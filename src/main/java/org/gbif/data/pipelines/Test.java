@@ -1,6 +1,6 @@
 package org.gbif.data.pipelines;
 
-import org.gbif.data.io.avro.VerbatimOccurrence;
+import org.gbif.data.io.avro.UntypedOccurrence;
 
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
@@ -39,12 +39,12 @@ public class Test {
       }}));
 
     // Parse the raw record into a DwC file
-    PCollection<VerbatimOccurrence> verbatimRecords = rawRecords.apply(
+    PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
       "ParseRawToDwC", ParDo.of(new ParseDwC()));
 
 
     // Write the file to Avro
-    verbatimRecords.apply(AvroIO.write(VerbatimOccurrence.class).to("transformed"));
+    verbatimRecords.apply(AvroIO.write(UntypedOccurrence.class).to("transformed"));
 
     PipelineResult result = p.run();
     result.waitUntilFinish();

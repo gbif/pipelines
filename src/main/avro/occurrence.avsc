@@ -1,14 +1,84 @@
 /**
  * Occurrence record formats.
+ *   UntypedOccurrence represents values as Strings (e.g. as read from the wire)
+ *   TypedOccurrence represents values in the primitive types following interpretation.
  */
 [
   {
-    "name": "VerbatimOccurrence",
+    "name": "UntypedOccurrence",
     "namespace": "org.gbif.data.io.avro",
     "type": "record",
     "fields": [
       {"name": "occurrenceId", "type": "string"},
-      {"name": "scientificName", "type": "string"}
+
+      {"name": "kingdom", "type": "string"},
+      {"name": "phylum", "type": "string"},
+      {"name": "class", "type": "string"},
+      {"name": "order", "type": "string"},
+      {"name": "family", "type": "string"},
+      {"name": "genus", "type": "string"},
+      {"name": "species", "type": "string"},
+      {"name": "specificEpithet", "type": "string"},
+      {"name": "infraspecificEpithet", "type": "string"},
+      {"name": "taxonRank", "type": "string"},
+      {"name": "scientificName", "type": "string"},
+      {"name": "scientificNameAuthorship", "type": "string"},
+
+      {"name": "basisOfRecord", "type": "string"},
+
+      {"name": "decimalLatitude", "type": "string"},
+      {"name": "decimalLongitude", "type": "string"},
+      {"name": "geodeticDatum", "type": "string"},
+      {"name": "country", "type": "string"},
+
+      {"name": "eventDate", "type": "string"},
+      {"name": "year", "type": "string"},
+      {"name": "month", "type": "string"},
+      {"name": "day", "type": "string"}
+    ]
+  },
+
+  {
+    "name": "TypedOccurrence",
+    "namespace": "org.gbif.data.io.avro",
+    "type": "record",
+    "fields": [
+      {"name": "occurrenceId", "type": "string"},
+
+      {"name": "kingdom", "type": "string"},
+      {"name": "phylum", "type": "string"},
+      {"name": "class", "type": "string"},
+      {"name": "order", "type": "string"},
+      {"name": "family", "type": "string"},
+      {"name": "genus", "type": "string"},
+      {"name": "species", "type": "string"},
+      {"name": "specificEpithet", "type": "string"},
+      {"name": "infraspecificEpithet", "type": "string"},
+      {"name": "taxonRank", "type": "string"},
+      {"name": "scientificName", "type": "string"},
+      {"name": "scientificNameAuthorship", "type": "string"},
+
+      {"name": "kingdomKey", "type": "int"},
+      {"name": "phylumKey", "type": "int"},
+      {"name": "classKey", "type": "int"},
+      {"name": "orderKey", "type": "int"},
+      {"name": "familyKey", "type": "int"},
+      {"name": "genusKey", "type": "int"},
+      {"name": "speciesKey", "type": "int"},
+      {"name": "nubKey", "type": "int"},
+
+      {"name": "basisOfRecord", "type": "string"},
+
+      {"name": "decimalLatitude", "type": "double"},
+      {"name": "decimalLongitude", "type": "double"},
+      {"name": "geodeticDatum", "type": "string"},
+      {"name": "country", "type": "string"},
+
+      {"name": "eventDate", "type": "string"},
+      {"name": "year", "type": "int"},
+      {"name": "month", "type": "int"},
+      {"name": "day", "type": "int"}
     ]
   }
+
 ]
