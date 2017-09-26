@@ -1,0 +1,14 @@
+/**
+ * Occurrence record formats.
+ */
+[
+  {
+    "name": "VerbatimOccurrence",
+    "namespace": "org.gbif.data.io.avro",
+    "type": "record",
+    "fields": [
+      {"name": "occurrenceId", "type": "string"},
+      {"name": "scientificName", "type": "string"}
+    ]
+  }
+]
