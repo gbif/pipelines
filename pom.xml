@@ -20,16 +20,16 @@
       <url>http://repository.gbif.org/content/groups/gbif</url>
     </repository>
     <repository>
-      <!-- For Hadoop artifacts -->
       <id>cloudera-release</id>
       <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
-
   </repositories>
 
   <properties>
+    <jdkLevel>1.8</jdkLevel>
     <apache.beam.version>2.1.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
+    <dwca-io.version>1.32-SNAPSHOT</dwca-io.version>
     <logback.version>1.1.5</logback.version>
 
     <!-- Plugins -->
@@ -82,7 +82,6 @@
     </plugins>
   </build>
 
-
   <dependencies>
     <dependency>
       <groupId>org.apache.beam</groupId>
@@ -95,25 +94,22 @@
       <artifactId>beam-runners-direct-java</artifactId>
       <version>${apache.beam.version}</version>
     </dependency>
-
-    <!--dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-parser</artifactId>
-      <version>0.61</version>
-    </dependency-->
-
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwca-io</artifactId>
+      <version>${dwca-io.version}</version>
+    </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>${logback.version}</version>
     </dependency>
+
+    <!-- TODO: Remove please -->
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>${logback.version}</version>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
     </dependency>
-
   </dependencies>
-
-
 </project>

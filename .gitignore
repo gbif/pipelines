@@ -1,6 +1,6 @@
 *.class
 target
 data-pipelines.iml
-
+output
 *.log
 
