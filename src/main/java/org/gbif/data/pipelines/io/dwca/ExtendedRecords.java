@@ -35,7 +35,6 @@ public class ExtendedRecords {
       data.forEach(extensionRecord -> {
         Map<CharSequence, CharSequence> extensionRecordTerms = new HashMap<CharSequence, CharSequence>();
         for (Term term : extensionRecord.terms()) {
-          System.out.println("EXTENSION: " + term.qualifiedName() + ": " + record.core().value(term));
           extensionRecordTerms.put(term.qualifiedName(), extensionRecord.value(term));
         }
         extensionData.add(extensionRecordTerms);

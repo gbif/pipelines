@@ -79,6 +79,39 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Shade the project into an über jar to send to Spark -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <configuration>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+              </excludes>
+            </filter>
+          </filters>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>shaded</shadedClassifierName>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -88,12 +121,38 @@
       <artifactId>beam-sdks-java-core</artifactId>
       <version>${apache.beam.version}</version>
     </dependency>
-    <!-- Direct runner for early testing only -->
+    <!-- Direct runner for early testing only, and should be put in a IDE profile -->
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-runners-direct-java</artifactId>
       <version>${apache.beam.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-runners-spark</artifactId>
+      <version>${apache.beam.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-hadoop-input-format</artifactId>
+      <version>${apache.beam.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
+      <version>${apache.beam.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>2.6.0-mr1-cdh5.12.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>2.6.0-cdh5.12.1</version>
+    </dependency>
+
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwca-io</artifactId>

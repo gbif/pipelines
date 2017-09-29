@@ -34,12 +34,14 @@ import org.slf4j.LoggerFactory;
  * <pre>
  * {@code
  * p.apply("read",
- *     DwCIO.Read.withPaths("/tmp/my-dwca.zip", "/tmp/working")
+ *     DwCAIO.Read.withPaths("/tmp/my-dwca.zip", "/tmp/working")
  *     ...;
  * }</pre>
+ * @deprecated use the DwCAInputFormat instead.
  */
-public class DwCIO {
-  private static final Logger LOG = LoggerFactory.getLogger(DwCIO.class);
+@Deprecated
+public class DwCAIO {
+  private static final Logger LOG = LoggerFactory.getLogger(DwCAIO.class);
 
   public static class Read extends PTransform<PBegin, PCollection<ExtendedRecord>> {
     private final String path;
@@ -83,6 +85,7 @@ public class DwCIO {
 
     @Override
     public Coder<ExtendedRecord> getDefaultOutputCoder() {
+      // TODO: use this? AvroCoder.of(ExtendedRecord.class)
       return new ExtendedRecordCoder();
     }
 

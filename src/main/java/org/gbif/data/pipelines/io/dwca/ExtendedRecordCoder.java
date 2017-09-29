@@ -21,7 +21,9 @@ import org.apache.beam.sdk.coders.CoderException;
 
 /**
  * SerDe for ExtendedRecords using Avro.
+ * @deprecated use AvroCoder.of(ExtendedRecord.class)
  */
+@Deprecated
 public class ExtendedRecordCoder extends Coder<ExtendedRecord> {
   @Override
   public void encode(ExtendedRecord record, OutputStream outStream) throws CoderException, IOException {

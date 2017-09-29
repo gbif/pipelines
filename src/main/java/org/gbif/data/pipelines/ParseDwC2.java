@@ -7,15 +7,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.KV;
+import org.apache.hadoop.io.Text;
 
 /**
  * A function to read a line of text and generate a VerbatimOccurrence.
  * For demo only.
  */
-public class ParseDwC extends DoFn<ExtendedRecord, UntypedOccurrence> {
+public class ParseDwC2 extends DoFn<KV<Text,ExtendedRecord>, UntypedOccurrence> {
   @ProcessElement
   public void processElement(ProcessContext c) {
-    ExtendedRecord raw = c.element();
+    ExtendedRecord raw = c.element().getValue();
     UntypedOccurrence o = new UntypedOccurrence();
     o.setOccurrenceId(raw.getId());
 
