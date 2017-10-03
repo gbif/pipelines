@@ -90,19 +90,23 @@ public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
         LOG.info("Read [{}] records", recordsReturned);
       }
       current = ExtendedRecords.newFromStarRecord(next);
+
+      // TODO: consider this... the core ID might not be unique
+      current.setId(UUID.randomUUID().toString());
       return true;
     }
 
     @Override
     public Text getCurrentKey() throws IOException, InterruptedException {
       // use the DwC record ID or else a UUID
-      // TODO: what if the ID is not unique... consider always a UUID?
+      // TODO: consider this... ID is no good if it is not unique within the file
       String id = current.getId() == null ? UUID.randomUUID().toString() : current.getId().toString();
       return new Text(id);
     }
 
     @Override
     public ExtendedRecord getCurrentValue() throws IOException, InterruptedException {
+      current.setId(getCurrentKey().toString()); // override the ID
       return current;
     }
 

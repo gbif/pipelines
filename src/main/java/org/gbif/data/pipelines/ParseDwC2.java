@@ -17,6 +17,8 @@ import org.apache.hadoop.io.Text;
 public class ParseDwC2 extends DoFn<KV<Text,ExtendedRecord>, UntypedOccurrence> {
   @ProcessElement
   public void processElement(ProcessContext c) {
+    String key = c.element().getKey().toString();
+
     ExtendedRecord raw = c.element().getValue();
     UntypedOccurrence o = new UntypedOccurrence();
     o.setOccurrenceId(raw.getId());

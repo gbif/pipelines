@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<schema name="occurrence" version="1.5">
+  <types>
+    <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="long" class="solr.TrieLongField"
+               precisionStep="0" omitNorms="true" positionIncrementGap="0" sortMissingLast="true"/>
+
+    <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.PatternReplaceFilterFactory" pattern="\t|\n|\r|(?:(?>\u000D\u000A)|[\u000A\u000B\u000C\u000D\u0085\u2028\u2029])" replacement=" " replace="all" />
+        <filter class="solr.PatternReplaceFilterFactory" pattern="\s+{2,}" replacement=" " replace="all" />
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType name="string_ci" class="solr.TextField" sortMissingLast="true" omitNorms="true">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory" />
+        <filter class="solr.PatternReplaceFilterFactory" pattern="\t|\n|\r|(?:(?>\u000D\u000A)|[\u000A\u000B\u000C\u000D\u0085\u2028\u2029])" replacement=" " replace="all" />
+        <filter class="solr.PatternReplaceFilterFactory" pattern="\s+{2,}" replacement=" " replace="all" />
+        <filter class="solr.TrimFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory" />
+        <filter class="solr.PatternReplaceFilterFactory" pattern="\s+{2,}" replacement=" " replace="all" />
+        <filter class="solr.TrimFilterFactory"/>
+      </analyzer>
+    </fieldType>
+
+  </types>
+  <fields>
+    <field name="occurrenceId" type="string" indexed="true" stored="true" required="true" docValues="true"/>
+    <field name="kingdom" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="phylum" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="class" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="order" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="family" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="genus" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="species" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="specificEpithet" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="infraspecificEpithet" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="taxonRank" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="scientificName" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="scientificNameAuthorship" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="basisOfRecord" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="decimalLatitude" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="decimalLongitude" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="geodeticDatum" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="country" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="event_date" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="year" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="month" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="day" type="string" indexed="true" stored="true" docValues="true"/>
+    <!-- required for both indexed and docValues -->
+    <field name="_version_" type="long" indexed="true" stored="true"/>
+  </fields>
+
+  <uniqueKey>occurrenceId</uniqueKey>
+
+  <defaultSearchField>scientificName</defaultSearchField>
+  <solrQueryParser defaultOperator="AND" />
+
+</schema>

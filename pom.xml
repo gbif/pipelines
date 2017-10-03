@@ -23,11 +23,17 @@
       <id>cloudera-release</id>
       <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
+    <!-- TODO: proxy at GBIF, and remove when we don't need SNAPSHOT (addedfor SOLR sink) -->
+    <repository>
+      <id>Apache-Snapshots</id>
+      <url>https://repository.apache.org/content/repositories/snapshots</url>
+    </repository>
   </repositories>
 
   <properties>
     <jdkLevel>1.8</jdkLevel>
-    <apache.beam.version>2.1.0</apache.beam.version>
+    <!-- 2.2.0-SNAPSHOT is the first with SOLR sink -->
+    <apache.beam.version>2.2.0-SNAPSHOT</apache.beam.version>
     <avro.version>1.7.7</avro.version>
     <dwca-io.version>1.32-SNAPSHOT</dwca-io.version>
     <logback.version>1.1.5</logback.version>
@@ -112,6 +118,30 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <relocations>
+                <!-- Spark 1.6 presents commons http 4.3.x but SOLR-J needs 4.4+ -->
+                <relocation>
+                  <pattern>org.apache.http</pattern>
+                  <shadedPattern>commons-http-4-4.org.apache.http</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 
@@ -132,6 +162,29 @@
       <artifactId>beam-runners-spark</artifactId>
       <version>${apache.beam.version}</version>
     </dependency>
+
+    <!-- Note: since 2.2.0-SNAPSHOT+ (i.e. unreleased at time of writing!) -->
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-solr</artifactId>
+      <version>${apache.beam.version}</version>
+    </dependency>
+
+    <!--
+      These look good at first glancebut the Avro to SOLR doc is tightly coupled to morphlines and therefore not
+      helpful.  Might be worth extracting the code though.
+    -->
+    <!--dependency>
+      <groupId>org.kitesdk</groupId>
+      <artifactId>kite-morphlines-solr-cell</artifactId>
+      <version>1.0.0-cdh5.12.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kitesdk</groupId>
+      <artifactId>kite-morphlines-avro</artifactId>
+      <version>1.0.0-cdh5.12.1</version>
+    </dependency-->
+
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-io-hadoop-input-format</artifactId>
@@ -146,11 +199,32 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <version>2.6.0-mr1-cdh5.12.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-httpclient</groupId>
+          <artifactId>commons-httpclient</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
       <version>2.6.0-cdh5.12.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-httpclient</groupId>
+          <artifactId>commons-httpclient</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+
+      </exclusions>
     </dependency>
 
     <dependency>
