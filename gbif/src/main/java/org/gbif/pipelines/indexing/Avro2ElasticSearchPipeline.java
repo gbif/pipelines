@@ -9,6 +9,7 @@ import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -36,7 +37,8 @@ public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
 
     // Convert the objects (interpretation)
     PCollection<TypedOccurrence> interpreted = verbatimRecords.apply(
-      "Interpret occurrence records", ParDo.of(BeamFunctions.beamify(Functions.interpretOccurrence())));
+      "Interpret occurrence records", ParDo.of(BeamFunctions.beamify(Functions.interpretOccurrence())))
+                                                              .setCoder(AvroCoder.of(TypedOccurrence.class));
 
     // Convert to JSON
     PCollection<String> json = interpreted.apply(

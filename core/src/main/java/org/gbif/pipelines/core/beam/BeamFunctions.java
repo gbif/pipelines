@@ -16,6 +16,7 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.TypeDescriptor;
 
 /**
  * Utilities for writing beam functions.
@@ -32,7 +33,8 @@ public class BeamFunctions {
    */
   public static <IN,OUT> DoFn<IN, OUT> beamify(Function<IN, OUT> source) {
     return new DoFn<IN, OUT>() {
-      @ProcessElement
+
+    @ProcessElement
       public void processElement(ProcessContext c)
         throws InvocationTargetException, IllegalAccessException, IntrospectionException {
         c.output(source.apply(c.element()));

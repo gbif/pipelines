@@ -5,11 +5,13 @@ import org.gbif.pipelines.core.beam.Coders;
 import org.gbif.pipelines.core.beam.DwCAIO;
 import org.gbif.pipelines.core.functions.Functions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -38,7 +40,8 @@ public class DwCA2SolrPipeline {
     // Convert the ExtendedRecord into an UntypedOccurrence record
     PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
       "Convert the objects into untyped DwC style records",
-      ParDo.of(BeamFunctions.beamify(Functions.untypedOccurrenceBuilder())));
+      ParDo.of(BeamFunctions.beamify(Functions.untypedOccurrenceBuilder())))
+                                                               .setCoder(AvroCoder.of(UntypedOccurrence.class));
 
     // Write the file to SOLR
     final SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration
