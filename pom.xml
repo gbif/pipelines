@@ -4,9 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.gbif.data</groupId>
-  <artifactId>data-pipelines</artifactId>
+  <groupId>org.gbif.pipelines</groupId>
+  <artifactId>pipelines-parent</artifactId>
+  <packaging>pom</packaging>
   <version>1.0-SNAPSHOT</version>
+
+  <modules>
+    <module>core</module>
+    <module>demo</module>
+    <module>hadoop</module>
+    <module>gbif</module>
+    <module>living-atlas</module>
+  </modules>
 
   <parent>
     <groupId>org.gbif</groupId>
@@ -23,135 +32,174 @@
       <id>cloudera-release</id>
       <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
-    <!-- TODO: proxy at GBIF, and remove when we don't need SNAPSHOT (addedfor SOLR sink) -->
+    <!-- TODO: proxy at GBIF, and remove when we don't need SNAPSHOT (added for SOLR sink) -->
     <repository>
       <id>Apache-Snapshots</id>
       <url>https://repository.apache.org/content/repositories/snapshots</url>
     </repository>
   </repositories>
 
+  <!--
+    The project policy is to name ALL versions in this parent pom and only to override those versions on a module by
+    module basis when necessary.  This policy is intended to help keep a clear overview of the entire project state.
+  -->
   <properties>
     <jdkLevel>1.8</jdkLevel>
+
     <!-- 2.2.0-SNAPSHOT is the first with SOLR sink -->
     <apache.beam.version>2.2.0-SNAPSHOT</apache.beam.version>
     <avro.version>1.7.7</avro.version>
     <dwca-io.version>1.32-SNAPSHOT</dwca-io.version>
+    <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
+    <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
+    <slf4j.version>1.7.24</slf4j.version>
     <logback.version>1.1.5</logback.version>
 
     <!-- Plugins -->
     <build-helper-maven.version>1.9.1</build-helper-maven.version>
-    <maven-protoc-plugin.version>0.3.5</maven-protoc-plugin.version>
+    <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
   </properties>
 
   <build>
-    <plugins>
-      <!--  Generate source from Avro definitions -->
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <version>${avro.version}</version>
-        <executions>
-          <execution>
-            <id>schemas</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>schema</goal>
-            </goals>
-            <configuration>
-              <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
-              <outputDirectory>${project.basedir}/src/main/java-generated/</outputDirectory>
-              <testSourceDirectory>${project.basedir}/src/test/avro/</testSourceDirectory>
-              <testOutputDirectory>${project.basedir}/src/test/java-generated/</testOutputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- Add the generated sources to the classpath for IDEs -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>${build-helper-maven.version}</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>${project.basedir}/src/main/java-generated/</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- Shade the project into an über jar to send to Spark -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <configuration>
-          <createDependencyReducedPom>false</createDependencyReducedPom>
-          <filters>
-            <filter>
-              <artifact>*:*</artifact>
-              <excludes>
-                <exclude>META-INF/*.SF</exclude>
-                <exclude>META-INF/*.DSA</exclude>
-                <exclude>META-INF/*.RSA</exclude>
-              </excludes>
-            </filter>
-          </filters>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>shaded</shadedClassifierName>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.3</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <relocations>
-                <!-- Spark 1.6 presents commons http 4.3.x but SOLR-J needs 4.4+ -->
-                <relocation>
-                  <pattern>org.apache.http</pattern>
-                  <shadedPattern>commons-http-4-4.org.apache.http</shadedPattern>
-                </relocation>
-              </relocations>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.avro</groupId>
+          <artifactId>avro-maven-plugin</artifactId>
+          <version>${avro.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 
-  <dependencies>
+  <!--
+    All dependencies of all modules are listed here with the project-wide default version.  Only when necessary
+    are library versions overridden in modules.
+  -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>${avro.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>dwca-io</artifactId>
+        <version>${dwca-io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>common-beam</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>hadoop</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-core</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-runners-direct-java</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-runners-spark</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-io-solr</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-io-elasticsearch</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-io-hadoop-input-format</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-core</artifactId>
+        <version>${hadoop-core.version}</version>
+        <exclusions>
+          <!-- Avoid conflicts with Apache Beam -->
+          <exclusion>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>${hadoop-common.version}</version>
+        <exclusions>
+          <!-- Avoid conflicts with Apache Beam -->
+          <exclusion>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <!--dependencies>
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-core</artifactId>
       <version>${apache.beam.version}</version>
     </dependency>
-    <!-- Direct runner for early testing only, and should be put in a IDE profile -->
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-runners-direct-java</artifactId>
@@ -163,27 +211,18 @@
       <version>${apache.beam.version}</version>
     </dependency>
 
-    <!-- Note: since 2.2.0-SNAPSHOT+ (i.e. unreleased at time of writing!) -->
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-io-solr</artifactId>
       <version>${apache.beam.version}</version>
     </dependency>
 
-    <!--
-      These look good at first glancebut the Avro to SOLR doc is tightly coupled to morphlines and therefore not
-      helpful.  Might be worth extracting the code though.
-    -->
-    <!--dependency>
-      <groupId>org.kitesdk</groupId>
-      <artifactId>kite-morphlines-solr-cell</artifactId>
-      <version>1.0.0-cdh5.12.1</version>
-    </dependency>
     <dependency>
-      <groupId>org.kitesdk</groupId>
-      <artifactId>kite-morphlines-avro</artifactId>
-      <version>1.0.0-cdh5.12.1</version>
-    </dependency-->
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-elasticsearch</artifactId>
+      <version>${apache.beam.version}</version>
+    </dependency>
+
 
     <dependency>
       <groupId>org.apache.beam</groupId>
@@ -226,7 +265,6 @@
 
       </exclusions>
     </dependency>
-
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwca-io</artifactId>
@@ -237,12 +275,17 @@
       <artifactId>logback-classic</artifactId>
       <version>${logback.version}</version>
     </dependency>
-
-    <!-- TODO: Remove please -->
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_2.10</artifactId>
+      <version>1.6.0-cdh5.12.1</version>
+      <scope>provided</scope>
+    </dependency
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.4</version>
+      <scope>runtime</scope>
     </dependency>
-  </dependencies>
+  </dependencies-->
 </project>
