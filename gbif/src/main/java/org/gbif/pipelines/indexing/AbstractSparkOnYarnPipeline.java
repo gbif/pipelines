@@ -19,8 +19,6 @@ public abstract class AbstractSparkOnYarnPipeline {
     HadoopFileSystemOptions options =
       PipelineOptionsFactory.fromArgs(args).withValidation().as(HadoopFileSystemOptions.class);
     options.setHdfsConfiguration(Collections.singletonList(conf));
-    options.setRunner(SparkRunner.class); // forced
-
     return Pipeline.create(options);
   }
 }

@@ -39,5 +39,6 @@ class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, Typ
 
     } catch (Exception e) {
     }
-    return target;  }
+    return target;
+  }
 }

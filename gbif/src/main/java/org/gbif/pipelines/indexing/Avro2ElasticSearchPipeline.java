@@ -47,7 +47,7 @@ public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
     // Write the file to ES
     ElasticsearchIO.ConnectionConfiguration conn = ElasticsearchIO.ConnectionConfiguration
       .create(new String[]{"http://c3n1.gbif.org:9200","http://c3n2.gbif.org:9200","http://c3n3.gbif.org:9200"},
-              "occurrence", "occurrence");
+              "occurrence2", "occurrence");
 
     // Index in ES
     json.apply(ElasticsearchIO.write().withConnectionConfiguration(conn).withMaxBatchSize(1000));

@@ -59,7 +59,7 @@
     <field name="decimalLongitude" type="string" indexed="true" stored="true" docValues="true"/>
     <field name="geodeticDatum" type="string" indexed="true" stored="true" docValues="true"/>
     <field name="country" type="string" indexed="true" stored="true" docValues="true"/>
-    <field name="event_date" type="string" indexed="true" stored="true" docValues="true"/>
+    <field name="eventDate" type="string" indexed="true" stored="true" docValues="true"/>
     <field name="year" type="string" indexed="true" stored="true" docValues="true"/>
     <field name="month" type="string" indexed="true" stored="true" docValues="true"/>
     <field name="day" type="string" indexed="true" stored="true" docValues="true"/>

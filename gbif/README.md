@@ -18,6 +18,6 @@ Pipelines:
 To run:
 ```
 sudo -u hdfs hdfs dfs -put ./dwca-lep5.zip /tmp/dwca-lep5.zip
-sudo -u hdfs spark-submit --conf --class org.gbif.pipelines.indexing.DwC2AvroPipeline --master yarn --executor-memory 18G --executor-cores 3 --num-executors 1 /home/trobertson/data-pipelines-1.0-SNAPSHOT-shaded.jar
-sudo -u hdfs spark-submit --conf spark.default.parallelism=24 --class org.gbif.pipelines.indexing.Avro2ElasticSearchPipeline --master yarn --executor-memory 8G --executor-cores 8 --num-executors 3 /home/trobertson/data-pipelines-1.0-SNAPSHOT-shaded.jar 
+sudo -u hdfs spark-submit --conf --class org.gbif.pipelines.indexing.DwC2AvroPipeline --master yarn --executor-memory 18G --executor-cores 3 --num-executors 1 /home/trobertson/gbif-pipelines-1.0-SNAPSHOT-shaded.jar --runner=SparkRunner
+sudo -u hdfs spark-submit --conf spark.default.parallelism=24 --class org.gbif.pipelines.indexing.Avro2ElasticSearchPipeline --master yarn --executor-memory 8G --executor-cores 8 --num-executors 3 /home/trobertson/gbif-pipelines-1.0-SNAPSHOT-shaded.jar --runner=SparkRunner
 ```

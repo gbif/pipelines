@@ -5,7 +5,6 @@ import org.gbif.pipelines.core.beam.Coders;
 import org.gbif.pipelines.core.beam.DwCAIO;
 import org.gbif.pipelines.core.functions.Functions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import org.apache.beam.runners.direct.DirectRunner;
@@ -18,12 +17,15 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.solr.common.SolrInputDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A demonstration for showing how to index a DwC-A into SOLR.
  * TODO: Remove hard coded things
  */
 public class DwCA2SolrPipeline {
+  private static final Logger LOG = LoggerFactory.getLogger(DwCA2SolrPipeline.class);
 
   public static void main(String[] args) {
     PipelineOptions options = PipelineOptionsFactory.create();
@@ -45,15 +47,16 @@ public class DwCA2SolrPipeline {
 
     // Write the file to SOLR
     final SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration
-      .create("c1n1.gbif.org:2181,c1n2.gbif.org:2181,c1n3.gbif.org:2181/solr5dev");
+      .create("c3master1-vh.gbif.org:2181,c3master2-vh.gbif.org:2181,c3master3-vh.gbif.org:2181/solr5c2");
 
     PCollection<SolrInputDocument> inputDocs = verbatimRecords.apply(
       "Convert to SOLR", ParDo.of(new SolrDocBuilder()));
 
-    inputDocs.apply(SolrIO.write().to("test-solr").withConnectionConfiguration(conn));
+    inputDocs.apply(SolrIO.write().to("beam-demo1").withConnectionConfiguration(conn));
 
+    LOG.info("Starting the pipeline");
     PipelineResult result = p.run();
-    // Note: can read result state here (e.g. a web app polling for metrics would do this)
     result.waitUntilFinish();
+    LOG.info("Pipeline finished with state: {} ", result.getState());
   }
 }
