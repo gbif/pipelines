@@ -27,6 +27,9 @@ import org.slf4j.LoggerFactory;
 public class DwCA2SolrPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(DwCA2SolrPipeline.class);
 
+
+
+
   public static void main(String[] args) {
     PipelineOptions options = PipelineOptionsFactory.create();
     options.setRunner(DirectRunner.class); // forced for this demo

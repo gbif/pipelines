@@ -89,3 +89,60 @@ PUT /occurrence
     }
   }
 }
+
+
+
+
+
+POST /occurrence/_search
+{
+   "query": {
+      "range": {
+         "decimalLongitude": {
+            "from": 23.4,
+            "to": 91.8
+         }
+      }
+   }
+}
+
+POST /occurrence/_search
+{
+   "query": {
+      "match": {
+         "kingdom.string": {
+            "query": "Animalia",
+            "type": "phrase"
+         }
+      }
+   },
+   "aggs": {
+      "basisOfRecords": {
+         "terms": {
+            "field": "basisOfRecord.string.keyword",
+            "min_doc_count": 1
+         }
+      }
+   }
+}
+
+
+POST /occurrence/_search
+{
+   "query": {
+       "match_all": {}
+   }
+}
+
+POST /occurrence/_search
+{
+  "size": 0,
+  "aggs": {
+        "basisOfRecords": {
+          "terms": {
+            "field": "basisOfRecord.string.keyword",
+            "min_doc_count": 1
+          }
+        }
+      }
+}

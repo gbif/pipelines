@@ -10,7 +10,9 @@ class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, Typ
 
   @Override
   public TypedOccurrence apply(UntypedOccurrence source) {
+
     // worst code ever... quick test
+    // note, we override a ton of this in the nub lookup in this - it is just demo code
     TypedOccurrence target = new TypedOccurrence();
     target.setOccurrenceId(source.getOccurrenceId());
     target.setKingdom(source.getKingdom());

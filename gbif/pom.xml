@@ -44,10 +44,15 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
               </transformers>
               <relocations>
-                <!-- Spark 1.6 presents commons http 4.3.x but SOLR-J needs 4.4+ -->
+                <!-- Transient from core: conflicts with Beam on Spark -->
                 <relocation>
-                  <pattern>org.apache.http</pattern>
-                  <shadedPattern>commons-http-4-4.org.apache.http</shadedPattern>
+                  <pattern>com.google.gson</pattern>
+                  <shadedPattern>g27.com.google.gson</shadedPattern>
+                </relocation>
+                <!-- Transient from core: conflicts with Beam on Spark -->
+                <relocation>
+                  <pattern>okio</pattern>
+                  <shadedPattern>o113.okio</shadedPattern>
                 </relocation>
               </relocations>
             </configuration>

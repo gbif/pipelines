@@ -12,12 +12,13 @@
     </encoder>
   </appender>
 
-  <logger name="org.apache.beam.sdk" level="WARN"/>
-  <logger name="org.gbif.dwc.terms.TermFactory" level="ERROR"/>
+
+    <logger name="org.apache.beam.sdk" level="WARN"/>
+    <logger name="org.gbif.dwc.terms.TermFactory" level="ERROR"/>
 
 
-  <root level="INFO">
-    <appender-ref ref="CONSOLE"/>
-  </root>
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
 
-</configuration>
+  </configuration>

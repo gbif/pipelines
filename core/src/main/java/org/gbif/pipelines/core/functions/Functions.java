@@ -24,4 +24,8 @@ public class Functions {
   public static SerializableFunction<ExtendedRecord, UntypedOccurrence> untypedOccurrenceBuilder() {
     return new UntypedOccurrenceBuilder();
   }
+
+  public static SerializableFunction<TypedOccurrence, TypedOccurrence> gbifSpeciesMatch(String baseUrl) {
+    return new NubSpeciesMatch(baseUrl);
+  }
 }
