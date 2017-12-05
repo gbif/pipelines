@@ -53,6 +53,7 @@ public class BeamFunctions {
       @ProcessElement
       public void processElement(ProcessContext c) throws IOException {
         T source = c.element();
+        /*
         Schema schema = source.getSchema();
         DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
 
@@ -60,8 +61,18 @@ public class BeamFunctions {
           final JsonEncoder encoder = EncoderFactory.get().jsonEncoder(TypedOccurrence.getClassSchema(), os);
           writer.write(source, encoder);
           encoder.flush();
-          c.output(new String(os.toByteArray(),"UTF-8"));
+
+          String s = new String(os.toByteArray(),"UTF-8");
+          System.out.println(s);
+
+          c.output(s);
         }
+        */
+
+        // The JSON writer produces obscure JSON for nullables
+        // See https://issues.apache.org/jira/browse/AVRO-1582
+        c.output(source.toString());
+
       }
     };
   }

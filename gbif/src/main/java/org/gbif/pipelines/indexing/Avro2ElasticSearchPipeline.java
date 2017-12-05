@@ -7,14 +7,35 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.security.KeyStore;
+import javax.net.ssl.SSLContext;
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.impl.nio.conn.ManagedNHttpClientConnectionFactory;
+import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
+import org.apache.http.ssl.SSLContexts;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,14 +47,31 @@ import org.slf4j.LoggerFactory;
 public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(Avro2ElasticSearchPipeline.class);
 
-  private static final String SOURCE_PATH = "hdfs://ha-nn/tmp/dwca-lep5.avro-00000-of-00001";
+  /*
+  private static final String SOURCE_PATH = "hdfs://ha-nn/user/hive/warehouse/tim.db/occ_all/*";
   private static final String[] ES_HOSTS =
-    new String[] {"http://c3n1.gbif.org:9200","http://c3n2.gbif.org:9200","http://c3n3.gbif.org:9200"};
+    new String[] {"http://c4n1.gbif.org:9200",
+      "http://c4n2.gbif.org:9200",
+      "http://c4n3.gbif.org:9200",
+      "http://c4n4.gbif.org:9200",
+      "http://c4n5.gbif.org:9200",
+      "http://c4n6.gbif.org:9200",
+      "http://c4n7.gbif.org:9200",
+      "http://c4n8.gbif.org:9200",
+      "http://c4n9.gbif.org:9200"};
+  */
+  private static final String SOURCE_PATH = "hdfs://ha-nn/user/hive/warehouse/occ_all/*";
+  private static final String[] ES_HOSTS =
+    new String[] {"http://c3n1.gbif.org:9200",
+      "http://c3n2.gbif.org:9200",
+      "http://c3n3.gbif.org:9200"};
+
   private static final String ES_INDEX = "occurrence";
   private static final String ES_TYPE = "occurrence";
   private static final int BATCH_SIZE = 1000;
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
+
     Configuration conf = new Configuration(); // assume defaults on CP
     Pipeline p = newPipeline(args, conf);
     Coders.registerAvroCoders(p, UntypedOccurrence.class, TypedOccurrence.class, ExtendedRecord.class);
@@ -64,6 +102,7 @@ public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
     // Index in ES
     json.apply(ElasticsearchIO.write().withConnectionConfiguration(conn).withMaxBatchSize(BATCH_SIZE));
 
+    // instruct the writer to use a provided document ID
     LOG.info("Starting the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();

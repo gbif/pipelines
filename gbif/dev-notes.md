@@ -3,6 +3,35 @@
 Notes while in early dev
 
 
+``` 
+create table occ_all stored as avro as
+select
+  cast(gbifid as String) as occurrenceId,
+  v_kingdom as kingdom,
+  v_phylum as phylum,
+  v_class as class,
+  v_order as `order`,
+  v_family as family,
+  v_genus as genus,
+  species,
+  v_specificepithet as specificEpithet,
+  v_infraspecificepithet as infraspecificEpithet,
+  v_taxonrank as taxonRank,
+  v_scientificname as scientificName,
+  v_scientificnameauthorship as scientificNameAuthorship,
+  v_basisofrecord as basisOfRecord,
+  v_decimallatitude as decimalLatitude,
+  v_decimallongitude as decimalLongitude,
+  v_geodeticdatum as geodeticDatum,
+  v_country as country,
+  v_eventdate as eventDate,
+  v_year as year,
+  v_month as month,
+  v_day as day
+from dev.occurrence_hdfs
+```
+
+
 Create the index:
 
 ```  
@@ -42,10 +71,10 @@ sudo systemctl restart elasticsearch.service
 
 Add a location as geoPoint
 
-PUT _mapping/occurrence 
+PUT /occurrence/_mapping/occurrence 
 {
   "properties": {
-    "message": {
+    "location": {
       "type": "geo_point"
     }
   }

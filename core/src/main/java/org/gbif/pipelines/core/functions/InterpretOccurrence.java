@@ -3,14 +3,23 @@ package org.gbif.pipelines.core.functions;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.function.Function;
+
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
 
 class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, TypedOccurrence> {
 
   @Override
   public TypedOccurrence apply(UntypedOccurrence source) {
-
     // worst code ever... quick test
     // note, we override a ton of this in the nub lookup in this - it is just demo code
     TypedOccurrence target = new TypedOccurrence();
@@ -32,15 +41,46 @@ class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, Typ
     target.setCountry(source.getCountry());
     target.setEventDate(source.getEventDate());
     try {
-      Double lat = Double.parseDouble(source.getDecimalLatitude().toString());
-      Double lng = Double.parseDouble(source.getDecimalLongitude().toString());
-      target.setDecimalLatitude(lat);
-      target.setDecimalLongitude(lng);
-      //target.setLocation(Arrays.asList(new Double[]{lat, lng}));
-      //target.setLocation("{lat:" + lat +",lon:" + lng + "}");
+      if (source.getDecimallatitude() != null && source.getDecimallongitude() != null) {
+        Double lat = Double.parseDouble(source.getDecimallatitude().toString());
+        Double lng = Double.parseDouble(source.getDecimallongitude().toString());
 
-    } catch (Exception e) {
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          target.setDecimalLatitude(lat);
+          target.setDecimalLongitude(lng);
+          target.setLocation(lat + "," + lng);
+        }
+
+      }
+
+    } catch (NumberFormatException e) {
     }
     return target;
   }
+
+  public static void main(String[] args) throws IOException {
+    /*
+    TypedOccurrence t = new TypedOccurrence();
+    t.setLocation("41.12,-71.34");
+    Schema schema = t.getSchema();
+    DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+
+    System.out.println(t.toString());
+
+    try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+      final JsonEncoder encoder = EncoderFactory.get().jsonEncoder(TypedOccurrence.getClassSchema(), os);
+
+      writer.write(t, encoder);
+      encoder.flush();
+
+      String s = new String(os.toByteArray(),"UTF-8");
+      System.out.println(s);
+
+
+    }
+    */
+
+  }
+
+
 }

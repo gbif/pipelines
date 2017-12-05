@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class DwCA2SolrPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(DwCA2SolrPipeline.class);
 
-
+  private static final String SOLR_HOSTS = "c3master1-vh.gbif.org:2181,c3master2-vh.gbif.org:2181,c3master3-vh.gbif.org:2181/solr5c2";
 
 
   public static void main(String[] args) {
@@ -40,7 +40,7 @@ public class DwCA2SolrPipeline {
 
     // Read the DwC-A using our custom reader
     PCollection<ExtendedRecord> rawRecords = p.apply(
-      "Read from Darwin Core Archive", DwCAIO.Read.withPaths("demo/dwca.zip", "demo/target/tmp"));
+      "Read from Darwin Core Archive", DwCAIO.Read.withPaths("/tmp/dwca-s-bryophytes-v4.1.zip", "demo/target/tmp"));
 
     // Convert the ExtendedRecord into an UntypedOccurrence record
     PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
@@ -50,7 +50,7 @@ public class DwCA2SolrPipeline {
 
     // Write the file to SOLR
     final SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration
-      .create("c3master1-vh.gbif.org:2181,c3master2-vh.gbif.org:2181,c3master3-vh.gbif.org:2181/solr5c2");
+      .create(SOLR_HOSTS);
 
     PCollection<SolrInputDocument> inputDocs = verbatimRecords.apply(
       "Convert to SOLR", ParDo.of(new SolrDocBuilder()));

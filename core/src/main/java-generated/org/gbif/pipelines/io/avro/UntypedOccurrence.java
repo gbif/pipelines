@@ -7,7 +7,7 @@ package org.gbif.pipelines.io.avro;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"UntypedOccurrence\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"occurrenceId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"kingdom\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"phylum\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"class\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"family\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"genus\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"species\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"specificEpithet\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"infraspecificEpithet\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"taxonRank\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"scientificName\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"scientificNameAuthorship\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"basisOfRecord\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"decimalLatitude\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"decimalLongitude\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"geodeticDatum\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"country\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"eventDate\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"year\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"month\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"day\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"UntypedOccurrence\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"occurrenceId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"kingdom\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"phylum\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"class\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"family\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"genus\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"species\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"specificEpithet\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"infraspecificEpithet\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"taxonRank\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"scientificName\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"scientificNameAuthorship\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"basisOfRecord\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"decimallatitude\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"decimallongitude\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"geodeticDatum\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"country\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"eventDate\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"year\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"month\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"day\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   @Deprecated public java.lang.CharSequence occurrenceId;
   @Deprecated public java.lang.CharSequence kingdom;
@@ -23,8 +23,8 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
   @Deprecated public java.lang.CharSequence scientificName;
   @Deprecated public java.lang.CharSequence scientificNameAuthorship;
   @Deprecated public java.lang.CharSequence basisOfRecord;
-  @Deprecated public java.lang.CharSequence decimalLatitude;
-  @Deprecated public java.lang.CharSequence decimalLongitude;
+  @Deprecated public java.lang.CharSequence decimallatitude;
+  @Deprecated public java.lang.CharSequence decimallongitude;
   @Deprecated public java.lang.CharSequence geodeticDatum;
   @Deprecated public java.lang.CharSequence country;
   @Deprecated public java.lang.CharSequence eventDate;
@@ -42,7 +42,7 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
   /**
    * All-args constructor.
    */
-  public UntypedOccurrence(java.lang.CharSequence occurrenceId, java.lang.CharSequence kingdom, java.lang.CharSequence phylum, java.lang.CharSequence class$, java.lang.CharSequence order, java.lang.CharSequence family, java.lang.CharSequence genus, java.lang.CharSequence species, java.lang.CharSequence specificEpithet, java.lang.CharSequence infraspecificEpithet, java.lang.CharSequence taxonRank, java.lang.CharSequence scientificName, java.lang.CharSequence scientificNameAuthorship, java.lang.CharSequence basisOfRecord, java.lang.CharSequence decimalLatitude, java.lang.CharSequence decimalLongitude, java.lang.CharSequence geodeticDatum, java.lang.CharSequence country, java.lang.CharSequence eventDate, java.lang.CharSequence year, java.lang.CharSequence month, java.lang.CharSequence day) {
+  public UntypedOccurrence(java.lang.CharSequence occurrenceId, java.lang.CharSequence kingdom, java.lang.CharSequence phylum, java.lang.CharSequence class$, java.lang.CharSequence order, java.lang.CharSequence family, java.lang.CharSequence genus, java.lang.CharSequence species, java.lang.CharSequence specificEpithet, java.lang.CharSequence infraspecificEpithet, java.lang.CharSequence taxonRank, java.lang.CharSequence scientificName, java.lang.CharSequence scientificNameAuthorship, java.lang.CharSequence basisOfRecord, java.lang.CharSequence decimallatitude, java.lang.CharSequence decimallongitude, java.lang.CharSequence geodeticDatum, java.lang.CharSequence country, java.lang.CharSequence eventDate, java.lang.CharSequence year, java.lang.CharSequence month, java.lang.CharSequence day) {
     this.occurrenceId = occurrenceId;
     this.kingdom = kingdom;
     this.phylum = phylum;
@@ -57,8 +57,8 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
     this.scientificName = scientificName;
     this.scientificNameAuthorship = scientificNameAuthorship;
     this.basisOfRecord = basisOfRecord;
-    this.decimalLatitude = decimalLatitude;
-    this.decimalLongitude = decimalLongitude;
+    this.decimallatitude = decimallatitude;
+    this.decimallongitude = decimallongitude;
     this.geodeticDatum = geodeticDatum;
     this.country = country;
     this.eventDate = eventDate;
@@ -85,8 +85,8 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
     case 11: return scientificName;
     case 12: return scientificNameAuthorship;
     case 13: return basisOfRecord;
-    case 14: return decimalLatitude;
-    case 15: return decimalLongitude;
+    case 14: return decimallatitude;
+    case 15: return decimallongitude;
     case 16: return geodeticDatum;
     case 17: return country;
     case 18: return eventDate;
@@ -114,8 +114,8 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
     case 11: scientificName = (java.lang.CharSequence)value$; break;
     case 12: scientificNameAuthorship = (java.lang.CharSequence)value$; break;
     case 13: basisOfRecord = (java.lang.CharSequence)value$; break;
-    case 14: decimalLatitude = (java.lang.CharSequence)value$; break;
-    case 15: decimalLongitude = (java.lang.CharSequence)value$; break;
+    case 14: decimallatitude = (java.lang.CharSequence)value$; break;
+    case 15: decimallongitude = (java.lang.CharSequence)value$; break;
     case 16: geodeticDatum = (java.lang.CharSequence)value$; break;
     case 17: country = (java.lang.CharSequence)value$; break;
     case 18: eventDate = (java.lang.CharSequence)value$; break;
@@ -337,33 +337,33 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
   }
 
   /**
-   * Gets the value of the 'decimalLatitude' field.
+   * Gets the value of the 'decimallatitude' field.
    */
-  public java.lang.CharSequence getDecimalLatitude() {
-    return decimalLatitude;
+  public java.lang.CharSequence getDecimallatitude() {
+    return decimallatitude;
   }
 
   /**
-   * Sets the value of the 'decimalLatitude' field.
+   * Sets the value of the 'decimallatitude' field.
    * @param value the value to set.
    */
-  public void setDecimalLatitude(java.lang.CharSequence value) {
-    this.decimalLatitude = value;
+  public void setDecimallatitude(java.lang.CharSequence value) {
+    this.decimallatitude = value;
   }
 
   /**
-   * Gets the value of the 'decimalLongitude' field.
+   * Gets the value of the 'decimallongitude' field.
    */
-  public java.lang.CharSequence getDecimalLongitude() {
-    return decimalLongitude;
+  public java.lang.CharSequence getDecimallongitude() {
+    return decimallongitude;
   }
 
   /**
-   * Sets the value of the 'decimalLongitude' field.
+   * Sets the value of the 'decimallongitude' field.
    * @param value the value to set.
    */
-  public void setDecimalLongitude(java.lang.CharSequence value) {
-    this.decimalLongitude = value;
+  public void setDecimallongitude(java.lang.CharSequence value) {
+    this.decimallongitude = value;
   }
 
   /**
@@ -491,8 +491,8 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
     private java.lang.CharSequence scientificName;
     private java.lang.CharSequence scientificNameAuthorship;
     private java.lang.CharSequence basisOfRecord;
-    private java.lang.CharSequence decimalLatitude;
-    private java.lang.CharSequence decimalLongitude;
+    private java.lang.CharSequence decimallatitude;
+    private java.lang.CharSequence decimallongitude;
     private java.lang.CharSequence geodeticDatum;
     private java.lang.CharSequence country;
     private java.lang.CharSequence eventDate;
@@ -564,12 +564,12 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
         this.basisOfRecord = data().deepCopy(fields()[13].schema(), other.basisOfRecord);
         fieldSetFlags()[13] = true;
       }
-      if (isValidValue(fields()[14], other.decimalLatitude)) {
-        this.decimalLatitude = data().deepCopy(fields()[14].schema(), other.decimalLatitude);
+      if (isValidValue(fields()[14], other.decimallatitude)) {
+        this.decimallatitude = data().deepCopy(fields()[14].schema(), other.decimallatitude);
         fieldSetFlags()[14] = true;
       }
-      if (isValidValue(fields()[15], other.decimalLongitude)) {
-        this.decimalLongitude = data().deepCopy(fields()[15].schema(), other.decimalLongitude);
+      if (isValidValue(fields()[15], other.decimallongitude)) {
+        this.decimallongitude = data().deepCopy(fields()[15].schema(), other.decimallongitude);
         fieldSetFlags()[15] = true;
       }
       if (isValidValue(fields()[16], other.geodeticDatum)) {
@@ -657,12 +657,12 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
         this.basisOfRecord = data().deepCopy(fields()[13].schema(), other.basisOfRecord);
         fieldSetFlags()[13] = true;
       }
-      if (isValidValue(fields()[14], other.decimalLatitude)) {
-        this.decimalLatitude = data().deepCopy(fields()[14].schema(), other.decimalLatitude);
+      if (isValidValue(fields()[14], other.decimallatitude)) {
+        this.decimallatitude = data().deepCopy(fields()[14].schema(), other.decimallatitude);
         fieldSetFlags()[14] = true;
       }
-      if (isValidValue(fields()[15], other.decimalLongitude)) {
-        this.decimalLongitude = data().deepCopy(fields()[15].schema(), other.decimalLongitude);
+      if (isValidValue(fields()[15], other.decimallongitude)) {
+        this.decimallongitude = data().deepCopy(fields()[15].schema(), other.decimallongitude);
         fieldSetFlags()[15] = true;
       }
       if (isValidValue(fields()[16], other.geodeticDatum)) {
@@ -1041,52 +1041,52 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
       return this;
     }
 
-    /** Gets the value of the 'decimalLatitude' field */
-    public java.lang.CharSequence getDecimalLatitude() {
-      return decimalLatitude;
+    /** Gets the value of the 'decimallatitude' field */
+    public java.lang.CharSequence getDecimallatitude() {
+      return decimallatitude;
     }
     
-    /** Sets the value of the 'decimalLatitude' field */
-    public org.gbif.pipelines.io.avro.UntypedOccurrence.Builder setDecimalLatitude(java.lang.CharSequence value) {
+    /** Sets the value of the 'decimallatitude' field */
+    public org.gbif.pipelines.io.avro.UntypedOccurrence.Builder setDecimallatitude(java.lang.CharSequence value) {
       validate(fields()[14], value);
-      this.decimalLatitude = value;
+      this.decimallatitude = value;
       fieldSetFlags()[14] = true;
       return this; 
     }
     
-    /** Checks whether the 'decimalLatitude' field has been set */
-    public boolean hasDecimalLatitude() {
+    /** Checks whether the 'decimallatitude' field has been set */
+    public boolean hasDecimallatitude() {
       return fieldSetFlags()[14];
     }
     
-    /** Clears the value of the 'decimalLatitude' field */
-    public org.gbif.pipelines.io.avro.UntypedOccurrence.Builder clearDecimalLatitude() {
-      decimalLatitude = null;
+    /** Clears the value of the 'decimallatitude' field */
+    public org.gbif.pipelines.io.avro.UntypedOccurrence.Builder clearDecimallatitude() {
+      decimallatitude = null;
       fieldSetFlags()[14] = false;
       return this;
     }
 
-    /** Gets the value of the 'decimalLongitude' field */
-    public java.lang.CharSequence getDecimalLongitude() {
-      return decimalLongitude;
+    /** Gets the value of the 'decimallongitude' field */
+    public java.lang.CharSequence getDecimallongitude() {
+      return decimallongitude;
     }
     
-    /** Sets the value of the 'decimalLongitude' field */
-    public org.gbif.pipelines.io.avro.UntypedOccurrence.Builder setDecimalLongitude(java.lang.CharSequence value) {
+    /** Sets the value of the 'decimallongitude' field */
+    public org.gbif.pipelines.io.avro.UntypedOccurrence.Builder setDecimallongitude(java.lang.CharSequence value) {
       validate(fields()[15], value);
-      this.decimalLongitude = value;
+      this.decimallongitude = value;
       fieldSetFlags()[15] = true;
       return this; 
     }
     
-    /** Checks whether the 'decimalLongitude' field has been set */
-    public boolean hasDecimalLongitude() {
+    /** Checks whether the 'decimallongitude' field has been set */
+    public boolean hasDecimallongitude() {
       return fieldSetFlags()[15];
     }
     
-    /** Clears the value of the 'decimalLongitude' field */
-    public org.gbif.pipelines.io.avro.UntypedOccurrence.Builder clearDecimalLongitude() {
-      decimalLongitude = null;
+    /** Clears the value of the 'decimallongitude' field */
+    public org.gbif.pipelines.io.avro.UntypedOccurrence.Builder clearDecimallongitude() {
+      decimallongitude = null;
       fieldSetFlags()[15] = false;
       return this;
     }
@@ -1259,8 +1259,8 @@ public class UntypedOccurrence extends org.apache.avro.specific.SpecificRecordBa
         record.scientificName = fieldSetFlags()[11] ? this.scientificName : (java.lang.CharSequence) defaultValue(fields()[11]);
         record.scientificNameAuthorship = fieldSetFlags()[12] ? this.scientificNameAuthorship : (java.lang.CharSequence) defaultValue(fields()[12]);
         record.basisOfRecord = fieldSetFlags()[13] ? this.basisOfRecord : (java.lang.CharSequence) defaultValue(fields()[13]);
-        record.decimalLatitude = fieldSetFlags()[14] ? this.decimalLatitude : (java.lang.CharSequence) defaultValue(fields()[14]);
-        record.decimalLongitude = fieldSetFlags()[15] ? this.decimalLongitude : (java.lang.CharSequence) defaultValue(fields()[15]);
+        record.decimallatitude = fieldSetFlags()[14] ? this.decimallatitude : (java.lang.CharSequence) defaultValue(fields()[14]);
+        record.decimallongitude = fieldSetFlags()[15] ? this.decimallongitude : (java.lang.CharSequence) defaultValue(fields()[15]);
         record.geodeticDatum = fieldSetFlags()[16] ? this.geodeticDatum : (java.lang.CharSequence) defaultValue(fields()[16]);
         record.country = fieldSetFlags()[17] ? this.country : (java.lang.CharSequence) defaultValue(fields()[17]);
         record.eventDate = fieldSetFlags()[18] ? this.eventDate : (java.lang.CharSequence) defaultValue(fields()[18]);

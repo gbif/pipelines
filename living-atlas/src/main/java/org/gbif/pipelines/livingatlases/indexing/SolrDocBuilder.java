@@ -16,7 +16,6 @@ public class SolrDocBuilder extends DoFn<UntypedOccurrence, SolrInputDocument> {
   private static final Schema SCHEMA = UntypedOccurrence.getClassSchema();
   private static final float DEFAULT_BOOST = 1f;
 
-
   @ProcessElement
   public void processElement(ProcessContext c) {
     UntypedOccurrence inputRecord = c.element();
