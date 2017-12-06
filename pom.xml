@@ -32,11 +32,6 @@
       <id>cloudera-release</id>
       <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
-    <!-- TODO: proxy at GBIF, and remove when we don't need SNAPSHOT (added for SOLR sink) -->
-    <repository>
-      <id>Apache-Snapshots</id>
-      <url>https://repository.apache.org/content/repositories/snapshots</url>
-    </repository>
   </repositories>
 
   <!--
@@ -46,8 +41,7 @@
   <properties>
     <jdkLevel>1.8</jdkLevel>
 
-    <!-- 2.2.0-SNAPSHOT is the first with SOLR sink -->
-    <apache.beam.version>2.2.0-SNAPSHOT</apache.beam.version>
+    <apache.beam.version>2.2.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
     <dwca-io.version>1.32-SNAPSHOT</dwca-io.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
