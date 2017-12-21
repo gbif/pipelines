@@ -44,7 +44,7 @@
 
     <apache.beam.version>2.2.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
-    <dwca-io.version>1.32-SNAPSHOT</dwca-io.version>
+    <dwca-io.version>1.33-SNAPSHOT</dwca-io.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
     <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
     <retrofit.version>2.3.0</retrofit.version>
@@ -144,6 +144,11 @@
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
         <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-io-kafka</artifactId>
+        <version>2.2.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
