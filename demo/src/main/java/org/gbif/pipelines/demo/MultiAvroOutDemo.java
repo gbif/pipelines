@@ -1,6 +1,6 @@
 package org.gbif.pipelines.demo;
 
-import org.gbif.pipelines.core.beam.Coders;
+import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 

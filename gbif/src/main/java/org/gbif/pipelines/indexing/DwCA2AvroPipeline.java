@@ -1,13 +1,12 @@
 package org.gbif.pipelines.indexing;
 
-import org.gbif.pipelines.core.beam.Coders;
+import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.functions.Functions;
 import org.gbif.pipelines.hadoop.io.DwCAInputFormat;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
-import okio.BufferedSource;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;

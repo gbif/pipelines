@@ -1,41 +1,22 @@
 package org.gbif.pipelines.indexing;
 
-import org.gbif.pipelines.core.beam.BeamFunctions;
-import org.gbif.pipelines.core.beam.Coders;
+import org.gbif.pipelines.common.beam.BeamFunctions;
+import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.functions.Functions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.security.KeyStore;
-import javax.net.ssl.SSLContext;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
-import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.apache.http.impl.nio.conn.ManagedNHttpClientConnectionFactory;
-import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
-import org.apache.http.ssl.SSLContexts;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

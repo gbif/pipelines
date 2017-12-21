@@ -11,6 +11,7 @@
 
   <modules>
     <module>core</module>
+    <module>beam-common</module>
     <module>demo</module>
     <module>hadoop</module>
     <module>gbif</module>
@@ -101,7 +102,7 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
-        <artifactId>common-beam</artifactId>
+        <artifactId>beam-common</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

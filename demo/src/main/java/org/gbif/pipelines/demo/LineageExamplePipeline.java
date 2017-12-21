@@ -1,8 +1,8 @@
 package org.gbif.pipelines.demo;
 
-import org.gbif.pipelines.core.beam.BeamFunctions;
-import org.gbif.pipelines.core.beam.Coders;
-import org.gbif.pipelines.core.beam.DwCAIO;
+import org.gbif.pipelines.common.beam.BeamFunctions;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.functions.Functions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
@@ -14,7 +14,6 @@ import java.util.stream.StreamSupport;
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -22,7 +21,6 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;

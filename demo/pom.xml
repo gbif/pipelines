@@ -18,10 +18,13 @@
       <artifactId>core</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>beam-common</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-core</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-runners-direct-java</artifactId>

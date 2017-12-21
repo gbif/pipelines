@@ -1,8 +1,8 @@
 package org.gbif.pipelines.livingatlases.indexing;
 
-import org.gbif.pipelines.core.beam.BeamFunctions;
-import org.gbif.pipelines.core.beam.Coders;
-import org.gbif.pipelines.core.beam.DwCAIO;
+import org.gbif.pipelines.common.beam.BeamFunctions;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.functions.Functions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
