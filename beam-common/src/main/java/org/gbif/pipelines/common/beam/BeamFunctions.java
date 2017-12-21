@@ -1,22 +1,12 @@
-package org.gbif.pipelines.core.beam;
-
-import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
+package org.gbif.pipelines.common.beam;
 
 import java.beans.IntrospectionException;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
 
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.values.TypeDescriptor;
 
 /**
  * Utilities for writing beam functions.

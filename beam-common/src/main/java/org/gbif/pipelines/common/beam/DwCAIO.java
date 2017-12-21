@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.beam;
+package org.gbif.pipelines.common.beam;
 
 import org.gbif.pipelines.core.io.DwCAReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

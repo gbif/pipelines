@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.beam;
+package org.gbif.pipelines.common.beam;
 
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.beam.sdk.Pipeline;
