@@ -40,7 +40,7 @@ Interpretation is depicted below:
 
 Initial implementations will be available for both SOLR and for ElasticSearch to allow for evaluation of both at GBIF.
 During indexing the categories of interpreted information of use are merged and loaded into the search indexes:
-![Ingress](./docs/images/interpret.svg)
+![Ingress](./docs/images/index.svg)
 
 
 > Note that GBIF target 10,000 records/sec per node indexing speed (i.e. 100,000 records/sec on current production cluster).  This will allow simplified disaster recovery and rapid deployment and of new features.
