@@ -5,6 +5,8 @@ _status: for review by F.M._
 The following list a proposed set of milestones for first development.  
 Once reviewed and amended they should be discussed in a initial kickoff, and then converted into GH Milestones and issues.
 
+This assumes the general outline setout in [the project readme](../../README.md) is a reasonable first aim.
+
 ## Milestone 1 (GBIF): DwC-A Ingress
 A pipeline exists to write a DwC-A into verbatim Avro files.
 The pipeline can be run locally or on Spark (saving to HDFS) and unit / integration tests are in place. This will set the preliminary standard for all future work.
