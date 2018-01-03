@@ -1,22 +1,13 @@
 package org.gbif.pipelines.core.functions;
 
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwca.record.StarRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
-
 import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.Serializable;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 /**
  * A builder of UntypedOccurrences which uses introspection to locate all suitable terms (e.g. Darwin Core) from the

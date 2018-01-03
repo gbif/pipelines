@@ -1,15 +1,12 @@
 package org.gbif.pipelines.core.functions;
 
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwca.record.StarRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwca.record.StarRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 class ExtendedRecordBuilder implements SerializableFunction<StarRecord, ExtendedRecord> {
 
@@ -17,7 +14,7 @@ class ExtendedRecordBuilder implements SerializableFunction<StarRecord, Extended
   public ExtendedRecord apply(StarRecord record) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder()
                                                    .setId(record.core().id());
-    builder.setCoreTerms(new HashMap());
+    builder.setCoreTerms(new HashMap<>());
 
     for (Term term : record.core().terms()) {
       // remove empty content

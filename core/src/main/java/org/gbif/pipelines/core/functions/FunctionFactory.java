@@ -1,17 +1,18 @@
 package org.gbif.pipelines.core.functions;
 
 import org.gbif.dwca.record.StarRecord;
+import org.gbif.pipelines.core.functions.ws.gbif.species.NubSpeciesMatchFunction;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
-import java.util.function.Function;
-
 /**
- * Provider of reusable functions.
- * All functions implement serializable.
+ * Provider of reusable functions. All functions implement serializable.
  */
-public class Functions {
+public class FunctionFactory {
+
+  private FunctionFactory() {
+  }
 
   public static SerializableFunction<UntypedOccurrence, TypedOccurrence> interpretOccurrence() {
     return new InterpretOccurrence();
@@ -25,7 +26,7 @@ public class Functions {
     return new UntypedOccurrenceBuilder();
   }
 
-  public static SerializableFunction<TypedOccurrence, TypedOccurrence> gbifSpeciesMatch(String baseUrl) {
-    return new NubSpeciesMatch(baseUrl);
+  public static SerializableFunction<TypedOccurrence, TypedOccurrence> gbifSpeciesMatch() {
+    return new NubSpeciesMatchFunction();
   }
 }
