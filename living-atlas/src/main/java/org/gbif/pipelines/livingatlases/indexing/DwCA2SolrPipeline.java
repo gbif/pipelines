@@ -1,12 +1,5 @@
 package org.gbif.pipelines.livingatlases.indexing;
 
-import org.gbif.pipelines.common.beam.BeamFunctions;
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.core.functions.Functions;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
-
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -17,6 +10,12 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.solr.common.SolrInputDocument;
+import org.gbif.pipelines.common.beam.BeamFunctions;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,7 @@ public class DwCA2SolrPipeline {
     // Convert the ExtendedRecord into an UntypedOccurrence record
     PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
       "Convert the objects into untyped DwC style records",
-      ParDo.of(BeamFunctions.beamify(Functions.untypedOccurrenceBuilder())))
+      ParDo.of(BeamFunctions.beamify(FunctionFactory.untypedOccurrenceBuilder())))
                                                                .setCoder(AvroCoder.of(UntypedOccurrence.class));
 
     // Write the file to SOLR

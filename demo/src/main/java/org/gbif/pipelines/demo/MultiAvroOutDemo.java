@@ -1,8 +1,6 @@
 package org.gbif.pipelines.demo;
 
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
+import static org.apache.beam.sdk.io.fs.ResolveOptions.StandardResolveOptions.RESOLVE_FILE;
 
 import org.apache.avro.Schema;
 import org.apache.beam.runners.direct.DirectRunner;
@@ -19,10 +17,11 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.values.PCollection;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.beam.sdk.io.fs.ResolveOptions.StandardResolveOptions.RESOLVE_FILE;
 
 /**
  * A simple local demonstration illustrating taking an avro file and splitting it into an avro file per genus.

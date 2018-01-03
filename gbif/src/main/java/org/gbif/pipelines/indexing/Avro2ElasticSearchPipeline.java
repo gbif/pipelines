@@ -1,14 +1,6 @@
 package org.gbif.pipelines.indexing;
 
-import org.gbif.pipelines.common.beam.BeamFunctions;
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.functions.Functions;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
-
 import java.io.IOException;
-
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;
@@ -17,6 +9,12 @@ import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
+import org.gbif.pipelines.common.beam.BeamFunctions;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.TypedOccurrence;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,13 +61,13 @@ public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
 
     // Convert the objects (interpretation)
     PCollection<TypedOccurrence> interpreted = verbatimRecords.apply(
-      "Interpret occurrence records", ParDo.of(BeamFunctions.beamify(Functions.interpretOccurrence())))
+      "Interpret occurrence records", ParDo.of(BeamFunctions.beamify(FunctionFactory.interpretOccurrence())))
                                                               .setCoder(AvroCoder.of(TypedOccurrence.class));
 
     // Do the nub lookup
     PCollection<TypedOccurrence> matched = interpreted.apply(
       "Align to backbone using species/match", ParDo.of(
-        BeamFunctions.beamify(Functions.gbifSpeciesMatch("https://api.gbif.org/"))))
+        BeamFunctions.beamify(FunctionFactory.gbifSpeciesMatch())))
                                                       .setCoder(AvroCoder.of(TypedOccurrence.class));
 
     // Convert to JSON

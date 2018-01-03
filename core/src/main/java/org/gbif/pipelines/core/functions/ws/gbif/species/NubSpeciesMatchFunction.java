@@ -36,9 +36,6 @@ public class NubSpeciesMatchFunction implements SerializableFunction<TypedOccurr
     }
 
     return s;
-
-
   }
-
 
 }

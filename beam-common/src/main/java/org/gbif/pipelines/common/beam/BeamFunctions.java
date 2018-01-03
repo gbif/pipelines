@@ -4,7 +4,6 @@ import java.beans.IntrospectionException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
-
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.beam.sdk.transforms.DoFn;
 

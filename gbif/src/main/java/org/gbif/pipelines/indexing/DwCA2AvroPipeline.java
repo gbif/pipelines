@@ -1,12 +1,5 @@
 package org.gbif.pipelines.indexing;
 
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.functions.Functions;
-import org.gbif.pipelines.hadoop.io.DwCAInputFormat;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
-
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
@@ -18,6 +11,12 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputFormat;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.hadoop.io.DwCAInputFormat;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.TypedOccurrence;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +60,7 @@ public class DwCA2AvroPipeline extends AbstractSparkOnYarnPipeline {
     return new DoFn<KV<Text,ExtendedRecord>, UntypedOccurrence>() {
       @ProcessElement
       public void processElement(ProcessContext c) {
-        c.output(Functions.untypedOccurrenceBuilder().apply(c.element().getValue()));
+        c.output(FunctionFactory.untypedOccurrenceBuilder().apply(c.element().getValue()));
       }
     };
   }

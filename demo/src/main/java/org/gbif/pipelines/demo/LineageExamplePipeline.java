@@ -1,16 +1,8 @@
 package org.gbif.pipelines.demo;
 
-import org.gbif.pipelines.common.beam.BeamFunctions;
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.core.functions.Functions;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
-
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -26,6 +18,11 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +57,7 @@ public class LineageExamplePipeline {
         @ProcessElement
         public void processElement(ProcessContext c) {
           ExtendedRecord input = c.element();
-          UntypedOccurrence output = Functions.untypedOccurrenceBuilder().apply(input);
-
+          UntypedOccurrence output = FunctionFactory.untypedOccurrenceBuilder().apply(input);
           // make up some bogus statements about lineage
           String key = output.getOccurrenceId().toString();
           c.output(lineage, KV.of(key, "Day [" + output.getDay() + "] was copied from input[something]"));
