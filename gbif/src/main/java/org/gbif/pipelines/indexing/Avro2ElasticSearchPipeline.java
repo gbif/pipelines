@@ -14,7 +14,7 @@ import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
+import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,19 +49,19 @@ public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
   private static final String ES_TYPE = "occurrence";
   private static final int BATCH_SIZE = 1000;
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
 
     Configuration conf = new Configuration(); // assume defaults on CP
     Pipeline p = newPipeline(args, conf);
-    Coders.registerAvroCoders(p, UntypedOccurrence.class, TypedOccurrence.class, ExtendedRecord.class);
+    Coders.registerAvroCoders(p, UntypedOccurrenceLowerCase.class, TypedOccurrence.class, ExtendedRecord.class);
 
     // Read Avro files
-    PCollection<UntypedOccurrence> verbatimRecords = p.apply(
-      "Read Avro files", AvroIO.read(UntypedOccurrence.class).from(SOURCE_PATH));
+    PCollection<UntypedOccurrenceLowerCase> verbatimRecords = p.apply(
+      "Read Avro files", AvroIO.read(UntypedOccurrenceLowerCase.class).from(SOURCE_PATH));
 
     // Convert the objects (interpretation)
     PCollection<TypedOccurrence> interpreted = verbatimRecords.apply(
-      "Interpret occurrence records", ParDo.of(BeamFunctions.beamify(FunctionFactory.interpretOccurrence())))
+      "Interpret occurrence records", ParDo.of(BeamFunctions.beamify(FunctionFactory.interpretOccurrenceLowerCase())))
                                                               .setCoder(AvroCoder.of(TypedOccurrence.class));
 
     // Do the nub lookup
