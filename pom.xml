@@ -16,6 +16,7 @@
     <module>hadoop</module>
     <module>gbif</module>
     <module>living-atlas</module>
+    <module>DwCASchemaGenerator</module>
   </modules>
 
   <parent>
