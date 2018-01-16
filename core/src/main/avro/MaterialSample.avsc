@@ -1,0 +1,28 @@
+{
+	"type":"record",
+	"namespace":"org.gbif.dwca.avro",
+	"name":"MaterialSample",
+	"doc":"A physical results of a sampling (or subsampling) event. In biological collections, the material sample is typically collected, and either preserved or destructively processed.",
+	"fields":[
+		{"name":"materialSampleID","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/materialSampleID"},
+		{"name":"dcterms_type","type":["null","string"],"default":"", "doc":"http://purl.org/dc/terms/type"},
+		{"name":"dcterms_modified","type":["null","string"],"default":"", "doc":"http://purl.org/dc/terms/modified"},
+		{"name":"dcterms_language","type":["null","string"],"default":"", "doc":"http://purl.org/dc/terms/language"},
+		{"name":"dcterms_license","type":["null","string"],"default":"", "doc":"http://purl.org/dc/terms/license"},
+		{"name":"dcterms_rightsHolder","type":["null","string"],"default":"", "doc":"http://purl.org/dc/terms/rightsHolder"},
+		{"name":"dcterms_accessRights","type":["null","string"],"default":"", "doc":"http://purl.org/dc/terms/accessRights"},
+		{"name":"dcterms_bibliographicCitation","type":["null","string"],"default":"", "doc":"http://purl.org/dc/terms/bibliographicCitation"},
+		{"name":"dcterms_references","type":["null","string"],"default":"", "doc":"http://purl.org/dc/terms/references"},
+		{"name":"institutionID","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/institutionID"},
+		{"name":"collectionID","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/collectionID"},
+		{"name":"datasetID","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/datasetID"},
+		{"name":"institutionCode","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/institutionCode"},
+		{"name":"collectionCode","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/collectionCode"},
+		{"name":"datasetName","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/datasetName"},
+		{"name":"ownerInstitutionCode","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/ownerInstitutionCode"},
+		{"name":"basisOfRecord","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/basisOfRecord"},
+		{"name":"informationWithheld","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/informationWithheld"},
+		{"name":"dataGeneralizations","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/dataGeneralizations"},
+		{"name":"dynamicProperties","type":["null","string"],"default":"", "doc":"http://rs.tdwg.org/dwc/terms/dynamicProperties"}
+	]
+}
