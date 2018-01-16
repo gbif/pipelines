@@ -5,3 +5,4 @@ target
 *.iml
 output
 *.log
+demo/miniCluster/
