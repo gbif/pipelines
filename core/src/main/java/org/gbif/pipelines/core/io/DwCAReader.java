@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 public class DwCAReader {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwCAReader.class);
-  private String source;
-  private String workingDir;
+  private final String source;
+  private final String workingDir;
   private ClosableIterator<StarRecord> iter;
   private long recordsReturned;
   private ExtendedRecord current;

@@ -45,8 +45,8 @@ public class DwCAIO {
     }
 
     private Read(String filePath, String workingPath) {
-      this.path = filePath.toString();
-      this.workingPath = workingPath.toString();
+      path = filePath;
+      this.workingPath = workingPath;
     }
 
     @Override
@@ -58,7 +58,7 @@ public class DwCAIO {
     @Override
     public void populateDisplayData(DisplayData.Builder builder) {
       super.populateDisplayData(builder);
-      builder.add(DisplayData.item("DwC-A Path", path.toString()));
+      builder.add(DisplayData.item("DwC-A Path", path));
     }
   }
 
@@ -85,9 +85,8 @@ public class DwCAIO {
      * Will always return a single entry list of just ourselves. This is not splittable.
      */
     @Override
-    public List<? extends BoundedSource<ExtendedRecord>> split(
-      long desiredBundleSizeBytes, PipelineOptions options
-    ) throws Exception {
+    public List<? extends BoundedSource<ExtendedRecord>> split(long desiredBundleSizeBytes,
+                                                               PipelineOptions options) throws Exception {
       List<DwCASource> readers = new ArrayList<>();
       readers.add(this);
       return readers;
@@ -109,9 +108,7 @@ public class DwCAIO {
    */
   private static class BoundedDwCAReader extends BoundedSource.BoundedReader<ExtendedRecord> {
     private final DwCASource source;
-    private long recordsReturned;
     private DwCAReader reader;
-    private ExtendedRecord current;
 
     private BoundedDwCAReader(DwCASource source) {
       this.source = source;

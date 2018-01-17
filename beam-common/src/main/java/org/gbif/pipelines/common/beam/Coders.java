@@ -10,7 +10,15 @@ import org.slf4j.LoggerFactory;
  * Utilities for dealing with Beam coders.
  */
 public class Coders {
+
   private static final Logger LOG = LoggerFactory.getLogger(Coders.class);
+
+  /**
+   * Can't instantiate utility classes.
+   */
+  private Coders() {
+    //do nothing
+  }
 
   /**
    * Registers a default AvroCoder for each of the classes in the provided pipelines coder registry.
