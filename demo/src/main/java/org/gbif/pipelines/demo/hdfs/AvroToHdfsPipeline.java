@@ -1,5 +1,6 @@
 package org.gbif.pipelines.demo.hdfs;
 
+import org.gbif.pipelines.core.config.HdfsExporterOptions;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
@@ -14,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Pipeline that writes an Avro file to HDFS.
- *
+ * <p>
  * Source path is hard coded for demo purposes.
  */
 public class AvroToHdfsPipeline {
@@ -23,29 +24,28 @@ public class AvroToHdfsPipeline {
 
   /**
    * Main method.
-   *
-   * @param args beam arguments + -targetPath to specify the path where the files should be written.
    */
   public static void main(String[] args) {
 
-    String targetPath = PipelineUtils.getTargetPath(args);
+    Configuration config = new Configuration();
+    HdfsExporterOptions options = PipelineUtils.createPipelineOptions(config, args);
+    Pipeline pipeline = Pipeline.create(options);
+
+    String targetPath = PipelineUtils.targetPath(options);
 
     LOG.info("Target path : {}", targetPath);
 
-    Configuration config = new Configuration();
-    Pipeline p = PipelineUtils.newHadoopPipeline(args, config);
-
     // Read Avro files
     PCollection<UntypedOccurrence> verbatimRecords =
-      p.apply("Read Avro files", AvroIO.read(UntypedOccurrence.class).from("/home/mlopez/tests/exportData*"));
+      pipeline.apply("Read Avro files", AvroIO.read(UntypedOccurrence.class).from(options.getInputFile()));
 
     verbatimRecords.apply("Write Avro files",
                           AvroIO.write(UntypedOccurrence.class)
                             .to(targetPath)
-                            .withTempDirectory(FileSystems.matchNewResource(PipelineUtils.tmpPath(config), true)));
+                            .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     LOG.info("Starting the pipeline");
-    PipelineResult result = p.run();
+    PipelineResult result = pipeline.run();
     result.waitUntilFinish();
     LOG.info("Pipeline finished with state: {} ", result.getState());
 

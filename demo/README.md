@@ -14,7 +14,11 @@ It should be possibile to run it in your IDE as it uses the native runner with t
 Usage examples to run the pipelines DwcaToHdfsPipeline and AvroToHdfsPipeline on HDFS: 
  
 ``` 
-sudo -u hdfs hadoop jar /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.demo.hdfs.DwcaToHdfsPipeline -targetPath=hdfs://ha-nn/pipelines/exportDwcaData --runner=DirectRunner
+sudo -u hdfs hadoop jar /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.demo.hdfs.AvroToHdfsPipeline --targetDirectory=hdfs://ha-nn/pipelines --datasetId=exp1 --inputFile=/home/mlopez/tests/exportData* --runner=DirectRunner
 
-sudo -u hdfs hadoop jar /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.demo.hdfs.AvroToHdfsPipeline -targetPath=hdfs://ha-nn/pipelines/exportAvroData --runner=DirectRunner 
-``` 
+sudo -u hdfs hadoop jar /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.demo.hdfs.DwcaToHdfsPipeline --targetDirectory=hdfs://ha-nn/pipelines --datasetId=exp1 --inputFile=/home/mlopez/tests/dwca.zip --runner=DirectRunner
+ 
+```
+
+To check all the parameters available take a look at the HdfsExporterOptions class. 
+Also notice that some parameters have default values, in case no value is provided.

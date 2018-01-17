@@ -1,51 +1,56 @@
 package org.gbif.pipelines.demo.utils;
 
-import java.util.Collections;
+import org.gbif.pipelines.core.config.HdfsExporterOptions;
 
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
+import java.io.File;
+import java.util.Collections;
+import java.util.Optional;
+
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
 
 public final class PipelineUtils {
 
+  private PipelineUtils() {}
+
   /**
-   * Instanciates the pipeline.
+   * Creates a {@link HdfsExporterOptions} from the arguments and configuration passed.
    *
-   * @param args Provided arguments
+   * @param args   cli args
+   * @param config hadoop config
    *
-   * @return An HDFS configured pipeline
+   * @return {@link HdfsExporterOptions}
    */
-  public static Pipeline newHadoopPipeline(String args[], Configuration conf) {
-    HadoopFileSystemOptions options =
-      PipelineOptionsFactory.fromArgs(args).withValidation().withoutStrictParsing().as(HadoopFileSystemOptions.class);
-    options.setHdfsConfiguration(Collections.singletonList(conf));
-    return Pipeline.create(options);
+  public static HdfsExporterOptions createPipelineOptions(Configuration config, String[] args) {
+    HdfsExporterOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(HdfsExporterOptions.class);
+    options.setHdfsConfiguration(Collections.singletonList(config));
+
+    return options;
+  }
+
+  public static HdfsExporterOptions createPipelineOptions(Configuration config) {
+    HdfsExporterOptions options = PipelineOptionsFactory.as(HdfsExporterOptions.class);
+    options.setHdfsConfiguration(Collections.singletonList(config));
+
+    return options;
   }
 
   /**
-   * Gets the targetPath argument from the command line args.
+   * Generates a target path from {@link HdfsExporterOptions} by concatenating the target directory and the file name.
    *
-   * @param args from command line
+   * @param options {@link HdfsExporterOptions} with the target directory and the file name
    *
-   * @return the target path
+   * @return target path generated
    */
-  public static String getTargetPath(String[] args) {
-    String targetPath = ArgsParser.getArgShortForm(args, Constants.TARGET_PATH_ARG_NAME, true);
+  public static String targetPath(HdfsExporterOptions options) {
+    String targetDir = Optional.ofNullable(options.getTargetDirectory())
+      .filter(s -> !s.isEmpty())
+      .orElseThrow(() -> new IllegalArgumentException("missing targetDirectory argument"));
+    String datasetId = Optional.ofNullable(options.getDatasetId())
+      .filter(s -> !s.isEmpty())
+      .orElseThrow(() -> new IllegalArgumentException("missing datasetId argument"));
 
-    // we add timestamp to the target path in order to run the same pipeline with the same path several times
-    return targetPath.concat(String.valueOf(System.currentTimeMillis()));
-  }
-
-  /**
-   * Generates the temp path created from the root of the hdfs.
-   *
-   * @param config hadoop configuration
-   *
-   * @return path of the temp directory
-   */
-  public static String tmpPath(Configuration config) {
-    return config.get("fs.defaultFS").concat(Constants.TEMP_DIR_HDFS);
+    return targetDir.endsWith(File.separator) ? targetDir + datasetId : targetDir + File.separator + datasetId;
   }
 
 }

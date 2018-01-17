@@ -20,11 +20,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Tests the class {@link AvroToHdfsTestingPipelineTest}.
+ * Tests the class {@link DwcaToHdfsTestingPipelineTest}.
  */
-public class AvroToHdfsTestingPipelineTest {
+public class DwcaToHdfsTestingPipelineTest {
 
-  private static final String AVRO_FILE_PATH = "data/exportData*";
+  private static final String DWCA_FILE_PATH = "data/dwca.zip";
 
   private static MiniDFSCluster hdfsCluster;
   private static Configuration configuration = new Configuration();
@@ -48,18 +48,18 @@ public class AvroToHdfsTestingPipelineTest {
   }
 
   @Test
-  public void givenHdfsClusterWhenWritingAvroToHdfsThenFileCreated() throws Exception {
+  public void givenHdfsClusterWhenWritingDwcaToHdfsThenFileCreated() throws Exception {
 
     // create options
     HdfsExporterOptions options = PipelineUtils.createPipelineOptions(configuration);
     options.setRunner(DirectRunner.class);
 
-    options.setInputFile(AVRO_FILE_PATH);
+    options.setInputFile(DWCA_FILE_PATH);
     options.setDatasetId("123");
     options.setTargetDirectory(hdfsClusterBaseUri + "/pipelines");
 
     // create and run pipeline
-    AvroToHdfsTestingPipeline pipeline = new AvroToHdfsTestingPipeline(options);
+    DwcaToHdfsTestingPipeline pipeline = new DwcaToHdfsTestingPipeline(options);
     pipeline.createAndRunPipeline();
 
     // test results
@@ -74,6 +74,19 @@ public class AvroToHdfsTestingPipelineTest {
       Assert.assertTrue(fileStatus.isFile());
       Assert.assertTrue(fs.exists(fileStatus.getPath()));
     }
+
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void missingPipelineOptionsTest() {
+
+    // create options
+    HdfsExporterOptions options = PipelineUtils.createPipelineOptions(configuration);
+    options.setRunner(DirectRunner.class);
+
+    // create and run pipeline
+    DwcaToHdfsTestingPipeline pipeline = new DwcaToHdfsTestingPipeline(options);
+    pipeline.createAndRunPipeline();
 
   }
 
