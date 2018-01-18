@@ -54,9 +54,8 @@ public class DwcaToHdfsTestingPipeline {
     String tmpDirDwca = new File(options.getInputFile()).getParentFile().getPath() + File.separator + "tmpDwca";
 
     // Read the DwC-A using our custom reader
-    PCollection<ExtendedRecord> rawRecords = pipeline.apply("Read from Darwin Core Archive",
-                                                            DwCAIO.Read.withPaths(options.getInputFile(),
-                                                                                  options.getHdfsTempLocation()));
+    PCollection<ExtendedRecord> rawRecords =
+      pipeline.apply("Read from Darwin Core Archive", DwCAIO.Read.withPaths(options.getInputFile(), tmpDirDwca));
 
     // Convert the ExtendedRecord into an UntypedOccurrence record
     DoFn<ExtendedRecord, UntypedOccurrence> fn = BeamFunctions.beamify(FunctionFactory.untypedOccurrenceBuilder());

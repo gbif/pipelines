@@ -7,4 +7,3 @@ output
 *.log
 demo/miniCluster/
 demo/data/tmpDwca/
-demo/hdfs:
