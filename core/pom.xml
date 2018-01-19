@@ -28,8 +28,8 @@
             <configuration>
               <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
               <outputDirectory>${project.basedir}/src/main/java-generated/</outputDirectory>
-              <testSourceDirectory>${project.basedir}/src/test/avro/</testSourceDirectory>
-              <testOutputDirectory>${project.basedir}/src/test/java-generated/</testOutputDirectory>
+              <testSourceDirectory>../demo/src/main/java/test/avro/</testSourceDirectory>
+              <testOutputDirectory>../demo/src/main/java/test/java-generated/</testOutputDirectory>
             </configuration>
           </execution>
         </executions>
@@ -80,5 +80,13 @@
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>logging-interceptor</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.0.3</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 </project>
