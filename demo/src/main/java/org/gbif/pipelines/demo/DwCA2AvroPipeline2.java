@@ -107,18 +107,20 @@ public class DwCA2AvroPipeline2 {
     public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
       PCollection<KV<String,Event>> eventView = input.apply(ParDo.of(new ExtendedRecordToEventTransformer()));
       PCollection<KV<String,Location>> locationView = input.apply(ParDo.of(new ExtendedRecordToLocationTransformer()));
+
       final PCollectionTuple and = PCollectionTuple.of(temporalView, eventView).and(spatialView, locationView);
       return and;
     }
   }
 
   static class CoGbkResultToFlattenedInterpretedRecord extends DoFn<KV<String,CoGbkResult>,ExtendedOccurence>{
+
     @ProcessElement
     public void processElement(ProcessContext ctx){
       KV<String,CoGbkResult> result = ctx.element();
 
-      Event evt = result.getValue().getOnly(new TupleTag<Event>());
-      Location loc = result.getValue().getOnly(new TupleTag<Location>());
+      Event evt = result.getValue().getOnly((TupleTag<Event>)result.getValue().getSchema().getTag(0));
+      Location loc = result.getValue().getOnly((TupleTag<Location>)result.getValue().getSchema().getTag(1));
 
       ExtendedOccurence occurence = new ExtendedOccurence();
       occurence.setOccurrenceID(result.getKey());
