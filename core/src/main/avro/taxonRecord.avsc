@@ -1,0 +1,22 @@
+/**
+ * Represents the interpreted values of terms related to taxon terms.
+ */
+[
+  {
+    "name": "TaxonRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "doc": "A container for taxon DarwinCore terms been interpreted.",
+    "type": "record",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "The record id"},
+      {"name": "genericName", "type": ["null", "string"], "default" : null },
+      {"name": "scientificName", "type": ["null", "string"], "default" : null },
+      {"name": "kingdom", "type": ["null", "string"], "default" : null },
+      {"name": "kingdomKey", "type": ["null", "int"], "default" : null },
+      {"name": "phylum", "type": ["null", "string"], "default" : null },
+      {"name": "phylumKey", "type": ["null", "int"], "default" : null },
+      {"name": "genus", "type": ["null", "string"], "default" : null },
+      {"name": "genusKey", "type": ["null", "int"], "default" : null }
+    ]
+  }
+]
