@@ -1,10 +1,13 @@
 package org.gbif.pipelines.demo.hdfs;
 
-import org.gbif.pipelines.core.config.HdfsExporterOptions;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Map;
 
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.hadoop.conf.Configuration;
@@ -51,19 +54,21 @@ public class DwcaToHdfsTestingPipelineTest {
   public void givenHdfsClusterWhenWritingDwcaToHdfsThenFileCreated() throws Exception {
 
     // create options
-    HdfsExporterOptions options = PipelineUtils.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);
     options.setRunner(DirectRunner.class);
 
     options.setInputFile(DWCA_FILE_PATH);
     options.setDatasetId("123");
-    options.setTargetDirectory(hdfsClusterBaseUri + "/pipelines");
+    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "/pipelines");
 
     // create and run pipeline
     DwcaToHdfsTestingPipeline pipeline = new DwcaToHdfsTestingPipeline(options);
     pipeline.createAndRunPipeline();
 
     // test results
-    URI uriTargetPath = hdfsClusterBaseUri.resolve(PipelineUtils.targetPath(options) + "*");
+    URI uriTargetPath =
+      hdfsClusterBaseUri.resolve(TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId())
+                                 + "*");
     FileStatus[] fileStatuses = fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);
@@ -81,7 +86,7 @@ public class DwcaToHdfsTestingPipelineTest {
   public void missingPipelineOptionsTest() {
 
     // create options
-    HdfsExporterOptions options = PipelineUtils.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);
     options.setRunner(DirectRunner.class);
 
     // create and run pipeline
@@ -89,5 +94,26 @@ public class DwcaToHdfsTestingPipelineTest {
     pipeline.createAndRunPipeline();
 
   }
+
+  @Test
+  public void defaultTargetPathsTest() {
+    // create options
+    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);
+
+    Map<Interpretation, TargetPath> targetPaths = options.getTargetPaths();
+
+    Assert.assertNotNull(targetPaths);
+    Assert.assertEquals(Interpretation.values().length, targetPaths.size());
+
+    for(Interpretation interpretation : Interpretation.values()) {
+      TargetPath tp = targetPaths.get(interpretation);
+
+      Assert.assertNotNull(tp);
+      Assert.assertEquals(tp.getDirectory(), options.getDefaultTargetDirectory());
+      Assert.assertEquals(tp.getFileName(), interpretation.getDefaultFileName());
+    }
+
+  }
+
 
 }

@@ -3,7 +3,8 @@ package org.gbif.pipelines.demo.hdfs;
 import org.gbif.pipelines.common.beam.BeamFunctions;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.core.config.HdfsExporterOptions;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -41,10 +42,10 @@ public class DwcaToHdfsPipeline {
   public static void main(String[] args) {
 
     Configuration config = new Configuration();
-    HdfsExporterOptions options = PipelineUtils.createPipelineOptions(config, args);
+    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(config, args);
     Pipeline pipeline = Pipeline.create(options);
 
-    String targetPath = PipelineUtils.targetPath(options);
+    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
 
     LOG.info("Target path : {}", targetPath);
 

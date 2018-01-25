@@ -1,6 +1,7 @@
 package org.gbif.pipelines.demo.hdfs;
 
-import org.gbif.pipelines.core.config.HdfsExporterOptions;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 
 import java.io.File;
@@ -51,19 +52,21 @@ public class AvroToHdfsTestingPipelineTest {
   public void givenHdfsClusterWhenWritingAvroToHdfsThenFileCreated() throws Exception {
 
     // create options
-    HdfsExporterOptions options = PipelineUtils.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);
     options.setRunner(DirectRunner.class);
 
     options.setInputFile(AVRO_FILE_PATH);
     options.setDatasetId("123");
-    options.setTargetDirectory(hdfsClusterBaseUri + "/pipelines");
+    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "pipelines");
 
     // create and run pipeline
     AvroToHdfsTestingPipeline pipeline = new AvroToHdfsTestingPipeline(options);
     pipeline.createAndRunPipeline();
 
     // test results
-    URI uriTargetPath = hdfsClusterBaseUri.resolve(PipelineUtils.targetPath(options) + "*");
+    URI uriTargetPath =
+      hdfsClusterBaseUri.resolve(TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId())
+                                 + "*");
     FileStatus[] fileStatuses = fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);

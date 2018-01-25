@@ -1,7 +1,7 @@
 package org.gbif.pipelines.demo.hdfs;
 
-import org.gbif.pipelines.core.config.HdfsExporterOptions;
-import org.gbif.pipelines.demo.utils.PipelineUtils;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import java.util.Optional;
@@ -23,16 +23,16 @@ public class AvroToHdfsTestingPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(AvroToHdfsTestingPipeline.class);
 
-  private HdfsExporterOptions options;
+  private DataProcessingPipelineOptions options;
 
-  public AvroToHdfsTestingPipeline(HdfsExporterOptions options) {
+  public AvroToHdfsTestingPipeline(DataProcessingPipelineOptions options) {
     this.options = options;
   }
 
   public void createAndRunPipeline() {
     Optional.ofNullable(options).orElseThrow(() -> new IllegalArgumentException("Pipeline options cannot be null"));
 
-    String targetPath = PipelineUtils.targetPath(options);
+    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
 
     LOG.info("Target path : {}", targetPath);
 
