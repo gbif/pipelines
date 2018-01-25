@@ -1,5 +1,8 @@
 package org.gbif.pipelines.core.functions.interpretation;
 
+/**
+ * This enum helps in identifying the DwCATerms with its identifier
+ */
 public enum DwCATermIdentifier {
   Occurrence ("http://rs.tdwg.org/dwc/terms/Occurrence"),
   Organism ("http://rs.tdwg.org/dwc/terms/Organism"),

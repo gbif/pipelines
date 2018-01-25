@@ -1,0 +1,55 @@
+{
+	"type": "record",
+	"name": "IssueLineageRecord",
+	"namespace": "org.gbif.pipelines.core.functions.interpretation.error",
+	"fields": [{
+		"name": "occurenceId",
+		"type": "string"
+	}, {
+		"name": "fieldIssuesMap",
+		"type": {
+			"type": "map",
+			"values": {
+				"type": "array",
+				"items": {
+					"type": "record",
+					"name": "Issue",
+					"fields": [{
+						"name": "occurenceId",
+						"type": "string"
+					}, {
+						"name": "fieldName",
+						"type": "string"
+					}, {
+						"name": "remark",
+						"type": "string"
+					}
+					]}
+				}
+			}
+		}
+	, {
+		"name": "fieldLineageMap",
+		"type": {
+			"type": "map",
+			"values": {
+				"type": "array",
+				"items": {
+					"type": "record",
+					"name": "Lineage",
+					"fields": [{
+						"name": "occurenceId",
+						"type": "string"
+					}, {
+						"name": "fieldName",
+						"type": "string"
+					}, {
+						"name": "remark",
+						"type": "string"
+					}
+					]
+				}
+			}
+		}
+	}]
+}

@@ -1,20 +1,47 @@
 package org.gbif.pipelines.core.functions.interpretation;
 
+import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.ContinentParser;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwca.avro.Location;
+import org.gbif.pipelines.core.functions.interpretation.error.Issue;
+import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
+import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.TupleTag;
 
+/**
+ * This function converts an extended record to an interpreted KeyValue of occurenceId and Event.
+ * This function returns multiple outputs,
+ * a. Interpreted version of raw temporal data as KV<String,Event>
+ * b. Issues and lineages applied on raw data to get the interpreted result, as KV<String,IssueLineageRecord>
+ */
 public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord,KV<String,Location>> {
+
+  /**
+   * tags for locating different type of outputs send by this function
+   */
+  public static final TupleTag<KV<String,Location>> locationDataTag = new TupleTag<KV<String,Location>>();
+  public static final TupleTag<KV<String,IssueLineageRecord>> locationIssueTag = new TupleTag<KV<String,IssueLineageRecord>>();
+
   @ProcessElement
   public void processElement(ProcessContext ctx){
     ExtendedRecord record = ctx.element();
     Location loc = new Location();
+
+    Map<CharSequence,List<Issue>> fieldIssueMap = new HashMap<CharSequence, List<Issue>>();
+    Map<CharSequence,List<Lineage>> fieldLineageMap = new HashMap<CharSequence, List<Lineage>>();
+    //mapping raw record with interpreted ones
     loc.setOccurrenceID(record.getId());
     loc.setLocationID(record.getCoreTerms().get(DwCATermIdentifier.locationID.getIdentifier()));
     loc.setHigherGeographyID(record.getCoreTerms().get(DwCATermIdentifier.higherGeographyID.getIdentifier()));
@@ -23,10 +50,27 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord,KV<
     /**
      * Interpreting Continent
      */
+
     CharSequence rawContinent=record.getCoreTerms().get(DwCATermIdentifier.continent.getIdentifier());
     String interpretedContinent = null;
-    if(rawContinent!=null)
-      interpretedContinent  = ContinentParser.getInstance().parse(rawContinent.toString()).toString();
+    if(rawContinent!=null) {
+      List<Issue> issues= new ArrayList<>();
+      List<Lineage> lineages = new ArrayList<>();
+      final ParseResult<Continent> parse = ContinentParser.getInstance().parse(rawContinent.toString());
+      if(parse.isSuccessful()){
+        interpretedContinent = parse.toString();
+      }
+      else{
+        issues.add(Issue.newBuilder()
+                     .setOccurenceId(record.getId())
+                     .setFieldName(DwCATermIdentifier.continent.name())
+                     .setRemark(parse.getError().getMessage())
+                     .build());
+        lineages.add(Lineage.newBuilder().setOccurenceId(record.getId()).setFieldName(DwCATermIdentifier.continent.name()).setRemark("Since the parse failed, interpreting as null").build());
+      }
+      fieldIssueMap.put(DwCATermIdentifier.continent.name(),issues);
+      fieldLineageMap.put(DwCATermIdentifier.continent.name(),lineages);
+    }
     loc.setContinent(interpretedContinent);
 
     loc.setWaterBody(record.getCoreTerms().get(DwCATermIdentifier.waterBody.getIdentifier()));
@@ -40,17 +84,41 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord,KV<
     CharSequence rawCountryCode =record.getCoreTerms().get(DwCATermIdentifier.countryCode.getIdentifier());
     String interpretedCountry = null; String interpretedCountryCode=null;
     if(rawCountry!=null){
+      List<Issue> issues= new ArrayList<>();
+      List<Lineage> lineages = new ArrayList<>();
       ParseResult<Country> parseCountry = CountryParser.getInstance().parse(rawCountry.toString().trim());
       if(parseCountry.isSuccessful()) {
         interpretedCountry = parseCountry.getPayload().getTitle();
         interpretedCountryCode = parseCountry.getPayload().getIso3LetterCode();
       }
+      else{
+        issues.add(Issue.newBuilder()
+                     .setOccurenceId(record.getId())
+                     .setFieldName(DwCATermIdentifier.country.name())
+                     .setRemark(parseCountry.getError().getMessage())
+                     .build());
+        lineages.add(Lineage.newBuilder().setOccurenceId(record.getId()).setFieldName(DwCATermIdentifier.country.name()).setRemark("Since the parse on country failed, interpreting as null").build());
+      }
+      fieldIssueMap.put(DwCATermIdentifier.country.name(),issues);
+      fieldLineageMap.put(DwCATermIdentifier.country.name(),lineages);
     }else if (rawCountryCode!=null) {
+      List<Issue> issues= new ArrayList<>();
+      List<Lineage> lineages = new ArrayList<>();
       ParseResult<Country> parseCountry = CountryParser.getInstance().parse(rawCountryCode.toString().trim());
       if(parseCountry.isSuccessful()) {
         interpretedCountry = parseCountry.getPayload().getTitle();
         interpretedCountryCode = parseCountry.getPayload().getIso3LetterCode();
       }
+      else{
+        issues.add(Issue.newBuilder()
+                     .setOccurenceId(record.getId())
+                     .setFieldName(DwCATermIdentifier.countryCode.name())
+                     .setRemark(parseCountry.getError().getMessage())
+                     .build());
+        lineages.add(Lineage.newBuilder().setOccurenceId(record.getId()).setFieldName(DwCATermIdentifier.countryCode.name()).setRemark("Since the parse on countryCode failed, interpreting as null").build());
+      }
+      fieldIssueMap.put(DwCATermIdentifier.countryCode.name(),issues);
+      fieldLineageMap.put(DwCATermIdentifier.countryCode.name(),lineages);
     }
     loc.setCountry(interpretedCountry);
     loc.setCountryCode(interpretedCountryCode);
@@ -98,6 +166,10 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord,KV<
     loc.setDynamicProperties(record.getCoreTerms().get(DwCATermIdentifier.dynamicProperties.getIdentifier()));
     loc.setInformationWithheld(record.getCoreTerms().get(DwCATermIdentifier.informationWithheld.getIdentifier()));
     loc.setDataGeneralizations(record.getCoreTerms().get(DwCATermIdentifier.dataGeneralizations.getIdentifier()));
-    ctx.output(KV.of(loc.getOccurrenceID().toString(),loc));
+    //all issues and lineages are dumped on this object
+    final IssueLineageRecord finalRecord = IssueLineageRecord.newBuilder().setOccurenceId(record.getId()).setFieldLineageMap(fieldLineageMap).setFieldIssuesMap(fieldIssueMap).build();
+
+    ctx.output(locationDataTag,KV.of(loc.getOccurrenceID().toString(),loc));
+    ctx.output(locationIssueTag,KV.of(loc.getOccurrenceID().toString(),finalRecord));
   }
 }
