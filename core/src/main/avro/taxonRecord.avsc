@@ -9,14 +9,34 @@
     "type": "record",
     "fields": [
       {"name": "id", "type": "string", "doc": "The record id"},
+      {"name": "confidence", "type": ["null", "int"], "default" : null },
       {"name": "genericName", "type": ["null", "string"], "default" : null },
-      {"name": "scientificName", "type": ["null", "string"], "default" : null },
+      {"name": "specificEpithet", "type": ["null", "string"], "default" : null },
+      {"name": "infraspecificEpithet", "type": ["null", "string"], "default" : null },
+      {"name": "usageName", "type": ["null", "string"], "default" : null },
+      {"name": "usageRank", "type": ["null", "string"], "default" : null },
+      {"name": "usageKey", "type": ["null", "int"], "default" : null },
+      {"name": "acceptedUsageName", "type": ["null", "string"], "default" : null },
+      {"name": "acceptedUsageRank", "type": ["null", "string"], "default" : null },
+      {"name": "acceptedUsageKey", "type": ["null", "int"], "default" : null },
       {"name": "kingdom", "type": ["null", "string"], "default" : null },
       {"name": "kingdomKey", "type": ["null", "int"], "default" : null },
       {"name": "phylum", "type": ["null", "string"], "default" : null },
       {"name": "phylumKey", "type": ["null", "int"], "default" : null },
       {"name": "genus", "type": ["null", "string"], "default" : null },
-      {"name": "genusKey", "type": ["null", "int"], "default" : null }
+      {"name": "genusKey", "type": ["null", "int"], "default" : null },
+      {"name": "class", "type": ["null", "string"], "default" : null },
+      {"name": "classKey", "type": ["null", "int"], "default" : null },
+      {"name": "order", "type": ["null", "string"], "default" : null },
+      {"name": "orderKey", "type": ["null", "int"], "default" : null },
+      {"name": "family", "type": ["null", "string"], "default" : null },
+      {"name": "familyKey", "type": ["null", "int"], "default" : null },
+      {"name": "subgenus", "type": ["null", "string"], "default" : null },
+      {"name": "subgenusKey", "type": ["null", "int"], "default" : null },
+      {"name": "species", "type": ["null", "string"], "default" : null },
+      {"name": "speciesKey", "type": ["null", "int"], "default" : null },
+      {"name": "nomenclatureId", "type": ["null", "string"], "default" : null },
+      {"name": "nomenclatureSource", "type": ["null", "string"], "default" : null }
     ]
   }
 ]

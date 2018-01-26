@@ -8,18 +8,38 @@ package org.gbif.pipelines.io.avro;
 /** A container for taxon DarwinCore terms been interpreted. */
 @org.apache.avro.specific.AvroGenerated
 public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TaxonRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"A container for taxon DarwinCore terms been interpreted.\",\"fields\":[{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The record id\"},{\"name\":\"genericName\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"scientificName\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"kingdom\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"kingdomKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"phylum\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"phylumKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"genus\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"genusKey\",\"type\":[\"null\",\"int\"],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TaxonRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"A container for taxon DarwinCore terms been interpreted.\",\"fields\":[{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The record id\"},{\"name\":\"confidence\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"genericName\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"specificEpithet\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"infraspecificEpithet\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"usageName\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"usageRank\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"usageKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"acceptedUsageName\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"acceptedUsageRank\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"acceptedUsageKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"kingdom\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"kingdomKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"phylum\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"phylumKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"genus\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"genusKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"class\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"classKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"order\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"orderKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"family\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"familyKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"subgenus\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"subgenusKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"species\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"speciesKey\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"nomenclatureId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"nomenclatureSource\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** The record id */
   @Deprecated public java.lang.CharSequence id;
+  @Deprecated public java.lang.Integer confidence;
   @Deprecated public java.lang.CharSequence genericName;
-  @Deprecated public java.lang.CharSequence scientificName;
+  @Deprecated public java.lang.CharSequence specificEpithet;
+  @Deprecated public java.lang.CharSequence infraspecificEpithet;
+  @Deprecated public java.lang.CharSequence usageName;
+  @Deprecated public java.lang.CharSequence usageRank;
+  @Deprecated public java.lang.Integer usageKey;
+  @Deprecated public java.lang.CharSequence acceptedUsageName;
+  @Deprecated public java.lang.CharSequence acceptedUsageRank;
+  @Deprecated public java.lang.Integer acceptedUsageKey;
   @Deprecated public java.lang.CharSequence kingdom;
   @Deprecated public java.lang.Integer kingdomKey;
   @Deprecated public java.lang.CharSequence phylum;
   @Deprecated public java.lang.Integer phylumKey;
   @Deprecated public java.lang.CharSequence genus;
   @Deprecated public java.lang.Integer genusKey;
+  @Deprecated public java.lang.CharSequence class$;
+  @Deprecated public java.lang.Integer classKey;
+  @Deprecated public java.lang.CharSequence order;
+  @Deprecated public java.lang.Integer orderKey;
+  @Deprecated public java.lang.CharSequence family;
+  @Deprecated public java.lang.Integer familyKey;
+  @Deprecated public java.lang.CharSequence subgenus;
+  @Deprecated public java.lang.Integer subgenusKey;
+  @Deprecated public java.lang.CharSequence species;
+  @Deprecated public java.lang.Integer speciesKey;
+  @Deprecated public java.lang.CharSequence nomenclatureId;
+  @Deprecated public java.lang.CharSequence nomenclatureSource;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -31,16 +51,36 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   /**
    * All-args constructor.
    */
-  public TaxonRecord(java.lang.CharSequence id, java.lang.CharSequence genericName, java.lang.CharSequence scientificName, java.lang.CharSequence kingdom, java.lang.Integer kingdomKey, java.lang.CharSequence phylum, java.lang.Integer phylumKey, java.lang.CharSequence genus, java.lang.Integer genusKey) {
+  public TaxonRecord(java.lang.CharSequence id, java.lang.Integer confidence, java.lang.CharSequence genericName, java.lang.CharSequence specificEpithet, java.lang.CharSequence infraspecificEpithet, java.lang.CharSequence usageName, java.lang.CharSequence usageRank, java.lang.Integer usageKey, java.lang.CharSequence acceptedUsageName, java.lang.CharSequence acceptedUsageRank, java.lang.Integer acceptedUsageKey, java.lang.CharSequence kingdom, java.lang.Integer kingdomKey, java.lang.CharSequence phylum, java.lang.Integer phylumKey, java.lang.CharSequence genus, java.lang.Integer genusKey, java.lang.CharSequence class$, java.lang.Integer classKey, java.lang.CharSequence order, java.lang.Integer orderKey, java.lang.CharSequence family, java.lang.Integer familyKey, java.lang.CharSequence subgenus, java.lang.Integer subgenusKey, java.lang.CharSequence species, java.lang.Integer speciesKey, java.lang.CharSequence nomenclatureId, java.lang.CharSequence nomenclatureSource) {
     this.id = id;
+    this.confidence = confidence;
     this.genericName = genericName;
-    this.scientificName = scientificName;
+    this.specificEpithet = specificEpithet;
+    this.infraspecificEpithet = infraspecificEpithet;
+    this.usageName = usageName;
+    this.usageRank = usageRank;
+    this.usageKey = usageKey;
+    this.acceptedUsageName = acceptedUsageName;
+    this.acceptedUsageRank = acceptedUsageRank;
+    this.acceptedUsageKey = acceptedUsageKey;
     this.kingdom = kingdom;
     this.kingdomKey = kingdomKey;
     this.phylum = phylum;
     this.phylumKey = phylumKey;
     this.genus = genus;
     this.genusKey = genusKey;
+    this.class$ = class$;
+    this.classKey = classKey;
+    this.order = order;
+    this.orderKey = orderKey;
+    this.family = family;
+    this.familyKey = familyKey;
+    this.subgenus = subgenus;
+    this.subgenusKey = subgenusKey;
+    this.species = species;
+    this.speciesKey = speciesKey;
+    this.nomenclatureId = nomenclatureId;
+    this.nomenclatureSource = nomenclatureSource;
   }
 
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
@@ -48,14 +88,34 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return id;
-    case 1: return genericName;
-    case 2: return scientificName;
-    case 3: return kingdom;
-    case 4: return kingdomKey;
-    case 5: return phylum;
-    case 6: return phylumKey;
-    case 7: return genus;
-    case 8: return genusKey;
+    case 1: return confidence;
+    case 2: return genericName;
+    case 3: return specificEpithet;
+    case 4: return infraspecificEpithet;
+    case 5: return usageName;
+    case 6: return usageRank;
+    case 7: return usageKey;
+    case 8: return acceptedUsageName;
+    case 9: return acceptedUsageRank;
+    case 10: return acceptedUsageKey;
+    case 11: return kingdom;
+    case 12: return kingdomKey;
+    case 13: return phylum;
+    case 14: return phylumKey;
+    case 15: return genus;
+    case 16: return genusKey;
+    case 17: return class$;
+    case 18: return classKey;
+    case 19: return order;
+    case 20: return orderKey;
+    case 21: return family;
+    case 22: return familyKey;
+    case 23: return subgenus;
+    case 24: return subgenusKey;
+    case 25: return species;
+    case 26: return speciesKey;
+    case 27: return nomenclatureId;
+    case 28: return nomenclatureSource;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -64,14 +124,34 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: id = (java.lang.CharSequence)value$; break;
-    case 1: genericName = (java.lang.CharSequence)value$; break;
-    case 2: scientificName = (java.lang.CharSequence)value$; break;
-    case 3: kingdom = (java.lang.CharSequence)value$; break;
-    case 4: kingdomKey = (java.lang.Integer)value$; break;
-    case 5: phylum = (java.lang.CharSequence)value$; break;
-    case 6: phylumKey = (java.lang.Integer)value$; break;
-    case 7: genus = (java.lang.CharSequence)value$; break;
-    case 8: genusKey = (java.lang.Integer)value$; break;
+    case 1: confidence = (java.lang.Integer)value$; break;
+    case 2: genericName = (java.lang.CharSequence)value$; break;
+    case 3: specificEpithet = (java.lang.CharSequence)value$; break;
+    case 4: infraspecificEpithet = (java.lang.CharSequence)value$; break;
+    case 5: usageName = (java.lang.CharSequence)value$; break;
+    case 6: usageRank = (java.lang.CharSequence)value$; break;
+    case 7: usageKey = (java.lang.Integer)value$; break;
+    case 8: acceptedUsageName = (java.lang.CharSequence)value$; break;
+    case 9: acceptedUsageRank = (java.lang.CharSequence)value$; break;
+    case 10: acceptedUsageKey = (java.lang.Integer)value$; break;
+    case 11: kingdom = (java.lang.CharSequence)value$; break;
+    case 12: kingdomKey = (java.lang.Integer)value$; break;
+    case 13: phylum = (java.lang.CharSequence)value$; break;
+    case 14: phylumKey = (java.lang.Integer)value$; break;
+    case 15: genus = (java.lang.CharSequence)value$; break;
+    case 16: genusKey = (java.lang.Integer)value$; break;
+    case 17: class$ = (java.lang.CharSequence)value$; break;
+    case 18: classKey = (java.lang.Integer)value$; break;
+    case 19: order = (java.lang.CharSequence)value$; break;
+    case 20: orderKey = (java.lang.Integer)value$; break;
+    case 21: family = (java.lang.CharSequence)value$; break;
+    case 22: familyKey = (java.lang.Integer)value$; break;
+    case 23: subgenus = (java.lang.CharSequence)value$; break;
+    case 24: subgenusKey = (java.lang.Integer)value$; break;
+    case 25: species = (java.lang.CharSequence)value$; break;
+    case 26: speciesKey = (java.lang.Integer)value$; break;
+    case 27: nomenclatureId = (java.lang.CharSequence)value$; break;
+    case 28: nomenclatureSource = (java.lang.CharSequence)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -92,6 +172,21 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   }
 
   /**
+   * Gets the value of the 'confidence' field.
+   */
+  public java.lang.Integer getConfidence() {
+    return confidence;
+  }
+
+  /**
+   * Sets the value of the 'confidence' field.
+   * @param value the value to set.
+   */
+  public void setConfidence(java.lang.Integer value) {
+    this.confidence = value;
+  }
+
+  /**
    * Gets the value of the 'genericName' field.
    */
   public java.lang.CharSequence getGenericName() {
@@ -107,18 +202,123 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   }
 
   /**
-   * Gets the value of the 'scientificName' field.
+   * Gets the value of the 'specificEpithet' field.
    */
-  public java.lang.CharSequence getScientificName() {
-    return scientificName;
+  public java.lang.CharSequence getSpecificEpithet() {
+    return specificEpithet;
   }
 
   /**
-   * Sets the value of the 'scientificName' field.
+   * Sets the value of the 'specificEpithet' field.
    * @param value the value to set.
    */
-  public void setScientificName(java.lang.CharSequence value) {
-    this.scientificName = value;
+  public void setSpecificEpithet(java.lang.CharSequence value) {
+    this.specificEpithet = value;
+  }
+
+  /**
+   * Gets the value of the 'infraspecificEpithet' field.
+   */
+  public java.lang.CharSequence getInfraspecificEpithet() {
+    return infraspecificEpithet;
+  }
+
+  /**
+   * Sets the value of the 'infraspecificEpithet' field.
+   * @param value the value to set.
+   */
+  public void setInfraspecificEpithet(java.lang.CharSequence value) {
+    this.infraspecificEpithet = value;
+  }
+
+  /**
+   * Gets the value of the 'usageName' field.
+   */
+  public java.lang.CharSequence getUsageName() {
+    return usageName;
+  }
+
+  /**
+   * Sets the value of the 'usageName' field.
+   * @param value the value to set.
+   */
+  public void setUsageName(java.lang.CharSequence value) {
+    this.usageName = value;
+  }
+
+  /**
+   * Gets the value of the 'usageRank' field.
+   */
+  public java.lang.CharSequence getUsageRank() {
+    return usageRank;
+  }
+
+  /**
+   * Sets the value of the 'usageRank' field.
+   * @param value the value to set.
+   */
+  public void setUsageRank(java.lang.CharSequence value) {
+    this.usageRank = value;
+  }
+
+  /**
+   * Gets the value of the 'usageKey' field.
+   */
+  public java.lang.Integer getUsageKey() {
+    return usageKey;
+  }
+
+  /**
+   * Sets the value of the 'usageKey' field.
+   * @param value the value to set.
+   */
+  public void setUsageKey(java.lang.Integer value) {
+    this.usageKey = value;
+  }
+
+  /**
+   * Gets the value of the 'acceptedUsageName' field.
+   */
+  public java.lang.CharSequence getAcceptedUsageName() {
+    return acceptedUsageName;
+  }
+
+  /**
+   * Sets the value of the 'acceptedUsageName' field.
+   * @param value the value to set.
+   */
+  public void setAcceptedUsageName(java.lang.CharSequence value) {
+    this.acceptedUsageName = value;
+  }
+
+  /**
+   * Gets the value of the 'acceptedUsageRank' field.
+   */
+  public java.lang.CharSequence getAcceptedUsageRank() {
+    return acceptedUsageRank;
+  }
+
+  /**
+   * Sets the value of the 'acceptedUsageRank' field.
+   * @param value the value to set.
+   */
+  public void setAcceptedUsageRank(java.lang.CharSequence value) {
+    this.acceptedUsageRank = value;
+  }
+
+  /**
+   * Gets the value of the 'acceptedUsageKey' field.
+   */
+  public java.lang.Integer getAcceptedUsageKey() {
+    return acceptedUsageKey;
+  }
+
+  /**
+   * Sets the value of the 'acceptedUsageKey' field.
+   * @param value the value to set.
+   */
+  public void setAcceptedUsageKey(java.lang.Integer value) {
+    this.acceptedUsageKey = value;
   }
 
   /**
@@ -211,6 +411,186 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     this.genusKey = value;
   }
 
+  /**
+   * Gets the value of the 'class$' field.
+   */
+  public java.lang.CharSequence getClass$() {
+    return class$;
+  }
+
+  /**
+   * Sets the value of the 'class$' field.
+   * @param value the value to set.
+   */
+  public void setClass$(java.lang.CharSequence value) {
+    this.class$ = value;
+  }
+
+  /**
+   * Gets the value of the 'classKey' field.
+   */
+  public java.lang.Integer getClassKey() {
+    return classKey;
+  }
+
+  /**
+   * Sets the value of the 'classKey' field.
+   * @param value the value to set.
+   */
+  public void setClassKey(java.lang.Integer value) {
+    this.classKey = value;
+  }
+
+  /**
+   * Gets the value of the 'order' field.
+   */
+  public java.lang.CharSequence getOrder() {
+    return order;
+  }
+
+  /**
+   * Sets the value of the 'order' field.
+   * @param value the value to set.
+   */
+  public void setOrder(java.lang.CharSequence value) {
+    this.order = value;
+  }
+
+  /**
+   * Gets the value of the 'orderKey' field.
+   */
+  public java.lang.Integer getOrderKey() {
+    return orderKey;
+  }
+
+  /**
+   * Sets the value of the 'orderKey' field.
+   * @param value the value to set.
+   */
+  public void setOrderKey(java.lang.Integer value) {
+    this.orderKey = value;
+  }
+
+  /**
+   * Gets the value of the 'family' field.
+   */
+  public java.lang.CharSequence getFamily() {
+    return family;
+  }
+
+  /**
+   * Sets the value of the 'family' field.
+   * @param value the value to set.
+   */
+  public void setFamily(java.lang.CharSequence value) {
+    this.family = value;
+  }
+
+  /**
+   * Gets the value of the 'familyKey' field.
+   */
+  public java.lang.Integer getFamilyKey() {
+    return familyKey;
+  }
+
+  /**
+   * Sets the value of the 'familyKey' field.
+   * @param value the value to set.
+   */
+  public void setFamilyKey(java.lang.Integer value) {
+    this.familyKey = value;
+  }
+
+  /**
+   * Gets the value of the 'subgenus' field.
+   */
+  public java.lang.CharSequence getSubgenus() {
+    return subgenus;
+  }
+
+  /**
+   * Sets the value of the 'subgenus' field.
+   * @param value the value to set.
+   */
+  public void setSubgenus(java.lang.CharSequence value) {
+    this.subgenus = value;
+  }
+
+  /**
+   * Gets the value of the 'subgenusKey' field.
+   */
+  public java.lang.Integer getSubgenusKey() {
+    return subgenusKey;
+  }
+
+  /**
+   * Sets the value of the 'subgenusKey' field.
+   * @param value the value to set.
+   */
+  public void setSubgenusKey(java.lang.Integer value) {
+    this.subgenusKey = value;
+  }
+
+  /**
+   * Gets the value of the 'species' field.
+   */
+  public java.lang.CharSequence getSpecies() {
+    return species;
+  }
+
+  /**
+   * Sets the value of the 'species' field.
+   * @param value the value to set.
+   */
+  public void setSpecies(java.lang.CharSequence value) {
+    this.species = value;
+  }
+
+  /**
+   * Gets the value of the 'speciesKey' field.
+   */
+  public java.lang.Integer getSpeciesKey() {
+    return speciesKey;
+  }
+
+  /**
+   * Sets the value of the 'speciesKey' field.
+   * @param value the value to set.
+   */
+  public void setSpeciesKey(java.lang.Integer value) {
+    this.speciesKey = value;
+  }
+
+  /**
+   * Gets the value of the 'nomenclatureId' field.
+   */
+  public java.lang.CharSequence getNomenclatureId() {
+    return nomenclatureId;
+  }
+
+  /**
+   * Sets the value of the 'nomenclatureId' field.
+   * @param value the value to set.
+   */
+  public void setNomenclatureId(java.lang.CharSequence value) {
+    this.nomenclatureId = value;
+  }
+
+  /**
+   * Gets the value of the 'nomenclatureSource' field.
+   */
+  public java.lang.CharSequence getNomenclatureSource() {
+    return nomenclatureSource;
+  }
+
+  /**
+   * Sets the value of the 'nomenclatureSource' field.
+   * @param value the value to set.
+   */
+  public void setNomenclatureSource(java.lang.CharSequence value) {
+    this.nomenclatureSource = value;
+  }
+
   /** Creates a new TaxonRecord RecordBuilder */
   public static org.gbif.pipelines.io.avro.TaxonRecord.Builder newBuilder() {
     return new org.gbif.pipelines.io.avro.TaxonRecord.Builder();
@@ -233,14 +613,34 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     implements org.apache.avro.data.RecordBuilder<TaxonRecord> {
 
     private java.lang.CharSequence id;
+    private java.lang.Integer confidence;
     private java.lang.CharSequence genericName;
-    private java.lang.CharSequence scientificName;
+    private java.lang.CharSequence specificEpithet;
+    private java.lang.CharSequence infraspecificEpithet;
+    private java.lang.CharSequence usageName;
+    private java.lang.CharSequence usageRank;
+    private java.lang.Integer usageKey;
+    private java.lang.CharSequence acceptedUsageName;
+    private java.lang.CharSequence acceptedUsageRank;
+    private java.lang.Integer acceptedUsageKey;
     private java.lang.CharSequence kingdom;
     private java.lang.Integer kingdomKey;
     private java.lang.CharSequence phylum;
     private java.lang.Integer phylumKey;
     private java.lang.CharSequence genus;
     private java.lang.Integer genusKey;
+    private java.lang.CharSequence class$;
+    private java.lang.Integer classKey;
+    private java.lang.CharSequence order;
+    private java.lang.Integer orderKey;
+    private java.lang.CharSequence family;
+    private java.lang.Integer familyKey;
+    private java.lang.CharSequence subgenus;
+    private java.lang.Integer subgenusKey;
+    private java.lang.CharSequence species;
+    private java.lang.Integer speciesKey;
+    private java.lang.CharSequence nomenclatureId;
+    private java.lang.CharSequence nomenclatureSource;
 
     /** Creates a new Builder */
     private Builder() {
@@ -254,37 +654,117 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
         this.id = data().deepCopy(fields()[0].schema(), other.id);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.genericName)) {
-        this.genericName = data().deepCopy(fields()[1].schema(), other.genericName);
+      if (isValidValue(fields()[1], other.confidence)) {
+        this.confidence = data().deepCopy(fields()[1].schema(), other.confidence);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.scientificName)) {
-        this.scientificName = data().deepCopy(fields()[2].schema(), other.scientificName);
+      if (isValidValue(fields()[2], other.genericName)) {
+        this.genericName = data().deepCopy(fields()[2].schema(), other.genericName);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.kingdom)) {
-        this.kingdom = data().deepCopy(fields()[3].schema(), other.kingdom);
+      if (isValidValue(fields()[3], other.specificEpithet)) {
+        this.specificEpithet = data().deepCopy(fields()[3].schema(), other.specificEpithet);
         fieldSetFlags()[3] = true;
       }
-      if (isValidValue(fields()[4], other.kingdomKey)) {
-        this.kingdomKey = data().deepCopy(fields()[4].schema(), other.kingdomKey);
+      if (isValidValue(fields()[4], other.infraspecificEpithet)) {
+        this.infraspecificEpithet = data().deepCopy(fields()[4].schema(), other.infraspecificEpithet);
         fieldSetFlags()[4] = true;
       }
-      if (isValidValue(fields()[5], other.phylum)) {
-        this.phylum = data().deepCopy(fields()[5].schema(), other.phylum);
+      if (isValidValue(fields()[5], other.usageName)) {
+        this.usageName = data().deepCopy(fields()[5].schema(), other.usageName);
         fieldSetFlags()[5] = true;
       }
-      if (isValidValue(fields()[6], other.phylumKey)) {
-        this.phylumKey = data().deepCopy(fields()[6].schema(), other.phylumKey);
+      if (isValidValue(fields()[6], other.usageRank)) {
+        this.usageRank = data().deepCopy(fields()[6].schema(), other.usageRank);
         fieldSetFlags()[6] = true;
       }
-      if (isValidValue(fields()[7], other.genus)) {
-        this.genus = data().deepCopy(fields()[7].schema(), other.genus);
+      if (isValidValue(fields()[7], other.usageKey)) {
+        this.usageKey = data().deepCopy(fields()[7].schema(), other.usageKey);
         fieldSetFlags()[7] = true;
       }
-      if (isValidValue(fields()[8], other.genusKey)) {
-        this.genusKey = data().deepCopy(fields()[8].schema(), other.genusKey);
+      if (isValidValue(fields()[8], other.acceptedUsageName)) {
+        this.acceptedUsageName = data().deepCopy(fields()[8].schema(), other.acceptedUsageName);
         fieldSetFlags()[8] = true;
+      }
+      if (isValidValue(fields()[9], other.acceptedUsageRank)) {
+        this.acceptedUsageRank = data().deepCopy(fields()[9].schema(), other.acceptedUsageRank);
+        fieldSetFlags()[9] = true;
+      }
+      if (isValidValue(fields()[10], other.acceptedUsageKey)) {
+        this.acceptedUsageKey = data().deepCopy(fields()[10].schema(), other.acceptedUsageKey);
+        fieldSetFlags()[10] = true;
+      }
+      if (isValidValue(fields()[11], other.kingdom)) {
+        this.kingdom = data().deepCopy(fields()[11].schema(), other.kingdom);
+        fieldSetFlags()[11] = true;
+      }
+      if (isValidValue(fields()[12], other.kingdomKey)) {
+        this.kingdomKey = data().deepCopy(fields()[12].schema(), other.kingdomKey);
+        fieldSetFlags()[12] = true;
+      }
+      if (isValidValue(fields()[13], other.phylum)) {
+        this.phylum = data().deepCopy(fields()[13].schema(), other.phylum);
+        fieldSetFlags()[13] = true;
+      }
+      if (isValidValue(fields()[14], other.phylumKey)) {
+        this.phylumKey = data().deepCopy(fields()[14].schema(), other.phylumKey);
+        fieldSetFlags()[14] = true;
+      }
+      if (isValidValue(fields()[15], other.genus)) {
+        this.genus = data().deepCopy(fields()[15].schema(), other.genus);
+        fieldSetFlags()[15] = true;
+      }
+      if (isValidValue(fields()[16], other.genusKey)) {
+        this.genusKey = data().deepCopy(fields()[16].schema(), other.genusKey);
+        fieldSetFlags()[16] = true;
+      }
+      if (isValidValue(fields()[17], other.class$)) {
+        this.class$ = data().deepCopy(fields()[17].schema(), other.class$);
+        fieldSetFlags()[17] = true;
+      }
+      if (isValidValue(fields()[18], other.classKey)) {
+        this.classKey = data().deepCopy(fields()[18].schema(), other.classKey);
+        fieldSetFlags()[18] = true;
+      }
+      if (isValidValue(fields()[19], other.order)) {
+        this.order = data().deepCopy(fields()[19].schema(), other.order);
+        fieldSetFlags()[19] = true;
+      }
+      if (isValidValue(fields()[20], other.orderKey)) {
+        this.orderKey = data().deepCopy(fields()[20].schema(), other.orderKey);
+        fieldSetFlags()[20] = true;
+      }
+      if (isValidValue(fields()[21], other.family)) {
+        this.family = data().deepCopy(fields()[21].schema(), other.family);
+        fieldSetFlags()[21] = true;
+      }
+      if (isValidValue(fields()[22], other.familyKey)) {
+        this.familyKey = data().deepCopy(fields()[22].schema(), other.familyKey);
+        fieldSetFlags()[22] = true;
+      }
+      if (isValidValue(fields()[23], other.subgenus)) {
+        this.subgenus = data().deepCopy(fields()[23].schema(), other.subgenus);
+        fieldSetFlags()[23] = true;
+      }
+      if (isValidValue(fields()[24], other.subgenusKey)) {
+        this.subgenusKey = data().deepCopy(fields()[24].schema(), other.subgenusKey);
+        fieldSetFlags()[24] = true;
+      }
+      if (isValidValue(fields()[25], other.species)) {
+        this.species = data().deepCopy(fields()[25].schema(), other.species);
+        fieldSetFlags()[25] = true;
+      }
+      if (isValidValue(fields()[26], other.speciesKey)) {
+        this.speciesKey = data().deepCopy(fields()[26].schema(), other.speciesKey);
+        fieldSetFlags()[26] = true;
+      }
+      if (isValidValue(fields()[27], other.nomenclatureId)) {
+        this.nomenclatureId = data().deepCopy(fields()[27].schema(), other.nomenclatureId);
+        fieldSetFlags()[27] = true;
+      }
+      if (isValidValue(fields()[28], other.nomenclatureSource)) {
+        this.nomenclatureSource = data().deepCopy(fields()[28].schema(), other.nomenclatureSource);
+        fieldSetFlags()[28] = true;
       }
     }
     
@@ -295,37 +775,117 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
         this.id = data().deepCopy(fields()[0].schema(), other.id);
         fieldSetFlags()[0] = true;
       }
-      if (isValidValue(fields()[1], other.genericName)) {
-        this.genericName = data().deepCopy(fields()[1].schema(), other.genericName);
+      if (isValidValue(fields()[1], other.confidence)) {
+        this.confidence = data().deepCopy(fields()[1].schema(), other.confidence);
         fieldSetFlags()[1] = true;
       }
-      if (isValidValue(fields()[2], other.scientificName)) {
-        this.scientificName = data().deepCopy(fields()[2].schema(), other.scientificName);
+      if (isValidValue(fields()[2], other.genericName)) {
+        this.genericName = data().deepCopy(fields()[2].schema(), other.genericName);
         fieldSetFlags()[2] = true;
       }
-      if (isValidValue(fields()[3], other.kingdom)) {
-        this.kingdom = data().deepCopy(fields()[3].schema(), other.kingdom);
+      if (isValidValue(fields()[3], other.specificEpithet)) {
+        this.specificEpithet = data().deepCopy(fields()[3].schema(), other.specificEpithet);
         fieldSetFlags()[3] = true;
       }
-      if (isValidValue(fields()[4], other.kingdomKey)) {
-        this.kingdomKey = data().deepCopy(fields()[4].schema(), other.kingdomKey);
+      if (isValidValue(fields()[4], other.infraspecificEpithet)) {
+        this.infraspecificEpithet = data().deepCopy(fields()[4].schema(), other.infraspecificEpithet);
         fieldSetFlags()[4] = true;
       }
-      if (isValidValue(fields()[5], other.phylum)) {
-        this.phylum = data().deepCopy(fields()[5].schema(), other.phylum);
+      if (isValidValue(fields()[5], other.usageName)) {
+        this.usageName = data().deepCopy(fields()[5].schema(), other.usageName);
         fieldSetFlags()[5] = true;
       }
-      if (isValidValue(fields()[6], other.phylumKey)) {
-        this.phylumKey = data().deepCopy(fields()[6].schema(), other.phylumKey);
+      if (isValidValue(fields()[6], other.usageRank)) {
+        this.usageRank = data().deepCopy(fields()[6].schema(), other.usageRank);
         fieldSetFlags()[6] = true;
       }
-      if (isValidValue(fields()[7], other.genus)) {
-        this.genus = data().deepCopy(fields()[7].schema(), other.genus);
+      if (isValidValue(fields()[7], other.usageKey)) {
+        this.usageKey = data().deepCopy(fields()[7].schema(), other.usageKey);
         fieldSetFlags()[7] = true;
       }
-      if (isValidValue(fields()[8], other.genusKey)) {
-        this.genusKey = data().deepCopy(fields()[8].schema(), other.genusKey);
+      if (isValidValue(fields()[8], other.acceptedUsageName)) {
+        this.acceptedUsageName = data().deepCopy(fields()[8].schema(), other.acceptedUsageName);
         fieldSetFlags()[8] = true;
+      }
+      if (isValidValue(fields()[9], other.acceptedUsageRank)) {
+        this.acceptedUsageRank = data().deepCopy(fields()[9].schema(), other.acceptedUsageRank);
+        fieldSetFlags()[9] = true;
+      }
+      if (isValidValue(fields()[10], other.acceptedUsageKey)) {
+        this.acceptedUsageKey = data().deepCopy(fields()[10].schema(), other.acceptedUsageKey);
+        fieldSetFlags()[10] = true;
+      }
+      if (isValidValue(fields()[11], other.kingdom)) {
+        this.kingdom = data().deepCopy(fields()[11].schema(), other.kingdom);
+        fieldSetFlags()[11] = true;
+      }
+      if (isValidValue(fields()[12], other.kingdomKey)) {
+        this.kingdomKey = data().deepCopy(fields()[12].schema(), other.kingdomKey);
+        fieldSetFlags()[12] = true;
+      }
+      if (isValidValue(fields()[13], other.phylum)) {
+        this.phylum = data().deepCopy(fields()[13].schema(), other.phylum);
+        fieldSetFlags()[13] = true;
+      }
+      if (isValidValue(fields()[14], other.phylumKey)) {
+        this.phylumKey = data().deepCopy(fields()[14].schema(), other.phylumKey);
+        fieldSetFlags()[14] = true;
+      }
+      if (isValidValue(fields()[15], other.genus)) {
+        this.genus = data().deepCopy(fields()[15].schema(), other.genus);
+        fieldSetFlags()[15] = true;
+      }
+      if (isValidValue(fields()[16], other.genusKey)) {
+        this.genusKey = data().deepCopy(fields()[16].schema(), other.genusKey);
+        fieldSetFlags()[16] = true;
+      }
+      if (isValidValue(fields()[17], other.class$)) {
+        this.class$ = data().deepCopy(fields()[17].schema(), other.class$);
+        fieldSetFlags()[17] = true;
+      }
+      if (isValidValue(fields()[18], other.classKey)) {
+        this.classKey = data().deepCopy(fields()[18].schema(), other.classKey);
+        fieldSetFlags()[18] = true;
+      }
+      if (isValidValue(fields()[19], other.order)) {
+        this.order = data().deepCopy(fields()[19].schema(), other.order);
+        fieldSetFlags()[19] = true;
+      }
+      if (isValidValue(fields()[20], other.orderKey)) {
+        this.orderKey = data().deepCopy(fields()[20].schema(), other.orderKey);
+        fieldSetFlags()[20] = true;
+      }
+      if (isValidValue(fields()[21], other.family)) {
+        this.family = data().deepCopy(fields()[21].schema(), other.family);
+        fieldSetFlags()[21] = true;
+      }
+      if (isValidValue(fields()[22], other.familyKey)) {
+        this.familyKey = data().deepCopy(fields()[22].schema(), other.familyKey);
+        fieldSetFlags()[22] = true;
+      }
+      if (isValidValue(fields()[23], other.subgenus)) {
+        this.subgenus = data().deepCopy(fields()[23].schema(), other.subgenus);
+        fieldSetFlags()[23] = true;
+      }
+      if (isValidValue(fields()[24], other.subgenusKey)) {
+        this.subgenusKey = data().deepCopy(fields()[24].schema(), other.subgenusKey);
+        fieldSetFlags()[24] = true;
+      }
+      if (isValidValue(fields()[25], other.species)) {
+        this.species = data().deepCopy(fields()[25].schema(), other.species);
+        fieldSetFlags()[25] = true;
+      }
+      if (isValidValue(fields()[26], other.speciesKey)) {
+        this.speciesKey = data().deepCopy(fields()[26].schema(), other.speciesKey);
+        fieldSetFlags()[26] = true;
+      }
+      if (isValidValue(fields()[27], other.nomenclatureId)) {
+        this.nomenclatureId = data().deepCopy(fields()[27].schema(), other.nomenclatureId);
+        fieldSetFlags()[27] = true;
+      }
+      if (isValidValue(fields()[28], other.nomenclatureSource)) {
+        this.nomenclatureSource = data().deepCopy(fields()[28].schema(), other.nomenclatureSource);
+        fieldSetFlags()[28] = true;
       }
     }
 
@@ -354,6 +914,31 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
       return this;
     }
 
+    /** Gets the value of the 'confidence' field */
+    public java.lang.Integer getConfidence() {
+      return confidence;
+    }
+    
+    /** Sets the value of the 'confidence' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setConfidence(java.lang.Integer value) {
+      validate(fields()[1], value);
+      this.confidence = value;
+      fieldSetFlags()[1] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'confidence' field has been set */
+    public boolean hasConfidence() {
+      return fieldSetFlags()[1];
+    }
+    
+    /** Clears the value of the 'confidence' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearConfidence() {
+      confidence = null;
+      fieldSetFlags()[1] = false;
+      return this;
+    }
+
     /** Gets the value of the 'genericName' field */
     public java.lang.CharSequence getGenericName() {
       return genericName;
@@ -361,46 +946,221 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     
     /** Sets the value of the 'genericName' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder setGenericName(java.lang.CharSequence value) {
-      validate(fields()[1], value);
+      validate(fields()[2], value);
       this.genericName = value;
-      fieldSetFlags()[1] = true;
+      fieldSetFlags()[2] = true;
       return this; 
     }
     
     /** Checks whether the 'genericName' field has been set */
     public boolean hasGenericName() {
-      return fieldSetFlags()[1];
+      return fieldSetFlags()[2];
     }
     
     /** Clears the value of the 'genericName' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearGenericName() {
       genericName = null;
-      fieldSetFlags()[1] = false;
+      fieldSetFlags()[2] = false;
       return this;
     }
 
-    /** Gets the value of the 'scientificName' field */
-    public java.lang.CharSequence getScientificName() {
-      return scientificName;
+    /** Gets the value of the 'specificEpithet' field */
+    public java.lang.CharSequence getSpecificEpithet() {
+      return specificEpithet;
     }
     
-    /** Sets the value of the 'scientificName' field */
-    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setScientificName(java.lang.CharSequence value) {
-      validate(fields()[2], value);
-      this.scientificName = value;
-      fieldSetFlags()[2] = true;
+    /** Sets the value of the 'specificEpithet' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setSpecificEpithet(java.lang.CharSequence value) {
+      validate(fields()[3], value);
+      this.specificEpithet = value;
+      fieldSetFlags()[3] = true;
       return this; 
     }
     
-    /** Checks whether the 'scientificName' field has been set */
-    public boolean hasScientificName() {
-      return fieldSetFlags()[2];
+    /** Checks whether the 'specificEpithet' field has been set */
+    public boolean hasSpecificEpithet() {
+      return fieldSetFlags()[3];
     }
     
-    /** Clears the value of the 'scientificName' field */
-    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearScientificName() {
-      scientificName = null;
-      fieldSetFlags()[2] = false;
+    /** Clears the value of the 'specificEpithet' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearSpecificEpithet() {
+      specificEpithet = null;
+      fieldSetFlags()[3] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'infraspecificEpithet' field */
+    public java.lang.CharSequence getInfraspecificEpithet() {
+      return infraspecificEpithet;
+    }
+    
+    /** Sets the value of the 'infraspecificEpithet' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setInfraspecificEpithet(java.lang.CharSequence value) {
+      validate(fields()[4], value);
+      this.infraspecificEpithet = value;
+      fieldSetFlags()[4] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'infraspecificEpithet' field has been set */
+    public boolean hasInfraspecificEpithet() {
+      return fieldSetFlags()[4];
+    }
+    
+    /** Clears the value of the 'infraspecificEpithet' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearInfraspecificEpithet() {
+      infraspecificEpithet = null;
+      fieldSetFlags()[4] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'usageName' field */
+    public java.lang.CharSequence getUsageName() {
+      return usageName;
+    }
+    
+    /** Sets the value of the 'usageName' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setUsageName(java.lang.CharSequence value) {
+      validate(fields()[5], value);
+      this.usageName = value;
+      fieldSetFlags()[5] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'usageName' field has been set */
+    public boolean hasUsageName() {
+      return fieldSetFlags()[5];
+    }
+    
+    /** Clears the value of the 'usageName' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearUsageName() {
+      usageName = null;
+      fieldSetFlags()[5] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'usageRank' field */
+    public java.lang.CharSequence getUsageRank() {
+      return usageRank;
+    }
+    
+    /** Sets the value of the 'usageRank' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setUsageRank(java.lang.CharSequence value) {
+      validate(fields()[6], value);
+      this.usageRank = value;
+      fieldSetFlags()[6] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'usageRank' field has been set */
+    public boolean hasUsageRank() {
+      return fieldSetFlags()[6];
+    }
+    
+    /** Clears the value of the 'usageRank' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearUsageRank() {
+      usageRank = null;
+      fieldSetFlags()[6] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'usageKey' field */
+    public java.lang.Integer getUsageKey() {
+      return usageKey;
+    }
+    
+    /** Sets the value of the 'usageKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setUsageKey(java.lang.Integer value) {
+      validate(fields()[7], value);
+      this.usageKey = value;
+      fieldSetFlags()[7] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'usageKey' field has been set */
+    public boolean hasUsageKey() {
+      return fieldSetFlags()[7];
+    }
+    
+    /** Clears the value of the 'usageKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearUsageKey() {
+      usageKey = null;
+      fieldSetFlags()[7] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'acceptedUsageName' field */
+    public java.lang.CharSequence getAcceptedUsageName() {
+      return acceptedUsageName;
+    }
+    
+    /** Sets the value of the 'acceptedUsageName' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setAcceptedUsageName(java.lang.CharSequence value) {
+      validate(fields()[8], value);
+      this.acceptedUsageName = value;
+      fieldSetFlags()[8] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'acceptedUsageName' field has been set */
+    public boolean hasAcceptedUsageName() {
+      return fieldSetFlags()[8];
+    }
+    
+    /** Clears the value of the 'acceptedUsageName' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearAcceptedUsageName() {
+      acceptedUsageName = null;
+      fieldSetFlags()[8] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'acceptedUsageRank' field */
+    public java.lang.CharSequence getAcceptedUsageRank() {
+      return acceptedUsageRank;
+    }
+    
+    /** Sets the value of the 'acceptedUsageRank' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setAcceptedUsageRank(java.lang.CharSequence value) {
+      validate(fields()[9], value);
+      this.acceptedUsageRank = value;
+      fieldSetFlags()[9] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'acceptedUsageRank' field has been set */
+    public boolean hasAcceptedUsageRank() {
+      return fieldSetFlags()[9];
+    }
+    
+    /** Clears the value of the 'acceptedUsageRank' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearAcceptedUsageRank() {
+      acceptedUsageRank = null;
+      fieldSetFlags()[9] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'acceptedUsageKey' field */
+    public java.lang.Integer getAcceptedUsageKey() {
+      return acceptedUsageKey;
+    }
+    
+    /** Sets the value of the 'acceptedUsageKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setAcceptedUsageKey(java.lang.Integer value) {
+      validate(fields()[10], value);
+      this.acceptedUsageKey = value;
+      fieldSetFlags()[10] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'acceptedUsageKey' field has been set */
+    public boolean hasAcceptedUsageKey() {
+      return fieldSetFlags()[10];
+    }
+    
+    /** Clears the value of the 'acceptedUsageKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearAcceptedUsageKey() {
+      acceptedUsageKey = null;
+      fieldSetFlags()[10] = false;
       return this;
     }
 
@@ -411,21 +1171,21 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     
     /** Sets the value of the 'kingdom' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder setKingdom(java.lang.CharSequence value) {
-      validate(fields()[3], value);
+      validate(fields()[11], value);
       this.kingdom = value;
-      fieldSetFlags()[3] = true;
+      fieldSetFlags()[11] = true;
       return this; 
     }
     
     /** Checks whether the 'kingdom' field has been set */
     public boolean hasKingdom() {
-      return fieldSetFlags()[3];
+      return fieldSetFlags()[11];
     }
     
     /** Clears the value of the 'kingdom' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearKingdom() {
       kingdom = null;
-      fieldSetFlags()[3] = false;
+      fieldSetFlags()[11] = false;
       return this;
     }
 
@@ -436,21 +1196,21 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     
     /** Sets the value of the 'kingdomKey' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder setKingdomKey(java.lang.Integer value) {
-      validate(fields()[4], value);
+      validate(fields()[12], value);
       this.kingdomKey = value;
-      fieldSetFlags()[4] = true;
+      fieldSetFlags()[12] = true;
       return this; 
     }
     
     /** Checks whether the 'kingdomKey' field has been set */
     public boolean hasKingdomKey() {
-      return fieldSetFlags()[4];
+      return fieldSetFlags()[12];
     }
     
     /** Clears the value of the 'kingdomKey' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearKingdomKey() {
       kingdomKey = null;
-      fieldSetFlags()[4] = false;
+      fieldSetFlags()[12] = false;
       return this;
     }
 
@@ -461,21 +1221,21 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     
     /** Sets the value of the 'phylum' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder setPhylum(java.lang.CharSequence value) {
-      validate(fields()[5], value);
+      validate(fields()[13], value);
       this.phylum = value;
-      fieldSetFlags()[5] = true;
+      fieldSetFlags()[13] = true;
       return this; 
     }
     
     /** Checks whether the 'phylum' field has been set */
     public boolean hasPhylum() {
-      return fieldSetFlags()[5];
+      return fieldSetFlags()[13];
     }
     
     /** Clears the value of the 'phylum' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearPhylum() {
       phylum = null;
-      fieldSetFlags()[5] = false;
+      fieldSetFlags()[13] = false;
       return this;
     }
 
@@ -486,21 +1246,21 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     
     /** Sets the value of the 'phylumKey' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder setPhylumKey(java.lang.Integer value) {
-      validate(fields()[6], value);
+      validate(fields()[14], value);
       this.phylumKey = value;
-      fieldSetFlags()[6] = true;
+      fieldSetFlags()[14] = true;
       return this; 
     }
     
     /** Checks whether the 'phylumKey' field has been set */
     public boolean hasPhylumKey() {
-      return fieldSetFlags()[6];
+      return fieldSetFlags()[14];
     }
     
     /** Clears the value of the 'phylumKey' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearPhylumKey() {
       phylumKey = null;
-      fieldSetFlags()[6] = false;
+      fieldSetFlags()[14] = false;
       return this;
     }
 
@@ -511,21 +1271,21 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     
     /** Sets the value of the 'genus' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder setGenus(java.lang.CharSequence value) {
-      validate(fields()[7], value);
+      validate(fields()[15], value);
       this.genus = value;
-      fieldSetFlags()[7] = true;
+      fieldSetFlags()[15] = true;
       return this; 
     }
     
     /** Checks whether the 'genus' field has been set */
     public boolean hasGenus() {
-      return fieldSetFlags()[7];
+      return fieldSetFlags()[15];
     }
     
     /** Clears the value of the 'genus' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearGenus() {
       genus = null;
-      fieldSetFlags()[7] = false;
+      fieldSetFlags()[15] = false;
       return this;
     }
 
@@ -536,21 +1296,321 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     
     /** Sets the value of the 'genusKey' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder setGenusKey(java.lang.Integer value) {
-      validate(fields()[8], value);
+      validate(fields()[16], value);
       this.genusKey = value;
-      fieldSetFlags()[8] = true;
+      fieldSetFlags()[16] = true;
       return this; 
     }
     
     /** Checks whether the 'genusKey' field has been set */
     public boolean hasGenusKey() {
-      return fieldSetFlags()[8];
+      return fieldSetFlags()[16];
     }
     
     /** Clears the value of the 'genusKey' field */
     public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearGenusKey() {
       genusKey = null;
-      fieldSetFlags()[8] = false;
+      fieldSetFlags()[16] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'class$' field */
+    public java.lang.CharSequence getClass$() {
+      return class$;
+    }
+    
+    /** Sets the value of the 'class$' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setClass$(java.lang.CharSequence value) {
+      validate(fields()[17], value);
+      this.class$ = value;
+      fieldSetFlags()[17] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'class$' field has been set */
+    public boolean hasClass$() {
+      return fieldSetFlags()[17];
+    }
+    
+    /** Clears the value of the 'class$' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearClass$() {
+      class$ = null;
+      fieldSetFlags()[17] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'classKey' field */
+    public java.lang.Integer getClassKey() {
+      return classKey;
+    }
+    
+    /** Sets the value of the 'classKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setClassKey(java.lang.Integer value) {
+      validate(fields()[18], value);
+      this.classKey = value;
+      fieldSetFlags()[18] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'classKey' field has been set */
+    public boolean hasClassKey() {
+      return fieldSetFlags()[18];
+    }
+    
+    /** Clears the value of the 'classKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearClassKey() {
+      classKey = null;
+      fieldSetFlags()[18] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'order' field */
+    public java.lang.CharSequence getOrder() {
+      return order;
+    }
+    
+    /** Sets the value of the 'order' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setOrder(java.lang.CharSequence value) {
+      validate(fields()[19], value);
+      this.order = value;
+      fieldSetFlags()[19] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'order' field has been set */
+    public boolean hasOrder() {
+      return fieldSetFlags()[19];
+    }
+    
+    /** Clears the value of the 'order' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearOrder() {
+      order = null;
+      fieldSetFlags()[19] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'orderKey' field */
+    public java.lang.Integer getOrderKey() {
+      return orderKey;
+    }
+    
+    /** Sets the value of the 'orderKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setOrderKey(java.lang.Integer value) {
+      validate(fields()[20], value);
+      this.orderKey = value;
+      fieldSetFlags()[20] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'orderKey' field has been set */
+    public boolean hasOrderKey() {
+      return fieldSetFlags()[20];
+    }
+    
+    /** Clears the value of the 'orderKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearOrderKey() {
+      orderKey = null;
+      fieldSetFlags()[20] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'family' field */
+    public java.lang.CharSequence getFamily() {
+      return family;
+    }
+    
+    /** Sets the value of the 'family' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setFamily(java.lang.CharSequence value) {
+      validate(fields()[21], value);
+      this.family = value;
+      fieldSetFlags()[21] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'family' field has been set */
+    public boolean hasFamily() {
+      return fieldSetFlags()[21];
+    }
+    
+    /** Clears the value of the 'family' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearFamily() {
+      family = null;
+      fieldSetFlags()[21] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'familyKey' field */
+    public java.lang.Integer getFamilyKey() {
+      return familyKey;
+    }
+    
+    /** Sets the value of the 'familyKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setFamilyKey(java.lang.Integer value) {
+      validate(fields()[22], value);
+      this.familyKey = value;
+      fieldSetFlags()[22] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'familyKey' field has been set */
+    public boolean hasFamilyKey() {
+      return fieldSetFlags()[22];
+    }
+    
+    /** Clears the value of the 'familyKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearFamilyKey() {
+      familyKey = null;
+      fieldSetFlags()[22] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'subgenus' field */
+    public java.lang.CharSequence getSubgenus() {
+      return subgenus;
+    }
+    
+    /** Sets the value of the 'subgenus' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setSubgenus(java.lang.CharSequence value) {
+      validate(fields()[23], value);
+      this.subgenus = value;
+      fieldSetFlags()[23] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'subgenus' field has been set */
+    public boolean hasSubgenus() {
+      return fieldSetFlags()[23];
+    }
+    
+    /** Clears the value of the 'subgenus' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearSubgenus() {
+      subgenus = null;
+      fieldSetFlags()[23] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'subgenusKey' field */
+    public java.lang.Integer getSubgenusKey() {
+      return subgenusKey;
+    }
+    
+    /** Sets the value of the 'subgenusKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setSubgenusKey(java.lang.Integer value) {
+      validate(fields()[24], value);
+      this.subgenusKey = value;
+      fieldSetFlags()[24] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'subgenusKey' field has been set */
+    public boolean hasSubgenusKey() {
+      return fieldSetFlags()[24];
+    }
+    
+    /** Clears the value of the 'subgenusKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearSubgenusKey() {
+      subgenusKey = null;
+      fieldSetFlags()[24] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'species' field */
+    public java.lang.CharSequence getSpecies() {
+      return species;
+    }
+    
+    /** Sets the value of the 'species' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setSpecies(java.lang.CharSequence value) {
+      validate(fields()[25], value);
+      this.species = value;
+      fieldSetFlags()[25] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'species' field has been set */
+    public boolean hasSpecies() {
+      return fieldSetFlags()[25];
+    }
+    
+    /** Clears the value of the 'species' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearSpecies() {
+      species = null;
+      fieldSetFlags()[25] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'speciesKey' field */
+    public java.lang.Integer getSpeciesKey() {
+      return speciesKey;
+    }
+    
+    /** Sets the value of the 'speciesKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setSpeciesKey(java.lang.Integer value) {
+      validate(fields()[26], value);
+      this.speciesKey = value;
+      fieldSetFlags()[26] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'speciesKey' field has been set */
+    public boolean hasSpeciesKey() {
+      return fieldSetFlags()[26];
+    }
+    
+    /** Clears the value of the 'speciesKey' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearSpeciesKey() {
+      speciesKey = null;
+      fieldSetFlags()[26] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'nomenclatureId' field */
+    public java.lang.CharSequence getNomenclatureId() {
+      return nomenclatureId;
+    }
+    
+    /** Sets the value of the 'nomenclatureId' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setNomenclatureId(java.lang.CharSequence value) {
+      validate(fields()[27], value);
+      this.nomenclatureId = value;
+      fieldSetFlags()[27] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'nomenclatureId' field has been set */
+    public boolean hasNomenclatureId() {
+      return fieldSetFlags()[27];
+    }
+    
+    /** Clears the value of the 'nomenclatureId' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearNomenclatureId() {
+      nomenclatureId = null;
+      fieldSetFlags()[27] = false;
+      return this;
+    }
+
+    /** Gets the value of the 'nomenclatureSource' field */
+    public java.lang.CharSequence getNomenclatureSource() {
+      return nomenclatureSource;
+    }
+    
+    /** Sets the value of the 'nomenclatureSource' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setNomenclatureSource(java.lang.CharSequence value) {
+      validate(fields()[28], value);
+      this.nomenclatureSource = value;
+      fieldSetFlags()[28] = true;
+      return this; 
+    }
+    
+    /** Checks whether the 'nomenclatureSource' field has been set */
+    public boolean hasNomenclatureSource() {
+      return fieldSetFlags()[28];
+    }
+    
+    /** Clears the value of the 'nomenclatureSource' field */
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder clearNomenclatureSource() {
+      nomenclatureSource = null;
+      fieldSetFlags()[28] = false;
       return this;
     }
 
@@ -559,14 +1619,34 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
       try {
         TaxonRecord record = new TaxonRecord();
         record.id = fieldSetFlags()[0] ? this.id : (java.lang.CharSequence) defaultValue(fields()[0]);
-        record.genericName = fieldSetFlags()[1] ? this.genericName : (java.lang.CharSequence) defaultValue(fields()[1]);
-        record.scientificName = fieldSetFlags()[2] ? this.scientificName : (java.lang.CharSequence) defaultValue(fields()[2]);
-        record.kingdom = fieldSetFlags()[3] ? this.kingdom : (java.lang.CharSequence) defaultValue(fields()[3]);
-        record.kingdomKey = fieldSetFlags()[4] ? this.kingdomKey : (java.lang.Integer) defaultValue(fields()[4]);
-        record.phylum = fieldSetFlags()[5] ? this.phylum : (java.lang.CharSequence) defaultValue(fields()[5]);
-        record.phylumKey = fieldSetFlags()[6] ? this.phylumKey : (java.lang.Integer) defaultValue(fields()[6]);
-        record.genus = fieldSetFlags()[7] ? this.genus : (java.lang.CharSequence) defaultValue(fields()[7]);
-        record.genusKey = fieldSetFlags()[8] ? this.genusKey : (java.lang.Integer) defaultValue(fields()[8]);
+        record.confidence = fieldSetFlags()[1] ? this.confidence : (java.lang.Integer) defaultValue(fields()[1]);
+        record.genericName = fieldSetFlags()[2] ? this.genericName : (java.lang.CharSequence) defaultValue(fields()[2]);
+        record.specificEpithet = fieldSetFlags()[3] ? this.specificEpithet : (java.lang.CharSequence) defaultValue(fields()[3]);
+        record.infraspecificEpithet = fieldSetFlags()[4] ? this.infraspecificEpithet : (java.lang.CharSequence) defaultValue(fields()[4]);
+        record.usageName = fieldSetFlags()[5] ? this.usageName : (java.lang.CharSequence) defaultValue(fields()[5]);
+        record.usageRank = fieldSetFlags()[6] ? this.usageRank : (java.lang.CharSequence) defaultValue(fields()[6]);
+        record.usageKey = fieldSetFlags()[7] ? this.usageKey : (java.lang.Integer) defaultValue(fields()[7]);
+        record.acceptedUsageName = fieldSetFlags()[8] ? this.acceptedUsageName : (java.lang.CharSequence) defaultValue(fields()[8]);
+        record.acceptedUsageRank = fieldSetFlags()[9] ? this.acceptedUsageRank : (java.lang.CharSequence) defaultValue(fields()[9]);
+        record.acceptedUsageKey = fieldSetFlags()[10] ? this.acceptedUsageKey : (java.lang.Integer) defaultValue(fields()[10]);
+        record.kingdom = fieldSetFlags()[11] ? this.kingdom : (java.lang.CharSequence) defaultValue(fields()[11]);
+        record.kingdomKey = fieldSetFlags()[12] ? this.kingdomKey : (java.lang.Integer) defaultValue(fields()[12]);
+        record.phylum = fieldSetFlags()[13] ? this.phylum : (java.lang.CharSequence) defaultValue(fields()[13]);
+        record.phylumKey = fieldSetFlags()[14] ? this.phylumKey : (java.lang.Integer) defaultValue(fields()[14]);
+        record.genus = fieldSetFlags()[15] ? this.genus : (java.lang.CharSequence) defaultValue(fields()[15]);
+        record.genusKey = fieldSetFlags()[16] ? this.genusKey : (java.lang.Integer) defaultValue(fields()[16]);
+        record.class$ = fieldSetFlags()[17] ? this.class$ : (java.lang.CharSequence) defaultValue(fields()[17]);
+        record.classKey = fieldSetFlags()[18] ? this.classKey : (java.lang.Integer) defaultValue(fields()[18]);
+        record.order = fieldSetFlags()[19] ? this.order : (java.lang.CharSequence) defaultValue(fields()[19]);
+        record.orderKey = fieldSetFlags()[20] ? this.orderKey : (java.lang.Integer) defaultValue(fields()[20]);
+        record.family = fieldSetFlags()[21] ? this.family : (java.lang.CharSequence) defaultValue(fields()[21]);
+        record.familyKey = fieldSetFlags()[22] ? this.familyKey : (java.lang.Integer) defaultValue(fields()[22]);
+        record.subgenus = fieldSetFlags()[23] ? this.subgenus : (java.lang.CharSequence) defaultValue(fields()[23]);
+        record.subgenusKey = fieldSetFlags()[24] ? this.subgenusKey : (java.lang.Integer) defaultValue(fields()[24]);
+        record.species = fieldSetFlags()[25] ? this.species : (java.lang.CharSequence) defaultValue(fields()[25]);
+        record.speciesKey = fieldSetFlags()[26] ? this.speciesKey : (java.lang.Integer) defaultValue(fields()[26]);
+        record.nomenclatureId = fieldSetFlags()[27] ? this.nomenclatureId : (java.lang.CharSequence) defaultValue(fields()[27]);
+        record.nomenclatureSource = fieldSetFlags()[28] ? this.nomenclatureSource : (java.lang.CharSequence) defaultValue(fields()[28]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

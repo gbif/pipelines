@@ -28,11 +28,24 @@ import retrofit2.Response;
 
 import static org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyHelper.isSuccesfulMatch;
 
+/**
+ * Handles the calls to the species match WS.
+ */
 public class SpeciesMatchManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatchManager.class);
 
-  public static SpeciesMatch2ResponseModel getMatch(ExtendedRecord extendedRecord) {
+  /**
+   * Matches a {@link ExtendedRecord} to an existing specie using the species match 2 WS.
+   *
+   * @param extendedRecord avro file with the taxonomic data
+   *
+   * @return {@link SpeciesMatch2ResponseModel} with the match received from the WS.
+   *
+   * @throws TaxonomyInterpretationException in case of errors
+   */
+  public static SpeciesMatch2ResponseModel getMatch(ExtendedRecord extendedRecord)
+    throws TaxonomyInterpretationException {
     SpeciesMatch2ResponseModel responseModel = callSpeciesMatchWs(extendedRecord.getCoreTerms());
 
     if (!isSuccesfulMatch(responseModel)) {
@@ -60,7 +73,8 @@ public class SpeciesMatchManager {
     return responseModel;
   }
 
-  private static SpeciesMatch2ResponseModel callSpeciesMatchWs(Map<CharSequence, CharSequence> terms) {
+  private static SpeciesMatch2ResponseModel callSpeciesMatchWs(Map<CharSequence, CharSequence> terms)
+    throws TaxonomyInterpretationException {
     TaxonomyFieldsWorkingCopy workingCopy = new TaxonomyFieldsWorkingCopy(terms);
 
     SpeciesMatch2Service service = SpeciesMatch2ServiceRest.SINGLE.getService();
@@ -71,7 +85,7 @@ public class SpeciesMatchManager {
                                                            workingCopy.order,
                                                            workingCopy.family,
                                                            workingCopy.genus,
-                                                           workingCopy.rank.name(),
+                                                           workingCopy.rank != null ? workingCopy.rank.name() : null,
                                                            workingCopy.scientificName,
                                                            false,
                                                            false);
@@ -84,11 +98,21 @@ public class SpeciesMatchManager {
       responseModel = response.body();
 
     } catch (IOException e) {
-      // TODO
-      e.printStackTrace();
+      throw new TaxonomyInterpretationException("Error calling the match2 species name WS", e);
+    }
+
+    // checking for unexpected response
+    if (isEmptyResponse(responseModel)) {
+      throw new TaxonomyInterpretationException("Empty response from match2 species name WS");
     }
 
     return responseModel;
+  }
+
+  private static boolean isEmptyResponse(SpeciesMatch2ResponseModel response) {
+    return response == null || (response.getUsage() == null
+                                && response.getClassification() == null
+                                && response.getDiagnostics() == null);
   }
 
   /**
@@ -127,7 +151,12 @@ public class SpeciesMatchManager {
       specificEpithet = ClassificationUtils.cleanAuthor(value(terms, DwcTerm.specificEpithet));
       infraspecificEpithet = ClassificationUtils.cleanAuthor(value(terms, DwcTerm.infraspecificEpithet));
       rank = interpretRank(terms);
-      scientificName = buildScientificName();
+      scientificName = buildScientificName(value(terms, DwcTerm.scientificName),
+                                           authorship,
+                                           genericName,
+                                           genus,
+                                           specificEpithet,
+                                           infraspecificEpithet);
     }
 
     Rank interpretRank(Map<CharSequence, CharSequence> terms) {
@@ -158,7 +187,14 @@ public class SpeciesMatchManager {
     /**
      * Assembles the most complete scientific name based on full and individual name parts.
      */
-    String buildScientificName() {
+    String buildScientificName(
+      String scientificName,
+      String authorship,
+      String genericName,
+      String genus,
+      String specificEpithet,
+      String infraspecificEpithet
+    ) {
       String sciname = ClassificationUtils.clean(scientificName);
       if (sciname == null) {
         // handle case when the scientific name is null and only given as atomized fields: genus & speciesEpitheton
@@ -173,7 +209,8 @@ public class SpeciesMatchManager {
         pn.setAuthorship(authorship);
         sciname = pn.canonicalNameComplete();
 
-      } else if (!Strings.isNullOrEmpty(authorship) && !sciname.toLowerCase().contains(authorship.toLowerCase())) {
+      } else if (authorship != null && !authorship.isEmpty() && !sciname.toLowerCase()
+        .contains(authorship.toLowerCase())) {
         sciname = sciname + " " + authorship;
       }
 

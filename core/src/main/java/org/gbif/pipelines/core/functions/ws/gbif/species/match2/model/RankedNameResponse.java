@@ -2,6 +2,9 @@ package org.gbif.pipelines.core.functions.ws.gbif.species.match2.model;
 
 import java.io.Serializable;
 
+/**
+ * Models a RankedName response.
+ */
 public class RankedNameResponse implements Serializable {
 
   private static final long serialVersionUID = 2139732650633250955L;

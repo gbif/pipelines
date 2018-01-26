@@ -6,7 +6,9 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
-// WS API MATCH 2
+/**
+ * API of the species match 2 WS.
+ */
 public interface SpeciesMatch2Service {
 
   @GET("/v1/species/match2")

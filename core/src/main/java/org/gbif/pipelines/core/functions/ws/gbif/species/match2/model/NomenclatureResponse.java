@@ -2,6 +2,9 @@ package org.gbif.pipelines.core.functions.ws.gbif.species.match2.model;
 
 import java.io.Serializable;
 
+/**
+ * Models a nomenclature response.
+ */
 public class NomenclatureResponse implements Serializable {
 
   private static final long serialVersionUID = 829422886059883606L;

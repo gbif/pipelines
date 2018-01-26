@@ -5,6 +5,9 @@ import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * Models a diagnostics response.
+ */
 public class DiagnosticsResponse implements Serializable {
 
   private static final long serialVersionUID = -1036059768581926145L;

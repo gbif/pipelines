@@ -13,12 +13,13 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /*
- * Singleton to create the service.
+ * Singleton to create the species match 2 service.
  */
 public enum SpeciesMatch2ServiceRest {
 
   SINGLE;
 
+  // TODO: receive as parameter
   private static final String PROPERTIES_FILE_PATH_DEFAULT = "species-ws.properties";
 
   private SpeciesMatch2Service service;

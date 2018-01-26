@@ -7,6 +7,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Models the interpretation of a taxonomy.
+ */
 public class InterpretedTaxonomy implements Serializable {
 
   private static final long serialVersionUID = 5754733108334628580L;

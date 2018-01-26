@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /*
- * Response model for the WS call.
+ * Models a response from the species match 2 WS.
  */
 public class SpeciesMatch2ResponseModel implements Serializable {
 
