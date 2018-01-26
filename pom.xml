@@ -96,6 +96,16 @@
         <version>${dwca-io.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-parsers</artifactId>
+        <version>0.32</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-api</artifactId>
+        <version>0.58</version>
+      </dependency>
+      <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>core</artifactId>
         <version>${project.version}</version>

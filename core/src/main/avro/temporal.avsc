@@ -1,0 +1,21 @@
+/**
+ * Represents the interpreted fields of terms related to temporal.
+ */
+{
+  "name": "TemporalRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "doc": "A container for temporal fields of DarwinCore that have been interpreted.",
+  "type": "record",
+  "fields": [
+    {"name": "id", "type": "string", "doc": "The record id"},
+    {"name": "year", "type": ["null", "int"], "default" : null },
+    {"name": "month", "type": ["null", "int"], "default" : null },
+    {"name": "day", "type": ["null", "int"], "default" : null },
+    {"name": "startDayOfYear", "type": ["null", "int"], "default" : null },
+    {"name": "endDayOfYear", "type": ["null", "int"], "default" : null },
+    {"name": "modified", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null },
+    {"name": "dateIdentified", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null },
+    {"name": "eventTime", "type": ["null", "long"], "logicalType":"time-millis", "default" : null },
+    {"name": "eventDate", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null }
+  ]
+}
