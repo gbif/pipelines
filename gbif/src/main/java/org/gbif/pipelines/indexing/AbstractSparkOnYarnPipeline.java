@@ -1,11 +1,13 @@
 package org.gbif.pipelines.indexing;
 
 import java.util.Collections;
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
 
+@Deprecated
 public abstract class AbstractSparkOnYarnPipeline {
 
   /**
