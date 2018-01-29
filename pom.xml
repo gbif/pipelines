@@ -51,6 +51,7 @@
     <okhttp.version>3.9.0</okhttp.version>
     <slf4j.version>1.7.24</slf4j.version>
     <logback.version>1.1.5</logback.version>
+    <junit.version>4.12</junit.version>
 
     <!-- Plugins -->
     <build-helper-maven.version>1.9.1</build-helper-maven.version>
@@ -218,6 +219,15 @@
         <version>${logback.version}</version>
         <scope>runtime</scope>
       </dependency>
+
+      <!-- test -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+      </dependency>
+
+
     </dependencies>
   </dependencyManagement>
 </project>
