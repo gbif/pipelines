@@ -1,7 +1,7 @@
 package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.functions.interpretation.ExtendedRecordTransform;
+import org.gbif.pipelines.interpretation.ExtendedRecordTransform;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
@@ -17,8 +17,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.core.functions.interpretation.InterpretationTupleTags.INTERPRETED_EXTENDED_RECORD_TUPLE_TAG;
-import static org.gbif.pipelines.core.functions.interpretation.InterpretationTupleTags.OCCURRENCE_ISSUE_TUPLE_TAG;
+import static org.gbif.pipelines.interpretation.InterpretationTupleTags.INTERPRETED_EXTENDED_RECORD_TUPLE_TAG;
+import static org.gbif.pipelines.interpretation.InterpretationTupleTags.OCCURRENCE_ISSUE_TUPLE_TAG;
 
 /**
  * Reads an DwC-A Avro file containing ExtendedRecords element and performs an interpretation of basis fields.

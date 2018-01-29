@@ -4,7 +4,7 @@
 {
   "name": "LocationRecord",
   "namespace": "org.gbif.pipelines.io.avro",
-  "doc": "A container for location/geospatial fields of DarwinCore that have been interpreted.",
+  "doc": "A container for interpretd location/geospatial DarwinCore terms.",
   "type": "record",
   "fields": [
     {"name": "id", "type": "string", "doc": "The record id"},
