@@ -12,7 +12,6 @@
 
   <artifactId>core</artifactId>
   <properties>
-    <junit.version>4.12</junit.version>
     <gbif-parser.version>0.33-SNAPSHOT</gbif-parser.version>
   </properties>
   <build>
@@ -88,13 +87,10 @@
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>logging-interceptor</artifactId>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/junit/junit -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
-      <version>${junit.version}</version>
     </dependency>
-
   </dependencies>
 </project>

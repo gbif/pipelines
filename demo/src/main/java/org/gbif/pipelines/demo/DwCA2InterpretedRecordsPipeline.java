@@ -5,10 +5,10 @@ import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.core.functions.interpretation.RawToInterpretedCategoryTransformer;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
+import org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.HashMap;
@@ -36,10 +36,10 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.core.functions.interpretation.RawToInterpretedCategoryTransformer.spatialCategory;
-import static org.gbif.pipelines.core.functions.interpretation.RawToInterpretedCategoryTransformer.spatialCategoryIssues;
-import static org.gbif.pipelines.core.functions.interpretation.RawToInterpretedCategoryTransformer.temporalCategory;
-import static org.gbif.pipelines.core.functions.interpretation.RawToInterpretedCategoryTransformer.temporalCategoryIssues;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.spatialCategory;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.spatialCategoryIssues;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.temporalCategory;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.temporalCategoryIssues;
 
 /**
  * A simple demonstration showing a pipeline running locally which will read UntypedOccurrence from a DwC-A file
@@ -48,10 +48,10 @@ import static org.gbif.pipelines.core.functions.interpretation.RawToInterpretedC
  */
 public class DwCA2InterpretedRecordsPipeline {
 
-  static final TupleTag<Event> temporalTag = new TupleTag<Event>() {};
-  static final TupleTag<Location> spatialTag = new TupleTag<Location>() {};
-  static final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
-  static final TupleTag<IssueLineageRecord> spatialIssueTag = new TupleTag<IssueLineageRecord>() {};
+  private static final TupleTag<Event> temporalTag = new TupleTag<Event>() {};
+  private static final TupleTag<Location> spatialTag = new TupleTag<Location>() {};
+  private static final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
+  private static final TupleTag<IssueLineageRecord> spatialIssueTag = new TupleTag<IssueLineageRecord>() {};
   private static final Logger LOG = LoggerFactory.getLogger(DwCA2InterpretedRecordsPipeline.class);
 
   public static void main(String[] args) {
@@ -149,8 +149,8 @@ public class DwCA2InterpretedRecordsPipeline {
         AvroIO.write(IssueLineageRecord.class).to("demo/output/interpreted-spatialissue"));
     ;
 
-    /**
-     * Joining temporal category and spatial category to get the big flat interpreted record.
+    /*
+      Joining temporal category and spatial category to get the big flat interpreted record.
      */
     PCollection<KV<String, CoGbkResult>> joinedCollection =
       KeyedPCollectionTuple.of(temporalTag, interpretedCategory.get(temporalCategory))
@@ -160,8 +160,8 @@ public class DwCA2InterpretedRecordsPipeline {
     PCollection<ExtendedOccurence> interpretedRecords = joinedCollection.apply(
       "Applying join on interpreted category of records to make a flat big interpreted record",
       ParDo.of(new CoGbkResultToFlattenedInterpretedRecord()));
-    /**
-     * Joining temporal category issues and spatial category issues to get the overall issues together.
+    /*
+      Joining temporal category issues and spatial category issues to get the overall issues together.
      */
     PCollection<KV<String, CoGbkResult>> joinedIssueCollection =
       KeyedPCollectionTuple.of(temporalIssueTag, interpretedCategory.get(temporalCategoryIssues))

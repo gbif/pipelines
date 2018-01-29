@@ -15,20 +15,20 @@
 					"type": "record",
 					"name": "Issue",
 					"fields": [{
-						"name": "occurenceId",
-						"type": "string"
-					}, {
-						"name": "fieldName",
-						"type": "string"
-					}, {
 						"name": "remark",
 						"type": "string"
-					}
-					]}
+					}, {
+						"name": "issueType",
+						"type": {
+							"name": "IssueType",
+							"type": "enum",
+							"symbols": ["OTHERS","PARSE_ERROR","DAY_OUT_OF_RANGE","MONTH_OUT_OF_RANGE","INVALID_YEAR"]
+						}
+					}]
 				}
 			}
 		}
-	, {
+	}, {
 		"name": "fieldLineageMap",
 		"type": {
 			"type": "map",
@@ -38,16 +38,16 @@
 					"type": "record",
 					"name": "Lineage",
 					"fields": [{
-						"name": "occurenceId",
-						"type": "string"
-					}, {
-						"name": "fieldName",
-						"type": "string"
-					}, {
 						"name": "remark",
 						"type": "string"
-					}
-					]
+					}, {
+						"name": "lineageType",
+						"type": {
+							"name": "LineageType",
+							"type": "enum",
+							"symbols": ["OTHERS","SET_TO_NULL"]
+						}
+					}]
 				}
 			}
 		}

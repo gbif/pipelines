@@ -1,13 +1,15 @@
-package org.gbif.pipelines.core.functions.interpretation;
+package org.gbif.pipelines.core.functions.transforms;
 
-import org.gbif.common.parsers.NumberParser;
 import org.gbif.dwca.avro.Event;
+import org.gbif.pipelines.core.functions.interpretation.DayInterpreter;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationException;
+import org.gbif.pipelines.core.functions.interpretation.MonthInterpreter;
+import org.gbif.pipelines.core.functions.interpretation.YearInterpreter;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,27 +25,27 @@ import org.slf4j.LoggerFactory;
  * This function returns multiple outputs,
  * a. Interpreted version of raw temporal data as KV<String,Event>
  * b. Issues and lineages applied on raw data to get the interpreted result, as KV<String,IssueLineageRecord>
- *
  */
-public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<String,Event>> {
+public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<String, Event>> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ExtendedRecordToEventTransformer.class);
   /**
    * tags for locating different types of outputs send by this function
    */
-  public static final TupleTag<KV<String,Event>> eventDataTag = new TupleTag<KV<String,Event>>();
-  public static final TupleTag<KV<String,IssueLineageRecord>> eventIssueTag = new TupleTag<KV<String,IssueLineageRecord>>();
-
+  public static final TupleTag<KV<String, Event>> eventDataTag = new TupleTag<KV<String, Event>>();
+  public static final TupleTag<KV<String, IssueLineageRecord>> eventIssueTag =
+    new TupleTag<KV<String, IssueLineageRecord>>();
+  private static final Logger LOG = LoggerFactory.getLogger(ExtendedRecordToEventTransformer.class);
 
   @ProcessElement
-  public void processElement(ProcessContext ctx){
+  public void processElement(ProcessContext ctx) {
     ExtendedRecord record = ctx.element();
     Event evt = new Event();
 
-    Map<CharSequence,List<Issue>> fieldIssueMap = new HashMap<CharSequence, List<Issue>>();
-    Map<CharSequence,List<Lineage>> fieldLineageMap = new HashMap<CharSequence, List<Lineage>>();
+    Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<CharSequence, List<Issue>>();
+    Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<CharSequence, List<Lineage>>();
     //mapping raw record with interpreted ones
     evt.setOccurrenceID(record.getId());
+
     evt.setBasisOfRecord(record.getCoreTerms().get(DwCATermIdentifier.basisOfRecord.getIdentifier()));
     evt.setEventID(record.getCoreTerms().get(DwCATermIdentifier.eventID.getIdentifier()));
     evt.setParentEventID(record.getCoreTerms().get(DwCATermIdentifier.parentEventID.getIdentifier()));
@@ -52,62 +54,42 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     evt.setStartDayOfYear(record.getCoreTerms().get(DwCATermIdentifier.startDayOfYear.getIdentifier()));
     evt.setEndDayOfYear(record.getCoreTerms().get(DwCATermIdentifier.endDayOfYear.getIdentifier()));
 
-    /**
-     * Day month year interpretation
+    /*
+      Day month year interpretation
      */
-    CharSequence raw_year= record.getCoreTerms().get(DwCATermIdentifier.year.getIdentifier());
-    CharSequence raw_month= record.getCoreTerms().get(DwCATermIdentifier.month.getIdentifier());
-    CharSequence raw_day= record.getCoreTerms().get(DwCATermIdentifier.day.getIdentifier());
+    CharSequence raw_year = record.getCoreTerms().get(DwCATermIdentifier.year.getIdentifier());
+    CharSequence raw_month = record.getCoreTerms().get(DwCATermIdentifier.month.getIdentifier());
+    CharSequence raw_day = record.getCoreTerms().get(DwCATermIdentifier.day.getIdentifier());
 
-    Integer interpretedDay = null,interpretedMonth=null,interpretedYear=null;
-    if(raw_day!=null){
-      List<Issue> issues= new ArrayList<>();
-      List<Lineage> lineages = new ArrayList<>();
-      interpretedDay = NumberParser.parseInteger(raw_day.toString());
-      if(interpretedDay>31 || interpretedDay<1){
-        interpretedDay = null;
-        issues.add(Issue.newBuilder()
-                     .setOccurenceId(record.getId())
-                     .setFieldName(DwCATermIdentifier.day.name())
-                     .setRemark("Day out of range expected value between 1-31")
-                     .build());
-        lineages.add(Lineage.newBuilder().setOccurenceId(record.getId()).setFieldName(DwCATermIdentifier.day.name()).setRemark("Since day out of range interpreting as null").build());
-
+    if (raw_day != null && !raw_day.toString().trim().isEmpty()) {
+      try {
+        evt.setDay(new DayInterpreter().interpret(raw_day.toString()));
+      } catch (InterpretationException e) {
+        fieldIssueMap.put(DwCATermIdentifier.day.name(), e.getIssues());
+        fieldLineageMap.put(DwCATermIdentifier.day.name(), e.getLineages());
+        if (e.isInterpretedObjectSet()) evt.setDay((Integer) e.getInterpretedValue());
       }
-      fieldIssueMap.put(DwCATermIdentifier.day.name(),issues);
-      fieldLineageMap.put(DwCATermIdentifier.day.name(),lineages);
     }
 
-    if(raw_month!=null){
-      List<Issue> issues= new ArrayList<>();
-      List<Lineage> lineages = new ArrayList<>();
-      interpretedMonth = NumberParser.parseInteger(raw_month.toString());
-      if(interpretedMonth>12 || interpretedMonth<1) {
-        interpretedMonth = null;
-        issues.add(Issue.newBuilder()
-                     .setOccurenceId(record.getId())
-                     .setFieldName(DwCATermIdentifier.day.name())
-                     .setRemark("Month out of range expected value between 1-12, inclusive")
-                     .build());
-        lineages.add(Lineage.newBuilder().setOccurenceId(record.getId()).setFieldName(DwCATermIdentifier.day.name()).setRemark("Since month out of range interpreting as null").build());
-
+    if (raw_month != null) {
+      try {
+        evt.setMonth(new MonthInterpreter().interpret(raw_month.toString()));
+      } catch (InterpretationException e) {
+        fieldIssueMap.put(DwCATermIdentifier.month.name(), e.getIssues());
+        fieldLineageMap.put(DwCATermIdentifier.month.name(), e.getLineages());
+        if (e.isInterpretedObjectSet()) evt.setMonth((Integer) e.getInterpretedValue());
       }
-      fieldIssueMap.put(DwCATermIdentifier.month.name(),issues);
-      fieldLineageMap.put(DwCATermIdentifier.month.name(),lineages);
     }
 
-    if(raw_year!=null){
-      List<Issue> issues= new ArrayList<>();
-      List<Lineage> lineages = new ArrayList<>();
-      interpretedYear = NumberParser.parseInteger(raw_year.toString());
-      fieldIssueMap.put(DwCATermIdentifier.year.name(),issues);
-      fieldLineageMap.put(DwCATermIdentifier.year.name(),lineages);
+    if (raw_year != null) {
+      try {
+        evt.setYear(new YearInterpreter().interpret(raw_year.toString()));
+      } catch (InterpretationException e) {
+        fieldIssueMap.put(DwCATermIdentifier.year.name(), e.getIssues());
+        fieldLineageMap.put(DwCATermIdentifier.year.name(), e.getLineages());
+        if (e.isInterpretedObjectSet()) evt.setYear((Integer) e.getInterpretedValue());
+      }
     }
-
-    evt.setYear(interpretedYear);
-    evt.setMonth(interpretedMonth);
-    evt.setDay(interpretedDay);
-
 
     evt.setVerbatimEventDate(record.getCoreTerms().get(DwCATermIdentifier.verbatimEventDate.getIdentifier()));
     evt.setHabitat(record.getCoreTerms().get(DwCATermIdentifier.habitat.getIdentifier()));
@@ -128,10 +110,14 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     evt.setInformationWithheld(record.getCoreTerms().get(DwCATermIdentifier.informationWithheld.getIdentifier()));
     evt.setDataGeneralizations(record.getCoreTerms().get(DwCATermIdentifier.dataGeneralizations.getIdentifier()));
     //all issues and lineages are dumped on this object
-    final IssueLineageRecord finalRecord = IssueLineageRecord.newBuilder().setOccurenceId(record.getId()).setFieldIssuesMap(fieldIssueMap).setFieldLineageMap(fieldLineageMap).build();
+    final IssueLineageRecord finalRecord = IssueLineageRecord.newBuilder()
+      .setOccurenceId(record.getId())
+      .setFieldIssuesMap(fieldIssueMap)
+      .setFieldLineageMap(fieldLineageMap)
+      .build();
 
-    ctx.output(eventDataTag,KV.of(evt.getOccurrenceID().toString(),evt));
-    ctx.output(eventIssueTag,KV.of(evt.getOccurrenceID().toString(),finalRecord));
+    ctx.output(eventDataTag, KV.of(evt.getOccurrenceID().toString(), evt));
+    ctx.output(eventIssueTag, KV.of(evt.getOccurrenceID().toString(), finalRecord));
   }
 
 }
