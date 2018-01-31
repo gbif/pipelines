@@ -63,7 +63,7 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
       if (parse.isSuccessful()) {
         interpretedContinent = parse.toString();
       } else {
-        issues.add(Issue.newBuilder().setIssueType(IssueType.OTHERS).setRemark(parse.getError().getMessage()).build());
+        issues.add(Issue.newBuilder().setIssueType(IssueType.OTHERS).setRemark("Continent parse failed").build());
         lineages.add(Lineage.newBuilder()
                        .setLineageType(LineageType.OTHERS)
                        .setRemark("Since the parse failed, interpreting as null")
@@ -95,7 +95,7 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
       } else {
         issues.add(Issue.newBuilder()
                      .setIssueType(IssueType.OTHERS)
-                     .setRemark(parseCountry.getError().getMessage())
+                     .setRemark("Country parse failed")
                      .build());
         lineages.add(Lineage.newBuilder()
                        .setLineageType(LineageType.OTHERS)
