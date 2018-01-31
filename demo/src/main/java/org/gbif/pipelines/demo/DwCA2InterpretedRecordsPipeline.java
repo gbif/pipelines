@@ -92,7 +92,7 @@ public class DwCA2InterpretedRecordsPipeline {
 
     // Read the DwC-A using our custom reader
     PCollection<ExtendedRecord> rawRecords =
-      p.apply("Read from Darwin Core Archive", DwCAIO.Read.withPaths("demo/dwca.zip", "demo/target/tmp"));
+      p.apply("Read from Darwin Core Archive", DwCAIO.Read.withPaths("demo/data/dwca.zip", "demo/target/tmp"));
 
     // Write records in an avro file, this will be location of the hive table which has raw records
     rawRecords.apply("Save the interpreted records as Avro",
