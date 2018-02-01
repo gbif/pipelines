@@ -136,7 +136,7 @@ public enum DwCATermIdentifier {
     "http://rs.tdwg.org/dwc/terms/relationshipEstablishedDate"), relationshipRemarks(
     "http://rs.tdwg.org/dwc/terms/relationshipRemarks");
 
-  private String identifier;
+  private final String identifier;
 
   DwCATermIdentifier(String identifier) {
     this.identifier = identifier;

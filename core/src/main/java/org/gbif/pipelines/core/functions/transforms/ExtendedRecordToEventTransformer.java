@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This function converts an extended record to an interpreted KeyValue of occurenceId and Event.
+ * This function converts an extended record to an interpreted KeyValue of occurrenceId and Event.
  * This function returns multiple outputs,
  * a. Interpreted version of raw temporal data as KV<String,Event>
  * b. Issues and lineages applied on raw data to get the interpreted result, as KV<String,IssueLineageRecord>
@@ -31,9 +31,8 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
   /**
    * tags for locating different types of outputs send by this function
    */
-  public static final TupleTag<KV<String, Event>> eventDataTag = new TupleTag<KV<String, Event>>();
-  public static final TupleTag<KV<String, IssueLineageRecord>> eventIssueTag =
-    new TupleTag<KV<String, IssueLineageRecord>>();
+  public static final TupleTag<KV<String, Event>> EVENT_DATA_TAG = new TupleTag<>();
+  public static final TupleTag<KV<String, IssueLineageRecord>> EVENT_ISSUE_TAG = new TupleTag<>();
   private static final Logger LOG = LoggerFactory.getLogger(ExtendedRecordToEventTransformer.class);
 
   @ProcessElement
@@ -41,8 +40,8 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     ExtendedRecord record = ctx.element();
     Event evt = new Event();
 
-    Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<CharSequence, List<Issue>>();
-    Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<CharSequence, List<Lineage>>();
+    Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<>();
+    Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<>();
     //mapping raw record with interpreted ones
     evt.setOccurrenceID(record.getId());
 
@@ -61,13 +60,13 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     CharSequence raw_month = record.getCoreTerms().get(DwCATermIdentifier.month.getIdentifier());
     CharSequence raw_day = record.getCoreTerms().get(DwCATermIdentifier.day.getIdentifier());
 
-    if (raw_day != null && !raw_day.toString().trim().isEmpty()) {
+    if (raw_day != null) {
       try {
         evt.setDay(new DayInterpreter().interpret(raw_day.toString()));
       } catch (InterpretationException e) {
         fieldIssueMap.put(DwCATermIdentifier.day.name(), e.getIssues());
         fieldLineageMap.put(DwCATermIdentifier.day.name(), e.getLineages());
-        if (e.isInterpretedObjectSet()) evt.setDay((Integer) e.getInterpretedValue());
+        if (e.getInterpretedValue().isPresent()) evt.setDay((Integer) e.getInterpretedValue().get());
       }
     }
 
@@ -77,7 +76,7 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
       } catch (InterpretationException e) {
         fieldIssueMap.put(DwCATermIdentifier.month.name(), e.getIssues());
         fieldLineageMap.put(DwCATermIdentifier.month.name(), e.getLineages());
-        if (e.isInterpretedObjectSet()) evt.setMonth((Integer) e.getInterpretedValue());
+        if (e.getInterpretedValue().isPresent()) evt.setMonth((Integer) e.getInterpretedValue().get());
       }
     }
 
@@ -87,7 +86,7 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
       } catch (InterpretationException e) {
         fieldIssueMap.put(DwCATermIdentifier.year.name(), e.getIssues());
         fieldLineageMap.put(DwCATermIdentifier.year.name(), e.getLineages());
-        if (e.isInterpretedObjectSet()) evt.setYear((Integer) e.getInterpretedValue());
+        if (e.getInterpretedValue().isPresent()) evt.setYear((Integer) e.getInterpretedValue().get());
       }
     }
 
@@ -116,8 +115,8 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
       .setFieldLineageMap(fieldLineageMap)
       .build();
 
-    ctx.output(eventDataTag, KV.of(evt.getOccurrenceID().toString(), evt));
-    ctx.output(eventIssueTag, KV.of(evt.getOccurrenceID().toString(), finalRecord));
+    ctx.output(EVENT_DATA_TAG, KV.of(evt.getOccurrenceID().toString(), evt));
+    ctx.output(EVENT_ISSUE_TAG, KV.of(evt.getOccurrenceID().toString(), finalRecord));
   }
 
 }

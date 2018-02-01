@@ -7,7 +7,7 @@ import org.gbif.pipelines.core.functions.interpretation.error.LineageType;
 
 import java.time.Month;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,28 +17,24 @@ public class MonthInterpreter implements Interpretable<String, Integer> {
 
   @Override
   public Integer interpret(String input) throws InterpretationException {
-
-    List<Issue> issues = new ArrayList<>();
-    List<Lineage> lineages = new ArrayList<>();
-
-    Month m;
+    String trimmedInput = input == null ? null : input.trim();
     try {
-      m = Month.of(Integer.parseInt(input.trim()));
-      return m.getValue();
-    } catch (IllegalArgumentException | DateTimeParseException ex1) {
+      if (trimmedInput == null) return null;
+      return Month.of(Integer.parseInt(trimmedInput)).getValue();
+    } catch (IllegalArgumentException | DateTimeParseException ex) {
       //if parse failed
-      issues.add(Issue.newBuilder()
-                   .setRemark("Month cannot be parsed because of " + ex1.getMessage())
-                   .setIssueType(IssueType.PARSE_ERROR)
-                   .build());
-      lineages.add(Lineage.newBuilder()
-                     .setRemark("Since Month cannot be parsed setting it to null")
-                     .setLineageType(LineageType.SET_TO_NULL)
-                     .build());
+      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                             .setRemark("Month cannot be parsed because of "
+                                                                        + ex.getMessage())
+                                                             .setIssueType(IssueType.PARSE_ERROR)
+                                                             .build());
+      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+                                                                 .setRemark(
+                                                                   "Since Month cannot be parsed setting it to null")
+                                                                 .setLineageType(LineageType.SET_TO_NULL)
+                                                                 .build());
+      throw new InterpretationException(issues, lineages, null);
     }
-    InterpretationException iex = new InterpretationException(issues, lineages);
-    iex.setInterpretedValue(null);
-    throw iex;
 
   }
 }

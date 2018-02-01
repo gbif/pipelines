@@ -22,11 +22,11 @@ public class RawToInterpretedCategoryTransformer extends PTransform<PCollection<
   /**
    * tags for the final output tuple indicating the type of collection and its category
    */
-  public static final TupleTag<KV<String, Event>> temporalCategory = new TupleTag<KV<String, Event>>() {};
-  public static final TupleTag<KV<String, Location>> spatialCategory = new TupleTag<KV<String, Location>>() {};
-  public static final TupleTag<KV<String, IssueLineageRecord>> temporalCategoryIssues =
+  public static final TupleTag<KV<String, Event>> TEMPORAL_CATEGORY = new TupleTag<KV<String, Event>>() {};
+  public static final TupleTag<KV<String, Location>> SPATIAL_CATEGORY = new TupleTag<KV<String, Location>>() {};
+  public static final TupleTag<KV<String, IssueLineageRecord>> TEMPORAL_CATEGORY_ISSUES =
     new TupleTag<KV<String, IssueLineageRecord>>() {};
-  public static final TupleTag<KV<String, IssueLineageRecord>> spatialCategoryIssues =
+  public static final TupleTag<KV<String, IssueLineageRecord>> SPATIAL_CATEGORY_ISSUES =
     new TupleTag<KV<String, IssueLineageRecord>>() {};
 
   /**
@@ -47,16 +47,16 @@ public class RawToInterpretedCategoryTransformer extends PTransform<PCollection<
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
     //get the multiple output tuple from raw to interpreted temporal record along with issues.
     PCollectionTuple eventView = input.apply(ParDo.of(new ExtendedRecordToEventTransformer())
-                                               .withOutputTags(ExtendedRecordToEventTransformer.eventDataTag,
-                                                               TupleTagList.of(ExtendedRecordToEventTransformer.eventIssueTag)));
+                                               .withOutputTags(ExtendedRecordToEventTransformer.EVENT_DATA_TAG,
+                                                               TupleTagList.of(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG)));
     //get the multiple output tuple from raw to interpreted spatial record along with issues.
     PCollectionTuple locationView = input.apply(ParDo.of(new ExtendedRecordToLocationTransformer())
-                                                  .withOutputTags(ExtendedRecordToLocationTransformer.locationDataTag,
-                                                                  TupleTagList.of(ExtendedRecordToLocationTransformer.locationIssueTag)));
+                                                  .withOutputTags(ExtendedRecordToLocationTransformer.LOCATION_DATA_TAG,
+                                                                  TupleTagList.of(ExtendedRecordToLocationTransformer.LOCATION_ISSUE_TAG)));
     //combining the different collections as one tuple
-    return PCollectionTuple.of(temporalCategory, eventView.get(ExtendedRecordToEventTransformer.eventDataTag))
-      .and(spatialCategory, locationView.get(ExtendedRecordToLocationTransformer.locationDataTag))
-      .and(temporalCategoryIssues, eventView.get(ExtendedRecordToEventTransformer.eventIssueTag))
-      .and(spatialCategoryIssues, locationView.get(ExtendedRecordToLocationTransformer.locationIssueTag));
+    return PCollectionTuple.of(TEMPORAL_CATEGORY, eventView.get(ExtendedRecordToEventTransformer.EVENT_DATA_TAG))
+      .and(SPATIAL_CATEGORY, locationView.get(ExtendedRecordToLocationTransformer.LOCATION_DATA_TAG))
+      .and(TEMPORAL_CATEGORY_ISSUES, eventView.get(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG))
+      .and(SPATIAL_CATEGORY_ISSUES, locationView.get(ExtendedRecordToLocationTransformer.LOCATION_ISSUE_TAG));
   }
 }

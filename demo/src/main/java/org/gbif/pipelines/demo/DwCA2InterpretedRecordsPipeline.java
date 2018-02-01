@@ -36,10 +36,10 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.spatialCategory;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.spatialCategoryIssues;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.temporalCategory;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.temporalCategoryIssues;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.SPATIAL_CATEGORY;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.SPATIAL_CATEGORY_ISSUES;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.TEMPORAL_CATEGORY;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.TEMPORAL_CATEGORY_ISSUES;
 
 /**
  * A simple demonstration showing a pipeline running locally which will read UntypedOccurrence from a DwC-A file
@@ -48,10 +48,10 @@ import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCateg
  */
 public class DwCA2InterpretedRecordsPipeline {
 
-  private static final TupleTag<Event> temporalTag = new TupleTag<Event>() {};
-  private static final TupleTag<Location> spatialTag = new TupleTag<Location>() {};
-  private static final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
-  private static final TupleTag<IssueLineageRecord> spatialIssueTag = new TupleTag<IssueLineageRecord>() {};
+  private static final TupleTag<Event> TEMPORAL_TAG = new TupleTag<Event>() {};
+  private static final TupleTag<Location> SPATIAL_TAG = new TupleTag<Location>() {};
+  private static final TupleTag<IssueLineageRecord> TEMPORAL_ISSUE_TAG = new TupleTag<IssueLineageRecord>() {};
+  private static final TupleTag<IssueLineageRecord> SPATIAL_ISSUE_TAG = new TupleTag<IssueLineageRecord>() {};
   private static final Logger LOG = LoggerFactory.getLogger(DwCA2InterpretedRecordsPipeline.class);
 
   public static void main(String[] args) {
@@ -68,27 +68,14 @@ public class DwCA2InterpretedRecordsPipeline {
                               Issue.class,
                               Lineage.class,
                               IssueLineageRecord.class);
-    p.getCoderRegistry()
-      .registerCoderForType(temporalTag.getTypeDescriptor(), AvroCoder.of(temporalTag.getTypeDescriptor()));
-    p.getCoderRegistry()
-      .registerCoderForType(spatialTag.getTypeDescriptor(), AvroCoder.of(spatialTag.getTypeDescriptor()));
-    p.getCoderRegistry()
-      .registerCoderForType(temporalIssueTag.getTypeDescriptor(), AvroCoder.of(temporalIssueTag.getTypeDescriptor()));
-    p.getCoderRegistry()
-      .registerCoderForType(spatialIssueTag.getTypeDescriptor(), AvroCoder.of(spatialIssueTag.getTypeDescriptor()));
-
-    p.getCoderRegistry()
-      .registerCoderForType(temporalCategory.getTypeDescriptor(),
-                            KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(Event.class)));
-    p.getCoderRegistry()
-      .registerCoderForType(spatialCategory.getTypeDescriptor(),
-                            KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(Location.class)));
-    p.getCoderRegistry()
-      .registerCoderForType(spatialCategoryIssues.getTypeDescriptor(),
-                            KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)));
-    p.getCoderRegistry()
-      .registerCoderForType(temporalCategoryIssues.getTypeDescriptor(),
-                            KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)));
+    Coders.registerAvroCodersForTypes(p, TEMPORAL_TAG, SPATIAL_TAG, TEMPORAL_ISSUE_TAG, SPATIAL_ISSUE_TAG);
+    Coders.registerAvroCodersForKVTypes(p,
+                                        new TupleTag[] {TEMPORAL_CATEGORY, SPATIAL_CATEGORY, TEMPORAL_CATEGORY_ISSUES,
+                                          SPATIAL_CATEGORY_ISSUES},
+                                        Event.class,
+                                        Location.class,
+                                        IssueLineageRecord.class,
+                                        IssueLineageRecord.class);
 
     // Read the DwC-A using our custom reader
     PCollection<ExtendedRecord> rawRecords =
@@ -102,7 +89,7 @@ public class DwCA2InterpretedRecordsPipeline {
     PCollectionTuple interpretedCategory = rawRecords.apply(new RawToInterpretedCategoryTransformer());
 
     //Dumping the temporal category of interpreted records in an defined hive table location.
-    interpretedCategory.get(temporalCategory)
+    interpretedCategory.get(TEMPORAL_CATEGORY)
       .apply(ParDo.of(new DoFn<KV<String, Event>, Event>() {
         @ProcessElement
         public void processElement(ProcessContext ctx) {
@@ -113,7 +100,7 @@ public class DwCA2InterpretedRecordsPipeline {
              AvroIO.write(Event.class).to("demo/output/interpreted-temporaldata"));
 
     //Dumping the spatial category of interpreted records in a defined hive table location.
-    interpretedCategory.get(spatialCategory)
+    interpretedCategory.get(SPATIAL_CATEGORY)
       .apply(ParDo.of(new DoFn<KV<String, Location>, Location>() {
         @ProcessElement
         public void processElement(ProcessContext ctx) {
@@ -124,7 +111,7 @@ public class DwCA2InterpretedRecordsPipeline {
              AvroIO.write(Location.class).to("demo/output/interpreted-spatialdata"));
 
     //Dumping the temporal category of issues and lineages while interpreting the records in a defined hive table location.
-    interpretedCategory.get(temporalCategoryIssues)
+    interpretedCategory.get(TEMPORAL_CATEGORY_ISSUES)
       .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)))
       .apply(ParDo.of(new DoFn<KV<String, IssueLineageRecord>, IssueLineageRecord>() {
         @ProcessElement
@@ -135,8 +122,9 @@ public class DwCA2InterpretedRecordsPipeline {
       .apply(
         "Dumping the temporal category of issues and lineages while interpreting the records in a defined hive table location",
         AvroIO.write(IssueLineageRecord.class).to("demo/output/interpreted-temporalissue"));
+
     //Dumping the spatial category of issues and lineages while interpreting the records in a defined hive table location.
-    interpretedCategory.get(spatialCategoryIssues)
+    interpretedCategory.get(SPATIAL_CATEGORY_ISSUES)
       .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)))
       .apply(ParDo.of(new DoFn<KV<String, IssueLineageRecord>, IssueLineageRecord>() {
         @ProcessElement
@@ -147,25 +135,25 @@ public class DwCA2InterpretedRecordsPipeline {
       .apply(
         "Dumping the spatial category of issues and lineages while interpreting the records in a defined hive table location",
         AvroIO.write(IssueLineageRecord.class).to("demo/output/interpreted-spatialissue"));
-    ;
 
     /*
       Joining temporal category and spatial category to get the big flat interpreted record.
      */
     PCollection<KV<String, CoGbkResult>> joinedCollection =
-      KeyedPCollectionTuple.of(temporalTag, interpretedCategory.get(temporalCategory))
-        .and(spatialTag, interpretedCategory.get(spatialCategory))
+      KeyedPCollectionTuple.of(TEMPORAL_TAG, interpretedCategory.get(TEMPORAL_CATEGORY))
+        .and(SPATIAL_TAG, interpretedCategory.get(SPATIAL_CATEGORY))
         .apply(CoGroupByKey.create());
 
     PCollection<ExtendedOccurence> interpretedRecords = joinedCollection.apply(
       "Applying join on interpreted category of records to make a flat big interpreted record",
       ParDo.of(new CoGbkResultToFlattenedInterpretedRecord()));
+
     /*
       Joining temporal category issues and spatial category issues to get the overall issues together.
      */
     PCollection<KV<String, CoGbkResult>> joinedIssueCollection =
-      KeyedPCollectionTuple.of(temporalIssueTag, interpretedCategory.get(temporalCategoryIssues))
-        .and(spatialIssueTag, interpretedCategory.get(spatialCategoryIssues))
+      KeyedPCollectionTuple.of(TEMPORAL_ISSUE_TAG, interpretedCategory.get(TEMPORAL_CATEGORY_ISSUES))
+        .and(SPATIAL_ISSUE_TAG, interpretedCategory.get(SPATIAL_CATEGORY_ISSUES))
         .apply(CoGroupByKey.create());
 
     PCollection<IssueLineageRecord> interpretedIssueLineageRecords = joinedIssueCollection.apply(
@@ -195,8 +183,8 @@ public class DwCA2InterpretedRecordsPipeline {
     public void processElement(ProcessContext ctx) {
       KV<String, CoGbkResult> result = ctx.element();
       //get temporal and spatial info from the joined beam collection with tags
-      Event evt = result.getValue().getOnly(temporalTag);
-      Location loc = result.getValue().getOnly(spatialTag);
+      Event evt = result.getValue().getOnly(TEMPORAL_TAG);
+      Location loc = result.getValue().getOnly(SPATIAL_TAG);
 
       //create final interpreted record with values from the interpreted category
       ExtendedOccurence occurence = new ExtendedOccurence();
@@ -225,14 +213,14 @@ public class DwCA2InterpretedRecordsPipeline {
     public void processElement(ProcessContext ctx) {
       KV<String, CoGbkResult> result = ctx.element();
       //get temporal and spatial issues info from the joined beam collection with tags
-      IssueLineageRecord evt = result.getValue().getOnly(temporalIssueTag);
-      IssueLineageRecord loc = result.getValue().getOnly(spatialIssueTag);
+      IssueLineageRecord evt = result.getValue().getOnly(TEMPORAL_ISSUE_TAG);
+      IssueLineageRecord loc = result.getValue().getOnly(SPATIAL_ISSUE_TAG);
 
-      Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<CharSequence, List<Issue>>();
+      Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<>();
       fieldIssueMap.putAll(evt.getFieldIssuesMap());
       fieldIssueMap.putAll(loc.getFieldIssuesMap());
 
-      Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<CharSequence, List<Lineage>>();
+      Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<>();
       fieldLineageMap.putAll(evt.getFieldLineageMap());
       fieldLineageMap.putAll(loc.getFieldLineageMap());
       //construct a final IssueLineageRecord for all categories

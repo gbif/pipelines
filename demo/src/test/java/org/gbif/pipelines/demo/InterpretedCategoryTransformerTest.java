@@ -6,6 +6,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
+import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.functions.interpretation.DayInterpreter;
 import org.gbif.pipelines.core.functions.interpretation.InterpretationException;
 import org.gbif.pipelines.core.functions.interpretation.MonthInterpreter;
@@ -32,13 +33,14 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.TupleTag;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.spatialCategory;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.spatialCategoryIssues;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.temporalCategory;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.temporalCategoryIssues;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.SPATIAL_CATEGORY;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.SPATIAL_CATEGORY_ISSUES;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.TEMPORAL_CATEGORY;
+import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.TEMPORAL_CATEGORY_ISSUES;
 
 /**
  * Testing the RawRecordtoInterpretedCategoryPTransform.
@@ -49,29 +51,29 @@ public class InterpretedCategoryTransformerTest {
   static final String VALID_OCC_ID = "VALID_ID";
   static final String EMPTY_OCC_ID = "";
   static final String NULL_OCC_ID = null;
-  static final String valid_day = "12";
-  static final String valid_month = "2";
-  static final String valid_year = "2015";
-  static final String range_invalid_day = "35";
-  static final String range_invalid_month = "-1";
-  static final String range_invalid_year = "1";
-  static final String null_day = null;
-  static final String null_month = null;
-  static final String null_year = null;
-  static final String empty_day = "";
-  static final String empty_month = "";
-  static final String empty_year = "";
-  static final String invalid_day = "Ja";
-  static final String invalid_month = "May";
-  static final String invalid_year = "Y2K";
+  static final String VALID_DAY = "12";
+  static final String VALID_MONTH = "2";
+  static final String VALID_YEAR = "2015";
+  static final String RANGE_INVALID_DAY = "35";
+  static final String RANGE_INVALID_MONTH = "-1";
+  static final String RANGE_INVALID_YEAR = "1";
+  static final String NULL_DAY = null;
+  static final String NULL_MONTH = null;
+  static final String NULL_YEAR = null;
+  static final String EMPTY_DAY = "";
+  static final String EMPTY_MONTH = "";
+  static final String EMPTY_YEAR = "";
+  static final String INVALID_DAY = "Ja";
+  static final String INVALID_MONTH = "May";
+  static final String INVALID_YEAR = "Y2K";
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
   static ExtendedRecord VALID_INPUT() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<CharSequence, CharSequence>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), valid_day);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), valid_month);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), valid_year);
+    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), VALID_DAY);
+    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), VALID_MONTH);
+    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), VALID_YEAR);
     coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
     coreTerms.put(DwCATermIdentifier.country.getIdentifier(), Country.DENMARK.name());
     coreTerms.put(DwCATermIdentifier.continent.getIdentifier(), Continent.EUROPE.name());
@@ -83,10 +85,10 @@ public class InterpretedCategoryTransformerTest {
   }
 
   static ExtendedRecord INVALID_DAY_INVALID_INPUT1() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<CharSequence, CharSequence>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), range_invalid_day);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), valid_month);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), valid_year);
+    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), RANGE_INVALID_DAY);
+    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), VALID_MONTH);
+    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), VALID_YEAR);
     coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
     coreTerms.put(DwCATermIdentifier.country.getIdentifier(), "XYZ");
     coreTerms.put(DwCATermIdentifier.continent.getIdentifier(), Continent.EUROPE.name());
@@ -98,10 +100,10 @@ public class InterpretedCategoryTransformerTest {
   }
 
   static ExtendedRecord INVALID_INPUT2_ALL() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<CharSequence, CharSequence>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), invalid_day);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), invalid_month);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), invalid_year);
+    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), INVALID_DAY);
+    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), INVALID_MONTH);
+    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), INVALID_YEAR);
     coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
     coreTerms.put(DwCATermIdentifier.country.getIdentifier(), "XYZ");
     coreTerms.put(DwCATermIdentifier.continent.getIdentifier(), "ABC");
@@ -113,10 +115,10 @@ public class InterpretedCategoryTransformerTest {
   }
 
   static ExtendedRecord INVALID_MONTH_INVALID_INPUT2() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<CharSequence, CharSequence>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), valid_day);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), invalid_month);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), valid_year);
+    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), VALID_DAY);
+    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), INVALID_MONTH);
+    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), VALID_YEAR);
     coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
@@ -126,10 +128,10 @@ public class InterpretedCategoryTransformerTest {
   }
 
   static ExtendedRecord INVALID_YEAR_INVALID_INPUT2() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<CharSequence, CharSequence>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), valid_day);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), valid_month);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), invalid_year);
+    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), VALID_DAY);
+    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), VALID_MONTH);
+    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), INVALID_YEAR);
     coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
@@ -139,10 +141,10 @@ public class InterpretedCategoryTransformerTest {
   }
 
   static ExtendedRecord INVALID_DAY_YEAR_INVALID_INPUT2() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<CharSequence, CharSequence>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), invalid_day);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), valid_month);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), invalid_year);
+    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), INVALID_DAY);
+    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), VALID_MONTH);
+    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), INVALID_YEAR);
     coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
@@ -152,10 +154,10 @@ public class InterpretedCategoryTransformerTest {
   }
 
   static ExtendedRecord INVALID_MONTH_YEAR_INVALID_INPUT2() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<CharSequence, CharSequence>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), valid_day);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), invalid_month);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), invalid_year);
+    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), VALID_DAY);
+    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), INVALID_MONTH);
+    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), INVALID_YEAR);
     coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
@@ -165,10 +167,10 @@ public class InterpretedCategoryTransformerTest {
   }
 
   static ExtendedRecord INVALID_MONTH_DAY_INVALID_INPUT2() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<CharSequence, CharSequence>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), invalid_day);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), invalid_month);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), valid_year);
+    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), INVALID_DAY);
+    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), INVALID_MONTH);
+    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), VALID_YEAR);
     coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
@@ -177,13 +179,13 @@ public class InterpretedCategoryTransformerTest {
       .build();
   }
 
-  public static ExtendedRecord[] getExtendedRecordArray() {
+  private static ExtendedRecord[] getExtendedRecordArray() {
     return new ExtendedRecord[] {INVALID_MONTH_INVALID_INPUT2(), VALID_INPUT(), INVALID_INPUT2_ALL(),
       INVALID_DAY_YEAR_INVALID_INPUT2()};
 
   }
 
-  public static List<KV<String, Event>> getTemporal() throws Exception {
+  private static List<KV<String, Event>> getTemporal() {
     List<KV<String, Event>> eventsTemporal = new ArrayList<>();
     for (ExtendedRecord record : getExtendedRecordArray()) {
       Event e = new Event();
@@ -210,7 +212,7 @@ public class InterpretedCategoryTransformerTest {
     return eventsTemporal;
   }
 
-  public static List<KV<String, IssueLineageRecord>> getTemporalIssues() throws Exception {
+  private static List<KV<String, IssueLineageRecord>> getTemporalIssues() {
     List<KV<String, IssueLineageRecord>> temporalIssues = new ArrayList<>();
     for (ExtendedRecord record : getExtendedRecordArray()) {
       IssueLineageRecord e = new IssueLineageRecord();
@@ -255,26 +257,21 @@ public class InterpretedCategoryTransformerTest {
     /*
     setting coder registry with appropriate coders
      */
-    p.getCoderRegistry().registerCoderForClass(ExtendedRecord.class, AvroCoder.of(ExtendedRecord.class));
-    p.getCoderRegistry().registerCoderForClass(Event.class, AvroCoder.of(Event.class));
-    p.getCoderRegistry().registerCoderForClass(Location.class, AvroCoder.of(Location.class));
-    p.getCoderRegistry().registerCoderForClass(ExtendedOccurence.class, AvroCoder.of(ExtendedOccurence.class));
-    p.getCoderRegistry().registerCoderForClass(Issue.class, AvroCoder.of(Issue.class));
-    p.getCoderRegistry().registerCoderForClass(Lineage.class, AvroCoder.of(Lineage.class));
-    p.getCoderRegistry().registerCoderForClass(IssueLineageRecord.class, AvroCoder.of(IssueLineageRecord.class));
-
-    p.getCoderRegistry()
-      .registerCoderForType(temporalCategory.getTypeDescriptor(),
-                            KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(Event.class)));
-    p.getCoderRegistry()
-      .registerCoderForType(spatialCategory.getTypeDescriptor(),
-                            KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(Location.class)));
-    p.getCoderRegistry()
-      .registerCoderForType(spatialCategoryIssues.getTypeDescriptor(),
-                            KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)));
-    p.getCoderRegistry()
-      .registerCoderForType(temporalCategoryIssues.getTypeDescriptor(),
-                            KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)));
+    Coders.registerAvroCoders(p,
+                              ExtendedRecord.class,
+                              Event.class,
+                              Location.class,
+                              ExtendedOccurence.class,
+                              Issue.class,
+                              Lineage.class,
+                              IssueLineageRecord.class);
+    Coders.registerAvroCodersForKVTypes(p,
+                                        new TupleTag[] {TEMPORAL_CATEGORY, SPATIAL_CATEGORY, TEMPORAL_CATEGORY_ISSUES,
+                                          SPATIAL_CATEGORY_ISSUES},
+                                        Event.class,
+                                        Location.class,
+                                        IssueLineageRecord.class,
+                                        IssueLineageRecord.class);
     /*
     apply transformer to the pipeline and extract information from the output tuple
      */
@@ -284,19 +281,19 @@ public class InterpretedCategoryTransformerTest {
       apply.apply("interpreted records transform", new RawToInterpretedCategoryTransformer());
 
     PCollection<KV<String, Event>> events =
-      interpreted_records_transform.get(RawToInterpretedCategoryTransformer.temporalCategory)
+      interpreted_records_transform.get(RawToInterpretedCategoryTransformer.TEMPORAL_CATEGORY)
         .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(Event.class)));
 
     PCollection<KV<String, Location>> spatials =
-      interpreted_records_transform.get(RawToInterpretedCategoryTransformer.spatialCategory)
+      interpreted_records_transform.get(RawToInterpretedCategoryTransformer.SPATIAL_CATEGORY)
         .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(Location.class)));
 
     PCollection<KV<String, IssueLineageRecord>> eventsIssue =
-      interpreted_records_transform.get(RawToInterpretedCategoryTransformer.temporalCategoryIssues)
+      interpreted_records_transform.get(RawToInterpretedCategoryTransformer.TEMPORAL_CATEGORY_ISSUES)
         .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)));
 
     PCollection<KV<String, IssueLineageRecord>> spatialsIssue =
-      interpreted_records_transform.get(RawToInterpretedCategoryTransformer.spatialCategoryIssues)
+      interpreted_records_transform.get(RawToInterpretedCategoryTransformer.SPATIAL_CATEGORY_ISSUES)
         .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)));
 
     //verify temporal vents with expected results

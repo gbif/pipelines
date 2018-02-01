@@ -7,7 +7,7 @@ import org.gbif.pipelines.core.functions.interpretation.error.LineageType;
 
 import java.time.Year;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,26 +17,24 @@ public class YearInterpreter implements Interpretable<String, Integer> {
 
   @Override
   public Integer interpret(String input) throws InterpretationException {
-    Year x;
-    List<Issue> issues = new ArrayList<>();
-    List<Lineage> lineages = new ArrayList<>();
+    String trimmedInput = input == null ? null : input.trim();
 
     try {
-      x = Year.parse(input);
-      return x.getValue();
+      if (trimmedInput == null) return null;
+      return Year.parse(trimmedInput).getValue();
     } catch (DateTimeParseException ex) {
       //if parse failed
-      issues.add(Issue.newBuilder()
-                   .setRemark("Year cannot be parsed because of " + ex.getMessage())
-                   .setIssueType(IssueType.PARSE_ERROR)
-                   .build());
-      lineages.add(Lineage.newBuilder()
-                     .setRemark("Since Year cannot be parsed setting it to null")
-                     .setLineageType(LineageType.SET_TO_NULL)
-                     .build());
-      InterpretationException iex = new InterpretationException(issues, lineages);
-      iex.setInterpretedValue(null);
-      throw iex;
+      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                             .setRemark("Year cannot be parsed because of "
+                                                                        + ex.getMessage())
+                                                             .setIssueType(IssueType.PARSE_ERROR)
+                                                             .build());
+      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+                                                                 .setRemark(
+                                                                   "Since Year cannot be parsed setting it to null")
+                                                                 .setLineageType(LineageType.SET_TO_NULL)
+                                                                 .build());
+      throw new InterpretationException(issues, lineages, null);
     }
   }
 }
