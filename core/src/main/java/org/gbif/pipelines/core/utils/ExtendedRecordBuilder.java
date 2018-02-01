@@ -22,6 +22,7 @@ public class ExtendedRecordBuilder {
   private String rank;
   private String name;
   private String authorship;
+  private String id;
 
   public ExtendedRecordBuilder kingdom(String kingdom) {
     this.kingdom = kingdom;
@@ -68,8 +69,14 @@ public class ExtendedRecordBuilder {
     return this;
   }
 
+  public ExtendedRecordBuilder id(String id) {
+    this.id = id;
+    return this;
+  }
+
   public ExtendedRecord build() {
     ExtendedRecord record = new ExtendedRecord();
+    record.setId(id);
 
     Map<CharSequence, CharSequence> terms = new HashMap<>();
     terms.put(DwcTerm.kingdom.qualifiedName(), kingdom);

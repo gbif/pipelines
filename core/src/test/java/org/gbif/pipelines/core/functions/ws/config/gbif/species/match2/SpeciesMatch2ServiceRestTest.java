@@ -1,8 +1,8 @@
 package org.gbif.pipelines.core.functions.ws.config.gbif.species.match2;
 
+import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.functions.ws.gbif.species.match2.SpeciesMatch2Service;
 import org.gbif.pipelines.core.functions.ws.gbif.species.match2.SpeciesMatch2ServiceRest;
-import org.gbif.pipelines.core.functions.ws.gbif.species.match2.model.SpeciesMatch2ResponseModel;
 
 import java.io.IOException;
 
@@ -19,13 +19,16 @@ public class SpeciesMatch2ServiceRestTest {
   public void simpleCallTest() {
     SpeciesMatch2Service service = SpeciesMatch2ServiceRest.SINGLE.getService();
 
-    Call<SpeciesMatch2ResponseModel> call =
+    Call<NameUsageMatch2> call =
       service.match2(null, null, null, null, null, null, null, "Puma " + "concolor", true, false);
 
     try {
-      Response<SpeciesMatch2ResponseModel> response = call.execute();
+      Response<NameUsageMatch2> response = call.execute();
 
       Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+      Assert.assertNotNull(response);
+
       System.out.println(gson.toJson(response.body()));
 
     } catch (IOException e) {

@@ -1,27 +1,20 @@
 package org.gbif.pipelines.core.interpreter.taxonomy;
 
-import org.gbif.api.exception.UnparsableException;
-import org.gbif.api.model.checklistbank.ParsedName;
-import org.gbif.api.vocabulary.Kingdom;
-import org.gbif.api.vocabulary.Rank;
+import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.nameparser.NameParserGbifV1;
-import org.gbif.pipelines.core.functions.ws.gbif.species.match2.model.RankedNameResponse;
-import org.gbif.pipelines.core.functions.ws.gbif.species.match2.model.SpeciesMatch2ResponseModel;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.Validation;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.gbif.pipelines.core.interpreter.taxonomy.SpeciesMatchManager.getMatch;
-import static org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyHelper.checkIssues;
-import static org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyHelper.getUsage;
-import static org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyHelper.isSuccesfulMatch;
-import static org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyHelper.setRankData;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields should be based in the
@@ -45,106 +38,58 @@ public class TaxonomyInterpreter {
     Optional.ofNullable(extendedRecord)
       .filter(record -> record.getCoreTerms() != null)
       .filter(record -> !record.getCoreTerms().isEmpty())
-      .orElseThrow(() -> new TaxonomyInterpretationException("ExtendedRecord received is null or has no core terms. "
+      .filter(record -> record.getId() != null)
+      .filter(record -> record.getId() != "")
+      .orElseThrow(() -> new TaxonomyInterpretationException("ExtendedRecord with id and core terms is required. "
                                                              + "Please check how this ExtendedRecord was created."));
 
     // get match from WS
-    SpeciesMatch2ResponseModel responseModel = getMatch(extendedRecord);
+    NameUsageMatch2 responseModel = getMatch(extendedRecord);
 
     // create interpreted taxonomy
     InterpretedTaxonomy interpretedTaxonomy = new InterpretedTaxonomy();
 
+    // adapt taxon record
+    TaxonRecord taxonRecord = new TaxonRecordAdapter().adapt(responseModel);
+    taxonRecord.setId(extendedRecord.getId());
+    interpretedTaxonomy.setTaxonRecord(taxonRecord);
+
     // check issues
-    interpretedTaxonomy.getIssues().addAll(checkIssues(responseModel));
-
-    if (!isSuccesfulMatch(responseModel)) {
-      // handle unsuccessful response
-      return handleNotSuccesfulMatch(responseModel, extendedRecord);
-    }
-
-    // handle succesful response
-    return handleSuccesfulMatch(responseModel, extendedRecord);
-  }
-
-  private static InterpretedTaxonomy handleSuccesfulMatch(
-    SpeciesMatch2ResponseModel responseModel, ExtendedRecord extendedRecord
-  ) {
-
-    LOG.info("Handling succesful response from record {}", extendedRecord.getId());
-
-    InterpretedTaxonomy interpretedTaxonomy = new InterpretedTaxonomy();
-
-    // create taxonRecord with occurrenceId
-    TaxonRecord taxonRecord = new TaxonRecord();
-    interpretedTaxonomy.setTaxonRecord(taxonRecord);
-    taxonRecord.setId(extendedRecord.getId());
-
-    // parse name into pieces - we dont get them from the nub lookup
-    try {
-      ParsedName pn =
-        NAME_PARSER.parse(getUsage(responseModel).getName(), Rank.valueOf(getUsage(responseModel).getRank()));
-      taxonRecord.setGenericName(pn.getGenusOrAbove());
-      taxonRecord.setSpecificEpithet(pn.getSpecificEpithet());
-      taxonRecord.setInfraspecificEpithet(pn.getInfraSpecificEpithet());
-    } catch (UnparsableException e) {
-      if (e.type.isParsable()) {
-        LOG.warn("Fail to parse backbone {} name for occurrence {}: {}", e.type, extendedRecord.getId(), e.name);
-      }
-    }
-
-    // diagnostics
-    // TODO: do we need to add more diagnostic fields??
-    // FIXME: confidence not returned yet by the WS
-    // taxonRecord.setConfidence(responseModel.getDiagnostics().getConfidence());
-
-    // nomenclature
-    if (responseModel.getNomenclature() != null) {
-      taxonRecord.setNomenclatureId(responseModel.getNomenclature().getId());
-      taxonRecord.setNomenclatureSource(responseModel.getNomenclature().getSource());
-    }
-
-    // set usages
-    taxonRecord.setUsageKey(responseModel.getUsage().getKey());
-    taxonRecord.setUsageName(responseModel.getUsage().getName());
-    taxonRecord.setUsageRank(responseModel.getUsage().getRank());
-
-    if (responseModel.getAcceptedUsage() != null) {
-      taxonRecord.setAcceptedUsageKey(responseModel.getAcceptedUsage().getKey());
-      taxonRecord.setAcceptedUsageName(responseModel.getAcceptedUsage().getName());
-      taxonRecord.setAcceptedUsageRank(responseModel.getAcceptedUsage().getRank());
-    }
-
-    // map with classifications by rank
-    Map<Rank, RankedNameResponse> ranksResponse = responseModel.getClassification()
-      .stream()
-      .collect(Collectors.toMap(rankedName -> Rank.valueOf(rankedName.getRank()), rankedName -> rankedName));
-
-    for (Rank rank : Rank.LINNEAN_RANKS) {
-      setRankData(taxonRecord, rank, ranksResponse.get(rank));
-    }
+    List<Validation> validations = checkIssues(responseModel, extendedRecord.getId());
+    interpretedTaxonomy.setOccurrenceIssue(OccurrenceIssue.newBuilder()
+                                             .setId(extendedRecord.getId())
+                                             .setIssues(validations)
+                                             .build());
 
     return interpretedTaxonomy;
   }
 
-  private static InterpretedTaxonomy handleNotSuccesfulMatch(
-    SpeciesMatch2ResponseModel responseModel, ExtendedRecord extendedRecord
-  ) {
+  private static List<Validation> checkIssues(NameUsageMatch2 responseModel, CharSequence id) {
 
-    LOG.info("Handling unsuccesful response from record {}", extendedRecord.getId());
+    List<Validation> validations = new ArrayList<>();
 
-    InterpretedTaxonomy interpretedTaxonomy = new InterpretedTaxonomy();
+    switch (responseModel.getDiagnostics().getMatchType()) {
+      case NONE:
+        validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE));
+        break;
+      case FUZZY:
+        validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY));
+        break;
+      case HIGHERRANK:
+        validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK));
+        break;
+    }
 
-    // create taxonRecord with occurrenceId
-    TaxonRecord taxonRecord = new TaxonRecord();
-    interpretedTaxonomy.setTaxonRecord(taxonRecord);
-    taxonRecord.setId(extendedRecord.getId());
+    LOG.warn("Match type {} for occurrence {}", responseModel.getDiagnostics().getMatchType().name(), id);
 
-    // set unknown kingdom
-    taxonRecord.setUsageRank(Rank.KINGDOM.name());
-    taxonRecord.setUsageName(Kingdom.INCERTAE_SEDIS.scientificName());
-    taxonRecord.setUsageKey(Kingdom.INCERTAE_SEDIS.nubUsageKey());
+    return validations;
+  }
 
-    return interpretedTaxonomy;
+  private static Validation createValidation(org.gbif.api.vocabulary.OccurrenceIssue occurrenceIssue) {
+    return Validation.newBuilder()
+      .setName(occurrenceIssue.name())
+      .setSeverity(occurrenceIssue.getSeverity().name())
+      .build();
   }
 
 }

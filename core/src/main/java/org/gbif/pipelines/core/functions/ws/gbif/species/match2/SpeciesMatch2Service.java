@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.functions.ws.gbif.species.match2;
 
-import org.gbif.pipelines.core.functions.ws.gbif.species.match2.model.SpeciesMatch2ResponseModel;
+import org.gbif.api.v2.NameUsageMatch2;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -12,7 +12,7 @@ import retrofit2.http.Query;
 public interface SpeciesMatch2Service {
 
   @GET("/v1/species/match2")
-  Call<SpeciesMatch2ResponseModel> match2(
+  Call<NameUsageMatch2> match2(
     @Query("kingdom") String kingdom,
     @Query("phylum") String phylum,
     @Query("class") String clazz,

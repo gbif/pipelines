@@ -1,6 +1,8 @@
 package org.gbif.pipelines.core.interpreter.taxonomy;
 
+import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.model.checklistbank.ParsedName;
+import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.common.parsers.RankParser;
@@ -10,7 +12,6 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.functions.ws.gbif.species.match2.SpeciesMatch2Service;
 import org.gbif.pipelines.core.functions.ws.gbif.species.match2.SpeciesMatch2ServiceRest;
-import org.gbif.pipelines.core.functions.ws.gbif.species.match2.model.SpeciesMatch2ResponseModel;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.io.IOException;
@@ -26,8 +27,6 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 
-import static org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyHelper.isSuccesfulMatch;
-
 /**
  * Handles the calls to the species match WS.
  */
@@ -40,13 +39,13 @@ public class SpeciesMatchManager {
    *
    * @param extendedRecord avro file with the taxonomic data
    *
-   * @return {@link SpeciesMatch2ResponseModel} with the match received from the WS.
+   * @return {@link NameUsageMatch2} with the match received from the WS.
    *
    * @throws TaxonomyInterpretationException in case of errors
    */
-  public static SpeciesMatch2ResponseModel getMatch(ExtendedRecord extendedRecord)
+  public static NameUsageMatch2 getMatch(ExtendedRecord extendedRecord)
     throws TaxonomyInterpretationException {
-    SpeciesMatch2ResponseModel responseModel = callSpeciesMatchWs(extendedRecord.getCoreTerms());
+    NameUsageMatch2 responseModel = callSpeciesMatchWs(extendedRecord.getCoreTerms());
 
     if (!isSuccesfulMatch(responseModel)) {
       LOG.info("Retrying match with identification extension");
@@ -73,13 +72,13 @@ public class SpeciesMatchManager {
     return responseModel;
   }
 
-  private static SpeciesMatch2ResponseModel callSpeciesMatchWs(Map<CharSequence, CharSequence> terms)
+  private static NameUsageMatch2 callSpeciesMatchWs(Map<CharSequence, CharSequence> terms)
     throws TaxonomyInterpretationException {
     TaxonomyFieldsWorkingCopy workingCopy = new TaxonomyFieldsWorkingCopy(terms);
 
     SpeciesMatch2Service service = SpeciesMatch2ServiceRest.SINGLE.getService();
 
-    Call<SpeciesMatch2ResponseModel> call = service.match2(workingCopy.kingdom,
+    Call<NameUsageMatch2> call = service.match2(workingCopy.kingdom,
                                                            workingCopy.phylum,
                                                            workingCopy.clazz,
                                                            workingCopy.order,
@@ -90,10 +89,10 @@ public class SpeciesMatchManager {
                                                            false,
                                                            false);
 
-    SpeciesMatch2ResponseModel responseModel = null;
+    NameUsageMatch2 responseModel = null;
 
     try {
-      Response<SpeciesMatch2ResponseModel> response = call.execute();
+      Response<NameUsageMatch2> response = call.execute();
 
       responseModel = response.body();
 
@@ -109,10 +108,14 @@ public class SpeciesMatchManager {
     return responseModel;
   }
 
-  private static boolean isEmptyResponse(SpeciesMatch2ResponseModel response) {
+  private static boolean isEmptyResponse(NameUsageMatch2 response) {
     return response == null || (response.getUsage() == null
                                 && response.getClassification() == null
                                 && response.getDiagnostics() == null);
+  }
+
+  private static boolean isSuccesfulMatch(NameUsageMatch2 responseModel) {
+    return !NameUsageMatch.MatchType.NONE.equals(responseModel.getDiagnostics().getMatchType());
   }
 
   /**

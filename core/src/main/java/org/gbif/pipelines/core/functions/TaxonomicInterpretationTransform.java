@@ -1,16 +1,15 @@
 package org.gbif.pipelines.core.functions;
 
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.pipelines.core.interpreter.taxonomy.InterpretedTaxonomy;
 import org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyInterpretationException;
 import org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
@@ -24,9 +23,7 @@ public class TaxonomicInterpretationTransform extends PTransform<PCollection<Ext
 
   public static final TupleTag<TaxonRecord> TAXON_RECORD_TUPLE_TAG = new TupleTag<TaxonRecord>() {};
 
-  // TODO: use occurrence schema when available
-  public static final TupleTag<KV<String, OccurrenceIssue>> TAXON_ISSUES_TUPLE_TAG =
-    new TupleTag<KV<String, OccurrenceIssue>>() {};
+  public static final TupleTag<OccurrenceIssue> TAXON_ISSUES_TUPLE_TAG = new TupleTag<OccurrenceIssue>() {};
 
   @Override
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
@@ -47,13 +44,11 @@ public class TaxonomicInterpretationTransform extends PTransform<PCollection<Ext
           InterpretedTaxonomy interpretedTaxonomy = TaxonomyInterpreter.interpretTaxonomyFields(extendedRecord);
 
           context.output(TAXON_RECORD_TUPLE_TAG, interpretedTaxonomy.getTaxonRecord());
-
-          interpretedTaxonomy.getIssues()
-            .forEach(issue -> context.output(TAXON_ISSUES_TUPLE_TAG, KV.of(extendedRecord.getId().toString(), issue)));
+          context.output(TAXON_ISSUES_TUPLE_TAG, interpretedTaxonomy.getOccurrenceIssue());
 
         } catch (TaxonomyInterpretationException e) {
           LOG.error("Error while interpreting taxonmy of record {}", extendedRecord.getId(), e);
-          // TODO: add to side output
+          // TODO: add to side output?? these are unexpected erros, they should not be issues
         }
 
       }

@@ -1,11 +1,9 @@
 package org.gbif.pipelines.core.interpreter.taxonomy;
 
-import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Models the interpretation of a taxonomy.
@@ -16,8 +14,7 @@ public class InterpretedTaxonomy implements Serializable {
 
   private TaxonRecord taxonRecord;
 
-  // FIXME: change when the issue handling approach is defined
-  private List<OccurrenceIssue> issues = new ArrayList<>();
+  private OccurrenceIssue occurrenceIssue;
 
   public TaxonRecord getTaxonRecord() {
     return taxonRecord;
@@ -27,11 +24,11 @@ public class InterpretedTaxonomy implements Serializable {
     this.taxonRecord = taxonRecord;
   }
 
-  public List<OccurrenceIssue> getIssues() {
-    return issues;
+  public OccurrenceIssue getOccurrenceIssue() {
+    return occurrenceIssue;
   }
 
-  public void setIssues(List<OccurrenceIssue> issues) {
-    this.issues = issues;
+  public void setOccurrenceIssue(OccurrenceIssue occurrenceIssue) {
+    this.occurrenceIssue = occurrenceIssue;
   }
 }

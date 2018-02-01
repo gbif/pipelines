@@ -22,3 +22,36 @@ sudo -u hdfs hadoop jar /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar org.gbif.pipel
 
 To check all the parameters available take a look at the HdfsExporterOptions class. 
 Also notice that some parameters have default values, in case no value is provided.
+
+### Demo interpret taxonomic fields
+
+Run demo pipeline:
+
+```
+sudo -u hdfs hadoop jar /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.demo.TaxonomyInterpretationPipeline
+```
+
+Create hive tables:
+
+```
+USE pipelines; 
+ 
+SET hive.variable.substitute=true; 
+ 
+DROP TABLE IF EXISTS taxon_interpreted;
+DROP TABLE IF EXISTS taxon_issues_interpreted;
+
+CREATE EXTERNAL TABLE taxon_interpreted
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' 
+STORED as INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' 
+OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' 
+LOCATION 'hdfs://ha-nn/pipelines/avrotest1/taxon' 
+TBLPROPERTIES ('avro.schema.url'= 'hdfs://ha-nn/pipelines/avroschemas/taxonRecord.avsc'); 
+
+CREATE EXTERNAL TABLE taxon_issues_interpreted
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' 
+STORED as INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' 
+OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' 
+LOCATION 'hdfs://ha-nn/pipelines/avrotest1/taxonIssues' 
+TBLPROPERTIES ('avro.schema.url'= 'hdfs://ha-nn/pipelines/avroschemas/issues.avsc'); 
+```
