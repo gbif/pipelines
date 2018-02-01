@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
  * The core record ID will be used or if not present, a UUID is created.
  */
 public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
+
+  private static final int BUFFER_COPY_SIZE = 10_000;
   private static final Logger LOG = LoggerFactory.getLogger(DwCAInputFormat.class);
 
   @Override
@@ -61,7 +63,7 @@ public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
       FSDataInputStream fileIn = fs.open(file);
       FileOutputStream fileOut = new FileOutputStream(tmpFile.toFile());
       LOG.info("Copying from {} to {}", file, tmpFile);
-      IOUtils.copyBytes(fileIn, fileOut, 100000, true);
+      IOUtils.copyBytes(fileIn, fileOut, BUFFER_COPY_SIZE, true);
 
       // having copied the file out of HDFS onto the local FS in a temp folder, we prepare it (sorts files)
       java.nio.file.Path tmpSpace = Files.createTempDirectory("tmp-" + context.getTaskAttemptID().getJobID().getId() +

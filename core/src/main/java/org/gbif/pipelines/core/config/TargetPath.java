@@ -11,14 +11,17 @@ public class TargetPath implements Serializable {
 
   private static final long serialVersionUID = 1843400832026524345L;
 
-  private String directory;
+  private final String directory;
 
-  private String fileName;
+  private final String fileName;
 
-  public TargetPath() {}
-
+  /**
+   * Builds a new instance using a directory and file name.
+   * @param dir directory name
+   * @param fileName file name
+   */
   public TargetPath(String dir, String fileName) {
-    this.directory = dir;
+    directory = dir;
     this.fileName = fileName;
   }
 
@@ -26,16 +29,16 @@ public class TargetPath implements Serializable {
     return directory;
   }
 
-  public void setDirectory(String directory) {
-    this.directory = directory;
-  }
-
   public String getFileName() {
     return fileName;
   }
 
-  public void setFileName(String fileName) {
-    this.fileName = fileName;
+  /**
+   *
+   * @return a full path which concatenates the directory and file names.
+   */
+  public String getFilePath(){
+    return getFullPath(directory, fileName);
   }
 
   /**

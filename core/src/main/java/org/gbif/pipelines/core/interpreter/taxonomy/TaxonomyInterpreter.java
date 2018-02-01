@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.interpreter.taxonomy;
 
 import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.nameparser.NameParserGbifV1;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -27,8 +26,6 @@ import static org.gbif.pipelines.core.interpreter.taxonomy.SpeciesMatchManager.g
 public class TaxonomyInterpreter {
 
   private static final Logger LOG = LoggerFactory.getLogger(TaxonomyInterpreter.class);
-
-  private static final NameParserGbifV1 NAME_PARSER = new NameParserGbifV1();
 
   /**
    * Interprets a taxonomy from the taxonomic fields specified in the {@link ExtendedRecord} received.

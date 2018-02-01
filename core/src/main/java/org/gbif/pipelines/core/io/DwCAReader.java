@@ -22,7 +22,7 @@ public class DwCAReader {
   private static final Logger LOG = LoggerFactory.getLogger(DwCAReader.class);
   private final String source;
   private final String workingDir;
-  private ClosableIterator<StarRecord> iter;
+  private ClosableIterator<StarRecord> starRecordsIt;
   private long recordsReturned;
   private ExtendedRecord current;
 
@@ -36,15 +36,15 @@ public class DwCAReader {
     Path extractToFolder = Paths.get(workingDir);
     Archive dwcArchive = DwcFiles.fromCompressed(Paths.get(source), extractToFolder);
     NormalizedDwcArchive nda = DwcFiles.prepareArchive(dwcArchive, false, false);
-    iter = nda.iterator();
+    starRecordsIt = nda.iterator();
     return advance();
   }
 
   public boolean advance() {
-    if (!iter.hasNext()) {
+    if (!starRecordsIt.hasNext()) {
       return false;
     }
-    final StarRecord next = iter.next();
+    StarRecord next = starRecordsIt.next();
     recordsReturned++;
     if (recordsReturned % 1000 == 0) {
       LOG.info("Read [{}] records", recordsReturned);
@@ -61,12 +61,12 @@ public class DwCAReader {
   }
 
   public void close() throws IOException {
-    if (iter == null) {
+    if (starRecordsIt == null) {
       return;
     }
     try {
       LOG.info("Closing DwC-A reader having read [{}] records", recordsReturned);
-      iter.close();
+      starRecordsIt.close();
     } catch (Exception e) {
       throw new IOException(e);
     }

@@ -1,0 +1,18 @@
+/**
+ * Represents the interpreted fields of terms related to temporal.
+ */
+{
+  "name": "InterpretedExtendedRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "doc": "Interpreted values at the occurrence record level",
+  "type": "record",
+  "fields": [
+    {"name": "id", "type": "string", "doc": "The record id"},
+    {"name": "basisOfRecord", "type": ["null", "string"], "default" : null },
+    {"name": "sex", "type": ["null", "string"], "default" : null },
+    {"name": "lifeStage", "type": ["null", "string"], "default" : null },
+    {"name": "establishmentMeans", "type": ["null", "string"], "default" : null },
+    {"name": "individualCount", "type": ["null", "int"], "default" : null },
+    {"name": "typeStatus", "type": ["null", "string"], "default" : null }
+  ]
+}

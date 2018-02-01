@@ -13,6 +13,10 @@ public class Config {
   private static final String WS_BASE_PATH_PROP = "ws.basePath";
   private static final String WS_TIMEOUT_PROP = "ws.timeoutSeconds";
 
+  // defualts
+  private static final String DEFAULT_TIMEOUT = "60";
+  private static final String DEFAULT_CACHE_SIZE = "100";
+
   private String basePath;
   private long timeout;
   private CacheConfig cacheConfig;
@@ -31,7 +35,7 @@ public class Config {
     this.basePath = Optional.ofNullable(props.getProperty(WS_BASE_PATH_PROP))
       .filter(s -> !s.isEmpty())
       .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
-    this.timeout = Long.parseLong(props.getProperty(WS_TIMEOUT_PROP, "60"));
+    this.timeout = Long.parseLong(props.getProperty(WS_TIMEOUT_PROP, DEFAULT_TIMEOUT));
 
     Optional<String> cacheNameOptional =
       Optional.ofNullable(props.getProperty(CacheConfig.CACHE_NAME_PROP)).filter(s -> !s.isEmpty());
@@ -39,7 +43,8 @@ public class Config {
     if (cacheNameOptional.isPresent()) {
       this.cacheConfig = new CacheConfig();
       this.cacheConfig.name = cacheNameOptional.get();
-      this.cacheConfig.size = Long.parseLong(props.getProperty(CacheConfig.CACHE_SIZE_PROP, "100")) * 1024 * 1024;
+      this.cacheConfig.size =
+        Long.parseLong(props.getProperty(CacheConfig.CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE)) * 1024 * 1024;
     }
 
   }
