@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.functions.transforms;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.common.parsers.ContinentParser;
 import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.core.functions.interpretation.CountryCodeInterpreter;
 import org.gbif.pipelines.core.functions.interpretation.CountryInterpreter;
@@ -47,15 +48,15 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
     Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<>();
     //mapping raw record with interpreted ones
     loc.setOccurrenceID(record.getId());
-    loc.setLocationID(record.getCoreTerms().get(DwCATermIdentifier.locationID.getIdentifier()));
-    loc.setHigherGeographyID(record.getCoreTerms().get(DwCATermIdentifier.higherGeographyID.getIdentifier()));
-    loc.setHigherGeography(record.getCoreTerms().get(DwCATermIdentifier.higherGeography.getIdentifier()));
+    loc.setLocationID(record.getCoreTerms().get(DwcTerm.locationID.qualifiedName()));
+    loc.setHigherGeographyID(record.getCoreTerms().get(DwcTerm.higherGeographyID.qualifiedName()));
+    loc.setHigherGeography(record.getCoreTerms().get(DwcTerm.higherGeography.qualifiedName()));
 
     /*
       Interpreting Continent
      */
 
-    CharSequence rawContinent = record.getCoreTerms().get(DwCATermIdentifier.continent.getIdentifier());
+    CharSequence rawContinent = record.getCoreTerms().get(DwcTerm.continent.qualifiedName());
 
     if (rawContinent != null) {
       final ParseResult<Continent> parse = ContinentParser.getInstance().parse(rawContinent.toString());
@@ -63,13 +64,13 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
         loc.setContinent(parse.getPayload().getTitle());
       } else {
         loc.setContinent(null);
-        fieldIssueMap.put(DwCATermIdentifier.continent.name(),
+        fieldIssueMap.put(DwcTerm.continent.name(),
                           Collections.singletonList(Issue.newBuilder()
                                                       .setRemark("Could not parse continent because " + (parse.getError()!=null?
                                                         parse.getError().getMessage():" is null"))
                                                       .setIssueType(IssueType.PARSE_ERROR)
                                                       .build()));
-        fieldLineageMap.put(DwCATermIdentifier.continent.name(),
+        fieldLineageMap.put(DwcTerm.continent.name(),
                             Collections.singletonList(Lineage.newBuilder()
                                                         .setRemark(
                                                           "Could not parse the continent or invalid value setting it to null")
@@ -78,21 +79,21 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
       }
     }
 
-    loc.setWaterBody(record.getCoreTerms().get(DwCATermIdentifier.waterBody.getIdentifier()));
-    loc.setIslandGroup(record.getCoreTerms().get(DwCATermIdentifier.islandGroup.getIdentifier()));
-    loc.setIsland(record.getCoreTerms().get(DwCATermIdentifier.island.getIdentifier()));
+    loc.setWaterBody(record.getCoreTerms().get(DwcTerm.waterBody.qualifiedName()));
+    loc.setIslandGroup(record.getCoreTerms().get(DwcTerm.islandGroup.qualifiedName()));
+    loc.setIsland(record.getCoreTerms().get(DwcTerm.island.qualifiedName()));
 
     /*
       Interpreting Country code
      */
-    CharSequence rawCountry = record.getCoreTerms().get(DwCATermIdentifier.country.getIdentifier());
-    CharSequence rawCountryCode = record.getCoreTerms().get(DwCATermIdentifier.countryCode.getIdentifier());
+    CharSequence rawCountry = record.getCoreTerms().get(DwcTerm.country.qualifiedName());
+    CharSequence rawCountryCode = record.getCoreTerms().get(DwcTerm.countryCode.qualifiedName());
     if (rawCountry != null) {
       try {
         loc.setCountry(new CountryInterpreter().interpret(rawCountry.toString()));
       } catch (InterpretationException e) {
-        fieldIssueMap.put(DwCATermIdentifier.country.name(), e.getIssues());
-        fieldLineageMap.put(DwCATermIdentifier.country.name(), e.getLineages());
+        fieldIssueMap.put(DwcTerm.country.name(), e.getIssues());
+        fieldLineageMap.put(DwcTerm.country.name(), e.getLineages());
         e.getInterpretedValue().ifPresent((interpretedCountry) -> loc.setCountry(interpretedCountry.toString()));
       }
     }
@@ -100,60 +101,60 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
       try {
         loc.setCountryCode(new CountryCodeInterpreter().interpret(rawCountryCode.toString()));
       } catch (InterpretationException e) {
-        fieldIssueMap.put(DwCATermIdentifier.country.name(), e.getIssues());
-        fieldLineageMap.put(DwCATermIdentifier.country.name(), e.getLineages());
+        fieldIssueMap.put(DwcTerm.country.name(), e.getIssues());
+        fieldLineageMap.put(DwcTerm.country.name(), e.getLineages());
         e.getInterpretedValue()
           .ifPresent((interpretedCountryCode) -> loc.setCountryCode(interpretedCountryCode.toString()));
       }
     }
 
-    loc.setStateProvince(record.getCoreTerms().get(DwCATermIdentifier.stateProvince.getIdentifier()));
-    loc.setCounty(record.getCoreTerms().get(DwCATermIdentifier.county.getIdentifier()));
-    loc.setMunicipality(record.getCoreTerms().get(DwCATermIdentifier.municipality.getIdentifier()));
-    loc.setLocality(record.getCoreTerms().get(DwCATermIdentifier.locality.getIdentifier()));
-    loc.setVerbatimLocality(record.getCoreTerms().get(DwCATermIdentifier.verbatimLocality.getIdentifier()));
+    loc.setStateProvince(record.getCoreTerms().get(DwcTerm.stateProvince.qualifiedName()));
+    loc.setCounty(record.getCoreTerms().get(DwcTerm.county.qualifiedName()));
+    loc.setMunicipality(record.getCoreTerms().get(DwcTerm.municipality.qualifiedName()));
+    loc.setLocality(record.getCoreTerms().get(DwcTerm.locality.qualifiedName()));
+    loc.setVerbatimLocality(record.getCoreTerms().get(DwcTerm.verbatimLocality.qualifiedName()));
     loc.setMinimumElevationInMeters(record.getCoreTerms()
-                                      .get(DwCATermIdentifier.minimumElevationInMeters.getIdentifier()));
+                                      .get(DwcTerm.minimumElevationInMeters.qualifiedName()));
     loc.setMaximumElevationInMeters(record.getCoreTerms()
-                                      .get(DwCATermIdentifier.maximumElevationInMeters.getIdentifier()));
-    loc.setVerbatimElevation(record.getCoreTerms().get(DwCATermIdentifier.verbatimElevation.getIdentifier()));
-    loc.setMaximumDepthInMeters(record.getCoreTerms().get(DwCATermIdentifier.maximumDepthInMeters.getIdentifier()));
-    loc.setMinimumDepthInMeters(record.getCoreTerms().get(DwCATermIdentifier.minimumDepthInMeters.getIdentifier()));
-    loc.setLocationAccordingTo(record.getCoreTerms().get(DwCATermIdentifier.locationAccordingTo.getIdentifier()));
-    loc.setLocationRemarks(record.getCoreTerms().get(DwCATermIdentifier.locationRemarks.getIdentifier()));
-    loc.setDecimalLatitude(record.getCoreTerms().get(DwCATermIdentifier.decimalLatitude.getIdentifier()));
-    loc.setDecimalLongitude(record.getCoreTerms().get(DwCATermIdentifier.decimalLongitude.getIdentifier()));
-    loc.setGeodeticDatum(record.getCoreTerms().get(DwCATermIdentifier.geodeticDatum.getIdentifier()));
+                                      .get(DwcTerm.maximumElevationInMeters.qualifiedName()));
+    loc.setVerbatimElevation(record.getCoreTerms().get(DwcTerm.verbatimElevation.qualifiedName()));
+    loc.setMaximumDepthInMeters(record.getCoreTerms().get(DwcTerm.maximumDepthInMeters.qualifiedName()));
+    loc.setMinimumDepthInMeters(record.getCoreTerms().get(DwcTerm.minimumDepthInMeters.qualifiedName()));
+    loc.setLocationAccordingTo(record.getCoreTerms().get(DwcTerm.locationAccordingTo.qualifiedName()));
+    loc.setLocationRemarks(record.getCoreTerms().get(DwcTerm.locationRemarks.qualifiedName()));
+    loc.setDecimalLatitude(record.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()));
+    loc.setDecimalLongitude(record.getCoreTerms().get(DwcTerm.decimalLongitude.qualifiedName()));
+    loc.setGeodeticDatum(record.getCoreTerms().get(DwcTerm.geodeticDatum.qualifiedName()));
     loc.setCoordinateUncertaintyInMeters(record.getCoreTerms()
-                                           .get(DwCATermIdentifier.coordinateUncertaintyInMeters.getIdentifier()));
-    loc.setCoordinatePrecision(record.getCoreTerms().get(DwCATermIdentifier.coordinatePrecision.getIdentifier()));
-    loc.setPointRadiusSpatialFit(record.getCoreTerms().get(DwCATermIdentifier.pointRadiusSpatialFit.getIdentifier()));
-    loc.setVerbatimCoordinates(record.getCoreTerms().get(DwCATermIdentifier.verbatimCoordinates.getIdentifier()));
-    loc.setVerbatimLatitude(record.getCoreTerms().get(DwCATermIdentifier.verbatimLatitude.getIdentifier()));
-    loc.setVerbatimLongitude(record.getCoreTerms().get(DwCATermIdentifier.verbatimLongitude.getIdentifier()));
+                                           .get(DwcTerm.coordinateUncertaintyInMeters.qualifiedName()));
+    loc.setCoordinatePrecision(record.getCoreTerms().get(DwcTerm.coordinatePrecision.qualifiedName()));
+    loc.setPointRadiusSpatialFit(record.getCoreTerms().get(DwcTerm.pointRadiusSpatialFit.qualifiedName()));
+    loc.setVerbatimCoordinates(record.getCoreTerms().get(DwcTerm.verbatimCoordinates.qualifiedName()));
+    loc.setVerbatimLatitude(record.getCoreTerms().get(DwcTerm.verbatimLatitude.qualifiedName()));
+    loc.setVerbatimLongitude(record.getCoreTerms().get(DwcTerm.verbatimLongitude.qualifiedName()));
     loc.setVerbatimCoordinateSystem(record.getCoreTerms()
-                                      .get(DwCATermIdentifier.verbatimCoordinateSystem.getIdentifier()));
-    loc.setVerbatimSRS(record.getCoreTerms().get(DwCATermIdentifier.verbatimSRS.getIdentifier()));
-    loc.setFootprintWKT(record.getCoreTerms().get(DwCATermIdentifier.footprintWKT.getIdentifier()));
-    loc.setFootprintSRS(record.getCoreTerms().get(DwCATermIdentifier.footprintSRS.getIdentifier()));
-    loc.setFootprintSpatialFit(record.getCoreTerms().get(DwCATermIdentifier.footprintSpatialFit.getIdentifier()));
-    loc.setGeoreferencedBy(record.getCoreTerms().get(DwCATermIdentifier.georeferencedBy.getIdentifier()));
-    loc.setGeoreferencedDate(record.getCoreTerms().get(DwCATermIdentifier.georeferencedDate.getIdentifier()));
-    loc.setGeoreferenceProtocol(record.getCoreTerms().get(DwCATermIdentifier.georeferenceProtocol.getIdentifier()));
-    loc.setGeoreferenceSources(record.getCoreTerms().get(DwCATermIdentifier.georeferenceSources.getIdentifier()));
+                                      .get(DwcTerm.verbatimCoordinateSystem.qualifiedName()));
+    loc.setVerbatimSRS(record.getCoreTerms().get(DwcTerm.verbatimSRS.qualifiedName()));
+    loc.setFootprintWKT(record.getCoreTerms().get(DwcTerm.footprintWKT.qualifiedName()));
+    loc.setFootprintSRS(record.getCoreTerms().get(DwcTerm.footprintSRS.qualifiedName()));
+    loc.setFootprintSpatialFit(record.getCoreTerms().get(DwcTerm.footprintSpatialFit.qualifiedName()));
+    loc.setGeoreferencedBy(record.getCoreTerms().get(DwcTerm.georeferencedBy.qualifiedName()));
+    loc.setGeoreferencedDate(record.getCoreTerms().get(DwcTerm.georeferencedDate.qualifiedName()));
+    loc.setGeoreferenceProtocol(record.getCoreTerms().get(DwcTerm.georeferenceProtocol.qualifiedName()));
+    loc.setGeoreferenceSources(record.getCoreTerms().get(DwcTerm.georeferenceSources.qualifiedName()));
     loc.setGeoreferenceVerificationStatus(record.getCoreTerms()
-                                            .get(DwCATermIdentifier.georeferenceVerificationStatus.getIdentifier()));
-    loc.setGeoreferenceRemarks(record.getCoreTerms().get(DwCATermIdentifier.georeferenceRemarks.getIdentifier()));
-    loc.setInstitutionID(record.getCoreTerms().get(DwCATermIdentifier.institutionID.getIdentifier()));
-    loc.setCollectionID(record.getCoreTerms().get(DwCATermIdentifier.collectionID.getIdentifier()));
-    loc.setDatasetID(record.getCoreTerms().get(DwCATermIdentifier.datasetID.getIdentifier()));
-    loc.setInstitutionCode(record.getCoreTerms().get(DwCATermIdentifier.institutionCode.getIdentifier()));
-    loc.setCollectionCode(record.getCoreTerms().get(DwCATermIdentifier.collectionCode.getIdentifier()));
-    loc.setDatasetName(record.getCoreTerms().get(DwCATermIdentifier.datasetName.getIdentifier()));
-    loc.setOwnerInstitutionCode(record.getCoreTerms().get(DwCATermIdentifier.ownerInstitutionCode.getIdentifier()));
-    loc.setDynamicProperties(record.getCoreTerms().get(DwCATermIdentifier.dynamicProperties.getIdentifier()));
-    loc.setInformationWithheld(record.getCoreTerms().get(DwCATermIdentifier.informationWithheld.getIdentifier()));
-    loc.setDataGeneralizations(record.getCoreTerms().get(DwCATermIdentifier.dataGeneralizations.getIdentifier()));
+                                            .get(DwcTerm.georeferenceVerificationStatus.qualifiedName()));
+    loc.setGeoreferenceRemarks(record.getCoreTerms().get(DwcTerm.georeferenceRemarks.qualifiedName()));
+    loc.setInstitutionID(record.getCoreTerms().get(DwcTerm.institutionID.qualifiedName()));
+    loc.setCollectionID(record.getCoreTerms().get(DwcTerm.collectionID.qualifiedName()));
+    loc.setDatasetID(record.getCoreTerms().get(DwcTerm.datasetID.qualifiedName()));
+    loc.setInstitutionCode(record.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName()));
+    loc.setCollectionCode(record.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName()));
+    loc.setDatasetName(record.getCoreTerms().get(DwcTerm.datasetName.qualifiedName()));
+    loc.setOwnerInstitutionCode(record.getCoreTerms().get(DwcTerm.ownerInstitutionCode.qualifiedName()));
+    loc.setDynamicProperties(record.getCoreTerms().get(DwcTerm.dynamicProperties.qualifiedName()));
+    loc.setInformationWithheld(record.getCoreTerms().get(DwcTerm.informationWithheld.qualifiedName()));
+    loc.setDataGeneralizations(record.getCoreTerms().get(DwcTerm.dataGeneralizations.qualifiedName()));
     //all issues and lineages are dumped on this object
     final IssueLineageRecord finalRecord = IssueLineageRecord.newBuilder()
       .setOccurenceId(record.getId())

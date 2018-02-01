@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.functions.transforms;
 
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
 import org.gbif.pipelines.core.functions.interpretation.DayInterpreter;
 import org.gbif.pipelines.core.functions.interpretation.InterpretationException;
@@ -45,27 +46,27 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     //mapping raw record with interpreted ones
     evt.setOccurrenceID(record.getId());
 
-    evt.setBasisOfRecord(record.getCoreTerms().get(DwCATermIdentifier.basisOfRecord.getIdentifier()));
-    evt.setEventID(record.getCoreTerms().get(DwCATermIdentifier.eventID.getIdentifier()));
-    evt.setParentEventID(record.getCoreTerms().get(DwCATermIdentifier.parentEventID.getIdentifier()));
-    evt.setFieldNumber(record.getCoreTerms().get(DwCATermIdentifier.fieldNumber.getIdentifier()));
-    evt.setEventDate(record.getCoreTerms().get(DwCATermIdentifier.eventDate.getIdentifier()));
-    evt.setStartDayOfYear(record.getCoreTerms().get(DwCATermIdentifier.startDayOfYear.getIdentifier()));
-    evt.setEndDayOfYear(record.getCoreTerms().get(DwCATermIdentifier.endDayOfYear.getIdentifier()));
+    evt.setBasisOfRecord(record.getCoreTerms().get(DwcTerm.basisOfRecord.qualifiedName()));
+    evt.setEventID(record.getCoreTerms().get(DwcTerm.eventID.qualifiedName()));
+    evt.setParentEventID(record.getCoreTerms().get(DwcTerm.parentEventID.qualifiedName()));
+    evt.setFieldNumber(record.getCoreTerms().get(DwcTerm.fieldNumber.qualifiedName()));
+    evt.setEventDate(record.getCoreTerms().get(DwcTerm.eventDate.qualifiedName()));
+    evt.setStartDayOfYear(record.getCoreTerms().get(DwcTerm.startDayOfYear.qualifiedName()));
+    evt.setEndDayOfYear(record.getCoreTerms().get(DwcTerm.endDayOfYear.qualifiedName()));
 
     /*
       Day month year interpretation
      */
-    CharSequence raw_year = record.getCoreTerms().get(DwCATermIdentifier.year.getIdentifier());
-    CharSequence raw_month = record.getCoreTerms().get(DwCATermIdentifier.month.getIdentifier());
-    CharSequence raw_day = record.getCoreTerms().get(DwCATermIdentifier.day.getIdentifier());
+    CharSequence raw_year = record.getCoreTerms().get(DwcTerm.year.qualifiedName());
+    CharSequence raw_month = record.getCoreTerms().get(DwcTerm.month.qualifiedName());
+    CharSequence raw_day = record.getCoreTerms().get(DwcTerm.day.qualifiedName());
 
     if (raw_day != null) {
       try {
         evt.setDay(new DayInterpreter().interpret(raw_day.toString()));
       } catch (InterpretationException e) {
-        fieldIssueMap.put(DwCATermIdentifier.day.name(), e.getIssues());
-        fieldLineageMap.put(DwCATermIdentifier.day.name(), e.getLineages());
+        fieldIssueMap.put(DwcTerm.day.name(), e.getIssues());
+        fieldLineageMap.put(DwcTerm.day.name(), e.getLineages());
         if (e.getInterpretedValue().isPresent()) evt.setDay((Integer) e.getInterpretedValue().get());
       }
     }
@@ -74,8 +75,8 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
       try {
         evt.setMonth(new MonthInterpreter().interpret(raw_month.toString()));
       } catch (InterpretationException e) {
-        fieldIssueMap.put(DwCATermIdentifier.month.name(), e.getIssues());
-        fieldLineageMap.put(DwCATermIdentifier.month.name(), e.getLineages());
+        fieldIssueMap.put(DwcTerm.month.name(), e.getIssues());
+        fieldLineageMap.put(DwcTerm.month.name(), e.getLineages());
         if (e.getInterpretedValue().isPresent()) evt.setMonth((Integer) e.getInterpretedValue().get());
       }
     }
@@ -84,30 +85,30 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
       try {
         evt.setYear(new YearInterpreter().interpret(raw_year.toString()));
       } catch (InterpretationException e) {
-        fieldIssueMap.put(DwCATermIdentifier.year.name(), e.getIssues());
-        fieldLineageMap.put(DwCATermIdentifier.year.name(), e.getLineages());
+        fieldIssueMap.put(DwcTerm.year.name(), e.getIssues());
+        fieldLineageMap.put(DwcTerm.year.name(), e.getLineages());
         if (e.getInterpretedValue().isPresent()) evt.setYear((Integer) e.getInterpretedValue().get());
       }
     }
 
-    evt.setVerbatimEventDate(record.getCoreTerms().get(DwCATermIdentifier.verbatimEventDate.getIdentifier()));
-    evt.setHabitat(record.getCoreTerms().get(DwCATermIdentifier.habitat.getIdentifier()));
-    evt.setSamplingProtocol(record.getCoreTerms().get(DwCATermIdentifier.samplingProtocol.getIdentifier()));
-    evt.setSamplingEffort(record.getCoreTerms().get(DwCATermIdentifier.samplingEffort.getIdentifier()));
-    evt.setSampleSizeValue(record.getCoreTerms().get(DwCATermIdentifier.sampleSizeValue.getIdentifier()));
-    evt.setSampleSizeUnit(record.getCoreTerms().get(DwCATermIdentifier.sampleSizeUnit.getIdentifier()));
-    evt.setFieldNotes(record.getCoreTerms().get(DwCATermIdentifier.fieldNotes.getIdentifier()));
-    evt.setEventRemarks(record.getCoreTerms().get(DwCATermIdentifier.eventRemarks.getIdentifier()));
-    evt.setInstitutionID(record.getCoreTerms().get(DwCATermIdentifier.institutionID.getIdentifier()));
-    evt.setCollectionID(record.getCoreTerms().get(DwCATermIdentifier.collectionID.getIdentifier()));
-    evt.setDatasetID(record.getCoreTerms().get(DwCATermIdentifier.datasetID.getIdentifier()));
-    evt.setInstitutionCode(record.getCoreTerms().get(DwCATermIdentifier.institutionCode.getIdentifier()));
-    evt.setCollectionCode(record.getCoreTerms().get(DwCATermIdentifier.collectionCode.getIdentifier()));
-    evt.setDatasetName(record.getCoreTerms().get(DwCATermIdentifier.datasetName.getIdentifier()));
-    evt.setOwnerInstitutionCode(record.getCoreTerms().get(DwCATermIdentifier.ownerInstitutionCode.getIdentifier()));
-    evt.setDynamicProperties(record.getCoreTerms().get(DwCATermIdentifier.dynamicProperties.getIdentifier()));
-    evt.setInformationWithheld(record.getCoreTerms().get(DwCATermIdentifier.informationWithheld.getIdentifier()));
-    evt.setDataGeneralizations(record.getCoreTerms().get(DwCATermIdentifier.dataGeneralizations.getIdentifier()));
+    evt.setVerbatimEventDate(record.getCoreTerms().get(DwcTerm.verbatimEventDate.qualifiedName()));
+    evt.setHabitat(record.getCoreTerms().get(DwcTerm.habitat.qualifiedName()));
+    evt.setSamplingProtocol(record.getCoreTerms().get(DwcTerm.samplingProtocol.qualifiedName()));
+    evt.setSamplingEffort(record.getCoreTerms().get(DwcTerm.samplingEffort.qualifiedName()));
+    evt.setSampleSizeValue(record.getCoreTerms().get(DwcTerm.sampleSizeValue.qualifiedName()));
+    evt.setSampleSizeUnit(record.getCoreTerms().get(DwcTerm.sampleSizeUnit.qualifiedName()));
+    evt.setFieldNotes(record.getCoreTerms().get(DwcTerm.fieldNotes.qualifiedName()));
+    evt.setEventRemarks(record.getCoreTerms().get(DwcTerm.eventRemarks.qualifiedName()));
+    evt.setInstitutionID(record.getCoreTerms().get(DwcTerm.institutionID.qualifiedName()));
+    evt.setCollectionID(record.getCoreTerms().get(DwcTerm.collectionID.qualifiedName()));
+    evt.setDatasetID(record.getCoreTerms().get(DwcTerm.datasetID.qualifiedName()));
+    evt.setInstitutionCode(record.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName()));
+    evt.setCollectionCode(record.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName()));
+    evt.setDatasetName(record.getCoreTerms().get(DwcTerm.datasetName.qualifiedName()));
+    evt.setOwnerInstitutionCode(record.getCoreTerms().get(DwcTerm.ownerInstitutionCode.qualifiedName()));
+    evt.setDynamicProperties(record.getCoreTerms().get(DwcTerm.dynamicProperties.qualifiedName()));
+    evt.setInformationWithheld(record.getCoreTerms().get(DwcTerm.informationWithheld.qualifiedName()));
+    evt.setDataGeneralizations(record.getCoreTerms().get(DwcTerm.dataGeneralizations.qualifiedName()));
     //all issues and lineages are dumped on this object
     final IssueLineageRecord finalRecord = IssueLineageRecord.newBuilder()
       .setOccurenceId(record.getId())

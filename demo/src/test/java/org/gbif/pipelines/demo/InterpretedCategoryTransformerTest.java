@@ -3,6 +3,7 @@ package org.gbif.pipelines.demo;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
@@ -14,7 +15,6 @@ import org.gbif.pipelines.core.functions.interpretation.YearInterpreter;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
-import org.gbif.pipelines.core.functions.transforms.DwCATermIdentifier;
 import org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -71,12 +71,12 @@ public class InterpretedCategoryTransformerTest {
 
   static ExtendedRecord VALID_INPUT() {
     Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), VALID_DAY);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), VALID_MONTH);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), VALID_YEAR);
-    coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
-    coreTerms.put(DwCATermIdentifier.country.getIdentifier(), Country.DENMARK.name());
-    coreTerms.put(DwCATermIdentifier.continent.getIdentifier(), Continent.EUROPE.name());
+    coreTerms.put(DwcTerm.day.qualifiedName(), VALID_DAY);
+    coreTerms.put(DwcTerm.month.qualifiedName(), VALID_MONTH);
+    coreTerms.put(DwcTerm.year.qualifiedName(), VALID_YEAR);
+    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.HUMAN_OBSERVATION.name());
+    coreTerms.put(DwcTerm.country.qualifiedName(), Country.DENMARK.name());
+    coreTerms.put(DwcTerm.continent.qualifiedName(), Continent.EUROPE.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
       .setCoreTerms(coreTerms)
@@ -86,12 +86,12 @@ public class InterpretedCategoryTransformerTest {
 
   static ExtendedRecord INVALID_DAY_INVALID_INPUT1() {
     Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), RANGE_INVALID_DAY);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), VALID_MONTH);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), VALID_YEAR);
-    coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
-    coreTerms.put(DwCATermIdentifier.country.getIdentifier(), "XYZ");
-    coreTerms.put(DwCATermIdentifier.continent.getIdentifier(), Continent.EUROPE.name());
+    coreTerms.put(DwcTerm.day.qualifiedName(), RANGE_INVALID_DAY);
+    coreTerms.put(DwcTerm.month.qualifiedName(), VALID_MONTH);
+    coreTerms.put(DwcTerm.year.qualifiedName(), VALID_YEAR);
+    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.HUMAN_OBSERVATION.name());
+    coreTerms.put(DwcTerm.country.qualifiedName(), "XYZ");
+    coreTerms.put(DwcTerm.continent.qualifiedName(), Continent.EUROPE.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
       .setCoreTerms(coreTerms)
@@ -101,12 +101,12 @@ public class InterpretedCategoryTransformerTest {
 
   static ExtendedRecord INVALID_INPUT2_ALL() {
     Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), INVALID_DAY);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), INVALID_MONTH);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), INVALID_YEAR);
-    coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
-    coreTerms.put(DwCATermIdentifier.country.getIdentifier(), "XYZ");
-    coreTerms.put(DwCATermIdentifier.continent.getIdentifier(), "ABC");
+    coreTerms.put(DwcTerm.day.qualifiedName(), INVALID_DAY);
+    coreTerms.put(DwcTerm.month.qualifiedName(), INVALID_MONTH);
+    coreTerms.put(DwcTerm.year.qualifiedName(), INVALID_YEAR);
+    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.HUMAN_OBSERVATION.name());
+    coreTerms.put(DwcTerm.country.qualifiedName(), "XYZ");
+    coreTerms.put(DwcTerm.continent.qualifiedName(), "ABC");
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
       .setCoreTerms(coreTerms)
@@ -116,10 +116,10 @@ public class InterpretedCategoryTransformerTest {
 
   static ExtendedRecord INVALID_MONTH_INVALID_INPUT2() {
     Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), VALID_DAY);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), INVALID_MONTH);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), VALID_YEAR);
-    coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
+    coreTerms.put(DwcTerm.day.qualifiedName(), VALID_DAY);
+    coreTerms.put(DwcTerm.month.qualifiedName(), INVALID_MONTH);
+    coreTerms.put(DwcTerm.year.qualifiedName(), VALID_YEAR);
+    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
       .setCoreTerms(coreTerms)
@@ -129,10 +129,10 @@ public class InterpretedCategoryTransformerTest {
 
   static ExtendedRecord INVALID_YEAR_INVALID_INPUT2() {
     Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), VALID_DAY);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), VALID_MONTH);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), INVALID_YEAR);
-    coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
+    coreTerms.put(DwcTerm.day.qualifiedName(), VALID_DAY);
+    coreTerms.put(DwcTerm.month.qualifiedName(), VALID_MONTH);
+    coreTerms.put(DwcTerm.year.qualifiedName(), INVALID_YEAR);
+    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
       .setCoreTerms(coreTerms)
@@ -142,10 +142,10 @@ public class InterpretedCategoryTransformerTest {
 
   static ExtendedRecord INVALID_DAY_YEAR_INVALID_INPUT2() {
     Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), INVALID_DAY);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), VALID_MONTH);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), INVALID_YEAR);
-    coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
+    coreTerms.put(DwcTerm.day.qualifiedName(), INVALID_DAY);
+    coreTerms.put(DwcTerm.month.qualifiedName(), VALID_MONTH);
+    coreTerms.put(DwcTerm.year.qualifiedName(), INVALID_YEAR);
+    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
       .setCoreTerms(coreTerms)
@@ -155,10 +155,10 @@ public class InterpretedCategoryTransformerTest {
 
   static ExtendedRecord INVALID_MONTH_YEAR_INVALID_INPUT2() {
     Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), VALID_DAY);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), INVALID_MONTH);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), INVALID_YEAR);
-    coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
+    coreTerms.put(DwcTerm.day.qualifiedName(), VALID_DAY);
+    coreTerms.put(DwcTerm.month.qualifiedName(), INVALID_MONTH);
+    coreTerms.put(DwcTerm.year.qualifiedName(), INVALID_YEAR);
+    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
       .setCoreTerms(coreTerms)
@@ -168,10 +168,10 @@ public class InterpretedCategoryTransformerTest {
 
   static ExtendedRecord INVALID_MONTH_DAY_INVALID_INPUT2() {
     Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
-    coreTerms.put(DwCATermIdentifier.day.getIdentifier(), INVALID_DAY);
-    coreTerms.put(DwCATermIdentifier.month.getIdentifier(), INVALID_MONTH);
-    coreTerms.put(DwCATermIdentifier.year.getIdentifier(), VALID_YEAR);
-    coreTerms.put(DwCATermIdentifier.basisOfRecord.getIdentifier(), BasisOfRecord.HUMAN_OBSERVATION.name());
+    coreTerms.put(DwcTerm.day.qualifiedName(), INVALID_DAY);
+    coreTerms.put(DwcTerm.month.qualifiedName(), INVALID_MONTH);
+    coreTerms.put(DwcTerm.year.qualifiedName(), VALID_YEAR);
+    coreTerms.put(DwcTerm.basisOfRecord.qualifiedName(), BasisOfRecord.HUMAN_OBSERVATION.name());
     return ExtendedRecord.newBuilder()
       .setId(VALID_OCC_ID)
       .setCoreTerms(coreTerms)
@@ -190,19 +190,19 @@ public class InterpretedCategoryTransformerTest {
     for (ExtendedRecord record : getExtendedRecordArray()) {
       Event e = new Event();
       e.setOccurrenceID(record.getId());
-      e.setBasisOfRecord(record.getCoreTerms().get(DwCATermIdentifier.basisOfRecord.getIdentifier()));
+      e.setBasisOfRecord(record.getCoreTerms().get(DwcTerm.basisOfRecord.qualifiedName()));
       try {
-        e.setDay(Integer.parseInt(record.getCoreTerms().get(DwCATermIdentifier.day.getIdentifier()).toString()));
+        e.setDay(Integer.parseInt(record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString()));
       } catch (Exception ex) {
 
       }
       try {
-        e.setMonth(Integer.parseInt(record.getCoreTerms().get(DwCATermIdentifier.month.getIdentifier()).toString()));
+        e.setMonth(Integer.parseInt(record.getCoreTerms().get(DwcTerm.month.qualifiedName()).toString()));
       } catch (Exception ex) {
 
       }
       try {
-        e.setYear(Integer.parseInt(record.getCoreTerms().get(DwCATermIdentifier.year.getIdentifier()).toString()));
+        e.setYear(Integer.parseInt(record.getCoreTerms().get(DwcTerm.year.qualifiedName()).toString()));
       } catch (Exception ex) {
 
       }
@@ -220,24 +220,24 @@ public class InterpretedCategoryTransformerTest {
       Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<>();
 
       try {
-        new DayInterpreter().interpret(record.getCoreTerms().get(DwCATermIdentifier.day.getIdentifier()).toString());
+        new DayInterpreter().interpret(record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString());
       } catch (InterpretationException ex) {
-        fieldIssueMap.put(DwCATermIdentifier.day.name(), ex.getIssues());
-        fieldLineageMap.put(DwCATermIdentifier.day.name(), ex.getLineages());
+        fieldIssueMap.put(DwcTerm.day.name(), ex.getIssues());
+        fieldLineageMap.put(DwcTerm.day.name(), ex.getLineages());
       }
       try {
         new MonthInterpreter().interpret(record.getCoreTerms()
-                                           .get(DwCATermIdentifier.month.getIdentifier())
+                                           .get(DwcTerm.month.qualifiedName())
                                            .toString());
       } catch (InterpretationException ex) {
-        fieldIssueMap.put(DwCATermIdentifier.month.name(), ex.getIssues());
-        fieldLineageMap.put(DwCATermIdentifier.month.name(), ex.getLineages());
+        fieldIssueMap.put(DwcTerm.month.name(), ex.getIssues());
+        fieldLineageMap.put(DwcTerm.month.name(), ex.getLineages());
       }
       try {
-        new YearInterpreter().interpret(record.getCoreTerms().get(DwCATermIdentifier.year.getIdentifier()).toString());
+        new YearInterpreter().interpret(record.getCoreTerms().get(DwcTerm.year.qualifiedName()).toString());
       } catch (InterpretationException ex) {
-        fieldIssueMap.put(DwCATermIdentifier.year.name(), ex.getIssues());
-        fieldLineageMap.put(DwCATermIdentifier.year.name(), ex.getLineages());
+        fieldIssueMap.put(DwcTerm.year.name(), ex.getIssues());
+        fieldLineageMap.put(DwcTerm.year.name(), ex.getLineages());
       }
       e.setOccurenceId(record.getId());
       e.setFieldIssuesMap(fieldIssueMap);
@@ -251,9 +251,7 @@ public class InterpretedCategoryTransformerTest {
    * Tests data from a curated dataset with valid and invalid extendedRecords
    */
   @Test
-  public void test1() throws Exception {
-
-
+  public void testInterpretedCategoryTransformerMixed() throws Exception {
     /*
     setting coder registry with appropriate coders
      */
