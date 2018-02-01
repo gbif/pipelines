@@ -45,8 +45,16 @@ public class RawDateInterpreter {
     return year.length() == YEAR_LENGTH && isNumeric(year);
   }
 
-  private static void parseSizeOne(ParsedDate pDate, String[] aDate) {
+  private static void parseSizeOne(ParsedDate pDate, String... aDate) {
     String first = aDate[0];
+    //Case - 20120506
+    if (first.length() == 8 && isNumeric(first)) {
+      String year = first.substring(0, 4);
+      String month = first.substring(4, 6);
+      String day = first.substring(6, 8);
+      parseSizeThree(pDate, year, month, day);
+      return;
+    }
     //If values is year
     boolean isYearFirst = isYear(first);
     if (isYearFirst) {
@@ -62,7 +70,7 @@ public class RawDateInterpreter {
     }
   }
 
-  private static void parseSizeTwo(ParsedDate pDate, String[] aDate) {
+  private static void parseSizeTwo(ParsedDate pDate, String... aDate) {
     String first = aDate[0];
     String second = aDate[1];
     boolean isYearFirst = isYear(first);
@@ -80,7 +88,7 @@ public class RawDateInterpreter {
     }
   }
 
-  private static void parseSizeThree(ParsedDate pDate, String[] aDate) {
+  private static void parseSizeThree(ParsedDate pDate, String... aDate) {
     boolean isYearFirst = isYear(aDate[0]);
 
     //Parse year

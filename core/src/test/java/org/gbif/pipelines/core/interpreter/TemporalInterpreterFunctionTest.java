@@ -860,4 +860,17 @@ public class TemporalInterpreterFunctionTest {
     assertEquals(expectedSecond, result.getTo().toZonedDateTime());
   }
 
+  @Test
+  public void Should_T_When_T_057() {
+    //State
+    ZonedDateTime expectedFirst = LocalDateTime.of(2012, 5, 6, 0, 0, 0).atZone(ZONE_Z);
+
+    String eventDate = "20120506";
+
+    //When
+    ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
+    //Should
+    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
+  }
+
 }
