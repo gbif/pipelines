@@ -6,3 +6,4 @@ branches:
   only:
   - master
   - "#23-EventDateInterpreter"
+  - feature/daymonthyearinterpreter
