@@ -155,7 +155,18 @@ public class AvroSchemaGeneratorTest {
                         schemaGenerated.getField("floatFields").schema());
   }
 
-  @Test( expected = IllegalArgumentException.class)
+  @Test
+  public void testDefaultValues() {
+    String name = "Test";
+    String namespace = "ns.test";
+
+    Schema schemaGenerated = AvroSchemaGenerator.generateSchema(ClassFloatFields.class, name, null, namespace);
+    System.out.println(schemaGenerated.toString(true));
+
+    Assert.assertEquals(NullNode.getInstance(), schemaGenerated.getField("floatField").defaultValue());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
   public void testNullValues() {
     Schema schemaGenerated = AvroSchemaGenerator.generateSchema(null, null, null, null);
   }

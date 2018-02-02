@@ -10,7 +10,7 @@
   }, {
     "name" : "synonym",
     "type" : [ "null", "boolean" ],
-    "default" : false
+    "default" : null
   }, {
     "name" : "usage",
     "type" : [ "null", {
@@ -109,4 +109,4 @@
     } ],
     "default" : null
   } ]
-}
+}}
