@@ -1,7 +1,7 @@
 package org.gbif.pipelines.demo.transformation.validator;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,27 +32,27 @@ public class UniqueOccurrenceIdTransformationTest {
   @Category(NeedsRunner.class)
   public void Should_FilterDuplicateObjects_When_OccurrenceIdIsTheSame() {
     //State
-    final List<UntypedOccurrenceLowerCase> input = createCollection("0001", "0001", "0002", "0003", "0004");
-    final List<UntypedOccurrenceLowerCase> expected = createCollection("0002", "0003", "0004");
+    final List<ExtendedRecord> input = createCollection("0001", "0001", "0002", "0003", "0004");
+    final List<ExtendedRecord> expected = createCollection("0002", "0003", "0004");
 
     //When
-    Coders.registerAvroCoders(p, UntypedOccurrenceLowerCase.class);
+    Coders.registerAvroCoders(p, ExtendedRecord.class);
 
-    PCollection<UntypedOccurrenceLowerCase> inputStream = p.apply(Create.of(input));
+    PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 
     UniqueOccurrenceIdTransformation transformationStream = new UniqueOccurrenceIdTransformation();
     PCollectionTuple tuple = inputStream.apply(transformationStream);
 
-    PCollection<UntypedOccurrenceLowerCase> collectionStream = tuple.get(transformationStream.getDataTag());
+    PCollection<ExtendedRecord> collectionStream = tuple.get(transformationStream.getDataTag());
 
     //Should
     PAssert.that(collectionStream).containsInAnyOrder(expected);
     p.run();
   }
 
-  private List<UntypedOccurrenceLowerCase> createCollection(String... occurrenceIds) {
+  private List<ExtendedRecord> createCollection(String... occurrenceIds) {
     return Arrays.stream(occurrenceIds)
-      .map(x -> UntypedOccurrenceLowerCase.newBuilder().setOccurrenceid(x).build())
+      .map(x -> ExtendedRecord.newBuilder().setId(x).build())
       .collect(Collectors.toList());
   }
 

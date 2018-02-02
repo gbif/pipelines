@@ -1,7 +1,7 @@
 package org.gbif.pipelines.demo.transformation.validator;
 
 import org.gbif.pipelines.demo.transformation.ValidatorsTransformation;
-import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.stream.StreamSupport;
 
@@ -19,11 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Transformation for filtering all duplicate records with the same occurrenceId
- *
- * TODO: Probably it should not be UntypedOccurrenceLowerCase class, some common class with occurrenceID as a key.
+ * Transformation for filtering all duplicate records with the same record id
  */
-public class UniqueOccurrenceIdTransformation extends ValidatorsTransformation<UntypedOccurrenceLowerCase> {
+public class UniqueOccurrenceIdTransformation extends ValidatorsTransformation<ExtendedRecord> {
 
   private static final Logger LOG = LoggerFactory.getLogger(UniqueOccurrenceIdTransformation.class);
 
@@ -31,27 +29,27 @@ public class UniqueOccurrenceIdTransformation extends ValidatorsTransformation<U
   private static final String GROUP_STEP = "Group by occurrenceId";
   private static final String FILTER_STEP = "Filter duplicates";
 
-  private final TupleTag<UntypedOccurrenceLowerCase> dataTag = new TupleTag<UntypedOccurrenceLowerCase>() {};
-  private final TupleTag<KV<String, Iterable<UntypedOccurrenceLowerCase>>> issueTag =
-    new TupleTag<KV<String, Iterable<UntypedOccurrenceLowerCase>>>() {};
+  private final TupleTag<ExtendedRecord> dataTag = new TupleTag<ExtendedRecord>() {};
+  private final TupleTag<KV<String, Iterable<ExtendedRecord>>> issueTag =
+    new TupleTag<KV<String, Iterable<ExtendedRecord>>>() {};
 
   @Override
-  public PCollectionTuple expand(PCollection<UntypedOccurrenceLowerCase> input) {
+  public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
 
     //Convert from list to map where, key - occurrenceId, value - object instance
-    PCollection<KV<String, UntypedOccurrenceLowerCase>> map = input.apply(MAP_STEP
-      , MapElements.into(new TypeDescriptor<KV<String, UntypedOccurrenceLowerCase>>() {})
-        .via((UntypedOccurrenceLowerCase uo) -> KV.of(uo.getOccurrenceid().toString(), uo)));
+    PCollection<KV<String, ExtendedRecord>> map = input.apply(MAP_STEP
+      , MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
+        .via((ExtendedRecord uo) -> KV.of(uo.getId().toString(), uo)));
 
     //Group map by key - occurrenceId
-    PCollection<KV<String, Iterable<UntypedOccurrenceLowerCase>>> group = map.apply(GROUP_STEP, GroupByKey.create());
+    PCollection<KV<String, Iterable<ExtendedRecord>>> group = map.apply(GROUP_STEP, GroupByKey.create());
 
     //Filter duplicate occurrenceIds, all groups where value size != 1
     return group.apply(FILTER_STEP
-      , ParDo.of(new DoFn<KV<String, Iterable<UntypedOccurrenceLowerCase>>, UntypedOccurrenceLowerCase>() {
+      , ParDo.of(new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
         @ProcessElement
         public void processElement(ProcessContext c) {
-          KV<String, Iterable<UntypedOccurrenceLowerCase>> element = c.element();
+          KV<String, Iterable<ExtendedRecord>> element = c.element();
           long count = StreamSupport.stream(element.getValue().spliterator(), false).count();
           if (count == 1) {
             element.getValue().forEach(x -> c.output(dataTag, x));
@@ -63,11 +61,11 @@ public class UniqueOccurrenceIdTransformation extends ValidatorsTransformation<U
       }).withOutputTags(dataTag, TupleTagList.of(issueTag)));
   }
 
-  public TupleTag<UntypedOccurrenceLowerCase> getDataTag() {
+  public TupleTag<ExtendedRecord> getDataTag() {
     return dataTag;
   }
 
-  public TupleTag<KV<String, Iterable<UntypedOccurrenceLowerCase>>> getIssueTag() {
+  public TupleTag<KV<String, Iterable<ExtendedRecord>>> getIssueTag() {
     return issueTag;
   }
 }
