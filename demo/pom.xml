@@ -31,6 +31,10 @@
                 <exclude>META-INF/*.SF</exclude>
                 <exclude>META-INF/*.DSA</exclude>
                 <exclude>META-INF/*.RSA</exclude>
+                <exclude>core-site.xml</exclude>
+                <exclude>hbase-site.xml</exclude>
+                <exclude>mapred-site.xml</exclude>
+                <exclude>yarn-site.xml</exclude>
               </excludes>
             </filter>
           </filters>
@@ -135,6 +139,21 @@
       <version>${protobuf.version}</version>
     </dependency>
     <!--Test dependencies-->
+
+    <!-- test -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <version>${hadoop-common.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+      <classifier>tests</classifier>
+      <version>${hadoop-common.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

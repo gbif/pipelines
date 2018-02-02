@@ -7,6 +7,9 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 
 import org.gbif.pipelines.common.beam.Coders;
@@ -43,8 +46,8 @@ public class DwCA2AvroPipeline {
       , MapElements.into(CustomTypeDescriptors.untypedOccurrencies()).via(FunctionFactory.untypedOccurrenceBuilder()::apply));
 
     // Write the result as an Avro file
-    verbatimRecords.apply(
-      "Save the records as Avro", AvroIO.write(UntypedOccurrence.class).to("demo/output/data"));
+    rawRecords.apply(
+      "Save the records as Avro", AvroIO.write(ExtendedRecord.class).to("demo/output/data"));
 
     LOG.info("Starting the pipeline");
     PipelineResult result = p.run();
