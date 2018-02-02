@@ -224,7 +224,7 @@
         <scope>runtime</scope>
       </dependency>
 
-      <!-- test -->
+      <!-- Test -->
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>

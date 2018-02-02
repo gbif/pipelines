@@ -5,14 +5,14 @@ package org.gbif.pipelines.core.interpreter.temporal;
  */
 public class RawTemporalInterpreter {
 
+  private static final String RGX_PERIOD = "/";
+
   private RawTemporalInterpreter() {
     //NOP
   }
 
-  private static final String RGX_PERIOD = "/";
-
   public static ParsedTemporalDate interpret(ParsedDate baseParsedDate, String rDate){
-    ParsedDate baseDate = ParsedDate.copy(baseParsedDate);
+    ParsedDate baseDate = ParsedDate.copyOrCreate(baseParsedDate);
 
     String[] periodRawDates = splitByPeriod(rDate);
 

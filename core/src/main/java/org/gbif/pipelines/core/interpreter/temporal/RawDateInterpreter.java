@@ -20,7 +20,7 @@ public class RawDateInterpreter {
   }
 
   public static ParsedDate interpret(ParsedDate pDate, String rDate) {
-    ParsedDate parsedDate = ParsedDate.copy(pDate);
+    ParsedDate parsedDate = ParsedDate.copyOrCreate(pDate);
     if (isEmpty(rDate)) {
       return parsedDate;
     }
@@ -77,8 +77,10 @@ public class RawDateInterpreter {
     boolean isYearSecond = isYear(second);
     //If any of values is year, set year and month
     if (isYearFirst || isYearSecond) {
+
       pDate.parseAndSetYear(isYearFirst ? first : second);
       pDate.parseAndSetMonth(isYearFirst ? second : first);
+
     } else {
       //If year is absent, this array should represent toDate,
       //which may have month and day, determines by last parsed value in fromDate
@@ -89,33 +91,37 @@ public class RawDateInterpreter {
   }
 
   private static void parseSizeThree(ParsedDate pDate, String... aDate) {
-    boolean isYearFirst = isYear(aDate[0]);
+    String first = aDate[0];
+    String second = aDate[1];
+    String third = aDate[2];
+
+    boolean isYearFirst = isYear(first);
 
     //Parse year
-    int yearIdx = isYearFirst ? 0 : 2;
-    pDate.parseAndSetYear(aDate[yearIdx]);
+    String year = isYearFirst ? first : third;
+    pDate.parseAndSetYear(year);
 
     //Parse month
-    int pOne = isYearFirst ? 1 : 0;
-    int pTwo = pOne + 1;
+    String pOne = isYearFirst ? second : first;
+    String pTwo = isYearFirst ? third : second;
 
     //Check month value non-numeric, as JUNE or etc.
-    boolean isFirst = !isNumeric(aDate[pOne]);
-    boolean isSecond = !isNumeric(aDate[pTwo]);
+    boolean isFirst = !isNumeric(pOne);
+    boolean isSecond = !isNumeric(pTwo);
 
     //If both values non-numeric, month should be in the middle
-    int monthPosition;
+    String month;
     if (isFirst || isSecond) {
-      monthPosition = isFirst ? pOne : pTwo;
+      month = isFirst ? pOne : pTwo;
     } else {
-      monthPosition = 1;
+      month = second;
     }
-    pDate.parseAndSetMonth(aDate[monthPosition]);
+    pDate.parseAndSetMonth(month);
 
     //parse day
-    int position = isYearFirst ? 2 : 0;
-    int dayPosition = monthPosition == 1 ? position : 1;
-    pDate.parseAndSetDay(aDate[dayPosition]);
+    String position = isYearFirst ? third : first;
+    String day = month.equals(second) ? position : second;
+    pDate.parseAndSetDay(day);
   }
 
 }

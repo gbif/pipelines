@@ -31,11 +31,11 @@ public class ParsedDate {
   private boolean hasIssue = false;
   private ParsedElementEnum parsedEnum = NONE;
 
-  public static ParsedDate copy(ParsedDate pDate) {
-    if (pDate == null) {
-      return null;
-    }
+  public static ParsedDate copyOrCreate(ParsedDate pDate) {
     ParsedDate copy = new ParsedDate();
+    if (pDate == null) {
+      return copy;
+    }
     copy.year = pDate.year;
     copy.month = pDate.month;
     copy.day = pDate.day;
@@ -66,6 +66,13 @@ public class ParsedDate {
 
   public ParsedElementEnum getParsedEnum() {
     return parsedEnum;
+  }
+
+  /**
+   * @return null, if year has issue
+   */
+  public String toStringOrNull() {
+    return this.year <= 1 ? null : toZonedDateTime().toString();
   }
 
   @Override

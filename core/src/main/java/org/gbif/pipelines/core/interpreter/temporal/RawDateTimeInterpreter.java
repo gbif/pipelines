@@ -41,7 +41,7 @@ public class RawDateTimeInterpreter {
     String time = hasTime ? rawDate.substring(timeIdx) : "";
 
     //Interpret date and time separately
-    ParsedDate baseDate = ParsedDate.copy(baseParsedDate);
+    ParsedDate baseDate = ParsedDate.copyOrCreate(baseParsedDate);
     ParsedDate parsetDate = RawDateInterpreter.interpret(baseDate, date);
     return RawTimeInterpreter.interpret(parsetDate, time);
   }

@@ -118,7 +118,7 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- test -->
+    <!-- Test -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
@@ -137,7 +137,6 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
 
   </dependencies>
 </project>

@@ -29,6 +29,15 @@ public class TemporalInterpreterFunction {
     return apply(null, null, null, rDate);
   }
 
+  public static ParsedTemporalDate apply(int year, int month, int day, String rDate) {
+    String sDate = CONVERT_FUNC.apply(rDate);
+    return apply(String.valueOf(year), String.valueOf(month), String.valueOf(day), sDate);
+  }
+
+  public static ParsedTemporalDate apply(int year, int month, int day, CharSequence rDate) {
+    return apply(String.valueOf(year), String.valueOf(month), String.valueOf(day), rDate);
+  }
+
   public static ParsedTemporalDate apply(CharSequence year, CharSequence month, CharSequence day, CharSequence rDate) {
     String sYear = CONVERT_FUNC.apply(year);
     String sMonth = CONVERT_FUNC.apply(month);

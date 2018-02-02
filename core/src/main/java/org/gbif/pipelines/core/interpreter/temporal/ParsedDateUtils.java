@@ -23,14 +23,14 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
  */
 public class ParsedDateUtils {
 
-  private ParsedDateUtils() {
-    //NOP
-  }
-
   private static final Logger LOG = LoggerFactory.getLogger(ParsedDate.class);
 
   private static final Integer MIN_YEAR = 1000;
   private static final ZonedDateTime BASE_DATE = LocalDateTime.of(1, 1, 1, 0, 0).atZone(BASE_ZONE_ID);
+
+  private ParsedDateUtils() {
+    //NOP
+  }
 
   /**
    * Converts ParsedDate to ZonedDateTime, always returns valid ZonedDateTime

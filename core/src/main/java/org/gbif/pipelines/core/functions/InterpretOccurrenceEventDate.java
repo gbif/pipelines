@@ -1,32 +1,19 @@
 package org.gbif.pipelines.core.functions;
 
-import org.gbif.pipelines.core.interpreter.temporal.ParsedDate;
 import org.gbif.pipelines.core.interpreter.temporal.ParsedTemporalDate;
 import org.gbif.pipelines.core.interpreter.TemporalInterpreterFunction;
-import org.gbif.pipelines.io.avro.ParsedEventDateDemo;
-import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
+import org.gbif.pipelines.io.avro.TypedOccurrence;
 
-public class InterpretOccurrenceEventDate implements SerializableFunction<UntypedOccurrenceLowerCase, ParsedEventDateDemo> {
+public class InterpretOccurrenceEventDate implements SerializableFunction<TypedOccurrence, TypedOccurrence> {
 
   @Override
-  public ParsedEventDateDemo apply(UntypedOccurrenceLowerCase source) {
+  public TypedOccurrence apply(TypedOccurrence source) {
 
-    ParsedEventDateDemo target = new ParsedEventDateDemo();
-    target.setOccurrenceId(source.getOccurrenceid());
-    target.setRYear(source.getYear());
-    target.setRMonth(source.getMonth());
-    target.setRDay(source.getDay());
-    target.setREvent("EVENT=" + source.getEventdate());
+    ParsedTemporalDate temporalDate =
+      TemporalInterpreterFunction.apply(source.getYear(), source.getMonth(), source.getDay(), source.getEventDate());
 
-    ParsedTemporalDate parsedTemporalDate =
-      TemporalInterpreterFunction.apply(source.getYear(), source.getMonth(), source.getDay(), source.getEventdate());
-    ParsedDate first = parsedTemporalDate.getFrom();
-    ParsedDate second = parsedTemporalDate.getTo();
+    String fromDate = temporalDate.getFrom() == null ? null : temporalDate.getFrom().toStringOrNull();
 
-    target.setCFirstEvent(first != null ? first.toString() : null);
-    target.setCSecondEvent(second != null ? second.toString() : null);
-    target.setCDuration("" + parsedTemporalDate.getDuration().getSeconds());
-
-    return target;
+    return TypedOccurrence.newBuilder(source).setEventDate(fromDate).build();
   }
 }

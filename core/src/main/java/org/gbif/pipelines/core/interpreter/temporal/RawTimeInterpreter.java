@@ -15,7 +15,7 @@ public class RawTimeInterpreter {
   }
 
   public static ParsedDate interpret(ParsedDate pDate, String rTime) {
-    ParsedDate parsedDate = ParsedDate.copy(pDate);
+    ParsedDate parsedDate = ParsedDate.copyOrCreate(pDate);
     if (isEmpty(rTime)) {
       return parsedDate;
     }
