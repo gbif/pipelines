@@ -239,11 +239,9 @@ public final class AvroSchemaGenerator {
    * the future.
    */
   private static JsonNode defaultValue(Schema schema) {
-    Schema.Type schemaType = schema.getType();
-    if (Schema.Type.UNION.equals(schema.getType())) {
-      // according to the specification, in union schemas the default value corresponds to the first schema
-      schemaType = schema.getTypes().get(0).getType();
-    }
+    // according to the specification, in union schemas the default value corresponds to the first schema
+    Schema.Type schemaType =
+      Schema.Type.UNION.equals(schema.getType()) ? schema.getTypes().get(0).getType() : schema.getType();
 
     return commonSchemasDefaults.getOrDefault(schemaType, NullNode.getInstance());
   }
