@@ -19,7 +19,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Tests the class {@link DwcaToHdfsTestingPipelineTest}.
+ * Tests the class {@link DwcaToHdfsTestingPipeline}.
  */
 public class DwcaToHdfsTestingPipelineTest {
 
