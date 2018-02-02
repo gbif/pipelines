@@ -12,6 +12,10 @@
 
   <artifactId>demo</artifactId>
 
+  <properties>
+    <protobuf.version>3.5.1</protobuf.version>
+  </properties>
+
   <build>
     <plugins>
       <!-- Shade the project into an über jar to send to Spark -->
@@ -108,6 +112,14 @@
       <artifactId>logback-classic</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-runners-spark</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <scope>provided</scope>
@@ -117,6 +129,16 @@
       <artifactId>hadoop-common</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-elasticsearch</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>${protobuf.version}</version>
+    </dependency>
+    <!--Test dependencies-->
 
     <!-- test -->
     <dependency>
@@ -137,7 +159,10 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
-
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
