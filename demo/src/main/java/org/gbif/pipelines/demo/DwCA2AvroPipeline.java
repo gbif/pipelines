@@ -14,7 +14,16 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
+
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.core.functions.descriptor.CustomTypeDescriptors;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
