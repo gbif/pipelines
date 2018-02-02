@@ -61,6 +61,7 @@
 
                 <relocation>
                   <pattern>retrofit2</pattern>
+                  <!-- TODO: what name could we use here instead of tim?? -->
                   <shadedPattern>tim.retrofit2</shadedPattern>
                 </relocation>
 

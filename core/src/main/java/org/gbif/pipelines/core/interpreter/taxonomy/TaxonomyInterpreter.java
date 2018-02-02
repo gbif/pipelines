@@ -53,10 +53,12 @@ public class TaxonomyInterpreter {
 
     // check issues
     List<Validation> validations = checkIssues(responseModel, extendedRecord.getId());
-    interpretedTaxonomy.setOccurrenceIssue(OccurrenceIssue.newBuilder()
-                                             .setId(extendedRecord.getId())
-                                             .setIssues(validations)
-                                             .build());
+    if (!validations.isEmpty()) {
+      interpretedTaxonomy.setOccurrenceIssue(OccurrenceIssue.newBuilder()
+                                               .setId(extendedRecord.getId())
+                                               .setIssues(validations)
+                                               .build());
+    }
 
     return interpretedTaxonomy;
   }
@@ -67,17 +69,18 @@ public class TaxonomyInterpreter {
 
     switch (responseModel.getDiagnostics().getMatchType()) {
       case NONE:
+        LOG.info("Match type NONE for occurrence {}", id);
         validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE));
         break;
       case FUZZY:
+        LOG.info("Match type FUZZY for occurrence {}", id);
         validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY));
         break;
       case HIGHERRANK:
+        LOG.info("Match type HIGHERRANK for occurrence {}", id);
         validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK));
         break;
     }
-
-    LOG.warn("Match type {} for occurrence {}", responseModel.getDiagnostics().getMatchType().name(), id);
 
     return validations;
   }

@@ -19,9 +19,8 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import com.google.common.base.Strings;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -43,8 +42,7 @@ public class SpeciesMatchManager {
    *
    * @throws TaxonomyInterpretationException in case of errors
    */
-  public static NameUsageMatch2 getMatch(ExtendedRecord extendedRecord)
-    throws TaxonomyInterpretationException {
+  public static NameUsageMatch2 getMatch(ExtendedRecord extendedRecord) throws TaxonomyInterpretationException {
     NameUsageMatch2 responseModel = callSpeciesMatchWs(extendedRecord.getCoreTerms());
 
     if (!isSuccesfulMatch(responseModel)) {
@@ -79,15 +77,15 @@ public class SpeciesMatchManager {
     SpeciesMatch2Service service = SpeciesMatch2ServiceRest.SINGLE.getService();
 
     Call<NameUsageMatch2> call = service.match2(workingCopy.kingdom,
-                                                           workingCopy.phylum,
-                                                           workingCopy.clazz,
-                                                           workingCopy.order,
-                                                           workingCopy.family,
-                                                           workingCopy.genus,
-                                                           workingCopy.rank != null ? workingCopy.rank.name() : null,
-                                                           workingCopy.scientificName,
-                                                           false,
-                                                           false);
+                                                workingCopy.phylum,
+                                                workingCopy.clazz,
+                                                workingCopy.order,
+                                                workingCopy.family,
+                                                workingCopy.genus,
+                                                workingCopy.rank != null ? workingCopy.rank.name() : null,
+                                                workingCopy.scientificName,
+                                                false,
+                                                false);
 
     NameUsageMatch2 responseModel = null;
 
@@ -95,7 +93,6 @@ public class SpeciesMatchManager {
       Response<NameUsageMatch2> response = call.execute();
 
       responseModel = response.body();
-
     } catch (IOException e) {
       throw new TaxonomyInterpretationException("Error calling the match2 species name WS", e);
     }
@@ -202,7 +199,7 @@ public class SpeciesMatchManager {
       if (sciname == null) {
         // handle case when the scientific name is null and only given as atomized fields: genus & speciesEpitheton
         ParsedName pn = new ParsedName();
-        if (!StringUtils.isBlank(genericName)) {
+        if (genericName != null && !genericName.isEmpty()) {
           pn.setGenusOrAbove(genericName);
         } else {
           pn.setGenusOrAbove(genus);
@@ -226,7 +223,7 @@ public class SpeciesMatchManager {
     }
 
     private boolean hasTerm(Map<CharSequence, CharSequence> terms, Term term) {
-      return !Strings.isNullOrEmpty(value(terms, term));
+      return Optional.ofNullable(value(terms, term)).filter(value -> !value.isEmpty()).isPresent();
     }
 
   }

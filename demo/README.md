@@ -36,8 +36,6 @@ Create hive tables:
 ```
 USE pipelines; 
  
-SET hive.variable.substitute=true; 
- 
 DROP TABLE IF EXISTS taxon_interpreted;
 DROP TABLE IF EXISTS taxon_issues_interpreted;
 

@@ -6,7 +6,7 @@ package org.gbif.pipelines.core.config;
 public enum Interpretation {
 
   VERBATIM("verbatim"), TEMPORAL("temporal"), LOCATION("location"), GBIF_BACKBONE("gbif-backbone"), ISSUES("issues"),
-  RECORD_LEVEL("interpreted");
+  RECORD_LEVEL("interpreted"), TAXONOMY("taxon");
 
   private final String defaultFileName;
 

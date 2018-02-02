@@ -13,6 +13,9 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * {@link RecordAdapter} that adapts a {@link NameUsageMatch2} into a {@link TaxonRecord}
+ */
 public class TaxonRecordAdapter implements RecordAdapter<NameUsageMatch2, TaxonRecord> {
 
   @Override

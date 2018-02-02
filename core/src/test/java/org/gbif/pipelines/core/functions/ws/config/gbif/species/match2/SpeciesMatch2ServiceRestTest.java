@@ -19,8 +19,9 @@ public class SpeciesMatch2ServiceRestTest {
   public void simpleCallTest() {
     SpeciesMatch2Service service = SpeciesMatch2ServiceRest.SINGLE.getService();
 
-    Call<NameUsageMatch2> call =
-      service.match2(null, null, null, null, null, null, null, "Puma " + "concolor", true, false);
+    final String name = "Puma concolor";
+
+    Call<NameUsageMatch2> call = service.match2(null, null, null, null, null, null, null, name, true, false);
 
     try {
       Response<NameUsageMatch2> response = call.execute();
@@ -30,7 +31,6 @@ public class SpeciesMatch2ServiceRestTest {
       Assert.assertNotNull(response);
 
       System.out.println(gson.toJson(response.body()));
-
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }

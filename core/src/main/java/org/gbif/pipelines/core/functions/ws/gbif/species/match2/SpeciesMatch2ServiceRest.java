@@ -33,9 +33,10 @@ public enum SpeciesMatch2ServiceRest {
   }
 
   void init() {
-
+    // load WS Config
     Config wsConfig = new Config(PROPERTIES_FILE_PATH_DEFAULT);
 
+    // create cache file
     File httpCacheDirectory;
     try {
       // use a new file cache for the current session
@@ -44,15 +45,15 @@ public enum SpeciesMatch2ServiceRest {
       throw new IllegalStateException("Cannot run without the ability to create temporary cache directory", e);
     }
 
+    // create client
     Cache cache = new Cache(httpCacheDirectory, wsConfig.getCacheConfig().getSize());
-    OkHttpClient client = new OkHttpClient.Builder()
-      .connectTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
+    OkHttpClient client = new OkHttpClient.Builder().connectTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
       .readTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
       .cache(cache)
       .build();
 
-    Retrofit retrofit = new Retrofit.Builder()
-      .client(client)
+    // create service
+    Retrofit retrofit = new Retrofit.Builder().client(client)
       .baseUrl(wsConfig.getBasePath())
       .addConverterFactory(GsonConverterFactory.create())
       .build();

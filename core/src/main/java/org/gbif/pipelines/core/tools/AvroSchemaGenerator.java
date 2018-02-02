@@ -188,7 +188,6 @@ public final class AvroSchemaGenerator {
       // create field and add it to the list
       avroFields.add(new Schema.Field(field.getName(), makeNullable(schema), null, defaultValue(field.getType())));
     }
-
   }
 
   private static boolean isCollection(Field field) {

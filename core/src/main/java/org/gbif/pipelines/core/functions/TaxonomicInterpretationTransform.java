@@ -17,6 +17,9 @@ import org.apache.beam.sdk.values.TupleTagList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * {@link PTransform} to convert {@link ExtendedRecord} into {@link TaxonRecord} with its {@link OccurrenceIssue}.
+ */
 public class TaxonomicInterpretationTransform extends PTransform<PCollection<ExtendedRecord>, PCollectionTuple> {
 
   private static final Logger LOG = LoggerFactory.getLogger(TaxonomicInterpretationTransform.class);
@@ -43,8 +46,13 @@ public class TaxonomicInterpretationTransform extends PTransform<PCollection<Ext
         try {
           InterpretedTaxonomy interpretedTaxonomy = TaxonomyInterpreter.interpretTaxonomyFields(extendedRecord);
 
+          // taxon records
           context.output(TAXON_RECORD_TUPLE_TAG, interpretedTaxonomy.getTaxonRecord());
-          context.output(TAXON_ISSUES_TUPLE_TAG, interpretedTaxonomy.getOccurrenceIssue());
+
+          // issues
+          if (interpretedTaxonomy.getOccurrenceIssue() != null) {
+            context.output(TAXON_ISSUES_TUPLE_TAG, interpretedTaxonomy.getOccurrenceIssue());
+          }
 
         } catch (TaxonomyInterpretationException e) {
           LOG.error("Error while interpreting taxonmy of record {}", extendedRecord.getId(), e);
