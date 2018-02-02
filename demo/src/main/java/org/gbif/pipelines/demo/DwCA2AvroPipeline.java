@@ -8,6 +8,7 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.gbif.pipelines.common.beam.BeamFunctions;
@@ -38,17 +39,11 @@ public class DwCA2AvroPipeline {
     PCollection<ExtendedRecord> rawRecords = p.apply(
       "Read from Darwin Core Archive", DwCAIO.Read.withPaths("demo/dwca.zip", "demo/target/tmp"));
 
-    // Convert the ExtendedRecord into an UntypedOccurrence record
-    DoFn<ExtendedRecord,UntypedOccurrence> fn = BeamFunctions.beamify(FunctionFactory.untypedOccurrenceBuilder());
 
-    // TODO: Explore the generics as to why the coder registry does not find it and we need to set the coder explicitly
-    PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
-      "Convert the objects into untyped DwC style records",ParDo.of(fn))
-                                                               .setCoder(AvroCoder.of(UntypedOccurrence.class));
 
     // Write the result as an Avro file
-    verbatimRecords.apply(
-      "Save the records as Avro", AvroIO.write(UntypedOccurrence.class).to("demo/output/data"));
+    rawRecords.apply(
+      "Save the records as Avro", AvroIO.write(ExtendedRecord.class).to("demo/output/data"));
 
     LOG.info("Starting the pipeline");
     PipelineResult result = p.run();

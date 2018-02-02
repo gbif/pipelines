@@ -78,7 +78,7 @@ public class LineageExamplePipeline {
 
     // Collect all the lineage statements for each record
     PCollection<KV<String, Iterable<String>>> finalLineage =
-      results.get(lineage).apply(GroupByKey.<String,String>create());
+      results.get(lineage).apply(GroupByKey.create());
 
     // Transform to "JSON-ish data"so we can save as a text file to read the output
     PCollection<String> lineageAsJSON = finalLineage.apply(ParDo.of(new DoFn<KV<String,Iterable<String>>, String>() {

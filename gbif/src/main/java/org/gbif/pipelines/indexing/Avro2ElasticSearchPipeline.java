@@ -1,6 +1,5 @@
 package org.gbif.pipelines.indexing;
 
-import java.io.IOException;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;

@@ -40,7 +40,6 @@ public class DwCA2AvroPipeline extends AbstractSparkOnYarnPipeline {
 
     PCollection<KV<Text, ExtendedRecord>> rawRecords =
       p.apply("Read DwC-A", HadoopInputFormatIO.<Text, ExtendedRecord>read().withConfiguration(conf));
-
     PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
       "Convert to Avro", ParDo.of(fromExtendedRecordKVP()));
 
