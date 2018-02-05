@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreter.temporal;
 
+import org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant.ParsedElementEnum;
+
 import static org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant.ParsedElementEnum.DAY;
 import static org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant.ParsedElementEnum.MONTH;
 
@@ -63,9 +65,10 @@ public class RawDateInterpreter {
     }
     //If it not a year, this array should represent toDate,
     //which may have month or day, determines by last parsed value in fromDate
-    if (MONTH == pDate.getParsedEnum()) {
+    ParsedElementEnum lastParsed = pDate.getParsedDeque().getLast();
+    if (MONTH == lastParsed) {
       pDate.parseAndSetMonth(first);
-    } else if (DAY == pDate.getParsedEnum()) {
+    } else if (DAY == lastParsed) {
       pDate.parseAndSetDay(first);
     }
   }
@@ -84,7 +87,7 @@ public class RawDateInterpreter {
     } else {
       //If year is absent, this array should represent toDate,
       //which may have month and day, determines by last parsed value in fromDate
-      boolean isMonthFirst = DAY == pDate.getParsedEnum();
+      boolean isMonthFirst = DAY == pDate.getParsedDeque().getLast();
       pDate.parseAndSetMonth(isMonthFirst ? first : second);
       pDate.parseAndSetDay(isMonthFirst ? second : first);
     }

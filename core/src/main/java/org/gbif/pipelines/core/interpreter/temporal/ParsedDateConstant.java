@@ -7,7 +7,7 @@ class ParsedDateConstant {
   private ParsedDateConstant() {}
 
   enum ParsedElementEnum {
-    NONE, YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, ZONE
+    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, ZONE
   }
 
   static final Integer ISSUE = -1;

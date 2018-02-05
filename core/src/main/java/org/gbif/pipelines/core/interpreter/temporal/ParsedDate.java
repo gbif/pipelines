@@ -2,6 +2,8 @@ package org.gbif.pipelines.core.interpreter.temporal;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.function.Function;
 
 import static org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant.BASE_ZONE_ID;
@@ -29,7 +31,7 @@ public class ParsedDate {
   protected ZoneId zoneId = BASE_ZONE_ID;
 
   private boolean hasIssue = false;
-  private ParsedElementEnum parsedEnum = NONE;
+  private Deque<ParsedElementEnum> parsedDeque = new ArrayDeque<>();
 
   public static ParsedDate copyOrCreate(ParsedDate pDate) {
     ParsedDate copy = new ParsedDate();
@@ -43,7 +45,7 @@ public class ParsedDate {
     copy.minute = pDate.minute;
     copy.second = pDate.second;
     copy.zoneId = pDate.zoneId;
-    copy.parsedEnum = pDate.parsedEnum;
+    copy.parsedDeque = pDate.parsedDeque;
     copy.hasIssue = pDate.hasIssue;
     return copy;
   }
@@ -64,8 +66,8 @@ public class ParsedDate {
     return hasIssue;
   }
 
-  public ParsedElementEnum getParsedEnum() {
-    return parsedEnum;
+  public Deque<ParsedElementEnum> getParsedDeque() {
+    return parsedDeque;
   }
 
   /**
@@ -110,10 +112,12 @@ public class ParsedDate {
 
   /**
    * Common method for processing all actions with raw values
-   * @param bValue base value, for parsed value with issue
-   * @param rValue raw value for parsing
+   *
+   * @param bValue     base value, for parsed value with issue
+   * @param rValue     raw value for parsing
    * @param parsedEnum store last parsed value
-   * @param func main function for parsing
+   * @param func       main function for parsing
+   *
    * @return parsed value or base value if any issue during the parsing process
    */
   private <T> T parseRawValue(T bValue, String rValue, ParsedElementEnum parsedEnum, Function<String, T> func) {
@@ -121,7 +125,7 @@ public class ParsedDate {
       return bValue;
     }
     T value = func.apply(rValue);
-    this.parsedEnum = parsedEnum;
+    parsedDeque.add(parsedEnum);
     if (ISSUE.equals(value)) {
       this.hasIssue = true;
       return bValue;
