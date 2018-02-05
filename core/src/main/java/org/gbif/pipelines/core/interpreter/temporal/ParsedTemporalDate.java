@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreter.temporal;
 
 import java.time.Duration;
+import java.util.Optional;
 
 /**
  * Base temporal class, consists of two parsed dates from and to.
@@ -24,12 +25,12 @@ public class ParsedTemporalDate {
     this.hasIssue = (fromDate != null && fromDate.hasIssue()) || (toDate != null && toDate.hasIssue());
   }
 
-  public ParsedDate getFrom() {
-    return fromDate;
+  public Optional<ParsedDate> getFrom() {
+    return Optional.ofNullable(fromDate);
   }
 
-  public ParsedDate getTo() {
-    return toDate;
+  public Optional<ParsedDate> getTo() {
+    return Optional.ofNullable(toDate);
   }
 
   public boolean hasIssue() {

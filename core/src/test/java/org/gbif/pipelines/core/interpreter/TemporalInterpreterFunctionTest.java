@@ -9,7 +9,7 @@ import java.time.ZonedDateTime;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class TemporalInterpreterFunctionTest {
@@ -40,8 +40,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -55,8 +55,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertNull(result.getFrom());
-    assertNull(result.getTo());
+    assertFalse(result.getFrom().isPresent());
+    assertFalse(result.getTo().isPresent());
     assertTrue(result.hasIssue());
   }
 
@@ -73,8 +73,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -89,8 +89,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -105,8 +105,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -121,8 +121,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -137,8 +137,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -153,8 +153,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -169,8 +169,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -186,8 +186,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -203,8 +203,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -220,8 +220,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -237,8 +237,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -254,8 +254,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -271,8 +271,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -287,8 +287,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -303,8 +303,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -319,8 +319,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -335,8 +335,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -351,8 +351,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -367,8 +367,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -383,8 +383,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -399,8 +399,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -415,8 +415,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -424,15 +424,15 @@ public class TemporalInterpreterFunctionTest {
     //State
     ZonedDateTime expectedFirst = LocalDateTime.of(1999, 4, 1, 0, 0, 0).atZone(ZONE_Z);
 
-    String eventDate = "Apr. 01, 1999";
+    String eventDate = "Apr. 1, 1999";
     String year = "1999";
-    String month = "04";
-    String day = "01";
+    String month = "4";
+    String day = "1";
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -447,8 +447,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -463,8 +463,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -479,8 +479,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -495,8 +495,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -511,8 +511,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -524,8 +524,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -537,8 +537,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -553,8 +553,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -566,8 +566,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -579,8 +579,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -593,8 +593,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -607,8 +607,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -621,8 +621,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -635,8 +635,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -649,8 +649,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -666,8 +666,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -680,7 +680,7 @@ public class TemporalInterpreterFunctionTest {
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
     assertEquals(expectedHasIssue, result.hasIssue());
-    assertNull(result.getTo());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -692,8 +692,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -705,8 +705,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -719,8 +719,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -733,8 +733,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -746,8 +746,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
   
   @Test
@@ -759,8 +759,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -772,8 +772,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -785,8 +785,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -798,8 +798,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -811,8 +811,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -824,8 +824,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -841,8 +841,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertNull(result.getTo());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertFalse(result.getTo().isPresent());
   }
 
   @Test
@@ -856,8 +856,8 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
-    assertEquals(expectedSecond, result.getTo().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
+    assertEquals(expectedSecond, result.getTo().get().toZonedDateTime());
   }
 
   @Test
@@ -870,7 +870,7 @@ public class TemporalInterpreterFunctionTest {
     //When
     ParsedTemporalDate result = TemporalInterpreterFunction.apply(eventDate);
     //Should
-    assertEquals(expectedFirst, result.getFrom().toZonedDateTime());
+    assertEquals(expectedFirst, result.getFrom().get().toZonedDateTime());
   }
 
 }
