@@ -2,18 +2,17 @@ package org.gbif.pipelines.indexing;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.solr.SolrIO;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.solr.common.SolrInputDocument;
 import org.gbif.pipelines.builder.SolrDocBuilder;
-import org.gbif.pipelines.common.beam.BeamFunctions;
 import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.core.functions.descriptor.CustomTypeDescriptors;
 import org.gbif.pipelines.core.functions.FunctionFactory;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 import org.slf4j.Logger;
@@ -47,22 +46,19 @@ public class Avro2SolrPipeline extends AbstractSparkOnYarnPipeline {
 
         Configuration conf = new Configuration(); // assume defaults on CP
         Pipeline p = newPipeline(args, conf);
-        Coders.registerAvroCoders(p, UntypedOccurrenceLowerCase.class, TypedOccurrence.class, ExtendedRecord.class);
+        Coders.registerAvroCoders(p, UntypedOccurrenceLowerCase.class, TypedOccurrence.class);
 
         // Read Avro files
         PCollection<UntypedOccurrenceLowerCase> verbatimRecords = p.apply(
                 "Read Avro files", AvroIO.read(UntypedOccurrenceLowerCase.class).from(SOURCE_PATH));
 
         // Convert the objects (interpretation)
-        PCollection<TypedOccurrence> interpreted = verbatimRecords.apply(
-                "Interpret occurrence records", ParDo.of(BeamFunctions.beamify(FunctionFactory.interpretOccurrenceLowerCase())))
-                .setCoder(AvroCoder.of(TypedOccurrence.class));
+        PCollection<TypedOccurrence> interpreted = verbatimRecords.apply("Interpret occurrence records"
+          , MapElements.into(CustomTypeDescriptors.typedOccurrencies()).via(FunctionFactory.interpretOccurrenceLowerCase()::apply));
 
         // Do the nub lookup
-        PCollection<TypedOccurrence> matched = interpreted.apply(
-                "Align to backbone using species/match", ParDo.of(
-                        BeamFunctions.beamify(FunctionFactory.gbifSpeciesMatch())))
-                .setCoder(AvroCoder.of(TypedOccurrence.class));
+        PCollection<TypedOccurrence> matched = interpreted.apply("Align to backbone using species/match"
+          , MapElements.into(CustomTypeDescriptors.typedOccurrencies()).via(FunctionFactory.gbifSpeciesMatch()::apply));
 
         // Write the file to SOLR
         final SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration

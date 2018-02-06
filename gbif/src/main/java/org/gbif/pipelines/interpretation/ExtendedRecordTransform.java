@@ -1,26 +1,15 @@
 package org.gbif.pipelines.interpretation;
 
-import org.gbif.api.vocabulary.BasisOfRecord;
-import org.gbif.api.vocabulary.EstablishmentMeans;
-import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.api.vocabulary.Sex;
-import org.gbif.api.vocabulary.TypeStatus;
-import org.gbif.common.parsers.BasisOfRecordParser;
-import org.gbif.common.parsers.EstablishmentMeansParser;
-import org.gbif.common.parsers.LifeStageParser;
-import org.gbif.common.parsers.NumberParser;
-import org.gbif.common.parsers.SexParser;
-import org.gbif.common.parsers.TypeStatusParser;
-import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.interpretation.parsers.SimpleTypeParser;
+import org.gbif.pipelines.interpretation.parsers.VocabularyParsers;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.Validation;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -38,90 +27,138 @@ import static org.gbif.pipelines.interpretation.InterpretationTupleTags.occurren
  */
 public class ExtendedRecordTransform extends PTransform<PCollection<ExtendedRecord>, PCollectionTuple> {
 
-
-  private static final TypeStatusParser TYPE_PARSER = TypeStatusParser.getInstance();
-  private static final BasisOfRecordParser BOR_PARSER = BasisOfRecordParser.getInstance();
-  private static final SexParser SEX_PARSER = SexParser.getInstance();
-  private static final EstablishmentMeansParser EST_PARSER = EstablishmentMeansParser.getInstance();
-  private static final LifeStageParser LST_PARSER = LifeStageParser.getInstance();
-
   @Override
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
-    return input.apply("Interpreting record level terms", ParDo.of(interprete())
+    return input.apply("Interpreting record level terms", ParDo.of(interpret())
       .withOutputTags(interpretedExtendedRecordTupleTag(), TupleTagList.of(occurrenceIssueTupleTag())));
   }
 
   /**
    * Transforms a ExtendedRecord into a InterpretedExtendedRecord.
    */
-  private DoFn<ExtendedRecord,InterpretedExtendedRecord> interprete() {
+  private DoFn<ExtendedRecord,InterpretedExtendedRecord> interpret() {
     return new DoFn<ExtendedRecord, InterpretedExtendedRecord>() {
       @ProcessElement
       public void processElement(ProcessContext context) {
+
+        //Transformation main output
         InterpretedExtendedRecord interpretedExtendedRecord = new InterpretedExtendedRecord();
+
+        //Context element to be interpreted
         ExtendedRecord extendedRecord = context.element();
+
+        //Id
         interpretedExtendedRecord.setId(extendedRecord.getId());
         Collection<Validation> validations = new ArrayList<>();
-        Optional.ofNullable(extendedRecord.getCoreTerms().get(DwcTerm.basisOfRecord.qualifiedName()))
-          .ifPresent(value -> {
-            ParseResult<BasisOfRecord> parseResult = BOR_PARSER.parse(value.toString());
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setBasisOfRecord(parseResult.getPayload().name());
-            } else {
-              validations.add(toValidation(OccurrenceIssue.BASIS_OF_RECORD_INVALID));
-            }
-          });
 
-        Optional.ofNullable(extendedRecord.getCoreTerms().get(DwcTerm.sex.qualifiedName()))
-          .ifPresent(value -> {
-            ParseResult<Sex> parseResult = SEX_PARSER.parse(value.toString());
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setSex(parseResult.getPayload().name());
-            }
-          });
+        //Interpretation routines
+        interpretBasisOfRecord(interpretedExtendedRecord, extendedRecord, validations);
 
-        Optional.ofNullable(extendedRecord.getCoreTerms().get(DwcTerm.establishmentMeans.qualifiedName()))
-          .ifPresent(value -> {
-            ParseResult<EstablishmentMeans> parseResult = EST_PARSER.parse(value.toString());
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setEstablishmentMeans(parseResult.getPayload().name());
-            }
-          });
+        interpretSex(interpretedExtendedRecord, extendedRecord);
 
-        Optional.ofNullable(extendedRecord.getCoreTerms().get(DwcTerm.lifeStage.qualifiedName()))
-          .ifPresent(value -> {
-            ParseResult<LifeStage> parseResult = LST_PARSER.parse(value.toString());
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setLifeStage(parseResult.getPayload().name());
-            }
-          });
+        interpretEstablishmentMeans(interpretedExtendedRecord, extendedRecord);
 
-        Optional.ofNullable(extendedRecord.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()))
-          .ifPresent(value -> {
-            ParseResult<TypeStatus> parseResult = TYPE_PARSER.parse(value.toString());
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setTypeStatus(parseResult.getPayload().name());
-            } else {
-              validations.add(toValidation(OccurrenceIssue.TYPE_STATUS_INVALID));
-            }
-          });
+        interpretLifeStage(interpretedExtendedRecord, extendedRecord);
 
-        Optional.ofNullable(extendedRecord.getCoreTerms().get(DwcTerm.individualCount.qualifiedName()))
-          .ifPresent(value -> {
-            Optional<Integer> parseResult = Optional.ofNullable(NumberParser.parseInteger(value.toString()));
+        interpretTypeStatus(interpretedExtendedRecord, extendedRecord, validations);
+
+        interpretIndividualCount(interpretedExtendedRecord, extendedRecord, validations);
+
+        //additional outputs
+        if (!validations.isEmpty()) {
+          context.output(occurrenceIssueTupleTag(), org.gbif.pipelines.io.avro.OccurrenceIssue.newBuilder()
+            .setId(extendedRecord.getId())
+            .setIssues(validations).build());
+        }
+
+        //main output
+        context.output(interpretedExtendedRecordTupleTag(), interpretedExtendedRecord);
+      }
+
+      /**
+       * {@link DwcTerm#individualCount} interpretation.
+       */
+      private void interpretIndividualCount(InterpretedExtendedRecord interpretedExtendedRecord,
+                                            ExtendedRecord extendedRecord, Collection<Validation> validations) {
+        SimpleTypeParser.parseInt(extendedRecord, DwcTerm.individualCount, parseResult -> {
             if(parseResult.isPresent()) {
                interpretedExtendedRecord.setIndividualCount(parseResult.get());
             } else {
               validations.add(toValidation(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID));
             }
           });
+      }
 
-        if (!validations.isEmpty()) {
-          context.output(occurrenceIssueTupleTag(), org.gbif.pipelines.io.avro.OccurrenceIssue.newBuilder()
-            .setId(extendedRecord.getId())
-            .setIssues(validations).build());
-        }
-        context.output(interpretedExtendedRecordTupleTag(), interpretedExtendedRecord);
+      /**
+       * {@link DwcTerm#typeStatus} interpretation.
+       */
+      private void interpretTypeStatus(InterpretedExtendedRecord interpretedExtendedRecord, ExtendedRecord extendedRecord,
+                                       Collection<Validation> validations) {
+        VocabularyParsers
+          .typeStatusParser()
+          .parse(extendedRecord, parseResult -> {
+            if (parseResult.isSuccessful()) {
+              interpretedExtendedRecord.setTypeStatus(parseResult.getPayload().name());
+            } else {
+              validations.add(toValidation(OccurrenceIssue.TYPE_STATUS_INVALID));
+            }
+          });
+      }
+
+      /**
+       * {@link DwcTerm#lifeStage} interpretation.
+       */
+      private void interpretLifeStage(InterpretedExtendedRecord interpretedExtendedRecord,
+                                      ExtendedRecord extendedRecord) {
+        VocabularyParsers
+          .lifeStageParser()
+          .parse(extendedRecord, parseResult -> {
+            if (parseResult.isSuccessful()) {
+              interpretedExtendedRecord.setLifeStage(parseResult.getPayload().name());
+            }
+          });
+      }
+
+      /**
+       * {@link DwcTerm#establishmentMeans} interpretation.
+       */
+      private void interpretEstablishmentMeans(InterpretedExtendedRecord interpretedExtendedRecord,
+                                               ExtendedRecord extendedRecord) {
+        VocabularyParsers
+          .establishmentMeansParser()
+          .parse(extendedRecord, parseResult -> {
+            if (parseResult.isSuccessful()) {
+              interpretedExtendedRecord.setEstablishmentMeans(parseResult.getPayload().name());
+            }
+          });
+      }
+
+      /**
+       * {@link DwcTerm#sex} interpretation.
+       */
+      private void interpretSex(InterpretedExtendedRecord interpretedExtendedRecord, ExtendedRecord extendedRecord) {
+        VocabularyParsers
+          .sexParser()
+          .parse(extendedRecord, parseResult -> {
+            if (parseResult.isSuccessful()) {
+              interpretedExtendedRecord.setSex(parseResult.getPayload().name());
+            }});
+      }
+
+      /**
+       * {@link DwcTerm#basisOfRecord} interpretation.
+       */
+      private void interpretBasisOfRecord(InterpretedExtendedRecord interpretedExtendedRecord,
+                                          ExtendedRecord extendedRecord, Collection<Validation> validations) {
+        VocabularyParsers
+          .basisOfRecordParser()
+          .parse(extendedRecord, parseResult -> {
+            if (parseResult.isSuccessful()) {
+              interpretedExtendedRecord.setBasisOfRecord(parseResult.getPayload().name());
+            } else {
+              validations.add(toValidation(OccurrenceIssue.BASIS_OF_RECORD_INVALID));
+            }
+          });
       }
     };
   }
