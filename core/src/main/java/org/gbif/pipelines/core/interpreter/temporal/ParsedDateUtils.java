@@ -13,8 +13,10 @@ import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant.BASE_DATE;
 import static org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant.BASE_ZONE_ID;
 import static org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant.ISSUE;
+import static org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant.MIN_YEAR;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
@@ -24,9 +26,6 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 public class ParsedDateUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(ParsedDate.class);
-
-  private static final Integer MIN_YEAR = 1000;
-  private static final ZonedDateTime BASE_DATE = LocalDateTime.of(1, 1, 1, 0, 0).atZone(BASE_ZONE_ID);
 
   private ParsedDateUtils() {
     //NOP
