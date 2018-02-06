@@ -1,9 +1,10 @@
 package org.gbif.pipelines.demo;
 
-import static org.apache.beam.sdk.io.fs.ResolveOptions.StandardResolveOptions.RESOLVE_FILE;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import org.apache.avro.Schema;
-import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
@@ -17,35 +18,34 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.options.ValueProvider;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.beam.sdk.io.fs.ResolveOptions.StandardResolveOptions.RESOLVE_FILE;
 
 /**
  * A simple local demonstration illustrating taking an avro file and splitting it into an avro file per genus.
  */
 public class MultiAvroOutDemo {
+
   private static final Logger LOG = LoggerFactory.getLogger(MultiAvroOutDemo.class);
 
   public static void main(String[] args) {
     PipelineOptions options = PipelineOptionsFactory.create();
-    options.setRunner(DirectRunner.class); // forced for this demo
+    //options.setRunner(DirectRunner.class); // forced for this demo
     Pipeline p = Pipeline.create(options);
 
     // register Avro coders for serializing our messages
     Coders.registerAvroCoders(p, ExtendedRecord.class, UntypedOccurrence.class);
 
-    PCollection<UntypedOccurrence> verbatimRecords = p.apply(
-      "Read Avro", AvroIO.read(UntypedOccurrence.class).from("demo/output/data*"));
+    PCollection<UntypedOccurrence> verbatimRecords =
+      p.apply("Read Avro", AvroIO.read(UntypedOccurrence.class).from("demo/output/data*"));
 
     verbatimRecords.apply("Write file per Genus",
                           AvroIO.write(UntypedOccurrence.class)
-                                .to("demo/output-split/data*") // prefix, is required but overwritten
-                                .to(new GenusDynamicAvroDestinations(
-                                  FileSystems.matchNewResource("demo/output-split/data*", true))));
-
+                            .to("demo/output-split/data*") // prefix, is required but overwritten
+                            .to(new GenusDynamicAvroDestinations(FileSystems.matchNewResource("demo/output-split/data*",
+                                                                                              true))));
 
     LOG.info("Starting the pipeline");
     PipelineResult result = p.run();
@@ -58,6 +58,7 @@ public class MultiAvroOutDemo {
    */
   static class GenusDynamicAvroDestinations
     extends DynamicAvroDestinations<UntypedOccurrence, String, UntypedOccurrence> {
+
     ResourceId baseDir;
 
     GenusDynamicAvroDestinations(ResourceId baseDir) {
@@ -86,12 +87,11 @@ public class MultiAvroOutDemo {
 
     @Override
     public FileBasedSink.FilenamePolicy getFilenamePolicy(String genus) {
-      return DefaultFilenamePolicy.fromStandardParameters(
-        ValueProvider.StaticValueProvider.of(
-          baseDir.resolve(genus, RESOLVE_FILE)),
-        ShardNameTemplate.INDEX_OF_MAX,
-        ".avro",
-        false);
+      return DefaultFilenamePolicy.fromStandardParameters(ValueProvider.StaticValueProvider.of(baseDir.resolve(genus,
+                                                                                                               RESOLVE_FILE)),
+                                                          ShardNameTemplate.INDEX_OF_MAX,
+                                                          ".avro",
+                                                          false);
     }
   }
 }

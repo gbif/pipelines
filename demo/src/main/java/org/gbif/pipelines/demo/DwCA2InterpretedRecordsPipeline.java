@@ -5,25 +5,25 @@ import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.config.DataFlowPipelineOptions;
+import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer;
+import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -45,6 +45,12 @@ import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCateg
  * A simple demonstration showing a pipeline running locally which will read UntypedOccurrence from a DwC-A file
  * transform it into interpreted occurence records
  * .
+ * <p>
+ * Run it
+ * On LocalFileSystem
+ * mvn compile exec:java -Dexec.mainClass=org.gbif.pipelines.demo.DwCA2InterpretedRecordsPipeline -Dexec.args="--datasetId=abc123 --inputFile=data/dwca.zip" -Pdirect-runner
+ * On HDFS
+ * mvn compile exec:java -Dexec.mainClass=org.gbif.pipelines.demo.DwCA2InterpretedRecordsPipeline -Dexec.args="--datasetId=abc123 --inputFile=data/dwca.zip --HDFSConfigurationDirectory=/path/to/hadoop-conf/ --defaultTargetDirectory=hdfs://ha-nn/user/hive/warehouse/gbif-data/abc123/" -Pdirect-runner
  */
 public class DwCA2InterpretedRecordsPipeline {
 
@@ -55,8 +61,9 @@ public class DwCA2InterpretedRecordsPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(DwCA2InterpretedRecordsPipeline.class);
 
   public static void main(String[] args) {
-    PipelineOptions options = PipelineOptionsFactory.create();
-    options.setRunner(DirectRunner.class); // forced for this demo
+    DataFlowPipelineOptions options = PipelineUtils.createPipelineOptions(args);
+    final Map<Interpretation, String> targetPaths = options.getTargetPaths();
+
     Pipeline p = Pipeline.create(options);
 
     // register Avro coders for serializing our messages
@@ -78,12 +85,13 @@ public class DwCA2InterpretedRecordsPipeline {
                                         IssueLineageRecord.class);
 
     // Read the DwC-A using our custom reader
-    PCollection<ExtendedRecord> rawRecords =
-      p.apply("Read from Darwin Core Archive", DwCAIO.Read.withPaths("demo/data/dwca.zip", "demo/target/tmp"));
+    PCollection<ExtendedRecord> rawRecords = p.apply("Read from Darwin Core Archive",
+                                                     DwCAIO.Read.withPaths(options.getInputFile(),
+                                                                           targetPaths.get(Interpretation.TEMP_DwCA_PATH)));
 
     // Write records in an avro file, this will be location of the hive table which has raw records
     rawRecords.apply("Save the interpreted records as Avro",
-                     AvroIO.write(ExtendedRecord.class).to("demo/output/raw-data"));
+                     AvroIO.write(ExtendedRecord.class).to(targetPaths.get(Interpretation.RAW_OCCURRENCE)));
 
     //Interpret the raw records as a tuple, which has both different categories of data and issue related to them
     PCollectionTuple interpretedCategory = rawRecords.apply(new RawToInterpretedCategoryTransformer());
@@ -97,7 +105,7 @@ public class DwCA2InterpretedRecordsPipeline {
         }
       }))
       .apply("Dumping the temporal category of interpreted records in an defined hive table location.",
-             AvroIO.write(Event.class).to("demo/output/interpreted-temporaldata"));
+             AvroIO.write(Event.class).to(targetPaths.get(Interpretation.TEMPORAL)));
 
     //Dumping the spatial category of interpreted records in a defined hive table location.
     interpretedCategory.get(SPATIAL_CATEGORY)
@@ -108,7 +116,7 @@ public class DwCA2InterpretedRecordsPipeline {
         }
       }))
       .apply("Dumping the spatial category of interpreted records in a defined hive table location.",
-             AvroIO.write(Location.class).to("demo/output/interpreted-spatialdata"));
+             AvroIO.write(Location.class).to(targetPaths.get(Interpretation.LOCATION)));
 
     //Dumping the temporal category of issues and lineages while interpreting the records in a defined hive table location.
     interpretedCategory.get(TEMPORAL_CATEGORY_ISSUES)
@@ -121,7 +129,7 @@ public class DwCA2InterpretedRecordsPipeline {
       }))
       .apply(
         "Dumping the temporal category of issues and lineages while interpreting the records in a defined hive table location",
-        AvroIO.write(IssueLineageRecord.class).to("demo/output/interpreted-temporalissue"));
+        AvroIO.write(IssueLineageRecord.class).to(targetPaths.get(Interpretation.TEMPORAL_ISSUE)));
 
     //Dumping the spatial category of issues and lineages while interpreting the records in a defined hive table location.
     interpretedCategory.get(SPATIAL_CATEGORY_ISSUES)
@@ -134,7 +142,7 @@ public class DwCA2InterpretedRecordsPipeline {
       }))
       .apply(
         "Dumping the spatial category of issues and lineages while interpreting the records in a defined hive table location",
-        AvroIO.write(IssueLineageRecord.class).to("demo/output/interpreted-spatialissue"));
+        AvroIO.write(IssueLineageRecord.class).to(targetPaths.get(Interpretation.LOCATION_ISSUE)));
 
     /*
       Joining temporal category and spatial category to get the big flat interpreted record.
@@ -162,11 +170,12 @@ public class DwCA2InterpretedRecordsPipeline {
 
     // Write the big flat final interpreted records as an Avro file in defined hive table
     interpretedRecords.apply("Save the interpreted records as Avro",
-                             AvroIO.write(ExtendedOccurence.class).to("demo/output/interpreted-data"));
+                             AvroIO.write(ExtendedOccurence.class)
+                               .to(targetPaths.get(Interpretation.INTERPRETED_OCURENCE)));
     // Write the issue and lineage result as an Avro file in defined table
     interpretedIssueLineageRecords.apply("Save the interpreted records issues and lineages as Avro",
                                          AvroIO.write(IssueLineageRecord.class)
-                                           .to("demo/output/interpreted_issue_lineage-data"));
+                                           .to(targetPaths.get(Interpretation.INTERPRETED_ISSUE)));
 
     LOG.info("Starting the pipeline");
     PipelineResult result = p.run();
