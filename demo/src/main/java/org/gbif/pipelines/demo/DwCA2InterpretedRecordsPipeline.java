@@ -65,24 +65,9 @@ public class DwCA2InterpretedRecordsPipeline {
     final Map<Interpretation, String> targetPaths = options.getTargetPaths();
 
     Pipeline p = Pipeline.create(options);
+    //register coders for the pipeline
+    registerPipeLineCoders(p);
 
-    // register Avro coders for serializing our messages
-    Coders.registerAvroCoders(p,
-                              ExtendedRecord.class,
-                              Event.class,
-                              Location.class,
-                              ExtendedOccurence.class,
-                              Issue.class,
-                              Lineage.class,
-                              IssueLineageRecord.class);
-    Coders.registerAvroCodersForTypes(p, TEMPORAL_TAG, SPATIAL_TAG, TEMPORAL_ISSUE_TAG, SPATIAL_ISSUE_TAG);
-    Coders.registerAvroCodersForKVTypes(p,
-                                        new TupleTag[] {TEMPORAL_CATEGORY, SPATIAL_CATEGORY, TEMPORAL_CATEGORY_ISSUES,
-                                          SPATIAL_CATEGORY_ISSUES},
-                                        Event.class,
-                                        Location.class,
-                                        IssueLineageRecord.class,
-                                        IssueLineageRecord.class);
 
     // Read the DwC-A using our custom reader
     PCollection<ExtendedRecord> rawRecords = p.apply("Read from Darwin Core Archive",
@@ -240,6 +225,30 @@ public class DwCA2InterpretedRecordsPipeline {
         .build();
       ctx.output(record);
     }
+  }
+
+  /**
+   * register Avro coders for serializing our messages
+   * @param p
+   */
+  static void registerPipeLineCoders(Pipeline p){
+
+    Coders.registerAvroCoders(p,
+                              ExtendedRecord.class,
+                              Event.class,
+                              Location.class,
+                              ExtendedOccurence.class,
+                              Issue.class,
+                              Lineage.class,
+                              IssueLineageRecord.class);
+    Coders.registerAvroCodersForTypes(p, TEMPORAL_TAG, SPATIAL_TAG, TEMPORAL_ISSUE_TAG, SPATIAL_ISSUE_TAG);
+    Coders.registerAvroCodersForKVTypes(p,
+                                        new TupleTag[] {TEMPORAL_CATEGORY, SPATIAL_CATEGORY, TEMPORAL_CATEGORY_ISSUES,
+                                          SPATIAL_CATEGORY_ISSUES},
+                                        Event.class,
+                                        Location.class,
+                                        IssueLineageRecord.class,
+                                        IssueLineageRecord.class);
   }
 
 }
