@@ -6,7 +6,7 @@ package org.gbif.pipelines.core.functions.interpretation;
  * T stands for Input parameter and U stands for output parameter
  */
 @FunctionalInterface
-interface Interpretable<T, U> {
+interface Interpretable<T> {
 
-  U interpret(T input) throws InterpretationException;
+  <U> U interpret(T input) throws InterpretationException;
 }

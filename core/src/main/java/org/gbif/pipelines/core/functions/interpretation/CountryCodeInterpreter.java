@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * interprets country code
  */
-public class CountryCodeInterpreter implements Interpretable<String, String> {
+class CountryCodeInterpreter implements Interpretable<String> {
 
   @Override
   public String interpret(String input) throws InterpretationException {

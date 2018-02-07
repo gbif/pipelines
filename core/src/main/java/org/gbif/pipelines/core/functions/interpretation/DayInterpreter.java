@@ -6,7 +6,7 @@ import org.gbif.pipelines.core.functions.interpretation.error.LineageType;
 /**
  * interprets day and adds issues and lineages with it
  */
-public class DayInterpreter implements Interpretable<String, Integer> {
+class DayInterpreter implements Interpretable<String> {
 
   private static final int MIN_DAY = 1;
   private static final int MAX_DAY = 31;

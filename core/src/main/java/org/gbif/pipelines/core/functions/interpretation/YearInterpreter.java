@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * year interpreter interprets the years and add issues and lineages to it.
  */
-public class YearInterpreter implements Interpretable<String, Integer> {
+class YearInterpreter implements Interpretable<String> {
 
   @Override
   public Integer interpret(String input) throws InterpretationException {

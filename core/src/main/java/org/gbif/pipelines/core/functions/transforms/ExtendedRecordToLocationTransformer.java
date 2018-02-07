@@ -5,9 +5,8 @@ import org.gbif.common.parsers.ContinentParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.functions.interpretation.CountryCodeInterpreter;
-import org.gbif.pipelines.core.functions.interpretation.CountryInterpreter;
 import org.gbif.pipelines.core.functions.interpretation.InterpretationException;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationFactory;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
@@ -59,23 +58,12 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
     CharSequence rawContinent = record.getCoreTerms().get(DwcTerm.continent.qualifiedName());
 
     if (rawContinent != null) {
-      final ParseResult<Continent> parse = ContinentParser.getInstance().parse(rawContinent.toString());
-      if (parse.isSuccessful()) {
-        loc.setContinent(parse.getPayload().getTitle());
-      } else {
-        loc.setContinent(null);
-        fieldIssueMap.put(DwcTerm.continent.name(),
-                          Collections.singletonList(Issue.newBuilder()
-                                                      .setRemark("Could not parse continent because " + (parse.getError()!=null?
-                                                        parse.getError().getMessage():" is null"))
-                                                      .setIssueType(IssueType.PARSE_ERROR)
-                                                      .build()));
-        fieldLineageMap.put(DwcTerm.continent.name(),
-                            Collections.singletonList(Lineage.newBuilder()
-                                                        .setRemark(
-                                                          "Could not parse the continent or invalid value setting it to null")
-                                                        .setLineageType(LineageType.SET_TO_NULL)
-                                                        .build()));
+      try {
+        loc.setCountry(InterpretationFactory.interpret(DwcTerm.continent, rawContinent));
+      } catch (InterpretationException e) {
+        fieldIssueMap.put(DwcTerm.continent.name(), e.getIssues());
+        fieldLineageMap.put(DwcTerm.continent.name(), e.getLineages());
+        e.getInterpretedValue().ifPresent((interpretedCountry) -> loc.setCountry(interpretedCountry.toString()));
       }
     }
 
@@ -90,7 +78,7 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
     CharSequence rawCountryCode = record.getCoreTerms().get(DwcTerm.countryCode.qualifiedName());
     if (rawCountry != null) {
       try {
-        loc.setCountry(new CountryInterpreter().interpret(rawCountry.toString()));
+        loc.setCountry(InterpretationFactory.interpret(DwcTerm.country, rawCountry));
       } catch (InterpretationException e) {
         fieldIssueMap.put(DwcTerm.country.name(), e.getIssues());
         fieldLineageMap.put(DwcTerm.country.name(), e.getLineages());
@@ -99,7 +87,7 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
     }
     if (rawCountryCode != null) {
       try {
-        loc.setCountryCode(new CountryCodeInterpreter().interpret(rawCountryCode.toString()));
+        loc.setCountryCode(InterpretationFactory.interpret(DwcTerm.countryCode,rawCountryCode));
       } catch (InterpretationException e) {
         fieldIssueMap.put(DwcTerm.country.name(), e.getIssues());
         fieldLineageMap.put(DwcTerm.country.name(), e.getLineages());

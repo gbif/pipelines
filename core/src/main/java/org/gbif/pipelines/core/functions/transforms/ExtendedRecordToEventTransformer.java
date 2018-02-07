@@ -2,10 +2,8 @@ package org.gbif.pipelines.core.functions.transforms;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
-import org.gbif.pipelines.core.functions.interpretation.DayInterpreter;
 import org.gbif.pipelines.core.functions.interpretation.InterpretationException;
-import org.gbif.pipelines.core.functions.interpretation.MonthInterpreter;
-import org.gbif.pipelines.core.functions.interpretation.YearInterpreter;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationFactory;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
@@ -63,7 +61,7 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
 
     if (raw_day != null) {
       try {
-        evt.setDay(new DayInterpreter().interpret(raw_day.toString()));
+        evt.setDay(InterpretationFactory.interpret(DwcTerm.day,raw_day));
       } catch (InterpretationException e) {
         fieldIssueMap.put(DwcTerm.day.name(), e.getIssues());
         fieldLineageMap.put(DwcTerm.day.name(), e.getLineages());
@@ -73,7 +71,7 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
 
     if (raw_month != null) {
       try {
-        evt.setMonth(new MonthInterpreter().interpret(raw_month.toString()));
+        evt.setMonth(InterpretationFactory.interpret(DwcTerm.month,raw_month));
       } catch (InterpretationException e) {
         fieldIssueMap.put(DwcTerm.month.name(), e.getIssues());
         fieldLineageMap.put(DwcTerm.month.name(), e.getLineages());
@@ -83,7 +81,7 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
 
     if (raw_year != null) {
       try {
-        evt.setYear(new YearInterpreter().interpret(raw_year.toString()));
+        evt.setYear(InterpretationFactory.interpret(DwcTerm.year,raw_year));
       } catch (InterpretationException e) {
         fieldIssueMap.put(DwcTerm.year.name(), e.getIssues());
         fieldLineageMap.put(DwcTerm.year.name(), e.getLineages());

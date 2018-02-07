@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * interprets month and add issue and lineages to it.
  */
-public class MonthInterpreter implements Interpretable<String, Integer> {
+class MonthInterpreter implements Interpretable<String> {
 
   @Override
   public Integer interpret(String input) throws InterpretationException {
