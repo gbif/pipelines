@@ -28,7 +28,9 @@ Also notice that some parameters have default values, in case no value is provid
 Run demo pipeline:
 
 ```
-sudo -u hdfs hadoop jar /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.demo.TaxonomyInterpretationPipeline
+sudo -u hdfs hadoop jar /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.demo.TaxonomyInterpretationPipeline --runner=DirectRunner
+
+sudo -u hdfs spark-submit --conf spark.default.parallelism=24 --conf spark.yarn.executor.memoryOverhead=2048 --class org.gbif.pipelines.demo.TaxonomyInterpretationPipeline --master yarn --executor-memory 24G --executor-cores 2 --num-executors 3 /home/mlopez/demo-1.0-SNAPSHOT-shaded.jar --runner=SparkRunner
 ```
 
 Create hive tables:

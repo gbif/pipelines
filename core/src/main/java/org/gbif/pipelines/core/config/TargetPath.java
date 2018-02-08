@@ -11,19 +11,26 @@ public class TargetPath implements Serializable {
 
   private static final long serialVersionUID = 1843400832026524345L;
 
-  private final String directory;
+  private String directory;
 
-  private final String fileName;
+  private String fileName;
 
   /**
    * Builds a new instance using a directory and file name.
-   * @param dir directory name
+   *
+   * @param dir      directory name
    * @param fileName file name
    */
   public TargetPath(String dir, String fileName) {
     directory = dir;
     this.fileName = fileName;
   }
+
+  /**
+   * Needed for json serialization with Jackson. Do NOT invoke it programmatically!! Setters are not created to
+   * avoid the use of this constructor.
+   */
+  public TargetPath() {}
 
   public String getDirectory() {
     return directory;
@@ -34,10 +41,9 @@ public class TargetPath implements Serializable {
   }
 
   /**
-   *
    * @return a full path which concatenates the directory and file names.
    */
-  public String getFilePath(){
+  public String filePath() {
     return getFullPath(directory, fileName);
   }
 

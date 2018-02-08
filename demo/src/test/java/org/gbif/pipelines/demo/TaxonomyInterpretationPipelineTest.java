@@ -12,7 +12,6 @@ import org.apache.hadoop.fs.Path;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -34,24 +33,24 @@ public class TaxonomyInterpretationPipelineTest {
   }
 
   @Test
-  @Ignore
-  // FIXME: ignored becasue when run with maven it does not find the properties file. Before fixing it we should
-  // decide how we are gonna handle the properties files, externalized? reading from maven profiles? any other idea?
   public void taxonomyInterpretationPipelineTest() throws Exception {
 
     final String sourcePath = "data/extendedRecords*";
     final String taxonOutPath = clusterConfig.hdfsClusterBaseUri + "taxon";
     final String issuesOutPath = clusterConfig.hdfsClusterBaseUri + "taxonIssues";
 
-    DataProcessingPipelineOptions options =
-      PipelineUtils.createDefaultTaxonOptions(configuration, sourcePath, taxonOutPath, issuesOutPath);
+    DataProcessingPipelineOptions options = PipelineUtils.createDefaultTaxonOptions(configuration,
+                                                                                    sourcePath,
+                                                                                    taxonOutPath,
+                                                                                    issuesOutPath,
+                                                                                    new String[] {
+                                                                                      "--runner=DirectRunner"});
 
     TaxonomyInterpretationPipeline.runPipelineProgrammatically(options);
 
     // test taxon results
     URI uriTargetPath =
-      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(Interpretation.TAXONOMY).getFilePath()
-                                               + "*");
+      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(Interpretation.TAXONOMY).filePath() + "*");
     FileStatus[] fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);
@@ -65,7 +64,7 @@ public class TaxonomyInterpretationPipelineTest {
 
     // test issues results
     uriTargetPath =
-      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(Interpretation.ISSUES).getFilePath() + "*");
+      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(Interpretation.ISSUES).filePath() + "*");
     fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);

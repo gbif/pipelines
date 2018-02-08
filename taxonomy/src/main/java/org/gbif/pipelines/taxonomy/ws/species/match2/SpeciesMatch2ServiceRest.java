@@ -1,6 +1,6 @@
-package org.gbif.pipelines.core.functions.ws.gbif.species.match2;
+package org.gbif.pipelines.taxonomy.ws.species.match2;
 
-import org.gbif.pipelines.core.functions.ws.config.Config;
+import org.gbif.pipelines.taxonomy.ws.config.Config;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,6 +56,7 @@ public enum SpeciesMatch2ServiceRest {
     Retrofit retrofit = new Retrofit.Builder().client(client)
       .baseUrl(wsConfig.getBasePath())
       .addConverterFactory(GsonConverterFactory.create())
+      .validateEagerly(true)
       .build();
 
     service = retrofit.create(SpeciesMatch2Service.class);

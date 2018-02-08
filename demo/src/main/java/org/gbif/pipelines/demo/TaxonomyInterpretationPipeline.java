@@ -4,10 +4,10 @@ import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
-import org.gbif.pipelines.core.functions.TaxonomicInterpretationTransform;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.taxonomy.transforms.TaxonomicInterpretationTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -39,7 +39,7 @@ public class TaxonomyInterpretationPipeline {
    */
   public static void main(String[] args) {
     Configuration config = new Configuration();
-    runPipeline(createDefaultTaxonOptions(config, SOURCE_PATH, TAXON_OUT_PATH_DIR, ISSUES_OUT_PATH_DIR));
+    runPipeline(createDefaultTaxonOptions(config, SOURCE_PATH, TAXON_OUT_PATH_DIR, ISSUES_OUT_PATH_DIR, args));
   }
 
   /**
@@ -70,7 +70,7 @@ public class TaxonomyInterpretationPipeline {
       .setCoder(AvroCoder.of(TaxonRecord.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(TaxonRecord.class)
-               .to(options.getTargetPaths().get(Interpretation.TAXONOMY).getFilePath())
+               .to(options.getTargetPaths().get(Interpretation.TAXONOMY).filePath())
                .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     // write issues
@@ -78,7 +78,7 @@ public class TaxonomyInterpretationPipeline {
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(OccurrenceIssue.class)
-               .to(options.getTargetPaths().get(Interpretation.ISSUES).getFilePath())
+               .to(options.getTargetPaths().get(Interpretation.ISSUES).filePath())
                .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     LOG.info("Starting the pipeline");

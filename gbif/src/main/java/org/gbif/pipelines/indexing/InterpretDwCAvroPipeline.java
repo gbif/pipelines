@@ -49,13 +49,13 @@ public class InterpretDwCAvroPipeline extends AbstractSparkOnYarnPipeline {
     interpreted.get(interpretedExtendedRecordTupleTag())
       .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
       .apply("Write Interpreted Avro files", AvroIO.write(InterpretedExtendedRecord.class)
-        .to(options.getTargetPaths().get(Interpretation.RECORD_LEVEL).getFilePath()));
+        .to(options.getTargetPaths().get(Interpretation.RECORD_LEVEL).filePath()));
 
     //Exporting issues
     interpreted.get(occurrenceIssueTupleTag())
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Write Interpretation Issues Avro files", AvroIO.write(OccurrenceIssue.class)
-        .to(options.getTargetPaths().get(Interpretation.ISSUES).getFilePath()));
+        .to(options.getTargetPaths().get(Interpretation.ISSUES).filePath()));
 
     // instruct the writer to use a provided document ID
     LOG.info("Starting interpretation the pipeline");

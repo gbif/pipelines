@@ -1,11 +1,11 @@
-package org.gbif.pipelines.core.functions;
+package org.gbif.pipelines.taxonomy.transforms;
 
-import org.gbif.pipelines.core.interpreter.taxonomy.InterpretedTaxonomy;
-import org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyInterpretationException;
-import org.gbif.pipelines.core.interpreter.taxonomy.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.taxonomy.interpreter.InterpretedTaxonomy;
+import org.gbif.pipelines.taxonomy.interpreter.TaxonomyInterpretationException;
+import org.gbif.pipelines.taxonomy.interpreter.TaxonomyInterpreter;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;

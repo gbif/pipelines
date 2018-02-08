@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpreter.taxonomy;
+package org.gbif.pipelines.taxonomy.interpreter;
 
 import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -35,16 +35,12 @@ public class TaxonomyInterpreterTest {
     InterpretedTaxonomy interpretedTaxon = null;
     try {
 
-      try {
-        interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
-      } catch (TaxonomyInterpretationException e) {
-        e.printStackTrace();
-      }
+      interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
 
       Map<Rank, RankedName> ranksResponse = interpretedTaxon.getTaxonRecord()
         .getClassification()
         .stream()
-        .collect(Collectors.toMap(rankedName -> rankedName.getRank(), rankedName -> rankedName));
+        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
       Assert.assertEquals(2435099, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
       Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
@@ -62,7 +58,7 @@ public class TaxonomyInterpreterTest {
       ranksResponse = interpretedTaxon.getTaxonRecord()
         .getClassification()
         .stream()
-        .collect(Collectors.toMap(rankedName -> rankedName.getRank(), rankedName -> rankedName));
+        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
       Assert.assertEquals(2435099, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
       Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
@@ -81,7 +77,7 @@ public class TaxonomyInterpreterTest {
       ranksResponse = interpretedTaxon.getTaxonRecord()
         .getClassification()
         .stream()
-        .collect(Collectors.toMap(rankedName -> rankedName.getRank(), rankedName -> rankedName));
+        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
       Assert.assertEquals(2435099, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
       Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
@@ -108,7 +104,7 @@ public class TaxonomyInterpreterTest {
       Map<Rank, RankedName> ranksResponse = interpretedTaxon.getTaxonRecord()
         .getClassification()
         .stream()
-        .collect(Collectors.toMap(rankedName -> rankedName.getRank(), rankedName -> rankedName));
+        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
       Assert.assertEquals(3034893, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
       Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
@@ -126,7 +122,7 @@ public class TaxonomyInterpreterTest {
       ranksResponse = interpretedTaxon.getTaxonRecord()
         .getClassification()
         .stream()
-        .collect(Collectors.toMap(rankedName -> rankedName.getRank(), rankedName -> rankedName));
+        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
       Assert.assertEquals(3034893, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
       Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
@@ -144,7 +140,7 @@ public class TaxonomyInterpreterTest {
       ranksResponse = interpretedTaxon.getTaxonRecord()
         .getClassification()
         .stream()
-        .collect(Collectors.toMap(rankedName -> rankedName.getRank(), rankedName -> rankedName));
+        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
       Assert.assertEquals(2492483, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
       Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
@@ -168,7 +164,7 @@ public class TaxonomyInterpreterTest {
     try {
       InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
 
-      // FIXME: this tests does not pass. It is copied from old interpreter but it returns a different response.Should we check it??
+      // FIXME: this tests does not pass. It is copied from old adapter but it returns a different response.Should we check it??
       // this is the old test
 //      Assert.assertEquals("BOLD:ACV7160", interpretedTaxon.getTaxonRecord().getUsage().getName());
       Assert.assertEquals("Lumbricidae", interpretedTaxon.getTaxonRecord().getUsage().getName());
@@ -197,11 +193,11 @@ public class TaxonomyInterpreterTest {
       Map<Rank, RankedName> ranksResponse = interpretedTaxon.getTaxonRecord()
         .getClassification()
         .stream()
-        .collect(Collectors.toMap(rankedName -> rankedName.getRank(), rankedName -> rankedName));
+        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
       Assert.assertEquals(7598904, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
       Assert.assertEquals(7479242, ranksResponse.get(Rank.FAMILY).getKey().intValue());
-      // FIXME: this tests does not pass. It is copied from old interpreter but it returns a different response.Should we check it??
+      // FIXME: this tests does not pass. It is copied from old adapter but it returns a different response.Should we check it??
       // this is the old test
 //      Assert.assertEquals("Ceratium hirundinella (O.F.Müller) Dujardin, 1841",
 //                          interpretedTaxon.getTaxonRecord().getUsage().getName());
@@ -229,7 +225,7 @@ public class TaxonomyInterpreterTest {
       Map<Rank, RankedName> ranksResponse = interpretedTaxon.getTaxonRecord()
         .getClassification()
         .stream()
-        .collect(Collectors.toMap(rankedName -> rankedName.getRank(), rankedName -> rankedName));
+        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
       Assert.assertEquals(2435099, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
       Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
@@ -261,16 +257,16 @@ public class TaxonomyInterpreterTest {
 
   }
 
-  @Test(expected = TaxonomyInterpretationException.class)
+  @Test(expected = NullPointerException.class)
   public void testMatchNullArgs() throws TaxonomyInterpretationException {
-    InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(new ExtendedRecord());
+    TaxonomyInterpreter.interpretTaxonomyFields(null);
   }
 
-  @Test(expected = TaxonomyInterpretationException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testMatchEmptyArgs() throws TaxonomyInterpretationException {
     ExtendedRecord record = new ExtendedRecord();
     record.setCoreTerms(new HashMap<>());
-    InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    TaxonomyInterpreter.interpretTaxonomyFields(record);
   }
 
 }

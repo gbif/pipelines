@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.functions.ws.gbif.species.match2;
+package org.gbif.pipelines.taxonomy.ws.species.match2;
 
 import org.gbif.api.v2.NameUsageMatch2;
 

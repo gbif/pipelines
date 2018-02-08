@@ -1,7 +1,7 @@
-package org.gbif.pipelines.core.functions.ws.config;
+package org.gbif.pipelines.taxonomy.ws.config;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -25,7 +25,7 @@ public class Config {
   public Config(String propertiesFilePath) {
     Properties props = new Properties();
     try (
-      FileInputStream in = new FileInputStream(getClass().getClassLoader().getResource(propertiesFilePath).getFile())) {
+      InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(propertiesFilePath)){
       props.load(in);
     } catch (IOException e) {
       throw new IllegalArgumentException("Could not load properties file " + propertiesFilePath, e);
@@ -66,7 +66,7 @@ public class Config {
 
     public CacheConfig(Properties props) {
       this.name = Optional.ofNullable(props.getProperty(CacheConfig.CACHE_NAME_PROP))
-        .filter(name -> !name.isEmpty())
+        .filter(prop -> !prop.isEmpty())
         .orElseThrow(() -> new IllegalArgumentException("WS Cache name is required"));
       this.size = Long.parseLong(props.getProperty(CacheConfig.CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE)) * 1024 * 1024;
     }

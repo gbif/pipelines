@@ -1,6 +1,7 @@
-package org.gbif.pipelines.core.interpreter.taxonomy;
+package org.gbif.pipelines.taxonomy.interpreter;
 
 import org.gbif.api.v2.NameUsageMatch2;
+import org.gbif.pipelines.core.utils.AvroDataUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -8,12 +9,11 @@ import org.gbif.pipelines.io.avro.Validation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.core.interpreter.taxonomy.SpeciesMatchManager.getMatch;
+import static org.gbif.pipelines.taxonomy.interpreter.SpeciesMatchManager.getMatch;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields should be based in the
@@ -28,17 +28,19 @@ public class TaxonomyInterpreter {
   private static final Logger LOG = LoggerFactory.getLogger(TaxonomyInterpreter.class);
 
   /**
+   * Utility class must have private constructor.
+   */
+  private  TaxonomyInterpreter() {
+    //DO nothing
+  }
+
+  /**
    * Interprets a taxonomy from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
   public static InterpretedTaxonomy interpretTaxonomyFields(ExtendedRecord extendedRecord)
     throws TaxonomyInterpretationException {
-    Optional.ofNullable(extendedRecord)
-      .filter(record -> record.getCoreTerms() != null)
-      .filter(record -> !record.getCoreTerms().isEmpty())
-      .filter(record -> record.getId() != null)
-      .filter(record -> record.getId() != "")
-      .orElseThrow(() -> new TaxonomyInterpretationException("ExtendedRecord with id and core terms is required. "
-                                                             + "Please check how this ExtendedRecord was created."));
+
+    AvroDataUtils.checkNullOrEmpty(extendedRecord);
 
     // get match from WS
     NameUsageMatch2 responseModel = getMatch(extendedRecord);

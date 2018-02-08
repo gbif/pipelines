@@ -12,9 +12,11 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -42,12 +44,12 @@ public final class AvroSchemaGenerator {
   /**
    * key -> class name , value -> {@link Schema} with schema and default value.
    */
-  private final static Map<String, Schema> commonTypesSchemas = new HashMap<>();
+  private static final Map<String, Schema> commonTypesSchemas = new HashMap<>();
 
   /**
    * key -> {@link org.apache.avro.Schema.Type} , value -> {@link JsonNode} witht the default value.
    */
-  private final static Map<Schema.Type, JsonNode> commonSchemasDefaults = new HashMap<>();
+  private static final EnumMap<Schema.Type, JsonNode> commonSchemasDefaults = new EnumMap<>(Schema.Type.class);
 
   static {
     // initialize schemas of common types
@@ -122,12 +124,11 @@ public final class AvroSchemaGenerator {
                 StandardOpenOption.CREATE);
   }
 
-  private static SchemaData generateSchemaData(
-    Class clazz, String schemaName, String schemaDoc, String namespace
-  ) {
-    Optional.ofNullable(clazz).orElseThrow(() -> new IllegalArgumentException("clazz argument is required"));
-    Optional.ofNullable(schemaName).orElseThrow(() -> new IllegalArgumentException("schema name argument is required"));
-    Optional.ofNullable(namespace).orElseThrow(() -> new IllegalArgumentException("namespace argument is required"));
+  private static SchemaData generateSchemaData(Class clazz, String schemaName, String schemaDoc, String namespace) {
+
+    Objects.requireNonNull(clazz, "clazz argument is required");
+    Objects.requireNonNull(schemaName, "schema name argument is required");
+    Objects.requireNonNull(namespace, "namespace argument is required");
 
     // generate schema of type record without fields
     Schema schemaGenerated = Schema.createRecord(schemaName, schemaDoc, namespace, false);
@@ -179,7 +180,7 @@ public final class AvroSchemaGenerator {
         customSchemas.put(recordName, schema);
 
         // check fields of the type to determine if more schemas should be created
-        List<Schema.Field> avroFieldsRecordSchema = new ArrayList<Schema.Field>();
+        List<Schema.Field> avroFieldsRecordSchema = new ArrayList<>();
         createFieldsRecursive(avroFieldsRecordSchema, field.getType().getDeclaredFields(), customSchemas, namespace);
 
         // add all the fields created to the schema
@@ -187,7 +188,8 @@ public final class AvroSchemaGenerator {
       }
 
       // create field and add it to the list
-      avroFields.add(new Schema.Field(field.getName(), schema = makeNullable(schema), null, defaultValue(schema)));
+      schema = makeNullable(schema);
+      avroFields.add(new Schema.Field(field.getName(), schema, null, defaultValue(schema)));
     }
   }
 
@@ -239,7 +241,7 @@ public final class AvroSchemaGenerator {
    * the future.
    */
   private static JsonNode defaultValue(Schema schema) {
-    // according to the specification, in union schemas the default value corresponds to the first schema
+    // according to the avro specification, in union schemas the default value corresponds to the first schema
     Schema.Type schemaType =
       Schema.Type.UNION.equals(schema.getType()) ? schema.getTypes().get(0).getType() : schema.getType();
 

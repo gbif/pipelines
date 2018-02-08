@@ -1,18 +1,17 @@
-package org.gbif.pipelines.core.interpreter.taxonomy;
+package org.gbif.pipelines.taxonomy.interpreter;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.utils.ClassificationUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.core.functions.ws.gbif.species.match2.SpeciesMatch2Service;
-import org.gbif.pipelines.core.functions.ws.gbif.species.match2.SpeciesMatch2ServiceRest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.taxonomy.ws.species.match2.SpeciesMatch2Service;
+import org.gbif.pipelines.taxonomy.ws.species.match2.SpeciesMatch2ServiceRest;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -33,6 +32,8 @@ public class SpeciesMatchManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatchManager.class);
 
+  private SpeciesMatchManager() {}
+
   /**
    * Matches a {@link ExtendedRecord} to an existing specie using the species match 2 WS.
    *
@@ -43,31 +44,30 @@ public class SpeciesMatchManager {
    * @throws TaxonomyInterpretationException in case of errors
    */
   public static NameUsageMatch2 getMatch(ExtendedRecord extendedRecord) throws TaxonomyInterpretationException {
-    NameUsageMatch2 responseModel = callSpeciesMatchWs(extendedRecord.getCoreTerms());
+    NameUsageMatch2 nameUsageMatch = callSpeciesMatchWs(extendedRecord.getCoreTerms());
 
-    if (!isSuccesfulMatch(responseModel)) {
+    if (!isSuccessfulMatch(nameUsageMatch) && hasIdentifications(extendedRecord)) {
       LOG.info("Retrying match with identification extension");
-      // we try with the identification extension
-      if (extendedRecord.getExtensions().containsKey(Extension.IDENTIFICATION)) {
-        // get identifications
-        final List<Map<CharSequence, CharSequence>> identifications =
-          extendedRecord.getExtensions().get(Extension.IDENTIFICATION);
+      // get identifications
+      List<Map<CharSequence, CharSequence>> identifications =
+        extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
 
-        // FIXME: use new generic functions to parse the date??
-        // sort them by date identified
-        identifications.sort(Comparator.comparing((Map<CharSequence, CharSequence> map) -> LocalDateTime.parse(map.get(
-          DwcTerm.dateIdentified))).reversed());
-        for (Map<CharSequence, CharSequence> record : identifications) {
-          responseModel = callSpeciesMatchWs(record);
-          if (isSuccesfulMatch(responseModel)) {
-            LOG.info("match with identificationId {} succeed", record.get(DwcTerm.identificationID));
-            return responseModel;
-          }
+      // FIXME: use new generic functions to parse the date??
+      // sort them by date identified
+      // Ask Markus D if this can be moved to the API?
+      identifications.sort(Comparator.comparing((Map<CharSequence, CharSequence> map) -> LocalDateTime.parse(map.get(
+        DwcTerm.dateIdentified))).reversed());
+      for (Map<CharSequence, CharSequence> record : identifications) {
+        nameUsageMatch = callSpeciesMatchWs(record);
+        if (isSuccessfulMatch(nameUsageMatch)) {
+          LOG.info("match with identificationId {} succeed", record.get(DwcTerm.identificationID.name()));
+          return nameUsageMatch;
         }
       }
+
     }
 
-    return responseModel;
+    return nameUsageMatch;
   }
 
   private static NameUsageMatch2 callSpeciesMatchWs(Map<CharSequence, CharSequence> terms)
@@ -111,8 +111,12 @@ public class SpeciesMatchManager {
                                 && response.getDiagnostics() == null);
   }
 
-  private static boolean isSuccesfulMatch(NameUsageMatch2 responseModel) {
+  private static boolean isSuccessfulMatch(NameUsageMatch2 responseModel) {
     return !NameUsageMatch.MatchType.NONE.equals(responseModel.getDiagnostics().getMatchType());
+  }
+
+  private static boolean hasIdentifications(ExtendedRecord extendedRecord) {
+    return extendedRecord.getExtensions().containsKey(DwcTerm.Identification.qualifiedName());
   }
 
   /**
@@ -160,28 +164,28 @@ public class SpeciesMatchManager {
     }
 
     Rank interpretRank(Map<CharSequence, CharSequence> terms) {
-      Rank rank = null;
+      Rank rankFound = null;
 
       if (hasTerm(terms, DwcTerm.taxonRank)) {
-        rank = RANK_PARSER.parse(value(terms, DwcTerm.taxonRank)).getPayload();
+        rankFound = RANK_PARSER.parse(value(terms, DwcTerm.taxonRank)).getPayload();
       }
       // try again with verbatim if it exists
-      if (rank == null && hasTerm(terms, DwcTerm.verbatimTaxonRank)) {
-        rank = RANK_PARSER.parse(value(terms, DwcTerm.verbatimTaxonRank)).getPayload();
+      if (rankFound == null && hasTerm(terms, DwcTerm.verbatimTaxonRank)) {
+        rankFound = RANK_PARSER.parse(value(terms, DwcTerm.verbatimTaxonRank)).getPayload();
       }
       // derive from atomized fields
-      if (rank == null && hasTerm(terms, DwcTerm.genus)) {
+      if (rankFound == null && hasTerm(terms, DwcTerm.genus)) {
         if (hasTerm(terms, DwcTerm.specificEpithet)) {
           if (hasTerm(terms, DwcTerm.infraspecificEpithet)) {
-            rank = Rank.INFRASPECIFIC_NAME;
+            rankFound = Rank.INFRASPECIFIC_NAME;
           } else {
-            rank = Rank.SPECIES;
+            rankFound = Rank.SPECIES;
           }
         } else {
-          rank = Rank.GENUS;
+          rankFound = Rank.GENUS;
         }
       }
-      return rank;
+      return rankFound;
     }
 
     /**
@@ -217,13 +221,13 @@ public class SpeciesMatchManager {
       return sciname;
     }
 
-    private String value(Map<CharSequence, CharSequence> terms, Term term) {
-      CharSequence val = terms.get(term.qualifiedName());
-      return val == null ? null : val.toString();
+    private static boolean hasTerm(Map<CharSequence, CharSequence> terms, Term term) {
+      return Optional.ofNullable(value(terms, term)).filter(value -> !value.isEmpty()).isPresent();
     }
 
-    private boolean hasTerm(Map<CharSequence, CharSequence> terms, Term term) {
-      return Optional.ofNullable(value(terms, term)).filter(value -> !value.isEmpty()).isPresent();
+    private static String value(Map<CharSequence, CharSequence> terms, Term term) {
+      CharSequence val = terms.get(term.qualifiedName());
+      return val == null ? null : val.toString();
     }
 
   }

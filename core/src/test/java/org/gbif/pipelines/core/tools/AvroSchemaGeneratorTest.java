@@ -15,6 +15,8 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * Tests the class {@link AvroSchemaGenerator}.
  */
@@ -59,7 +61,7 @@ public class AvroSchemaGeneratorTest {
     Schema schemaGenerated = AvroSchemaGenerator.generateSchema(ClassNotParametrizedList.class, name, null, namespace);
     System.out.println(schemaGenerated.toString(true));
 
-    Assert.assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+    assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
                                                          Schema.createArray(Schema.create(Schema.Type.STRING)))),
                         schemaGenerated.getField("list").schema());
   }
@@ -77,7 +79,7 @@ public class AvroSchemaGeneratorTest {
     Schema schemaGenerated = AvroSchemaGenerator.generateSchema(ClassParametrizedList.class, name, null, namespace);
     System.out.println(schemaGenerated.toString(true));
 
-    Assert.assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+    assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
                                                          Schema.createArray(Schema.create(Schema.Type.INT)))),
                         schemaGenerated.getField("list").schema());
   }
@@ -96,10 +98,10 @@ public class AvroSchemaGeneratorTest {
     Schema schemaGenerated = AvroSchemaGenerator.generateSchema(ClassFloatFields.class, name, null, namespace);
     System.out.println(schemaGenerated.toString(true));
 
-    Assert.assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+    assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
                                                          Schema.create(Schema.Type.FLOAT))),
                         schemaGenerated.getField("floatField").schema());
-    Assert.assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+    assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
                                                          Schema.create(Schema.Type.FLOAT))),
                         schemaGenerated.getField("floatPrimitiveField").schema());
   }
@@ -119,7 +121,7 @@ public class AvroSchemaGeneratorTest {
 
     List<String> rankValues = Arrays.stream(Rank.values()).map(value -> value.toString()).collect(Collectors.toList());
 
-    Assert.assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
+    assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
                                                          Schema.createEnum("Rank", null, namespace, rankValues))),
                         schemaGenerated.getField("rank").schema());
   }
@@ -151,7 +153,7 @@ public class AvroSchemaGeneratorTest {
                                 NullNode.getInstance()));
     record.setFields(fields);
 
-    Assert.assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), record)),
+    assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), record)),
                         schemaGenerated.getField("floatFields").schema());
   }
 
@@ -163,21 +165,22 @@ public class AvroSchemaGeneratorTest {
     Schema schemaGenerated = AvroSchemaGenerator.generateSchema(ClassFloatFields.class, name, null, namespace);
     System.out.println(schemaGenerated.toString(true));
 
-    Assert.assertEquals(NullNode.getInstance(), schemaGenerated.getField("floatField").defaultValue());
+    assertEquals(NullNode.getInstance(), schemaGenerated.getField("floatField").defaultValue());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testNullValues() {
     Schema schemaGenerated = AvroSchemaGenerator.generateSchema(null, null, null, null);
   }
 
-  @Test()
+  @Test
   public void testNullDocValue() {
     String name = "TaxonRecord";
     String namespace = "org.gbif.pipelines.io.avro";
 
     Schema schemaGenerated = AvroSchemaGenerator.generateSchema(NameUsageMatch2.class, name, null, namespace);
     System.out.println(schemaGenerated.toString(true));
+    Assert.assertNotNull(schemaGenerated);
   }
 
 }
