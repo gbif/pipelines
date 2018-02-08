@@ -1,20 +1,14 @@
 package org.gbif.pipelines.core.functions.transforms;
 
-import org.gbif.api.vocabulary.Continent;
-import org.gbif.common.parsers.ContinentParser;
-import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.functions.interpretation.InterpretationException;
 import org.gbif.pipelines.core.functions.interpretation.InterpretationFactory;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationResult;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
-import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
-import org.gbif.pipelines.core.functions.interpretation.error.LineageType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +29,7 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
    * tags for locating different type of outputs send by this function
    */
   public static final TupleTag<KV<String, Location>> LOCATION_DATA_TAG = new TupleTag<>();
-  public static final TupleTag<KV<String, IssueLineageRecord>> LOCATION_ISSUE_TAG =
-    new TupleTag<>();
+  public static final TupleTag<KV<String, IssueLineageRecord>> LOCATION_ISSUE_TAG = new TupleTag<>();
 
   @ProcessElement
   public void processElement(ProcessContext ctx) {
@@ -57,15 +50,15 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
 
     CharSequence rawContinent = record.getCoreTerms().get(DwcTerm.continent.qualifiedName());
 
-    if (rawContinent != null) {
-      try {
-        loc.setCountry(InterpretationFactory.interpret(DwcTerm.continent, rawContinent));
-      } catch (InterpretationException e) {
-        fieldIssueMap.put(DwcTerm.continent.name(), e.getIssues());
-        fieldLineageMap.put(DwcTerm.continent.name(), e.getLineages());
-        e.getInterpretedValue().ifPresent((interpretedCountry) -> loc.setCountry(interpretedCountry.toString()));
-      }
-    }
+    final InterpretationResult<String> interpretedContinent =
+      InterpretationFactory.interpret(DwcTerm.continent, rawContinent);
+    interpretedContinent.ifSuccessFulThenElse((e1) -> loc.setContinent(e1.getResult().isPresent()
+                                                                         ? e1.getResult().get()
+                                                                         : null), (e2) -> {
+      loc.setContinent(e2.getResult().isPresent() ? e2.getResult().get() : null);
+      fieldIssueMap.put(DwcTerm.continent.name(), e2.getIssueList());
+      fieldLineageMap.put(DwcTerm.continent.name(), e2.getLineageList());
+    });
 
     loc.setWaterBody(record.getCoreTerms().get(DwcTerm.waterBody.qualifiedName()));
     loc.setIslandGroup(record.getCoreTerms().get(DwcTerm.islandGroup.qualifiedName()));
@@ -76,35 +69,34 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
      */
     CharSequence rawCountry = record.getCoreTerms().get(DwcTerm.country.qualifiedName());
     CharSequence rawCountryCode = record.getCoreTerms().get(DwcTerm.countryCode.qualifiedName());
-    if (rawCountry != null) {
-      try {
-        loc.setCountry(InterpretationFactory.interpret(DwcTerm.country, rawCountry));
-      } catch (InterpretationException e) {
-        fieldIssueMap.put(DwcTerm.country.name(), e.getIssues());
-        fieldLineageMap.put(DwcTerm.country.name(), e.getLineages());
-        e.getInterpretedValue().ifPresent((interpretedCountry) -> loc.setCountry(interpretedCountry.toString()));
-      }
-    }
-    if (rawCountryCode != null) {
-      try {
-        loc.setCountryCode(InterpretationFactory.interpret(DwcTerm.countryCode,rawCountryCode));
-      } catch (InterpretationException e) {
-        fieldIssueMap.put(DwcTerm.country.name(), e.getIssues());
-        fieldLineageMap.put(DwcTerm.country.name(), e.getLineages());
-        e.getInterpretedValue()
-          .ifPresent((interpretedCountryCode) -> loc.setCountryCode(interpretedCountryCode.toString()));
-      }
-    }
+
+    final InterpretationResult<String> interpretedCountry =
+      InterpretationFactory.interpret(DwcTerm.country, rawCountry);
+    interpretedCountry.ifSuccessFulThenElse((e1) -> loc.setCountry(e1.getResult().isPresent()
+                                                                     ? e1.getResult().get()
+                                                                     : null), (e2) -> {
+      loc.setCountry(e2.getResult().isPresent() ? e2.getResult().get() : null);
+      fieldIssueMap.put(DwcTerm.country.name(), e2.getIssueList());
+      fieldLineageMap.put(DwcTerm.country.name(), e2.getLineageList());
+    });
+
+    final InterpretationResult<String> interpretedCountryCode =
+      InterpretationFactory.interpret(DwcTerm.countryCode, rawCountryCode);
+    interpretedCountryCode.ifSuccessFulThenElse((e1) -> loc.setCountry(e1.getResult().isPresent()
+                                                                         ? e1.getResult().get()
+                                                                         : null), (e2) -> {
+      loc.setCountryCode(e2.getResult().isPresent() ? e2.getResult().get() : null);
+      fieldIssueMap.put(DwcTerm.country.name(), e2.getIssueList());
+      fieldLineageMap.put(DwcTerm.country.name(), e2.getLineageList());
+    });
 
     loc.setStateProvince(record.getCoreTerms().get(DwcTerm.stateProvince.qualifiedName()));
     loc.setCounty(record.getCoreTerms().get(DwcTerm.county.qualifiedName()));
     loc.setMunicipality(record.getCoreTerms().get(DwcTerm.municipality.qualifiedName()));
     loc.setLocality(record.getCoreTerms().get(DwcTerm.locality.qualifiedName()));
     loc.setVerbatimLocality(record.getCoreTerms().get(DwcTerm.verbatimLocality.qualifiedName()));
-    loc.setMinimumElevationInMeters(record.getCoreTerms()
-                                      .get(DwcTerm.minimumElevationInMeters.qualifiedName()));
-    loc.setMaximumElevationInMeters(record.getCoreTerms()
-                                      .get(DwcTerm.maximumElevationInMeters.qualifiedName()));
+    loc.setMinimumElevationInMeters(record.getCoreTerms().get(DwcTerm.minimumElevationInMeters.qualifiedName()));
+    loc.setMaximumElevationInMeters(record.getCoreTerms().get(DwcTerm.maximumElevationInMeters.qualifiedName()));
     loc.setVerbatimElevation(record.getCoreTerms().get(DwcTerm.verbatimElevation.qualifiedName()));
     loc.setMaximumDepthInMeters(record.getCoreTerms().get(DwcTerm.maximumDepthInMeters.qualifiedName()));
     loc.setMinimumDepthInMeters(record.getCoreTerms().get(DwcTerm.minimumDepthInMeters.qualifiedName()));
@@ -120,8 +112,7 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
     loc.setVerbatimCoordinates(record.getCoreTerms().get(DwcTerm.verbatimCoordinates.qualifiedName()));
     loc.setVerbatimLatitude(record.getCoreTerms().get(DwcTerm.verbatimLatitude.qualifiedName()));
     loc.setVerbatimLongitude(record.getCoreTerms().get(DwcTerm.verbatimLongitude.qualifiedName()));
-    loc.setVerbatimCoordinateSystem(record.getCoreTerms()
-                                      .get(DwcTerm.verbatimCoordinateSystem.qualifiedName()));
+    loc.setVerbatimCoordinateSystem(record.getCoreTerms().get(DwcTerm.verbatimCoordinateSystem.qualifiedName()));
     loc.setVerbatimSRS(record.getCoreTerms().get(DwcTerm.verbatimSRS.qualifiedName()));
     loc.setFootprintWKT(record.getCoreTerms().get(DwcTerm.footprintWKT.qualifiedName()));
     loc.setFootprintSRS(record.getCoreTerms().get(DwcTerm.footprintSRS.qualifiedName()));

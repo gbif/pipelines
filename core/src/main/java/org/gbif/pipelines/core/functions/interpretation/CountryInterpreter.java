@@ -17,10 +17,10 @@ import java.util.List;
 class CountryInterpreter implements Interpretable<String> {
 
   @Override
-  public String interpret(String input) throws InterpretationException {
+  public InterpretationResult<String> interpret(String input) {
     ParseResult<Country> parseCountry = CountryParser.getInstance().parse(input.trim());
     if (parseCountry.isSuccessful()) {
-      return parseCountry.getPayload().getTitle();
+      return InterpretationResult.withSuccess(parseCountry.getPayload().getTitle());
     } else {
       final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
                                                              .setIssueType(IssueType.PARSE_ERROR)
@@ -33,7 +33,7 @@ class CountryInterpreter implements Interpretable<String> {
                                                                  .setRemark(
                                                                    "Since the parse on country failed, interpreting as null")
                                                                  .build());
-      throw new InterpretationException(issues, lineages, null);
+      return InterpretationResult.withIssueAndLineage(null, issues, lineages);
     }
 
   }

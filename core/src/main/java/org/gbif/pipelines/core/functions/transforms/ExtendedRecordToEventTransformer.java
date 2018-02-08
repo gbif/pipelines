@@ -2,8 +2,8 @@ package org.gbif.pipelines.core.functions.transforms;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
-import org.gbif.pipelines.core.functions.interpretation.InterpretationException;
 import org.gbif.pipelines.core.functions.interpretation.InterpretationFactory;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationResult;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
@@ -59,35 +59,30 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     CharSequence raw_month = record.getCoreTerms().get(DwcTerm.month.qualifiedName());
     CharSequence raw_day = record.getCoreTerms().get(DwcTerm.day.qualifiedName());
 
-    if (raw_day != null) {
-      try {
-        evt.setDay(InterpretationFactory.interpret(DwcTerm.day,raw_day));
-      } catch (InterpretationException e) {
-        fieldIssueMap.put(DwcTerm.day.name(), e.getIssues());
-        fieldLineageMap.put(DwcTerm.day.name(), e.getLineages());
-        if (e.getInterpretedValue().isPresent()) evt.setDay((Integer) e.getInterpretedValue().get());
-      }
-    }
+    final InterpretationResult<Integer> interpretedDay = InterpretationFactory.interpret(DwcTerm.day, raw_day);
+    interpretedDay.ifSuccessFulThenElse((e1) -> evt.setDay(e1.getResult().isPresent() ? e1.getResult().get() : null),
+                                        (e2) -> {
+                                          evt.setDay(e2.getResult().isPresent() ? e2.getResult().get() : null);
+                                          fieldIssueMap.put(DwcTerm.day.name(), e2.getIssueList());
+                                          fieldLineageMap.put(DwcTerm.day.name(), e2.getLineageList());
+                                        });
 
-    if (raw_month != null) {
-      try {
-        evt.setMonth(InterpretationFactory.interpret(DwcTerm.month,raw_month));
-      } catch (InterpretationException e) {
-        fieldIssueMap.put(DwcTerm.month.name(), e.getIssues());
-        fieldLineageMap.put(DwcTerm.month.name(), e.getLineages());
-        if (e.getInterpretedValue().isPresent()) evt.setMonth((Integer) e.getInterpretedValue().get());
-      }
-    }
+    final InterpretationResult<Integer> interpretedMonth = InterpretationFactory.interpret(DwcTerm.month, raw_month);
+    interpretedMonth.ifSuccessFulThenElse((e1) -> evt.setMonth(e1.getResult().isPresent()
+                                                                 ? e1.getResult().get()
+                                                                 : null), (e2) -> {
+      evt.setMonth(e2.getResult().isPresent() ? e2.getResult().get() : null);
+      fieldIssueMap.put(DwcTerm.month.name(), e2.getIssueList());
+      fieldLineageMap.put(DwcTerm.month.name(), e2.getLineageList());
+    });
 
-    if (raw_year != null) {
-      try {
-        evt.setYear(InterpretationFactory.interpret(DwcTerm.year,raw_year));
-      } catch (InterpretationException e) {
-        fieldIssueMap.put(DwcTerm.year.name(), e.getIssues());
-        fieldLineageMap.put(DwcTerm.year.name(), e.getLineages());
-        if (e.getInterpretedValue().isPresent()) evt.setYear((Integer) e.getInterpretedValue().get());
-      }
-    }
+    final InterpretationResult<Integer> interpretedYear = InterpretationFactory.interpret(DwcTerm.year, raw_year);
+    interpretedYear.ifSuccessFulThenElse((e1) -> evt.setYear(e1.getResult().isPresent() ? e1.getResult().get() : null),
+                                         (e2) -> {
+                                           evt.setYear(e2.getResult().isPresent() ? e2.getResult().get() : null);
+                                           fieldIssueMap.put(DwcTerm.year.name(), e2.getIssueList());
+                                           fieldLineageMap.put(DwcTerm.year.name(), e2.getLineageList());
+                                         });
 
     evt.setVerbatimEventDate(record.getCoreTerms().get(DwcTerm.verbatimEventDate.qualifiedName()));
     evt.setHabitat(record.getCoreTerms().get(DwcTerm.habitat.qualifiedName()));

@@ -16,12 +16,12 @@ import java.util.List;
 class YearInterpreter implements Interpretable<String> {
 
   @Override
-  public Integer interpret(String input) throws InterpretationException {
+  public InterpretationResult<Integer> interpret(String input) {
     String trimmedInput = input == null ? null : input.trim();
 
     try {
       if (trimmedInput == null) return null;
-      return Year.parse(trimmedInput).getValue();
+      return InterpretationResult.withSuccess(Year.parse(trimmedInput).getValue());
     } catch (DateTimeParseException ex) {
       //if parse failed
       final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
@@ -34,7 +34,7 @@ class YearInterpreter implements Interpretable<String> {
                                                                    "Since Year cannot be parsed setting it to null")
                                                                  .setLineageType(LineageType.SET_TO_NULL)
                                                                  .build());
-      throw new InterpretationException(issues, lineages, null);
+      return InterpretationResult.withIssueAndLineage(null, issues, lineages);
     }
   }
 }

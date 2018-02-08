@@ -47,12 +47,12 @@ public class RawToInterpretedCategoryTransformer extends PTransform<PCollection<
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
     //get the multiple output tuple from raw to interpreted temporal record along with issues.
     PCollectionTuple event = input.apply(ParDo.of(new ExtendedRecordToEventTransformer())
-                                               .withOutputTags(ExtendedRecordToEventTransformer.EVENT_DATA_TAG,
-                                                               TupleTagList.of(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG)));
+                                           .withOutputTags(ExtendedRecordToEventTransformer.EVENT_DATA_TAG,
+                                                           TupleTagList.of(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG)));
     //get the multiple output tuple from raw to interpreted spatial record along with issues.
     PCollectionTuple location = input.apply(ParDo.of(new ExtendedRecordToLocationTransformer())
-                                                  .withOutputTags(ExtendedRecordToLocationTransformer.LOCATION_DATA_TAG,
-                                                                  TupleTagList.of(ExtendedRecordToLocationTransformer.LOCATION_ISSUE_TAG)));
+                                              .withOutputTags(ExtendedRecordToLocationTransformer.LOCATION_DATA_TAG,
+                                                              TupleTagList.of(ExtendedRecordToLocationTransformer.LOCATION_ISSUE_TAG)));
     //combining the different collections as one tuple
     return PCollectionTuple.of(TEMPORAL_CATEGORY, event.get(ExtendedRecordToEventTransformer.EVENT_DATA_TAG))
       .and(SPATIAL_CATEGORY, location.get(ExtendedRecordToLocationTransformer.LOCATION_DATA_TAG))

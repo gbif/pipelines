@@ -22,7 +22,7 @@
 						"type": {
 							"name": "IssueType",
 							"type": "enum",
-							"symbols": ["OTHERS","PARSE_ERROR","DAY_OUT_OF_RANGE","MONTH_OUT_OF_RANGE","INVALID_YEAR"]
+							"symbols": ["OTHERS","PARSE_ERROR","DAY_OUT_OF_RANGE","MONTH_OUT_OF_RANGE","INVALID_YEAR","COUNTRY_AND_COUNTRYCODE_DONOT_MATCH"]
 						}
 					}]
 				}
@@ -45,7 +45,7 @@
 						"type": {
 							"name": "LineageType",
 							"type": "enum",
-							"symbols": ["OTHERS","SET_TO_NULL"]
+							"symbols": ["OTHERS","SET_TO_NULL","SET_COUNTRYCODE_FROM_COUNTRY"]
 						}
 					}]
 				}

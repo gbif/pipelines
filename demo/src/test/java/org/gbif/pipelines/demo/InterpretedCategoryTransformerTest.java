@@ -8,10 +8,8 @@ import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.functions.interpretation.DayInterpreter;
-import org.gbif.pipelines.core.functions.interpretation.InterpretationException;
-import org.gbif.pipelines.core.functions.interpretation.MonthInterpreter;
-import org.gbif.pipelines.core.functions.interpretation.YearInterpreter;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationFactory;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationResult;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
@@ -219,25 +217,27 @@ public class InterpretedCategoryTransformerTest {
       Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<>();
       Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<>();
 
-      try {
-        new DayInterpreter().interpret(record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString());
-      } catch (InterpretationException ex) {
-        fieldIssueMap.put(DwcTerm.day.name(), ex.getIssues());
-        fieldLineageMap.put(DwcTerm.day.name(), ex.getLineages());
+      final InterpretationResult<Integer> interpretDay =
+        InterpretationFactory.interpret(DwcTerm.day, record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString());
+      if (!interpretDay.isSuccessFull()) {
+        fieldIssueMap.put(DwcTerm.day.name(), interpretDay.getIssueList());
+        fieldLineageMap.put(DwcTerm.day.name(), interpretDay.getLineageList());
       }
-      try {
-        new MonthInterpreter().interpret(record.getCoreTerms()
-                                           .get(DwcTerm.month.qualifiedName())
-                                           .toString());
-      } catch (InterpretationException ex) {
-        fieldIssueMap.put(DwcTerm.month.name(), ex.getIssues());
-        fieldLineageMap.put(DwcTerm.month.name(), ex.getLineages());
+      InterpretationResult<Integer> interpretMonth = InterpretationFactory.interpret(DwcTerm.month,
+                                                                                     record.getCoreTerms()
+                                                                                       .get(DwcTerm.month.qualifiedName())
+                                                                                       .toString());
+      if (!interpretMonth.isSuccessFull()) {
+        fieldIssueMap.put(DwcTerm.month.name(), interpretMonth.getIssueList());
+        fieldLineageMap.put(DwcTerm.month.name(), interpretMonth.getLineageList());
       }
-      try {
-        new YearInterpreter().interpret(record.getCoreTerms().get(DwcTerm.year.qualifiedName()).toString());
-      } catch (InterpretationException ex) {
-        fieldIssueMap.put(DwcTerm.year.name(), ex.getIssues());
-        fieldLineageMap.put(DwcTerm.year.name(), ex.getLineages());
+      InterpretationResult<Integer> interpretYear = InterpretationFactory.interpret(DwcTerm.year,
+                                                                                    record.getCoreTerms()
+                                                                                      .get(DwcTerm.year.qualifiedName())
+                                                                                      .toString());
+      if (!interpretYear.isSuccessFull()) {
+        fieldIssueMap.put(DwcTerm.year.name(), interpretYear.getIssueList());
+        fieldLineageMap.put(DwcTerm.year.name(), interpretYear.getLineageList());
       }
       e.setOccurenceId(record.getId());
       e.setFieldIssuesMap(fieldIssueMap);
