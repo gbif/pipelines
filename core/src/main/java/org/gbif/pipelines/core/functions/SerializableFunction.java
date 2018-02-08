@@ -8,5 +8,6 @@ import java.util.function.Function;
  * @param <T> The input type
  * @param <R> The return type
  */
+@FunctionalInterface
 public interface SerializableFunction<T,R> extends Function<T,R>, Serializable {
 }

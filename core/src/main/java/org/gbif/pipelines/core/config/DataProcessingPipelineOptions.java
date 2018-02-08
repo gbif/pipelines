@@ -1,9 +1,12 @@
 package org.gbif.pipelines.core.config;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.beam.sdk.annotations.Experimental;
 import org.apache.beam.sdk.annotations.Experimental.Kind;
@@ -17,7 +20,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
 /**
- * {@link HadoopFileSystemOptions} to use when exporting files to HDFS.
+ * Pipeline options (configuration) for GBIF based data pipelines.
+ * Optionally can use a {@link HadoopFileSystemOptions} when exporting files.
  */
 @Experimental(Kind.FILESYSTEM)
 public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
@@ -56,22 +60,26 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
   void setTargetPaths(Map<Interpretation, TargetPath> targetPaths);
 
+
+
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 
-    @Override
-    public String create(PipelineOptions options) {
-
+    static Optional<String> getHadoopDefaultFs(PipelineOptions options) {
       List<Configuration> configs = options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
       if (configs != null && !configs.isEmpty()) {
         // we take the first config as default
-        return configs.get(0).get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY);
+        return Optional.ofNullable(configs.get(0).get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY));
       }
+      return Optional.empty();
+    }
 
+    @Override
+    public String create(PipelineOptions options) {
       // return root dir if no configurations are provided
-      return "hdfs://";
+      return getHadoopDefaultFs(options).orElse("hdfs://");
     }
   }
 
@@ -82,15 +90,9 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
     @Override
     public String create(PipelineOptions options) {
-
-      List<Configuration> configs = options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
-      if (configs != null && !configs.isEmpty()) {
-        // we take the first config as default
-        return configs.get(0).get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY) + File.separator + "tmp";
-      }
-
-      // in case no configurations are provided
-      return "hdfs://tmp";
+      return DefaultDirectoryFactory.getHadoopDefaultFs(options)
+        .map(hadoopFs -> hadoopFs + File.separator + "tmp")
+        .orElse("hdfs://tmp"); // in case no configurations are provided
     }
   }
 
@@ -102,15 +104,11 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
     @Override
     public Map<Interpretation, TargetPath> create(PipelineOptions options) {
 
-      Map<Interpretation, TargetPath> targetPaths = new HashMap<>();
-
       String defaultDir = options.as(DataProcessingPipelineOptions.class).getDefaultTargetDirectory();
 
-      for(Interpretation interpretation : Interpretation.values()) {
-        targetPaths.put(interpretation, new TargetPath(defaultDir, interpretation.getDefaultFileName()));
-      }
+      return Arrays.stream(Interpretation.values())
+        .collect(Collectors.toMap(Function.identity(), i -> new TargetPath(defaultDir, i.getDefaultFileName())));
 
-      return targetPaths;
     }
   }
 

@@ -1,0 +1,33 @@
+{
+    "name": "UntypedOccurrenceLowerCase",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "fields": [
+    {"name": "occurrenceid", "type": ["null", "string"], "default" : null },
+
+    {"name": "kingdom", "type": ["null", "string"], "default" : null },
+    {"name": "phylum", "type": ["null", "string"], "default" : null },
+    {"name": "class", "type": ["null", "string"], "default" : null },
+    {"name": "order", "type": ["null", "string"], "default" : null },
+    {"name": "family", "type": ["null", "string"], "default" : null },
+    {"name": "genus", "type": ["null", "string"], "default" : null },
+    {"name": "species", "type": ["null", "string"], "default" : null },
+    {"name": "specificepithet", "type": ["null", "string"], "default" : null },
+    {"name": "infraspecificepithet", "type": ["null", "string"], "default" : null },
+    {"name": "taxonrank", "type": ["null", "string"], "default" : null },
+    {"name": "scientificname", "type": ["null", "string"], "default" : null },
+    {"name": "scientificnameauthorship", "type": ["null", "string"], "default" : null },
+
+    {"name": "basisofrecord", "type": ["null", "string"], "default" : null },
+
+    {"name": "decimallatitude", "type": ["null", "string"], "default" : null },
+    {"name": "decimallongitude", "type": ["null", "string"], "default" : null },
+    {"name": "geodeticdatum", "type": ["null", "string"], "default" : null },
+    {"name": "country", "type": ["null", "string"], "default" : null },
+
+    {"name": "eventdate", "type": ["null", "string"], "default" : null },
+    {"name": "year", "type": ["null", "string"], "default" : null },
+    {"name": "month", "type": ["null", "string"], "default" : null },
+    {"name": "day", "type": ["null", "string"], "default" : null }
+  ]
+  }

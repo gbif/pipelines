@@ -26,7 +26,8 @@ public class InterpretOccurrenceLowerCase  implements SerializableFunction<Untyp
     target.setBasisOfRecord(source.getBasisofrecord());
     target.setGeodeticDatum(source.getGeodeticdatum());
     target.setCountry(source.getCountry());
-    target.setEventDate(source.getEventdate());
+    //TODO: RESOLVE PROBLEM WITH ELASTIC IMPORT
+    //target.setEventDate(source.getEventdate());
     try {
       if (source.getDecimallatitude() != null && source.getDecimallongitude() != null) {
         Double lat = Double.parseDouble(source.getDecimallatitude().toString());
