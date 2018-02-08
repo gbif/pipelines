@@ -1,9 +1,6 @@
 package org.gbif.pipelines.interpretation;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.interpretation.parsers.SimpleTypeParser;
-import org.gbif.pipelines.interpretation.parsers.VocabularyParsers;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.Validation;
@@ -16,10 +13,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
-
-import static org.gbif.pipelines.interpretation.InterpretationTupleTags.interpretedExtendedRecordTupleTag;
-import static org.gbif.pipelines.interpretation.InterpretationTupleTags.occurrenceIssueTupleTag;
 
 /**
  * This transformation provides interpretation for the record level fields: basisOfRecord, sex,
@@ -27,10 +22,14 @@ import static org.gbif.pipelines.interpretation.InterpretationTupleTags.occurren
  */
 public class ExtendedRecordTransform extends PTransform<PCollection<ExtendedRecord>, PCollectionTuple> {
 
+  private final TupleTag<InterpretedExtendedRecord> interpretedExtendedRecordTupleTag = new TupleTag<InterpretedExtendedRecord>(){};
+
+  private final  TupleTag<org.gbif.pipelines.io.avro.OccurrenceIssue> occurrenceIssueTupleTag = new TupleTag<org.gbif.pipelines.io.avro.OccurrenceIssue>(){};
+
   @Override
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
     return input.apply("Interpreting record level terms", ParDo.of(interpret())
-      .withOutputTags(interpretedExtendedRecordTupleTag(), TupleTagList.of(occurrenceIssueTupleTag())));
+      .withOutputTags(interpretedExtendedRecordTupleTag, TupleTagList.of(occurrenceIssueTupleTag)));
   }
 
   /**
@@ -46,121 +45,43 @@ public class ExtendedRecordTransform extends PTransform<PCollection<ExtendedReco
 
         //Context element to be interpreted
         ExtendedRecord extendedRecord = context.element();
+        Collection<Validation> validations = new ArrayList<>();
 
         //Id
         interpretedExtendedRecord.setId(extendedRecord.getId());
-        Collection<Validation> validations = new ArrayList<>();
 
-        //Interpretation routines
-        interpretBasisOfRecord(interpretedExtendedRecord, extendedRecord, validations);
-
-        interpretSex(interpretedExtendedRecord, extendedRecord);
-
-        interpretEstablishmentMeans(interpretedExtendedRecord, extendedRecord);
-
-        interpretLifeStage(interpretedExtendedRecord, extendedRecord);
-
-        interpretTypeStatus(interpretedExtendedRecord, extendedRecord, validations);
-
-        interpretIndividualCount(interpretedExtendedRecord, extendedRecord, validations);
+        Interpretation
+          .of(extendedRecord)
+          .using(ExtendedRecordInterpreter.interpretBasisOfRecord(interpretedExtendedRecord))
+          .using(ExtendedRecordInterpreter.interpretSex(interpretedExtendedRecord))
+          .using(ExtendedRecordInterpreter.interpretEstablishmentMeans(interpretedExtendedRecord))
+          .using(ExtendedRecordInterpreter.interpretLifeStage(interpretedExtendedRecord))
+          .using(ExtendedRecordInterpreter.interpretTypeStatus(interpretedExtendedRecord))
+          .using(ExtendedRecordInterpreter.interpretIndividualCount(interpretedExtendedRecord))
+          .forEachValidation(trace ->  validations.add(toValidation(trace.getContext())));
 
         //additional outputs
         if (!validations.isEmpty()) {
-          context.output(occurrenceIssueTupleTag(), org.gbif.pipelines.io.avro.OccurrenceIssue.newBuilder()
-            .setId(extendedRecord.getId())
-            .setIssues(validations).build());
+          context.output(getOccurrenceIssueTupleTag(),
+                         org.gbif.pipelines.io.avro.OccurrenceIssue.newBuilder()
+                           .setId(extendedRecord.getId())
+                           .setIssues(validations).build());
         }
 
         //main output
-        context.output(interpretedExtendedRecordTupleTag(), interpretedExtendedRecord);
+        context.output(getInterpretedExtendedRecordTupleTag(), interpretedExtendedRecord);
       }
 
-      /**
-       * {@link DwcTerm#individualCount} interpretation.
-       */
-      private void interpretIndividualCount(InterpretedExtendedRecord interpretedExtendedRecord,
-                                            ExtendedRecord extendedRecord, Collection<Validation> validations) {
-        SimpleTypeParser.parseInt(extendedRecord, DwcTerm.individualCount, parseResult -> {
-            if(parseResult.isPresent()) {
-               interpretedExtendedRecord.setIndividualCount(parseResult.get());
-            } else {
-              validations.add(toValidation(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID));
-            }
-          });
-      }
 
-      /**
-       * {@link DwcTerm#typeStatus} interpretation.
-       */
-      private void interpretTypeStatus(InterpretedExtendedRecord interpretedExtendedRecord, ExtendedRecord extendedRecord,
-                                       Collection<Validation> validations) {
-        VocabularyParsers
-          .typeStatusParser()
-          .parse(extendedRecord, parseResult -> {
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setTypeStatus(parseResult.getPayload().name());
-            } else {
-              validations.add(toValidation(OccurrenceIssue.TYPE_STATUS_INVALID));
-            }
-          });
-      }
-
-      /**
-       * {@link DwcTerm#lifeStage} interpretation.
-       */
-      private void interpretLifeStage(InterpretedExtendedRecord interpretedExtendedRecord,
-                                      ExtendedRecord extendedRecord) {
-        VocabularyParsers
-          .lifeStageParser()
-          .parse(extendedRecord, parseResult -> {
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setLifeStage(parseResult.getPayload().name());
-            }
-          });
-      }
-
-      /**
-       * {@link DwcTerm#establishmentMeans} interpretation.
-       */
-      private void interpretEstablishmentMeans(InterpretedExtendedRecord interpretedExtendedRecord,
-                                               ExtendedRecord extendedRecord) {
-        VocabularyParsers
-          .establishmentMeansParser()
-          .parse(extendedRecord, parseResult -> {
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setEstablishmentMeans(parseResult.getPayload().name());
-            }
-          });
-      }
-
-      /**
-       * {@link DwcTerm#sex} interpretation.
-       */
-      private void interpretSex(InterpretedExtendedRecord interpretedExtendedRecord, ExtendedRecord extendedRecord) {
-        VocabularyParsers
-          .sexParser()
-          .parse(extendedRecord, parseResult -> {
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setSex(parseResult.getPayload().name());
-            }});
-      }
-
-      /**
-       * {@link DwcTerm#basisOfRecord} interpretation.
-       */
-      private void interpretBasisOfRecord(InterpretedExtendedRecord interpretedExtendedRecord,
-                                          ExtendedRecord extendedRecord, Collection<Validation> validations) {
-        VocabularyParsers
-          .basisOfRecordParser()
-          .parse(extendedRecord, parseResult -> {
-            if (parseResult.isSuccessful()) {
-              interpretedExtendedRecord.setBasisOfRecord(parseResult.getPayload().name());
-            } else {
-              validations.add(toValidation(OccurrenceIssue.BASIS_OF_RECORD_INVALID));
-            }
-          });
-      }
     };
+  }
+
+  public TupleTag<InterpretedExtendedRecord> getInterpretedExtendedRecordTupleTag() {
+    return interpretedExtendedRecordTupleTag;
+  }
+
+  public TupleTag<org.gbif.pipelines.io.avro.OccurrenceIssue> getOccurrenceIssueTupleTag() {
+    return occurrenceIssueTupleTag;
   }
 
   /**
