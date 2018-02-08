@@ -78,10 +78,10 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
 
     final InterpretationResult<String> interpretedCountryCode =
       InterpretationFactory.interpret(DwcTerm.countryCode, rawCountryCode);
-    interpretedCountryCode.ifSuccessFulThenElse((e1) -> loc.setCountry(e1.getResult().orElse(null)), (e2) -> {
+    interpretedCountryCode.ifSuccessFulThenElse((e1) -> loc.setCountryCode(e1.getResult().orElse(null)), (e2) -> {
       loc.setCountryCode(e2.getResult().orElse(null));
-      fieldIssueMap.put(DwcTerm.country.name(), e2.getIssueList());
-      fieldLineageMap.put(DwcTerm.country.name(), e2.getLineageList());
+      fieldIssueMap.put(DwcTerm.countryCode.name(), e2.getIssueList());
+      fieldLineageMap.put(DwcTerm.countryCode.name(), e2.getLineageList());
     });
 
     loc.setStateProvince(record.getCoreTerms().get(DwcTerm.stateProvince.qualifiedName()));
