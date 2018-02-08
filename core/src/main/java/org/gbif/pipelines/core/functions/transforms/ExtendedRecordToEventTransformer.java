@@ -60,26 +60,24 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     CharSequence raw_day = record.getCoreTerms().get(DwcTerm.day.qualifiedName());
 
     final InterpretationResult<Integer> interpretedDay = InterpretationFactory.interpret(DwcTerm.day, raw_day);
-    interpretedDay.ifSuccessFulThenElse((e1) -> evt.setDay(e1.getResult().isPresent() ? e1.getResult().get() : null),
+    interpretedDay.ifSuccessFulThenElse((e1) -> evt.setDay(e1.getResult().orElse(null)),
                                         (e2) -> {
-                                          evt.setDay(e2.getResult().isPresent() ? e2.getResult().get() : null);
+                                          evt.setDay(e2.getResult().orElse(null));
                                           fieldIssueMap.put(DwcTerm.day.name(), e2.getIssueList());
                                           fieldLineageMap.put(DwcTerm.day.name(), e2.getLineageList());
                                         });
 
     final InterpretationResult<Integer> interpretedMonth = InterpretationFactory.interpret(DwcTerm.month, raw_month);
-    interpretedMonth.ifSuccessFulThenElse((e1) -> evt.setMonth(e1.getResult().isPresent()
-                                                                 ? e1.getResult().get()
-                                                                 : null), (e2) -> {
-      evt.setMonth(e2.getResult().isPresent() ? e2.getResult().get() : null);
+    interpretedMonth.ifSuccessFulThenElse((e1) -> evt.setMonth(e1.getResult().orElse(null)), (e2) -> {
+      evt.setMonth(e2.getResult().orElse(null));
       fieldIssueMap.put(DwcTerm.month.name(), e2.getIssueList());
       fieldLineageMap.put(DwcTerm.month.name(), e2.getLineageList());
     });
 
     final InterpretationResult<Integer> interpretedYear = InterpretationFactory.interpret(DwcTerm.year, raw_year);
-    interpretedYear.ifSuccessFulThenElse((e1) -> evt.setYear(e1.getResult().isPresent() ? e1.getResult().get() : null),
+    interpretedYear.ifSuccessFulThenElse((e1) -> evt.setYear(e1.getResult().orElse(null)),
                                          (e2) -> {
-                                           evt.setYear(e2.getResult().isPresent() ? e2.getResult().get() : null);
+                                           evt.setYear(e2.getResult().orElse( null));
                                            fieldIssueMap.put(DwcTerm.year.name(), e2.getIssueList());
                                            fieldLineageMap.put(DwcTerm.year.name(), e2.getLineageList());
                                          });

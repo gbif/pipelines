@@ -52,10 +52,8 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
 
     final InterpretationResult<String> interpretedContinent =
       InterpretationFactory.interpret(DwcTerm.continent, rawContinent);
-    interpretedContinent.ifSuccessFulThenElse((e1) -> loc.setContinent(e1.getResult().isPresent()
-                                                                         ? e1.getResult().get()
-                                                                         : null), (e2) -> {
-      loc.setContinent(e2.getResult().isPresent() ? e2.getResult().get() : null);
+    interpretedContinent.ifSuccessFulThenElse((e1) -> loc.setContinent(e1.getResult().orElse(null)), (e2) -> {
+      loc.setContinent(e2.getResult().orElse(null));
       fieldIssueMap.put(DwcTerm.continent.name(), e2.getIssueList());
       fieldLineageMap.put(DwcTerm.continent.name(), e2.getLineageList());
     });
@@ -72,20 +70,16 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
 
     final InterpretationResult<String> interpretedCountry =
       InterpretationFactory.interpret(DwcTerm.country, rawCountry);
-    interpretedCountry.ifSuccessFulThenElse((e1) -> loc.setCountry(e1.getResult().isPresent()
-                                                                     ? e1.getResult().get()
-                                                                     : null), (e2) -> {
-      loc.setCountry(e2.getResult().isPresent() ? e2.getResult().get() : null);
+    interpretedCountry.ifSuccessFulThenElse((e1) -> loc.setCountry(e1.getResult().orElse(null)), (e2) -> {
+      loc.setCountry(e2.getResult().orElse(null));
       fieldIssueMap.put(DwcTerm.country.name(), e2.getIssueList());
       fieldLineageMap.put(DwcTerm.country.name(), e2.getLineageList());
     });
 
     final InterpretationResult<String> interpretedCountryCode =
       InterpretationFactory.interpret(DwcTerm.countryCode, rawCountryCode);
-    interpretedCountryCode.ifSuccessFulThenElse((e1) -> loc.setCountry(e1.getResult().isPresent()
-                                                                         ? e1.getResult().get()
-                                                                         : null), (e2) -> {
-      loc.setCountryCode(e2.getResult().isPresent() ? e2.getResult().get() : null);
+    interpretedCountryCode.ifSuccessFulThenElse((e1) -> loc.setCountry(e1.getResult().orElse(null)), (e2) -> {
+      loc.setCountryCode(e2.getResult().orElse(null));
       fieldIssueMap.put(DwcTerm.country.name(), e2.getIssueList());
       fieldLineageMap.put(DwcTerm.country.name(), e2.getLineageList());
     });
