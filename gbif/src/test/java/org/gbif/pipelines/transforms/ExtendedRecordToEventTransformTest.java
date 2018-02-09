@@ -5,6 +5,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.ExtendedRecordToEventTransformer;
 
 import java.util.HashMap;
 import java.util.List;
@@ -153,8 +154,8 @@ public class ExtendedRecordToEventTransformTest {
    */
   @Test
   public void valid_test1() throws Exception {
-    ExtendedRecordToEventTransformer ertoevt = new ExtendedRecordToEventTransformer();
-    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(ertoevt);
+    ExtendedRecordToEventTransformer eventTransformer = new ExtendedRecordToEventTransformer();
+    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(eventTransformer);
 
     tester.processBundle(VALID_INPUT());
     List<KV<String, Event>> result = tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_DATA_TAG);
@@ -182,11 +183,11 @@ public class ExtendedRecordToEventTransformTest {
    */
   @Test
   public void valid_test2() throws Exception {
-    ExtendedRecordToEventTransformer ertoevt = new ExtendedRecordToEventTransformer();
-    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(ertoevt);
+    ExtendedRecordToEventTransformer eventTransformer = new ExtendedRecordToEventTransformer();
+    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(eventTransformer);
 
     tester.processBundle(INVALID_DAY_INVALID_INPUT1());
-    List<KV<String, Event>> result = tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_DATA_TAG);
+    List<KV<String, Event>> result = tester.peekOutputElements(eventTransformer.getEventDataTag());
     String occID = result.get(0).getKey();
     Event event = result.get(0).getValue();
 
@@ -197,7 +198,7 @@ public class ExtendedRecordToEventTransformTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), event.getBasisOfRecord());
     List<KV<String, IssueLineageRecord>> issueResult =
-      tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG);
+      tester.peekOutputElements(eventTransformer.getEventIssueTag());
     String issue_occID = issueResult.get(0).getKey();
     IssueLineageRecord issueLineageRecord = issueResult.get(0).getValue();
     Assert.assertEquals(VALID_OCC_ID, issue_occID);
@@ -215,11 +216,11 @@ public class ExtendedRecordToEventTransformTest {
    */
   @Test
   public void valid_test4() throws Exception {
-    ExtendedRecordToEventTransformer ertoevt = new ExtendedRecordToEventTransformer();
-    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(ertoevt);
+    ExtendedRecordToEventTransformer eventTransformer = new ExtendedRecordToEventTransformer();
+    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(eventTransformer);
 
     tester.processBundle(INVALID_MONTH_INVALID_INPUT2());
-    List<KV<String, Event>> result = tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_DATA_TAG);
+    List<KV<String, Event>> result = tester.peekOutputElements(eventTransformer.getEventDataTag());
     String occID = result.get(0).getKey();
     Event event = result.get(0).getValue();
 
@@ -230,7 +231,7 @@ public class ExtendedRecordToEventTransformTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), event.getBasisOfRecord());
     List<KV<String, IssueLineageRecord>> issueResult =
-      tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG);
+      tester.peekOutputElements(eventTransformer.getEventIssueTag());
     String issue_occID = issueResult.get(0).getKey();
     IssueLineageRecord issueLineageRecord = issueResult.get(0).getValue();
     Assert.assertEquals(VALID_OCC_ID, issue_occID);
@@ -248,11 +249,11 @@ public class ExtendedRecordToEventTransformTest {
    */
   @Test
   public void valid_test3() throws Exception {
-    ExtendedRecordToEventTransformer ertoevt = new ExtendedRecordToEventTransformer();
-    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(ertoevt);
+    ExtendedRecordToEventTransformer eventTransformer = new ExtendedRecordToEventTransformer();
+    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(eventTransformer);
 
     tester.processBundle(INVALID_INPUT2_ALL());
-    List<KV<String, Event>> result = tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_DATA_TAG);
+    List<KV<String, Event>> result = tester.peekOutputElements(eventTransformer.getEventDataTag());
     String occID = result.get(0).getKey();
     Event event = result.get(0).getValue();
 
@@ -263,7 +264,7 @@ public class ExtendedRecordToEventTransformTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), event.getBasisOfRecord());
     List<KV<String, IssueLineageRecord>> issueResult =
-      tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG);
+      tester.peekOutputElements(eventTransformer.getEventIssueTag());
     String issue_occID = issueResult.get(0).getKey();
     IssueLineageRecord issueLineageRecord = issueResult.get(0).getValue();
     Assert.assertEquals(VALID_OCC_ID, issue_occID);
@@ -278,11 +279,11 @@ public class ExtendedRecordToEventTransformTest {
    */
   @Test
   public void valid_test5() throws Exception {
-    ExtendedRecordToEventTransformer ertoevt = new ExtendedRecordToEventTransformer();
-    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(ertoevt);
+    ExtendedRecordToEventTransformer eventTransformer = new ExtendedRecordToEventTransformer();
+    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(eventTransformer);
 
     tester.processBundle(INVALID_MONTH_INVALID_INPUT2());
-    List<KV<String, Event>> result = tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_DATA_TAG);
+    List<KV<String, Event>> result = tester.peekOutputElements(eventTransformer.getEventDataTag());
     String occID = result.get(0).getKey();
     Event event = result.get(0).getValue();
 
@@ -293,7 +294,7 @@ public class ExtendedRecordToEventTransformTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), event.getBasisOfRecord());
     List<KV<String, IssueLineageRecord>> issueResult =
-      tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG);
+      tester.peekOutputElements(eventTransformer.getEventIssueTag());
     String issue_occID = issueResult.get(0).getKey();
     IssueLineageRecord issueLineageRecord = issueResult.get(0).getValue();
     Assert.assertEquals(VALID_OCC_ID, issue_occID);
@@ -308,11 +309,11 @@ public class ExtendedRecordToEventTransformTest {
    */
   @Test
   public void valid_test6() throws Exception {
-    ExtendedRecordToEventTransformer ertoevt = new ExtendedRecordToEventTransformer();
-    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(ertoevt);
+    ExtendedRecordToEventTransformer eventTransformer = new ExtendedRecordToEventTransformer();
+    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(eventTransformer);
 
     tester.processBundle(INVALID_YEAR_INVALID_INPUT2());
-    List<KV<String, Event>> result = tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_DATA_TAG);
+    List<KV<String, Event>> result = tester.peekOutputElements(eventTransformer.getEventDataTag());
     String occID = result.get(0).getKey();
     Event event = result.get(0).getValue();
 
@@ -323,7 +324,7 @@ public class ExtendedRecordToEventTransformTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), event.getBasisOfRecord());
     List<KV<String, IssueLineageRecord>> issueResult =
-      tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG);
+      tester.peekOutputElements(eventTransformer.getEventIssueTag());
     String issue_occID = issueResult.get(0).getKey();
     IssueLineageRecord issueLineageRecord = issueResult.get(0).getValue();
     Assert.assertEquals(VALID_OCC_ID, issue_occID);
@@ -338,11 +339,11 @@ public class ExtendedRecordToEventTransformTest {
    */
   @Test
   public void valid_test7() throws Exception {
-    ExtendedRecordToEventTransformer ertoevt = new ExtendedRecordToEventTransformer();
-    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(ertoevt);
+    ExtendedRecordToEventTransformer eventTransformer = new ExtendedRecordToEventTransformer();
+    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(eventTransformer);
 
     tester.processBundle(INVALID_DAY_YEAR_INVALID_INPUT2());
-    List<KV<String, Event>> result = tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_DATA_TAG);
+    List<KV<String, Event>> result = tester.peekOutputElements(eventTransformer.getEventDataTag());
     String occID = result.get(0).getKey();
     Event event = result.get(0).getValue();
 
@@ -353,7 +354,7 @@ public class ExtendedRecordToEventTransformTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), event.getBasisOfRecord());
     List<KV<String, IssueLineageRecord>> issueResult =
-      tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG);
+      tester.peekOutputElements(eventTransformer.getEventIssueTag());
     String issue_occID = issueResult.get(0).getKey();
     IssueLineageRecord issueLineageRecord = issueResult.get(0).getValue();
     Assert.assertEquals(VALID_OCC_ID, issue_occID);
@@ -368,11 +369,11 @@ public class ExtendedRecordToEventTransformTest {
    */
   @Test
   public void valid_test8() throws Exception {
-    ExtendedRecordToEventTransformer ertoevt = new ExtendedRecordToEventTransformer();
-    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(ertoevt);
+    ExtendedRecordToEventTransformer eventTransformer = new ExtendedRecordToEventTransformer();
+    DoFnTester<ExtendedRecord, KV<String, Event>> tester = DoFnTester.of(eventTransformer);
 
     tester.processBundle(INVALID_MONTH_YEAR_INVALID_INPUT2());
-    List<KV<String, Event>> result = tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_DATA_TAG);
+    List<KV<String, Event>> result = tester.peekOutputElements(eventTransformer.getEventDataTag());
     String occID = result.get(0).getKey();
     Event event = result.get(0).getValue();
 
@@ -383,7 +384,7 @@ public class ExtendedRecordToEventTransformTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), event.getBasisOfRecord());
     List<KV<String, IssueLineageRecord>> issueResult =
-      tester.peekOutputElements(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG);
+      tester.peekOutputElements(eventTransformer.getEventIssueTag());
     String issue_occID = issueResult.get(0).getKey();
     IssueLineageRecord issueLineageRecord = issueResult.get(0).getValue();
     Assert.assertEquals(VALID_OCC_ID, issue_occID);

@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Utility class that parses Enum based terms.
@@ -91,6 +92,17 @@ public class VocabularyParsers<T extends Enum<T>> {
   public void parse(ExtendedRecord extendedRecord, Consumer<ParseResult<T>> onParse) {
     Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()).toString())
       .ifPresent( value -> onParse.accept(parser.parse(value)));
+  }
+
+
+  /**
+   * Runs a parsing method on a extended record and applies a mapping function to the result.
+   * @param extendedRecord to be used as input
+   * @param mapper function mapper
+   */
+  public <U> Optional<U> map(ExtendedRecord extendedRecord, Function<ParseResult<T>,U> mapper) {
+    return Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()).toString())
+            .map(value -> mapper.apply(parser.parse(value)));
   }
 
 }

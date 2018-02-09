@@ -55,11 +55,12 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     /*
       Day month year interpretation
      */
-    CharSequence raw_year = record.getCoreTerms().get(DwcTerm.year.qualifiedName());
-    CharSequence raw_month = record.getCoreTerms().get(DwcTerm.month.qualifiedName());
-    CharSequence raw_day = record.getCoreTerms().get(DwcTerm.day.qualifiedName());
+    
+    String rawYear = record.getCoreTerms().get(DwcTerm.year.qualifiedName()).toString();
+    String rawMonth = record.getCoreTerms().get(DwcTerm.month.qualifiedName()).toString();
+    String rawDay = record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString();
 
-    final InterpretationResult<Integer> interpretedDay = InterpretationFactory.interpret(DwcTerm.day, raw_day);
+    final InterpretationResult<Integer> interpretedDay = InterpretationFactory.interpret(DwcTerm.day, rawDay);
     interpretedDay.ifSuccessFulThenElse((e1) -> evt.setDay(e1.getResult().orElse(null)),
                                         (e2) -> {
                                           evt.setDay(e2.getResult().orElse(null));
@@ -67,14 +68,14 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
                                           fieldLineageMap.put(DwcTerm.day.name(), e2.getLineageList());
                                         });
 
-    final InterpretationResult<Integer> interpretedMonth = InterpretationFactory.interpret(DwcTerm.month, raw_month);
+    final InterpretationResult<Integer> interpretedMonth = InterpretationFactory.interpret(DwcTerm.month, rawMonth);
     interpretedMonth.ifSuccessFulThenElse((e1) -> evt.setMonth(e1.getResult().orElse(null)), (e2) -> {
       evt.setMonth(e2.getResult().orElse(null));
       fieldIssueMap.put(DwcTerm.month.name(), e2.getIssueList());
       fieldLineageMap.put(DwcTerm.month.name(), e2.getLineageList());
     });
 
-    final InterpretationResult<Integer> interpretedYear = InterpretationFactory.interpret(DwcTerm.year, raw_year);
+    final InterpretationResult<Integer> interpretedYear = InterpretationFactory.interpret(DwcTerm.year, rawYear);
     interpretedYear.ifSuccessFulThenElse((e1) -> evt.setYear(e1.getResult().orElse(null)),
                                          (e2) -> {
                                            evt.setYear(e2.getResult().orElse( null));
