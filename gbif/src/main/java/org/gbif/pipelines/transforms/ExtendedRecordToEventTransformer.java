@@ -62,11 +62,13 @@ public class ExtendedRecordToEventTransformer extends DoFn<ExtendedRecord, KV<St
     String rawMonth = record.getCoreTerms().get(DwcTerm.month.qualifiedName()).toString();
     String rawDay = record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString();
 
-    Interpretation
+    Interpretation<ExtendedRecord> interpretation = Interpretation
       .of(record)
       .using(TemporalInterpreter.interpretDay(event))
       .using(TemporalInterpreter.interpretMonth(event))
       .using(TemporalInterpreter.interpretYear(event));
+
+
 
     final InterpretationResult<Integer> interpretedDay = InterpretationFactory.interpret(DwcTerm.day, rawDay);
     interpretedDay.ifSuccessFulThenElse((e1) -> event.setDay(e1.getResult().orElse(null)),

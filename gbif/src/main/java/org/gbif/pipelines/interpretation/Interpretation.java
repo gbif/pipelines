@@ -117,7 +117,7 @@ public class Interpretation<T> implements Serializable {
     List<Trace<OccurrenceIssue>> newValidations = new ArrayList<>(validations);
     newValidations.addAll(interpretation.validations);
 
-    return new Interpretation<>(interpretation.value, validations, newLineage);
+    return new Interpretation<>(interpretation.value, newValidations, newLineage);
   }
 
   /**
