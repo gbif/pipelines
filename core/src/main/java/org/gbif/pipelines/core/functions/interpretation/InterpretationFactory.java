@@ -2,7 +2,7 @@ package org.gbif.pipelines.core.functions.interpretation;
 
 import org.gbif.dwc.terms.DwcTerm;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 /**
@@ -10,10 +10,10 @@ import java.util.Map;
  */
 public class InterpretationFactory {
 
-  private static final Map<DwcTerm, Interpretable> termInterpretationMap = createMap();
+  private static final Map<DwcTerm, Interpretable<String>> TERM_INTERPRETATION_MAP = createMap();
 
-  private static Map<DwcTerm, Interpretable> createMap() {
-    Map<DwcTerm, Interpretable> termInterpretationMap = new HashMap<>();
+  private static Map<DwcTerm, Interpretable<String>> createMap() {
+    Map<DwcTerm, Interpretable<String>> termInterpretationMap = new EnumMap<>(DwcTerm.class);
     termInterpretationMap.put(DwcTerm.day, new DayInterpreter());
     termInterpretationMap.put(DwcTerm.month, new MonthInterpreter());
     termInterpretationMap.put(DwcTerm.year, new YearInterpreter());
@@ -35,8 +35,8 @@ public class InterpretationFactory {
    * returns InterpretedResult if the interpreter is available else throw UnsupportedOperationException
    */
   public static <U, T> InterpretationResult<U> interpret(DwcTerm term, T input) {
-    if (termInterpretationMap.containsKey(term)) {
-      return InterpretationFactory.interpret((Interpretable<T>) termInterpretationMap.get(term), input);
+    if (TERM_INTERPRETATION_MAP.containsKey(term)) {
+      return interpret((Interpretable<T>) TERM_INTERPRETATION_MAP.get(term), input);
     } else {
       throw new UnsupportedOperationException("Interpreter for the " + term.name() + " is not supported");
     }

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.functions.transforms;
+package org.gbif.pipelines.transforms;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Location;
@@ -7,6 +7,8 @@ import org.gbif.pipelines.core.functions.interpretation.InterpretationResult;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
+import org.gbif.pipelines.interpretation.Interpretation;
+import org.gbif.pipelines.interpretation.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.HashMap;
@@ -28,8 +30,16 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
   /**
    * tags for locating different type of outputs send by this function
    */
-  public static final TupleTag<KV<String, Location>> LOCATION_DATA_TAG = new TupleTag<>();
-  public static final TupleTag<KV<String, IssueLineageRecord>> LOCATION_ISSUE_TAG = new TupleTag<>();
+  private final TupleTag<KV<String, Location>> locationDataTag = new TupleTag<KV<String, Location>>(){};
+  private final TupleTag<KV<String, IssueLineageRecord>> locationIssueTag = new TupleTag<KV<String, IssueLineageRecord>>(){};
+
+  public TupleTag<KV<String, Location>> getLocationDataTag() {
+    return locationDataTag;
+  }
+
+  public TupleTag<KV<String, IssueLineageRecord>> getLocationIssueTag() {
+    return locationIssueTag;
+  }
 
   @ProcessElement
   public void processElement(ProcessContext ctx) {
@@ -50,6 +60,8 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
 
     CharSequence rawContinent = record.getCoreTerms().get(DwcTerm.continent.qualifiedName());
 
+
+
     final InterpretationResult<String> interpretedContinent =
       InterpretationFactory.interpret(DwcTerm.continent, rawContinent);
     interpretedContinent.ifSuccessFulThenElse((e1) -> loc.setContinent(e1.getResult().orElse(null)), (e2) -> {
@@ -65,6 +77,13 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
     /*
       Interpreting Country code
      */
+
+    Interpretation
+      .of(record)
+      .using(LocationInterpreter.interpretCountry(loc))
+      .using(LocationInterpreter.interpretCountryCode(loc))
+      .using(LocationInterpreter.interpretContinent(loc));
+
     CharSequence rawCountry = record.getCoreTerms().get(DwcTerm.country.qualifiedName());
     CharSequence rawCountryCode = record.getCoreTerms().get(DwcTerm.countryCode.qualifiedName());
 
@@ -135,7 +154,7 @@ public class ExtendedRecordToLocationTransformer extends DoFn<ExtendedRecord, KV
       .setFieldIssuesMap(fieldIssueMap)
       .build();
 
-    ctx.output(LOCATION_DATA_TAG, KV.of(loc.getOccurrenceID().toString(), loc));
-    ctx.output(LOCATION_ISSUE_TAG, KV.of(loc.getOccurrenceID().toString(), finalRecord));
+    ctx.output(locationDataTag, KV.of(loc.getOccurrenceID().toString(), loc));
+    ctx.output(locationIssueTag, KV.of(loc.getOccurrenceID().toString(), finalRecord));
   }
 }

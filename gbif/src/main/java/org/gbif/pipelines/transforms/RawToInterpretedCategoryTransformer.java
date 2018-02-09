@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.functions.transforms;
+package org.gbif.pipelines.transforms;
 
 import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.Location;
@@ -22,11 +22,13 @@ public class RawToInterpretedCategoryTransformer extends PTransform<PCollection<
   /**
    * tags for the final output tuple indicating the type of collection and its category
    */
-  public static final TupleTag<KV<String, Event>> TEMPORAL_CATEGORY = new TupleTag<KV<String, Event>>() {};
-  public static final TupleTag<KV<String, Location>> SPATIAL_CATEGORY = new TupleTag<KV<String, Location>>() {};
-  public static final TupleTag<KV<String, IssueLineageRecord>> TEMPORAL_CATEGORY_ISSUES =
+  private final TupleTag<KV<String, Event>> temporalCategory = new TupleTag<KV<String, Event>>() {};
+  private final TupleTag<KV<String, Location>> spatialCategory = new TupleTag<KV<String, Location>>() {};
+
+  //next 2 types are identical, do we need 2?
+  private final TupleTag<KV<String, IssueLineageRecord>> temporalCategoryIssues =
     new TupleTag<KV<String, IssueLineageRecord>>() {};
-  public static final TupleTag<KV<String, IssueLineageRecord>> SPATIAL_CATEGORY_ISSUES =
+  private final TupleTag<KV<String, IssueLineageRecord>> spatialCategoryIssues =
     new TupleTag<KV<String, IssueLineageRecord>>() {};
 
   /**
@@ -46,17 +48,35 @@ public class RawToInterpretedCategoryTransformer extends PTransform<PCollection<
   @Override
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
     //get the multiple output tuple from raw to interpreted temporal record along with issues.
+    ExtendedRecordToEventTransformer  eventTransformer = new ExtendedRecordToEventTransformer();
     PCollectionTuple event = input.apply(ParDo.of(new ExtendedRecordToEventTransformer())
-                                           .withOutputTags(ExtendedRecordToEventTransformer.EVENT_DATA_TAG,
-                                                           TupleTagList.of(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG)));
+                                           .withOutputTags(eventTransformer.getEventDataTag(),
+                                                           TupleTagList.of(eventTransformer.getEventIssueTag())));
     //get the multiple output tuple from raw to interpreted spatial record along with issues.
+    ExtendedRecordToLocationTransformer locationTransformer = new ExtendedRecordToLocationTransformer();
     PCollectionTuple location = input.apply(ParDo.of(new ExtendedRecordToLocationTransformer())
-                                              .withOutputTags(ExtendedRecordToLocationTransformer.LOCATION_DATA_TAG,
-                                                              TupleTagList.of(ExtendedRecordToLocationTransformer.LOCATION_ISSUE_TAG)));
+                                              .withOutputTags(locationTransformer.getLocationDataTag(),
+                                                              TupleTagList.of(locationTransformer.getLocationIssueTag())));
     //combining the different collections as one tuple
-    return PCollectionTuple.of(TEMPORAL_CATEGORY, event.get(ExtendedRecordToEventTransformer.EVENT_DATA_TAG))
-      .and(SPATIAL_CATEGORY, location.get(ExtendedRecordToLocationTransformer.LOCATION_DATA_TAG))
-      .and(TEMPORAL_CATEGORY_ISSUES, event.get(ExtendedRecordToEventTransformer.EVENT_ISSUE_TAG))
-      .and(SPATIAL_CATEGORY_ISSUES, location.get(ExtendedRecordToLocationTransformer.LOCATION_ISSUE_TAG));
+    return PCollectionTuple.of(temporalCategory, event.get(eventTransformer.getEventDataTag()))
+      .and(spatialCategory, location.get(locationTransformer.getLocationDataTag()))
+      .and(temporalCategoryIssues, event.get(eventTransformer.getEventIssueTag()))
+      .and(spatialCategoryIssues, location.get(locationTransformer.getLocationIssueTag()));
+  }
+
+  public TupleTag<KV<String, Event>> getTemporalCategory() {
+    return temporalCategory;
+  }
+
+  public TupleTag<KV<String, Location>> getSpatialCategory() {
+    return spatialCategory;
+  }
+
+  public TupleTag<KV<String, IssueLineageRecord>> getTemporalCategoryIssues() {
+    return temporalCategoryIssues;
+  }
+
+  public TupleTag<KV<String, IssueLineageRecord>> getSpatialCategoryIssues() {
+    return spatialCategoryIssues;
   }
 }

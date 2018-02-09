@@ -127,6 +127,11 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>gbif-pipelines</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-sdks-java-core</artifactId>
         <version>${apache.beam.version}</version>

@@ -2,66 +2,67 @@ package org.gbif.pipelines.interpretation;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.interpretation.parsers.VocabularyParsers;
+import org.gbif.dwca.avro.Event;
+import org.gbif.pipelines.interpretation.parsers.SimpleTypeParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 import java.util.function.Function;
 
-public interface LocationInterpreter extends Function<ExtendedRecord,Interpretation<ExtendedRecord>> {
+public interface TemporalInterpreter extends Function<ExtendedRecord,Interpretation<ExtendedRecord>> {
 
 
   /**
-   * {@link DwcTerm#basisOfRecord} interpretation.
+   * {@link DwcTerm#day} interpretation.
    */
-  static LocationInterpreter interpretCountry(Location locationRecord) {
+  static ExtendedRecordInterpreter interpretDay(Event event) {
     return (ExtendedRecord extendedRecord) ->
-      VocabularyParsers
-        .countryParser()
-        .map(extendedRecord, parseResult -> {
-          Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-          if (parseResult.isSuccessful()) {
-            locationRecord.setCountry(parseResult.getPayload().name());
-          } else {
-            interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.COUNTRY_INVALID));
-          }
-          return interpretation;
-        }).get();
+      SimpleTypeParser.parseInt(extendedRecord, DwcTerm.day, parseResult -> {
+        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+        if(parseResult.isPresent()) {
+          event.setDay(parseResult.get());
+        } else {
+          //TODO: we'll use this issue by now
+          interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.RECORDED_DATE_INVALID));
+        }
+        return interpretation;
+      });
   }
 
-  /**
-   * {@link DwcTerm#basisOfRecord} interpretation.
-   */
-  static LocationInterpreter interpretCountryCode(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) ->
-      VocabularyParsers
-        .countryParser()
-        .map(extendedRecord, parseResult -> {
-          Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-          if (parseResult.isSuccessful()) {
-            locationRecord.setCountryCode(parseResult.getPayload().getIso3LetterCode());
-          } else {
-            interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.COUNTRY_INVALID));
-          }
-          return interpretation;
-        }).get();
-  }
 
   /**
-   * {@link DwcTerm#basisOfRecord} interpretation.
+   * {@link DwcTerm#month} interpretation.
    */
-  static LocationInterpreter interpretContinent(Location locationRecord) {
+  static ExtendedRecordInterpreter interpretMonth(Event event) {
     return (ExtendedRecord extendedRecord) ->
-      VocabularyParsers
-        .continentParser()
-        .map(extendedRecord, parseResult -> {
-          Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-          if (parseResult.isSuccessful()) {
-            locationRecord.setContinent(parseResult.getPayload().name());
-          } else {
-            interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.CONTINENT_INVALID));
-          }
-          return interpretation;
-        }).get();
+      SimpleTypeParser.parseInt(extendedRecord, DwcTerm.month, parseResult -> {
+        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+        if(parseResult.isPresent()) {
+          event.setMonth(parseResult.get());
+        } else {
+          //TODO: we'll use this issue by now
+          interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.RECORDED_DATE_INVALID));
+        }
+        return interpretation;
+      });
   }
+
+
+  /**
+   * {@link DwcTerm#year} interpretation.
+   */
+  static ExtendedRecordInterpreter interpretYear(Event event) {
+    return (ExtendedRecord extendedRecord) ->
+      SimpleTypeParser.parseInt(extendedRecord, DwcTerm.year, parseResult -> {
+        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+        if(parseResult.isPresent()) {
+          event.setYear(parseResult.get());
+        } else {
+          //TODO: we'll use this issue by now
+          interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.RECORDED_DATE_INVALID));
+        }
+        return interpretation;
+      });
+  }
+
 }

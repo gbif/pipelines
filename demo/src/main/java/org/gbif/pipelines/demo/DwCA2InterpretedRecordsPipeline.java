@@ -10,9 +10,9 @@ import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
-import org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.RawToInterpretedCategoryTransformer;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,10 +36,6 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.SPATIAL_CATEGORY;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.SPATIAL_CATEGORY_ISSUES;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.TEMPORAL_CATEGORY;
-import static org.gbif.pipelines.core.functions.transforms.RawToInterpretedCategoryTransformer.TEMPORAL_CATEGORY_ISSUES;
 
 /**
  * A simple demonstration showing a pipeline running locally which will read UntypedOccurrence from a DwC-A file
@@ -62,11 +58,12 @@ public class DwCA2InterpretedRecordsPipeline {
 
   public static void main(String[] args) {
     DataFlowPipelineOptions options = PipelineUtils.createPipelineOptions(args);
-    final Map<Interpretation, String> targetPaths = options.getTargetPaths();
+    Map<Interpretation, String> targetPaths = options.getTargetPaths();
+    RawToInterpretedCategoryTransformer transformer = new RawToInterpretedCategoryTransformer();
 
     Pipeline p = Pipeline.create(options);
     //register coders for the pipeline
-    registerPipeLineCoders(p);
+    registerPipeLineCoders(p, transformer);
 
 
     // Read the DwC-A using our custom reader
@@ -79,10 +76,10 @@ public class DwCA2InterpretedRecordsPipeline {
                      AvroIO.write(ExtendedRecord.class).to(targetPaths.get(Interpretation.RAW_OCCURRENCE)));
 
     //Interpret the raw records as a tuple, which has both different categories of data and issue related to them
-    PCollectionTuple interpretedCategory = rawRecords.apply(new RawToInterpretedCategoryTransformer());
+    PCollectionTuple interpretedCategory = rawRecords.apply(transformer);
 
     //Dumping the temporal category of interpreted records in an defined hive table location.
-    interpretedCategory.get(TEMPORAL_CATEGORY)
+    interpretedCategory.get(transformer.getTemporalCategory())
       .apply(ParDo.of(new DoFn<KV<String, Event>, Event>() {
         @ProcessElement
         public void processElement(ProcessContext ctx) {
@@ -93,7 +90,7 @@ public class DwCA2InterpretedRecordsPipeline {
              AvroIO.write(Event.class).to(targetPaths.get(Interpretation.TEMPORAL)));
 
     //Dumping the spatial category of interpreted records in a defined hive table location.
-    interpretedCategory.get(SPATIAL_CATEGORY)
+    interpretedCategory.get(transformer.getSpatialCategory())
       .apply(ParDo.of(new DoFn<KV<String, Location>, Location>() {
         @ProcessElement
         public void processElement(ProcessContext ctx) {
@@ -104,7 +101,7 @@ public class DwCA2InterpretedRecordsPipeline {
              AvroIO.write(Location.class).to(targetPaths.get(Interpretation.LOCATION)));
 
     //Dumping the temporal category of issues and lineages while interpreting the records in a defined hive table location.
-    interpretedCategory.get(TEMPORAL_CATEGORY_ISSUES)
+    interpretedCategory.get(transformer.getSpatialCategoryIssues())
       .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)))
       .apply(ParDo.of(new DoFn<KV<String, IssueLineageRecord>, IssueLineageRecord>() {
         @ProcessElement
@@ -117,7 +114,7 @@ public class DwCA2InterpretedRecordsPipeline {
         AvroIO.write(IssueLineageRecord.class).to(targetPaths.get(Interpretation.TEMPORAL_ISSUE)));
 
     //Dumping the spatial category of issues and lineages while interpreting the records in a defined hive table location.
-    interpretedCategory.get(SPATIAL_CATEGORY_ISSUES)
+    interpretedCategory.get(transformer.getSpatialCategoryIssues())
       .setCoder(KvCoder.of(StringUtf8Coder.of(), AvroCoder.of(IssueLineageRecord.class)))
       .apply(ParDo.of(new DoFn<KV<String, IssueLineageRecord>, IssueLineageRecord>() {
         @ProcessElement
@@ -133,8 +130,8 @@ public class DwCA2InterpretedRecordsPipeline {
       Joining temporal category and spatial category to get the big flat interpreted record.
      */
     PCollection<KV<String, CoGbkResult>> joinedCollection =
-      KeyedPCollectionTuple.of(TEMPORAL_TAG, interpretedCategory.get(TEMPORAL_CATEGORY))
-        .and(SPATIAL_TAG, interpretedCategory.get(SPATIAL_CATEGORY))
+      KeyedPCollectionTuple.of(TEMPORAL_TAG, interpretedCategory.get(transformer.getTemporalCategory()))
+        .and(SPATIAL_TAG, interpretedCategory.get(transformer.getSpatialCategory()))
         .apply(CoGroupByKey.create());
 
     PCollection<ExtendedOccurence> interpretedRecords = joinedCollection.apply(
@@ -145,8 +142,8 @@ public class DwCA2InterpretedRecordsPipeline {
       Joining temporal category issues and spatial category issues to get the overall issues together.
      */
     PCollection<KV<String, CoGbkResult>> joinedIssueCollection =
-      KeyedPCollectionTuple.of(TEMPORAL_ISSUE_TAG, interpretedCategory.get(TEMPORAL_CATEGORY_ISSUES))
-        .and(SPATIAL_ISSUE_TAG, interpretedCategory.get(SPATIAL_CATEGORY_ISSUES))
+      KeyedPCollectionTuple.of(TEMPORAL_ISSUE_TAG, interpretedCategory.get(transformer.getTemporalCategoryIssues()))
+        .and(SPATIAL_ISSUE_TAG, interpretedCategory.get(transformer.getSpatialCategoryIssues()))
         .apply(CoGroupByKey.create());
 
     PCollection<IssueLineageRecord> interpretedIssueLineageRecords = joinedIssueCollection.apply(
@@ -171,7 +168,7 @@ public class DwCA2InterpretedRecordsPipeline {
   /**
    * Convert's Beam's represented Joined PCollection to an Interpreted Occurrence
    */
-  static class CoGbkResultToFlattenedInterpretedRecord extends DoFn<KV<String, CoGbkResult>, ExtendedOccurence> {
+  private static class CoGbkResultToFlattenedInterpretedRecord extends DoFn<KV<String, CoGbkResult>, ExtendedOccurence> {
 
     @ProcessElement
     public void processElement(ProcessContext ctx) {
@@ -201,7 +198,7 @@ public class DwCA2InterpretedRecordsPipeline {
   /**
    * Convert's Beam's represented Joined Issues PCollection to an IssueAndLineageRecord
    */
-  static class CoGbkResultToFlattenedInterpretedIssueRecord extends DoFn<KV<String, CoGbkResult>, IssueLineageRecord> {
+  private static class CoGbkResultToFlattenedInterpretedIssueRecord extends DoFn<KV<String, CoGbkResult>, IssueLineageRecord> {
 
     @ProcessElement
     public void processElement(ProcessContext ctx) {
@@ -229,22 +226,17 @@ public class DwCA2InterpretedRecordsPipeline {
 
   /**
    * register Avro coders for serializing our messages
-   * @param p
    */
-  static void registerPipeLineCoders(Pipeline p){
+  private static void registerPipeLineCoders(Pipeline p, RawToInterpretedCategoryTransformer transformer) {
 
-    Coders.registerAvroCoders(p,
-                              ExtendedRecord.class,
-                              Event.class,
-                              Location.class,
-                              ExtendedOccurence.class,
-                              Issue.class,
-                              Lineage.class,
-                              IssueLineageRecord.class);
+    Coders.registerAvroCoders(p, ExtendedRecord.class, Event.class, Location.class, ExtendedOccurence.class,
+                              Issue.class, Lineage.class, IssueLineageRecord.class);
     Coders.registerAvroCodersForTypes(p, TEMPORAL_TAG, SPATIAL_TAG, TEMPORAL_ISSUE_TAG, SPATIAL_ISSUE_TAG);
     Coders.registerAvroCodersForKVTypes(p,
-                                        new TupleTag[] {TEMPORAL_CATEGORY, SPATIAL_CATEGORY, TEMPORAL_CATEGORY_ISSUES,
-                                          SPATIAL_CATEGORY_ISSUES},
+                                        new TupleTag[] {transformer.getSpatialCategory(),
+                                          transformer.getSpatialCategory(),
+                                          transformer.getTemporalCategoryIssues(),
+                                          transformer.getSpatialCategoryIssues()},
                                         Event.class,
                                         Location.class,
                                         IssueLineageRecord.class,
