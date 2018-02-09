@@ -16,6 +16,6 @@
     {"name": "modified", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null },
     {"name": "dateIdentified", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null },
     {"name": "eventTime", "type": ["null", "long"], "logicalType":"time-millis", "default" : null },
-    {"name": "eventDate", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null }
+    {"name": "eventDate", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null }
   ]
 }

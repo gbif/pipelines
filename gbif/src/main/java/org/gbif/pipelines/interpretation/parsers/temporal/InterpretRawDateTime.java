@@ -1,21 +1,26 @@
-package org.gbif.pipelines.core.interpreter.temporal;
+package org.gbif.pipelines.interpretation.parsers.temporal;
+
+import java.time.temporal.ChronoField;
+import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
  * Interpreter for raw date and time. The main method interpret, fills year, month, day, hour, minute, second and time zone
  */
-public class RawDateTimeInterpreter {
+class InterpretRawDateTime {
 
   private static final char TIME_SPLITERATOR = ':';
+  private static final Pattern RGX_YEAR = Pattern.compile("[0-9]{4}");
+  private static final Pattern RGX_PATTERN = Pattern.compile("[0-9]{2}");
 
-  private RawDateTimeInterpreter() {
+  private InterpretRawDateTime() {
     //NOP
   }
 
-  public static ParsedDate interpret(ParsedDate baseParsedDate, String rawDate) {
-    if (isEmpty(rawDate)) {
-      return null;
+  static ChronoStorage interpret(String rawDate, ChronoField lastParsed) {
+    if (isEmpty(rawDate) || (!RGX_YEAR.matcher(rawDate).find() && !RGX_PATTERN.matcher(rawDate).find())) {
+      return new ChronoStorage();
     }
 
     //Does value have time inside
@@ -41,8 +46,9 @@ public class RawDateTimeInterpreter {
     String time = hasTime ? rawDate.substring(timeIdx) : "";
 
     //Interpret date and time separately
-    ParsedDate baseDate = ParsedDate.copyOrCreate(baseParsedDate);
-    ParsedDate parsetDate = RawDateInterpreter.interpret(baseDate, date);
-    return RawTimeInterpreter.interpret(parsetDate, time);
+    ChronoStorage temporalDate = InterpretRawDate.interpret(date, lastParsed);
+    ChronoStorage temporalTime = InterpretRawTime.interpret(time);
+    return temporalDate.merge(temporalTime);
   }
+
 }

@@ -1,15 +1,10 @@
-package org.gbif.pipelines.core.functions;
+package org.gbif.pipelines.interpretation;
 
-import org.gbif.pipelines.core.interpreter.TemporalInterpreterFunction;
-import org.gbif.pipelines.core.interpreter.temporal.ParsedDate;
-import org.gbif.pipelines.core.interpreter.temporal.ParsedDateConstant;
-import org.gbif.pipelines.core.interpreter.temporal.ParsedTemporalDate;
+
+import org.gbif.pipelines.interpretation.parsers.TemporalInterpreterFunction;
+import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalPeriod;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
-
-import java.time.Duration;
-import java.time.ZonedDateTime;
-import java.util.Optional;
 
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
@@ -44,36 +39,15 @@ public class IterpretTemporalRecord extends PTransform<PCollection<TypedOccurren
         Integer day = typedOccurrence.getDay();
         CharSequence eventDate = typedOccurrence.getEventDate();
 
-        ParsedTemporalDate parsedDate = TemporalInterpreterFunction.apply(year, month, day, eventDate);
-        Optional<ParsedDate> from = parsedDate.getFrom();
-        //TODO: USE SECOND DATE
-        Optional<ParsedDate> to = parsedDate.getTo();
-        //TODO: USE DURATION
-        Duration duration = parsedDate.getDuration();
-
-        Long eventDateLong = null;
-        Long eventTimeLong = null;
-        int eventYear = -1;
-        if (from.isPresent()) {
-          ZonedDateTime zonedDateTime = from.get().toZonedDateTime();
-          eventDateLong = zonedDateTime.toInstant().getEpochSecond();
-          //TODO: CHANGE TO TIME LONG
-          eventTimeLong = zonedDateTime.toInstant().getEpochSecond();
-          eventYear = zonedDateTime.getYear();
-        }
+        ParsedTemporalPeriod temporalPeriod = TemporalInterpreterFunction.apply(year, month, day, eventDate);
 
         TemporalRecord temporalRecord = TemporalRecord.newBuilder()
           .setId(typedOccurrence.getOccurrenceId())
           .setYear(year)
           .setMonth(month)
           .setDay(day)
-          .setEventDate(eventDateLong)
-          .setEventTime(eventTimeLong)
+          .setEventDate(temporalPeriod.toEsString())
           .build();
-
-        if (from.isPresent() && eventYear < ParsedDateConstant.MIN_YEAR) {
-          c.output(issueTag, temporalRecord);
-        }
 
         c.output(dataTag, temporalRecord);
 

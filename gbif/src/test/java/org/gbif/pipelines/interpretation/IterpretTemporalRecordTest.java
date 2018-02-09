@@ -1,12 +1,12 @@
-package org.gbif.pipelines.core.function;
+package org.gbif.pipelines.interpretation;
 
-import org.gbif.pipelines.core.functions.IterpretTemporalRecord;
+
+import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalPeriod;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,38 +30,38 @@ public class IterpretTemporalRecordTest {
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
-  //TODO: FIX ME!
   @Test
   @Category(NeedsRunner.class)
   public void Should_T_When_T() {
     //State
     final List<TypedOccurrence> input = createTypedOccurrenceList("1999-04-17T12:26Z/12:52:17Z", "1999-04/2010-05");
-    final ZoneId zoneId = ZoneId.of("Z");
-    final ZonedDateTime firstFrom = LocalDateTime.of(1999, 4, 17, 12, 26).atZone(zoneId);
-    final ZonedDateTime secondFrom = LocalDateTime.of(1999, 4, 1, 0, 0).atZone(zoneId);
 
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(firstFrom, secondFrom);
-    final List<TemporalRecord> issueExpected = createTemporalRecordList(firstFrom, secondFrom);
+    //First
+    final LocalDateTime fromOne = LocalDateTime.of(1999, 4, 17, 12, 26);
+    final LocalDateTime toOne = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
+    final ParsedTemporalPeriod periodOne = new ParsedTemporalPeriod(fromOne, toOne);
+    //Second
+    //final YearMonth fromTwo = YearMonth.of(1999, 4);
+    //final YearMonth toTwo = YearMonth.of(2010, 5);
+    //final ParsedTemporalPeriod periodTwo = new ParsedTemporalPeriod(fromTwo, toTwo);
 
-    ////When
-    //p.getCoderRegistry().registerCoderForClass(TypedOccurrence.class, AvroCoder.of(TypedOccurrence.class));
-    //p.getCoderRegistry().registerCoderForClass(TemporalRecord.class, AvroCoder.of(TemporalRecord.class));
+    //final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, periodTwo);
 
-    //PCollection<TypedOccurrence> inputStream = p.apply(Create.of(input));
+    //When
+    p.getCoderRegistry().registerCoderForClass(TypedOccurrence.class, AvroCoder.of(TypedOccurrence.class));
+    p.getCoderRegistry().registerCoderForClass(TemporalRecord.class, AvroCoder.of(TemporalRecord.class));
 
-    //IterpretTemporalRecord temporalRecord = new IterpretTemporalRecord();
-    //PCollectionTuple tuple = inputStream.apply(temporalRecord);
+    PCollection<TypedOccurrence> inputStream = p.apply(Create.of(input));
 
-    //PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTag());
-    //PCollection<TemporalRecord> issueStream = tuple.get(temporalRecord.getIssueTag());
+    IterpretTemporalRecord temporalRecord = new IterpretTemporalRecord();
+    PCollectionTuple tuple = inputStream.apply(temporalRecord);
 
-    ////Should
+    PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTag());
+
+    //Should
     //PAssert.that(dataStream).containsInAnyOrder(dataExpected);
-    //PAssert.that(issueStream).containsInAnyOrder(issueExpected);
-    //p.run();
+    p.run();
   }
-
-
 
   private List<TypedOccurrence> createTypedOccurrenceList(String... events) {
     return Arrays.stream(events)
@@ -85,12 +85,10 @@ public class IterpretTemporalRecordTest {
       .collect(Collectors.toList());
   }
 
-  private List<TemporalRecord> createTemporalRecordList(ZonedDateTime... dates) {
-    return Arrays.stream(dates).map(x -> {
-      long date = x.toLocalDate().toEpochDay();
-      long time = x.toLocalTime().toNanoOfDay();
-      return TemporalRecord.newBuilder().setId("0").setEventDate(date).setEventTime(time).build();
-    }).collect(Collectors.toList());
+  private List<TemporalRecord> createTemporalRecordList(ParsedTemporalPeriod... dates) {
+    return Arrays.stream(dates)
+      .map(x -> TemporalRecord.newBuilder().setId("0").setEventDate(x.toEsString()).build())
+      .collect(Collectors.toList());
   }
 
 }
