@@ -34,8 +34,6 @@ import org.codehaus.jackson.node.NullNode;
  */
 public final class AvroSchemaGenerator {
 
-  public static final String DEFAULT_TAXON_SCHEMA_PATH = "src/main/avro/taxonRecord.avsc";
-
   // default taxonomic schema
   private static final String DEFAULT_TAXON_SCHEMA_NAME = "TaxonRecord";
   private static final String DEFAULT_TAXON_SCHEMA_DOC = "A taxonomic record";

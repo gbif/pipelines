@@ -11,6 +11,33 @@
 
   <artifactId>gbif-taxonomy</artifactId>
 
+  <build>
+    <plugins>
+      <!--  Generate source from Avro definitions -->
+      <plugin>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>schemas</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+            </goals>
+            <configuration>
+              <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
+              <outputDirectory>${project.basedir}/src/main/java-generated/</outputDirectory>
+              <testSourceDirectory>../taxonomy/src/main/java/test/avro/</testSourceDirectory>
+              <testOutputDirectory>../taxonomy/src/main/java/test/java-generated/</testOutputDirectory>
+              <!-- TODO: change CharSequence to String when all the PRs are mergeg?? -->
+              <!--<stringType>String</stringType>-->
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

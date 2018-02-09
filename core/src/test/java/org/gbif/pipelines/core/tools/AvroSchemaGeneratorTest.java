@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.tools;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.vocabulary.Rank;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +11,6 @@ import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.codehaus.jackson.node.NullNode;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -21,22 +19,6 @@ import static org.junit.Assert.assertEquals;
  * Tests the class {@link AvroSchemaGenerator}.
  */
 public class AvroSchemaGeneratorTest {
-
-  @Test
-  @Ignore
-  public void generateDefaultTaxonomicSchemaTest() {
-    String path = AvroSchemaGenerator.DEFAULT_TAXON_SCHEMA_PATH;
-
-    Schema schemaGenerated = AvroSchemaGenerator.generateDefaultTaxonomicSchema();
-    System.out.println(schemaGenerated.toString(true));
-
-    try {
-      AvroSchemaGenerator.writeSchemaToFile(path, schemaGenerated);
-    } catch (IOException e) {
-      Assert.fail("Could not generate default taxonomic schema in path " + path + ": " + e.getMessage());
-    }
-
-  }
 
   @Test
   public void generateSchemaTest() {
