@@ -1,6 +1,6 @@
 package org.gbif.pipelines.taxonomy.interpreter;
 
-import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
+import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
@@ -24,7 +24,7 @@ public class TaxonomyInterpreterTest {
 
     // Call to perform: https://api.gbif-uat.org/v1/species/match2?name=Puma
     // concolor&kingdom=Animalia&genus=Puma&rank=species
-    ExtendedRecord record = new ExtendedRecordBuilder().kingdom("Animalia")
+    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor")
       .authorship("")
@@ -46,7 +46,7 @@ public class TaxonomyInterpreterTest {
       Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
       Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
 
-      record = new ExtendedRecordBuilder().kingdom("Animalia")
+      record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
         .genus("Puma")
         .name("Puma concolor (Linnaeus, 1771)")
         .rank(Rank.SPECIES.name())
@@ -64,7 +64,7 @@ public class TaxonomyInterpreterTest {
       Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
       Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
 
-      record = new ExtendedRecordBuilder().kingdom("Animalia")
+      record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
         .genus("Puma")
         .name("Puma concolor")
         .authorship("(Linnaeus, 1771)")
@@ -90,7 +90,7 @@ public class TaxonomyInterpreterTest {
 
   @Test
   public void testOenanthe() {
-    ExtendedRecord record = new ExtendedRecordBuilder().kingdom("Plantae")
+    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Plantae")
       .name("Oenanthe")
       .authorship("")
       .rank(Rank.GENUS.name())
@@ -110,7 +110,7 @@ public class TaxonomyInterpreterTest {
       Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
       Assert.assertEquals("Oenanthe L.", interpretedTaxon.getTaxonRecord().getUsage().getName());
 
-      record = new ExtendedRecordBuilder().kingdom("Plantae")
+      record = new ExtendedRecordCustomBuilder().kingdom("Plantae")
         .name("Oenanthe")
         .authorship("L.")
         .rank(Rank.GENUS.name())
@@ -128,7 +128,7 @@ public class TaxonomyInterpreterTest {
       Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
       Assert.assertEquals("Oenanthe L.", interpretedTaxon.getTaxonRecord().getUsage().getName());
 
-      record = new ExtendedRecordBuilder().kingdom("Animalia")
+      record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
         .name("Oenanthe")
         .authorship("Vieillot, 1816")
         .rank(Rank.GENUS.name())
@@ -153,7 +153,7 @@ public class TaxonomyInterpreterTest {
 
   @Test
   public void testOtu() {
-    ExtendedRecord record = new ExtendedRecordBuilder().kingdom("Animalia")
+    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
       .phylum("Annelida")
       .family("Lumbricidae")
       .name("BOLD:ACV7160")
@@ -176,7 +176,7 @@ public class TaxonomyInterpreterTest {
 
   @Test
   public void testCeratiaceae() {
-    ExtendedRecord record = new ExtendedRecordBuilder().kingdom("Chromista")
+    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Chromista")
       .phylum("Dinophyta")
       .clazz("Dinophyceae")
       .order("Peridiniales")
@@ -212,7 +212,7 @@ public class TaxonomyInterpreterTest {
 
   @Test
   public void testNubLookupGood() {
-    ExtendedRecord record = new ExtendedRecordBuilder().kingdom("Animalia")
+    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor")
       .rank(Rank.SPECIES.name())
@@ -239,7 +239,7 @@ public class TaxonomyInterpreterTest {
 
   @Test
   public void testAcceptedUsage() {
-    ExtendedRecord record = new ExtendedRecordBuilder().name("Agallisus lepturoides").id(TEST_RECORD_ID).build();
+    ExtendedRecord record = new ExtendedRecordCustomBuilder().name("Agallisus lepturoides").id(TEST_RECORD_ID).build();
 
     try {
       InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);

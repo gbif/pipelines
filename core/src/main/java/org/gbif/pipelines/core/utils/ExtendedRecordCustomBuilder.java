@@ -11,7 +11,7 @@ import java.util.Map;
  * <p>
  * Recommended for testing purposes.
  */
-public class ExtendedRecordBuilder {
+public class ExtendedRecordCustomBuilder {
 
   private String kingdom;
   private String phylum;
@@ -24,60 +24,57 @@ public class ExtendedRecordBuilder {
   private String authorship;
   private String id;
 
-  public ExtendedRecordBuilder kingdom(String kingdom) {
+  public ExtendedRecordCustomBuilder kingdom(String kingdom) {
     this.kingdom = kingdom;
     return this;
   }
 
-  public ExtendedRecordBuilder phylum(String phylum) {
+  public ExtendedRecordCustomBuilder phylum(String phylum) {
     this.phylum = phylum;
     return this;
   }
 
-  public ExtendedRecordBuilder clazz(String clazz) {
+  public ExtendedRecordCustomBuilder clazz(String clazz) {
     this.clazz = clazz;
     return this;
   }
 
-  public ExtendedRecordBuilder order(String order) {
+  public ExtendedRecordCustomBuilder order(String order) {
     this.order = order;
     return this;
   }
 
-  public ExtendedRecordBuilder family(String family) {
+  public ExtendedRecordCustomBuilder family(String family) {
     this.family = family;
     return this;
   }
 
-  public ExtendedRecordBuilder genus(String genus) {
+  public ExtendedRecordCustomBuilder genus(String genus) {
     this.genus = genus;
     return this;
   }
 
-  public ExtendedRecordBuilder rank(String rank) {
+  public ExtendedRecordCustomBuilder rank(String rank) {
     this.rank = rank;
     return this;
   }
 
-  public ExtendedRecordBuilder name(String name) {
+  public ExtendedRecordCustomBuilder name(String name) {
     this.name = name;
     return this;
   }
 
-  public ExtendedRecordBuilder authorship(String authorship) {
+  public ExtendedRecordCustomBuilder authorship(String authorship) {
     this.authorship = authorship;
     return this;
   }
 
-  public ExtendedRecordBuilder id(String id) {
+  public ExtendedRecordCustomBuilder id(String id) {
     this.id = id;
     return this;
   }
 
   public ExtendedRecord build() {
-    ExtendedRecord record = new ExtendedRecord();
-    record.setId(id);
-
     Map<CharSequence, CharSequence> terms = new HashMap<>();
     terms.put(DwcTerm.kingdom.qualifiedName(), kingdom);
     terms.put(DwcTerm.genus.qualifiedName(), genus);
@@ -89,9 +86,7 @@ public class ExtendedRecordBuilder {
     terms.put(DwcTerm.order.qualifiedName(), order);
     terms.put(DwcTerm.family.qualifiedName(), family);
 
-    record.setCoreTerms(terms);
-
-    return record;
+    return ExtendedRecord.newBuilder().setId(id).setCoreTerms(terms).build();
   }
 
 }
