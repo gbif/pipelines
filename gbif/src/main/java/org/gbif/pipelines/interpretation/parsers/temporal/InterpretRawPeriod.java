@@ -1,6 +1,14 @@
 package org.gbif.pipelines.interpretation.parsers.temporal;
 
-import java.util.regex.Pattern;
+import org.gbif.pipelines.interpretation.parsers.temporal.accumulator.ChronoAccumulator;
+import org.gbif.pipelines.interpretation.parsers.temporal.accumulator.ChronoAccumulatorConverter;
+import org.gbif.pipelines.interpretation.parsers.temporal.parser.ParserRawDateTime;
+import org.gbif.pipelines.interpretation.parsers.temporal.utils.DelimiterUtils;
+
+import java.time.Month;
+import java.time.Year;
+import java.time.temporal.Temporal;
+import java.util.function.Function;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -9,51 +17,45 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  */
 public class InterpretRawPeriod {
 
-  private static final String CHAR_PERIOD = "/";
-  private static final Pattern RGX_PERIOD = Pattern.compile(CHAR_PERIOD);
+  private static final Function<ChronoAccumulator, Temporal> CONVERTER =
+    ca -> ChronoAccumulatorConverter.toTemporal(ca).orElse(null);
 
   private InterpretRawPeriod() {
     //NOP
   }
 
-  public static ParsedTemporalPeriod interpret(String year, String month, String day, String rawDate) {
-    ChronoAccumulator base = ChronoAccumulator.from(year, month, day);
+  public static ParsedTemporalDates interpret(String rawYear, String rawMonth, String rawDay, String rawDate) {
+    //Fill base values
+    ChronoAccumulator baseAccumulator = ChronoAccumulator.from(rawYear, rawMonth, rawDay);
+
+    Year year = ChronoAccumulatorConverter.getYear(baseAccumulator).orElse(null);
+    Month month = ChronoAccumulatorConverter.getMonth(baseAccumulator).orElse(null);
+    Integer day = ChronoAccumulatorConverter.getDay(baseAccumulator).orElse(null);
+    Temporal base = CONVERTER.apply(baseAccumulator);
+
+    ParsedTemporalDates temporalDates = new ParsedTemporalDates(year, month, day, base);
+
     if (isEmpty(rawDate)) {
-      return new ParsedTemporalPeriod(base.toTemporal());
+      return temporalDates;
     }
 
-    String[] rawPeriod = splitByPeriod(rawDate);
+    String[] rawPeriod = DelimiterUtils.splitPeriod(rawDate);
 
-    ChronoAccumulator from = InterpretRawDateTime.interpret(rawPeriod[0], base.getLastParsed());
-    ChronoAccumulator to = InterpretRawDateTime.interpret(rawPeriod[1], from.getLastParsed());
+    ChronoAccumulator fromAccumulator = ParserRawDateTime.parse(rawPeriod[0], baseAccumulator.getLastParsed());
+    ChronoAccumulator toAccumulator = ParserRawDateTime.parse(rawPeriod[1], fromAccumulator.getLastParsed());
 
-    // If "to" doesn't contain last parsed value, raw date will consist of one date only
-    if (to.getLastParsed() == null) {
-      // Use base value to improve parsed date
-      from.putAll(base);
+    // If toAccumulator doesn't contain last parsed value, raw date will consist of one date only
+    if (toAccumulator.getLastParsed() == null) {
+      // Use baseAccumulator value toAccumulator improve parsed date
+      fromAccumulator.putAllAndReplce(baseAccumulator);
     } else {
-      // Use "to" value to improve "from" parsed date
-      to.putAllIfAbsent(from);
+      // Use toAccumulator value toAccumulator improve fromAccumulator parsed date
+      toAccumulator.putAllIfAbsent(fromAccumulator);
     }
 
-    return new ParsedTemporalPeriod(from.toTemporal(), to.toTemporal());
-
-  }
-
-  /**
-   * Attempt to split the rawDate into raw periods by '/' symbol, the symbol must be the only one in the rawDate
-   *
-   * @param rawDate raw string date
-   *
-   * @return always two elements array
-   */
-  private static String[] splitByPeriod(String rawDate) {
-    //If the spliterator for the first position and last position are the same, symbol only one in string,
-    //check length, the length must be greater than seven to avoid case as "1999/2", where it looks as year and month
-    boolean canSplit = rawDate.lastIndexOf(CHAR_PERIOD) == rawDate.indexOf(CHAR_PERIOD) && rawDate.length() > 7;
-    String[] splited = canSplit ? RGX_PERIOD.split(rawDate) : new String[] {rawDate, ""};
-    //Returns an array of the same length each time
-    return splited.length < 2 ? new String[] {splited[0], ""} : splited;
+    temporalDates.setFromDate(CONVERTER.apply(fromAccumulator));
+    temporalDates.setToDate(CONVERTER.apply(toAccumulator));
+    return temporalDates;
   }
 
 }

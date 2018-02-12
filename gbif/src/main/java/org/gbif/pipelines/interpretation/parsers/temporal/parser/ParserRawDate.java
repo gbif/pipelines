@@ -1,7 +1,9 @@
-package org.gbif.pipelines.interpretation.parsers.temporal;
+package org.gbif.pipelines.interpretation.parsers.temporal.parser;
+
+import org.gbif.pipelines.interpretation.parsers.temporal.accumulator.ChronoAccumulator;
+import org.gbif.pipelines.interpretation.parsers.temporal.utils.DelimiterUtils;
 
 import java.time.temporal.ChronoField;
-import java.util.regex.Pattern;
 
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
@@ -11,31 +13,23 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 /**
- * Interpreter for raw date only. The main method interpret, fills year, month and day in ParseDate
+ * Interpreter for raw date only. The main method parse, fills year, month and day in ParseDate
  */
-class InterpretRawDate {
+class ParserRawDate {
 
   private static final int YEAR_LENGTH = 4;
-  private static final String REPLACE_CHAR = " ";
-  private static final Pattern RGX_FILTER = Pattern.compile("[^a-zA-Z0-9]+");
-  private static final Pattern RGX_REPLACE_CHAR = Pattern.compile(REPLACE_CHAR);
 
-  private InterpretRawDate() {
+  private ParserRawDate() {
     //NOP
   }
 
-  static ChronoAccumulator interpret(String rawDate) {
-    return interpret(rawDate, ChronoField.ERA);
-  }
-
-  static ChronoAccumulator interpret(String rawDate, ChronoField lastParsed) {
+  public static ChronoAccumulator parse(String rawDate, ChronoField lastParsed) {
     if (isEmpty(rawDate)) {
       return new ChronoAccumulator();
     }
 
     //Filter and split raw date
-    String filtered = RGX_FILTER.matcher(rawDate).replaceAll(REPLACE_CHAR).trim();
-    String[] input = RGX_REPLACE_CHAR.split(filtered);
+    String[] input = DelimiterUtils.splitDate(rawDate);
 
     //Choose case based on split array length
     int length = input.length;
@@ -67,15 +61,15 @@ class InterpretRawDate {
     //If values is year
     boolean isYearFirst = isYear(first);
     if (isYearFirst) {
-      accumulator.convertAndPut(YEAR, first);
+      accumulator.put(YEAR, first);
       return accumulator;
     }
     //If it not a year, this array should represent toDate,
     //which may have month or day, determines by last parsed value in fromDate
     if (MONTH_OF_YEAR == lastParsed) {
-      accumulator.convertAndPut(MONTH_OF_YEAR, first);
+      accumulator.put(MONTH_OF_YEAR, first);
     } else if (DAY_OF_MONTH == lastParsed) {
-      accumulator.convertAndPut(DAY_OF_MONTH, first);
+      accumulator.put(DAY_OF_MONTH, first);
     }
     return accumulator;
   }
@@ -88,14 +82,14 @@ class InterpretRawDate {
     boolean isYearSecond = isYear(second);
     //If any of values is year, set year and month
     if (isYearFirst || isYearSecond) {
-      accumulator.convertAndPut(YEAR, isYearFirst ? first : second);
-      accumulator.convertAndPut(MONTH_OF_YEAR, isYearFirst ? second : first);
+      accumulator.put(YEAR, isYearFirst ? first : second);
+      accumulator.put(MONTH_OF_YEAR, isYearFirst ? second : first);
     } else {
       //If year is absent, this array should represent toDate,
       //which may have month and day, determines by last parsed value in fromDate
       boolean isMonthFirst = DAY_OF_MONTH == lastParsed;
-      accumulator.convertAndPut(MONTH_OF_YEAR, isMonthFirst ? first : second);
-      accumulator.convertAndPut(DAY_OF_MONTH, isMonthFirst ? second : first);
+      accumulator.put(MONTH_OF_YEAR, isMonthFirst ? first : second);
+      accumulator.put(DAY_OF_MONTH, isMonthFirst ? second : first);
     }
     return accumulator;
   }
@@ -132,9 +126,9 @@ class InterpretRawDate {
     String day = month.equals(second) ? position : second;
 
     //Save results
-    accumulator.convertAndPut(YEAR, year);
-    accumulator.convertAndPut(MONTH_OF_YEAR, month);
-    accumulator.convertAndPut(DAY_OF_MONTH, day);
+    accumulator.put(YEAR, year);
+    accumulator.put(MONTH_OF_YEAR, month);
+    accumulator.put(DAY_OF_MONTH, day);
     return accumulator;
   }
 

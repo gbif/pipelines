@@ -1,4 +1,4 @@
-package org.gbif.pipelines.interpretation.parsers.temporal;
+package org.gbif.pipelines.interpretation.parsers.temporal.utils;
 
 import java.text.DateFormatSymbols;
 import java.time.Year;
@@ -10,36 +10,36 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 /**
  * Util class for parsing values
  */
-class ParsedDateUtils {
+public class ParsedUnitUtils {
 
-  private ParsedDateUtils() {
+  private ParsedUnitUtils() {
     //NOP
   }
 
-  static Integer parseYear(String year) {
+  public static Integer parseYear(String year) {
     return parseInteger(year, x -> x > Year.now().getValue() || x < 1000);
   }
 
-  static Integer parseMonth(String month) {
+  public static Integer parseMonth(String month) {
     if (isEmpty(month)) {
       return null;
     }
     return isNumeric(month) ? parseMonthAsInt(month) : parseMonthAsString(month);
   }
 
-  static Integer parseDay(String day) {
+  public static Integer parseDay(String day) {
     return parseInteger(day, x -> x < 1 || x > 31);
   }
 
-  static Integer parseHour(String hour) {
+  public static Integer parseHour(String hour) {
     return parseInteger(hour, x -> x < 0 || x > 23);
   }
 
-  static Integer parseMinute(String minute) {
+  public static Integer parseMinute(String minute) {
     return parseInteger(minute, x -> x < 0 || x > 59);
   }
 
-  static Integer parseSecond(String second) {
+  public static Integer parseSecond(String second) {
     return parseInteger(second, x -> x < 0 || x > 59);
   }
 
