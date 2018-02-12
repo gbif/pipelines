@@ -21,14 +21,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.interpretation.InterpretationTupleTags.interpretedExtendedRecordTupleTag;
-import static org.gbif.pipelines.interpretation.InterpretationTupleTags.occurrenceIssueTupleTag;
-
 /**
  * Reads an DwC-A Avro file containing ExtendedRecords element and performs an interpretation of basis fields.
  * The result is stored in a set of Avro files that follows the schema {@link InterpretedExtendedRecord}.
  */
-public class InterpretDwCAvroPipeline extends AbstractSparkOnYarnPipeline {
+public class InterpretDwCAvroPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(InterpretDwCAvroPipeline.class);
 
@@ -43,16 +40,17 @@ public class InterpretDwCAvroPipeline extends AbstractSparkOnYarnPipeline {
       .setCoder(AvroCoder.of(ExtendedRecord.class));
 
     // Convert the objects (interpretation)
-    PCollectionTuple interpreted = verbatimRecords.apply(new ExtendedRecordTransform());
+    ExtendedRecordTransform transform = new ExtendedRecordTransform();
+    PCollectionTuple interpreted = verbatimRecords.apply(transform);
 
     //Record level interpretations
-    interpreted.get(interpretedExtendedRecordTupleTag())
+    interpreted.get(transform.getInterpretedExtendedRecordTupleTag())
       .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
       .apply("Write Interpreted Avro files", AvroIO.write(InterpretedExtendedRecord.class)
         .to(options.getTargetPaths().get(Interpretation.RECORD_LEVEL).getFilePath()));
 
     //Exporting issues
-    interpreted.get(occurrenceIssueTupleTag())
+    interpreted.get(transform.getOccurrenceIssueTupleTag())
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Write Interpretation Issues Avro files", AvroIO.write(OccurrenceIssue.class)
         .to(options.getTargetPaths().get(Interpretation.ISSUES).getFilePath()));

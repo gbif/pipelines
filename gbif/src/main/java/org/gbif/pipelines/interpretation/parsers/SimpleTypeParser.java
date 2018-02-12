@@ -9,6 +9,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Utility class that parses basic data types.
@@ -32,7 +33,16 @@ public class SimpleTypeParser {
     Optional
       .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
       .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseInteger(termValue.toString()))));
+  }
 
+  /**
+   * Parses an integer value and applies a mapping function to its response (if any).
+   */
+  public static <U> U parseInt(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Integer>, U> mapper) {
+    return Optional
+            .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
+            .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseInteger(termValue.toString()))))
+            .get();
   }
 
   /**
@@ -42,7 +52,16 @@ public class SimpleTypeParser {
     Optional
       .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
       .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseDouble(termValue.toString()))));
+  }
 
+  /**
+   * Parses a double value and applies a mapping function to its response (if any).
+   */
+  public static <U> U parseDouble(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Double>, U> mapper) {
+    return Optional
+            .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
+            .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseDouble(termValue.toString()))))
+            .get();
   }
 
 
@@ -53,6 +72,15 @@ public class SimpleTypeParser {
     Optional
       .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
       .ifPresent(termValue -> consumer.accept(BOOLEAN_PARSER.parse(termValue.toString())));
+  }
 
+  /**
+   * Parses a boolean value and applies mapping functions to its response (if any).
+   */
+  public static <U> U parseBoolean(ExtendedRecord extendedRecord, DwcTerm term, Function<ParseResult<Boolean>,U> mapper) {
+    return Optional
+            .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
+            .map(termValue -> mapper.apply(BOOLEAN_PARSER.parse(termValue.toString())))
+            .get();
   }
 }
