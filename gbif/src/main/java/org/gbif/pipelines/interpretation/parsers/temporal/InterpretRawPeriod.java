@@ -17,15 +17,15 @@ public class InterpretRawPeriod {
   }
 
   public static ParsedTemporalPeriod interpret(String year, String month, String day, String rawDate) {
-    ChronoStorage base = ChronoStorage.from(year, month, day);
+    ChronoAccumulator base = ChronoAccumulator.from(year, month, day);
     if (isEmpty(rawDate)) {
       return new ParsedTemporalPeriod(base.toTemporal());
     }
 
     String[] periodRawDates = splitByPeriod(rawDate);
 
-    ChronoStorage from = InterpretRawDateTime.interpret(periodRawDates[0], base.getLastParsed());
-    ChronoStorage to = InterpretRawDateTime.interpret(periodRawDates[1], from.getLastParsed());
+    ChronoAccumulator from = InterpretRawDateTime.interpret(periodRawDates[0], base.getLastParsed());
+    ChronoAccumulator to = InterpretRawDateTime.interpret(periodRawDates[1], from.getLastParsed());
 
     if (to.getLastParsed() == null) {
       from.putAll(base);

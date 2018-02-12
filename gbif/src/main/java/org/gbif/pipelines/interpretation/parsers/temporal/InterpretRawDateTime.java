@@ -18,9 +18,9 @@ class InterpretRawDateTime {
     //NOP
   }
 
-  static ChronoStorage interpret(String rawDate, ChronoField lastParsed) {
+  static ChronoAccumulator interpret(String rawDate, ChronoField lastParsed) {
     if (isEmpty(rawDate) || (!RGX_YEAR.matcher(rawDate).find() && !RGX_PATTERN.matcher(rawDate).find())) {
-      return new ChronoStorage();
+      return new ChronoAccumulator();
     }
 
     //Does value have time inside
@@ -46,8 +46,8 @@ class InterpretRawDateTime {
     String time = hasTime ? rawDate.substring(timeIdx) : "";
 
     //Interpret date and time separately
-    ChronoStorage temporalDate = InterpretRawDate.interpret(date, lastParsed);
-    ChronoStorage temporalTime = InterpretRawTime.interpret(time);
+    ChronoAccumulator temporalDate = InterpretRawDate.interpret(date, lastParsed);
+    ChronoAccumulator temporalTime = InterpretRawTime.interpret(time);
     return temporalDate.merge(temporalTime);
   }
 

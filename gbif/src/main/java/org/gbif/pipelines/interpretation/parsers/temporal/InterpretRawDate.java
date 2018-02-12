@@ -24,13 +24,13 @@ class InterpretRawDate {
     //NOP
   }
 
-  static ChronoStorage interpret(String rawDate) {
+  static ChronoAccumulator interpret(String rawDate) {
     return interpret(rawDate, ChronoField.ERA);
   }
 
-  static ChronoStorage interpret(String rawDate, ChronoField lastParsed) {
+  static ChronoAccumulator interpret(String rawDate, ChronoField lastParsed) {
     if (isEmpty(rawDate)) {
-      return new ChronoStorage();
+      return new ChronoAccumulator();
     }
 
     //Filter and split raw date
@@ -47,15 +47,15 @@ class InterpretRawDate {
       return parseSizeThree(input);
     }
 
-    return new ChronoStorage();
+    return new ChronoAccumulator();
   }
 
   private static boolean isYear(String year) {
     return year.length() == YEAR_LENGTH && isNumeric(year);
   }
 
-  private static ChronoStorage parseSizeOne(ChronoField lastParsed, String... dateArray) {
-    ChronoStorage chronoStorage = new ChronoStorage();
+  private static ChronoAccumulator parseSizeOne(ChronoField lastParsed, String... dateArray) {
+    ChronoAccumulator chronoAccumulator = new ChronoAccumulator();
     String first = dateArray[0];
     //Case example - 20120506
     if (first.length() == 8 && isNumeric(first)) {
@@ -67,41 +67,41 @@ class InterpretRawDate {
     //If values is year
     boolean isYearFirst = isYear(first);
     if (isYearFirst) {
-      chronoStorage.convertAndPut(YEAR, first);
-      return chronoStorage;
+      chronoAccumulator.convertAndPut(YEAR, first);
+      return chronoAccumulator;
     }
     //If it not a year, this array should represent toDate,
     //which may have month or day, determines by last parsed value in fromDate
     if (MONTH_OF_YEAR == lastParsed) {
-      chronoStorage.convertAndPut(MONTH_OF_YEAR, first);
+      chronoAccumulator.convertAndPut(MONTH_OF_YEAR, first);
     } else if (DAY_OF_MONTH == lastParsed) {
-      chronoStorage.convertAndPut(DAY_OF_MONTH, first);
+      chronoAccumulator.convertAndPut(DAY_OF_MONTH, first);
     }
-    return chronoStorage;
+    return chronoAccumulator;
   }
 
-  private static ChronoStorage parseSizeTwo(ChronoField lastParsed, String... dateArray) {
-    ChronoStorage chronoStorage = new ChronoStorage();
+  private static ChronoAccumulator parseSizeTwo(ChronoField lastParsed, String... dateArray) {
+    ChronoAccumulator chronoAccumulator = new ChronoAccumulator();
     String first = dateArray[0];
     String second = dateArray[1];
     boolean isYearFirst = isYear(first);
     boolean isYearSecond = isYear(second);
     //If any of values is year, set year and month
     if (isYearFirst || isYearSecond) {
-      chronoStorage.convertAndPut(YEAR, isYearFirst ? first : second);
-      chronoStorage.convertAndPut(MONTH_OF_YEAR, isYearFirst ? second : first);
+      chronoAccumulator.convertAndPut(YEAR, isYearFirst ? first : second);
+      chronoAccumulator.convertAndPut(MONTH_OF_YEAR, isYearFirst ? second : first);
     } else {
       //If year is absent, this array should represent toDate,
       //which may have month and day, determines by last parsed value in fromDate
       boolean isMonthFirst = DAY_OF_MONTH == lastParsed;
-      chronoStorage.convertAndPut(MONTH_OF_YEAR, isMonthFirst ? first : second);
-      chronoStorage.convertAndPut(DAY_OF_MONTH, isMonthFirst ? second : first);
+      chronoAccumulator.convertAndPut(MONTH_OF_YEAR, isMonthFirst ? first : second);
+      chronoAccumulator.convertAndPut(DAY_OF_MONTH, isMonthFirst ? second : first);
     }
-    return chronoStorage;
+    return chronoAccumulator;
   }
 
-  private static ChronoStorage parseSizeThree(String... dateArray) {
-    ChronoStorage chronoStorage = new ChronoStorage();
+  private static ChronoAccumulator parseSizeThree(String... dateArray) {
+    ChronoAccumulator chronoAccumulator = new ChronoAccumulator();
     String first = dateArray[0];
     String second = dateArray[1];
     String third = dateArray[2];
@@ -132,10 +132,10 @@ class InterpretRawDate {
     String day = month.equals(second) ? position : second;
 
     //Save results
-    chronoStorage.convertAndPut(YEAR, year);
-    chronoStorage.convertAndPut(MONTH_OF_YEAR, month);
-    chronoStorage.convertAndPut(DAY_OF_MONTH, day);
-    return chronoStorage;
+    chronoAccumulator.convertAndPut(YEAR, year);
+    chronoAccumulator.convertAndPut(MONTH_OF_YEAR, month);
+    chronoAccumulator.convertAndPut(DAY_OF_MONTH, day);
+    return chronoAccumulator;
   }
 
 }

@@ -28,10 +28,10 @@ class InterpretRawTime {
     //NOP
   }
 
-  static ChronoStorage interpret(String rawTime) {
-    ChronoStorage chronoStorage = new ChronoStorage();
+  static ChronoAccumulator interpret(String rawTime) {
+    ChronoAccumulator chronoAccumulator = new ChronoAccumulator();
     if (isEmpty(rawTime)) {
-      return chronoStorage;
+      return chronoAccumulator;
     }
     //Split by some zone char
     String minus = RGX_MINUS.matcher(rawTime).replaceAll(MINUS);
@@ -43,14 +43,14 @@ class InterpretRawTime {
 
     //Parse time only
     if (timeArray.length > 1) {
-      chronoStorage.convertAndPut(HOUR_OF_DAY, timeArray[0]);
-      chronoStorage.convertAndPut(MINUTE_OF_HOUR, timeArray[1]);
+      chronoAccumulator.convertAndPut(HOUR_OF_DAY, timeArray[0]);
+      chronoAccumulator.convertAndPut(MINUTE_OF_HOUR, timeArray[1]);
       if (timeArray.length > 2) {
-        chronoStorage.convertAndPut(SECOND_OF_MINUTE, timeArray[2]);
+        chronoAccumulator.convertAndPut(SECOND_OF_MINUTE, timeArray[2]);
       }
     }
 
-    return chronoStorage;
+    return chronoAccumulator;
   }
 
 }
