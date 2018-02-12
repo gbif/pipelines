@@ -1,11 +1,11 @@
 package org.gbif.pipelines.demo.hdfs;
 
-import org.gbif.pipelines.common.beam.BeamFunctions;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.core.functions.descriptor.CustomTypeDescriptors;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
@@ -18,6 +18,7 @@ import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
@@ -57,12 +58,11 @@ public class DwcaToHdfsTestingPipeline {
     PCollection<ExtendedRecord> rawRecords =
       pipeline.apply("Read from Darwin Core Archive", DwCAIO.Read.withPaths(options.getInputFile(), tmpDirDwca));
 
-    // Convert the ExtendedRecord into an UntypedOccurrence record
-    DoFn<ExtendedRecord, UntypedOccurrence> fn = BeamFunctions.beamify(FunctionFactory.untypedOccurrenceBuilder());
-
-    // TODO: Explore the generics as to whßy the coder registry does not find it and we need to set the coder explicitly
+        // TODO: Explore the generics as to whßy the coder registry does not find it and we need to set the coder explicitly
     PCollection<UntypedOccurrence> verbatimRecords =
-      rawRecords.apply("Convert the objects into untyped DwC style records", ParDo.of(fn))
+      rawRecords.apply("Convert the objects into untyped DwC style records",
+                       MapElements.into(CustomTypeDescriptors.untypedOccurrencies())
+                                  .via(FunctionFactory.untypedOccurrenceBuilder()::apply))
         .setCoder(AvroCoder.of(UntypedOccurrence.class));
 
     verbatimRecords.apply("Write Avro files",
