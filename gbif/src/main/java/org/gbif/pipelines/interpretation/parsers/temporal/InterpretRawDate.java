@@ -55,7 +55,7 @@ class InterpretRawDate {
   }
 
   private static ChronoAccumulator parseSizeOne(ChronoField lastParsed, String... dateArray) {
-    ChronoAccumulator chronoAccumulator = new ChronoAccumulator();
+    ChronoAccumulator accumulator = new ChronoAccumulator();
     String first = dateArray[0];
     //Case example - 20120506
     if (first.length() == 8 && isNumeric(first)) {
@@ -67,41 +67,41 @@ class InterpretRawDate {
     //If values is year
     boolean isYearFirst = isYear(first);
     if (isYearFirst) {
-      chronoAccumulator.convertAndPut(YEAR, first);
-      return chronoAccumulator;
+      accumulator.convertAndPut(YEAR, first);
+      return accumulator;
     }
     //If it not a year, this array should represent toDate,
     //which may have month or day, determines by last parsed value in fromDate
     if (MONTH_OF_YEAR == lastParsed) {
-      chronoAccumulator.convertAndPut(MONTH_OF_YEAR, first);
+      accumulator.convertAndPut(MONTH_OF_YEAR, first);
     } else if (DAY_OF_MONTH == lastParsed) {
-      chronoAccumulator.convertAndPut(DAY_OF_MONTH, first);
+      accumulator.convertAndPut(DAY_OF_MONTH, first);
     }
-    return chronoAccumulator;
+    return accumulator;
   }
 
   private static ChronoAccumulator parseSizeTwo(ChronoField lastParsed, String... dateArray) {
-    ChronoAccumulator chronoAccumulator = new ChronoAccumulator();
+    ChronoAccumulator accumulator = new ChronoAccumulator();
     String first = dateArray[0];
     String second = dateArray[1];
     boolean isYearFirst = isYear(first);
     boolean isYearSecond = isYear(second);
     //If any of values is year, set year and month
     if (isYearFirst || isYearSecond) {
-      chronoAccumulator.convertAndPut(YEAR, isYearFirst ? first : second);
-      chronoAccumulator.convertAndPut(MONTH_OF_YEAR, isYearFirst ? second : first);
+      accumulator.convertAndPut(YEAR, isYearFirst ? first : second);
+      accumulator.convertAndPut(MONTH_OF_YEAR, isYearFirst ? second : first);
     } else {
       //If year is absent, this array should represent toDate,
       //which may have month and day, determines by last parsed value in fromDate
       boolean isMonthFirst = DAY_OF_MONTH == lastParsed;
-      chronoAccumulator.convertAndPut(MONTH_OF_YEAR, isMonthFirst ? first : second);
-      chronoAccumulator.convertAndPut(DAY_OF_MONTH, isMonthFirst ? second : first);
+      accumulator.convertAndPut(MONTH_OF_YEAR, isMonthFirst ? first : second);
+      accumulator.convertAndPut(DAY_OF_MONTH, isMonthFirst ? second : first);
     }
-    return chronoAccumulator;
+    return accumulator;
   }
 
   private static ChronoAccumulator parseSizeThree(String... dateArray) {
-    ChronoAccumulator chronoAccumulator = new ChronoAccumulator();
+    ChronoAccumulator accumulator = new ChronoAccumulator();
     String first = dateArray[0];
     String second = dateArray[1];
     String third = dateArray[2];
@@ -132,10 +132,10 @@ class InterpretRawDate {
     String day = month.equals(second) ? position : second;
 
     //Save results
-    chronoAccumulator.convertAndPut(YEAR, year);
-    chronoAccumulator.convertAndPut(MONTH_OF_YEAR, month);
-    chronoAccumulator.convertAndPut(DAY_OF_MONTH, day);
-    return chronoAccumulator;
+    accumulator.convertAndPut(YEAR, year);
+    accumulator.convertAndPut(MONTH_OF_YEAR, month);
+    accumulator.convertAndPut(DAY_OF_MONTH, day);
+    return accumulator;
   }
 
 }

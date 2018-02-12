@@ -32,10 +32,15 @@ public class ParsedTemporalPeriod {
     return Optional.ofNullable(toDate);
   }
 
+  //TODO: FIX!
   public Duration getDuration() {
-    return fromDate == null || toDate == null ? Duration.ZERO : Duration.between(fromDate, toDate);
+    return Duration.ZERO;
+    //return fromDate == null || toDate == null ? Duration.ZERO : Duration.between(fromDate, toDate);
   }
 
+  /**
+   * @return string formatted for using in elastic
+   */
   public String toEsString() {
     String from = fromDate != null ? fromDate.toString() : "";
     String to = toDate != null ? toDate.toString() : "";

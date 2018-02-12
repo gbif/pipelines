@@ -22,14 +22,17 @@ public class InterpretRawPeriod {
       return new ParsedTemporalPeriod(base.toTemporal());
     }
 
-    String[] periodRawDates = splitByPeriod(rawDate);
+    String[] rawPeriod = splitByPeriod(rawDate);
 
-    ChronoAccumulator from = InterpretRawDateTime.interpret(periodRawDates[0], base.getLastParsed());
-    ChronoAccumulator to = InterpretRawDateTime.interpret(periodRawDates[1], from.getLastParsed());
+    ChronoAccumulator from = InterpretRawDateTime.interpret(rawPeriod[0], base.getLastParsed());
+    ChronoAccumulator to = InterpretRawDateTime.interpret(rawPeriod[1], from.getLastParsed());
 
+    // If "to" doesn't contain last parsed value, raw date will consist of one date only
     if (to.getLastParsed() == null) {
+      // Use base value to improve parsed date
       from.putAll(base);
     } else {
+      // Use "to" value to improve "from" parsed date
       to.putAllIfAbsent(from);
     }
 

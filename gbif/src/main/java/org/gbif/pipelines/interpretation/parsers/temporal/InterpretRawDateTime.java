@@ -27,7 +27,7 @@ class InterpretRawDateTime {
     int timeSpliterIdx = rawDate.indexOf(TIME_SPLITERATOR);
     boolean hasTime = timeSpliterIdx > 0;
 
-    //Calculate a shift index of time, for case as 09:00 or 9:00
+    //Calculate a shift index of the time, for case as 09:00 or 9:00
     int shift = -1;
     for (int x = timeSpliterIdx - 1; x > 0; x--) {
       char sign = rawDate.charAt(x);

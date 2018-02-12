@@ -17,6 +17,9 @@ import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 
+/**
+ * The accumulator class for storing all parsed chrono fields
+ */
 class ChronoAccumulator {
 
   private static final Map<ChronoField, Function<String, Integer>> FUNCTION_MAP = new EnumMap<>(ChronoField.class);
@@ -40,6 +43,12 @@ class ChronoAccumulator {
     return temporal;
   }
 
+  /**
+   * Converts raw value to integer and put into the map
+   *
+   * @param key      one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   * @param rawValue raw value for parsing
+   */
   void convertAndPut(ChronoField key, String rawValue) {
     Integer value = FUNCTION_MAP.get(key).apply(rawValue);
     if (value != null) {
@@ -48,10 +57,17 @@ class ChronoAccumulator {
     }
   }
 
+  /**
+   * @return last parsed chrono field
+   */
   ChronoField getLastParsed() {
     return lastParsed;
   }
 
+  /**
+   * Copies ALL of the values from the specified accumulator to this accumulator.
+   * If a chrono filed is present, the field will be replaced by the value from accumulator param
+   */
   ChronoAccumulator merge(ChronoAccumulator chronoAccumulator) {
     valueMap.putAll(chronoAccumulator.valueMap);
     if (chronoAccumulator.getLastParsed() != null) {
@@ -60,14 +76,27 @@ class ChronoAccumulator {
     return this;
   }
 
-  void putAll(ChronoAccumulator storage) {
-    valueMap.putAll(storage.valueMap);
+  /**
+   * Copies CHRONO FILED values from the specified accumulator to this accumulator.
+   * If a chrono filed is present, the field will be replaced by the value from accumulator param
+   */
+  void putAll(ChronoAccumulator accumulator) {
+    valueMap.putAll(accumulator.valueMap);
   }
 
-  void putAllIfAbsent(ChronoAccumulator storage) {
-    storage.valueMap.forEach(valueMap::putIfAbsent);
+  /**
+   * Copies CHRONO FILED values from the specified accumulator to this accumulator.
+   * If a chrono filed is present, the field will NOT be replaced by the value from accumulator param
+   */
+  void putAllIfAbsent(ChronoAccumulator accumulator) {
+    accumulator.valueMap.forEach(valueMap::putIfAbsent);
   }
 
+  /**
+   * Converts Map<ChronoField, Integer> to Temporal
+   *
+   * @return some Temporal value: Year, YearMonth, LocalDate, LocalDateTime
+   */
   Temporal toTemporal() {
     Integer intYear = valueMap.get(YEAR);
     if (intYear == null) {
