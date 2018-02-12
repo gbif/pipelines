@@ -1,4 +1,4 @@
-package org.gbif.pipelines.taxonomy.interpreter;
+package org.gbif.pipelines.ws.match2;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.model.checklistbank.ParsedName;
@@ -9,9 +9,8 @@ import org.gbif.common.parsers.utils.ClassificationUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.interpretation.taxonomy.TaxonomyInterpretationException;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.taxonomy.ws.species.match2.SpeciesMatch2Service;
-import org.gbif.pipelines.taxonomy.ws.species.match2.SpeciesMatch2ServiceRest;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

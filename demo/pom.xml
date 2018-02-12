@@ -86,11 +86,7 @@
   <dependencies>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
-      <artifactId>core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>gbif-taxonomy</artifactId>
+      <artifactId>gbif-pipelines</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
@@ -137,6 +133,10 @@
         <exclusion>
           <groupId>com.google.code.gson</groupId>
           <artifactId>gson</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-compress</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

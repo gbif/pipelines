@@ -1,4 +1,4 @@
-package org.gbif.pipelines.taxonomy.interpreter;
+package org.gbif.pipelines.interpretation.adapters;
 
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.adapter.RecordAdapter;

@@ -1,19 +1,21 @@
-package org.gbif.pipelines.taxonomy.interpreter;
+package org.gbif.pipelines.interpretation.interpreters;
 
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.utils.AvroDataUtils;
+import org.gbif.pipelines.interpretation.taxonomy.TaxonomyInterpretationException;
+import org.gbif.pipelines.interpretation.adapters.TaxonRecordAdapter;
+import org.gbif.pipelines.interpretation.taxonomy.InterpretedTaxonomy;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.ws.match2.SpeciesMatchManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.gbif.pipelines.taxonomy.interpreter.SpeciesMatchManager.getMatch;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields should be based in the
@@ -43,7 +45,7 @@ public class TaxonomyInterpreter {
     AvroDataUtils.checkNullOrEmpty(extendedRecord);
 
     // get match from WS
-    NameUsageMatch2 responseModel = getMatch(extendedRecord);
+    NameUsageMatch2 responseModel = SpeciesMatchManager.getMatch(extendedRecord);
 
     // create interpreted taxonomy
     InterpretedTaxonomy interpretedTaxonomy = new InterpretedTaxonomy();

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.taxonomy.ws.config;
+package org.gbif.pipelines.ws.config;
 
 import java.io.IOException;
 import java.io.InputStream;

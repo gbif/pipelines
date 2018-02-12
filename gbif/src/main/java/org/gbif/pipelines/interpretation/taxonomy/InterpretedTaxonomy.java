@@ -1,4 +1,4 @@
-package org.gbif.pipelines.taxonomy.interpreter;
+package org.gbif.pipelines.interpretation.taxonomy;
 
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;

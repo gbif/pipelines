@@ -4,10 +4,10 @@ import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.interpretation.taxonomy.TaxonomicInterpretationTransform;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.taxonomy.transforms.TaxonomicInterpretationTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;

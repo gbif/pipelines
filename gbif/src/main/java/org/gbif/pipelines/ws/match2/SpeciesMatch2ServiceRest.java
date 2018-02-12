@@ -1,6 +1,6 @@
-package org.gbif.pipelines.taxonomy.ws.species.match2;
+package org.gbif.pipelines.ws.match2;
 
-import org.gbif.pipelines.taxonomy.ws.config.Config;
+import org.gbif.pipelines.ws.config.Config;
 
 import java.io.File;
 import java.io.IOException;

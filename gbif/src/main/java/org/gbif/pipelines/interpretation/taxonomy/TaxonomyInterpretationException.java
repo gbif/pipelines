@@ -1,4 +1,4 @@
-package org.gbif.pipelines.taxonomy.interpreter;
+package org.gbif.pipelines.interpretation.taxonomy;
 
 /**
  * Exception to use in the interpretation of taxonomic fields.

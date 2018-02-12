@@ -1,4 +1,4 @@
-package org.gbif.pipelines.taxonomy;
+package org.gbif.pipelines.interpretation;
 
 import org.gbif.pipelines.core.tools.AvroSchemaGenerator;
 
