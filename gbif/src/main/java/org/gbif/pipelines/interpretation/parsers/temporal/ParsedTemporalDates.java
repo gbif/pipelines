@@ -6,7 +6,7 @@ import java.time.temporal.Temporal;
 import java.util.Optional;
 
 /**
- * Base temporal class, consists of two parsed dates from and to.
+ * Base temporal class, consists of two parsed dates from and to, also year, month and day
  */
 public class ParsedTemporalDates {
 

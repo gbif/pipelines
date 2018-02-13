@@ -15,9 +15,16 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 class ParserRawTime {
 
   private ParserRawTime() {
-    //NOP
+    // Can't have an instance
   }
 
+  /**
+   * Parse hour, minute and second position in the raw date string, and save raw values into ChronoAccumulator
+   *
+   * @param rawTime raw time string
+   *
+   * @return ChronoAccumulator which store all parsed values
+   */
   public static ChronoAccumulator parse(String rawTime) {
     ChronoAccumulator accumulator = new ChronoAccumulator();
     if (isEmpty(rawTime)) {

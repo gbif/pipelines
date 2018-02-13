@@ -2,21 +2,24 @@ package org.gbif.pipelines.interpretation.parsers.temporal.utils;
 
 import java.util.regex.Pattern;
 
+/**
+ * Contains methods which can delimit raw string into raw array, example: "10-10-2010" to {"10", "10", "2010"} and etc.
+ */
 public class DelimiterUtils {
 
-  // Period
+  // Period values
   private static final String CHAR_REPLACE = " ";
   private static final Pattern RGX_FILTER = Pattern.compile("[^a-zA-Z0-9]+");
   private static final Pattern RGX_REPLACE_CHAR = Pattern.compile(CHAR_REPLACE);
 
-  // DateTime
-  private static final char TIME_DELIMITER= ':';
+  // DateTime values
+  private static final char TIME_DELIMITER = ':';
 
-  // Date
+  // Date values
   private static final String CHAR_PERIOD = "/";
   private static final Pattern RGX_PERIOD = Pattern.compile(CHAR_PERIOD);
 
-  // Time
+  // Time values
   private static final Pattern RGX_TIME = Pattern.compile("[^\\d]");
   private static final Pattern RGX_MINUS = Pattern.compile("[-]");
   private static final Pattern RGX_PLUS = Pattern.compile("[+]");
@@ -29,13 +32,13 @@ public class DelimiterUtils {
   private static final String Z = ESCAPE + "Z";
 
   private DelimiterUtils() {
-    //NOP
+    // Can't have an instance
   }
 
   /**
    * Attempt to split the rawPeriod into raw periods by delimiter '/' symbol, the symbol must be the only one in the rawPeriod
    *
-   * @param rawPeriod raw string date
+   * @param rawPeriod raw string period dates
    *
    * @return always two elements array
    */
@@ -48,6 +51,12 @@ public class DelimiterUtils {
     return splited.length < 2 ? new String[] {splited[0], ""} : splited;
   }
 
+  /**
+   * Split raw date time into an array with two elements, example: "10-10-2010T10:10:10" to {"10-10-2010", "10:10:10"}
+   *
+   * @param rawDateTime raw string date and time
+   * @return an array with two elements, where fist is the date and second the time, example: {"10-10-2010", "10:10:10"}
+   */
   public static String[] splitDateTime(String rawDateTime) {
     //Does value have time inside
     int timeDelimiterIdx = rawDateTime.indexOf(TIME_DELIMITER);
@@ -74,11 +83,23 @@ public class DelimiterUtils {
     return new String[] {date, time};
   }
 
+  /**
+   * Split raw date into an array with raw elements, example: "10-10-2010" to {"10", "10", "2010"}
+   *
+   * @param rawDate raw string date
+   * @return an array with raw elements, example: {"10", "10", "2010"}
+   */
   public static String[] splitDate(String rawDate) {
     String filtered = RGX_FILTER.matcher(rawDate).replaceAll(CHAR_REPLACE).trim();
     return RGX_REPLACE_CHAR.split(filtered);
   }
 
+  /**
+   * Split raw time into an array with raw elements, example: "10:10:10" to {"10", "10", "10"}
+   *
+   * @param rawTime raw string time
+   * @return an array with two elements, where fist is the date and second the time
+   */
   public static String[] splitTime(String rawTime) {
     String minus = RGX_MINUS.matcher(rawTime).replaceAll(MINUS);
     String plus = RGX_PLUS.matcher(minus).replaceAll(PLUS);

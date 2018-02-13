@@ -13,7 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 public class ParsedUnitUtils {
 
   private ParsedUnitUtils() {
-    //NOP
+    // Can't have an instance
   }
 
   public static Integer parseYear(String year) {

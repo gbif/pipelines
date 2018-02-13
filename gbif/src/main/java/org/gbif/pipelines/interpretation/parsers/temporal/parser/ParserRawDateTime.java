@@ -17,9 +17,17 @@ public class ParserRawDateTime {
   private static final Pattern RGX_PATTERN = Pattern.compile("[0-9]{2}");
 
   private ParserRawDateTime() {
-    //NOP
+    // Can't have an instance
   }
 
+  /**
+   * Parse year, month, day, hour, minute and second position in the raw date string, and save raw values into ChronoAccumulator
+   *
+   * @param rawDate    raw date and time string
+   * @param lastParsed if it is date "to", it can store only one value
+   *
+   * @return ChronoAccumulator which store all parsed values
+   */
   public static ChronoAccumulator parse(String rawDate, ChronoField lastParsed) {
     if (isEmpty(rawDate) || (!RGX_YEAR.matcher(rawDate).find() && !RGX_PATTERN.matcher(rawDate).find())) {
       return new ChronoAccumulator();

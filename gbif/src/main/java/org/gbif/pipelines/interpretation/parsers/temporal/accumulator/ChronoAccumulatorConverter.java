@@ -23,6 +23,9 @@ import static java.time.temporal.ChronoField.YEAR;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+/**
+ * The main function convert ChronoAccumulator to Temporal in approrative way
+ */
 public class ChronoAccumulatorConverter {
 
   private static final Map<ChronoField, Function<String, Integer>> FUNCTION_MAP = new EnumMap<>(ChronoField.class);
@@ -37,25 +40,11 @@ public class ChronoAccumulatorConverter {
   }
 
   private ChronoAccumulatorConverter() {
-    //NOP
+    // Can't have an instance
   }
 
   /**
-   * Converts raw value to integer and put into the map
-   *
-   * @param accumulator raw value for parsing
-   * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
-   */
-  private static Integer convert(ChronoAccumulator accumulator, ChronoField chronoField) {
-    String rawValue = accumulator.valueMap.get(chronoField);
-    if (isEmpty(rawValue)) {
-      return null;
-    }
-    return FUNCTION_MAP.get(chronoField).apply(rawValue);
-  }
-
-  /**
-   * Converts Map<ChronoField, Integer> to Temporal
+   * Converts ChronoAccumulator to Temporal
    *
    * @return some Temporal value: Year, YearMonth, LocalDate, LocalDateTime
    */
@@ -97,16 +86,51 @@ public class ChronoAccumulatorConverter {
     return Optional.of(localDateTime.withSecond(intSecond));
   }
 
+  /**
+   * Looks for the year in a ChronoAccumulator
+   *
+   * @param accumulator - where to look for a value
+   *
+   * @return Year value if present
+   */
   public static Optional<Year> getYear(ChronoAccumulator accumulator) {
     return Optional.ofNullable(convert(accumulator, YEAR)).map(Year::of);
   }
 
+  /**
+   * Looks for the month in a ChronoAccumulator
+   *
+   * @param accumulator - where to look for a value
+   *
+   * @return Month value if present
+   */
   public static Optional<Month> getMonth(ChronoAccumulator accumulator) {
     return Optional.ofNullable(convert(accumulator, MONTH_OF_YEAR)).map(Month::of);
   }
 
+  /**
+   * Looks for the day in a ChronoAccumulator
+   *
+   * @param accumulator - where to look for a value
+   *
+   * @return Integer day value if present
+   */
   public static Optional<Integer> getDay(ChronoAccumulator accumulator) {
     return Optional.ofNullable(convert(accumulator, DAY_OF_MONTH));
+  }
+
+  /**
+   * Converts raw value to integer and put into the map
+   *
+   * @param accumulator raw value for parsing
+   * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   */
+  private static Integer convert(ChronoAccumulator accumulator, ChronoField chronoField) {
+    String rawValue = accumulator.valueMap.get(chronoField);
+    if (isEmpty(rawValue)) {
+      return null;
+    }
+    return FUNCTION_MAP.get(chronoField).apply(rawValue);
   }
 
 }

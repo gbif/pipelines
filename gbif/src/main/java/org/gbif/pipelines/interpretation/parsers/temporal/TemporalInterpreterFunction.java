@@ -22,10 +22,10 @@ public class TemporalInterpreterFunction {
   private static final Function<CharSequence, String> CHAR_SEQUE_FUNC = cs -> Optional.ofNullable(cs).orElse("").toString();
 
   private TemporalInterpreterFunction() {
-    //NOP
+    // Can't have an instance
   }
 
-  public static ParsedTemporalDates apply(CharSequence year, CharSequence month, CharSequence day, CharSequence rawDate) {
+   public static ParsedTemporalDates apply(CharSequence year, CharSequence month, CharSequence day, CharSequence rawDate) {
     String strYear = CHAR_SEQUE_FUNC.apply(year);
     String strMonth = CHAR_SEQUE_FUNC.apply(month);
     String strDay = CHAR_SEQUE_FUNC.apply(day);

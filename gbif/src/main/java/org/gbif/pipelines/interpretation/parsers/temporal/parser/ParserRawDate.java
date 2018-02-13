@@ -4,6 +4,7 @@ import org.gbif.pipelines.interpretation.parsers.temporal.accumulator.ChronoAccu
 import org.gbif.pipelines.interpretation.parsers.temporal.utils.DelimiterUtils;
 
 import java.time.temporal.ChronoField;
+import java.util.function.Predicate;
 
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
@@ -17,12 +18,20 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
  */
 class ParserRawDate {
 
-  private static final int YEAR_LENGTH = 4;
+  private static final Predicate<String> YEAR_PREDICATE = year -> year.length() == 4 && isNumeric(year);
 
   private ParserRawDate() {
-    //NOP
+    // Can't have an instance
   }
 
+  /**
+   * Parse year, month and day index in the raw date string, and save raw values into ChronoAccumulator
+   *
+   * @param rawDate    raw date string
+   * @param lastParsed if it is date "to", it can store only one value
+   *
+   * @return ChronoAccumulator which store all parsed values
+   */
   public static ChronoAccumulator parse(String rawDate, ChronoField lastParsed) {
     if (isEmpty(rawDate)) {
       return new ChronoAccumulator();
@@ -44,10 +53,6 @@ class ParserRawDate {
     return new ChronoAccumulator();
   }
 
-  private static boolean isYear(String year) {
-    return year.length() == YEAR_LENGTH && isNumeric(year);
-  }
-
   private static ChronoAccumulator parseSizeOne(ChronoField lastParsed, String... dateArray) {
     ChronoAccumulator accumulator = new ChronoAccumulator();
     String first = dateArray[0];
@@ -59,7 +64,7 @@ class ParserRawDate {
       return parseSizeThree(year, month, day);
     }
     //If values is year
-    boolean isYearFirst = isYear(first);
+    boolean isYearFirst = YEAR_PREDICATE.test(first);
     if (isYearFirst) {
       accumulator.put(YEAR, first);
       return accumulator;
@@ -78,8 +83,8 @@ class ParserRawDate {
     ChronoAccumulator accumulator = new ChronoAccumulator();
     String first = dateArray[0];
     String second = dateArray[1];
-    boolean isYearFirst = isYear(first);
-    boolean isYearSecond = isYear(second);
+    boolean isYearFirst = YEAR_PREDICATE.test(first);
+    boolean isYearSecond = YEAR_PREDICATE.test(second);
     //If any of values is year, set year and month
     if (isYearFirst || isYearSecond) {
       accumulator.put(YEAR, isYearFirst ? first : second);
@@ -100,7 +105,7 @@ class ParserRawDate {
     String second = dateArray[1];
     String third = dateArray[2];
 
-    boolean isYearFirst = isYear(first);
+    boolean isYearFirst = YEAR_PREDICATE.test(first);
 
     //Parse year
     String year = isYearFirst ? first : third;
