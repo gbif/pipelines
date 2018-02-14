@@ -24,7 +24,7 @@ public class ExtendedRecordTransform extends PTransform<PCollection<ExtendedReco
 
   private final TupleTag<InterpretedExtendedRecord> interpretedExtendedRecordTupleTag = new TupleTag<InterpretedExtendedRecord>(){};
 
-  private final  TupleTag<org.gbif.pipelines.io.avro.OccurrenceIssue> occurrenceIssueTupleTag = new TupleTag<org.gbif.pipelines.io.avro.OccurrenceIssue>(){};
+  private final TupleTag<org.gbif.pipelines.io.avro.OccurrenceIssue> occurrenceIssueTupleTag = new TupleTag<org.gbif.pipelines.io.avro.OccurrenceIssue>(){};
 
   @Override
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
