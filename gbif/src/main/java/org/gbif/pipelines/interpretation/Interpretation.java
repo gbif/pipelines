@@ -175,5 +175,4 @@ public class Interpretation<T> implements Serializable {
             return remark;
         }
     }
-
 }
