@@ -1,67 +1,57 @@
 package org.gbif.pipelines.interpretation;
 
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.interpretation.parsers.VocabularyParsers;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationFactory;
+import org.gbif.pipelines.core.functions.interpretation.InterpretationResult;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.function.Function;
 
-public interface LocationInterpreter extends Function<ExtendedRecord,Interpretation<ExtendedRecord>> {
+public interface LocationInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
 
-  /**
-   * {@link DwcTerm#basisOfRecord} interpretation.
-   */
-  static LocationInterpreter interpretCountry(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) ->
-      VocabularyParsers
-        .countryParser()
-        .map(extendedRecord, parseResult -> {
-          Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-          if (parseResult.isSuccessful()) {
-            locationRecord.setCountry(parseResult.getPayload().name());
-          } else {
-            interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.COUNTRY_INVALID));
-          }
-          return interpretation;
-        }).get();
-  }
+    /**
+     * {@link DwcTerm#basisOfRecord} interpretation.
+     */
+    static LocationInterpreter interpretCountry(Location locationRecord) {
+        return (ExtendedRecord extendedRecord) -> {
+            InterpretationResult<String> result = InterpretationFactory.interpret(DwcTerm.country, extendedRecord.getCoreTerms().get(DwcTerm.country.qualifiedName()));
+            Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
 
-  /**
-   * {@link DwcTerm#basisOfRecord} interpretation.
-   */
-  static LocationInterpreter interpretCountryCode(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) ->
-      VocabularyParsers
-        .countryParser()
-        .map(extendedRecord, parseResult -> {
-          Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-          if (parseResult.isSuccessful()) {
-            locationRecord.setCountryCode(parseResult.getPayload().getIso3LetterCode());
-          } else {
-            interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.COUNTRY_INVALID));
-          }
-          return interpretation;
-        }).get();
-  }
+            locationRecord.setCountry(result.getResult().orElse(null));
+            finalResult.withValidation(DwcTerm.country.name(), result.getIssueList()).withLineage(DwcTerm.country.name(), result.getLineageList());
 
-  /**
-   * {@link DwcTerm#basisOfRecord} interpretation.
-   */
-  static LocationInterpreter interpretContinent(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) ->
-      VocabularyParsers
-        .continentParser()
-        .map(extendedRecord, parseResult -> {
-          Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-          if (parseResult.isSuccessful()) {
-            locationRecord.setContinent(parseResult.getPayload().name());
-          } else {
-            interpretation.withValidation(Interpretation.Trace.of(OccurrenceIssue.CONTINENT_INVALID));
-          }
-          return interpretation;
-        }).get();
-  }
+            return finalResult;
+        };
+    }
+
+    /**
+     * {@link DwcTerm#basisOfRecord} interpretation.
+     */
+    static LocationInterpreter interpretCountryCode(Location locationRecord) {
+        return (ExtendedRecord extendedRecord) -> {
+            InterpretationResult<String> result = InterpretationFactory.interpret(DwcTerm.countryCode, extendedRecord.getCoreTerms().get(DwcTerm.countryCode.qualifiedName()));
+            Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
+            locationRecord.setCountryCode(result.getResult().orElse(null));
+            finalResult.withValidation(DwcTerm.countryCode.name(), result.getIssueList()).withLineage(DwcTerm.countryCode.name(), result.getLineageList());
+
+            return finalResult;
+        };
+    }
+
+    /**
+     * {@link DwcTerm#basisOfRecord} interpretation.
+     */
+    static LocationInterpreter interpretContinent(Location locationRecord) {
+        return (ExtendedRecord extendedRecord) -> {
+            InterpretationResult<String> result = InterpretationFactory.interpret(DwcTerm.continent, extendedRecord.getCoreTerms().get(DwcTerm.continent.qualifiedName()));
+            Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
+
+            locationRecord.setContinent(result.getResult().orElse(null));
+            finalResult.withValidation(DwcTerm.continent.name(), result.getIssueList()).withLineage(DwcTerm.continent.name(), result.getLineageList());
+
+            return finalResult;
+        };
+    }
 }

@@ -8,5 +8,5 @@ package org.gbif.pipelines.core.functions.interpretation;
 @FunctionalInterface
 interface Interpretable<T> {
 
-  <U> InterpretationResult<U> interpret(T input);
+    <U> InterpretationResult<U> interpret(T input);
 }

@@ -57,8 +57,7 @@ public class ExtendedRecordTransform extends PTransform<PCollection<ExtendedReco
           .using(ExtendedRecordInterpreter.interpretEstablishmentMeans(interpretedExtendedRecord))
           .using(ExtendedRecordInterpreter.interpretLifeStage(interpretedExtendedRecord))
           .using(ExtendedRecordInterpreter.interpretTypeStatus(interpretedExtendedRecord))
-          .using(ExtendedRecordInterpreter.interpretIndividualCount(interpretedExtendedRecord))
-          .forEachValidation(trace ->  validations.add(toValidation(trace.getContext())));
+          .using(ExtendedRecordInterpreter.interpretIndividualCount(interpretedExtendedRecord));
 
         //additional outputs
         if (!validations.isEmpty()) {

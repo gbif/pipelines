@@ -13,88 +13,88 @@ import java.util.function.Consumer;
  */
 public class InterpretationResult<T> {
 
-  private final Optional<T> result;
-  private final boolean isSuccessFull;
-  private final List<Issue> issueList;
-  private final List<Lineage> lineageList;
+    private final Optional<T> result;
+    private final boolean isSuccessFull;
+    private final List<Issue> issueList;
+    private final List<Lineage> lineageList;
 
-  /**
-   * use this method to get InterpretationResult when the interpretation was successful
-   */
-  public static <U> InterpretationResult<U> withSuccess(U result) {
-    return new InterpretationResult<>(Optional.ofNullable(result), true, new ArrayList<>(), new ArrayList<>());
-  }
-
-  /**
-   * use this method to get InterpretationResult when the interpretation was failed or interpreted with issues and lineages
-   */
-  public static <U> InterpretationResult<U> withIssueAndLineage(
-    U interpretedResult, List<Issue> issues, List<Lineage> lineages
-  ) {
-    return new InterpretationResult<>(Optional.ofNullable(interpretedResult), false, issues, lineages);
-  }
-
-  private InterpretationResult(
-    Optional<T> result, boolean isSuccessFull, List<Issue> issueList, List<Lineage> lineageList
-  ) {
-    this.result = result;
-    this.isSuccessFull = isSuccessFull;
-    this.issueList = issueList;
-    this.lineageList = lineageList;
-  }
-
-  /**
-   * returns interpreted result
-   */
-  public Optional<T> getResult() {
-    return result;
-  }
-
-  /**
-   * interpretation was successful true when done without issues and lineages
-   */
-  public boolean isSuccessFull() {
-    return isSuccessFull;
-  }
-
-  /**
-   * helps embedding custom code with appropriate actions when the result was succesfull or failed
-   */
-  public void ifSuccessFulThenElse(
-    Consumer<InterpretationResult<T>> successfulConsumer, Consumer<InterpretationResult<T>> failedConsumer
-  ) {
-    if (this.isSuccessFull) {
-      successfulConsumer.accept(this);
-    } else {
-      failedConsumer.accept(this);
+    private InterpretationResult(
+            Optional<T> result, boolean isSuccessFull, List<Issue> issueList, List<Lineage> lineageList
+    ) {
+        this.result = result;
+        this.isSuccessFull = isSuccessFull;
+        this.issueList = issueList;
+        this.lineageList = lineageList;
     }
-  }
 
-  /**
-   * get list of issues
-   */
-  public List<Issue> getIssueList() {
-    return issueList;
-  }
+    /**
+     * use this method to get InterpretationResult when the interpretation was successful
+     */
+    public static <U> InterpretationResult<U> withSuccess(U result) {
+        return new InterpretationResult<>(Optional.ofNullable(result), true, new ArrayList<>(), new ArrayList<>());
+    }
 
-  /**
-   * get List of lineages
-   */
-  public List<Lineage> getLineageList() {
-    return lineageList;
-  }
+    /**
+     * use this method to get InterpretationResult when the interpretation was failed or interpreted with issues and lineages
+     */
+    public static <U> InterpretationResult<U> withIssueAndLineage(
+            U interpretedResult, List<Issue> issues, List<Lineage> lineages
+    ) {
+        return new InterpretationResult<>(Optional.ofNullable(interpretedResult), false, issues, lineages);
+    }
 
-  @Override
-  public String toString() {
-    return "InterpretationResult{"
-           + "result="
-           + result
-           + ", isSuccessFull="
-           + isSuccessFull
-           + ", issueList="
-           + issueList
-           + ", lineageList="
-           + lineageList
-           + '}';
-  }
+    /**
+     * returns interpreted result
+     */
+    public Optional<T> getResult() {
+        return result;
+    }
+
+    /**
+     * interpretation was successful true when done without issues and lineages
+     */
+    public boolean isSuccessFull() {
+        return isSuccessFull;
+    }
+
+    /**
+     * helps embedding custom code with appropriate actions when the result was succesfull or failed
+     */
+    public void ifSuccessFulThenElse(
+            Consumer<InterpretationResult<T>> successfulConsumer, Consumer<InterpretationResult<T>> failedConsumer
+    ) {
+        if (this.isSuccessFull) {
+            successfulConsumer.accept(this);
+        } else {
+            failedConsumer.accept(this);
+        }
+    }
+
+    /**
+     * get list of issues
+     */
+    public List<Issue> getIssueList() {
+        return issueList;
+    }
+
+    /**
+     * get List of lineages
+     */
+    public List<Lineage> getLineageList() {
+        return lineageList;
+    }
+
+    @Override
+    public String toString() {
+        return "InterpretationResult{"
+                + "result="
+                + result
+                + ", isSuccessFull="
+                + isSuccessFull
+                + ", issueList="
+                + issueList
+                + ", lineageList="
+                + lineageList
+                + '}';
+    }
 }

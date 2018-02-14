@@ -16,25 +16,25 @@ import java.util.List;
  */
 class CountryInterpreter implements Interpretable<String> {
 
-  @Override
-  public InterpretationResult<String> interpret(String input) {
-    ParseResult<Country> parseCountry = CountryParser.getInstance().parse(input.trim());
-    if (parseCountry.isSuccessful()) {
-      return InterpretationResult.withSuccess(parseCountry.getPayload().getTitle());
-    } else {
-      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                                                             .setIssueType(IssueType.PARSE_ERROR)
-                                                             .setRemark(parseCountry.getError() != null
-                                                                          ? parseCountry.getError().getMessage()
-                                                                          : "Parse failed as null")
-                                                             .build());
-      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
-                                                                 .setLineageType(LineageType.SET_TO_NULL)
-                                                                 .setRemark(
-                                                                   "Since the parse on country failed, interpreting as null")
-                                                                 .build());
-      return InterpretationResult.withIssueAndLineage(null, issues, lineages);
-    }
+    @Override
+    public InterpretationResult<String> interpret(String input) {
+        ParseResult<Country> parseCountry = CountryParser.getInstance().parse(input.trim());
+        if (parseCountry.isSuccessful()) {
+            return InterpretationResult.withSuccess(parseCountry.getPayload().getTitle());
+        } else {
+            final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                    .setIssueType(IssueType.PARSE_ERROR)
+                    .setRemark(parseCountry.getError() != null
+                            ? parseCountry.getError().getMessage()
+                            : "Parse failed as null")
+                    .build());
+            final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+                    .setLineageType(LineageType.SET_TO_NULL)
+                    .setRemark(
+                            "Since the parse on country failed, interpreting as null")
+                    .build());
+            return InterpretationResult.withIssueAndLineage(null, issues, lineages);
+        }
 
-  }
+    }
 }
