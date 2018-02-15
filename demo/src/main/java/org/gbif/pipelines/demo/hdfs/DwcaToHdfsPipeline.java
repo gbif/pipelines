@@ -2,19 +2,22 @@ package org.gbif.pipelines.demo.hdfs;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.core.functions.descriptor.CustomTypeDescriptors;
+import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
-import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.options.PipelineOptions;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,28 +38,32 @@ public class DwcaToHdfsPipeline {
    */
   public static void main(String[] args) {
 
-    PipelineOptions options = PipelineOptionsFactory.create();
-    options.setRunner(DirectRunner.class); // forced for this demo
-    Pipeline p = Pipeline.create(options);
+    Configuration config = new Configuration();
+    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(config, args);
+    Pipeline pipeline = Pipeline.create(options);
+
+    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
 
     // register Avro coders for serializing our messages
-    Coders.registerAvroCoders(p, ExtendedRecord.class, UntypedOccurrence.class);
+    Coders.registerAvroCoders(pipeline, ExtendedRecord.class, UntypedOccurrence.class);
 
     // Read the DwC-A using our custom reader
-    PCollection<ExtendedRecord> rawRecords = p.apply(
-      "Read from Darwin Core Archive", DwCAIO.Read.withPaths("demo/dwca.zip", "demo/target/tmp"));
+    PCollection<ExtendedRecord> rawRecords =
+      pipeline.apply("Read from Darwin Core Archive", DwCAIO.Read.withPaths("demo/dwca.zip", "demo/target/tmp"));
 
-    // Convert the ExtendedRecord into an UntypedOccurrence record
+    // TODO: Explore the generics as to whßy the coder registry does not find it and we need to set the coder explicitly
     PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
-      "Convert the objects into untyped DwC style records"
-      , MapElements.into(CustomTypeDescriptors.untypedOccurrencies()).via(FunctionFactory.untypedOccurrenceBuilder()::apply));
+      "Convert the objects into untyped DwC style records",
+      MapElements.into(CustomTypeDescriptors.untypedOccurrencies())
+        .via(FunctionFactory.untypedOccurrenceBuilder()::apply)).setCoder(AvroCoder.of(UntypedOccurrence.class));
 
-    // Write the result as an Avro file
-    rawRecords.apply(
-      "Save the records as Avro", AvroIO.write(ExtendedRecord.class).to("demo/output/data"));
+    verbatimRecords.apply("Write Avro files",
+                          AvroIO.write(UntypedOccurrence.class)
+                            .to(targetPath)
+                            .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     LOG.info("Starting the pipeline");
-    PipelineResult result = p.run();
+    PipelineResult result = pipeline.run();
     result.waitUntilFinish();
     LOG.info("Pipeline finished with state: {} ", result.getState());
 

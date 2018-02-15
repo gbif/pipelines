@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -55,11 +56,12 @@ public class DwcaToHdfsTestingPipeline {
     PCollection<ExtendedRecord> rawRecords =
       pipeline.apply("Read from Darwin Core Archive", DwCAIO.Read.withPaths(options.getInputFile(), tmpDirDwca));
 
-    // Convert the ExtendedRecord into an UntypedOccurrence record
-    PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
-      "Convert the objects into untyped DwC style records",
-      MapElements.into(CustomTypeDescriptors.untypedOccurrencies())
-        .via(FunctionFactory.untypedOccurrenceBuilder()::apply));
+        // TODO: Explore the generics as to whßy the coder registry does not find it and we need to set the coder explicitly
+    PCollection<UntypedOccurrence> verbatimRecords =
+      rawRecords.apply("Convert the objects into untyped DwC style records",
+                       MapElements.into(CustomTypeDescriptors.untypedOccurrencies())
+                                  .via(FunctionFactory.untypedOccurrenceBuilder()::apply))
+        .setCoder(AvroCoder.of(UntypedOccurrence.class));
 
     verbatimRecords.apply("Write Avro files",
                           AvroIO.write(UntypedOccurrence.class)
