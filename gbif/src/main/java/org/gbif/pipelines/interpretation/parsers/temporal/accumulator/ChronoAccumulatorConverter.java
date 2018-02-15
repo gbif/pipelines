@@ -1,5 +1,6 @@
 package org.gbif.pipelines.interpretation.parsers.temporal.accumulator;
 
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.pipelines.interpretation.parsers.temporal.utils.ParsedUnitUtils;
 
 import java.time.LocalDate;
@@ -10,6 +11,7 @@ import java.time.YearMonth;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -28,6 +30,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  */
 public class ChronoAccumulatorConverter {
 
+  private static final Year OLD_YEAR = Year.of(1600);
   private static final Map<ChronoField, Function<String, Integer>> FUNCTION_MAP = new EnumMap<>(ChronoField.class);
 
   static {
@@ -48,38 +51,52 @@ public class ChronoAccumulatorConverter {
    *
    * @return some Temporal value: Year, YearMonth, LocalDate, LocalDateTime
    */
-  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator) {
-    Integer intYear = convert(accumulator, YEAR);
+  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator, List<OccurrenceIssue> issueList) {
+
+    //Check Year
+    Integer intYear = convert(accumulator, YEAR, issueList);
     if (intYear == null) {
       return Optional.empty();
     }
     Year year = Year.of(intYear);
+    if(year.isBefore(OLD_YEAR)){
+      issueList.add(OccurrenceIssue.RECORDED_DATE_UNLIKELY);
+    }
 
-    Integer intMonth = convert(accumulator, MONTH_OF_YEAR);
+    //Check Month
+    Integer intMonth = convert(accumulator, MONTH_OF_YEAR, issueList);
     if (intMonth == null) {
       return Optional.of(year);
     }
     YearMonth yearMonth = year.atMonth(intMonth);
 
-    Integer intDay = convert(accumulator, DAY_OF_MONTH);
-    if (intDay == null || !yearMonth.isValidDay(intDay)) {
+    //Check Day
+    Integer intDay = convert(accumulator, DAY_OF_MONTH, issueList);
+    if (intDay == null) {
+      return Optional.of(yearMonth);
+    }
+    if(!yearMonth.isValidDay(intDay)){
+      issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
       return Optional.of(yearMonth);
     }
     LocalDate localDate = yearMonth.atDay(intDay);
 
-    Integer intHour = convert(accumulator, HOUR_OF_DAY);
+    //Check Hour
+    Integer intHour = convert(accumulator, HOUR_OF_DAY, issueList);
     if (intHour == null) {
       return Optional.of(localDate);
     }
     LocalDateTime localDateTime = localDate.atTime(intHour, 0);
 
-    Integer intMonute = convert(accumulator, MINUTE_OF_HOUR);
+    //Check Minute
+    Integer intMonute = convert(accumulator, MINUTE_OF_HOUR, issueList);
     if (intMonute == null) {
       return Optional.of(localDateTime);
     }
     localDateTime = localDateTime.withMinute(intMonute);
 
-    Integer intSecond = convert(accumulator, SECOND_OF_MINUTE);
+    //Check Second
+    Integer intSecond = convert(accumulator, SECOND_OF_MINUTE, issueList);
     if (intSecond == null) {
       return Optional.of(localDateTime);
     }
@@ -93,8 +110,8 @@ public class ChronoAccumulatorConverter {
    *
    * @return Year value if present
    */
-  public static Optional<Year> getYear(ChronoAccumulator accumulator) {
-    return Optional.ofNullable(convert(accumulator, YEAR)).map(Year::of);
+  public static Optional<Year> getYear(ChronoAccumulator accumulator, List<OccurrenceIssue> issueList) {
+    return Optional.ofNullable(convert(accumulator, YEAR, issueList)).map(Year::of);
   }
 
   /**
@@ -104,8 +121,8 @@ public class ChronoAccumulatorConverter {
    *
    * @return Month value if present
    */
-  public static Optional<Month> getMonth(ChronoAccumulator accumulator) {
-    return Optional.ofNullable(convert(accumulator, MONTH_OF_YEAR)).map(Month::of);
+  public static Optional<Month> getMonth(ChronoAccumulator accumulator, List<OccurrenceIssue> issueList) {
+    return Optional.ofNullable(convert(accumulator, MONTH_OF_YEAR, issueList)).map(Month::of);
   }
 
   /**
@@ -115,8 +132,8 @@ public class ChronoAccumulatorConverter {
    *
    * @return Integer day value if present
    */
-  public static Optional<Integer> getDay(ChronoAccumulator accumulator) {
-    return Optional.ofNullable(convert(accumulator, DAY_OF_MONTH));
+  public static Optional<Integer> getDay(ChronoAccumulator accumulator, List<OccurrenceIssue> issueList) {
+    return Optional.ofNullable(convert(accumulator, DAY_OF_MONTH, issueList));
   }
 
   /**
@@ -125,12 +142,16 @@ public class ChronoAccumulatorConverter {
    * @param accumulator raw value for parsing
    * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
-  private static Integer convert(ChronoAccumulator accumulator, ChronoField chronoField) {
+  private static Integer convert(ChronoAccumulator accumulator, ChronoField chronoField, List<OccurrenceIssue> issueList) {
     String rawValue = accumulator.valueMap.get(chronoField);
     if (isEmpty(rawValue)) {
       return null;
     }
-    return FUNCTION_MAP.get(chronoField).apply(rawValue);
+    Integer value = FUNCTION_MAP.get(chronoField).apply(rawValue);
+    if (value == null) {
+      issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+    }
+    return value;
   }
 
 }

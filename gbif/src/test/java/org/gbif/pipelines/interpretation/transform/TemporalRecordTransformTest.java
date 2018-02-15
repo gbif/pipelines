@@ -1,10 +1,11 @@
-package org.gbif.pipelines.interpretation;
+package org.gbif.pipelines.interpretation.transform;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transform.TemporalRecordTransform;
 
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -75,7 +76,7 @@ public class TemporalRecordTransformTest {
     TemporalRecordTransform temporalRecord = new TemporalRecordTransform();
     PCollectionTuple tuple = inputStream.apply(temporalRecord);
 
-    PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTag());
+    PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTupleTag());
 
     //Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);
@@ -102,7 +103,7 @@ public class TemporalRecordTransformTest {
         .setYear(x.getYear().map(Year::getValue).orElse(null))
         .setMonth(x.getMonth().map(Month::getValue).orElse(null))
         .setDay(x.getDay().orElse(null))
-        .setEventDate(String.join("||", from, to))
+        .setEventDate(String.join("/", from, to))
         .build();
     }).collect(Collectors.toList());
   }

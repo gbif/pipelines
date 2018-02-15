@@ -1,4 +1,6 @@
-package org.gbif.pipelines.interpretation.parsers.temporal;
+package org.gbif.pipelines.interpretation.parsers;
+
+import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalDates;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,7 +13,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-public class TemporalInterpreterFunctionTest {
+public class TemporalParserTest {
 
   @Test
   public void testAllNull() {
@@ -22,7 +24,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertFalse(result.getFrom().isPresent());
@@ -40,7 +42,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -55,7 +57,7 @@ public class TemporalInterpreterFunctionTest {
     String day = "01";
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertFalse(result.getFrom().isPresent());
     assertFalse(result.getTo().isPresent());
@@ -72,7 +74,7 @@ public class TemporalInterpreterFunctionTest {
     String day = "1";
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -88,7 +90,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -104,7 +106,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -120,7 +122,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -136,7 +138,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "05";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -152,7 +154,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -169,7 +171,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "01";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
@@ -186,7 +188,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
@@ -203,7 +205,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "12";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
@@ -220,7 +222,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "17";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
@@ -237,7 +239,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "08";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
@@ -253,7 +255,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -269,7 +271,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -285,7 +287,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -301,7 +303,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -317,7 +319,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -333,7 +335,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -349,7 +351,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -366,7 +368,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -383,7 +385,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "4";
     String day = "1";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -399,7 +401,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -415,7 +417,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -431,7 +433,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -447,7 +449,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -463,7 +465,7 @@ public class TemporalInterpreterFunctionTest {
     String month = "04";
     String day = "01";
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
@@ -480,7 +482,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -498,7 +500,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -517,7 +519,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
 
     //Should
@@ -537,7 +539,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -556,7 +558,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -575,7 +577,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -590,7 +592,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertFalse(result.getFrom().isPresent());
@@ -608,7 +610,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -626,7 +628,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -645,7 +647,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -664,7 +666,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -682,7 +684,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -700,7 +702,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -718,7 +720,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -736,7 +738,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -754,7 +756,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -772,7 +774,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -788,7 +790,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertFalse(result.getFrom().isPresent());
@@ -804,7 +806,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
     //Should
     assertFalse(result.getFrom().isPresent());
     assertFalse(result.getTo().isPresent());
@@ -822,7 +824,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -840,7 +842,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -857,7 +859,7 @@ public class TemporalInterpreterFunctionTest {
     String day = "1";
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -875,7 +877,7 @@ public class TemporalInterpreterFunctionTest {
     String day = null;
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());
@@ -892,7 +894,7 @@ public class TemporalInterpreterFunctionTest {
     String day = "28";
 
     //When
-    ParsedTemporalDates result = TemporalInterpreterFunction.apply(year, month, day, eventDate);
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
     //Should
     assertEquals(expectedFirst, result.getFrom().get());

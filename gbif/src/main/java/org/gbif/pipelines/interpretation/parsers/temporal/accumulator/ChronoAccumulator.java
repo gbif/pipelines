@@ -4,11 +4,13 @@ import java.time.temporal.ChronoField;
 import java.util.EnumMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.YEAR;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 /**
  * The accumulator class for storing all parsed chrono fields
@@ -33,7 +35,7 @@ public class ChronoAccumulator {
    * @param rawValue raw value for parsing
    */
   public void put(ChronoField key, String rawValue) {
-    if (isEmpty(rawValue)) {
+    if (StringUtils.isEmpty(rawValue)) {
       return;
     }
     valueMap.put(key, rawValue);
@@ -73,6 +75,13 @@ public class ChronoAccumulator {
    */
   public void putAllIfAbsent(ChronoAccumulator accumulator) {
     accumulator.valueMap.forEach(valueMap::putIfAbsent);
+  }
+
+  /**
+   * Checks all value in the folder are numeric, except month
+   */
+  public boolean areAllNumeric() {
+    return valueMap.entrySet().stream().anyMatch(x -> !x.getKey().equals(MONTH_OF_YEAR) && !isNumeric(x.getValue()));
   }
 
 }
