@@ -81,7 +81,7 @@ public class ParsedTemporalDates {
   }
 
   public boolean hasIssue() {
-    return issueList.isEmpty();
+    return !issueList.isEmpty();
   }
 
   public List<OccurrenceIssue> getIssueList() {
