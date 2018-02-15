@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * Darwin Core specification (http://rs.tdwg.org/dwc/terms/).
  * <p>
  * The interpretation uses the species match WS to match the taxonomic fields to an existing specie. Configuration
- * of the WS has to be set in the "species-ws.properties".
+ * of the WS has to be set in the "ws.properties".
  * </p>
  */
 public class TaxonomyInterpreter {

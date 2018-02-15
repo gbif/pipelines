@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ws.match2;
+package org.gbif.pipelines.ws.geocode;
 
 import org.gbif.pipelines.ws.config.Config;
 import org.gbif.pipelines.ws.config.Service;
@@ -12,23 +12,23 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /*
  * Singleton to create the species match 2 service.
  */
-public enum SpeciesMatch2ServiceRest {
+public enum GeocodeServiceRest {
 
   SINGLE;
 
-  private SpeciesMatch2Service service;
+  private GeocodeService service;
 
-  SpeciesMatch2ServiceRest() {
+  GeocodeServiceRest() {
     init();
   }
 
-  public SpeciesMatch2Service getService() {
+  public GeocodeService getService() {
     return service;
   }
 
   void init() {
     // load WS Config
-    Config wsConfig = WsConfiguration.of(Service.SPECIES_MATCH2).getConfigOrThrowException();
+    Config wsConfig = WsConfiguration.of(Service.GEO_CODE).getConfigOrThrowException();
 
     // create client
     OkHttpClient client = WsUtils.createClientWithCache(wsConfig);
@@ -40,8 +40,7 @@ public enum SpeciesMatch2ServiceRest {
       .validateEagerly(true)
       .build();
 
-    service = retrofit.create(SpeciesMatch2Service.class);
-
+    service = retrofit.create(GeocodeService.class);
   }
 
 }
