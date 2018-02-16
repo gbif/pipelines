@@ -3,6 +3,7 @@ package org.gbif.pipelines.interpretation.parsers.temporal.accumulator;
 import java.time.temporal.ChronoField;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -45,8 +46,8 @@ public class ChronoAccumulator {
   /**
    * @return last parsed chrono field
    */
-  public ChronoField getLastParsed() {
-    return lastParsed;
+  public Optional<ChronoField> getLastParsed() {
+    return Optional.ofNullable(lastParsed);
   }
 
   /**
@@ -55,9 +56,7 @@ public class ChronoAccumulator {
    */
   public ChronoAccumulator merge(ChronoAccumulator chronoAccumulator) {
     valueMap.putAll(chronoAccumulator.valueMap);
-    if (chronoAccumulator.getLastParsed() != null) {
-      lastParsed = chronoAccumulator.getLastParsed();
-    }
+    chronoAccumulator.getLastParsed().ifPresent(chronoField -> this.lastParsed = chronoField);
     return this;
   }
 

@@ -2,6 +2,7 @@ package org.gbif.pipelines.interpretation.parsers.temporal.utils;
 
 import java.text.DateFormatSymbols;
 import java.time.Year;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -16,34 +17,34 @@ public class ParsedUnitUtils {
     // Can't have an instance
   }
 
-  public static Integer parseYear(String year) {
+  public static Optional<Integer> parseYear(String year) {
     return parseInteger(year, x -> x > Year.now().getValue() || x < 1000);
   }
 
-  public static Integer parseMonth(String month) {
+  public static Optional<Integer> parseMonth(String month) {
     if (isEmpty(month)) {
-      return null;
+      return Optional.empty();
     }
     return isNumeric(month) ? parseMonthAsInt(month) : parseMonthAsString(month);
   }
 
-  public static Integer parseDay(String day) {
+  public static Optional<Integer> parseDay(String day) {
     return parseInteger(day, x -> x < 1 || x > 31);
   }
 
-  public static Integer parseHour(String hour) {
+  public static Optional<Integer> parseHour(String hour) {
     return parseInteger(hour, x -> x < 0 || x > 23);
   }
 
-  public static Integer parseMinute(String minute) {
+  public static Optional<Integer> parseMinute(String minute) {
     return parseInteger(minute, x -> x < 0 || x > 59);
   }
 
-  public static Integer parseSecond(String second) {
+  public static Optional<Integer> parseSecond(String second) {
     return parseInteger(second, x -> x < 0 || x > 59);
   }
 
-  private static Integer parseMonthAsString(String month) {
+  private static Optional<Integer> parseMonthAsString(String month) {
     Integer intMonth = null;
     String[] months = DateFormatSymbols.getInstance().getMonths();
     for (int x = 0; x < months.length; x++) {
@@ -52,10 +53,10 @@ public class ParsedUnitUtils {
         break;
       }
     }
-    return intMonth;
+    return Optional.ofNullable(intMonth);
   }
 
-  private static Integer parseMonthAsInt(String month) {
+  private static Optional<Integer> parseMonthAsInt(String month) {
     return parseInteger(month, x -> x < 1 || x > 12);
   }
 
@@ -67,9 +68,9 @@ public class ParsedUnitUtils {
    *
    * @return parsed value or ISSUE(-1) value, if value is invalid
    */
-  private static Integer parseInteger(String rawValue, Predicate<Integer> validator) {
+  private static Optional<Integer> parseInteger(String rawValue, Predicate<Integer> validator) {
     Integer value = (!isEmpty(rawValue) && isNumeric(rawValue) && rawValue.length() < 5) ? Integer.valueOf(rawValue) : -1;
-    return validator.test(value) ? null : value;
+    return validator.test(value) ? Optional.empty() : Optional.of(value);
   }
 
 }

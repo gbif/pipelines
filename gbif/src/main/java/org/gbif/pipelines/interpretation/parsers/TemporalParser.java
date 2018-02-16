@@ -56,20 +56,20 @@ public class TemporalParser {
     String[] rawPeriod = DelimiterUtils.splitPeriod(rawDate);
     String rawFrom = rawPeriod[0];
     String rawTo = rawPeriod[1];
-    ChronoAccumulator fromAccumulator = ParserRawDateTime.parse(rawFrom, baseAccumulator.getLastParsed());
-    ChronoAccumulator toAccumulator = ParserRawDateTime.parse(rawTo, fromAccumulator.getLastParsed());
+    ChronoAccumulator fromAccumulator = ParserRawDateTime.parse(rawFrom, null);
+    ChronoAccumulator toAccumulator = ParserRawDateTime.parse(rawTo, fromAccumulator.getLastParsed().orElse(null));
 
     if (fromAccumulator.areAllNumeric() || (!isEmpty(rawTo) && toAccumulator.areAllNumeric())) {
       issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
     }
 
     // If toAccumulator doesn't contain last parsed value, raw date will consist of one date only
-    if (toAccumulator.getLastParsed() == null) {
-      // Use baseAccumulator value toAccumulator improve parsed date
-      fromAccumulator.putAllAndReplce(baseAccumulator);
-    } else {
+    if (toAccumulator.getLastParsed().isPresent()) {
       // Use toAccumulator value toAccumulator improve fromAccumulator parsed date
       toAccumulator.putAllIfAbsent(fromAccumulator);
+    } else {
+      // Use baseAccumulator value toAccumulator improve parsed date
+      fromAccumulator.putAllAndReplce(baseAccumulator);
     }
 
     Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccumulator, issueList);
