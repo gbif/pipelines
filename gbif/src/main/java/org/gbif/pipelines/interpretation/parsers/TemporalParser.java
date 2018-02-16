@@ -59,7 +59,7 @@ public class TemporalParser {
     ChronoAccumulator fromAccumulator = ParserRawDateTime.parse(rawFrom, baseAccumulator.getLastParsed());
     ChronoAccumulator toAccumulator = ParserRawDateTime.parse(rawTo, fromAccumulator.getLastParsed());
 
-    if (fromAccumulator.areAllNumeric() || (!isEmpty(rawTo) && toAccumulator.areAllNumeric() )) {
+    if (fromAccumulator.areAllNumeric() || (!isEmpty(rawTo) && toAccumulator.areAllNumeric())) {
       issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
     }
 

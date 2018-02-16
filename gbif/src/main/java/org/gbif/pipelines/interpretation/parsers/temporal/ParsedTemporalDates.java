@@ -80,10 +80,6 @@ public class ParsedTemporalDates {
     this.issueList = issueList;
   }
 
-  public boolean hasIssue() {
-    return !issueList.isEmpty();
-  }
-
   public List<OccurrenceIssue> getIssueList() {
     return issueList;
   }

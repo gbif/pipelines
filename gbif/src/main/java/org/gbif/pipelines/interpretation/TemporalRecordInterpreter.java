@@ -48,9 +48,7 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
       temporalRecord.setEventDate(eventDay);
 
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      if (temporalDates.hasIssue()) {
-        temporalDates.getIssueList().forEach(issue -> interpretation.withValidation(Interpretation.Trace.of(issue)));
-      }
+      temporalDates.getIssueList().forEach(issue -> interpretation.withValidation(Interpretation.Trace.of(issue)));
       return interpretation;
     };
   }
