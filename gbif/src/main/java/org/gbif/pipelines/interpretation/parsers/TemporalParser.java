@@ -66,10 +66,10 @@ public class TemporalParser {
     // If toAccumulator doesn't contain last parsed value, raw date will consist of one date only
     if (toAccumulator.getLastParsed().isPresent()) {
       // Use toAccumulator value toAccumulator improve fromAccumulator parsed date
-      toAccumulator.putAllIfAbsent(fromAccumulator);
+      toAccumulator.mergeAbsent(fromAccumulator);
     } else {
       // Use baseAccumulator value toAccumulator improve parsed date
-      fromAccumulator.putAllAndReplce(baseAccumulator);
+      fromAccumulator.mergeReplace(baseAccumulator);
     }
 
     Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccumulator, issueList);

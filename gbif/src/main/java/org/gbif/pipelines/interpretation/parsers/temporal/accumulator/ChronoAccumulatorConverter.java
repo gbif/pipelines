@@ -23,14 +23,13 @@ import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
 /**
  * The main function convert ChronoAccumulator to Temporal in approrative way
  */
 public class ChronoAccumulatorConverter {
 
   private static final Year OLD_YEAR = Year.of(1600);
+
   private static final Map<ChronoField, Function<String, Optional<Integer>>> FUNCTION_MAP = new EnumMap<>(ChronoField.class);
 
   static {
@@ -68,13 +67,14 @@ public class ChronoAccumulatorConverter {
     if (!intMonth.isPresent()) {
       return Optional.of(year);
     }
-    YearMonth yearMonth = year.atMonth(intMonth.get());
 
+    YearMonth yearMonth = year.atMonth(intMonth.get());
     //Check Day
     Optional<Integer> intDay = convert(accumulator, DAY_OF_MONTH, issueList);
     if (!intDay.isPresent()) {
       return Optional.of(yearMonth);
     }
+
     if (!yearMonth.isValidDay(intDay.get())) {
       issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
       return Optional.of(yearMonth);
@@ -89,11 +89,11 @@ public class ChronoAccumulatorConverter {
     LocalDateTime localDateTime = localDate.atTime(intHour.get(), 0);
 
     //Check Minute
-    Optional<Integer> intMonute = convert(accumulator, MINUTE_OF_HOUR, issueList);
-    if (!intMonute.isPresent()) {
+    Optional<Integer> intMinute = convert(accumulator, MINUTE_OF_HOUR, issueList);
+    if (!intMinute.isPresent()) {
       return Optional.of(localDateTime);
     }
-    localDateTime = localDateTime.withMinute(intMonute.get());
+    localDateTime = localDateTime.withMinute(intMinute.get());
 
     //Check Second
     Optional<Integer> intSecond = convert(accumulator, SECOND_OF_MINUTE, issueList);
@@ -137,21 +137,21 @@ public class ChronoAccumulatorConverter {
   }
 
   /**
-   * Converts raw value to integer and put into the map
+   * Converts raw value to integer and setChronoField into the map
    *
    * @param accumulator raw value for parsing
    * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
   private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField chronoField, List<OccurrenceIssue> issueList) {
-    String rawValue = accumulator.valueMap.get(chronoField);
-    if (isEmpty(rawValue)) {
-      return Optional.empty();
+    Optional<String> rawValue = accumulator.getChronoFileValue(chronoField);
+    if (rawValue.isPresent()) {
+      Optional<Integer> value = FUNCTION_MAP.get(chronoField).apply(rawValue.get());
+      if (!value.isPresent()) {
+        issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+      }
+      return value;
     }
-    Optional<Integer> value = FUNCTION_MAP.get(chronoField).apply(rawValue);
-    if (!value.isPresent()) {
-      issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
-    }
-    return value;
+    return Optional.empty();
   }
 
 }

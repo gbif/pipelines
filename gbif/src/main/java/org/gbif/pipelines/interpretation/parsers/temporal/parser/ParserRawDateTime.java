@@ -38,7 +38,7 @@ public class ParserRawDateTime {
     //Interpret date and time separately
     ChronoAccumulator temporalDate = ParserRawDate.parse(dateTimeArray[0], lastParsed);
     ChronoAccumulator temporalTime = ParserRawTime.parse(dateTimeArray[1]);
-    return temporalDate.merge(temporalTime);
+    return temporalDate.mergeReplace(temporalTime);
   }
 
 }

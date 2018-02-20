@@ -13,6 +13,9 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
  */
 public class ParsedUnitUtils {
 
+  //Cached instance
+  private static final String[] MONTHS = DateFormatSymbols.getInstance().getMonths();
+
   private ParsedUnitUtils() {
     // Can't have an instance
   }
@@ -45,15 +48,12 @@ public class ParsedUnitUtils {
   }
 
   private static Optional<Integer> parseMonthAsString(String month) {
-    Integer intMonth = null;
-    String[] months = DateFormatSymbols.getInstance().getMonths();
-    for (int x = 0; x < months.length; x++) {
-      if (months[x].toLowerCase().startsWith(month.toLowerCase())) {
-        intMonth = x + 1;
-        break;
+    for (int x = 0; x < MONTHS.length; x++) {
+      if (MONTHS[x].toLowerCase().startsWith(month.toLowerCase())) {
+        return Optional.of(x + 1);
       }
     }
-    return Optional.ofNullable(intMonth);
+    return Optional.empty();
   }
 
   private static Optional<Integer> parseMonthAsInt(String month) {
@@ -64,7 +64,7 @@ public class ParsedUnitUtils {
    * Common method for parsing shor numeric string to int
    *
    * @param rawValue  raw value for parsing
-   * @param validator predica with validity conditions
+   * @param validator predicate with validity conditions
    *
    * @return parsed value or ISSUE(-1) value, if value is invalid
    */

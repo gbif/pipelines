@@ -44,9 +44,11 @@ class ParserRawDate {
     int length = input.length;
     if (length == 1) {
       return parseSizeOne(lastParsed, input);
-    } else if (length == 2) {
+    }
+    if (length == 2) {
       return parseSizeTwo(lastParsed, input);
-    } else if (length == 3) {
+    }
+    if (length == 3) {
       return parseSizeThree(input);
     }
 
@@ -66,15 +68,15 @@ class ParserRawDate {
     //If values is year
     boolean isYearFirst = YEAR_PREDICATE.test(first);
     if (isYearFirst) {
-      accumulator.put(YEAR, first);
+      accumulator.setChronoField(YEAR, first);
       return accumulator;
     }
     //If it not a year, this array should represent toDate,
     //which may have month or day, determines by last parsed value in fromDate
     if (MONTH_OF_YEAR == lastParsed) {
-      accumulator.put(MONTH_OF_YEAR, first);
+      accumulator.setChronoField(MONTH_OF_YEAR, first);
     } else if (DAY_OF_MONTH == lastParsed) {
-      accumulator.put(DAY_OF_MONTH, first);
+      accumulator.setChronoField(DAY_OF_MONTH, first);
     }
     return accumulator;
   }
@@ -87,14 +89,14 @@ class ParserRawDate {
     boolean isYearSecond = YEAR_PREDICATE.test(second);
     //If any of values is year, set year and month
     if (isYearFirst || isYearSecond) {
-      accumulator.put(YEAR, isYearFirst ? first : second);
-      accumulator.put(MONTH_OF_YEAR, isYearFirst ? second : first);
+      accumulator.setChronoField(YEAR, isYearFirst ? first : second);
+      accumulator.setChronoField(MONTH_OF_YEAR, isYearFirst ? second : first);
     } else {
       //If year is absent, this array should represent toDate,
       //which may have month and day, determines by last parsed value in fromDate
       boolean isMonthFirst = DAY_OF_MONTH == lastParsed;
-      accumulator.put(MONTH_OF_YEAR, isMonthFirst ? first : second);
-      accumulator.put(DAY_OF_MONTH, isMonthFirst ? second : first);
+      accumulator.setChronoField(MONTH_OF_YEAR, isMonthFirst ? first : second);
+      accumulator.setChronoField(DAY_OF_MONTH, isMonthFirst ? second : first);
     }
     return accumulator;
   }
@@ -131,9 +133,9 @@ class ParserRawDate {
     String day = month.equals(second) ? position : second;
 
     //Save results
-    accumulator.put(YEAR, year);
-    accumulator.put(MONTH_OF_YEAR, month);
-    accumulator.put(DAY_OF_MONTH, day);
+    accumulator.setChronoField(YEAR, year);
+    accumulator.setChronoField(MONTH_OF_YEAR, month);
+    accumulator.setChronoField(DAY_OF_MONTH, day);
     return accumulator;
   }
 

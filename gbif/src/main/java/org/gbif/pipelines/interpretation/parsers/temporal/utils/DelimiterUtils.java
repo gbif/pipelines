@@ -60,7 +60,6 @@ public class DelimiterUtils {
   public static String[] splitDateTime(String rawDateTime) {
     //Does value have time inside
     int timeDelimiterIdx = rawDateTime.indexOf(TIME_DELIMITER);
-    boolean hasTime = timeDelimiterIdx > 0;
 
     //Calculate a shift index of the time, for case as 09:00 or 9:00
     int shift = -1;
@@ -74,6 +73,7 @@ public class DelimiterUtils {
 
     //Calculate the beginning index of date, the date can be absent, in this case, substring from 0 to 0 returns empty string
     int dateIdx = shift < 0 ? 0 : shift;
+    boolean hasTime = timeDelimiterIdx > 0;
     String date = hasTime ? rawDateTime.substring(0, dateIdx) : rawDateTime;
 
     //Calculate the beginning index of time

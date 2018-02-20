@@ -14,11 +14,11 @@ import java.util.Optional;
  */
 public class ParsedTemporalDates {
 
-  private Year year = null;
-  private Month month = null;
-  private Integer day = null;
-  private Temporal fromDate = null;
-  private Temporal toDate = null;
+  private Year year;
+  private Month month;
+  private Integer day;
+  private Temporal fromDate;
+  private Temporal toDate;
   private List<OccurrenceIssue> issueList = Collections.emptyList();
 
   public ParsedTemporalDates() {

@@ -35,10 +35,10 @@ class ParserRawTime {
 
     //Parse time only
     if (timeArray.length > 1) {
-      accumulator.put(HOUR_OF_DAY, timeArray[0]);
-      accumulator.put(MINUTE_OF_HOUR, timeArray[1]);
+      accumulator.setChronoField(HOUR_OF_DAY, timeArray[0]);
+      accumulator.setChronoField(MINUTE_OF_HOUR, timeArray[1]);
       if (timeArray.length > 2) {
-        accumulator.put(SECOND_OF_MINUTE, timeArray[2]);
+        accumulator.setChronoField(SECOND_OF_MINUTE, timeArray[2]);
       }
     }
 

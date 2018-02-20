@@ -18,29 +18,38 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
  */
 public class ChronoAccumulator {
 
-  Map<ChronoField, String> valueMap = new EnumMap<>(ChronoField.class);
-  private ChronoField lastParsed = null;
+  private final Map<ChronoField, String> valueMap = new EnumMap<>(ChronoField.class);
+
+  private ChronoField lastParsed;
 
   public static ChronoAccumulator from(String year, String month, String day) {
     ChronoAccumulator temporal = new ChronoAccumulator();
-    temporal.put(YEAR, year);
-    temporal.put(MONTH_OF_YEAR, month);
-    temporal.put(DAY_OF_MONTH, day);
+    temporal.setChronoField(YEAR, year);
+    temporal.setChronoField(MONTH_OF_YEAR, month);
+    temporal.setChronoField(DAY_OF_MONTH, day);
     return temporal;
   }
 
   /**
-   * Converts raw value to integer and put into the map
+   * Set raw value
    *
-   * @param key      one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
-   * @param rawValue raw value for parsing
+   * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   * @param rawValue    raw value for parsing
    */
-  public void put(ChronoField key, String rawValue) {
-    if (StringUtils.isEmpty(rawValue)) {
-      return;
+  public void setChronoField(ChronoField chronoField, String rawValue) {
+    if (!StringUtils.isEmpty(rawValue)) {
+      valueMap.put(chronoField, rawValue);
+      lastParsed = chronoField;
     }
-    valueMap.put(key, rawValue);
-    lastParsed = key;
+  }
+
+  /**
+   * Get raw value by ChronoField
+   *
+   * @return raw string value
+   */
+  public Optional<String> getChronoFileValue(ChronoField chronoField) {
+    return Optional.ofNullable(valueMap.get(chronoField));
   }
 
   /**
@@ -54,33 +63,26 @@ public class ChronoAccumulator {
    * Copies ALL of the values from the specified accumulator to this accumulator.
    * If a chrono filed is present, the field will be replaced by the value from accumulator param
    */
-  public ChronoAccumulator merge(ChronoAccumulator chronoAccumulator) {
-    valueMap.putAll(chronoAccumulator.valueMap);
-    chronoAccumulator.getLastParsed().ifPresent(chronoField -> this.lastParsed = chronoField);
-    return this;
-  }
-
-  /**
-   * Copies CHRONO FILED values from the specified accumulator to this accumulator.
-   * If a chrono filed is present, the field will be replaced by the value from accumulator param
-   */
-  public void putAllAndReplce(ChronoAccumulator accumulator) {
+  public ChronoAccumulator mergeReplace(ChronoAccumulator accumulator) {
     valueMap.putAll(accumulator.valueMap);
+    accumulator.getLastParsed().ifPresent(chronoField -> lastParsed = chronoField);
+    return this;
   }
 
   /**
    * Copies CHRONO FILED values from the specified accumulator to this accumulator.
    * If a chrono filed is present, the field will NOT be replaced by the value from accumulator param
    */
-  public void putAllIfAbsent(ChronoAccumulator accumulator) {
+  public ChronoAccumulator mergeAbsent(ChronoAccumulator accumulator) {
     accumulator.valueMap.forEach(valueMap::putIfAbsent);
+    return this;
   }
 
   /**
    * Checks all value in the folder are numeric, except month
    */
   public boolean areAllNumeric() {
-    return valueMap.entrySet().stream().anyMatch(x -> !x.getKey().equals(MONTH_OF_YEAR) && !isNumeric(x.getValue()));
+    return valueMap.entrySet().stream().anyMatch(x -> MONTH_OF_YEAR != x.getKey() && !isNumeric(x.getValue()));
   }
 
 }
