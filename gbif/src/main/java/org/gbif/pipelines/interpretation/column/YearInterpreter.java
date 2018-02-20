@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.functions.interpretation;
+package org.gbif.pipelines.interpretation.column;
 
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
@@ -13,10 +13,10 @@ import java.util.List;
 /**
  * year interpreter interprets the years and add issues and lineages to it.
  */
-class YearInterpreter implements Interpretable<String> {
+class YearInterpreter implements Interpretable<String,Integer> {
 
     @Override
-    public InterpretationResult<Integer> interpret(String input) {
+    public InterpretationResult<Integer> apply(String input) {
         String trimmedInput = input == null ? null : input.trim();
 
         try {

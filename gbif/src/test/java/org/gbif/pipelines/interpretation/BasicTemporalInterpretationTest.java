@@ -1,6 +1,8 @@
-package org.gbif.pipelines.core.functions.interpretation;
+package org.gbif.pipelines.interpretation;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.interpretation.column.InterpretationFactory;
+import org.gbif.pipelines.interpretation.column.InterpretationResult;
 import org.junit.Assert;
 import org.junit.Test;
 

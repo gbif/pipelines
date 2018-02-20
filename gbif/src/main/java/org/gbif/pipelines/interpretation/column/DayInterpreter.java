@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.functions.interpretation;
+package org.gbif.pipelines.interpretation.column;
 
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
@@ -11,13 +11,13 @@ import java.util.List;
 /**
  * interprets day and adds issues and lineages with it
  */
-class DayInterpreter implements Interpretable<String> {
+class DayInterpreter implements Interpretable<String,Integer> {
 
     private static final int MIN_DAY = 1;
     private static final int MAX_DAY = 31;
 
     @Override
-    public InterpretationResult<Integer> interpret(String input) {
+    public InterpretationResult<Integer> apply(String input) {
         String trimmedInput = input == null ? null : input.trim();
         try {
             if (trimmedInput == null) return null;

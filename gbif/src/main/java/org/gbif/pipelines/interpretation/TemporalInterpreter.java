@@ -2,8 +2,8 @@ package org.gbif.pipelines.interpretation;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
-import org.gbif.pipelines.core.functions.interpretation.InterpretationFactory;
-import org.gbif.pipelines.core.functions.interpretation.InterpretationResult;
+import org.gbif.pipelines.interpretation.column.InterpretationFactory;
+import org.gbif.pipelines.interpretation.column.InterpretationResult;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.function.Function;

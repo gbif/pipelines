@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.functions.interpretation;
+package org.gbif.pipelines.interpretation.column;
 
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.common.parsers.ContinentParser;
@@ -14,10 +14,10 @@ import java.util.List;
 /**
  * parse and interpret continents
  */
-class ContinentInterpreter implements Interpretable<String> {
+class ContinentInterpreter implements Interpretable<String,String> {
 
     @Override
-    public InterpretationResult<String> interpret(String input) {
+    public InterpretationResult<String> apply(String input) {
         final ParseResult<Continent> parse = ContinentParser.getInstance().parse(input);
         if (parse.isSuccessful()) {
             return InterpretationResult.withSuccess(parse.getPayload().getTitle());

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.functions.interpretation;
+package org.gbif.pipelines.interpretation.column;
 
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;

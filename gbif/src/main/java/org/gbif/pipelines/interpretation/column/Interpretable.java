@@ -1,4 +1,6 @@
-package org.gbif.pipelines.core.functions.interpretation;
+package org.gbif.pipelines.interpretation.column;
+
+import java.util.function.Function;
 
 /**
  * interpret interface for various term based interpreter
@@ -6,7 +8,6 @@ package org.gbif.pipelines.core.functions.interpretation;
  * T stands for Input parameter and U stands for output parameter
  */
 @FunctionalInterface
-interface Interpretable<T> {
+interface Interpretable<T,U> extends Function<T,InterpretationResult<U>> {
 
-    <U> InterpretationResult<U> interpret(T input);
 }
