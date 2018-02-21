@@ -13,28 +13,28 @@ import java.util.List;
 /**
  * year interpreter interprets the years and add issues and lineages to it.
  */
-class YearInterpreter implements Interpretable<String,Integer> {
+class YearInterpreter implements Interpretable<String, Integer> {
 
-    @Override
-    public InterpretationResult<Integer> apply(String input) {
-        String trimmedInput = input == null ? null : input.trim();
+  @Override
+  public InterpretationResult<Integer> apply(String input) {
+    String trimmedInput = input == null ? null : input.trim();
 
-        try {
-            if (trimmedInput == null) return null;
-            return InterpretationResult.withSuccess(Year.parse(trimmedInput).getValue());
-        } catch (DateTimeParseException ex) {
-            //if parse failed
-            final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                    .setRemark("Year cannot be parsed because of "
-                            + ex.getMessage())
-                    .setIssueType(IssueType.PARSE_ERROR)
-                    .build());
-            final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
-                    .setRemark(
-                            "Since Year cannot be parsed setting it to null")
-                    .setLineageType(LineageType.SET_TO_NULL)
-                    .build());
-            return InterpretationResult.withIssueAndLineage(null, issues, lineages);
-        }
+    try {
+      if (trimmedInput == null) return null;
+      return InterpretationResult.withSuccess(Year.parse(trimmedInput).getValue());
+    } catch (DateTimeParseException ex) {
+      //if parse failed
+      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                             .setRemark("Year cannot be parsed because of "
+                                                                        + ex.getMessage())
+                                                             .setIssueType(IssueType.PARSE_ERROR)
+                                                             .build());
+      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+                                                                 .setRemark(
+                                                                   "Since Year cannot be parsed setting it to null")
+                                                                 .setLineageType(LineageType.SET_TO_NULL)
+                                                                 .build());
+      return InterpretationResult.withIssueAndLineage(null, issues, lineages);
     }
+  }
 }

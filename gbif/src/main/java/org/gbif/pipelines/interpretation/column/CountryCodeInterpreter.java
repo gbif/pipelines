@@ -14,25 +14,27 @@ import java.util.List;
 /**
  * interprets country code
  */
-class CountryCodeInterpreter implements Interpretable<String,String> {
+class CountryCodeInterpreter implements Interpretable<String, String> {
 
-    @Override
-    public InterpretationResult<String> apply(String input) {
-        ParseResult<Country> parseCountry = CountryParser.getInstance().parse(input.trim());
-        if (parseCountry.isSuccessful()) {
-            return InterpretationResult.withSuccess(parseCountry.getPayload().getIso3LetterCode());
-        } else {
-            final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                    .setIssueType(IssueType.PARSE_ERROR)
-                    .setRemark(parseCountry.getError() != null ? parseCountry.getError().getMessage() : "Couldnot parse countryCode")
-                    .build());
-            final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
-                    .setLineageType(LineageType.SET_TO_NULL)
-                    .setRemark(
-                            "Since the parse on countryCode failed, interpreting as null")
-                    .build());
-            return InterpretationResult.withIssueAndLineage(null, issues, lineages);
-        }
-
+  @Override
+  public InterpretationResult<String> apply(String input) {
+    ParseResult<Country> parseCountry = CountryParser.getInstance().parse(input.trim());
+    if (parseCountry.isSuccessful()) {
+      return InterpretationResult.withSuccess(parseCountry.getPayload().getIso3LetterCode());
+    } else {
+      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                             .setIssueType(IssueType.PARSE_ERROR)
+                                                             .setRemark(parseCountry.getError() != null
+                                                                          ? parseCountry.getError().getMessage()
+                                                                          : "Could not parse countryCode")
+                                                             .build());
+      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+                                                                 .setLineageType(LineageType.SET_TO_NULL)
+                                                                 .setRemark(
+                                                                   "Since the parse on countryCode failed, interpreting as null")
+                                                                 .build());
+      return InterpretationResult.withIssueAndLineage(null, issues, lineages);
     }
+
+  }
 }

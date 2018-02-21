@@ -8,6 +8,6 @@ import java.util.function.Function;
  * T stands for Input parameter and U stands for output parameter
  */
 @FunctionalInterface
-interface Interpretable<T,U> extends Function<T,InterpretationResult<U>> {
+interface Interpretable<T, U> extends Function<T, InterpretationResult<U>> {
 
 }
