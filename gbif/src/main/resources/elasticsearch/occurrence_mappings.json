@@ -1,0 +1,24 @@
+{
+  "mappings": {
+    "occurrence": {
+      "_all": {
+        "store": true
+      },
+      "dynamic_templates": [
+        {
+         "default_string" : {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "coordinate": {
+          "type": "geo_point"
+        }
+      }
+    }
+  }
+}
