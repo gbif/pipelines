@@ -12,10 +12,6 @@
 
   <artifactId>demo</artifactId>
 
-  <properties>
-    <protobuf.version>3.5.1</protobuf.version>
-  </properties>
-
   <build>
     <plugins>
       <!-- Shade the project into an über jar to send to Spark -->
@@ -65,7 +61,7 @@
 
                 <relocation>
                   <pattern>retrofit2</pattern>
-                  <shadedPattern>tim.retrofit2</shadedPattern>
+                  <shadedPattern>gbif.retrofit2</shadedPattern>
                 </relocation>
 
 
@@ -92,16 +88,16 @@
       <artifactId>beam-common</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-runners-direct-java</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-io-kafka</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -136,7 +132,6 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>${protobuf.version}</version>
     </dependency>
     <!--Test dependencies-->
 
