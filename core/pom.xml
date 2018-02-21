@@ -56,10 +56,14 @@
   </build>
 
   <dependencies>
+
+    <!-- GBIF -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwca-io</artifactId>
     </dependency>
+
+    <!-- Other -->
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
@@ -89,5 +93,6 @@
       <artifactId>hadoop-common</artifactId>
       <scope>provided</scope>
     </dependency>
+
   </dependencies>
 </project>
