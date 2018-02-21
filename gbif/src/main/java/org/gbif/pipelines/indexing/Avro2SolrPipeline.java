@@ -1,5 +1,12 @@
 package org.gbif.pipelines.indexing;
 
+import org.gbif.pipelines.builder.SolrDocBuilder;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.core.functions.descriptor.CustomTypeDescriptors;
+import org.gbif.pipelines.io.avro.TypedOccurrence;
+import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
@@ -9,12 +16,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.solr.common.SolrInputDocument;
-import org.gbif.pipelines.builder.SolrDocBuilder;
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.functions.descriptor.CustomTypeDescriptors;
-import org.gbif.pipelines.core.functions.FunctionFactory;
-import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
