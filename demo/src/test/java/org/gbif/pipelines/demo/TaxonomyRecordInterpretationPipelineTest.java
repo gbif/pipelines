@@ -1,7 +1,7 @@
 package org.gbif.pipelines.demo;
 
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.core.config.RecordInterpretation;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 
 import java.net.URI;
@@ -17,7 +17,7 @@ import org.junit.Test;
 /**
  * Tests the {@link TaxonomyInterpretationPipeline}.
  */
-public class TaxonomyInterpretationPipelineTest {
+public class TaxonomyRecordInterpretationPipelineTest {
 
   private static TestUtils.MiniClusterConfig clusterConfig;
   private static Configuration configuration = new Configuration();
@@ -50,7 +50,7 @@ public class TaxonomyInterpretationPipelineTest {
 
     // test taxon results
     URI uriTargetPath =
-      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(Interpretation.TAXONOMY).filePath() + "*");
+      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(RecordInterpretation.TAXONOMY).filePath() + "*");
     FileStatus[] fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);
@@ -64,7 +64,7 @@ public class TaxonomyInterpretationPipelineTest {
 
     // test issues results
     uriTargetPath =
-      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(Interpretation.ISSUES).filePath() + "*");
+      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(RecordInterpretation.ISSUES).filePath() + "*");
     fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);

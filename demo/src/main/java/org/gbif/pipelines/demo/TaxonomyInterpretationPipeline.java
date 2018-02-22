@@ -3,7 +3,7 @@ package org.gbif.pipelines.demo;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.core.config.RecordInterpretation;
 import org.gbif.pipelines.interpretation.taxonomy.TaxonomicInterpretationTransform;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
@@ -70,7 +70,7 @@ public class TaxonomyInterpretationPipeline {
       .setCoder(AvroCoder.of(TaxonRecord.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(TaxonRecord.class)
-               .to(options.getTargetPaths().get(Interpretation.TAXONOMY).filePath())
+               .to(options.getTargetPaths().get(RecordInterpretation.TAXONOMY).filePath())
                .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     // write issues
@@ -78,7 +78,7 @@ public class TaxonomyInterpretationPipeline {
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(OccurrenceIssue.class)
-               .to(options.getTargetPaths().get(Interpretation.ISSUES).filePath())
+               .to(options.getTargetPaths().get(RecordInterpretation.ISSUES).filePath())
                .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     LOG.info("Starting the pipeline");

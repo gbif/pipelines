@@ -2,20 +2,17 @@ package org.gbif.pipelines.interpretation.interpreters;
 
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.utils.AvroDataUtils;
-import org.gbif.pipelines.interpretation.taxonomy.TaxonomyInterpretationException;
+import org.gbif.pipelines.interpretation.Interpretation;
 import org.gbif.pipelines.interpretation.adapters.TaxonRecordAdapter;
-import org.gbif.pipelines.interpretation.taxonomy.InterpretedTaxonomy;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.Validation;
-import org.gbif.pipelines.ws.match2.SpeciesMatchManager;
+import org.gbif.pipelines.ws.WsResponse;
+import org.gbif.pipelines.ws.match2.SpeciesMatchCaller;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Function;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.gbif.pipelines.interpretation.taxonomy.TaxonomyUtils.checkMatchIssue;
+import static org.gbif.pipelines.interpretation.taxonomy.TaxonomyUtils.emptyNameUsageMatchResponse;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields should be based in the
@@ -25,75 +22,44 @@ import org.slf4j.LoggerFactory;
  * of the WS has to be set in the "ws.properties".
  * </p>
  */
-public class TaxonomyInterpreter {
-
-  private static final Logger LOG = LoggerFactory.getLogger(TaxonomyInterpreter.class);
-
-  /**
-   * Utility class must have private constructor.
-   */
-  private  TaxonomyInterpreter() {
-    //DO nothing
-  }
+public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
   /**
    * Interprets a taxonomy from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
-  public static InterpretedTaxonomy interpretTaxonomyFields(ExtendedRecord extendedRecord)
-    throws TaxonomyInterpretationException {
+  static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord) {
+    return (ExtendedRecord extendedRecord) -> {
 
-    AvroDataUtils.checkNullOrEmpty(extendedRecord);
+      AvroDataUtils.checkNullOrEmpty(extendedRecord);
 
-    // get match from WS
-    NameUsageMatch2 responseModel = SpeciesMatchManager.getMatch(extendedRecord);
+      // get match from WS
+      WsResponse<NameUsageMatch2> response = SpeciesMatchCaller.getMatch(extendedRecord);
 
-    // create interpreted taxonomy
-    InterpretedTaxonomy interpretedTaxonomy = new InterpretedTaxonomy();
+      Interpretation interpretation = Interpretation.of(extendedRecord);
 
-    // adapt taxon record
-    TaxonRecord taxonRecord = new TaxonRecordAdapter().adapt(responseModel);
-    taxonRecord.setId(extendedRecord.getId());
-    interpretedTaxonomy.setTaxonRecord(taxonRecord);
+      if (response.isError()) {
+        interpretation.withValidation(Interpretation.Trace.of(org.gbif.api.vocabulary.OccurrenceIssue.INTERPRETATION_ERROR,
+                                                              response.getErrorCode().toString()
+                                                              + response.getErrorMessage()));
+        return interpretation;
+      }
 
-    // check issues
-    List<Validation> validations = checkIssues(responseModel, extendedRecord.getId());
-    if (!validations.isEmpty()) {
-      interpretedTaxonomy.setOccurrenceIssue(OccurrenceIssue.newBuilder()
-                                               .setId(extendedRecord.getId())
-                                               .setIssues(validations)
-                                               .build());
-    }
+      if (response.isResponsyEmpty(emptyNameUsageMatchResponse())) {
+        // FIXME: maybe I would need to add to the enum a new issue for this, sth like "NO_MATCHING_RESULTS". This happens
+        // when we get an empty response from the WS
+        interpretation.withValidation(Interpretation.Trace.of(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE,
+                                                              "No results from match service"));
+        return interpretation;
+      }
 
-    return interpretedTaxonomy;
-  }
+      checkMatchIssue(response.getBody().getDiagnostics().getMatchType(), interpretation);
 
-  private static List<Validation> checkIssues(NameUsageMatch2 responseModel, CharSequence id) {
+      // adapt taxon record
+      TaxonRecordAdapter.adapt(response.getBody(), taxonRecord);
+      taxonRecord.setId(extendedRecord.getId());
 
-    List<Validation> validations = new ArrayList<>();
-
-    switch (responseModel.getDiagnostics().getMatchType()) {
-      case NONE:
-        LOG.info("Match type NONE for occurrence {}", id);
-        validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE));
-        break;
-      case FUZZY:
-        LOG.info("Match type FUZZY for occurrence {}", id);
-        validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY));
-        break;
-      case HIGHERRANK:
-        LOG.info("Match type HIGHERRANK for occurrence {}", id);
-        validations.add(createValidation(org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK));
-        break;
-    }
-
-    return validations;
-  }
-
-  private static Validation createValidation(org.gbif.api.vocabulary.OccurrenceIssue occurrenceIssue) {
-    return Validation.newBuilder()
-      .setName(occurrenceIssue.name())
-      .setSeverity(occurrenceIssue.getSeverity().name())
-      .build();
+      return interpretation;
+    };
   }
 
 }

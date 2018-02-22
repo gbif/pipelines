@@ -1,7 +1,7 @@
 package org.gbif.pipelines.demo.hdfs;
 
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.core.config.RecordInterpretation;
 import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.demo.TestUtils;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
@@ -34,7 +34,7 @@ public class DwcaToHdfsTestingPipelineTest {
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
+  public static void tearDown() {
     clusterConfig.hdfsCluster.shutdown();
   }
 
@@ -88,17 +88,17 @@ public class DwcaToHdfsTestingPipelineTest {
     // create options
     DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(clusterConfig.configuration);
 
-    Map<Interpretation, TargetPath> targetPaths = options.getTargetPaths();
+    Map<RecordInterpretation, TargetPath> targetPaths = options.getTargetPaths();
 
     Assert.assertNotNull(targetPaths);
-    Assert.assertEquals(Interpretation.values().length, targetPaths.size());
+    Assert.assertEquals(RecordInterpretation.values().length, targetPaths.size());
 
-    for (Interpretation interpretation : Interpretation.values()) {
-      TargetPath tp = targetPaths.get(interpretation);
+    for (RecordInterpretation recordInterpretation : RecordInterpretation.values()) {
+      TargetPath tp = targetPaths.get(recordInterpretation);
 
       Assert.assertNotNull(tp);
       Assert.assertEquals(tp.getDirectory(), options.getDefaultTargetDirectory());
-      Assert.assertEquals(tp.getFileName(), interpretation.getDefaultFileName());
+      Assert.assertEquals(tp.getFileName(), recordInterpretation.getDefaultFileName());
     }
 
   }

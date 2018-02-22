@@ -2,7 +2,7 @@ package org.gbif.pipelines.ws.match2;
 
 import org.gbif.pipelines.ws.config.Config;
 import org.gbif.pipelines.ws.config.Service;
-import org.gbif.pipelines.ws.config.WsConfiguration;
+import org.gbif.pipelines.ws.config.WsConfigurer;
 import org.gbif.pipelines.ws.utils.WsUtils;
 
 import okhttp3.OkHttpClient;
@@ -28,7 +28,7 @@ public enum SpeciesMatch2ServiceRest {
 
   void init() {
     // load WS Config
-    Config wsConfig = WsConfiguration.of(Service.SPECIES_MATCH2).getConfigOrThrowException();
+    Config wsConfig = WsConfigurer.createConfig(Service.SPECIES_MATCH2);
 
     // create client
     OkHttpClient client = WsUtils.createClientWithCache(wsConfig);

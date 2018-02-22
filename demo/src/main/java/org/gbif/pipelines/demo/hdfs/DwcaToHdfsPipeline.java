@@ -66,7 +66,6 @@ public class DwcaToHdfsPipeline {
     PipelineResult result = pipeline.run();
     result.waitUntilFinish();
     LOG.info("Pipeline finished with state: {} ", result.getState());
-
   }
 
 }

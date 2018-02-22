@@ -19,7 +19,7 @@ public class SpeciesMatch2ServiceRestTest {
 
     final String name = "Puma concolor";
 
-    Call<NameUsageMatch2> call = service.match2(null, null, null, null, null, null, null, name, true, false);
+    Call<NameUsageMatch2> call = service.match(null, null, null, null, null, null, null, name, true, false);
 
     try {
       Response<NameUsageMatch2> response = call.execute();

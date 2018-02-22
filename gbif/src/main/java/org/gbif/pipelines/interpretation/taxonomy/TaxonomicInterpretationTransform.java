@@ -1,9 +1,14 @@
 package org.gbif.pipelines.interpretation.taxonomy;
 
+import org.gbif.pipelines.interpretation.Interpretation;
 import org.gbif.pipelines.interpretation.interpreters.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.Validation;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -40,26 +45,38 @@ public class TaxonomicInterpretationTransform extends PTransform<PCollection<Ext
       public void processElement(ProcessContext context) {
 
         ExtendedRecord extendedRecord = context.element();
+        Collection<Validation> validations = new ArrayList<>();
 
-        try {
-          InterpretedTaxonomy interpretedTaxonomy = TaxonomyInterpreter.interpretTaxonomyFields(extendedRecord);
+        TaxonRecord taxonRecord = new TaxonRecord();
 
-          // taxon records
-          context.output(TAXON_RECORD_TUPLE_TAG, interpretedTaxonomy.getTaxonRecord());
+        Interpretation.of(extendedRecord)
+          .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord))
+          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
-          // issues
-          if (interpretedTaxonomy.getOccurrenceIssue() != null) {
-            context.output(TAXON_ISSUES_TUPLE_TAG, interpretedTaxonomy.getOccurrenceIssue());
-          }
+        // taxon records
+        context.output(TAXON_RECORD_TUPLE_TAG, taxonRecord);
 
-        } catch (TaxonomyInterpretationException e) {
-          LOG.error("Error while interpreting taxonmy of record {}", extendedRecord.getId(), e);
-          // TODO: add to side output?? these are unexpected erros, they should not be issues
+        // issues
+        if (!validations.isEmpty()) {
+          context.output((TAXON_ISSUES_TUPLE_TAG),
+                         OccurrenceIssue.newBuilder().setId(extendedRecord.getId()).setIssues(validations).build());
         }
 
       }
 
     };
+  }
+
+  /**
+   * FIXME: move to utility class when all PR merged
+   * <p>
+   * Translates a OccurrenceIssue into Validation object.
+   */
+  private static Validation toValidation(org.gbif.api.vocabulary.OccurrenceIssue occurrenceIssue) {
+    return Validation.newBuilder()
+      .setName(occurrenceIssue.name())
+      .setSeverity(occurrenceIssue.getSeverity().name())
+      .build();
   }
 
 }

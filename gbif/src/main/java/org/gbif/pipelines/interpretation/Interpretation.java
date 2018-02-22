@@ -4,19 +4,20 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
  * A container object of interpretation result that can be combined with the result of other interpretations.
+ *
  * @param <T> type of context element use as an input for interpretation
  */
 public class Interpretation<T> implements Serializable {
 
   /**
    * Container class for an element that needs to be tracked during an interpretation.
+   *
    * @param <T> type of element to be tracked
    */
   public static class Trace<T> implements Serializable {
@@ -28,7 +29,7 @@ public class Interpretation<T> implements Serializable {
     private final String remark;
 
     /**
-     *  Creates an instance of traceable element.
+     * Creates an instance of traceable element.
      */
     private Trace(T context, String remark) {
       this.context = context;
@@ -50,7 +51,6 @@ public class Interpretation<T> implements Serializable {
     }
 
     /**
-     *
      * @return the element being traced
      */
     public T getContext() {
@@ -58,7 +58,6 @@ public class Interpretation<T> implements Serializable {
     }
 
     /**
-     *
      * @return any comment or observation about the traced element
      */
     public String getRemark() {
@@ -78,7 +77,7 @@ public class Interpretation<T> implements Serializable {
   /**
    * Full constructor.
    */
-  private Interpretation(T value,  List<Trace<OccurrenceIssue>> validations, List<Trace<String>> lineage) {
+  private Interpretation(T value, List<Trace<OccurrenceIssue>> validations, List<Trace<String>> lineage) {
     this.value = value;
     this.validations = validations;
     this.lineage = lineage;
@@ -88,7 +87,7 @@ public class Interpretation<T> implements Serializable {
    * Creates a interpretation of a value.
    */
   public static <U> Interpretation<U> of(U value) {
-    return new Interpretation<>(value, Collections.emptyList(), Collections.emptyList());
+    return new Interpretation<>(value, new ArrayList<>(), new ArrayList<>());
   }
 
   /**
@@ -98,7 +97,6 @@ public class Interpretation<T> implements Serializable {
     validations.add(validation);
     return this;
   }
-
 
   /**
    * Adds a lineage trace to the interpretation operation.
@@ -123,7 +121,7 @@ public class Interpretation<T> implements Serializable {
   /**
    * Consumes all traces in the validation.
    */
-  public void forEachValidation(Consumer<Trace<OccurrenceIssue>> traceConsumer) {
+  public void forEachValidation(Consumer<Interpretation.Trace<OccurrenceIssue>> traceConsumer) {
     validations.forEach(traceConsumer);
   }
 
@@ -135,3 +133,4 @@ public class Interpretation<T> implements Serializable {
   }
 
 }
+

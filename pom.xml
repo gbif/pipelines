@@ -45,7 +45,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.32</gbif-parsers.version>
     <dwca-io.version>1.33-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>0.58</gbif-api.version>
+    <gbif-api.version>0.59-SNAPSHOT</gbif-api.version>
 
     <apache.beam.version>2.2.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
@@ -114,6 +114,12 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwc-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>

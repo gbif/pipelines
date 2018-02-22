@@ -1,16 +1,13 @@
 package org.gbif.pipelines.demo.utils;
 
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.core.config.RecordInterpretation;
 import org.gbif.pipelines.core.config.TargetPath;
 
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
 
@@ -63,10 +60,10 @@ public final class PipelineUtils {
     options.setInputFile(sourcePath);
 
     // target paths
-    EnumMap<Interpretation, TargetPath> targetPaths = new EnumMap<>(Interpretation.class);
-    targetPaths.put(Interpretation.TAXONOMY,
-                    new TargetPath(taxonOutPath, Interpretation.TAXONOMY.getDefaultFileName()));
-    targetPaths.put(Interpretation.ISSUES, new TargetPath(issuesOutPath, Interpretation.ISSUES.getDefaultFileName()));
+    EnumMap<RecordInterpretation, TargetPath> targetPaths = new EnumMap<>(RecordInterpretation.class);
+    targetPaths.put(RecordInterpretation.TAXONOMY,
+                    new TargetPath(taxonOutPath, RecordInterpretation.TAXONOMY.getDefaultFileName()));
+    targetPaths.put(RecordInterpretation.ISSUES, new TargetPath(issuesOutPath, RecordInterpretation.ISSUES.getDefaultFileName()));
     options.setTargetPaths(targetPaths);
 
     return options;

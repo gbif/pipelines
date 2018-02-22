@@ -1,11 +1,11 @@
 package org.gbif.pipelines.interpretation.interpreters;
 
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.interpretation.taxonomy.InterpretedTaxonomy;
 import org.gbif.pipelines.interpretation.taxonomy.TaxonomyInterpretationException;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaxonRecord;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,60 +34,48 @@ public class TaxonomyInterpreterTest {
       .id(TEST_RECORD_ID)
       .build();
 
-    InterpretedTaxonomy interpretedTaxon = null;
-    try {
+    TaxonRecord taxonRecord = new TaxonRecord();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    Map<Rank, RankedName> ranksResponse =
+      taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-      Map<Rank, RankedName> ranksResponse = interpretedTaxon.getTaxonRecord()
-        .getClassification()
-        .stream()
-        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
+    Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
+    Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
 
-      Assert.assertEquals(2435099, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
-      Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
+    record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+      .genus("Puma")
+      .name("Puma concolor (Linnaeus, 1771)")
+      .rank(Rank.SPECIES.name())
+      .id(TEST_RECORD_ID)
+      .build();
 
-      record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
-        .genus("Puma")
-        .name("Puma concolor (Linnaeus, 1771)")
-        .rank(Rank.SPECIES.name())
-        .id(TEST_RECORD_ID)
-        .build();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    ranksResponse =
+      taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-      ranksResponse = interpretedTaxon.getTaxonRecord()
-        .getClassification()
-        .stream()
-        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
+    Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
+    Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
 
-      Assert.assertEquals(2435099, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
-      Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
+    record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+      .genus("Puma")
+      .name("Puma concolor")
+      .authorship("(Linnaeus, 1771)")
+      .rank(Rank.SPECIES.name())
+      .id(TEST_RECORD_ID)
+      .build();
 
-      record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
-        .genus("Puma")
-        .name("Puma concolor")
-        .authorship("(Linnaeus, 1771)")
-        .rank(Rank.SPECIES.name())
-        .id(TEST_RECORD_ID)
-        .build();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    ranksResponse =
+      taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-      ranksResponse = interpretedTaxon.getTaxonRecord()
-        .getClassification()
-        .stream()
-        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
-
-      Assert.assertEquals(2435099, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
-      Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
-
-    } catch (TaxonomyInterpretationException e) {
-      Assert.fail(e.getMessage());
-    }
+    Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
+    Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
   }
 
   @Test
@@ -99,58 +87,47 @@ public class TaxonomyInterpreterTest {
       .id(TEST_RECORD_ID)
       .build();
 
-    try {
+    TaxonRecord taxonRecord = new TaxonRecord();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    Map<Rank, RankedName> ranksResponse =
+      taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-      Map<Rank, RankedName> ranksResponse = interpretedTaxon.getTaxonRecord()
-        .getClassification()
-        .stream()
-        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
+    Assert.assertEquals(3034893, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
+    Assert.assertEquals("Oenanthe L.", taxonRecord.getUsage().getName());
 
-      Assert.assertEquals(3034893, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
-      Assert.assertEquals("Oenanthe L.", interpretedTaxon.getTaxonRecord().getUsage().getName());
+    record = new ExtendedRecordCustomBuilder().kingdom("Plantae")
+      .name("Oenanthe")
+      .authorship("L.")
+      .rank(Rank.GENUS.name())
+      .id(TEST_RECORD_ID)
+      .build();
 
-      record = new ExtendedRecordCustomBuilder().kingdom("Plantae")
-        .name("Oenanthe")
-        .authorship("L.")
-        .rank(Rank.GENUS.name())
-        .id(TEST_RECORD_ID)
-        .build();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    ranksResponse =
+      taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-      ranksResponse = interpretedTaxon.getTaxonRecord()
-        .getClassification()
-        .stream()
-        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
+    Assert.assertEquals(3034893, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
+    Assert.assertEquals("Oenanthe L.", taxonRecord.getUsage().getName());
 
-      Assert.assertEquals(3034893, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
-      Assert.assertEquals("Oenanthe L.", interpretedTaxon.getTaxonRecord().getUsage().getName());
+    record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+      .name("Oenanthe")
+      .authorship("Vieillot, 1816")
+      .rank(Rank.GENUS.name())
+      .id(TEST_RECORD_ID)
+      .build();
 
-      record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
-        .name("Oenanthe")
-        .authorship("Vieillot, 1816")
-        .rank(Rank.GENUS.name())
-        .id(TEST_RECORD_ID)
-        .build();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    ranksResponse =
+      taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-      ranksResponse = interpretedTaxon.getTaxonRecord()
-        .getClassification()
-        .stream()
-        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
-
-      Assert.assertEquals(2492483, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
-      Assert.assertEquals("Oenanthe Vieillot, 1816", interpretedTaxon.getTaxonRecord().getUsage().getName());
-
-    } catch (TaxonomyInterpretationException e) {
-      Assert.fail(e.getMessage());
-    }
+    Assert.assertEquals(2492483, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
+    Assert.assertEquals("Oenanthe Vieillot, 1816", taxonRecord.getUsage().getName());
   }
 
   @Test
@@ -163,17 +140,13 @@ public class TaxonomyInterpreterTest {
       .id(TEST_RECORD_ID)
       .build();
 
-    try {
-      InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    TaxonRecord taxonRecord = new TaxonRecord();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      // FIXME: this tests does not pass. It is copied from old adapter but it returns a different response.Should we check it??
-      // this is the old test
+    // FIXME: this test does not pass. It is copied from old adapter but it returns a different response.Should we check it??
+    // this is the old test
 //      Assert.assertEquals("BOLD:ACV7160", interpretedTaxon.getTaxonRecord().getUsage().getName());
-      Assert.assertEquals("Lumbricidae", interpretedTaxon.getTaxonRecord().getUsage().getName());
-
-    } catch (TaxonomyInterpretationException e) {
-      Assert.fail(e.getMessage());
-    }
+    Assert.assertEquals("Lumbricidae", taxonRecord.getUsage().getName());
   }
 
   @Test
@@ -189,27 +162,19 @@ public class TaxonomyInterpreterTest {
       .id(TEST_RECORD_ID)
       .build();
 
-    try {
-      InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    TaxonRecord taxonRecord = new TaxonRecord();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      Map<Rank, RankedName> ranksResponse = interpretedTaxon.getTaxonRecord()
-        .getClassification()
-        .stream()
-        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
+    Map<Rank, RankedName> ranksResponse =
+      taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-      Assert.assertEquals(7598904, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(7479242, ranksResponse.get(Rank.FAMILY).getKey().intValue());
-      // FIXME: this tests does not pass. It is copied from old adapter but it returns a different response.Should we check it??
-      // this is the old test
+    Assert.assertEquals(7598904, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(7479242, ranksResponse.get(Rank.FAMILY).getKey().intValue());
+    // FIXME: this tests does not pass. It is copied from old adapter but it returns a different response.Should we check it??
+    // this is the old test
 //      Assert.assertEquals("Ceratium hirundinella (O.F.Müller) Dujardin, 1841",
 //                          interpretedTaxon.getTaxonRecord().getUsage().getName());
-      Assert.assertEquals("Ceratium hirundinella (O.F.Müll.) Dujard.",
-                          interpretedTaxon.getTaxonRecord().getUsage().getName());
-
-    } catch (TaxonomyInterpretationException e) {
-      Assert.fail(e.getMessage());
-    }
-
+    Assert.assertEquals("Ceratium hirundinella (O.F.Müll.) Dujard.", taxonRecord.getUsage().getName());
   }
 
   @Test
@@ -221,54 +186,47 @@ public class TaxonomyInterpreterTest {
       .id(TEST_RECORD_ID)
       .build();
 
-    try {
-      InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    TaxonRecord taxonRecord = new TaxonRecord();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      Map<Rank, RankedName> ranksResponse = interpretedTaxon.getTaxonRecord()
-        .getClassification()
-        .stream()
-        .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
+    Map<Rank, RankedName> ranksResponse =
+      taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-      Assert.assertEquals(2435099, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
-      Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
-
-    } catch (TaxonomyInterpretationException e) {
-      Assert.fail(e.getMessage());
-    }
-
+    Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
+    Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
   }
 
   @Test
   public void testAcceptedUsage() {
     ExtendedRecord record = new ExtendedRecordCustomBuilder().name("Agallisus lepturoides").id(TEST_RECORD_ID).build();
 
-    try {
-      InterpretedTaxonomy interpretedTaxon = TaxonomyInterpreter.interpretTaxonomyFields(record);
+    TaxonRecord taxonRecord = new TaxonRecord();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
-      Assert.assertEquals(1118030, interpretedTaxon.getTaxonRecord().getUsage().getKey().intValue());
-      Assert.assertEquals(1118026, interpretedTaxon.getTaxonRecord().getAcceptedUsage().getKey().intValue());
-      Assert.assertEquals("Agallisus lepturoides Hovore, Penrose & Neck, 1987",
-                          interpretedTaxon.getTaxonRecord().getUsage().getName());
-      Assert.assertEquals("Agallissus lepturoides (Chevrolat, 1849)",
-                          interpretedTaxon.getTaxonRecord().getAcceptedUsage().getName());
+    Assert.assertEquals(1118030, taxonRecord.getUsage().getKey().intValue());
+    Assert.assertEquals(1118026, taxonRecord.getAcceptedUsage().getKey().intValue());
+    Assert.assertEquals("Agallisus lepturoides Hovore, Penrose & Neck, 1987", taxonRecord.getUsage().getName());
+    Assert.assertEquals("Agallissus lepturoides (Chevrolat, 1849)", taxonRecord.getAcceptedUsage().getName());
+  }
 
-    } catch (TaxonomyInterpretationException e) {
-      Assert.fail(e.getMessage());
-    }
-
+  @Test(expected = NullPointerException.class)
+  public void testMatchNullTaxonRecord() throws TaxonomyInterpretationException {
+    TaxonomyInterpreter.taxonomyInterpreter(null).apply(null);
   }
 
   @Test(expected = NullPointerException.class)
   public void testMatchNullArgs() throws TaxonomyInterpretationException {
-    TaxonomyInterpreter.interpretTaxonomyFields(null);
+    TaxonRecord taxonRecord = new TaxonRecord();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testMatchEmptyArgs() throws TaxonomyInterpretationException {
     ExtendedRecord record = new ExtendedRecord();
     record.setCoreTerms(new HashMap<>());
-    TaxonomyInterpreter.interpretTaxonomyFields(record);
+    TaxonRecord taxonRecord = new TaxonRecord();
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
   }
 
 }

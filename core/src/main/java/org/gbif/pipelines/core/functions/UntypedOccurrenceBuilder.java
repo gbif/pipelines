@@ -1,19 +1,21 @@
 package org.gbif.pipelines.core.functions;
 
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
+
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 import java.util.Map;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 /**
  * A builder of UntypedOccurrences which uses introspection to locate all suitable terms (e.g. Darwin Core) from the
  * source records.
  */
 class UntypedOccurrenceBuilder implements SerializableFunction<ExtendedRecord, UntypedOccurrence> {
+
+  private static final String PREFIX = "http://rs.tdwg.org/dwc/terms/";
 
   @Override
   public UntypedOccurrence apply(ExtendedRecord record) {
@@ -30,7 +32,7 @@ class UntypedOccurrenceBuilder implements SerializableFunction<ExtendedRecord, U
       for (PropertyDescriptor pd : info.getPropertyDescriptors()) {
         if (pd.getWriteMethod() != null) {
           String term = pd.getName();
-          String value = termsAsString.get(DwcTerm.NS + term);
+          String value = termsAsString.get(PREFIX + term);
           if (value != null) {
             pd.getWriteMethod().invoke(parsed, value);
           }

@@ -17,7 +17,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Tests the class {@link AvroToHdfsTestingPipelineTest}.
+ * Tests the class {@link AvroToHdfsTestingPipeline}.
  */
 public class AvroToHdfsTestingPipelineTest {
 
