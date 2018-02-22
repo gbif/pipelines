@@ -11,9 +11,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>core</artifactId>
+
   <properties>
-    <gbif-parser.version>0.33-SNAPSHOT</gbif-parser.version>
+    <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
   </properties>
+
   <build>
     <plugins>
       <!--  Generate source from Avro definitions -->
@@ -28,8 +30,9 @@
               <goal>schema</goal>
             </goals>
             <configuration>
+              <stringType>String</stringType>
               <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
-              <outputDirectory>${project.basedir}/src/main/java-generated/</outputDirectory>
+              <outputDirectory>${avro-generated-path}</outputDirectory>
               <testSourceDirectory>../demo/src/main/java/test/avro/</testSourceDirectory>
               <testOutputDirectory>../demo/src/main/java/test/java-generated/</testOutputDirectory>
             </configuration>
@@ -48,25 +51,44 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.basedir}/src/main/java-generated/</source>
+                <source>${avro-generated-path}</source>
               </sources>
             </configuration>
           </execution>
         </executions>
       </plugin>
+      <!---->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${avro-generated-path}</directory>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
   <dependencies>
+
+    <!-- GBIF -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwca-io</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
-      <artifactId>gbif-parsers</artifactId>
-      <version>${gbif-parser.version}</version>
+      <artifactId>dwc-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-common</artifactId>
+    </dependency>
+
+    <!-- Other -->
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
@@ -84,13 +106,16 @@
       <artifactId>converter-gson</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>logging-interceptor</artifactId>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
@@ -101,5 +126,11 @@
       <artifactId>hadoop-common</artifactId>
       <scope>provided</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
   </dependencies>
 </project>

@@ -108,9 +108,9 @@ public class Interpretation<T> implements Serializable {
     lineage.forEach(traceConsumer);
   }
 
-  public IssueLineageRecord getIssueLineageRecord(CharSequence occurrenceId) {
-    Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<>();
-    Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<>();
+  public IssueLineageRecord getIssueLineageRecord(String occurrenceId) {
+    Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
+    Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
 
     this.forEachValidation((issueTrace) -> {
       final Issue build = Issue.newBuilder().setRemark(issueTrace.getRemark()).setIssueType(issueTrace.context).build();

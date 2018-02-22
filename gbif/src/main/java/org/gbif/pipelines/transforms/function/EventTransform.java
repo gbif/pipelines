@@ -36,7 +36,7 @@ public class EventTransform extends DoFn<ExtendedRecord, KV<String, Event>> {
 
     ExtendedRecord record = ctx.element();
 
-    Function<DwcTerm, CharSequence> getValue = (dwcterm) -> record.getCoreTerms().get(dwcterm.qualifiedName());
+    Function<DwcTerm, String> getValue = (dwcterm) -> record.getCoreTerms().get(dwcterm.qualifiedName());
 
     Event event = Event.newBuilder()
       //mapping raw record with interpreted ones

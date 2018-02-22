@@ -31,11 +31,11 @@ public class InterpretedIssueRecordTransform extends DoFn<KV<String, CoGbkResult
     IssueLineageRecord evt = result.getValue().getOnly(extendedOccurenceTransform.getTemporalIssueTag());
     IssueLineageRecord loc = result.getValue().getOnly(extendedOccurenceTransform.getSpatialIssueTag());
 
-    Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<>();
+    Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
     fieldIssueMap.putAll(evt.getFieldIssueMap());
     fieldIssueMap.putAll(loc.getFieldIssueMap());
 
-    Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<>();
+    Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
     fieldLineageMap.putAll(evt.getFieldLineageMap());
     fieldLineageMap.putAll(loc.getFieldLineageMap());
     //construct a final IssueLineageRecord for all categories

@@ -19,7 +19,8 @@
             "fields": [
               {
                 "name": "remark",
-                "type": "string"
+                "type": "string",
+                "default" : "null"
               },
               {
                 "name": "issueType",

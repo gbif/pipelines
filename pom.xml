@@ -4,10 +4,33 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>org.gbif</groupId>
+    <artifactId>motherpom</artifactId>
+    <version>37</version>
+  </parent>
+
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
   <packaging>pom</packaging>
   <version>1.0-SNAPSHOT</version>
+
+  <name>GBIF Pipelines</name>
+  <url>http://github.com/gbif/pipelines</url>
+
+  <scm>
+    <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
+    <url>https://github.com/gbif/pipelines</url>
+    <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <distributionManagement>
+    <site>
+      <id>gh-pages</id>
+      <url>http://gbif.github.io/pipelines/</url>
+    </site>
+  </distributionManagement>
 
   <modules>
     <module>core</module>
@@ -16,13 +39,8 @@
     <module>hadoop</module>
     <module>gbif</module>
     <module>living-atlas</module>
+    <module>labs</module>
   </modules>
-
-  <parent>
-    <groupId>org.gbif</groupId>
-    <artifactId>motherpom</artifactId>
-    <version>37</version>
-  </parent>
 
   <repositories>
     <repository>
@@ -46,21 +64,29 @@
     <gbif-parsers.version>0.32</gbif-parsers.version>
     <dwca-io.version>1.33-SNAPSHOT</dwca-io.version>
     <gbif-api.version>0.58</gbif-api.version>
+    <gbif-common.version>0.36</gbif-common.version>
+    <dwc-api.version>1.18-SNAPSHOT</dwc-api.version>
 
     <apache.beam.version>2.2.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
     <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
+    <commons-lang3.version>3.4</commons-lang3.version>
+    <solr.version>5.5.4</solr.version>
+    <protobuf.version>3.5.1</protobuf.version>
     <retrofit.version>2.3.0</retrofit.version>
+    <gson.version>2.7</gson.version>
+    <guava.version>18.0</guava.version>
     <okhttp.version>3.9.0</okhttp.version>
     <slf4j.version>1.7.24</slf4j.version>
     <logback.version>1.1.5</logback.version>
+
     <junit.version>4.12</junit.version>
-    <hamcrest.all.version>1.3</hamcrest.all.version>
-    <hadoop.hdfs.version>2.6.0-cdh5.12.1</hadoop.hdfs.version>
+    <hamcrest.version>1.3</hamcrest.version>
     <!-- Plugins -->
     <build-helper-maven.version>1.9.1</build-helper-maven.version>
     <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
+    <maven-clean-plugin.version>3.0.0</maven-clean-plugin.version>
   </properties>
 
   <build>
@@ -80,6 +106,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
           <version>${maven-shade-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>${maven-clean-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -103,8 +134,18 @@
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
+        <artifactId>dwc-api</artifactId>
+        <version>${dwc-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
         <artifactId>gbif-parsers</artifactId>
         <version>${gbif-parsers.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-common</artifactId>
+        <version>${gbif-common.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
@@ -118,6 +159,11 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
+        <artifactId>gbif-pipelines</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>beam-common</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -127,9 +173,14 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.pipelines</groupId>
-        <artifactId>gbif-pipelines</artifactId>
-        <version>${project.version}</version>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.beam</groupId>
@@ -150,6 +201,11 @@
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-sdks-java-io-solr</artifactId>
         <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.solr</groupId>
+        <artifactId>solr-solrj</artifactId>
+        <version>${solr.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.beam</groupId>
@@ -173,6 +229,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs</artifactId>
+        <version>${hadoop-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-core</artifactId>
         <version>${hadoop-core.version}</version>
         <exclusions>
@@ -186,6 +247,11 @@
             <artifactId>*</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${protobuf.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -204,11 +270,6 @@
         </exclusions>
       </dependency>
       <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-hdfs</artifactId>
-      <version>${hadoop-common.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>${slf4j.version}</version>
@@ -224,9 +285,20 @@
         <version>${retrofit.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>${gson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>${okhttp.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>logging-interceptor</artifactId>
         <version>${okhttp.version}</version>
+        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
@@ -234,6 +306,8 @@
         <version>${logback.version}</version>
         <scope>runtime</scope>
       </dependency>
+
+      <!--Test dependencies-->
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
@@ -243,9 +317,10 @@
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-all</artifactId>
-        <version>${hamcrest.all.version}</version>
+        <version>${hamcrest.version}</version>
         <scope>test</scope>
       </dependency>
+
     </dependencies>
   </dependencyManagement>
 </project>

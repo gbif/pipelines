@@ -35,7 +35,7 @@ public class EventTransformTest {
   private static final String INVALID_YEAR = "Y2K";
 
   private static ExtendedRecord buildTestData(String dayValue, String monthValue, String yearValue) {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.day.qualifiedName(), dayValue);
     coreTerms.put(DwcTerm.month.qualifiedName(), monthValue);
     coreTerms.put(DwcTerm.year.qualifiedName(), yearValue);

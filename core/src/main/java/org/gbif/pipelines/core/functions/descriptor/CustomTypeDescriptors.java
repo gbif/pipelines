@@ -8,7 +8,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 public class CustomTypeDescriptors {
 
   private CustomTypeDescriptors() {
-    //NOP
+    // Can't have an instance
   }
 
   public static TypeDescriptor<TypedOccurrence> typedOccurrencies() {

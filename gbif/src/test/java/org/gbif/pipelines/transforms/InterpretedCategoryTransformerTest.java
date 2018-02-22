@@ -52,7 +52,7 @@ public class InterpretedCategoryTransformerTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   private static ExtendedRecord VALID_INPUT() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.day.qualifiedName(), VALID_DAY);
     coreTerms.put(DwcTerm.month.qualifiedName(), VALID_MONTH);
     coreTerms.put(DwcTerm.year.qualifiedName(), VALID_YEAR);
@@ -67,7 +67,7 @@ public class InterpretedCategoryTransformerTest {
   }
 
   private static ExtendedRecord INVALID_INPUT2_ALL() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.day.qualifiedName(), INVALID_DAY);
     coreTerms.put(DwcTerm.month.qualifiedName(), INVALID_MONTH);
     coreTerms.put(DwcTerm.year.qualifiedName(), INVALID_YEAR);
@@ -82,7 +82,7 @@ public class InterpretedCategoryTransformerTest {
   }
 
   private static ExtendedRecord INVALID_MONTH_INVALID_INPUT2() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.day.qualifiedName(), VALID_DAY);
     coreTerms.put(DwcTerm.month.qualifiedName(), INVALID_MONTH);
     coreTerms.put(DwcTerm.year.qualifiedName(), VALID_YEAR);
@@ -95,7 +95,7 @@ public class InterpretedCategoryTransformerTest {
   }
 
   private static ExtendedRecord INVALID_DAY_YEAR_INVALID_INPUT2() {
-    Map<CharSequence, CharSequence> coreTerms = new HashMap<>();
+    Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.day.qualifiedName(), INVALID_DAY);
     coreTerms.put(DwcTerm.month.qualifiedName(), VALID_MONTH);
     coreTerms.put(DwcTerm.year.qualifiedName(), INVALID_YEAR);
@@ -144,8 +144,8 @@ public class InterpretedCategoryTransformerTest {
     List<KV<String, IssueLineageRecord>> temporalIssues = new ArrayList<>();
     for (ExtendedRecord record : getExtendedRecordArray()) {
       IssueLineageRecord e = new IssueLineageRecord();
-      Map<CharSequence, List<Issue>> fieldIssueMap = new HashMap<>();
-      Map<CharSequence, List<Lineage>> fieldLineageMap = new HashMap<>();
+      Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
+      Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
 
       final InterpretationResult<Integer> interpretDay =
         InterpretationFactory.interpret(DwcTerm.day, record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString());

@@ -42,7 +42,7 @@ public class LocationTransform extends DoFn<ExtendedRecord, KV<String, Location>
   @ProcessElement
   public void processElement(ProcessContext ctx) {
     ExtendedRecord record = ctx.element();
-    Function<DwcTerm, CharSequence> getValue = (dwcterm) -> record.getCoreTerms().get(dwcterm.qualifiedName());
+    Function<DwcTerm, String> getValue = (dwcterm) -> record.getCoreTerms().get(dwcterm.qualifiedName());
 
     Location loc = Location.newBuilder()
       //mapping raw record with interpreted ones
