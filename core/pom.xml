@@ -12,6 +12,10 @@
 
   <artifactId>core</artifactId>
 
+  <properties>
+    <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
+  </properties>
+
   <build>
     <plugins>
       <!--  Generate source from Avro definitions -->
@@ -26,8 +30,9 @@
               <goal>schema</goal>
             </goals>
             <configuration>
+              <stringType>String</stringType>
               <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
-              <outputDirectory>${project.basedir}/src/main/java-generated/</outputDirectory>
+              <outputDirectory>${avro-generated-path}</outputDirectory>
               <testSourceDirectory>../demo/src/main/java/test/avro/</testSourceDirectory>
               <testOutputDirectory>../demo/src/main/java/test/java-generated/</testOutputDirectory>
             </configuration>
@@ -46,11 +51,23 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.basedir}/src/main/java-generated/</source>
+                <source>${avro-generated-path}</source>
               </sources>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <!---->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${avro-generated-path}</directory>
+            </fileset>
+          </filesets>
+        </configuration>
       </plugin>
     </plugins>
   </build>
