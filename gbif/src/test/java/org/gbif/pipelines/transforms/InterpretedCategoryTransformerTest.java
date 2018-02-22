@@ -120,22 +120,22 @@ public class InterpretedCategoryTransformerTest {
       e.setOccurrenceID(record.getId());
       e.setBasisOfRecord(record.getCoreTerms().get(DwcTerm.basisOfRecord.qualifiedName()));
       try {
-        e.setDay(Integer.parseInt(record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString()));
+        e.setDay(Integer.parseInt(record.getCoreTerms().get(DwcTerm.day.qualifiedName())));
       } catch (Exception ignored) {
 
       }
       try {
-        e.setMonth(Integer.parseInt(record.getCoreTerms().get(DwcTerm.month.qualifiedName()).toString()));
+        e.setMonth(Integer.parseInt(record.getCoreTerms().get(DwcTerm.month.qualifiedName())));
       } catch (Exception ignored) {
 
       }
       try {
-        e.setYear(Integer.parseInt(record.getCoreTerms().get(DwcTerm.year.qualifiedName()).toString()));
+        e.setYear(Integer.parseInt(record.getCoreTerms().get(DwcTerm.year.qualifiedName())));
       } catch (Exception ignored) {
 
       }
 
-      eventsTemporal.add(KV.of(record.getId().toString(), e));
+      eventsTemporal.add(KV.of(record.getId(), e));
     }
     return eventsTemporal;
   }
@@ -148,23 +148,21 @@ public class InterpretedCategoryTransformerTest {
       Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
 
       final InterpretationResult<Integer> interpretDay =
-        InterpretationFactory.interpret(DwcTerm.day, record.getCoreTerms().get(DwcTerm.day.qualifiedName()).toString());
+        InterpretationFactory.interpret(DwcTerm.day, record.getCoreTerms().get(DwcTerm.day.qualifiedName()));
       if (!interpretDay.isSuccessFull()) {
         fieldIssueMap.put(DwcTerm.day.name(), interpretDay.getIssueList());
         fieldLineageMap.put(DwcTerm.day.name(), interpretDay.getLineageList());
       }
       InterpretationResult<Integer> interpretMonth = InterpretationFactory.interpret(DwcTerm.month,
                                                                                      record.getCoreTerms()
-                                                                                       .get(DwcTerm.month.qualifiedName())
-                                                                                       .toString());
+                                                                                       .get(DwcTerm.month.qualifiedName()));
       if (!interpretMonth.isSuccessFull()) {
         fieldIssueMap.put(DwcTerm.month.name(), interpretMonth.getIssueList());
         fieldLineageMap.put(DwcTerm.month.name(), interpretMonth.getLineageList());
       }
       InterpretationResult<Integer> interpretYear = InterpretationFactory.interpret(DwcTerm.year,
                                                                                     record.getCoreTerms()
-                                                                                      .get(DwcTerm.year.qualifiedName())
-                                                                                      .toString());
+                                                                                      .get(DwcTerm.year.qualifiedName()));
       if (!interpretYear.isSuccessFull()) {
         fieldIssueMap.put(DwcTerm.year.name(), interpretYear.getIssueList());
         fieldLineageMap.put(DwcTerm.year.name(), interpretYear.getLineageList());
@@ -172,7 +170,7 @@ public class InterpretedCategoryTransformerTest {
       e.setOccurenceId(record.getId());
       e.setFieldIssueMap(fieldIssueMap);
       e.setFieldLineageMap(fieldLineageMap);
-      temporalIssues.add(KV.of(record.getId().toString(), e));
+      temporalIssues.add(KV.of(record.getId(), e));
     }
     return temporalIssues;
   }

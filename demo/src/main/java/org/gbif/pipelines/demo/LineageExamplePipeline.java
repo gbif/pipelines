@@ -59,7 +59,7 @@ public class LineageExamplePipeline {
         ExtendedRecord input = c.element();
         UntypedOccurrence output = FunctionFactory.untypedOccurrenceBuilder().apply(input);
         // make up some bogus statements about lineage
-        String key = output.getOccurrenceId().toString();
+        String key = output.getOccurrenceId();
         c.output(lineage, KV.of(key, "Day [" + output.getDay() + "] was copied from input[something]"));
         c.output(lineage, KV.of(key, "Software version v0.12"));
         c.output(lineage, KV.of(key, "I am a random UUID[" + UUID.randomUUID() + "]"));

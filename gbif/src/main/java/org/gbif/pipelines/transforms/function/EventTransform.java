@@ -77,8 +77,8 @@ public class EventTransform extends DoFn<ExtendedRecord, KV<String, Event>> {
       .getIssueLineageRecord(record.getId());
     LOG.debug("Raw records converted to temporal category reporting issues and lineages");
     //all issues and lineages are dumped on this object
-    ctx.output(eventDataTag, KV.of(event.getOccurrenceID().toString(), event));
-    ctx.output(eventIssueTag, KV.of(event.getOccurrenceID().toString(), issueLineageRecord));
+    ctx.output(eventDataTag, KV.of(event.getOccurrenceID(), event));
+    ctx.output(eventIssueTag, KV.of(event.getOccurrenceID(), issueLineageRecord));
   }
 
   public TupleTag<KV<String, Event>> getEventDataTag() {

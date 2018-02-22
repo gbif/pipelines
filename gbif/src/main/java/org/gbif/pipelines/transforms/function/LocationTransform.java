@@ -42,7 +42,7 @@ public class LocationTransform extends DoFn<ExtendedRecord, KV<String, Location>
   @ProcessElement
   public void processElement(ProcessContext ctx) {
     ExtendedRecord record = ctx.element();
-    Function<DwcTerm, String> getValue = (dwcterm) -> record.getCoreTerms().get(dwcterm.qualifiedName());
+    Function<DwcTerm, String> getValue = dwcterm -> record.getCoreTerms().get(dwcterm.qualifiedName());
 
     Location loc = Location.newBuilder()
       //mapping raw record with interpreted ones
@@ -107,7 +107,7 @@ public class LocationTransform extends DoFn<ExtendedRecord, KV<String, Location>
     //all issues and lineages are dumped on this object
     issueLineageRecord.setOccurenceId(record.getId());
     LOG.debug("Raw records converted to spatial category reporting issues and lineages");
-    ctx.output(locationDataTag, KV.of(loc.getOccurrenceID().toString(), loc));
-    ctx.output(locationIssueTag, KV.of(loc.getOccurrenceID().toString(), issueLineageRecord));
+    ctx.output(locationDataTag, KV.of(loc.getOccurrenceID(), loc));
+    ctx.output(locationIssueTag, KV.of(loc.getOccurrenceID(), issueLineageRecord));
   }
 }

@@ -8,7 +8,6 @@ import org.gbif.pipelines.core.functions.interpretation.error.LineageType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -60,7 +59,7 @@ public class Interpretation<T> implements Serializable {
   public Interpretation<T> withValidation(String fieldName, List<Issue> validations) {
     validations.forEach((validation) -> this.validations.add(Trace.of(fieldName,
                                                                       validation.getIssueType(),
-                                                                      validation.getRemark().toString())));
+                                                                      validation.getRemark())));
     return this;
   }
 
@@ -78,7 +77,7 @@ public class Interpretation<T> implements Serializable {
   public Interpretation<T> withLineage(String fieldName, List<Lineage> lineages) {
     lineages.forEach((lineage) -> this.lineage.add(Trace.of(fieldName,
                                                             lineage.getLineageType(),
-                                                            lineage.getRemark().toString())));
+                                                            lineage.getRemark())));
     return this;
   }
 
