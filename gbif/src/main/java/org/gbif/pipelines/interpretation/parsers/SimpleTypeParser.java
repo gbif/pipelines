@@ -32,7 +32,7 @@ public class SimpleTypeParser {
   public static void parseInt(ExtendedRecord extendedRecord, DwcTerm term, Consumer<Optional<Integer>> consumer) {
     Optional
       .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-      .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseInteger(termValue.toString()))));
+      .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseInteger(termValue))));
   }
 
   /**
@@ -41,7 +41,7 @@ public class SimpleTypeParser {
   public static <U> U parseInt(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Integer>, U> mapper) {
     return Optional
             .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseInteger(termValue.toString()))))
+            .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseInteger(termValue))))
             .get();
   }
 
@@ -51,7 +51,7 @@ public class SimpleTypeParser {
   public static void parseDouble(ExtendedRecord extendedRecord, DwcTerm term, Consumer<Optional<Double>> consumer) {
     Optional
       .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-      .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseDouble(termValue.toString()))));
+      .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseDouble(termValue))));
   }
 
   /**
@@ -60,7 +60,7 @@ public class SimpleTypeParser {
   public static <U> U parseDouble(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Double>, U> mapper) {
     return Optional
             .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseDouble(termValue.toString()))))
+            .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseDouble(termValue))))
             .get();
   }
 
@@ -71,7 +71,7 @@ public class SimpleTypeParser {
   public static void parseBoolean(ExtendedRecord extendedRecord, DwcTerm term, Consumer<ParseResult<Boolean>> consumer) {
     Optional
       .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-      .ifPresent(termValue -> consumer.accept(BOOLEAN_PARSER.parse(termValue.toString())));
+      .ifPresent(termValue -> consumer.accept(BOOLEAN_PARSER.parse(termValue)));
   }
 
   /**
@@ -80,7 +80,7 @@ public class SimpleTypeParser {
   public static <U> U parseBoolean(ExtendedRecord extendedRecord, DwcTerm term, Function<ParseResult<Boolean>,U> mapper) {
     return Optional
             .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(termValue -> mapper.apply(BOOLEAN_PARSER.parse(termValue.toString())))
+            .map(termValue -> mapper.apply(BOOLEAN_PARSER.parse(termValue)))
             .get();
   }
 }

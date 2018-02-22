@@ -1,9 +1,13 @@
 package org.gbif.pipelines.hadoop.io;
 
+import org.gbif.pipelines.core.io.DwCAReader;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.UUID;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -16,8 +20,6 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.gbif.pipelines.core.io.DwCAReader;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +86,7 @@ public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
       if (e!=null) {
         // use the DwC record ID or else a UUID
         // TODO: consider this... ID is no good if it is not unique within the file
-        String id = e.getId() == null ? UUID.randomUUID().toString() : e.getId().toString();
+        String id = e.getId() == null ? UUID.randomUUID().toString() : e.getId();
         return new Text(id);
       }
       throw new IllegalStateException("Cannot get current key when no current record is available");
