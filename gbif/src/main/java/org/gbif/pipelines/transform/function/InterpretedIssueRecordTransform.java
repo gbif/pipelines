@@ -1,9 +1,9 @@
-package org.gbif.pipelines.transforms.function;
+package org.gbif.pipelines.transform.function;
 
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
-import org.gbif.pipelines.transforms.ExtendedOccurenceTransform;
+import org.gbif.pipelines.transform.ExtendedOccurenceTransform;
 
 import java.util.HashMap;
 import java.util.List;

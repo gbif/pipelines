@@ -5,7 +5,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.function.EventTransform;
+import org.gbif.pipelines.transform.function.EventTransform;
 
 import java.util.Collections;
 import java.util.HashMap;

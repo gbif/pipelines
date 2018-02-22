@@ -1,9 +1,9 @@
-package org.gbif.pipelines.transforms.function;
+package org.gbif.pipelines.transform.function;
 
 import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.transforms.ExtendedOccurenceTransform;
+import org.gbif.pipelines.transform.ExtendedOccurenceTransform;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;

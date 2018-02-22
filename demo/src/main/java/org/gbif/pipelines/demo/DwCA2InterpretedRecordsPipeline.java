@@ -12,10 +12,10 @@ import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.ExtendedOccurenceAvroDump;
-import org.gbif.pipelines.transforms.ExtendedOccurenceTransform;
-import org.gbif.pipelines.transforms.InterpretedCategoryAvroDump;
-import org.gbif.pipelines.transforms.InterpretedCategoryTransform;
+import org.gbif.pipelines.transform.ExtendedOccurenceAvroDump;
+import org.gbif.pipelines.transform.ExtendedOccurenceTransform;
+import org.gbif.pipelines.transform.InterpretedCategoryAvroDump;
+import org.gbif.pipelines.transform.InterpretedCategoryTransform;
 
 import java.util.Map;
 

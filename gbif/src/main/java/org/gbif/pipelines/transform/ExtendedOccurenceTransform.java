@@ -1,19 +1,12 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transform;
 
 import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
-import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
-import org.gbif.pipelines.transforms.function.InterpretedIssueRecordTransform;
-import org.gbif.pipelines.transforms.function.InterpretedOccurenceTransform;
+import org.gbif.pipelines.transform.function.InterpretedIssueRecordTransform;
+import org.gbif.pipelines.transform.function.InterpretedOccurenceTransform;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;

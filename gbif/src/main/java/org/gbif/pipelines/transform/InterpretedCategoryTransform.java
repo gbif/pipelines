@@ -1,11 +1,11 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transform;
 
 import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.function.EventTransform;
-import org.gbif.pipelines.transforms.function.LocationTransform;
+import org.gbif.pipelines.transform.function.EventTransform;
+import org.gbif.pipelines.transform.function.LocationTransform;
 
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;

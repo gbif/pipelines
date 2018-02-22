@@ -14,6 +14,7 @@ import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.interpretation.column.InterpretationFactory;
 import org.gbif.pipelines.interpretation.column.InterpretationResult;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transform.InterpretedCategoryTransform;
 
 import java.util.ArrayList;
 import java.util.Arrays;

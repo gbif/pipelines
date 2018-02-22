@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transform;
 
 import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.Location;

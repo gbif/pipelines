@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.function;
+package org.gbif.pipelines.transform.function;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
