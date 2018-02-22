@@ -39,7 +39,7 @@ public class UniqueOccurrenceIdTransformation extends ValidatorsTransformation<E
     //Convert from list to map where, key - occurrenceId, value - object instance
     PCollection<KV<String, ExtendedRecord>> map = input.apply(MAP_STEP
       , MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
-        .via((ExtendedRecord uo) -> KV.of(uo.getId().toString(), uo)));
+        .via((ExtendedRecord uo) -> KV.of(uo.getId(), uo)));
 
     //Group map by key - occurrenceId
     PCollection<KV<String, Iterable<ExtendedRecord>>> group = map.apply(GROUP_STEP, GroupByKey.create());

@@ -90,7 +90,7 @@ public class VocabularyParsers<T extends Enum<T>> {
    * @param onParse consumer called during parsing
    */
   public void parse(ExtendedRecord extendedRecord, Consumer<ParseResult<T>> onParse) {
-    Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()).toString())
+    Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
       .ifPresent( value -> onParse.accept(parser.parse(value)));
   }
 
@@ -101,7 +101,7 @@ public class VocabularyParsers<T extends Enum<T>> {
    * @param mapper function mapper
    */
   public <U> Optional<U> map(ExtendedRecord extendedRecord, Function<ParseResult<T>,U> mapper) {
-    return Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()).toString())
+    return Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
             .map(value -> mapper.apply(parser.parse(value)));
   }
 

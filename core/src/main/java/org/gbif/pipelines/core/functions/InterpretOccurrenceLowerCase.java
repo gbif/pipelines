@@ -29,8 +29,8 @@ public class InterpretOccurrenceLowerCase  implements SerializableFunction<Untyp
     target.setEventDate(source.getEventdate());
     try {
       if (source.getDecimallatitude() != null && source.getDecimallongitude() != null) {
-        Double lat = Double.parseDouble(source.getDecimallatitude().toString());
-        Double lng = Double.parseDouble(source.getDecimallongitude().toString());
+        Double lat = Double.parseDouble(source.getDecimallatitude());
+        Double lng = Double.parseDouble(source.getDecimallongitude());
 
         if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
           target.setDecimalLatitude(lat);
