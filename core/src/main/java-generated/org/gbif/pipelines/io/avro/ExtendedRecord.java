@@ -8,14 +8,14 @@ package org.gbif.pipelines.io.avro;
 /** A container for an extended DwC record (core plus extension data for a single record) */
 @org.apache.avro.specific.AvroGenerated
 public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ExtendedRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"A container for an extended DwC record (core plus extension data for a single record)\",\"fields\":[{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The record id\"},{\"name\":\"coreTerms\",\"type\":{\"type\":\"map\",\"values\":\"string\"},\"doc\":\"The core record terms\",\"default\":{}},{\"name\":\"extensions\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"array\",\"items\":{\"type\":\"map\",\"values\":[\"null\",\"string\"],\"default\":{}},\"default\":[]}},\"doc\":\"The extensions records\",\"default\":{}}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"ExtendedRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"A container for an extended DwC record (core plus extension data for a single record)\",\"fields\":[{\"name\":\"id\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"The record id\"},{\"name\":\"coreTerms\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"avro.java.string\":\"String\"},\"doc\":\"The core record terms\",\"default\":{}},{\"name\":\"extensions\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"array\",\"items\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"avro.java.string\":\"String\",\"default\":{}},\"default\":[]},\"avro.java.string\":\"String\"},\"doc\":\"The extensions records\",\"default\":{}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** The record id */
-  @Deprecated public java.lang.CharSequence id;
+  @Deprecated public java.lang.String id;
   /** The core record terms */
-  @Deprecated public java.util.Map<java.lang.CharSequence,java.lang.CharSequence> coreTerms;
+  @Deprecated public java.util.Map<java.lang.String,java.lang.String> coreTerms;
   /** The extensions records */
-  @Deprecated public java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>> extensions;
+  @Deprecated public java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>> extensions;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -27,7 +27,7 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
   /**
    * All-args constructor.
    */
-  public ExtendedRecord(java.lang.CharSequence id, java.util.Map<java.lang.CharSequence,java.lang.CharSequence> coreTerms, java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>> extensions) {
+  public ExtendedRecord(java.lang.String id, java.util.Map<java.lang.String,java.lang.String> coreTerms, java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>> extensions) {
     this.id = id;
     this.coreTerms = coreTerms;
     this.extensions = extensions;
@@ -47,9 +47,9 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: id = (java.lang.CharSequence)value$; break;
-    case 1: coreTerms = (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>)value$; break;
-    case 2: extensions = (java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>>)value$; break;
+    case 0: id = (java.lang.String)value$; break;
+    case 1: coreTerms = (java.util.Map<java.lang.String,java.lang.String>)value$; break;
+    case 2: extensions = (java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>>)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -57,7 +57,7 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
   /**
    * Gets the value of the 'id' field.
    * The record id   */
-  public java.lang.CharSequence getId() {
+  public java.lang.String getId() {
     return id;
   }
 
@@ -65,14 +65,14 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
    * Sets the value of the 'id' field.
    * The record id   * @param value the value to set.
    */
-  public void setId(java.lang.CharSequence value) {
+  public void setId(java.lang.String value) {
     this.id = value;
   }
 
   /**
    * Gets the value of the 'coreTerms' field.
    * The core record terms   */
-  public java.util.Map<java.lang.CharSequence,java.lang.CharSequence> getCoreTerms() {
+  public java.util.Map<java.lang.String,java.lang.String> getCoreTerms() {
     return coreTerms;
   }
 
@@ -80,14 +80,14 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
    * Sets the value of the 'coreTerms' field.
    * The core record terms   * @param value the value to set.
    */
-  public void setCoreTerms(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
+  public void setCoreTerms(java.util.Map<java.lang.String,java.lang.String> value) {
     this.coreTerms = value;
   }
 
   /**
    * Gets the value of the 'extensions' field.
    * The extensions records   */
-  public java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>> getExtensions() {
+  public java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>> getExtensions() {
     return extensions;
   }
 
@@ -95,7 +95,7 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
    * Sets the value of the 'extensions' field.
    * The extensions records   * @param value the value to set.
    */
-  public void setExtensions(java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>> value) {
+  public void setExtensions(java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>> value) {
     this.extensions = value;
   }
 
@@ -120,9 +120,9 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<ExtendedRecord>
     implements org.apache.avro.data.RecordBuilder<ExtendedRecord> {
 
-    private java.lang.CharSequence id;
-    private java.util.Map<java.lang.CharSequence,java.lang.CharSequence> coreTerms;
-    private java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>> extensions;
+    private java.lang.String id;
+    private java.util.Map<java.lang.String,java.lang.String> coreTerms;
+    private java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>> extensions;
 
     /** Creates a new Builder */
     private Builder() {
@@ -164,12 +164,12 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
     }
 
     /** Gets the value of the 'id' field */
-    public java.lang.CharSequence getId() {
+    public java.lang.String getId() {
       return id;
     }
     
     /** Sets the value of the 'id' field */
-    public org.gbif.pipelines.io.avro.ExtendedRecord.Builder setId(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.ExtendedRecord.Builder setId(java.lang.String value) {
       validate(fields()[0], value);
       this.id = value;
       fieldSetFlags()[0] = true;
@@ -189,12 +189,12 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
     }
 
     /** Gets the value of the 'coreTerms' field */
-    public java.util.Map<java.lang.CharSequence,java.lang.CharSequence> getCoreTerms() {
+    public java.util.Map<java.lang.String,java.lang.String> getCoreTerms() {
       return coreTerms;
     }
     
     /** Sets the value of the 'coreTerms' field */
-    public org.gbif.pipelines.io.avro.ExtendedRecord.Builder setCoreTerms(java.util.Map<java.lang.CharSequence,java.lang.CharSequence> value) {
+    public org.gbif.pipelines.io.avro.ExtendedRecord.Builder setCoreTerms(java.util.Map<java.lang.String,java.lang.String> value) {
       validate(fields()[1], value);
       this.coreTerms = value;
       fieldSetFlags()[1] = true;
@@ -214,12 +214,12 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
     }
 
     /** Gets the value of the 'extensions' field */
-    public java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>> getExtensions() {
+    public java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>> getExtensions() {
       return extensions;
     }
     
     /** Sets the value of the 'extensions' field */
-    public org.gbif.pipelines.io.avro.ExtendedRecord.Builder setExtensions(java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>> value) {
+    public org.gbif.pipelines.io.avro.ExtendedRecord.Builder setExtensions(java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>> value) {
       validate(fields()[2], value);
       this.extensions = value;
       fieldSetFlags()[2] = true;
@@ -242,9 +242,9 @@ public class ExtendedRecord extends org.apache.avro.specific.SpecificRecordBase 
     public ExtendedRecord build() {
       try {
         ExtendedRecord record = new ExtendedRecord();
-        record.id = fieldSetFlags()[0] ? this.id : (java.lang.CharSequence) defaultValue(fields()[0]);
-        record.coreTerms = fieldSetFlags()[1] ? this.coreTerms : (java.util.Map<java.lang.CharSequence,java.lang.CharSequence>) defaultValue(fields()[1]);
-        record.extensions = fieldSetFlags()[2] ? this.extensions : (java.util.Map<java.lang.CharSequence,java.util.List<java.util.Map<java.lang.CharSequence,java.lang.CharSequence>>>) defaultValue(fields()[2]);
+        record.id = fieldSetFlags()[0] ? this.id : (java.lang.String) defaultValue(fields()[0]);
+        record.coreTerms = fieldSetFlags()[1] ? this.coreTerms : (java.util.Map<java.lang.String,java.lang.String>) defaultValue(fields()[1]);
+        record.extensions = fieldSetFlags()[2] ? this.extensions : (java.util.Map<java.lang.String,java.util.List<java.util.Map<java.lang.String,java.lang.String>>>) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

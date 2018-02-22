@@ -7,21 +7,21 @@ package org.gbif.pipelines.io.avro;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TypedOccurrence\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"occurrenceId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"kingdom\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"phylum\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"class\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"family\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"genus\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"species\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"specificEpithet\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"infraspecificEpithet\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"taxonRank\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"scientificName\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"scientificNameAuthorship\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"kingdomKey\",\"type\":\"int\"},{\"name\":\"phylumKey\",\"type\":\"int\"},{\"name\":\"classKey\",\"type\":\"int\"},{\"name\":\"orderKey\",\"type\":\"int\"},{\"name\":\"familyKey\",\"type\":\"int\"},{\"name\":\"genusKey\",\"type\":\"int\"},{\"name\":\"speciesKey\",\"type\":\"int\"},{\"name\":\"nubKey\",\"type\":\"int\"},{\"name\":\"basisOfRecord\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"decimalLatitude\",\"type\":\"double\"},{\"name\":\"decimalLongitude\",\"type\":\"double\"},{\"name\":\"geodeticDatum\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"country\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"eventDate\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"year\",\"type\":\"int\"},{\"name\":\"month\",\"type\":\"int\"},{\"name\":\"day\",\"type\":\"int\"},{\"name\":\"location\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TypedOccurrence\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"occurrenceId\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"kingdom\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"phylum\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"class\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"order\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"family\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"genus\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"species\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"specificEpithet\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"infraspecificEpithet\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"taxonRank\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"scientificName\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"scientificNameAuthorship\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"kingdomKey\",\"type\":\"int\"},{\"name\":\"phylumKey\",\"type\":\"int\"},{\"name\":\"classKey\",\"type\":\"int\"},{\"name\":\"orderKey\",\"type\":\"int\"},{\"name\":\"familyKey\",\"type\":\"int\"},{\"name\":\"genusKey\",\"type\":\"int\"},{\"name\":\"speciesKey\",\"type\":\"int\"},{\"name\":\"nubKey\",\"type\":\"int\"},{\"name\":\"basisOfRecord\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"decimalLatitude\",\"type\":\"double\"},{\"name\":\"decimalLongitude\",\"type\":\"double\"},{\"name\":\"geodeticDatum\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"country\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"eventDate\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"year\",\"type\":\"int\"},{\"name\":\"month\",\"type\":\"int\"},{\"name\":\"day\",\"type\":\"int\"},{\"name\":\"location\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
-  @Deprecated public java.lang.CharSequence occurrenceId;
-  @Deprecated public java.lang.CharSequence kingdom;
-  @Deprecated public java.lang.CharSequence phylum;
-  @Deprecated public java.lang.CharSequence class$;
-  @Deprecated public java.lang.CharSequence order;
-  @Deprecated public java.lang.CharSequence family;
-  @Deprecated public java.lang.CharSequence genus;
-  @Deprecated public java.lang.CharSequence species;
-  @Deprecated public java.lang.CharSequence specificEpithet;
-  @Deprecated public java.lang.CharSequence infraspecificEpithet;
-  @Deprecated public java.lang.CharSequence taxonRank;
-  @Deprecated public java.lang.CharSequence scientificName;
-  @Deprecated public java.lang.CharSequence scientificNameAuthorship;
+  @Deprecated public java.lang.String occurrenceId;
+  @Deprecated public java.lang.String kingdom;
+  @Deprecated public java.lang.String phylum;
+  @Deprecated public java.lang.String class$;
+  @Deprecated public java.lang.String order;
+  @Deprecated public java.lang.String family;
+  @Deprecated public java.lang.String genus;
+  @Deprecated public java.lang.String species;
+  @Deprecated public java.lang.String specificEpithet;
+  @Deprecated public java.lang.String infraspecificEpithet;
+  @Deprecated public java.lang.String taxonRank;
+  @Deprecated public java.lang.String scientificName;
+  @Deprecated public java.lang.String scientificNameAuthorship;
   @Deprecated public int kingdomKey;
   @Deprecated public int phylumKey;
   @Deprecated public int classKey;
@@ -30,16 +30,16 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
   @Deprecated public int genusKey;
   @Deprecated public int speciesKey;
   @Deprecated public int nubKey;
-  @Deprecated public java.lang.CharSequence basisOfRecord;
+  @Deprecated public java.lang.String basisOfRecord;
   @Deprecated public double decimalLatitude;
   @Deprecated public double decimalLongitude;
-  @Deprecated public java.lang.CharSequence geodeticDatum;
-  @Deprecated public java.lang.CharSequence country;
-  @Deprecated public java.lang.CharSequence eventDate;
+  @Deprecated public java.lang.String geodeticDatum;
+  @Deprecated public java.lang.String country;
+  @Deprecated public java.lang.String eventDate;
   @Deprecated public int year;
   @Deprecated public int month;
   @Deprecated public int day;
-  @Deprecated public java.lang.CharSequence location;
+  @Deprecated public java.lang.String location;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -51,7 +51,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
   /**
    * All-args constructor.
    */
-  public TypedOccurrence(java.lang.CharSequence occurrenceId, java.lang.CharSequence kingdom, java.lang.CharSequence phylum, java.lang.CharSequence class$, java.lang.CharSequence order, java.lang.CharSequence family, java.lang.CharSequence genus, java.lang.CharSequence species, java.lang.CharSequence specificEpithet, java.lang.CharSequence infraspecificEpithet, java.lang.CharSequence taxonRank, java.lang.CharSequence scientificName, java.lang.CharSequence scientificNameAuthorship, java.lang.Integer kingdomKey, java.lang.Integer phylumKey, java.lang.Integer classKey, java.lang.Integer orderKey, java.lang.Integer familyKey, java.lang.Integer genusKey, java.lang.Integer speciesKey, java.lang.Integer nubKey, java.lang.CharSequence basisOfRecord, java.lang.Double decimalLatitude, java.lang.Double decimalLongitude, java.lang.CharSequence geodeticDatum, java.lang.CharSequence country, java.lang.CharSequence eventDate, java.lang.Integer year, java.lang.Integer month, java.lang.Integer day, java.lang.CharSequence location) {
+  public TypedOccurrence(java.lang.String occurrenceId, java.lang.String kingdom, java.lang.String phylum, java.lang.String class$, java.lang.String order, java.lang.String family, java.lang.String genus, java.lang.String species, java.lang.String specificEpithet, java.lang.String infraspecificEpithet, java.lang.String taxonRank, java.lang.String scientificName, java.lang.String scientificNameAuthorship, java.lang.Integer kingdomKey, java.lang.Integer phylumKey, java.lang.Integer classKey, java.lang.Integer orderKey, java.lang.Integer familyKey, java.lang.Integer genusKey, java.lang.Integer speciesKey, java.lang.Integer nubKey, java.lang.String basisOfRecord, java.lang.Double decimalLatitude, java.lang.Double decimalLongitude, java.lang.String geodeticDatum, java.lang.String country, java.lang.String eventDate, java.lang.Integer year, java.lang.Integer month, java.lang.Integer day, java.lang.String location) {
     this.occurrenceId = occurrenceId;
     this.kingdom = kingdom;
     this.phylum = phylum;
@@ -127,19 +127,19 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: occurrenceId = (java.lang.CharSequence)value$; break;
-    case 1: kingdom = (java.lang.CharSequence)value$; break;
-    case 2: phylum = (java.lang.CharSequence)value$; break;
-    case 3: class$ = (java.lang.CharSequence)value$; break;
-    case 4: order = (java.lang.CharSequence)value$; break;
-    case 5: family = (java.lang.CharSequence)value$; break;
-    case 6: genus = (java.lang.CharSequence)value$; break;
-    case 7: species = (java.lang.CharSequence)value$; break;
-    case 8: specificEpithet = (java.lang.CharSequence)value$; break;
-    case 9: infraspecificEpithet = (java.lang.CharSequence)value$; break;
-    case 10: taxonRank = (java.lang.CharSequence)value$; break;
-    case 11: scientificName = (java.lang.CharSequence)value$; break;
-    case 12: scientificNameAuthorship = (java.lang.CharSequence)value$; break;
+    case 0: occurrenceId = (java.lang.String)value$; break;
+    case 1: kingdom = (java.lang.String)value$; break;
+    case 2: phylum = (java.lang.String)value$; break;
+    case 3: class$ = (java.lang.String)value$; break;
+    case 4: order = (java.lang.String)value$; break;
+    case 5: family = (java.lang.String)value$; break;
+    case 6: genus = (java.lang.String)value$; break;
+    case 7: species = (java.lang.String)value$; break;
+    case 8: specificEpithet = (java.lang.String)value$; break;
+    case 9: infraspecificEpithet = (java.lang.String)value$; break;
+    case 10: taxonRank = (java.lang.String)value$; break;
+    case 11: scientificName = (java.lang.String)value$; break;
+    case 12: scientificNameAuthorship = (java.lang.String)value$; break;
     case 13: kingdomKey = (java.lang.Integer)value$; break;
     case 14: phylumKey = (java.lang.Integer)value$; break;
     case 15: classKey = (java.lang.Integer)value$; break;
@@ -148,16 +148,16 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     case 18: genusKey = (java.lang.Integer)value$; break;
     case 19: speciesKey = (java.lang.Integer)value$; break;
     case 20: nubKey = (java.lang.Integer)value$; break;
-    case 21: basisOfRecord = (java.lang.CharSequence)value$; break;
+    case 21: basisOfRecord = (java.lang.String)value$; break;
     case 22: decimalLatitude = (java.lang.Double)value$; break;
     case 23: decimalLongitude = (java.lang.Double)value$; break;
-    case 24: geodeticDatum = (java.lang.CharSequence)value$; break;
-    case 25: country = (java.lang.CharSequence)value$; break;
-    case 26: eventDate = (java.lang.CharSequence)value$; break;
+    case 24: geodeticDatum = (java.lang.String)value$; break;
+    case 25: country = (java.lang.String)value$; break;
+    case 26: eventDate = (java.lang.String)value$; break;
     case 27: year = (java.lang.Integer)value$; break;
     case 28: month = (java.lang.Integer)value$; break;
     case 29: day = (java.lang.Integer)value$; break;
-    case 30: location = (java.lang.CharSequence)value$; break;
+    case 30: location = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -165,7 +165,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
   /**
    * Gets the value of the 'occurrenceId' field.
    */
-  public java.lang.CharSequence getOccurrenceId() {
+  public java.lang.String getOccurrenceId() {
     return occurrenceId;
   }
 
@@ -173,14 +173,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'occurrenceId' field.
    * @param value the value to set.
    */
-  public void setOccurrenceId(java.lang.CharSequence value) {
+  public void setOccurrenceId(java.lang.String value) {
     this.occurrenceId = value;
   }
 
   /**
    * Gets the value of the 'kingdom' field.
    */
-  public java.lang.CharSequence getKingdom() {
+  public java.lang.String getKingdom() {
     return kingdom;
   }
 
@@ -188,14 +188,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'kingdom' field.
    * @param value the value to set.
    */
-  public void setKingdom(java.lang.CharSequence value) {
+  public void setKingdom(java.lang.String value) {
     this.kingdom = value;
   }
 
   /**
    * Gets the value of the 'phylum' field.
    */
-  public java.lang.CharSequence getPhylum() {
+  public java.lang.String getPhylum() {
     return phylum;
   }
 
@@ -203,14 +203,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'phylum' field.
    * @param value the value to set.
    */
-  public void setPhylum(java.lang.CharSequence value) {
+  public void setPhylum(java.lang.String value) {
     this.phylum = value;
   }
 
   /**
    * Gets the value of the 'class$' field.
    */
-  public java.lang.CharSequence getClass$() {
+  public java.lang.String getClass$() {
     return class$;
   }
 
@@ -218,14 +218,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'class$' field.
    * @param value the value to set.
    */
-  public void setClass$(java.lang.CharSequence value) {
+  public void setClass$(java.lang.String value) {
     this.class$ = value;
   }
 
   /**
    * Gets the value of the 'order' field.
    */
-  public java.lang.CharSequence getOrder() {
+  public java.lang.String getOrder() {
     return order;
   }
 
@@ -233,14 +233,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'order' field.
    * @param value the value to set.
    */
-  public void setOrder(java.lang.CharSequence value) {
+  public void setOrder(java.lang.String value) {
     this.order = value;
   }
 
   /**
    * Gets the value of the 'family' field.
    */
-  public java.lang.CharSequence getFamily() {
+  public java.lang.String getFamily() {
     return family;
   }
 
@@ -248,14 +248,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'family' field.
    * @param value the value to set.
    */
-  public void setFamily(java.lang.CharSequence value) {
+  public void setFamily(java.lang.String value) {
     this.family = value;
   }
 
   /**
    * Gets the value of the 'genus' field.
    */
-  public java.lang.CharSequence getGenus() {
+  public java.lang.String getGenus() {
     return genus;
   }
 
@@ -263,14 +263,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'genus' field.
    * @param value the value to set.
    */
-  public void setGenus(java.lang.CharSequence value) {
+  public void setGenus(java.lang.String value) {
     this.genus = value;
   }
 
   /**
    * Gets the value of the 'species' field.
    */
-  public java.lang.CharSequence getSpecies() {
+  public java.lang.String getSpecies() {
     return species;
   }
 
@@ -278,14 +278,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'species' field.
    * @param value the value to set.
    */
-  public void setSpecies(java.lang.CharSequence value) {
+  public void setSpecies(java.lang.String value) {
     this.species = value;
   }
 
   /**
    * Gets the value of the 'specificEpithet' field.
    */
-  public java.lang.CharSequence getSpecificEpithet() {
+  public java.lang.String getSpecificEpithet() {
     return specificEpithet;
   }
 
@@ -293,14 +293,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'specificEpithet' field.
    * @param value the value to set.
    */
-  public void setSpecificEpithet(java.lang.CharSequence value) {
+  public void setSpecificEpithet(java.lang.String value) {
     this.specificEpithet = value;
   }
 
   /**
    * Gets the value of the 'infraspecificEpithet' field.
    */
-  public java.lang.CharSequence getInfraspecificEpithet() {
+  public java.lang.String getInfraspecificEpithet() {
     return infraspecificEpithet;
   }
 
@@ -308,14 +308,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'infraspecificEpithet' field.
    * @param value the value to set.
    */
-  public void setInfraspecificEpithet(java.lang.CharSequence value) {
+  public void setInfraspecificEpithet(java.lang.String value) {
     this.infraspecificEpithet = value;
   }
 
   /**
    * Gets the value of the 'taxonRank' field.
    */
-  public java.lang.CharSequence getTaxonRank() {
+  public java.lang.String getTaxonRank() {
     return taxonRank;
   }
 
@@ -323,14 +323,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'taxonRank' field.
    * @param value the value to set.
    */
-  public void setTaxonRank(java.lang.CharSequence value) {
+  public void setTaxonRank(java.lang.String value) {
     this.taxonRank = value;
   }
 
   /**
    * Gets the value of the 'scientificName' field.
    */
-  public java.lang.CharSequence getScientificName() {
+  public java.lang.String getScientificName() {
     return scientificName;
   }
 
@@ -338,14 +338,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'scientificName' field.
    * @param value the value to set.
    */
-  public void setScientificName(java.lang.CharSequence value) {
+  public void setScientificName(java.lang.String value) {
     this.scientificName = value;
   }
 
   /**
    * Gets the value of the 'scientificNameAuthorship' field.
    */
-  public java.lang.CharSequence getScientificNameAuthorship() {
+  public java.lang.String getScientificNameAuthorship() {
     return scientificNameAuthorship;
   }
 
@@ -353,7 +353,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'scientificNameAuthorship' field.
    * @param value the value to set.
    */
-  public void setScientificNameAuthorship(java.lang.CharSequence value) {
+  public void setScientificNameAuthorship(java.lang.String value) {
     this.scientificNameAuthorship = value;
   }
 
@@ -480,7 +480,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
   /**
    * Gets the value of the 'basisOfRecord' field.
    */
-  public java.lang.CharSequence getBasisOfRecord() {
+  public java.lang.String getBasisOfRecord() {
     return basisOfRecord;
   }
 
@@ -488,7 +488,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'basisOfRecord' field.
    * @param value the value to set.
    */
-  public void setBasisOfRecord(java.lang.CharSequence value) {
+  public void setBasisOfRecord(java.lang.String value) {
     this.basisOfRecord = value;
   }
 
@@ -525,7 +525,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
   /**
    * Gets the value of the 'geodeticDatum' field.
    */
-  public java.lang.CharSequence getGeodeticDatum() {
+  public java.lang.String getGeodeticDatum() {
     return geodeticDatum;
   }
 
@@ -533,14 +533,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'geodeticDatum' field.
    * @param value the value to set.
    */
-  public void setGeodeticDatum(java.lang.CharSequence value) {
+  public void setGeodeticDatum(java.lang.String value) {
     this.geodeticDatum = value;
   }
 
   /**
    * Gets the value of the 'country' field.
    */
-  public java.lang.CharSequence getCountry() {
+  public java.lang.String getCountry() {
     return country;
   }
 
@@ -548,14 +548,14 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'country' field.
    * @param value the value to set.
    */
-  public void setCountry(java.lang.CharSequence value) {
+  public void setCountry(java.lang.String value) {
     this.country = value;
   }
 
   /**
    * Gets the value of the 'eventDate' field.
    */
-  public java.lang.CharSequence getEventDate() {
+  public java.lang.String getEventDate() {
     return eventDate;
   }
 
@@ -563,7 +563,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'eventDate' field.
    * @param value the value to set.
    */
-  public void setEventDate(java.lang.CharSequence value) {
+  public void setEventDate(java.lang.String value) {
     this.eventDate = value;
   }
 
@@ -615,7 +615,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
   /**
    * Gets the value of the 'location' field.
    */
-  public java.lang.CharSequence getLocation() {
+  public java.lang.String getLocation() {
     return location;
   }
 
@@ -623,7 +623,7 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'location' field.
    * @param value the value to set.
    */
-  public void setLocation(java.lang.CharSequence value) {
+  public void setLocation(java.lang.String value) {
     this.location = value;
   }
 
@@ -648,19 +648,19 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<TypedOccurrence>
     implements org.apache.avro.data.RecordBuilder<TypedOccurrence> {
 
-    private java.lang.CharSequence occurrenceId;
-    private java.lang.CharSequence kingdom;
-    private java.lang.CharSequence phylum;
-    private java.lang.CharSequence class$;
-    private java.lang.CharSequence order;
-    private java.lang.CharSequence family;
-    private java.lang.CharSequence genus;
-    private java.lang.CharSequence species;
-    private java.lang.CharSequence specificEpithet;
-    private java.lang.CharSequence infraspecificEpithet;
-    private java.lang.CharSequence taxonRank;
-    private java.lang.CharSequence scientificName;
-    private java.lang.CharSequence scientificNameAuthorship;
+    private java.lang.String occurrenceId;
+    private java.lang.String kingdom;
+    private java.lang.String phylum;
+    private java.lang.String class$;
+    private java.lang.String order;
+    private java.lang.String family;
+    private java.lang.String genus;
+    private java.lang.String species;
+    private java.lang.String specificEpithet;
+    private java.lang.String infraspecificEpithet;
+    private java.lang.String taxonRank;
+    private java.lang.String scientificName;
+    private java.lang.String scientificNameAuthorship;
     private int kingdomKey;
     private int phylumKey;
     private int classKey;
@@ -669,16 +669,16 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     private int genusKey;
     private int speciesKey;
     private int nubKey;
-    private java.lang.CharSequence basisOfRecord;
+    private java.lang.String basisOfRecord;
     private double decimalLatitude;
     private double decimalLongitude;
-    private java.lang.CharSequence geodeticDatum;
-    private java.lang.CharSequence country;
-    private java.lang.CharSequence eventDate;
+    private java.lang.String geodeticDatum;
+    private java.lang.String country;
+    private java.lang.String eventDate;
     private int year;
     private int month;
     private int day;
-    private java.lang.CharSequence location;
+    private java.lang.String location;
 
     /** Creates a new Builder */
     private Builder() {
@@ -944,12 +944,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'occurrenceId' field */
-    public java.lang.CharSequence getOccurrenceId() {
+    public java.lang.String getOccurrenceId() {
       return occurrenceId;
     }
     
     /** Sets the value of the 'occurrenceId' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setOccurrenceId(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setOccurrenceId(java.lang.String value) {
       validate(fields()[0], value);
       this.occurrenceId = value;
       fieldSetFlags()[0] = true;
@@ -969,12 +969,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'kingdom' field */
-    public java.lang.CharSequence getKingdom() {
+    public java.lang.String getKingdom() {
       return kingdom;
     }
     
     /** Sets the value of the 'kingdom' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setKingdom(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setKingdom(java.lang.String value) {
       validate(fields()[1], value);
       this.kingdom = value;
       fieldSetFlags()[1] = true;
@@ -994,12 +994,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'phylum' field */
-    public java.lang.CharSequence getPhylum() {
+    public java.lang.String getPhylum() {
       return phylum;
     }
     
     /** Sets the value of the 'phylum' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setPhylum(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setPhylum(java.lang.String value) {
       validate(fields()[2], value);
       this.phylum = value;
       fieldSetFlags()[2] = true;
@@ -1019,12 +1019,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'class$' field */
-    public java.lang.CharSequence getClass$() {
+    public java.lang.String getClass$() {
       return class$;
     }
     
     /** Sets the value of the 'class$' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setClass$(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setClass$(java.lang.String value) {
       validate(fields()[3], value);
       this.class$ = value;
       fieldSetFlags()[3] = true;
@@ -1044,12 +1044,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'order' field */
-    public java.lang.CharSequence getOrder() {
+    public java.lang.String getOrder() {
       return order;
     }
     
     /** Sets the value of the 'order' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setOrder(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setOrder(java.lang.String value) {
       validate(fields()[4], value);
       this.order = value;
       fieldSetFlags()[4] = true;
@@ -1069,12 +1069,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'family' field */
-    public java.lang.CharSequence getFamily() {
+    public java.lang.String getFamily() {
       return family;
     }
     
     /** Sets the value of the 'family' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setFamily(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setFamily(java.lang.String value) {
       validate(fields()[5], value);
       this.family = value;
       fieldSetFlags()[5] = true;
@@ -1094,12 +1094,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'genus' field */
-    public java.lang.CharSequence getGenus() {
+    public java.lang.String getGenus() {
       return genus;
     }
     
     /** Sets the value of the 'genus' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setGenus(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setGenus(java.lang.String value) {
       validate(fields()[6], value);
       this.genus = value;
       fieldSetFlags()[6] = true;
@@ -1119,12 +1119,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'species' field */
-    public java.lang.CharSequence getSpecies() {
+    public java.lang.String getSpecies() {
       return species;
     }
     
     /** Sets the value of the 'species' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setSpecies(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setSpecies(java.lang.String value) {
       validate(fields()[7], value);
       this.species = value;
       fieldSetFlags()[7] = true;
@@ -1144,12 +1144,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'specificEpithet' field */
-    public java.lang.CharSequence getSpecificEpithet() {
+    public java.lang.String getSpecificEpithet() {
       return specificEpithet;
     }
     
     /** Sets the value of the 'specificEpithet' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setSpecificEpithet(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setSpecificEpithet(java.lang.String value) {
       validate(fields()[8], value);
       this.specificEpithet = value;
       fieldSetFlags()[8] = true;
@@ -1169,12 +1169,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'infraspecificEpithet' field */
-    public java.lang.CharSequence getInfraspecificEpithet() {
+    public java.lang.String getInfraspecificEpithet() {
       return infraspecificEpithet;
     }
     
     /** Sets the value of the 'infraspecificEpithet' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setInfraspecificEpithet(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setInfraspecificEpithet(java.lang.String value) {
       validate(fields()[9], value);
       this.infraspecificEpithet = value;
       fieldSetFlags()[9] = true;
@@ -1194,12 +1194,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'taxonRank' field */
-    public java.lang.CharSequence getTaxonRank() {
+    public java.lang.String getTaxonRank() {
       return taxonRank;
     }
     
     /** Sets the value of the 'taxonRank' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setTaxonRank(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setTaxonRank(java.lang.String value) {
       validate(fields()[10], value);
       this.taxonRank = value;
       fieldSetFlags()[10] = true;
@@ -1219,12 +1219,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'scientificName' field */
-    public java.lang.CharSequence getScientificName() {
+    public java.lang.String getScientificName() {
       return scientificName;
     }
     
     /** Sets the value of the 'scientificName' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setScientificName(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setScientificName(java.lang.String value) {
       validate(fields()[11], value);
       this.scientificName = value;
       fieldSetFlags()[11] = true;
@@ -1244,12 +1244,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'scientificNameAuthorship' field */
-    public java.lang.CharSequence getScientificNameAuthorship() {
+    public java.lang.String getScientificNameAuthorship() {
       return scientificNameAuthorship;
     }
     
     /** Sets the value of the 'scientificNameAuthorship' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setScientificNameAuthorship(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setScientificNameAuthorship(java.lang.String value) {
       validate(fields()[12], value);
       this.scientificNameAuthorship = value;
       fieldSetFlags()[12] = true;
@@ -1461,12 +1461,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'basisOfRecord' field */
-    public java.lang.CharSequence getBasisOfRecord() {
+    public java.lang.String getBasisOfRecord() {
       return basisOfRecord;
     }
     
     /** Sets the value of the 'basisOfRecord' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setBasisOfRecord(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setBasisOfRecord(java.lang.String value) {
       validate(fields()[21], value);
       this.basisOfRecord = value;
       fieldSetFlags()[21] = true;
@@ -1534,12 +1534,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'geodeticDatum' field */
-    public java.lang.CharSequence getGeodeticDatum() {
+    public java.lang.String getGeodeticDatum() {
       return geodeticDatum;
     }
     
     /** Sets the value of the 'geodeticDatum' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setGeodeticDatum(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setGeodeticDatum(java.lang.String value) {
       validate(fields()[24], value);
       this.geodeticDatum = value;
       fieldSetFlags()[24] = true;
@@ -1559,12 +1559,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'country' field */
-    public java.lang.CharSequence getCountry() {
+    public java.lang.String getCountry() {
       return country;
     }
     
     /** Sets the value of the 'country' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setCountry(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setCountry(java.lang.String value) {
       validate(fields()[25], value);
       this.country = value;
       fieldSetFlags()[25] = true;
@@ -1584,12 +1584,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'eventDate' field */
-    public java.lang.CharSequence getEventDate() {
+    public java.lang.String getEventDate() {
       return eventDate;
     }
     
     /** Sets the value of the 'eventDate' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setEventDate(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setEventDate(java.lang.String value) {
       validate(fields()[26], value);
       this.eventDate = value;
       fieldSetFlags()[26] = true;
@@ -1681,12 +1681,12 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'location' field */
-    public java.lang.CharSequence getLocation() {
+    public java.lang.String getLocation() {
       return location;
     }
     
     /** Sets the value of the 'location' field */
-    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setLocation(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TypedOccurrence.Builder setLocation(java.lang.String value) {
       validate(fields()[30], value);
       this.location = value;
       fieldSetFlags()[30] = true;
@@ -1709,19 +1709,19 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
     public TypedOccurrence build() {
       try {
         TypedOccurrence record = new TypedOccurrence();
-        record.occurrenceId = fieldSetFlags()[0] ? this.occurrenceId : (java.lang.CharSequence) defaultValue(fields()[0]);
-        record.kingdom = fieldSetFlags()[1] ? this.kingdom : (java.lang.CharSequence) defaultValue(fields()[1]);
-        record.phylum = fieldSetFlags()[2] ? this.phylum : (java.lang.CharSequence) defaultValue(fields()[2]);
-        record.class$ = fieldSetFlags()[3] ? this.class$ : (java.lang.CharSequence) defaultValue(fields()[3]);
-        record.order = fieldSetFlags()[4] ? this.order : (java.lang.CharSequence) defaultValue(fields()[4]);
-        record.family = fieldSetFlags()[5] ? this.family : (java.lang.CharSequence) defaultValue(fields()[5]);
-        record.genus = fieldSetFlags()[6] ? this.genus : (java.lang.CharSequence) defaultValue(fields()[6]);
-        record.species = fieldSetFlags()[7] ? this.species : (java.lang.CharSequence) defaultValue(fields()[7]);
-        record.specificEpithet = fieldSetFlags()[8] ? this.specificEpithet : (java.lang.CharSequence) defaultValue(fields()[8]);
-        record.infraspecificEpithet = fieldSetFlags()[9] ? this.infraspecificEpithet : (java.lang.CharSequence) defaultValue(fields()[9]);
-        record.taxonRank = fieldSetFlags()[10] ? this.taxonRank : (java.lang.CharSequence) defaultValue(fields()[10]);
-        record.scientificName = fieldSetFlags()[11] ? this.scientificName : (java.lang.CharSequence) defaultValue(fields()[11]);
-        record.scientificNameAuthorship = fieldSetFlags()[12] ? this.scientificNameAuthorship : (java.lang.CharSequence) defaultValue(fields()[12]);
+        record.occurrenceId = fieldSetFlags()[0] ? this.occurrenceId : (java.lang.String) defaultValue(fields()[0]);
+        record.kingdom = fieldSetFlags()[1] ? this.kingdom : (java.lang.String) defaultValue(fields()[1]);
+        record.phylum = fieldSetFlags()[2] ? this.phylum : (java.lang.String) defaultValue(fields()[2]);
+        record.class$ = fieldSetFlags()[3] ? this.class$ : (java.lang.String) defaultValue(fields()[3]);
+        record.order = fieldSetFlags()[4] ? this.order : (java.lang.String) defaultValue(fields()[4]);
+        record.family = fieldSetFlags()[5] ? this.family : (java.lang.String) defaultValue(fields()[5]);
+        record.genus = fieldSetFlags()[6] ? this.genus : (java.lang.String) defaultValue(fields()[6]);
+        record.species = fieldSetFlags()[7] ? this.species : (java.lang.String) defaultValue(fields()[7]);
+        record.specificEpithet = fieldSetFlags()[8] ? this.specificEpithet : (java.lang.String) defaultValue(fields()[8]);
+        record.infraspecificEpithet = fieldSetFlags()[9] ? this.infraspecificEpithet : (java.lang.String) defaultValue(fields()[9]);
+        record.taxonRank = fieldSetFlags()[10] ? this.taxonRank : (java.lang.String) defaultValue(fields()[10]);
+        record.scientificName = fieldSetFlags()[11] ? this.scientificName : (java.lang.String) defaultValue(fields()[11]);
+        record.scientificNameAuthorship = fieldSetFlags()[12] ? this.scientificNameAuthorship : (java.lang.String) defaultValue(fields()[12]);
         record.kingdomKey = fieldSetFlags()[13] ? this.kingdomKey : (java.lang.Integer) defaultValue(fields()[13]);
         record.phylumKey = fieldSetFlags()[14] ? this.phylumKey : (java.lang.Integer) defaultValue(fields()[14]);
         record.classKey = fieldSetFlags()[15] ? this.classKey : (java.lang.Integer) defaultValue(fields()[15]);
@@ -1730,16 +1730,16 @@ public class TypedOccurrence extends org.apache.avro.specific.SpecificRecordBase
         record.genusKey = fieldSetFlags()[18] ? this.genusKey : (java.lang.Integer) defaultValue(fields()[18]);
         record.speciesKey = fieldSetFlags()[19] ? this.speciesKey : (java.lang.Integer) defaultValue(fields()[19]);
         record.nubKey = fieldSetFlags()[20] ? this.nubKey : (java.lang.Integer) defaultValue(fields()[20]);
-        record.basisOfRecord = fieldSetFlags()[21] ? this.basisOfRecord : (java.lang.CharSequence) defaultValue(fields()[21]);
+        record.basisOfRecord = fieldSetFlags()[21] ? this.basisOfRecord : (java.lang.String) defaultValue(fields()[21]);
         record.decimalLatitude = fieldSetFlags()[22] ? this.decimalLatitude : (java.lang.Double) defaultValue(fields()[22]);
         record.decimalLongitude = fieldSetFlags()[23] ? this.decimalLongitude : (java.lang.Double) defaultValue(fields()[23]);
-        record.geodeticDatum = fieldSetFlags()[24] ? this.geodeticDatum : (java.lang.CharSequence) defaultValue(fields()[24]);
-        record.country = fieldSetFlags()[25] ? this.country : (java.lang.CharSequence) defaultValue(fields()[25]);
-        record.eventDate = fieldSetFlags()[26] ? this.eventDate : (java.lang.CharSequence) defaultValue(fields()[26]);
+        record.geodeticDatum = fieldSetFlags()[24] ? this.geodeticDatum : (java.lang.String) defaultValue(fields()[24]);
+        record.country = fieldSetFlags()[25] ? this.country : (java.lang.String) defaultValue(fields()[25]);
+        record.eventDate = fieldSetFlags()[26] ? this.eventDate : (java.lang.String) defaultValue(fields()[26]);
         record.year = fieldSetFlags()[27] ? this.year : (java.lang.Integer) defaultValue(fields()[27]);
         record.month = fieldSetFlags()[28] ? this.month : (java.lang.Integer) defaultValue(fields()[28]);
         record.day = fieldSetFlags()[29] ? this.day : (java.lang.Integer) defaultValue(fields()[29]);
-        record.location = fieldSetFlags()[30] ? this.location : (java.lang.CharSequence) defaultValue(fields()[30]);
+        record.location = fieldSetFlags()[30] ? this.location : (java.lang.String) defaultValue(fields()[30]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

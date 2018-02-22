@@ -3,7 +3,7 @@
  *   UntypedOccurrence represents values as Strings (e.g. as read from the wire)
  *   TypedOccurrence represents values in the primitive types following interpretation.
  */
-{
+[{
   "name": "UntypedOccurrence",
   "namespace": "org.gbif.pipelines.io.avro",
   "type": "record",
@@ -112,4 +112,4 @@
 
     {"name": "location", "type": ["null", "string"], "default" : null }
   ]
-}
+}]

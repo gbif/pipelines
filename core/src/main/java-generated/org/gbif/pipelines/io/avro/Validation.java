@@ -7,10 +7,10 @@ package org.gbif.pipelines.io.avro;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class Validation extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Validation\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"severity\",\"type\":\"string\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Validation\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"severity\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
-  @Deprecated public java.lang.CharSequence name;
-  @Deprecated public java.lang.CharSequence severity;
+  @Deprecated public java.lang.String name;
+  @Deprecated public java.lang.String severity;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -22,7 +22,7 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
   /**
    * All-args constructor.
    */
-  public Validation(java.lang.CharSequence name, java.lang.CharSequence severity) {
+  public Validation(java.lang.String name, java.lang.String severity) {
     this.name = name;
     this.severity = severity;
   }
@@ -40,8 +40,8 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: name = (java.lang.CharSequence)value$; break;
-    case 1: severity = (java.lang.CharSequence)value$; break;
+    case 0: name = (java.lang.String)value$; break;
+    case 1: severity = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -49,7 +49,7 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
   /**
    * Gets the value of the 'name' field.
    */
-  public java.lang.CharSequence getName() {
+  public java.lang.String getName() {
     return name;
   }
 
@@ -57,14 +57,14 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
    * Sets the value of the 'name' field.
    * @param value the value to set.
    */
-  public void setName(java.lang.CharSequence value) {
+  public void setName(java.lang.String value) {
     this.name = value;
   }
 
   /**
    * Gets the value of the 'severity' field.
    */
-  public java.lang.CharSequence getSeverity() {
+  public java.lang.String getSeverity() {
     return severity;
   }
 
@@ -72,7 +72,7 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
    * Sets the value of the 'severity' field.
    * @param value the value to set.
    */
-  public void setSeverity(java.lang.CharSequence value) {
+  public void setSeverity(java.lang.String value) {
     this.severity = value;
   }
 
@@ -97,8 +97,8 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Validation>
     implements org.apache.avro.data.RecordBuilder<Validation> {
 
-    private java.lang.CharSequence name;
-    private java.lang.CharSequence severity;
+    private java.lang.String name;
+    private java.lang.String severity;
 
     /** Creates a new Builder */
     private Builder() {
@@ -132,12 +132,12 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
     }
 
     /** Gets the value of the 'name' field */
-    public java.lang.CharSequence getName() {
+    public java.lang.String getName() {
       return name;
     }
     
     /** Sets the value of the 'name' field */
-    public org.gbif.pipelines.io.avro.Validation.Builder setName(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.Validation.Builder setName(java.lang.String value) {
       validate(fields()[0], value);
       this.name = value;
       fieldSetFlags()[0] = true;
@@ -157,12 +157,12 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
     }
 
     /** Gets the value of the 'severity' field */
-    public java.lang.CharSequence getSeverity() {
+    public java.lang.String getSeverity() {
       return severity;
     }
     
     /** Sets the value of the 'severity' field */
-    public org.gbif.pipelines.io.avro.Validation.Builder setSeverity(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.Validation.Builder setSeverity(java.lang.String value) {
       validate(fields()[1], value);
       this.severity = value;
       fieldSetFlags()[1] = true;
@@ -185,8 +185,8 @@ public class Validation extends org.apache.avro.specific.SpecificRecordBase impl
     public Validation build() {
       try {
         Validation record = new Validation();
-        record.name = fieldSetFlags()[0] ? this.name : (java.lang.CharSequence) defaultValue(fields()[0]);
-        record.severity = fieldSetFlags()[1] ? this.severity : (java.lang.CharSequence) defaultValue(fields()[1]);
+        record.name = fieldSetFlags()[0] ? this.name : (java.lang.String) defaultValue(fields()[0]);
+        record.severity = fieldSetFlags()[1] ? this.severity : (java.lang.String) defaultValue(fields()[1]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

@@ -8,10 +8,10 @@ package org.gbif.pipelines.io.avro;
 /** A container for temporal fields of DarwinCore that have been interpreted. */
 @org.apache.avro.specific.AvroGenerated
 public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TemporalRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"A container for temporal fields of DarwinCore that have been interpreted.\",\"fields\":[{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The record id\"},{\"name\":\"year\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"month\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"day\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"startDayOfYear\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"endDayOfYear\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"modified\",\"type\":[\"null\",\"long\"],\"default\":null,\"logicalType\":\"timestamp-millis\"},{\"name\":\"dateIdentified\",\"type\":[\"null\",\"long\"],\"default\":null,\"logicalType\":\"timestamp-millis\"},{\"name\":\"eventTime\",\"type\":[\"null\",\"long\"],\"default\":null,\"logicalType\":\"time-millis\"},{\"name\":\"eventDate\",\"type\":[\"null\",\"string\"],\"default\":null,\"logicalType\":\"timestamp-millis\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TemporalRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"A container for temporal fields of DarwinCore that have been interpreted.\",\"fields\":[{\"name\":\"id\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"The record id\"},{\"name\":\"year\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"month\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"day\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"startDayOfYear\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"endDayOfYear\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"modified\",\"type\":[\"null\",\"long\"],\"default\":null,\"logicalType\":\"timestamp-millis\"},{\"name\":\"dateIdentified\",\"type\":[\"null\",\"long\"],\"default\":null,\"logicalType\":\"timestamp-millis\"},{\"name\":\"eventTime\",\"type\":[\"null\",\"long\"],\"default\":null,\"logicalType\":\"time-millis\"},{\"name\":\"eventDate\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null,\"logicalType\":\"timestamp-millis\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** The record id */
-  @Deprecated public java.lang.CharSequence id;
+  @Deprecated public java.lang.String id;
   @Deprecated public java.lang.Integer year;
   @Deprecated public java.lang.Integer month;
   @Deprecated public java.lang.Integer day;
@@ -20,7 +20,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
   @Deprecated public java.lang.Long modified;
   @Deprecated public java.lang.Long dateIdentified;
   @Deprecated public java.lang.Long eventTime;
-  @Deprecated public java.lang.CharSequence eventDate;
+  @Deprecated public java.lang.String eventDate;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -32,7 +32,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
   /**
    * All-args constructor.
    */
-  public TemporalRecord(java.lang.CharSequence id, java.lang.Integer year, java.lang.Integer month, java.lang.Integer day, java.lang.Integer startDayOfYear, java.lang.Integer endDayOfYear, java.lang.Long modified, java.lang.Long dateIdentified, java.lang.Long eventTime, java.lang.CharSequence eventDate) {
+  public TemporalRecord(java.lang.String id, java.lang.Integer year, java.lang.Integer month, java.lang.Integer day, java.lang.Integer startDayOfYear, java.lang.Integer endDayOfYear, java.lang.Long modified, java.lang.Long dateIdentified, java.lang.Long eventTime, java.lang.String eventDate) {
     this.id = id;
     this.year = year;
     this.month = month;
@@ -66,7 +66,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: id = (java.lang.CharSequence)value$; break;
+    case 0: id = (java.lang.String)value$; break;
     case 1: year = (java.lang.Integer)value$; break;
     case 2: month = (java.lang.Integer)value$; break;
     case 3: day = (java.lang.Integer)value$; break;
@@ -75,7 +75,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
     case 6: modified = (java.lang.Long)value$; break;
     case 7: dateIdentified = (java.lang.Long)value$; break;
     case 8: eventTime = (java.lang.Long)value$; break;
-    case 9: eventDate = (java.lang.CharSequence)value$; break;
+    case 9: eventDate = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -83,7 +83,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
   /**
    * Gets the value of the 'id' field.
    * The record id   */
-  public java.lang.CharSequence getId() {
+  public java.lang.String getId() {
     return id;
   }
 
@@ -91,7 +91,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
    * Sets the value of the 'id' field.
    * The record id   * @param value the value to set.
    */
-  public void setId(java.lang.CharSequence value) {
+  public void setId(java.lang.String value) {
     this.id = value;
   }
 
@@ -218,7 +218,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
   /**
    * Gets the value of the 'eventDate' field.
    */
-  public java.lang.CharSequence getEventDate() {
+  public java.lang.String getEventDate() {
     return eventDate;
   }
 
@@ -226,7 +226,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
    * Sets the value of the 'eventDate' field.
    * @param value the value to set.
    */
-  public void setEventDate(java.lang.CharSequence value) {
+  public void setEventDate(java.lang.String value) {
     this.eventDate = value;
   }
 
@@ -251,7 +251,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<TemporalRecord>
     implements org.apache.avro.data.RecordBuilder<TemporalRecord> {
 
-    private java.lang.CharSequence id;
+    private java.lang.String id;
     private java.lang.Integer year;
     private java.lang.Integer month;
     private java.lang.Integer day;
@@ -260,7 +260,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
     private java.lang.Long modified;
     private java.lang.Long dateIdentified;
     private java.lang.Long eventTime;
-    private java.lang.CharSequence eventDate;
+    private java.lang.String eventDate;
 
     /** Creates a new Builder */
     private Builder() {
@@ -358,12 +358,12 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
     }
 
     /** Gets the value of the 'id' field */
-    public java.lang.CharSequence getId() {
+    public java.lang.String getId() {
       return id;
     }
     
     /** Sets the value of the 'id' field */
-    public org.gbif.pipelines.io.avro.TemporalRecord.Builder setId(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TemporalRecord.Builder setId(java.lang.String value) {
       validate(fields()[0], value);
       this.id = value;
       fieldSetFlags()[0] = true;
@@ -583,12 +583,12 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
     }
 
     /** Gets the value of the 'eventDate' field */
-    public java.lang.CharSequence getEventDate() {
+    public java.lang.String getEventDate() {
       return eventDate;
     }
     
     /** Sets the value of the 'eventDate' field */
-    public org.gbif.pipelines.io.avro.TemporalRecord.Builder setEventDate(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TemporalRecord.Builder setEventDate(java.lang.String value) {
       validate(fields()[9], value);
       this.eventDate = value;
       fieldSetFlags()[9] = true;
@@ -611,7 +611,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
     public TemporalRecord build() {
       try {
         TemporalRecord record = new TemporalRecord();
-        record.id = fieldSetFlags()[0] ? this.id : (java.lang.CharSequence) defaultValue(fields()[0]);
+        record.id = fieldSetFlags()[0] ? this.id : (java.lang.String) defaultValue(fields()[0]);
         record.year = fieldSetFlags()[1] ? this.year : (java.lang.Integer) defaultValue(fields()[1]);
         record.month = fieldSetFlags()[2] ? this.month : (java.lang.Integer) defaultValue(fields()[2]);
         record.day = fieldSetFlags()[3] ? this.day : (java.lang.Integer) defaultValue(fields()[3]);
@@ -620,7 +620,7 @@ public class TemporalRecord extends org.apache.avro.specific.SpecificRecordBase 
         record.modified = fieldSetFlags()[6] ? this.modified : (java.lang.Long) defaultValue(fields()[6]);
         record.dateIdentified = fieldSetFlags()[7] ? this.dateIdentified : (java.lang.Long) defaultValue(fields()[7]);
         record.eventTime = fieldSetFlags()[8] ? this.eventTime : (java.lang.Long) defaultValue(fields()[8]);
-        record.eventDate = fieldSetFlags()[9] ? this.eventDate : (java.lang.CharSequence) defaultValue(fields()[9]);
+        record.eventDate = fieldSetFlags()[9] ? this.eventDate : (java.lang.String) defaultValue(fields()[9]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

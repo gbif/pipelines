@@ -1,12 +1,13 @@
 package org.gbif.pipelines.core.functions;
 
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwca.record.StarRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwca.record.StarRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 class ExtendedRecordBuilder implements SerializableFunction<StarRecord, ExtendedRecord> {
 
@@ -26,11 +27,11 @@ class ExtendedRecordBuilder implements SerializableFunction<StarRecord, Extended
     record.extensions().forEach((extensionType, data) -> {
       if (builder.getExtensions() == null) builder.setExtensions(new HashMap<>());
 
-      List<Map<CharSequence,CharSequence>> extensionData =
+      List<Map<String, String>> extensionData =
         builder.getExtensions().getOrDefault(extensionType.qualifiedName(), new ArrayList<>());
 
       data.forEach(extensionRecord -> {
-        Map<CharSequence, CharSequence> extensionRecordTerms = new HashMap<CharSequence, CharSequence>();
+        Map<String, String> extensionRecordTerms = new HashMap<String, String>();
         for (Term term : extensionRecord.terms()) {
           // filter unusable content
           if (term.qualifiedName() != null && extensionRecord.value(term) != null) {

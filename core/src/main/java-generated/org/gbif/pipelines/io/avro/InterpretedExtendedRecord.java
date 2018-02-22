@@ -8,16 +8,16 @@ package org.gbif.pipelines.io.avro;
 /** Interpreted values at the occurrence record level */
 @org.apache.avro.specific.AvroGenerated
 public class InterpretedExtendedRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"InterpretedExtendedRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"Interpreted values at the occurrence record level\",\"fields\":[{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The record id\"},{\"name\":\"basisOfRecord\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"sex\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"lifeStage\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"establishmentMeans\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"individualCount\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"typeStatus\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"InterpretedExtendedRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"Interpreted values at the occurrence record level\",\"fields\":[{\"name\":\"id\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"The record id\"},{\"name\":\"basisOfRecord\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"sex\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"lifeStage\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"establishmentMeans\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"individualCount\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"typeStatus\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** The record id */
-  @Deprecated public java.lang.CharSequence id;
-  @Deprecated public java.lang.CharSequence basisOfRecord;
-  @Deprecated public java.lang.CharSequence sex;
-  @Deprecated public java.lang.CharSequence lifeStage;
-  @Deprecated public java.lang.CharSequence establishmentMeans;
+  @Deprecated public java.lang.String id;
+  @Deprecated public java.lang.String basisOfRecord;
+  @Deprecated public java.lang.String sex;
+  @Deprecated public java.lang.String lifeStage;
+  @Deprecated public java.lang.String establishmentMeans;
   @Deprecated public java.lang.Integer individualCount;
-  @Deprecated public java.lang.CharSequence typeStatus;
+  @Deprecated public java.lang.String typeStatus;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -29,7 +29,7 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
   /**
    * All-args constructor.
    */
-  public InterpretedExtendedRecord(java.lang.CharSequence id, java.lang.CharSequence basisOfRecord, java.lang.CharSequence sex, java.lang.CharSequence lifeStage, java.lang.CharSequence establishmentMeans, java.lang.Integer individualCount, java.lang.CharSequence typeStatus) {
+  public InterpretedExtendedRecord(java.lang.String id, java.lang.String basisOfRecord, java.lang.String sex, java.lang.String lifeStage, java.lang.String establishmentMeans, java.lang.Integer individualCount, java.lang.String typeStatus) {
     this.id = id;
     this.basisOfRecord = basisOfRecord;
     this.sex = sex;
@@ -57,13 +57,13 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: id = (java.lang.CharSequence)value$; break;
-    case 1: basisOfRecord = (java.lang.CharSequence)value$; break;
-    case 2: sex = (java.lang.CharSequence)value$; break;
-    case 3: lifeStage = (java.lang.CharSequence)value$; break;
-    case 4: establishmentMeans = (java.lang.CharSequence)value$; break;
+    case 0: id = (java.lang.String)value$; break;
+    case 1: basisOfRecord = (java.lang.String)value$; break;
+    case 2: sex = (java.lang.String)value$; break;
+    case 3: lifeStage = (java.lang.String)value$; break;
+    case 4: establishmentMeans = (java.lang.String)value$; break;
     case 5: individualCount = (java.lang.Integer)value$; break;
-    case 6: typeStatus = (java.lang.CharSequence)value$; break;
+    case 6: typeStatus = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -71,7 +71,7 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
   /**
    * Gets the value of the 'id' field.
    * The record id   */
-  public java.lang.CharSequence getId() {
+  public java.lang.String getId() {
     return id;
   }
 
@@ -79,14 +79,14 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
    * Sets the value of the 'id' field.
    * The record id   * @param value the value to set.
    */
-  public void setId(java.lang.CharSequence value) {
+  public void setId(java.lang.String value) {
     this.id = value;
   }
 
   /**
    * Gets the value of the 'basisOfRecord' field.
    */
-  public java.lang.CharSequence getBasisOfRecord() {
+  public java.lang.String getBasisOfRecord() {
     return basisOfRecord;
   }
 
@@ -94,14 +94,14 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
    * Sets the value of the 'basisOfRecord' field.
    * @param value the value to set.
    */
-  public void setBasisOfRecord(java.lang.CharSequence value) {
+  public void setBasisOfRecord(java.lang.String value) {
     this.basisOfRecord = value;
   }
 
   /**
    * Gets the value of the 'sex' field.
    */
-  public java.lang.CharSequence getSex() {
+  public java.lang.String getSex() {
     return sex;
   }
 
@@ -109,14 +109,14 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
    * Sets the value of the 'sex' field.
    * @param value the value to set.
    */
-  public void setSex(java.lang.CharSequence value) {
+  public void setSex(java.lang.String value) {
     this.sex = value;
   }
 
   /**
    * Gets the value of the 'lifeStage' field.
    */
-  public java.lang.CharSequence getLifeStage() {
+  public java.lang.String getLifeStage() {
     return lifeStage;
   }
 
@@ -124,14 +124,14 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
    * Sets the value of the 'lifeStage' field.
    * @param value the value to set.
    */
-  public void setLifeStage(java.lang.CharSequence value) {
+  public void setLifeStage(java.lang.String value) {
     this.lifeStage = value;
   }
 
   /**
    * Gets the value of the 'establishmentMeans' field.
    */
-  public java.lang.CharSequence getEstablishmentMeans() {
+  public java.lang.String getEstablishmentMeans() {
     return establishmentMeans;
   }
 
@@ -139,7 +139,7 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
    * Sets the value of the 'establishmentMeans' field.
    * @param value the value to set.
    */
-  public void setEstablishmentMeans(java.lang.CharSequence value) {
+  public void setEstablishmentMeans(java.lang.String value) {
     this.establishmentMeans = value;
   }
 
@@ -161,7 +161,7 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
   /**
    * Gets the value of the 'typeStatus' field.
    */
-  public java.lang.CharSequence getTypeStatus() {
+  public java.lang.String getTypeStatus() {
     return typeStatus;
   }
 
@@ -169,7 +169,7 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
    * Sets the value of the 'typeStatus' field.
    * @param value the value to set.
    */
-  public void setTypeStatus(java.lang.CharSequence value) {
+  public void setTypeStatus(java.lang.String value) {
     this.typeStatus = value;
   }
 
@@ -194,13 +194,13 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<InterpretedExtendedRecord>
     implements org.apache.avro.data.RecordBuilder<InterpretedExtendedRecord> {
 
-    private java.lang.CharSequence id;
-    private java.lang.CharSequence basisOfRecord;
-    private java.lang.CharSequence sex;
-    private java.lang.CharSequence lifeStage;
-    private java.lang.CharSequence establishmentMeans;
+    private java.lang.String id;
+    private java.lang.String basisOfRecord;
+    private java.lang.String sex;
+    private java.lang.String lifeStage;
+    private java.lang.String establishmentMeans;
     private java.lang.Integer individualCount;
-    private java.lang.CharSequence typeStatus;
+    private java.lang.String typeStatus;
 
     /** Creates a new Builder */
     private Builder() {
@@ -274,12 +274,12 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
     }
 
     /** Gets the value of the 'id' field */
-    public java.lang.CharSequence getId() {
+    public java.lang.String getId() {
       return id;
     }
     
     /** Sets the value of the 'id' field */
-    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setId(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setId(java.lang.String value) {
       validate(fields()[0], value);
       this.id = value;
       fieldSetFlags()[0] = true;
@@ -299,12 +299,12 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
     }
 
     /** Gets the value of the 'basisOfRecord' field */
-    public java.lang.CharSequence getBasisOfRecord() {
+    public java.lang.String getBasisOfRecord() {
       return basisOfRecord;
     }
     
     /** Sets the value of the 'basisOfRecord' field */
-    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setBasisOfRecord(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setBasisOfRecord(java.lang.String value) {
       validate(fields()[1], value);
       this.basisOfRecord = value;
       fieldSetFlags()[1] = true;
@@ -324,12 +324,12 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
     }
 
     /** Gets the value of the 'sex' field */
-    public java.lang.CharSequence getSex() {
+    public java.lang.String getSex() {
       return sex;
     }
     
     /** Sets the value of the 'sex' field */
-    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setSex(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setSex(java.lang.String value) {
       validate(fields()[2], value);
       this.sex = value;
       fieldSetFlags()[2] = true;
@@ -349,12 +349,12 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
     }
 
     /** Gets the value of the 'lifeStage' field */
-    public java.lang.CharSequence getLifeStage() {
+    public java.lang.String getLifeStage() {
       return lifeStage;
     }
     
     /** Sets the value of the 'lifeStage' field */
-    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setLifeStage(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setLifeStage(java.lang.String value) {
       validate(fields()[3], value);
       this.lifeStage = value;
       fieldSetFlags()[3] = true;
@@ -374,12 +374,12 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
     }
 
     /** Gets the value of the 'establishmentMeans' field */
-    public java.lang.CharSequence getEstablishmentMeans() {
+    public java.lang.String getEstablishmentMeans() {
       return establishmentMeans;
     }
     
     /** Sets the value of the 'establishmentMeans' field */
-    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setEstablishmentMeans(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setEstablishmentMeans(java.lang.String value) {
       validate(fields()[4], value);
       this.establishmentMeans = value;
       fieldSetFlags()[4] = true;
@@ -424,12 +424,12 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
     }
 
     /** Gets the value of the 'typeStatus' field */
-    public java.lang.CharSequence getTypeStatus() {
+    public java.lang.String getTypeStatus() {
       return typeStatus;
     }
     
     /** Sets the value of the 'typeStatus' field */
-    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setTypeStatus(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.InterpretedExtendedRecord.Builder setTypeStatus(java.lang.String value) {
       validate(fields()[6], value);
       this.typeStatus = value;
       fieldSetFlags()[6] = true;
@@ -452,13 +452,13 @@ public class InterpretedExtendedRecord extends org.apache.avro.specific.Specific
     public InterpretedExtendedRecord build() {
       try {
         InterpretedExtendedRecord record = new InterpretedExtendedRecord();
-        record.id = fieldSetFlags()[0] ? this.id : (java.lang.CharSequence) defaultValue(fields()[0]);
-        record.basisOfRecord = fieldSetFlags()[1] ? this.basisOfRecord : (java.lang.CharSequence) defaultValue(fields()[1]);
-        record.sex = fieldSetFlags()[2] ? this.sex : (java.lang.CharSequence) defaultValue(fields()[2]);
-        record.lifeStage = fieldSetFlags()[3] ? this.lifeStage : (java.lang.CharSequence) defaultValue(fields()[3]);
-        record.establishmentMeans = fieldSetFlags()[4] ? this.establishmentMeans : (java.lang.CharSequence) defaultValue(fields()[4]);
+        record.id = fieldSetFlags()[0] ? this.id : (java.lang.String) defaultValue(fields()[0]);
+        record.basisOfRecord = fieldSetFlags()[1] ? this.basisOfRecord : (java.lang.String) defaultValue(fields()[1]);
+        record.sex = fieldSetFlags()[2] ? this.sex : (java.lang.String) defaultValue(fields()[2]);
+        record.lifeStage = fieldSetFlags()[3] ? this.lifeStage : (java.lang.String) defaultValue(fields()[3]);
+        record.establishmentMeans = fieldSetFlags()[4] ? this.establishmentMeans : (java.lang.String) defaultValue(fields()[4]);
         record.individualCount = fieldSetFlags()[5] ? this.individualCount : (java.lang.Integer) defaultValue(fields()[5]);
-        record.typeStatus = fieldSetFlags()[6] ? this.typeStatus : (java.lang.CharSequence) defaultValue(fields()[6]);
+        record.typeStatus = fieldSetFlags()[6] ? this.typeStatus : (java.lang.String) defaultValue(fields()[6]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

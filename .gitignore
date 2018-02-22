@@ -7,3 +7,4 @@ output
 *.log
 demo/miniCluster/
 demo/data/tmpDwca/
+core/src/main/java-generated

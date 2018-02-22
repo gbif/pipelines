@@ -8,10 +8,10 @@ package org.gbif.pipelines.io.avro;
 /** Interpretation occurrence issues  */
 @org.apache.avro.specific.AvroGenerated
 public class OccurrenceIssue extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OccurrenceIssue\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"Interpretation occurrence issues \",\"fields\":[{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The record id\"},{\"name\":\"issues\",\"type\":[{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"Validation\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"severity\",\"type\":\"string\"}]}}]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"OccurrenceIssue\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"Interpretation occurrence issues \",\"fields\":[{\"name\":\"id\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"The record id\"},{\"name\":\"issues\",\"type\":[{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"Validation\",\"fields\":[{\"name\":\"name\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"severity\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}]}}]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** The record id */
-  @Deprecated public java.lang.CharSequence id;
+  @Deprecated public java.lang.String id;
   @Deprecated public java.lang.Object issues;
 
   /**
@@ -24,7 +24,7 @@ public class OccurrenceIssue extends org.apache.avro.specific.SpecificRecordBase
   /**
    * All-args constructor.
    */
-  public OccurrenceIssue(java.lang.CharSequence id, java.lang.Object issues) {
+  public OccurrenceIssue(java.lang.String id, java.lang.Object issues) {
     this.id = id;
     this.issues = issues;
   }
@@ -42,7 +42,7 @@ public class OccurrenceIssue extends org.apache.avro.specific.SpecificRecordBase
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: id = (java.lang.CharSequence)value$; break;
+    case 0: id = (java.lang.String)value$; break;
     case 1: issues = (java.lang.Object)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
@@ -51,7 +51,7 @@ public class OccurrenceIssue extends org.apache.avro.specific.SpecificRecordBase
   /**
    * Gets the value of the 'id' field.
    * The record id   */
-  public java.lang.CharSequence getId() {
+  public java.lang.String getId() {
     return id;
   }
 
@@ -59,7 +59,7 @@ public class OccurrenceIssue extends org.apache.avro.specific.SpecificRecordBase
    * Sets the value of the 'id' field.
    * The record id   * @param value the value to set.
    */
-  public void setId(java.lang.CharSequence value) {
+  public void setId(java.lang.String value) {
     this.id = value;
   }
 
@@ -99,7 +99,7 @@ public class OccurrenceIssue extends org.apache.avro.specific.SpecificRecordBase
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<OccurrenceIssue>
     implements org.apache.avro.data.RecordBuilder<OccurrenceIssue> {
 
-    private java.lang.CharSequence id;
+    private java.lang.String id;
     private java.lang.Object issues;
 
     /** Creates a new Builder */
@@ -134,12 +134,12 @@ public class OccurrenceIssue extends org.apache.avro.specific.SpecificRecordBase
     }
 
     /** Gets the value of the 'id' field */
-    public java.lang.CharSequence getId() {
+    public java.lang.String getId() {
       return id;
     }
     
     /** Sets the value of the 'id' field */
-    public org.gbif.pipelines.io.avro.OccurrenceIssue.Builder setId(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.OccurrenceIssue.Builder setId(java.lang.String value) {
       validate(fields()[0], value);
       this.id = value;
       fieldSetFlags()[0] = true;
@@ -187,7 +187,7 @@ public class OccurrenceIssue extends org.apache.avro.specific.SpecificRecordBase
     public OccurrenceIssue build() {
       try {
         OccurrenceIssue record = new OccurrenceIssue();
-        record.id = fieldSetFlags()[0] ? this.id : (java.lang.CharSequence) defaultValue(fields()[0]);
+        record.id = fieldSetFlags()[0] ? this.id : (java.lang.String) defaultValue(fields()[0]);
         record.issues = fieldSetFlags()[1] ? this.issues : (java.lang.Object) defaultValue(fields()[1]);
         return record;
       } catch (Exception e) {
