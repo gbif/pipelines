@@ -20,9 +20,7 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
     return (ExtendedRecord extendedRecord) -> {
 
       BiFunction<ExtendedRecord, DwcTerm, String> getValueFunc =
-        (record, dwcTerm) -> Optional.ofNullable(record.getCoreTerms().get(dwcTerm.qualifiedName()))
-          .orElse("")
-          .toString();
+        (record, dwcTerm) -> Optional.ofNullable(record.getCoreTerms().get(dwcTerm.qualifiedName())).orElse("");
 
       // Get all raw values
       String rawYear = getValueFunc.apply(extendedRecord, DwcTerm.year);
