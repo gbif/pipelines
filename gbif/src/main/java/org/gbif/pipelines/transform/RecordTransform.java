@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transform;
 
+import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.Validation;
 
@@ -50,10 +51,10 @@ public abstract class RecordTransform<T, R> extends PTransform<PCollection<T>, P
   /**
    * Translates a OccurrenceIssue into Validation object.
    */
-  static Validation toValidation(org.gbif.api.vocabulary.OccurrenceIssue occurrenceIssue) {
+  static Validation toValidation(IssueType occurrenceIssue) {
     return Validation.newBuilder()
       .setName(occurrenceIssue.name())
-      .setSeverity(occurrenceIssue.getSeverity().name())
+      .setSeverity(occurrenceIssue.name())
       .build();
   }
 

@@ -12,6 +12,38 @@
 
   <artifactId>demo</artifactId>
 
+  <profiles>
+    <profile>
+      <id>direct-runner</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>beam-runners-direct-java</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </dependency>
+        <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-hdfs</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+
+  </profiles>
+  <properties>
+    <protobuf.version>3.5.1</protobuf.version>
+  </properties>
+
   <build>
     <plugins>
       <!-- Shade the project into an über jar to send to Spark -->
@@ -80,8 +112,17 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.16.1</version>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>gbif-pipelines</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

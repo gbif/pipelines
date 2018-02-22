@@ -1,6 +1,7 @@
 package org.gbif.pipelines.interpretation.parsers;
 
-import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.pipelines.core.functions.interpretation.error.Issue;
+import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.interpretation.parsers.temporal.accumulator.ChronoAccumulator;
 import org.gbif.pipelines.interpretation.parsers.temporal.accumulator.ChronoAccumulatorConverter;
@@ -21,7 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  */
 public class TemporalParser {
 
-  private static final BiFunction<ChronoAccumulator, List<OccurrenceIssue>, Temporal> TEMPORAL_FUNC =
+  private static final BiFunction<ChronoAccumulator, List<Issue>, Temporal> TEMPORAL_FUNC =
     (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
   private TemporalParser() {
@@ -34,7 +35,7 @@ public class TemporalParser {
       return new ParsedTemporalDates();
     }
 
-    List<OccurrenceIssue> issueList = new ArrayList<>();
+    List<Issue> issueList = new ArrayList<>();
 
     // Parse year, month and day
     ChronoAccumulator baseAccumulator = ChronoAccumulator.from(rawYear, rawMonth, rawDay);
@@ -60,7 +61,7 @@ public class TemporalParser {
     ChronoAccumulator toAccumulator = ParserRawDateTime.parse(rawTo, fromAccumulator.getLastParsed().orElse(null));
 
     if (fromAccumulator.areAllNumeric() || (!isEmpty(rawTo) && toAccumulator.areAllNumeric())) {
-      issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+      issueList.add(Issue.newBuilder().setIssueType(IssueType.RECORDED_DATE_INVALID).build());
     }
 
     // If toAccumulator doesn't contain last parsed value, raw date will consist of one date only

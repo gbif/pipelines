@@ -1,6 +1,8 @@
 package org.gbif.pipelines.interpretation.parsers.temporal;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.pipelines.core.functions.interpretation.error.Issue;
+import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 
 import java.time.Month;
 import java.time.Year;
@@ -19,10 +21,11 @@ public class ParsedTemporalDates {
   private Integer day;
   private Temporal fromDate;
   private Temporal toDate;
-  private List<OccurrenceIssue> issueList = Collections.emptyList();
+  private List<Issue> issueList = Collections.emptyList();
 
   public ParsedTemporalDates() {
   }
+
 
   public ParsedTemporalDates(Temporal fromDate, Temporal toDate) {
     this.fromDate = fromDate;
@@ -76,11 +79,11 @@ public class ParsedTemporalDates {
     this.toDate = toDate;
   }
 
-  public void setIssueList(List<OccurrenceIssue> issueList) {
+  public void setIssueList(List<Issue> issueList) {
     this.issueList = issueList;
   }
 
-  public List<OccurrenceIssue> getIssueList() {
+  public List<Issue> getIssueList() {
     return issueList;
   }
 }

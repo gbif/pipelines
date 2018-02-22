@@ -5,25 +5,27 @@ package org.gbif.pipelines.core.config;
  */
 public enum Interpretation {
 
-  VERBATIM("verbatim"), TEMPORAL("temporal"), LOCATION("location"), GBIF_BACKBONE("gbif-backbone"), ISSUES("issues"),
-  RECORD_LEVEL("interpreted");
+    RAW_OCCURRENCE("raw_data"), INTERPRETED_OCURENCE("interpreted_data"), VERBATIM("verbatim"), TEMPORAL("temporal"), LOCATION(
+            "location"), GBIF_BACKBONE("gbif-backbone"), TEMP_DwCA_PATH("temp"), TEMPORAL_ISSUE("temporal_issue"), LOCATION_ISSUE(
+            "location_issue"), INTERPRETED_ISSUE("interpreted_issue"), ISSUES("issues"), RECORD_LEVEL("interpreted");
 
-  private final String defaultFileName;
 
-  /**
-   * Default constructor: receives the name of the output file or directory.
-   * @param defaultFileName default output file name
-   */
-  Interpretation(String defaultFileName) {
-    this.defaultFileName = defaultFileName;
-  }
+    private final String defaultFileName;
 
-  /**
-   *
-   * @return default file name
-   */
-  public String getDefaultFileName() {
-    return defaultFileName;
-  }
+    /**
+     * Default constructor: receives the name of the output file or directory.
+     *
+     * @param defaultFileName default output file name
+     */
+    Interpretation(String defaultFileName) {
+        this.defaultFileName = defaultFileName;
+    }
+
+    /**
+     * @return default file name
+     */
+    public String getDefaultFileName() {
+        return defaultFileName;
+    }
 
 }

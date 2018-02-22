@@ -1,6 +1,7 @@
 package org.gbif.pipelines.interpretation.parsers.temporal.accumulator;
 
-import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.pipelines.core.functions.interpretation.error.Issue;
+import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 import org.gbif.pipelines.interpretation.parsers.temporal.utils.ParsedUnitUtils;
 
 import java.time.LocalDate;
@@ -50,7 +51,7 @@ public class ChronoAccumulatorConverter {
    *
    * @return some Temporal value: Year, YearMonth, LocalDate, LocalDateTime
    */
-  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator, List<OccurrenceIssue> issueList) {
+  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator, List<Issue> issueList) {
 
     //Check Year
     Optional<Integer> intYear = convert(accumulator, YEAR, issueList);
@@ -59,7 +60,7 @@ public class ChronoAccumulatorConverter {
     }
     Year year = Year.of(intYear.get());
     if (year.isBefore(OLD_YEAR)) {
-      issueList.add(OccurrenceIssue.RECORDED_DATE_UNLIKELY);
+      issueList.add(Issue.newBuilder().setIssueType(IssueType.RECORDED_DATE_UNLIKELY).build());
     }
 
     //Check Month
@@ -76,7 +77,7 @@ public class ChronoAccumulatorConverter {
     }
 
     if (!yearMonth.isValidDay(intDay.get())) {
-      issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+      issueList.add(Issue.newBuilder().setIssueType(IssueType.RECORDED_DATE_INVALID).build());
       return Optional.of(yearMonth);
     }
     LocalDate localDate = yearMonth.atDay(intDay.get());
@@ -110,7 +111,7 @@ public class ChronoAccumulatorConverter {
    *
    * @return Year value if present
    */
-  public static Optional<Year> getYear(ChronoAccumulator accumulator, List<OccurrenceIssue> issueList) {
+  public static Optional<Year> getYear(ChronoAccumulator accumulator, List<Issue> issueList) {
     return convert(accumulator, YEAR, issueList).map(Year::of);
   }
 
@@ -121,7 +122,7 @@ public class ChronoAccumulatorConverter {
    *
    * @return Month value if present
    */
-  public static Optional<Month> getMonth(ChronoAccumulator accumulator, List<OccurrenceIssue> issueList) {
+  public static Optional<Month> getMonth(ChronoAccumulator accumulator, List<Issue> issueList) {
     return convert(accumulator, MONTH_OF_YEAR, issueList).map(Month::of);
   }
 
@@ -132,7 +133,7 @@ public class ChronoAccumulatorConverter {
    *
    * @return Integer day value if present
    */
-  public static Optional<Integer> getDay(ChronoAccumulator accumulator, List<OccurrenceIssue> issueList) {
+  public static Optional<Integer> getDay(ChronoAccumulator accumulator, List<Issue> issueList) {
     return convert(accumulator, DAY_OF_MONTH, issueList);
   }
 
@@ -142,12 +143,12 @@ public class ChronoAccumulatorConverter {
    * @param accumulator raw value for parsing
    * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
-  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField chronoField, List<OccurrenceIssue> issueList) {
+  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField chronoField, List<Issue> issueList) {
     Optional<String> rawValue = accumulator.getChronoFileValue(chronoField);
     if (rawValue.isPresent()) {
       Optional<Integer> value = FUNCTION_MAP.get(chronoField).apply(rawValue.get());
       if (!value.isPresent()) {
-        issueList.add(OccurrenceIssue.RECORDED_DATE_INVALID);
+        issueList.add(Issue.newBuilder().setIssueType(IssueType.RECORDED_DATE_INVALID).build());
       }
       return value;
     }

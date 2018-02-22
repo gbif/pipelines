@@ -46,8 +46,7 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
 
       // Map to Interpretation
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      temporalDates.getIssueList().forEach(issue -> interpretation.withValidation(Interpretation.Trace.of(issue)));
-
+      interpretation.withValidation(DwcTerm.eventDate.name(), temporalDates.getIssueList());
       return interpretation;
     };
   }

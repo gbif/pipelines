@@ -1,0 +1,125 @@
+{
+  "type": "record",
+  "name": "IssueLineageRecord",
+  "namespace": "org.gbif.pipelines.core.functions.interpretation.error",
+  "fields": [
+    {
+      "name": "occurenceId",
+      "type": "string"
+    },
+    {
+      "name": "fieldIssueMap",
+      "type": {
+        "type": "map",
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "name": "Issue",
+            "fields": [
+              {
+                "name": "remark",
+                "type": "string",
+                "default" : "null"
+              },
+              {
+                "name": "issueType",
+                "type": {
+                  "type": "enum",
+                  "name": "IssueType",
+                  "namespace": "org.gbif.pipelines.core.functions.interpretation.error",
+                  "symbols": [
+                    "DAY_OUT_OF_RANGE",
+                    "PARSE_ERROR",
+                    "ZERO_COORDINATE",
+                    "COORDINATE_OUT_OF_RANGE",
+                    "COORDINATE_INVALID",
+                    "COORDINATE_ROUNDED",
+                    "GEODETIC_DATUM_INVALID",
+                    "GEODETIC_DATUM_ASSUMED_WGS84",
+                    "COORDINATE_REPROJECTED",
+                    "COORDINATE_REPROJECTION_FAILED",
+                    "COORDINATE_REPROJECTION_SUSPICIOUS",
+                    "COORDINATE_ACCURACY_INVALID",
+                    "COORDINATE_PRECISION_INVALID",
+                    "COORDINATE_UNCERTAINTY_METERS_INVALID",
+                    "COORDINATE_PRECISION_UNCERTAINTY_MISMATCH",
+                    "COUNTRY_COORDINATE_MISMATCH",
+                    "COUNTRY_MISMATCH",
+                    "COUNTRY_INVALID",
+                    "COUNTRY_DERIVED_FROM_COORDINATES",
+                    "CONTINENT_COUNTRY_MISMATCH",
+                    "CONTINENT_INVALID",
+                    "CONTINENT_DERIVED_FROM_COORDINATES",
+                    "PRESUMED_SWAPPED_COORDINATE",
+                    "PRESUMED_NEGATED_LONGITUDE",
+                    "PRESUMED_NEGATED_LATITUDE",
+                    "RECORDED_DATE_MISMATCH",
+                    "RECORDED_DATE_INVALID",
+                    "RECORDED_DATE_UNLIKELY",
+                    "TAXON_MATCH_FUZZY",
+                    "TAXON_MATCH_HIGHERRANK",
+                    "TAXON_MATCH_NONE",
+                    "DEPTH_NOT_METRIC",
+                    "DEPTH_UNLIKELY",
+                    "DEPTH_MIN_MAX_SWAPPED",
+                    "DEPTH_NON_NUMERIC",
+                    "ELEVATION_UNLIKELY",
+                    "ELEVATION_MIN_MAX_SWAPPED",
+                    "ELEVATION_NOT_METRIC",
+                    "ELEVATION_NON_NUMERIC",
+                    "MODIFIED_DATE_INVALID",
+                    "MODIFIED_DATE_UNLIKELY",
+                    "IDENTIFIED_DATE_UNLIKELY",
+                    "IDENTIFIED_DATE_INVALID",
+                    "BASIS_OF_RECORD_INVALID",
+                    "TYPE_STATUS_INVALID",
+                    "MULTIMEDIA_DATE_INVALID",
+                    "MULTIMEDIA_URI_INVALID",
+                    "REFERENCES_URI_INVALID",
+                    "INTERPRETATION_ERROR",
+                    "INDIVIDUAL_COUNT_INVALID"
+                  ]
+                }
+              }
+            ]
+          },
+          "java-class": "java.util.List"
+        }
+      }
+    },
+    {
+      "name": "fieldLineageMap",
+      "type": {
+        "type": "map",
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "name": "Lineage",
+            "fields": [
+              {
+                "name": "remark",
+                "type": "string"
+              },
+              {
+                "name": "lineageType",
+                "type": {
+                  "type": "enum",
+                  "name": "LineageType",
+                  "namespace": "org.gbif.pipelines.core.functions.interpretation.error",
+                  "symbols": [
+                    "OTHERS",
+                    "SET_TO_NULL",
+                    "SET_COUNTRYCODE_FROM_COUNTRY"
+                  ]
+                }
+              }
+            ]
+          },
+          "java-class": "java.util.List"
+        }
+      }
+    }
+  ]
+}
