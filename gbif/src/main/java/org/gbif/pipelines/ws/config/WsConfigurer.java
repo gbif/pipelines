@@ -31,6 +31,8 @@ public class WsConfigurer {
   private static final String DEFAULT_TIMEOUT = "60";
   private static final String DEFAULT_CACHE_SIZE = "256";
 
+  private static final String DEFAULT_CACHE_NAME_SUFFIX = "-cacheWs";
+
   public static Config createConfig(Service service) {
     Objects.requireNonNull(service);
 
@@ -65,7 +67,7 @@ public class WsConfigurer {
                                                        DEFAULT_TIMEOUT)));
 
     // cache properties
-    String cacheName = service.name().toLowerCase().concat("-cacheWs");
+    String cacheName = service.name().toLowerCase().concat(DEFAULT_CACHE_NAME_SUFFIX);
     Long cacheSize =
       Long.parseLong(props.getProperty(generatePropertyName(service, CACHE_SIZE_PROP), DEFAULT_CACHE_SIZE))
       * 1024
