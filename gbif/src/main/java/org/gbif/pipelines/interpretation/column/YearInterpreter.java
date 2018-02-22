@@ -24,16 +24,14 @@ class YearInterpreter implements Interpretable<String, Integer> {
       return InterpretationResult.withSuccess(Year.parse(trimmedInput).getValue());
     } catch (DateTimeParseException ex) {
       //if parse failed
-      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                                                             .setRemark("Year cannot be parsed because of "
-                                                                        + ex.getMessage())
-                                                             .setIssueType(IssueType.PARSE_ERROR)
-                                                             .build());
-      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
-                                                                 .setRemark(
-                                                                   "Since Year cannot be parsed setting it to null")
-                                                                 .setLineageType(LineageType.SET_TO_NULL)
-                                                                 .build());
+      List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                       .setRemark("Year cannot be parsed because of " + ex.getMessage())
+                                                       .setIssueType(IssueType.PARSE_ERROR)
+                                                       .build());
+      List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+                                                           .setRemark("Since Year cannot be parsed setting it to null")
+                                                           .setLineageType(LineageType.SET_TO_NULL)
+                                                           .build());
       return InterpretationResult.withIssueAndLineage(null, issues, lineages);
     }
   }

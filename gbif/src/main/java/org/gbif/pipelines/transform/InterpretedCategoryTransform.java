@@ -22,9 +22,9 @@ import org.apache.beam.sdk.values.TupleTagList;
 public class InterpretedCategoryTransform extends PTransform<PCollection<ExtendedRecord>, PCollectionTuple> {
 
   //next 2 types are identical, do we need 2?
-  private static final TupleTag<KV<String, IssueLineageRecord>> temporalCategoryIssues =
+  private static final TupleTag<KV<String, IssueLineageRecord>> TEMPORAL_CATEGORY_ISSUES =
     new TupleTag<KV<String, IssueLineageRecord>>() {};
-  private static final TupleTag<KV<String, IssueLineageRecord>> spatialCategoryIssues =
+  private static final TupleTag<KV<String, IssueLineageRecord>> SPATIAL_CATEGORY_ISSUES =
     new TupleTag<KV<String, IssueLineageRecord>>() {};
   /**
    * tags for the final output tuple indicating the type of collection and its category
@@ -61,8 +61,8 @@ public class InterpretedCategoryTransform extends PTransform<PCollection<Extende
     //combining the different collections as one tuple
     return PCollectionTuple.of(temporalCategory, event.get(eventTransformer.getEventDataTag()))
       .and(spatialCategory, location.get(locationTransformer.getLocationDataTag()))
-      .and(temporalCategoryIssues, event.get(eventTransformer.getEventIssueTag()))
-      .and(spatialCategoryIssues, location.get(locationTransformer.getLocationIssueTag()));
+      .and(TEMPORAL_CATEGORY_ISSUES, event.get(eventTransformer.getEventIssueTag()))
+      .and(SPATIAL_CATEGORY_ISSUES, location.get(locationTransformer.getLocationIssueTag()));
   }
 
   public TupleTag<KV<String, Event>> getTemporalCategory() {
@@ -74,10 +74,10 @@ public class InterpretedCategoryTransform extends PTransform<PCollection<Extende
   }
 
   public TupleTag<KV<String, IssueLineageRecord>> getTemporalCategoryIssues() {
-    return temporalCategoryIssues;
+    return TEMPORAL_CATEGORY_ISSUES;
   }
 
   public TupleTag<KV<String, IssueLineageRecord>> getSpatialCategoryIssues() {
-    return spatialCategoryIssues;
+    return SPATIAL_CATEGORY_ISSUES;
   }
 }

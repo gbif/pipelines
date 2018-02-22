@@ -22,17 +22,16 @@ class CountryCodeInterpreter implements Interpretable<String, String> {
     if (parseCountry.isSuccessful()) {
       return InterpretationResult.withSuccess(parseCountry.getPayload().getIso3LetterCode());
     } else {
-      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                                                             .setIssueType(IssueType.PARSE_ERROR)
-                                                             .setRemark(parseCountry.getError() != null
-                                                                          ? parseCountry.getError().getMessage()
-                                                                          : "Could not parse countryCode")
+      List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                       .setIssueType(IssueType.PARSE_ERROR)
+                                                       .setRemark(parseCountry.getError() != null
+                                                                    ? parseCountry.getError().getMessage()
+                                                                    : "Could not parse countryCode")
                                                              .build());
-      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+      List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
                                                                  .setLineageType(LineageType.SET_TO_NULL)
-                                                                 .setRemark(
-                                                                   "Since the parse on countryCode failed, interpreting as null")
-                                                                 .build());
+                                                                 .setRemark("Since the parse on countryCode failed, interpreting as null")
+                                                           .build());
       return InterpretationResult.withIssueAndLineage(null, issues, lineages);
     }
 

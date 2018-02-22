@@ -13,9 +13,9 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 /**
- * Common class for a transformation recocd process
- * @param <T> transfort "from" class
- * @param <R> transfort "to" class
+ * Common class for a transformation record process
+ * @param <T> transform "from" class
+ * @param <R> transform "to" class
  */
 public abstract class RecordTransform<T, R> extends PTransform<PCollection<T>, PCollectionTuple> {
 

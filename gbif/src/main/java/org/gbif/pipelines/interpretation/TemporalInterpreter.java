@@ -18,7 +18,7 @@ public interface TemporalInterpreter extends Function<ExtendedRecord, Interpreta
       InterpretationResult<Integer> result =
         InterpretationFactory.interpret(DwcTerm.day, extendedRecord.getCoreTerms().get(DwcTerm.day.qualifiedName()));
       Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
-      event.setDay(result.getResult().orElse(null));
+      result.getResult().ifPresent(event::setDay);
       finalResult.withValidation(DwcTerm.day.name(), result.getIssueList())
         .withLineage(DwcTerm.day.name(), result.getLineageList());
       return finalResult;
@@ -34,7 +34,7 @@ public interface TemporalInterpreter extends Function<ExtendedRecord, Interpreta
                                                                              extendedRecord.getCoreTerms()
                                                                                .get(DwcTerm.month.qualifiedName()));
       Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
-      event.setMonth(result.getResult().orElse(null));
+      result.getResult().ifPresent(event::setMonth);
       finalResult.withValidation(DwcTerm.month.name(), result.getIssueList())
         .withLineage(DwcTerm.month.name(), result.getLineageList());
 
@@ -50,7 +50,7 @@ public interface TemporalInterpreter extends Function<ExtendedRecord, Interpreta
       InterpretationResult<Integer> result =
         InterpretationFactory.interpret(DwcTerm.year, extendedRecord.getCoreTerms().get(DwcTerm.year.qualifiedName()));
       Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
-      event.setYear(result.getResult().orElse(null));
+      result.getResult().ifPresent(event::setYear);
       finalResult.withValidation(DwcTerm.year.name(), result.getIssueList())
         .withLineage(DwcTerm.year.name(), result.getLineageList());
 

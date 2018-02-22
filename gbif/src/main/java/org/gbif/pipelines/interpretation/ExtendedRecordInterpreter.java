@@ -1,6 +1,5 @@
 package org.gbif.pipelines.interpretation;
 
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 import org.gbif.pipelines.interpretation.parsers.SimpleTypeParser;
