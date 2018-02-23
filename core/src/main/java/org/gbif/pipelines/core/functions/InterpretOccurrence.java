@@ -1,8 +1,9 @@
 package org.gbif.pipelines.core.functions;
 
-import java.io.IOException;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
+
+import java.io.IOException;
 
 class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, TypedOccurrence> {
 
@@ -30,8 +31,8 @@ class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, Typ
     target.setEventDate(source.getEventDate());
     try {
       if (source.getDecimallatitude() != null && source.getDecimallongitude() != null) {
-        Double lat = Double.parseDouble(source.getDecimallatitude().toString());
-        Double lng = Double.parseDouble(source.getDecimallongitude().toString());
+        Double lat = Double.parseDouble(source.getDecimallatitude());
+        Double lng = Double.parseDouble(source.getDecimallongitude());
 
         if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
           target.setDecimalLatitude(lat);

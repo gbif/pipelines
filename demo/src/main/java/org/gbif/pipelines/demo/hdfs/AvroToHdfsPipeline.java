@@ -32,7 +32,7 @@ public class AvroToHdfsPipeline {
     DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(config, args);
     Pipeline pipeline = Pipeline.create(options);
 
-    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
+    String targetPath = TargetPath.fullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
 
     LOG.info("Target path : {}", targetPath);
 

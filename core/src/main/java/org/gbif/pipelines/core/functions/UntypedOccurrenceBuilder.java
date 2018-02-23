@@ -24,7 +24,7 @@ class UntypedOccurrenceBuilder implements SerializableFunction<ExtendedRecord, U
 
     // rewrite only to enable lookup by String
     Map<String,String> termsAsString = new HashMap<>();
-    record.getCoreTerms().forEach((k,v)-> termsAsString.put(k.toString(), v.toString()));
+    record.getCoreTerms().forEach(termsAsString::put);
 
     // set all DwC fields on the UntypedOccurrence
     try {

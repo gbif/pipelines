@@ -4,7 +4,7 @@ import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
-import java.util.Optional;
+import java.util.Objects;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -30,7 +30,7 @@ public class AvroToHdfsTestingPipeline {
   }
 
   public void createAndRunPipeline() {
-    Optional.ofNullable(options).orElseThrow(() -> new IllegalArgumentException("Pipeline options cannot be null"));
+    Objects.requireNonNull(options, "Pipeline options cannot be null");
 
     String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
 

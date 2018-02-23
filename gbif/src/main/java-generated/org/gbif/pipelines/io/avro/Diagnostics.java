@@ -7,14 +7,14 @@ package org.gbif.pipelines.io.avro;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Diagnostics\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"matchType\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"MatchType\",\"symbols\":[\"EXACT\",\"FUZZY\",\"HIGHERRANK\",\"NONE\"]}],\"default\":null},{\"name\":\"confidence\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"status\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Status\",\"symbols\":[\"ACCEPTED\",\"DOUBTFUL\",\"SYNONYM\",\"HETEROTYPIC_SYNONYM\",\"HOMOTYPIC_SYNONYM\",\"PROPARTE_SYNONYM\",\"MISAPPLIED\",\"INTERMEDIATE_RANK_SYNONYM\",\"DETERMINATION_SYNONYM\"]}],\"default\":null},{\"name\":\"lineage\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"string\"}],\"default\":null},{\"name\":\"alternatives\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"TaxonRecord\",\"doc\":\"A taxonomic record\",\"fields\":[{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The record id\"},{\"name\":\"synonym\",\"type\":[\"null\",\"boolean\"],\"default\":null},{\"name\":\"usage\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RankedName\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"rank\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Rank\",\"symbols\":[\"DOMAIN\",\"SUPERKINGDOM\",\"KINGDOM\",\"SUBKINGDOM\",\"INFRAKINGDOM\",\"SUPERPHYLUM\",\"PHYLUM\",\"SUBPHYLUM\",\"INFRAPHYLUM\",\"SUPERCLASS\",\"CLASS\",\"SUBCLASS\",\"INFRACLASS\",\"PARVCLASS\",\"SUPERLEGION\",\"LEGION\",\"SUBLEGION\",\"INFRALEGION\",\"SUPERCOHORT\",\"COHORT\",\"SUBCOHORT\",\"INFRACOHORT\",\"MAGNORDER\",\"SUPERORDER\",\"GRANDORDER\",\"ORDER\",\"SUBORDER\",\"INFRAORDER\",\"PARVORDER\",\"SUPERFAMILY\",\"FAMILY\",\"SUBFAMILY\",\"INFRAFAMILY\",\"SUPERTRIBE\",\"TRIBE\",\"SUBTRIBE\",\"INFRATRIBE\",\"SUPRAGENERIC_NAME\",\"GENUS\",\"SUBGENUS\",\"INFRAGENUS\",\"SECTION\",\"SUBSECTION\",\"SERIES\",\"SUBSERIES\",\"INFRAGENERIC_NAME\",\"SPECIES_AGGREGATE\",\"SPECIES\",\"INFRASPECIFIC_NAME\",\"GREX\",\"SUBSPECIES\",\"CULTIVAR_GROUP\",\"CONVARIETY\",\"INFRASUBSPECIFIC_NAME\",\"PROLES\",\"RACE\",\"NATIO\",\"ABERRATION\",\"MORPH\",\"VARIETY\",\"SUBVARIETY\",\"FORM\",\"SUBFORM\",\"PATHOVAR\",\"BIOVAR\",\"CHEMOVAR\",\"MORPHOVAR\",\"PHAGOVAR\",\"SEROVAR\",\"CHEMOFORM\",\"FORMA_SPECIALIS\",\"CULTIVAR\",\"STRAIN\",\"OTHER\",\"UNRANKED\"]}],\"default\":null}]}],\"default\":null},{\"name\":\"acceptedUsage\",\"type\":[\"null\",\"RankedName\"],\"default\":null},{\"name\":\"nomenclature\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"Nomenclature\",\"fields\":[{\"name\":\"source\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null},{\"name\":\"classification\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"RankedName\"}],\"default\":null},{\"name\":\"diagnostics\",\"type\":[\"null\",\"Diagnostics\"],\"default\":null}]}}],\"default\":null},{\"name\":\"note\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Diagnostics\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"matchType\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"MatchType\",\"symbols\":[\"EXACT\",\"FUZZY\",\"HIGHERRANK\",\"NONE\"]}],\"default\":null},{\"name\":\"confidence\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"status\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Status\",\"symbols\":[\"ACCEPTED\",\"DOUBTFUL\",\"SYNONYM\",\"HETEROTYPIC_SYNONYM\",\"HOMOTYPIC_SYNONYM\",\"PROPARTE_SYNONYM\",\"MISAPPLIED\",\"INTERMEDIATE_RANK_SYNONYM\",\"DETERMINATION_SYNONYM\"]}],\"default\":null},{\"name\":\"lineage\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}],\"default\":null},{\"name\":\"alternatives\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"TaxonRecord\",\"doc\":\"A taxonomic record\",\"fields\":[{\"name\":\"id\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"The record id\"},{\"name\":\"synonym\",\"type\":[\"null\",\"boolean\"],\"default\":null},{\"name\":\"usage\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RankedName\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"rank\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Rank\",\"symbols\":[\"DOMAIN\",\"SUPERKINGDOM\",\"KINGDOM\",\"SUBKINGDOM\",\"INFRAKINGDOM\",\"SUPERPHYLUM\",\"PHYLUM\",\"SUBPHYLUM\",\"INFRAPHYLUM\",\"SUPERCLASS\",\"CLASS\",\"SUBCLASS\",\"INFRACLASS\",\"PARVCLASS\",\"SUPERLEGION\",\"LEGION\",\"SUBLEGION\",\"INFRALEGION\",\"SUPERCOHORT\",\"COHORT\",\"SUBCOHORT\",\"INFRACOHORT\",\"MAGNORDER\",\"SUPERORDER\",\"GRANDORDER\",\"ORDER\",\"SUBORDER\",\"INFRAORDER\",\"PARVORDER\",\"SUPERFAMILY\",\"FAMILY\",\"SUBFAMILY\",\"INFRAFAMILY\",\"SUPERTRIBE\",\"TRIBE\",\"SUBTRIBE\",\"INFRATRIBE\",\"SUPRAGENERIC_NAME\",\"GENUS\",\"SUBGENUS\",\"INFRAGENUS\",\"SECTION\",\"SUBSECTION\",\"SERIES\",\"SUBSERIES\",\"INFRAGENERIC_NAME\",\"SPECIES_AGGREGATE\",\"SPECIES\",\"INFRASPECIFIC_NAME\",\"GREX\",\"SUBSPECIES\",\"CULTIVAR_GROUP\",\"CONVARIETY\",\"INFRASUBSPECIFIC_NAME\",\"PROLES\",\"RACE\",\"NATIO\",\"ABERRATION\",\"MORPH\",\"VARIETY\",\"SUBVARIETY\",\"FORM\",\"SUBFORM\",\"PATHOVAR\",\"BIOVAR\",\"CHEMOVAR\",\"MORPHOVAR\",\"PHAGOVAR\",\"SEROVAR\",\"CHEMOFORM\",\"FORMA_SPECIALIS\",\"CULTIVAR\",\"STRAIN\",\"OTHER\",\"UNRANKED\"]}],\"default\":null}]}],\"default\":null},{\"name\":\"acceptedUsage\",\"type\":[\"null\",\"RankedName\"],\"default\":null},{\"name\":\"nomenclature\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"Nomenclature\",\"fields\":[{\"name\":\"source\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"id\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}],\"default\":null},{\"name\":\"classification\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"RankedName\"}],\"default\":null},{\"name\":\"diagnostics\",\"type\":[\"null\",\"Diagnostics\"],\"default\":null}]}}],\"default\":null},{\"name\":\"note\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   @Deprecated public org.gbif.pipelines.io.avro.MatchType matchType;
   @Deprecated public java.lang.Integer confidence;
   @Deprecated public org.gbif.pipelines.io.avro.Status status;
-  @Deprecated public java.util.List<java.lang.CharSequence> lineage;
+  @Deprecated public java.util.List<java.lang.String> lineage;
   @Deprecated public java.util.List<org.gbif.pipelines.io.avro.TaxonRecord> alternatives;
-  @Deprecated public java.lang.CharSequence note;
+  @Deprecated public java.lang.String note;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -26,7 +26,7 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
   /**
    * All-args constructor.
    */
-  public Diagnostics(org.gbif.pipelines.io.avro.MatchType matchType, java.lang.Integer confidence, org.gbif.pipelines.io.avro.Status status, java.util.List<java.lang.CharSequence> lineage, java.util.List<org.gbif.pipelines.io.avro.TaxonRecord> alternatives, java.lang.CharSequence note) {
+  public Diagnostics(org.gbif.pipelines.io.avro.MatchType matchType, java.lang.Integer confidence, org.gbif.pipelines.io.avro.Status status, java.util.List<java.lang.String> lineage, java.util.List<org.gbif.pipelines.io.avro.TaxonRecord> alternatives, java.lang.String note) {
     this.matchType = matchType;
     this.confidence = confidence;
     this.status = status;
@@ -55,9 +55,9 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
     case 0: matchType = (org.gbif.pipelines.io.avro.MatchType)value$; break;
     case 1: confidence = (java.lang.Integer)value$; break;
     case 2: status = (org.gbif.pipelines.io.avro.Status)value$; break;
-    case 3: lineage = (java.util.List<java.lang.CharSequence>)value$; break;
+    case 3: lineage = (java.util.List<java.lang.String>)value$; break;
     case 4: alternatives = (java.util.List<org.gbif.pipelines.io.avro.TaxonRecord>)value$; break;
-    case 5: note = (java.lang.CharSequence)value$; break;
+    case 5: note = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -110,7 +110,7 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
   /**
    * Gets the value of the 'lineage' field.
    */
-  public java.util.List<java.lang.CharSequence> getLineage() {
+  public java.util.List<java.lang.String> getLineage() {
     return lineage;
   }
 
@@ -118,7 +118,7 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
    * Sets the value of the 'lineage' field.
    * @param value the value to set.
    */
-  public void setLineage(java.util.List<java.lang.CharSequence> value) {
+  public void setLineage(java.util.List<java.lang.String> value) {
     this.lineage = value;
   }
 
@@ -140,7 +140,7 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
   /**
    * Gets the value of the 'note' field.
    */
-  public java.lang.CharSequence getNote() {
+  public java.lang.String getNote() {
     return note;
   }
 
@@ -148,7 +148,7 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
    * Sets the value of the 'note' field.
    * @param value the value to set.
    */
-  public void setNote(java.lang.CharSequence value) {
+  public void setNote(java.lang.String value) {
     this.note = value;
   }
 
@@ -176,9 +176,9 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
     private org.gbif.pipelines.io.avro.MatchType matchType;
     private java.lang.Integer confidence;
     private org.gbif.pipelines.io.avro.Status status;
-    private java.util.List<java.lang.CharSequence> lineage;
+    private java.util.List<java.lang.String> lineage;
     private java.util.List<org.gbif.pipelines.io.avro.TaxonRecord> alternatives;
-    private java.lang.CharSequence note;
+    private java.lang.String note;
 
     /** Creates a new Builder */
     private Builder() {
@@ -319,12 +319,12 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
     }
 
     /** Gets the value of the 'lineage' field */
-    public java.util.List<java.lang.CharSequence> getLineage() {
+    public java.util.List<java.lang.String> getLineage() {
       return lineage;
     }
     
     /** Sets the value of the 'lineage' field */
-    public org.gbif.pipelines.io.avro.Diagnostics.Builder setLineage(java.util.List<java.lang.CharSequence> value) {
+    public org.gbif.pipelines.io.avro.Diagnostics.Builder setLineage(java.util.List<java.lang.String> value) {
       validate(fields()[3], value);
       this.lineage = value;
       fieldSetFlags()[3] = true;
@@ -369,12 +369,12 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
     }
 
     /** Gets the value of the 'note' field */
-    public java.lang.CharSequence getNote() {
+    public java.lang.String getNote() {
       return note;
     }
     
     /** Sets the value of the 'note' field */
-    public org.gbif.pipelines.io.avro.Diagnostics.Builder setNote(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.Diagnostics.Builder setNote(java.lang.String value) {
       validate(fields()[5], value);
       this.note = value;
       fieldSetFlags()[5] = true;
@@ -400,9 +400,9 @@ public class Diagnostics extends org.apache.avro.specific.SpecificRecordBase imp
         record.matchType = fieldSetFlags()[0] ? this.matchType : (org.gbif.pipelines.io.avro.MatchType) defaultValue(fields()[0]);
         record.confidence = fieldSetFlags()[1] ? this.confidence : (java.lang.Integer) defaultValue(fields()[1]);
         record.status = fieldSetFlags()[2] ? this.status : (org.gbif.pipelines.io.avro.Status) defaultValue(fields()[2]);
-        record.lineage = fieldSetFlags()[3] ? this.lineage : (java.util.List<java.lang.CharSequence>) defaultValue(fields()[3]);
+        record.lineage = fieldSetFlags()[3] ? this.lineage : (java.util.List<java.lang.String>) defaultValue(fields()[3]);
         record.alternatives = fieldSetFlags()[4] ? this.alternatives : (java.util.List<org.gbif.pipelines.io.avro.TaxonRecord>) defaultValue(fields()[4]);
-        record.note = fieldSetFlags()[5] ? this.note : (java.lang.CharSequence) defaultValue(fields()[5]);
+        record.note = fieldSetFlags()[5] ? this.note : (java.lang.String) defaultValue(fields()[5]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

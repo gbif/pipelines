@@ -7,10 +7,10 @@ package org.gbif.pipelines.io.avro;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class RankedName extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"RankedName\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"rank\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Rank\",\"symbols\":[\"DOMAIN\",\"SUPERKINGDOM\",\"KINGDOM\",\"SUBKINGDOM\",\"INFRAKINGDOM\",\"SUPERPHYLUM\",\"PHYLUM\",\"SUBPHYLUM\",\"INFRAPHYLUM\",\"SUPERCLASS\",\"CLASS\",\"SUBCLASS\",\"INFRACLASS\",\"PARVCLASS\",\"SUPERLEGION\",\"LEGION\",\"SUBLEGION\",\"INFRALEGION\",\"SUPERCOHORT\",\"COHORT\",\"SUBCOHORT\",\"INFRACOHORT\",\"MAGNORDER\",\"SUPERORDER\",\"GRANDORDER\",\"ORDER\",\"SUBORDER\",\"INFRAORDER\",\"PARVORDER\",\"SUPERFAMILY\",\"FAMILY\",\"SUBFAMILY\",\"INFRAFAMILY\",\"SUPERTRIBE\",\"TRIBE\",\"SUBTRIBE\",\"INFRATRIBE\",\"SUPRAGENERIC_NAME\",\"GENUS\",\"SUBGENUS\",\"INFRAGENUS\",\"SECTION\",\"SUBSECTION\",\"SERIES\",\"SUBSERIES\",\"INFRAGENERIC_NAME\",\"SPECIES_AGGREGATE\",\"SPECIES\",\"INFRASPECIFIC_NAME\",\"GREX\",\"SUBSPECIES\",\"CULTIVAR_GROUP\",\"CONVARIETY\",\"INFRASUBSPECIFIC_NAME\",\"PROLES\",\"RACE\",\"NATIO\",\"ABERRATION\",\"MORPH\",\"VARIETY\",\"SUBVARIETY\",\"FORM\",\"SUBFORM\",\"PATHOVAR\",\"BIOVAR\",\"CHEMOVAR\",\"MORPHOVAR\",\"PHAGOVAR\",\"SEROVAR\",\"CHEMOFORM\",\"FORMA_SPECIALIS\",\"CULTIVAR\",\"STRAIN\",\"OTHER\",\"UNRANKED\"]}],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"RankedName\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"rank\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Rank\",\"symbols\":[\"DOMAIN\",\"SUPERKINGDOM\",\"KINGDOM\",\"SUBKINGDOM\",\"INFRAKINGDOM\",\"SUPERPHYLUM\",\"PHYLUM\",\"SUBPHYLUM\",\"INFRAPHYLUM\",\"SUPERCLASS\",\"CLASS\",\"SUBCLASS\",\"INFRACLASS\",\"PARVCLASS\",\"SUPERLEGION\",\"LEGION\",\"SUBLEGION\",\"INFRALEGION\",\"SUPERCOHORT\",\"COHORT\",\"SUBCOHORT\",\"INFRACOHORT\",\"MAGNORDER\",\"SUPERORDER\",\"GRANDORDER\",\"ORDER\",\"SUBORDER\",\"INFRAORDER\",\"PARVORDER\",\"SUPERFAMILY\",\"FAMILY\",\"SUBFAMILY\",\"INFRAFAMILY\",\"SUPERTRIBE\",\"TRIBE\",\"SUBTRIBE\",\"INFRATRIBE\",\"SUPRAGENERIC_NAME\",\"GENUS\",\"SUBGENUS\",\"INFRAGENUS\",\"SECTION\",\"SUBSECTION\",\"SERIES\",\"SUBSERIES\",\"INFRAGENERIC_NAME\",\"SPECIES_AGGREGATE\",\"SPECIES\",\"INFRASPECIFIC_NAME\",\"GREX\",\"SUBSPECIES\",\"CULTIVAR_GROUP\",\"CONVARIETY\",\"INFRASUBSPECIFIC_NAME\",\"PROLES\",\"RACE\",\"NATIO\",\"ABERRATION\",\"MORPH\",\"VARIETY\",\"SUBVARIETY\",\"FORM\",\"SUBFORM\",\"PATHOVAR\",\"BIOVAR\",\"CHEMOVAR\",\"MORPHOVAR\",\"PHAGOVAR\",\"SEROVAR\",\"CHEMOFORM\",\"FORMA_SPECIALIS\",\"CULTIVAR\",\"STRAIN\",\"OTHER\",\"UNRANKED\"]}],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   @Deprecated public java.lang.Integer key;
-  @Deprecated public java.lang.CharSequence name;
+  @Deprecated public java.lang.String name;
   @Deprecated public org.gbif.pipelines.io.avro.Rank rank;
 
   /**
@@ -23,7 +23,7 @@ public class RankedName extends org.apache.avro.specific.SpecificRecordBase impl
   /**
    * All-args constructor.
    */
-  public RankedName(java.lang.Integer key, java.lang.CharSequence name, org.gbif.pipelines.io.avro.Rank rank) {
+  public RankedName(java.lang.Integer key, java.lang.String name, org.gbif.pipelines.io.avro.Rank rank) {
     this.key = key;
     this.name = name;
     this.rank = rank;
@@ -44,7 +44,7 @@ public class RankedName extends org.apache.avro.specific.SpecificRecordBase impl
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: key = (java.lang.Integer)value$; break;
-    case 1: name = (java.lang.CharSequence)value$; break;
+    case 1: name = (java.lang.String)value$; break;
     case 2: rank = (org.gbif.pipelines.io.avro.Rank)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
@@ -68,7 +68,7 @@ public class RankedName extends org.apache.avro.specific.SpecificRecordBase impl
   /**
    * Gets the value of the 'name' field.
    */
-  public java.lang.CharSequence getName() {
+  public java.lang.String getName() {
     return name;
   }
 
@@ -76,7 +76,7 @@ public class RankedName extends org.apache.avro.specific.SpecificRecordBase impl
    * Sets the value of the 'name' field.
    * @param value the value to set.
    */
-  public void setName(java.lang.CharSequence value) {
+  public void setName(java.lang.String value) {
     this.name = value;
   }
 
@@ -117,7 +117,7 @@ public class RankedName extends org.apache.avro.specific.SpecificRecordBase impl
     implements org.apache.avro.data.RecordBuilder<RankedName> {
 
     private java.lang.Integer key;
-    private java.lang.CharSequence name;
+    private java.lang.String name;
     private org.gbif.pipelines.io.avro.Rank rank;
 
     /** Creates a new Builder */
@@ -185,12 +185,12 @@ public class RankedName extends org.apache.avro.specific.SpecificRecordBase impl
     }
 
     /** Gets the value of the 'name' field */
-    public java.lang.CharSequence getName() {
+    public java.lang.String getName() {
       return name;
     }
     
     /** Sets the value of the 'name' field */
-    public org.gbif.pipelines.io.avro.RankedName.Builder setName(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.RankedName.Builder setName(java.lang.String value) {
       validate(fields()[1], value);
       this.name = value;
       fieldSetFlags()[1] = true;
@@ -239,7 +239,7 @@ public class RankedName extends org.apache.avro.specific.SpecificRecordBase impl
       try {
         RankedName record = new RankedName();
         record.key = fieldSetFlags()[0] ? this.key : (java.lang.Integer) defaultValue(fields()[0]);
-        record.name = fieldSetFlags()[1] ? this.name : (java.lang.CharSequence) defaultValue(fields()[1]);
+        record.name = fieldSetFlags()[1] ? this.name : (java.lang.String) defaultValue(fields()[1]);
         record.rank = fieldSetFlags()[2] ? this.rank : (org.gbif.pipelines.io.avro.Rank) defaultValue(fields()[2]);
         return record;
       } catch (Exception e) {

@@ -1,12 +1,16 @@
 package org.gbif.pipelines.interpretation.parsers;
 
 import org.gbif.api.vocabulary.BasisOfRecord;
+import org.gbif.api.vocabulary.Continent;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.BasisOfRecordParser;
+import org.gbif.common.parsers.ContinentParser;
+import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.EstablishmentMeansParser;
 import org.gbif.common.parsers.LifeStageParser;
 import org.gbif.common.parsers.RankParser;
@@ -32,6 +36,8 @@ public class VocabularyParsers<T extends Enum<T>> {
   private static final SexParser SEX_PARSER = SexParser.getInstance();
   private static final EstablishmentMeansParser EST_PARSER = EstablishmentMeansParser.getInstance();
   private static final LifeStageParser LST_PARSER = LifeStageParser.getInstance();
+  private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
+  private static final ContinentParser CONTINENT_PARSER = ContinentParser.getInstance();
   private static final RankParser RANK_PARSER = RankParser.getInstance();
 
   //Parser to be used
@@ -84,14 +90,30 @@ public class VocabularyParsers<T extends Enum<T>> {
   }
 
   /**
+   *
+   * @return a country parser.
+   */
+  public static VocabularyParsers<Country> countryParser(){
+    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.country);
+  }
+
+  /**
+   *
+   * @return a continent parser.
+   */
+  public static VocabularyParsers<Continent> continentParser(){
+    return new VocabularyParsers<>(CONTINENT_PARSER, DwcTerm.continent);
+  }
+
+  /**
    * Runs a parsing method on a extended record.
    *
    * @param extendedRecord to be used as input
    * @param onParse        consumer called during parsing
    */
   public void parse(ExtendedRecord extendedRecord, Consumer<ParseResult<T>> onParse) {
-    Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()).toString())
-      .ifPresent(value -> onParse.accept(parser.parse(value)));
+    Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
+      .ifPresent( value -> onParse.accept(parser.parse(value)));
   }
 
   /**
@@ -124,6 +146,9 @@ public class VocabularyParsers<T extends Enum<T>> {
    * @param terms  to be used as input
    * @param mapper function mapper
    */
+  public <U> Optional<U> map(ExtendedRecord extendedRecord, Function<ParseResult<T>,U> mapper) {
+    return Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
+            .map(value -> mapper.apply(parser.parse(value)));
   public <U> Optional<U> map(Map<CharSequence, CharSequence> terms, Function<ParseResult<T>, U> mapper) {
     return Optional.ofNullable(terms.get(term.qualifiedName()))
       .map(value -> value.toString())

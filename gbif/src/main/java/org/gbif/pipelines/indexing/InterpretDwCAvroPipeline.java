@@ -3,10 +3,10 @@ package org.gbif.pipelines.indexing;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.RecordInterpretation;
-import org.gbif.pipelines.interpretation.ExtendedRecordTransform;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
+import org.gbif.pipelines.transform.ExtendedRecordTransform;
 
 import java.util.Collections;
 
@@ -44,14 +44,14 @@ public class InterpretDwCAvroPipeline {
     PCollectionTuple interpreted = verbatimRecords.apply(transform);
 
     //Record level interpretations
-    interpreted.get(transform.getInterpretedExtendedRecordTupleTag())
+    interpreted.get(transform.getDataTupleTag())
       .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
       .apply("Write Interpreted Avro files",
              AvroIO.write(InterpretedExtendedRecord.class)
                .to(options.getTargetPaths().get(RecordInterpretation.RECORD_LEVEL).filePath()));
 
     //Exporting issues
-    interpreted.get(transform.getOccurrenceIssueTupleTag())
+    interpreted.get(transform.getIssueTupleTag())
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Write InterpretationOld Issues Avro files",
              AvroIO.write(OccurrenceIssue.class)

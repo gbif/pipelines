@@ -5,14 +5,6 @@ package org.gbif.pipelines.ws.config;
  */
 public class Config {
 
-  // property names
-  private static final String WS_BASE_PATH_PROP_SUFFIX = ".ws.basePath";
-  private static final String WS_TIMEOUT_PROP_SUFFIX = ".ws.timeoutSeconds";
-
-  // defaults
-  private static final String DEFAULT_TIMEOUT = "60";
-  private static final String DEFAULT_CACHE_SIZE = "100";
-
   private String basePath;
   private long timeout;
   private CacheConfig cacheConfig;
@@ -45,9 +37,6 @@ public class Config {
    * Models the cache configuration.
    */
   public static class CacheConfig {
-
-    private static final String CACHE_NAME_PROP = ".cache.name";
-    private static final String CACHE_SIZE_PROP = ".cache.sizeInMb";
 
     private String name;
     // size in bytes

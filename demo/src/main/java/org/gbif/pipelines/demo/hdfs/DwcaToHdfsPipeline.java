@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
  */
 public class DwcaToHdfsPipeline {
 
-  private static final String TMP_DIR_DWCA = "tmpDwca";
-
   private static final Logger LOG = LoggerFactory.getLogger(DwcaToHdfsPipeline.class);
 
   /**
@@ -42,7 +40,7 @@ public class DwcaToHdfsPipeline {
     DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(config, args);
     Pipeline pipeline = Pipeline.create(options);
 
-    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
+    String targetPath = TargetPath.fullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
 
     // register Avro coders for serializing our messages
     Coders.registerAvroCoders(pipeline, ExtendedRecord.class, UntypedOccurrence.class);

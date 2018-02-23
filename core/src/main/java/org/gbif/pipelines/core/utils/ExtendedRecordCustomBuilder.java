@@ -23,6 +23,8 @@ public class ExtendedRecordCustomBuilder {
   private String name;
   private String authorship;
   private String id;
+  private String specificEpithet;
+  private String infraspecificEpithet;
 
   public ExtendedRecordCustomBuilder kingdom(String kingdom) {
     this.kingdom = kingdom;
@@ -69,13 +71,23 @@ public class ExtendedRecordCustomBuilder {
     return this;
   }
 
+  public ExtendedRecordCustomBuilder specificEpithet(String specificEpithet) {
+    this.specificEpithet = specificEpithet;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder infraspecificEpithet(String infraspecificEpithet) {
+    this.infraspecificEpithet = infraspecificEpithet;
+    return this;
+  }
+
   public ExtendedRecordCustomBuilder id(String id) {
     this.id = id;
     return this;
   }
 
   public ExtendedRecord build() {
-    Map<CharSequence, CharSequence> terms = new HashMap<>();
+    Map<String, String> terms = new HashMap<>();
     terms.put(DwcTerm.kingdom.qualifiedName(), kingdom);
     terms.put(DwcTerm.genus.qualifiedName(), genus);
     terms.put(DwcTerm.scientificName.qualifiedName(), name);
@@ -85,6 +97,8 @@ public class ExtendedRecordCustomBuilder {
     terms.put(DwcTerm.class_.qualifiedName(), clazz);
     terms.put(DwcTerm.order.qualifiedName(), order);
     terms.put(DwcTerm.family.qualifiedName(), family);
+    terms.put(DwcTerm.specificEpithet.qualifiedName(), specificEpithet);
+    terms.put(DwcTerm.infraspecificEpithet.qualifiedName(), infraspecificEpithet);
 
     return ExtendedRecord.newBuilder().setId(id).setCoreTerms(terms).build();
   }

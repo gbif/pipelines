@@ -126,7 +126,7 @@ public class WsResponse<T> {
   /**
    * Enum with the possible errors.
    */
-  public static enum WsErrorCode {
+  public enum WsErrorCode {
     CALL_FAILED, UNEXPECTED_ERROR;
   }
 

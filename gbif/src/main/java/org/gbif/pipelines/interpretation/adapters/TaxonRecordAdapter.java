@@ -9,6 +9,7 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -43,35 +44,43 @@ public class TaxonRecordAdapter {
   }
 
   private static RankedName adaptRankedName(org.gbif.api.v2.RankedName rankedNameApi) {
-    return rankedNameApi != null ? RankedName.newBuilder()
+    if (rankedNameApi == null) {
+      return null;
+    }
+
+    return RankedName.newBuilder()
       .setKey(rankedNameApi.getKey())
       .setName(rankedNameApi.getName())
       .setRank(Rank.valueOf(rankedNameApi.getRank().name()))
-      .build() : null;
+      .build();
   }
 
   private static Nomenclature adaptNomenclature(NameUsageMatch2.Nomenclature nomenclatureApi) {
-    return nomenclatureApi != null ? Nomenclature.newBuilder()
-      .setId(nomenclatureApi.getId())
-      .setSource(nomenclatureApi.getSource())
-      .build() : null;
+    if (nomenclatureApi == null) {
+      return null;
+    }
+
+    return Nomenclature.newBuilder().setId(nomenclatureApi.getId()).setSource(nomenclatureApi.getSource()).build();
   }
 
   private static Diagnostics adaptDiagnostics(NameUsageMatch2.Diagnostics diagnosticsApi) {
-    return diagnosticsApi != null ? Diagnostics.newBuilder()
-      .setAlternatives(diagnosticsApi.getAlternatives()
-                         .stream()
-                         .map(nameUsageMatch -> adaptInternal(nameUsageMatch, new TaxonRecord()))
-                         .collect(Collectors.toList()))
+    if (diagnosticsApi == null) {
+      return null;
+    }
+
+    List<TaxonRecord> alternatives = diagnosticsApi.getAlternatives()
+      .stream()
+      .map(nameUsageMatch -> adaptInternal(nameUsageMatch, new TaxonRecord()))
+      .collect(Collectors.toList());
+
+    return Diagnostics.newBuilder()
+      .setAlternatives(alternatives)
       .setConfidence(diagnosticsApi.getConfidence())
       .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
       .setNote(diagnosticsApi.getNote())
       .setStatus(Status.valueOf(diagnosticsApi.getStatus().name()))
-      .setLineage(diagnosticsApi.getLineage()
-                    .stream()
-                    .map(lineage -> (CharSequence) lineage)
-                    .collect(Collectors.toList()))
-      .build() : null;
+      .setLineage(diagnosticsApi.getLineage())
+      .build();
   }
 
 }

@@ -55,8 +55,8 @@ public class DwcaToHdfsTestingPipelineTest {
 
     // test results
     URI uriTargetPath =
-      clusterConfig.hdfsClusterBaseUri.resolve(TargetPath.getFullPath(options.getDefaultTargetDirectory(),
-                                                                      options.getDatasetId()) + "*");
+      clusterConfig.hdfsClusterBaseUri.resolve(TargetPath.fullPath(options.getDefaultTargetDirectory(),
+                                                                   options.getDatasetId()) + "*");
     FileStatus[] fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);

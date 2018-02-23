@@ -33,6 +33,8 @@ public class WsConfigurer {
 
   private static final String DEFAULT_CACHE_NAME_SUFFIX = "-cacheWs";
 
+  private WsConfigurer() {}
+
   public static Config createConfig(Service service) {
     Objects.requireNonNull(service);
 
@@ -89,6 +91,7 @@ public class WsConfigurer {
       // read properties from input stream
       props.load(in);
     } catch (Exception e) {
+      LOG.error("Properties could not be read from {}", propertiesPath.toString(), e);
       return Optional.empty();
     }
 

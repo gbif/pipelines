@@ -4,10 +4,10 @@ import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.RecordInterpretation;
-import org.gbif.pipelines.interpretation.taxonomy.TaxonomicInterpretationTransform;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.transform.TaxonRecordTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -63,18 +63,20 @@ public class TaxonomyInterpretationPipeline {
       pipeline.apply("Read Avro files", AvroIO.read(ExtendedRecord.class).from(options.getInputFile()))
         .setCoder(AvroCoder.of(ExtendedRecord.class));
 
-    PCollectionTuple taxonomicInterpreted = verbatimRecords.apply(new TaxonomicInterpretationTransform());
+    TaxonRecordTransform taxonRecordTransform = new TaxonRecordTransform();
+
+    PCollectionTuple taxonomicInterpreted = verbatimRecords.apply(taxonRecordTransform);
 
     // write taxon records
-    taxonomicInterpreted.get(TaxonomicInterpretationTransform.TAXON_RECORD_TUPLE_TAG)
+    taxonomicInterpreted.get(taxonRecordTransform.getDataTupleTag())
       .setCoder(AvroCoder.of(TaxonRecord.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(TaxonRecord.class)
-               .to(options.getTargetPaths().get(RecordInterpretation.TAXONOMY).filePath())
+               .to(options.getTargetPaths().get(RecordInterpretation.GBIF_BACKBONE).filePath())
                .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     // write issues
-    taxonomicInterpreted.get(TaxonomicInterpretationTransform.TAXON_ISSUES_TUPLE_TAG)
+    taxonomicInterpreted.get(taxonRecordTransform.getIssueTupleTag())
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(OccurrenceIssue.class)

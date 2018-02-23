@@ -12,6 +12,34 @@
 
   <artifactId>demo</artifactId>
 
+  <profiles>
+    <profile>
+      <id>direct-runner</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>beam-runners-direct-java</artifactId>
+          <scope>runtime</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </dependency>
+        <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-hdfs</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+
+  </profiles>
   <properties>
     <protobuf.version>3.5.1</protobuf.version>
   </properties>
@@ -65,8 +93,7 @@
 
                 <relocation>
                   <pattern>retrofit2</pattern>
-                  <!-- TODO: what name could we use here instead of tim?? -->
-                  <shadedPattern>tim.retrofit2</shadedPattern>
+                  <shadedPattern>gbif.retrofit2</shadedPattern>
                 </relocation>
 
 
@@ -85,6 +112,15 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.16.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>gbif-pipelines</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>gbif-pipelines</artifactId>
     </dependency>
@@ -93,16 +129,16 @@
       <artifactId>beam-common</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-runners-direct-java</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-io-kafka</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -147,7 +183,6 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>${protobuf.version}</version>
     </dependency>
     <!--Test dependencies-->
 

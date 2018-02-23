@@ -8,10 +8,10 @@ package org.gbif.pipelines.io.avro;
 /** A taxonomic record */
 @org.apache.avro.specific.AvroGenerated
 public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TaxonRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"A taxonomic record\",\"fields\":[{\"name\":\"id\",\"type\":\"string\",\"doc\":\"The record id\"},{\"name\":\"synonym\",\"type\":[\"null\",\"boolean\"],\"default\":null},{\"name\":\"usage\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RankedName\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"rank\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Rank\",\"symbols\":[\"DOMAIN\",\"SUPERKINGDOM\",\"KINGDOM\",\"SUBKINGDOM\",\"INFRAKINGDOM\",\"SUPERPHYLUM\",\"PHYLUM\",\"SUBPHYLUM\",\"INFRAPHYLUM\",\"SUPERCLASS\",\"CLASS\",\"SUBCLASS\",\"INFRACLASS\",\"PARVCLASS\",\"SUPERLEGION\",\"LEGION\",\"SUBLEGION\",\"INFRALEGION\",\"SUPERCOHORT\",\"COHORT\",\"SUBCOHORT\",\"INFRACOHORT\",\"MAGNORDER\",\"SUPERORDER\",\"GRANDORDER\",\"ORDER\",\"SUBORDER\",\"INFRAORDER\",\"PARVORDER\",\"SUPERFAMILY\",\"FAMILY\",\"SUBFAMILY\",\"INFRAFAMILY\",\"SUPERTRIBE\",\"TRIBE\",\"SUBTRIBE\",\"INFRATRIBE\",\"SUPRAGENERIC_NAME\",\"GENUS\",\"SUBGENUS\",\"INFRAGENUS\",\"SECTION\",\"SUBSECTION\",\"SERIES\",\"SUBSERIES\",\"INFRAGENERIC_NAME\",\"SPECIES_AGGREGATE\",\"SPECIES\",\"INFRASPECIFIC_NAME\",\"GREX\",\"SUBSPECIES\",\"CULTIVAR_GROUP\",\"CONVARIETY\",\"INFRASUBSPECIFIC_NAME\",\"PROLES\",\"RACE\",\"NATIO\",\"ABERRATION\",\"MORPH\",\"VARIETY\",\"SUBVARIETY\",\"FORM\",\"SUBFORM\",\"PATHOVAR\",\"BIOVAR\",\"CHEMOVAR\",\"MORPHOVAR\",\"PHAGOVAR\",\"SEROVAR\",\"CHEMOFORM\",\"FORMA_SPECIALIS\",\"CULTIVAR\",\"STRAIN\",\"OTHER\",\"UNRANKED\"]}],\"default\":null}]}],\"default\":null},{\"name\":\"acceptedUsage\",\"type\":[\"null\",\"RankedName\"],\"default\":null},{\"name\":\"nomenclature\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"Nomenclature\",\"fields\":[{\"name\":\"source\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null},{\"name\":\"classification\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"RankedName\"}],\"default\":null},{\"name\":\"diagnostics\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"Diagnostics\",\"fields\":[{\"name\":\"matchType\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"MatchType\",\"symbols\":[\"EXACT\",\"FUZZY\",\"HIGHERRANK\",\"NONE\"]}],\"default\":null},{\"name\":\"confidence\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"status\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Status\",\"symbols\":[\"ACCEPTED\",\"DOUBTFUL\",\"SYNONYM\",\"HETEROTYPIC_SYNONYM\",\"HOMOTYPIC_SYNONYM\",\"PROPARTE_SYNONYM\",\"MISAPPLIED\",\"INTERMEDIATE_RANK_SYNONYM\",\"DETERMINATION_SYNONYM\"]}],\"default\":null},{\"name\":\"lineage\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"string\"}],\"default\":null},{\"name\":\"alternatives\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"TaxonRecord\"}],\"default\":null},{\"name\":\"note\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TaxonRecord\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"doc\":\"A taxonomic record\",\"fields\":[{\"name\":\"id\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"doc\":\"The record id\"},{\"name\":\"synonym\",\"type\":[\"null\",\"boolean\"],\"default\":null},{\"name\":\"usage\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RankedName\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"name\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"rank\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Rank\",\"symbols\":[\"DOMAIN\",\"SUPERKINGDOM\",\"KINGDOM\",\"SUBKINGDOM\",\"INFRAKINGDOM\",\"SUPERPHYLUM\",\"PHYLUM\",\"SUBPHYLUM\",\"INFRAPHYLUM\",\"SUPERCLASS\",\"CLASS\",\"SUBCLASS\",\"INFRACLASS\",\"PARVCLASS\",\"SUPERLEGION\",\"LEGION\",\"SUBLEGION\",\"INFRALEGION\",\"SUPERCOHORT\",\"COHORT\",\"SUBCOHORT\",\"INFRACOHORT\",\"MAGNORDER\",\"SUPERORDER\",\"GRANDORDER\",\"ORDER\",\"SUBORDER\",\"INFRAORDER\",\"PARVORDER\",\"SUPERFAMILY\",\"FAMILY\",\"SUBFAMILY\",\"INFRAFAMILY\",\"SUPERTRIBE\",\"TRIBE\",\"SUBTRIBE\",\"INFRATRIBE\",\"SUPRAGENERIC_NAME\",\"GENUS\",\"SUBGENUS\",\"INFRAGENUS\",\"SECTION\",\"SUBSECTION\",\"SERIES\",\"SUBSERIES\",\"INFRAGENERIC_NAME\",\"SPECIES_AGGREGATE\",\"SPECIES\",\"INFRASPECIFIC_NAME\",\"GREX\",\"SUBSPECIES\",\"CULTIVAR_GROUP\",\"CONVARIETY\",\"INFRASUBSPECIFIC_NAME\",\"PROLES\",\"RACE\",\"NATIO\",\"ABERRATION\",\"MORPH\",\"VARIETY\",\"SUBVARIETY\",\"FORM\",\"SUBFORM\",\"PATHOVAR\",\"BIOVAR\",\"CHEMOVAR\",\"MORPHOVAR\",\"PHAGOVAR\",\"SEROVAR\",\"CHEMOFORM\",\"FORMA_SPECIALIS\",\"CULTIVAR\",\"STRAIN\",\"OTHER\",\"UNRANKED\"]}],\"default\":null}]}],\"default\":null},{\"name\":\"acceptedUsage\",\"type\":[\"null\",\"RankedName\"],\"default\":null},{\"name\":\"nomenclature\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"Nomenclature\",\"fields\":[{\"name\":\"source\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"id\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}],\"default\":null},{\"name\":\"classification\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"RankedName\"}],\"default\":null},{\"name\":\"diagnostics\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"Diagnostics\",\"fields\":[{\"name\":\"matchType\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"MatchType\",\"symbols\":[\"EXACT\",\"FUZZY\",\"HIGHERRANK\",\"NONE\"]}],\"default\":null},{\"name\":\"confidence\",\"type\":[\"null\",\"int\"],\"default\":null},{\"name\":\"status\",\"type\":[\"null\",{\"type\":\"enum\",\"name\":\"Status\",\"symbols\":[\"ACCEPTED\",\"DOUBTFUL\",\"SYNONYM\",\"HETEROTYPIC_SYNONYM\",\"HOMOTYPIC_SYNONYM\",\"PROPARTE_SYNONYM\",\"MISAPPLIED\",\"INTERMEDIATE_RANK_SYNONYM\",\"DETERMINATION_SYNONYM\"]}],\"default\":null},{\"name\":\"lineage\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}],\"default\":null},{\"name\":\"alternatives\",\"type\":[\"null\",{\"type\":\"array\",\"items\":\"TaxonRecord\"}],\"default\":null},{\"name\":\"note\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   /** The record id */
-  @Deprecated public java.lang.CharSequence id;
+  @Deprecated public java.lang.String id;
   @Deprecated public java.lang.Boolean synonym;
   @Deprecated public org.gbif.pipelines.io.avro.RankedName usage;
   @Deprecated public org.gbif.pipelines.io.avro.RankedName acceptedUsage;
@@ -29,7 +29,7 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   /**
    * All-args constructor.
    */
-  public TaxonRecord(java.lang.CharSequence id, java.lang.Boolean synonym, org.gbif.pipelines.io.avro.RankedName usage, org.gbif.pipelines.io.avro.RankedName acceptedUsage, org.gbif.pipelines.io.avro.Nomenclature nomenclature, java.util.List<org.gbif.pipelines.io.avro.RankedName> classification, org.gbif.pipelines.io.avro.Diagnostics diagnostics) {
+  public TaxonRecord(java.lang.String id, java.lang.Boolean synonym, org.gbif.pipelines.io.avro.RankedName usage, org.gbif.pipelines.io.avro.RankedName acceptedUsage, org.gbif.pipelines.io.avro.Nomenclature nomenclature, java.util.List<org.gbif.pipelines.io.avro.RankedName> classification, org.gbif.pipelines.io.avro.Diagnostics diagnostics) {
     this.id = id;
     this.synonym = synonym;
     this.usage = usage;
@@ -57,7 +57,7 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: id = (java.lang.CharSequence)value$; break;
+    case 0: id = (java.lang.String)value$; break;
     case 1: synonym = (java.lang.Boolean)value$; break;
     case 2: usage = (org.gbif.pipelines.io.avro.RankedName)value$; break;
     case 3: acceptedUsage = (org.gbif.pipelines.io.avro.RankedName)value$; break;
@@ -71,7 +71,7 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   /**
    * Gets the value of the 'id' field.
    * The record id   */
-  public java.lang.CharSequence getId() {
+  public java.lang.String getId() {
     return id;
   }
 
@@ -79,7 +79,7 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
    * Sets the value of the 'id' field.
    * The record id   * @param value the value to set.
    */
-  public void setId(java.lang.CharSequence value) {
+  public void setId(java.lang.String value) {
     this.id = value;
   }
 
@@ -194,7 +194,7 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<TaxonRecord>
     implements org.apache.avro.data.RecordBuilder<TaxonRecord> {
 
-    private java.lang.CharSequence id;
+    private java.lang.String id;
     private java.lang.Boolean synonym;
     private org.gbif.pipelines.io.avro.RankedName usage;
     private org.gbif.pipelines.io.avro.RankedName acceptedUsage;
@@ -274,12 +274,12 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     }
 
     /** Gets the value of the 'id' field */
-    public java.lang.CharSequence getId() {
+    public java.lang.String getId() {
       return id;
     }
     
     /** Sets the value of the 'id' field */
-    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setId(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.TaxonRecord.Builder setId(java.lang.String value) {
       validate(fields()[0], value);
       this.id = value;
       fieldSetFlags()[0] = true;
@@ -452,7 +452,7 @@ public class TaxonRecord extends org.apache.avro.specific.SpecificRecordBase imp
     public TaxonRecord build() {
       try {
         TaxonRecord record = new TaxonRecord();
-        record.id = fieldSetFlags()[0] ? this.id : (java.lang.CharSequence) defaultValue(fields()[0]);
+        record.id = fieldSetFlags()[0] ? this.id : (java.lang.String) defaultValue(fields()[0]);
         record.synonym = fieldSetFlags()[1] ? this.synonym : (java.lang.Boolean) defaultValue(fields()[1]);
         record.usage = fieldSetFlags()[2] ? this.usage : (org.gbif.pipelines.io.avro.RankedName) defaultValue(fields()[2]);
         record.acceptedUsage = fieldSetFlags()[3] ? this.acceptedUsage : (org.gbif.pipelines.io.avro.RankedName) defaultValue(fields()[3]);

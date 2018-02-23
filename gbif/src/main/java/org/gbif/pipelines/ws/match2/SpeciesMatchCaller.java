@@ -3,7 +3,6 @@ package org.gbif.pipelines.ws.match2;
 import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.interpretation.taxonomy.TaxonomyInterpretationException;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.ws.WsResponse;
 
@@ -18,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 
-import static org.gbif.pipelines.interpretation.taxonomy.TaxonomyUtils.emptyNameUsageMatchResponse;
+import static org.gbif.pipelines.interpretation.utils.TaxonomyUtils.emptyNameUsageMatchResponse;
 
 /**
  * Handles the calls to the species match WS.
@@ -35,8 +34,6 @@ public class SpeciesMatchCaller {
    * @param extendedRecord avro file with the taxonomic data
    *
    * @return {@link NameUsageMatch2} with the match received from the WS.
-   *
-   * @throws TaxonomyInterpretationException in case of errors
    */
   public static WsResponse<NameUsageMatch2> getMatch(ExtendedRecord extendedRecord) {
     WsResponse<NameUsageMatch2> response = tryNameMatch(extendedRecord.getCoreTerms());
@@ -44,15 +41,15 @@ public class SpeciesMatchCaller {
     if (!isSuccessfulMatch(response) && hasIdentifications(extendedRecord)) {
       LOG.info("Retrying match with identification extension");
       // get identifications
-      List<Map<CharSequence, CharSequence>> identifications =
+      List<Map<String, String>> identifications =
         extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
 
       // FIXME: use new generic functions to parse the date??
       // sort them by date identified
       // Ask Markus D if this can be moved to the API?
-      identifications.sort(Comparator.comparing((Map<CharSequence, CharSequence> map) -> LocalDateTime.parse(map.get(
-        DwcTerm.dateIdentified))).reversed());
-      for (Map<CharSequence, CharSequence> record : identifications) {
+      identifications.sort(Comparator.comparing((Map<String, String> map) -> LocalDateTime.parse(map.get(DwcTerm.dateIdentified)))
+                             .reversed());
+      for (Map<String, String> record : identifications) {
         response = tryNameMatch(record);
         if (isSuccessfulMatch(response)) {
           LOG.info("match with identificationId {} succeed", record.get(DwcTerm.identificationID.name()));
@@ -64,14 +61,12 @@ public class SpeciesMatchCaller {
     return response;
   }
 
-  private static WsResponse<NameUsageMatch2> tryNameMatch(Map<CharSequence, CharSequence> terms) {
-    SpeciesMatch2Service service = SpeciesMatch2ServiceRest.SINGLE.getService();
+  private static WsResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
+    SpeciesMatchService2 service = SpeciesMatchServiceRest2.SINGLE.getService();
 
     Map<String, String> params = NameUsageMatchQueryConverter.convert(terms);
 
     Call<NameUsageMatch2> call = service.match(params);
-
-    NameUsageMatch2 responseModel = null;
 
     try {
       Response<NameUsageMatch2> response = call.execute();

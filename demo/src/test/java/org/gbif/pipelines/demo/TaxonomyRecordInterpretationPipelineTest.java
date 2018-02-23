@@ -28,7 +28,7 @@ public class TaxonomyRecordInterpretationPipelineTest {
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
+  public static void tearDown() {
     clusterConfig.hdfsCluster.shutdown();
   }
 
@@ -49,8 +49,9 @@ public class TaxonomyRecordInterpretationPipelineTest {
     TaxonomyInterpretationPipeline.runPipelineProgrammatically(options);
 
     // test taxon results
-    URI uriTargetPath =
-      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(RecordInterpretation.TAXONOMY).filePath() + "*");
+    URI uriTargetPath = clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths()
+                                                                   .get(RecordInterpretation.GBIF_BACKBONE)
+                                                                   .filePath() + "*");
     FileStatus[] fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);
@@ -64,7 +65,8 @@ public class TaxonomyRecordInterpretationPipelineTest {
 
     // test issues results
     uriTargetPath =
-      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(RecordInterpretation.ISSUES).filePath() + "*");
+      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(RecordInterpretation.ISSUES).filePath()
+                                               + "*");
     fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);

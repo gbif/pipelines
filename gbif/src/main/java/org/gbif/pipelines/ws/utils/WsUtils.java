@@ -30,14 +30,14 @@ public final class WsUtils {
       throw new IllegalStateException("Cannot run without the ability to create temporary cache directory", e);
     }
 
-    // create client
+    // create cache
     Cache cache = new Cache(httpCacheDirectory, wsConfig.getCacheConfig().getSize());
-    OkHttpClient client = new OkHttpClient.Builder().connectTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
+
+    // create the client and return it
+    return new OkHttpClient.Builder().connectTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
       .readTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
       .cache(cache)
       .build();
-
-    return client;
   }
 
 }

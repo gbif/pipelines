@@ -109,7 +109,7 @@ public final class AvroSchemaGenerator {
   }
 
   /**
-   * Writes an schema to a File in the specified path.
+   * Writes a schema to a File in the specified path.
    *
    * @param pathToWrite path where the schema will be written to
    * @param schema      schema to write to the file
@@ -163,11 +163,11 @@ public final class AvroSchemaGenerator {
       }
       // collections
       else if (isCollection(field)) {
-        schema = Schema.createArray(schema(collectionType(field), customSchemas));
+        schema = Schema.createArray(createSchema(getCollectionType(field), customSchemas));
       }
       // java types
       else if (isJavaType(field)) {
-        schema = schema(field.getType().getSimpleName(), customSchemas);
+        schema = createSchema(field.getType().getSimpleName(), customSchemas);
       }
       // rest: custom types
       else {
@@ -187,7 +187,7 @@ public final class AvroSchemaGenerator {
 
       // create field and add it to the list
       schema = makeNullable(schema);
-      avroFields.add(new Schema.Field(field.getName(), schema, null, defaultValue(schema)));
+      avroFields.add(new Schema.Field(field.getName(), schema, null, defaultValueOf(schema)));
     }
   }
 
@@ -203,7 +203,7 @@ public final class AvroSchemaGenerator {
     return str == null ? "" : str.substring(0, 1).toUpperCase() + str.substring(1);
   }
 
-  private static String collectionType(Field collection) {
+  private static String getCollectionType(Field collection) {
     if (collection == null) {
       return "";
     }
@@ -221,7 +221,7 @@ public final class AvroSchemaGenerator {
     return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), schema));
   }
 
-  private static Schema schema(String className, Map<String, Schema> customSchemas) {
+  private static Schema createSchema(String className, Map<String, Schema> customSchemas) {
     if (customSchemas.containsKey(className)) {
       return customSchemas.get(className);
     }
@@ -238,7 +238,7 @@ public final class AvroSchemaGenerator {
    * Currently we generate all the fields nullable so the default will be always null, but we leave this method for
    * the future.
    */
-  private static JsonNode defaultValue(Schema schema) {
+  private static JsonNode defaultValueOf(Schema schema) {
     // according to the avro specification, in union schemas the default value corresponds to the first schema
     Schema.Type schemaType =
       Schema.Type.UNION.equals(schema.getType()) ? schema.getTypes().get(0).getType() : schema.getType();

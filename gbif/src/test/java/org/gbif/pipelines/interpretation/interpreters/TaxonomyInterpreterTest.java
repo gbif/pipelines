@@ -1,7 +1,6 @@
 package org.gbif.pipelines.interpretation.interpreters;
 
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.interpretation.taxonomy.TaxonomyInterpretationException;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
@@ -30,6 +29,7 @@ public class TaxonomyInterpreterTest {
       .genus("Puma")
       .name("Puma concolor")
       .authorship("")
+
       .rank(Rank.SPECIES.name())
       .id(TEST_RECORD_ID)
       .build();
@@ -211,18 +211,18 @@ public class TaxonomyInterpreterTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void testMatchNullTaxonRecord() throws TaxonomyInterpretationException {
+  public void testMatchNullTaxonRecord() {
     TaxonomyInterpreter.taxonomyInterpreter(null).apply(null);
   }
 
   @Test(expected = NullPointerException.class)
-  public void testMatchNullArgs() throws TaxonomyInterpretationException {
+  public void testMatchNullArgs() {
     TaxonRecord taxonRecord = new TaxonRecord();
     TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testMatchEmptyArgs() throws TaxonomyInterpretationException {
+  public void testMatchEmptyArgs() {
     ExtendedRecord record = new ExtendedRecord();
     record.setCoreTerms(new HashMap<>());
     TaxonRecord taxonRecord = new TaxonRecord();

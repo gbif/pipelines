@@ -7,10 +7,10 @@ package org.gbif.pipelines.io.avro;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Nomenclature\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"source\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Nomenclature\",\"namespace\":\"org.gbif.pipelines.io.avro\",\"fields\":[{\"name\":\"source\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null},{\"name\":\"id\",\"type\":[\"null\",{\"type\":\"string\",\"avro.java.string\":\"String\"}],\"default\":null}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
-  @Deprecated public java.lang.CharSequence source;
-  @Deprecated public java.lang.CharSequence id;
+  @Deprecated public java.lang.String source;
+  @Deprecated public java.lang.String id;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -22,7 +22,7 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
   /**
    * All-args constructor.
    */
-  public Nomenclature(java.lang.CharSequence source, java.lang.CharSequence id) {
+  public Nomenclature(java.lang.String source, java.lang.String id) {
     this.source = source;
     this.id = id;
   }
@@ -40,8 +40,8 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: source = (java.lang.CharSequence)value$; break;
-    case 1: id = (java.lang.CharSequence)value$; break;
+    case 0: source = (java.lang.String)value$; break;
+    case 1: id = (java.lang.String)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
@@ -49,7 +49,7 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
   /**
    * Gets the value of the 'source' field.
    */
-  public java.lang.CharSequence getSource() {
+  public java.lang.String getSource() {
     return source;
   }
 
@@ -57,14 +57,14 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
    * Sets the value of the 'source' field.
    * @param value the value to set.
    */
-  public void setSource(java.lang.CharSequence value) {
+  public void setSource(java.lang.String value) {
     this.source = value;
   }
 
   /**
    * Gets the value of the 'id' field.
    */
-  public java.lang.CharSequence getId() {
+  public java.lang.String getId() {
     return id;
   }
 
@@ -72,7 +72,7 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
    * Sets the value of the 'id' field.
    * @param value the value to set.
    */
-  public void setId(java.lang.CharSequence value) {
+  public void setId(java.lang.String value) {
     this.id = value;
   }
 
@@ -97,8 +97,8 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Nomenclature>
     implements org.apache.avro.data.RecordBuilder<Nomenclature> {
 
-    private java.lang.CharSequence source;
-    private java.lang.CharSequence id;
+    private java.lang.String source;
+    private java.lang.String id;
 
     /** Creates a new Builder */
     private Builder() {
@@ -132,12 +132,12 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
     }
 
     /** Gets the value of the 'source' field */
-    public java.lang.CharSequence getSource() {
+    public java.lang.String getSource() {
       return source;
     }
     
     /** Sets the value of the 'source' field */
-    public org.gbif.pipelines.io.avro.Nomenclature.Builder setSource(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.Nomenclature.Builder setSource(java.lang.String value) {
       validate(fields()[0], value);
       this.source = value;
       fieldSetFlags()[0] = true;
@@ -157,12 +157,12 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
     }
 
     /** Gets the value of the 'id' field */
-    public java.lang.CharSequence getId() {
+    public java.lang.String getId() {
       return id;
     }
     
     /** Sets the value of the 'id' field */
-    public org.gbif.pipelines.io.avro.Nomenclature.Builder setId(java.lang.CharSequence value) {
+    public org.gbif.pipelines.io.avro.Nomenclature.Builder setId(java.lang.String value) {
       validate(fields()[1], value);
       this.id = value;
       fieldSetFlags()[1] = true;
@@ -185,8 +185,8 @@ public class Nomenclature extends org.apache.avro.specific.SpecificRecordBase im
     public Nomenclature build() {
       try {
         Nomenclature record = new Nomenclature();
-        record.source = fieldSetFlags()[0] ? this.source : (java.lang.CharSequence) defaultValue(fields()[0]);
-        record.id = fieldSetFlags()[1] ? this.id : (java.lang.CharSequence) defaultValue(fields()[1]);
+        record.source = fieldSetFlags()[0] ? this.source : (java.lang.String) defaultValue(fields()[0]);
+        record.id = fieldSetFlags()[1] ? this.id : (java.lang.String) defaultValue(fields()[1]);
         return record;
       } catch (Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);

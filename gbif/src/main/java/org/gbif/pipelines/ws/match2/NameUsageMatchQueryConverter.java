@@ -19,7 +19,12 @@ import com.google.common.collect.ImmutableMap;
 import static org.gbif.pipelines.interpretation.parsers.VocabularyParsers.rankParser;
 import static org.gbif.pipelines.interpretation.parsers.VocabularyParsers.verbatimTaxonRankParser;
 
+/**
+ * Converter to create queries for the name match service.
+ */
 public class NameUsageMatchQueryConverter {
+
+  private NameUsageMatchQueryConverter() {}
 
   private static class AtomizedFields {
 
@@ -29,12 +34,6 @@ public class NameUsageMatchQueryConverter {
 
     private static Builder newBuilder() {
       return new Builder();
-    }
-
-    private AtomizedFields(String genus, String specificEpithet, String infraspecificEpithet) {
-      this.genus = genus;
-      this.specificEpithet = specificEpithet;
-      this.infraspecificEpithet = infraspecificEpithet;
     }
 
     private AtomizedFields(Builder builder) {
@@ -84,7 +83,10 @@ public class NameUsageMatchQueryConverter {
     }
   }
 
-  public static Map<String, String> convert(final Map<CharSequence, CharSequence> terms) {
+  /**
+   * Converts a {@link Map} of terms to {@link Map} with the params needed to call the {@link SpeciesMatchService2}.
+   */
+  public static Map<String, String> convert(final Map<String, String> terms) {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     AtomizedFields.Builder atomizedFieldsBuilder = AtomizedFields.newBuilder();
@@ -102,6 +104,14 @@ public class NameUsageMatchQueryConverter {
     getTaxonValue(terms, DwcTerm.genus).ifPresent(cleanValue -> {
       builder.put("genus", cleanValue);
       atomizedFieldsBuilder.withGenus(cleanValue);
+    });
+
+    getTaxonValue(terms, DwcTerm.specificEpithet).ifPresent(cleanValue -> {
+      atomizedFieldsBuilder.withSpecificEpithet(cleanValue);
+    });
+
+    getTaxonValue(terms, DwcTerm.infraspecificEpithet).ifPresent(cleanValue -> {
+      atomizedFieldsBuilder.withInfraspecificEpithet(cleanValue);
     });
 
     Optional<String> genericName = getTaxonValue(terms, GbifTerm.genericName);
@@ -124,21 +134,19 @@ public class NameUsageMatchQueryConverter {
   /**
    * Gets a clean version of taxa parameter.
    */
-  private static Optional<String> getTaxonValue(Map<CharSequence, CharSequence> terms, Term term) {
-    return Optional.ofNullable(terms.get(term.qualifiedName()))
-      .map(value -> ClassificationUtils.clean(value.toString()));
+  private static Optional<String> getTaxonValue(Map<String, String> terms, Term term) {
+    return Optional.ofNullable(terms.get(term.qualifiedName())).map(ClassificationUtils::clean);
   }
 
   /**
    * Gets a clean version of field with authorship.
    */
-  private static Optional<String> getAuthorValue(final Map<CharSequence, CharSequence> terms, Term term) {
-    return Optional.ofNullable(terms.get(term.qualifiedName()))
-      .map(value -> ClassificationUtils.cleanAuthor(value.toString()));
+  private static Optional<String> getAuthorValue(final Map<String, String> terms, Term term) {
+    return Optional.ofNullable(terms.get(term.qualifiedName())).map(ClassificationUtils::cleanAuthor);
   }
 
   private static Optional<Rank> interpretRank(
-    final Map<CharSequence, CharSequence> terms, AtomizedFields atomizedFields
+    final Map<String, String> terms, AtomizedFields atomizedFields
   ) {
     Optional<Rank> interpretedRank = rankParser().map(terms, Function.identity())
       .map(rankParseResult -> rankParseResult.isSuccessful()
@@ -168,11 +176,11 @@ public class NameUsageMatchQueryConverter {
    * Assembles the most complete scientific name based on full and individual name parts.
    */
   private static Optional<String> interpretScientificName(
-    final Map<CharSequence, CharSequence> terms, AtomizedFields atomizedFields, String authorship, String genericName
+    final Map<String, String> terms, AtomizedFields atomizedFields, String authorship, String genericName
   ) {
     Optional<String> interpretedScientificName =
       Optional.of(terms.get(DwcTerm.scientificName.qualifiedName())).map(scientificNameValue -> {
-        String scientificName = ClassificationUtils.clean(scientificNameValue.toString());
+        String scientificName = ClassificationUtils.clean(scientificNameValue);
         return scientificName != null && !Strings.isNullOrEmpty(authorship) && !scientificName.toLowerCase()
           .contains(authorship.toLowerCase()) ? scientificName + " " + authorship : scientificName;
       });
