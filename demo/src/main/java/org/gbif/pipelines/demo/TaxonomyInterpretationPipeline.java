@@ -63,8 +63,8 @@ public class TaxonomyInterpretationPipeline {
       pipeline.apply("Read Avro files", AvroIO.read(ExtendedRecord.class).from(options.getInputFile()))
         .setCoder(AvroCoder.of(ExtendedRecord.class));
 
+    // taxon interpretation
     TaxonRecordTransform taxonRecordTransform = new TaxonRecordTransform();
-
     PCollectionTuple taxonomicInterpreted = verbatimRecords.apply(taxonRecordTransform);
 
     // write taxon records

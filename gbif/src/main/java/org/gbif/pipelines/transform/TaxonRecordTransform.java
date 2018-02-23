@@ -34,10 +34,12 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
 
         TaxonRecord taxonRecord = new TaxonRecord();
 
+        // interpretation
         Interpretation.of(extendedRecord)
           .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord))
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
-        // taxon records
+
+        // taxon record result
         context.output(getDataTupleTag(), taxonRecord);
 
         // issues

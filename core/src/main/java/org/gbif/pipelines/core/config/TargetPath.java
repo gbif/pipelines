@@ -14,7 +14,7 @@ public class TargetPath implements Serializable {
   private String directory;
   private String fileName;
 
-  // This constructor is necessary for serialization when running on Spark with Jackson. Also, use getters and
+  // NOTE: This constructor is necessary for serialization when running on Spark with Jackson. Also, use getters and
   // setters only for properties, to avoid serialization problems.
   public TargetPath() {}
 

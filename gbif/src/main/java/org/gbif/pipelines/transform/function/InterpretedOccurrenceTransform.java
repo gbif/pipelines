@@ -12,11 +12,11 @@ import org.apache.beam.sdk.values.KV;
 /**
  * Convert's Beam's represented Joined PCollection to an Interpreted Occurrence
  */
-public class InterpretedOccurenceTransform extends DoFn<KV<String, CoGbkResult>, ExtendedOccurrence> {
+public class InterpretedOccurrenceTransform extends DoFn<KV<String, CoGbkResult>, ExtendedOccurrence> {
 
   private final ExtendedOccurrenceTransform extendedOccurenceTransform;
 
-  public InterpretedOccurenceTransform(ExtendedOccurrenceTransform extendedOccurenceTransform) {
+  public InterpretedOccurrenceTransform(ExtendedOccurrenceTransform extendedOccurenceTransform) {
     this.extendedOccurenceTransform = extendedOccurenceTransform;
   }
 

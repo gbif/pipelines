@@ -51,8 +51,7 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
 
       if (response.isResponsyEmpty(emptyNameUsageMatchResponse())) {
         // TODO: maybe I would need to add to the enum a new issue for this, sth like "NO_MATCHING_RESULTS". This
-        // happens
-        // when we get an empty response from the WS
+        // happens when we get an empty response from the WS
         interpretation.withValidation(Collections.singletonList(Trace.of(null,
                                                                          IssueType.TAXON_MATCH_NONE,
                                                                          "No results from match service")));
