@@ -22,13 +22,13 @@ class CountryInterpreter implements Interpretable<String, String> {
     if (parseCountry.isSuccessful()) {
       return InterpretationResult.withSuccess(parseCountry.getPayload().getTitle());
     } else {
-      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                                                             .setIssueType(IssueType.PARSE_ERROR)
-                                                             .setRemark(parseCountry.getError() != null
-                                                                          ? parseCountry.getError().getMessage()
+      List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                       .setIssueType(IssueType.PARSE_ERROR)
+                                                       .setRemark(parseCountry.getError() != null
+                                                                    ? parseCountry.getError().getMessage()
                                                                           : "Parse failed as null")
                                                              .build());
-      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+      List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
                                                                  .setLineageType(LineageType.SET_TO_NULL)
                                                                  .setRemark(
                                                                    "Since the parse on country failed, interpreting as null")

@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.dwca.avro.ExtendedOccurence;
+import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.pipelines.core.config.RecordInterpretation;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 
@@ -13,25 +13,22 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 /**
  * Transform to write final flat interpreted occurrence and issues/lineages
  */
-public class ExtendedOccurenceAvroDump extends PTransform<PCollectionTuple, PCollectionTuple> {
+public class ExtendedOccurrenceAvroDump extends PTransform<PCollectionTuple, PCollectionTuple> {
 
-  private final ExtendedOccurenceTransform transformer;
+  private final ExtendedOccurrenceTransform transformer;
   private final Map<RecordInterpretation, String> targetPaths;
 
-  public ExtendedOccurenceAvroDump(
-    ExtendedOccurenceTransform transform,
-    Map<RecordInterpretation, String> targetPaths
-  ) {
-    this.transformer = transform;
+  public ExtendedOccurrenceAvroDump(ExtendedOccurrenceTransform transform, Map<RecordInterpretation, String> targetPaths) {
+    transformer = transform;
     this.targetPaths = targetPaths;
   }
 
   @Override
   public PCollectionTuple expand(PCollectionTuple interpretedRecords) {
     // Write the big flat final interpreted records as an Avro file in defined hive table
-    interpretedRecords.get(transformer.getInterpretedOccurence())
+    interpretedRecords.get(transformer.getInterpretedOccurrence())
       .apply("Save the interpreted records as Avro",
-             AvroIO.write(ExtendedOccurence.class).to(targetPaths.get(RecordInterpretation.INTERPRETED_OCURENCE)));
+             AvroIO.write(ExtendedOccurrence.class).to(targetPaths.get(RecordInterpretation.INTERPRETED_OCURENCE)));
     // Write the issue and lineage result as an Avro file in defined table
     interpretedRecords.get(transformer.getInterpretedIssue())
       .apply("Save the interpreted records issues and lineages as Avro",

@@ -32,7 +32,7 @@ public class AvroToHdfsTestingPipeline {
   public void createAndRunPipeline() {
     Objects.requireNonNull(options, "Pipeline options cannot be null");
 
-    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
+    String targetPath = TargetPath.fullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
 
     LOG.info("Target path : {}", targetPath);
 

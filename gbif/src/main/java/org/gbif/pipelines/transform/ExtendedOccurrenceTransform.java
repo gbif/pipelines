@@ -1,11 +1,11 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.dwca.avro.Event;
-import org.gbif.dwca.avro.ExtendedOccurence;
+import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.transform.function.InterpretedIssueRecordTransform;
-import org.gbif.pipelines.transform.function.InterpretedOccurenceTransform;
+import org.gbif.pipelines.transform.function.InterpretedOccurrenceTransform;
 
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -20,21 +20,19 @@ import org.apache.beam.sdk.values.TupleTag;
 /**
  * Transform Joins the Individual categories via occurenceId to create ExtendedOccurrence
  */
-public class ExtendedOccurenceTransform extends PTransform<PCollectionTuple, PCollectionTuple> {
+public class ExtendedOccurrenceTransform extends PTransform<PCollectionTuple, PCollectionTuple> {
 
-  private final TupleTag<Event> TEMPORAL_TAG = new TupleTag<Event>() {};
-  private final TupleTag<Location> SPATIAL_TAG = new TupleTag<Location>() {};
-  private final TupleTag<IssueLineageRecord> TEMPORAL_ISSUE_TAG = new TupleTag<IssueLineageRecord>() {};
-  private final TupleTag<IssueLineageRecord> SPATIAL_ISSUE_TAG = new TupleTag<IssueLineageRecord>() {};
+  private final TupleTag<Event> tupleTag = new TupleTag<Event>() {};
+  private final TupleTag<Location> spatialTag = new TupleTag<Location>() {};
+  private final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
+  private final TupleTag<IssueLineageRecord> spatialIssueTag = new TupleTag<IssueLineageRecord>() {};
 
-  private final TupleTag<ExtendedOccurence> INTERPRETED_OCCURENCE = new TupleTag<ExtendedOccurence>() {};
-  private final TupleTag<IssueLineageRecord> INTERPRETED_ISSUE = new TupleTag<IssueLineageRecord>() {};
+  private final TupleTag<ExtendedOccurrence> interpretedOccurrence = new TupleTag<ExtendedOccurrence>() {};
+  private final TupleTag<IssueLineageRecord> interpretedIssue = new TupleTag<IssueLineageRecord>() {};
 
   private final InterpretedCategoryTransform transformer;
 
-  public ExtendedOccurenceTransform(
-    InterpretedCategoryTransform transformer
-  ) {
+  public ExtendedOccurrenceTransform(InterpretedCategoryTransform transformer) {
     this.transformer = transformer;
   }
 
@@ -44,8 +42,8 @@ public class ExtendedOccurenceTransform extends PTransform<PCollectionTuple, PCo
       Joining temporal category issues and spatial category issues to get the overall issues together.
      */
     PCollection<KV<String, CoGbkResult>> joinedIssueCollection =
-      KeyedPCollectionTuple.of(TEMPORAL_ISSUE_TAG, interpretedCategory.get(transformer.getTemporalCategoryIssues()))
-        .and(SPATIAL_ISSUE_TAG, interpretedCategory.get(transformer.getSpatialCategoryIssues()))
+      KeyedPCollectionTuple.of(temporalIssueTag, interpretedCategory.get(transformer.getTemporalCategoryIssues()))
+        .and(spatialIssueTag, interpretedCategory.get(transformer.getSpatialCategoryIssues()))
         .apply(CoGroupByKey.create());
 
     PCollection<IssueLineageRecord> interpretedIssueLineageRecords = joinedIssueCollection.apply(
@@ -56,40 +54,40 @@ public class ExtendedOccurenceTransform extends PTransform<PCollectionTuple, PCo
       Joining temporal category and spatial category to get the big flat interpreted record.
      */
     PCollection<KV<String, CoGbkResult>> joinedCollection =
-      KeyedPCollectionTuple.of(TEMPORAL_TAG, interpretedCategory.get(transformer.getTemporalCategory()))
-        .and(SPATIAL_TAG, interpretedCategory.get(transformer.getSpatialCategory()))
+      KeyedPCollectionTuple.of(tupleTag, interpretedCategory.get(transformer.getTemporalCategory()))
+        .and(spatialTag, interpretedCategory.get(transformer.getSpatialCategory()))
         .apply(CoGroupByKey.create());
 
-    PCollection<ExtendedOccurence> interpretedRecords = joinedCollection.apply(
+    PCollection<ExtendedOccurrence> interpretedRecords = joinedCollection.apply(
       "Applying join on interpreted category of records to make a flat big interpreted record",
-      ParDo.of(new InterpretedOccurenceTransform(this)));
+      ParDo.of(new InterpretedOccurrenceTransform(this)));
 
-    return PCollectionTuple.of(INTERPRETED_OCCURENCE, interpretedRecords)
-      .and(INTERPRETED_ISSUE, interpretedIssueLineageRecords);
+    return PCollectionTuple.of(interpretedOccurrence, interpretedRecords)
+      .and(interpretedIssue, interpretedIssueLineageRecords);
   }
 
   public TupleTag<Event> getTemporalTag() {
-    return TEMPORAL_TAG;
+    return tupleTag;
   }
 
   public TupleTag<Location> getSpatialTag() {
-    return SPATIAL_TAG;
+    return spatialTag;
   }
 
   public TupleTag<IssueLineageRecord> getTemporalIssueTag() {
-    return TEMPORAL_ISSUE_TAG;
+    return temporalIssueTag;
   }
 
   public TupleTag<IssueLineageRecord> getSpatialIssueTag() {
-    return SPATIAL_ISSUE_TAG;
+    return spatialIssueTag;
   }
 
-  public TupleTag<ExtendedOccurence> getInterpretedOccurence() {
-    return INTERPRETED_OCCURENCE;
+  public TupleTag<ExtendedOccurrence> getInterpretedOccurrence() {
+    return interpretedOccurrence;
   }
 
   public TupleTag<IssueLineageRecord> getInterpretedIssue() {
-    return INTERPRETED_ISSUE;
+    return interpretedIssue;
   }
 
 }

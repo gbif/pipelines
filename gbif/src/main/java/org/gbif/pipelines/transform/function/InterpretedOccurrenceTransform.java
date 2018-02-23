@@ -1,9 +1,9 @@
 package org.gbif.pipelines.transform.function;
 
 import org.gbif.dwca.avro.Event;
-import org.gbif.dwca.avro.ExtendedOccurence;
+import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.transform.ExtendedOccurenceTransform;
+import org.gbif.pipelines.transform.ExtendedOccurrenceTransform;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -12,11 +12,11 @@ import org.apache.beam.sdk.values.KV;
 /**
  * Convert's Beam's represented Joined PCollection to an Interpreted Occurrence
  */
-public class InterpretedOccurenceTransform extends DoFn<KV<String, CoGbkResult>, ExtendedOccurence> {
+public class InterpretedOccurenceTransform extends DoFn<KV<String, CoGbkResult>, ExtendedOccurrence> {
 
-  private final ExtendedOccurenceTransform extendedOccurenceTransform;
+  private final ExtendedOccurrenceTransform extendedOccurenceTransform;
 
-  public InterpretedOccurenceTransform(ExtendedOccurenceTransform extendedOccurenceTransform) {
+  public InterpretedOccurenceTransform(ExtendedOccurrenceTransform extendedOccurenceTransform) {
     this.extendedOccurenceTransform = extendedOccurenceTransform;
   }
 
@@ -29,7 +29,7 @@ public class InterpretedOccurenceTransform extends DoFn<KV<String, CoGbkResult>,
     Location loc = result.getValue().getOnly(extendedOccurenceTransform.getSpatialTag());
 
     //create final interpreted record with values from the interpreted category
-    ExtendedOccurence occurence = ExtendedOccurence.newBuilder()
+    ExtendedOccurrence occurence = ExtendedOccurrence.newBuilder()
       .setOccurrenceID(result.getKey())
       .setBasisOfRecord(evt.getBasisOfRecord())
       .setDay(evt.getDay())

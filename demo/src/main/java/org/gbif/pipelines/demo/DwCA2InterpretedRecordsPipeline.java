@@ -1,7 +1,7 @@
 package org.gbif.pipelines.demo;
 
 import org.gbif.dwca.avro.Event;
-import org.gbif.dwca.avro.ExtendedOccurence;
+import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
@@ -12,8 +12,8 @@ import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transform.ExtendedOccurenceAvroDump;
-import org.gbif.pipelines.transform.ExtendedOccurenceTransform;
+import org.gbif.pipelines.transform.ExtendedOccurrenceAvroDump;
+import org.gbif.pipelines.transform.ExtendedOccurrenceTransform;
 import org.gbif.pipelines.transform.InterpretedCategoryAvroDump;
 import org.gbif.pipelines.transform.InterpretedCategoryTransform;
 
@@ -47,7 +47,7 @@ public class DwCA2InterpretedRecordsPipeline {
     DataFlowPipelineOptions options = PipelineUtils.createPipelineOptions(args);
     Map<RecordInterpretation, String> targetPaths = options.getTargetPaths();
     InterpretedCategoryTransform transformer = new InterpretedCategoryTransform();
-    ExtendedOccurenceTransform interpretedRecordTransform = new ExtendedOccurenceTransform(transformer);
+    ExtendedOccurrenceTransform interpretedRecordTransform = new ExtendedOccurrenceTransform(transformer);
     Pipeline p = Pipeline.create(options);
     //register coders for the pipeline
     registerPipeLineCoders(p, transformer, interpretedRecordTransform);
@@ -75,7 +75,7 @@ public class DwCA2InterpretedRecordsPipeline {
       interpretedRecordTransform);
     //writing interpreted occurence and issues to the avro file
     interpretedoccurence.apply("Write interpreted occurence and issues to avro file",
-                               new ExtendedOccurenceAvroDump(interpretedRecordTransform, targetPaths));
+                               new ExtendedOccurrenceAvroDump(interpretedRecordTransform, targetPaths));
 
     LOG.info("Starting the pipeline");
     PipelineResult result = p.run();
@@ -87,14 +87,14 @@ public class DwCA2InterpretedRecordsPipeline {
    * register Avro coders for serializing our messages
    */
   private static void registerPipeLineCoders(
-    Pipeline p, InterpretedCategoryTransform transformer, ExtendedOccurenceTransform interpretRecordTransform
+    Pipeline p, InterpretedCategoryTransform transformer, ExtendedOccurrenceTransform interpretRecordTransform
   ) {
 
     Coders.registerAvroCoders(p,
                               ExtendedRecord.class,
                               Event.class,
                               Location.class,
-                              ExtendedOccurence.class,
+                              ExtendedOccurrence.class,
                               Issue.class,
                               Lineage.class,
                               IssueLineageRecord.class);

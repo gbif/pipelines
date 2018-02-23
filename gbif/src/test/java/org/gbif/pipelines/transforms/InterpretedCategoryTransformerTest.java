@@ -5,7 +5,7 @@ import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Event;
-import org.gbif.dwca.avro.ExtendedOccurence;
+import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
@@ -148,7 +148,7 @@ public class InterpretedCategoryTransformerTest {
       Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
       Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
 
-      final InterpretationResult<Integer> interpretDay =
+      InterpretationResult<Integer> interpretDay =
         InterpretationFactory.interpret(DwcTerm.day, record.getCoreTerms().get(DwcTerm.day.qualifiedName()));
       if (!interpretDay.isSuccessFull()) {
         fieldIssueMap.put(DwcTerm.day.name(), interpretDay.getIssueList());
@@ -189,7 +189,7 @@ public class InterpretedCategoryTransformerTest {
                               ExtendedRecord.class,
                               Event.class,
                               Location.class,
-                              ExtendedOccurence.class,
+                              ExtendedOccurrence.class,
                               Issue.class,
                               Lineage.class,
                               IssueLineageRecord.class);

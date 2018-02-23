@@ -36,9 +36,25 @@ public class EventTransform extends DoFn<ExtendedRecord, KV<String, Event>> {
 
     ExtendedRecord record = ctx.element();
 
-    Function<DwcTerm, String> getValue = (dwcterm) -> record.getCoreTerms().get(dwcterm.qualifiedName());
+    Event event = toEvent(record);
 
-    Event event = Event.newBuilder()
+    /*
+      Day month year interpretation
+     */
+    IssueLineageRecord issueLineageRecord = Interpretation.of(record)
+      .using(TemporalInterpreter.interpretDay(event))
+      .using(TemporalInterpreter.interpretMonth(event))
+      .using(TemporalInterpreter.interpretYear(event))
+      .getIssueLineageRecord(record.getId());
+    LOG.debug("Raw records converted to temporal category reporting issues and lineages");
+    //all issues and lineages are dumped on this object
+    ctx.output(eventDataTag, KV.of(event.getOccurrenceID(), event));
+    ctx.output(eventIssueTag, KV.of(event.getOccurrenceID(), issueLineageRecord));
+  }
+
+  private static Event toEvent(ExtendedRecord record) {
+    Function<DwcTerm, String> getValue = dwcterm -> record.getCoreTerms().get(dwcterm.qualifiedName());
+    return Event.newBuilder()
       //mapping raw record with interpreted ones
       .setOccurrenceID(record.getId())
       .setBasisOfRecord(getValue.apply(DwcTerm.basisOfRecord))
@@ -67,18 +83,6 @@ public class EventTransform extends DoFn<ExtendedRecord, KV<String, Event>> {
       .setInformationWithheld(getValue.apply(DwcTerm.informationWithheld))
       .setDataGeneralizations(getValue.apply(DwcTerm.dataGeneralizations))
       .build();
-    /*
-      Day month year interpretation
-     */
-    IssueLineageRecord issueLineageRecord = Interpretation.of(record)
-      .using(TemporalInterpreter.interpretDay(event))
-      .using(TemporalInterpreter.interpretMonth(event))
-      .using(TemporalInterpreter.interpretYear(event))
-      .getIssueLineageRecord(record.getId());
-    LOG.debug("Raw records converted to temporal category reporting issues and lineages");
-    //all issues and lineages are dumped on this object
-    ctx.output(eventDataTag, KV.of(event.getOccurrenceID(), event));
-    ctx.output(eventIssueTag, KV.of(event.getOccurrenceID(), issueLineageRecord));
   }
 
   public TupleTag<KV<String, Event>> getEventDataTag() {

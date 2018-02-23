@@ -118,8 +118,7 @@ public interface DataFlowPipelineOptions extends HadoopFileSystemOptions {
 
       for (RecordInterpretation interpretation : RecordInterpretation.values()) {
         targetPaths.put(interpretation,
-                        TargetPath.fullPath(defaultDir,
-                                               interpretation.getDefaultFileName() + File.separator + "data"));
+                        TargetPath.fullPath(defaultDir, interpretation.getDefaultFileName() + File.separator + "data"));
       }
 
       return targetPaths;

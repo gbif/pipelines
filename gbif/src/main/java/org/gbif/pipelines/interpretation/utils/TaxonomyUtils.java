@@ -33,12 +33,13 @@ public final class TaxonomyUtils {
    * were found.
    */
   public static void checkMatchIssue(MatchType matchType, Interpretation interpretation) {
+    // TODO: fieldName shouldn't be required in Trace. Remove nulls when Interpretation is fixed.
     if (MatchType.NONE.equals(matchType)) {
-      interpretation.withValidation(Collections.singletonList(Trace.of(IssueType.TAXON_MATCH_NONE)));
+      interpretation.withValidation(Collections.singletonList(Trace.of(null, IssueType.TAXON_MATCH_NONE)));
     } else if (MatchType.FUZZY.equals(matchType)) {
-      interpretation.withValidation(Collections.singletonList(Trace.of(IssueType.TAXON_MATCH_FUZZY)));
+      interpretation.withValidation(Collections.singletonList(Trace.of(null, IssueType.TAXON_MATCH_FUZZY)));
     } else if (MatchType.HIGHERRANK.equals(matchType)) {
-      interpretation.withValidation(Collections.singletonList(Trace.of(IssueType.TAXON_MATCH_HIGHERRANK)));
+      interpretation.withValidation(Collections.singletonList(Trace.of(null, IssueType.TAXON_MATCH_HIGHERRANK)));
     }
   }
 

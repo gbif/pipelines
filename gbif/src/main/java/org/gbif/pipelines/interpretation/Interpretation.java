@@ -57,9 +57,9 @@ public class Interpretation<T> implements Serializable {
    * Adds a validation to the applied interpretation.
    */
   public Interpretation<T> withValidation(String fieldName, List<Issue> validations) {
-    validations.forEach((validation) -> this.validations.add(Trace.of(fieldName,
-                                                                      validation.getIssueType(),
-                                                                      validation.getRemark())));
+    validations.forEach(validation -> this.validations.add(Trace.of(fieldName,
+                                                                    validation.getIssueType(),
+                                                                    validation.getRemark())));
     return this;
   }
 
@@ -75,7 +75,9 @@ public class Interpretation<T> implements Serializable {
    * Adds a lineage trace to the interpretation operation.
    */
   public Interpretation<T> withLineage(String fieldName, List<Lineage> lineages) {
-    lineages.forEach((lineage) -> this.lineage.add(Trace.of(fieldName, lineage.getLineageType(), lineage.getRemark())));
+    lineages.forEach(lineage -> this.lineage.add(Trace.of(fieldName,
+                                                            lineage.getLineageType(),
+                                                            lineage.getRemark())));
     return this;
   }
 
@@ -109,17 +111,23 @@ public class Interpretation<T> implements Serializable {
     Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
     Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
 
-    this.forEachValidation((issueTrace) -> {
-      final Issue build = Issue.newBuilder().setRemark(issueTrace.getRemark()).setIssueType(issueTrace.context).build();
-      if (fieldIssueMap.containsKey(issueTrace.fieldName)) fieldIssueMap.get(issueTrace.fieldName).add(build);
+    forEachValidation(issueTrace -> {
+      Issue build = Issue.newBuilder().setRemark(issueTrace.getRemark()).setIssueType(issueTrace.context).build();
+      if (fieldIssueMap.containsKey(issueTrace.fieldName)) {
+        fieldIssueMap.get(issueTrace.fieldName).add(build);
+      }
       fieldIssueMap.putIfAbsent(issueTrace.fieldName, new ArrayList<>(Collections.singletonList(build)));
     });
-    this.forEachLineage((lineageTrace) -> {
-      final Lineage build =
-        Lineage.newBuilder().setRemark(lineageTrace.getRemark()).setLineageType(lineageTrace.context).build();
-      if (fieldLineageMap.containsKey(lineageTrace.fieldName)) fieldLineageMap.get(lineageTrace.fieldName).add(build);
+
+    forEachLineage(lineageTrace -> {
+      Lineage build = Lineage.newBuilder().setRemark(lineageTrace.getRemark())
+        .setLineageType(lineageTrace.context).build();
+      if (fieldLineageMap.containsKey(lineageTrace.fieldName)) {
+        fieldLineageMap.get(lineageTrace.fieldName).add(build);
+      }
       fieldLineageMap.putIfAbsent(lineageTrace.fieldName, new ArrayList<>(Collections.singletonList(build)));
     });
+
     return IssueLineageRecord.newBuilder()
       .setFieldLineageMap(fieldLineageMap)
       .setFieldIssueMap(fieldIssueMap)
@@ -141,10 +149,6 @@ public class Interpretation<T> implements Serializable {
 
     //Observation about a trace event
     private final String remark;
-
-    public static <U> Trace<U> of(U context) {
-      return Trace.of(null, context, null);
-    }
 
     /**
      * Factory method to create a instance of trace object using a context element.

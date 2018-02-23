@@ -106,13 +106,12 @@ public class NameUsageMatchQueryConverter {
       atomizedFieldsBuilder.withGenus(cleanValue);
     });
 
-    getTaxonValue(terms, DwcTerm.specificEpithet).ifPresent(cleanValue -> {
-      atomizedFieldsBuilder.withSpecificEpithet(cleanValue);
-    });
+    getTaxonValue(terms, DwcTerm.specificEpithet).ifPresent(cleanValue -> atomizedFieldsBuilder.withSpecificEpithet(
+      cleanValue));
 
-    getTaxonValue(terms, DwcTerm.infraspecificEpithet).ifPresent(cleanValue -> {
-      atomizedFieldsBuilder.withInfraspecificEpithet(cleanValue);
-    });
+    getTaxonValue(terms,
+                  DwcTerm.infraspecificEpithet).ifPresent(cleanValue -> atomizedFieldsBuilder.withInfraspecificEpithet(
+      cleanValue));
 
     Optional<String> genericName = getTaxonValue(terms, GbifTerm.genericName);
     Optional<String> scientificNameAuthorship = getAuthorValue(terms, DwcTerm.scientificNameAuthorship);

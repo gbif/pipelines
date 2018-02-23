@@ -15,16 +15,15 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
 /**
- * This transform dumps the avro file of different categories in provided paths
+ * This transform dumps the vro file of different categories in provided paths
  */
 public class InterpretedCategoryAvroDump extends PTransform<PCollectionTuple, PCollectionTuple> {
 
   private final InterpretedCategoryTransform transformer;
-  private final Map<RecordInterpretation, String> targetPaths;
+  private final Map<RecordInterpretation,String> targetPaths;
 
-  public InterpretedCategoryAvroDump(
-    InterpretedCategoryTransform transformer, Map<RecordInterpretation, String> targetPaths
-  ) {
+  public InterpretedCategoryAvroDump(InterpretedCategoryTransform transformer,
+                                     Map<RecordInterpretation,String> targetPaths) {
     this.transformer = transformer;
     this.targetPaths = targetPaths;
   }
@@ -63,7 +62,7 @@ public class InterpretedCategoryAvroDump extends PTransform<PCollectionTuple, PC
   }
 
   private <T> DoFn<KV<String, T>, T> transformToValueFn() {
-    return new DoFn<KV<String, T>, T>() {
+    return new DoFn<KV<String,T>, T>() {
       @ProcessElement
       public void processElement(ProcessContext ctx) {
         ctx.output(ctx.element().getValue());

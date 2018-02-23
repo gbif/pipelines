@@ -3,7 +3,7 @@ package org.gbif.pipelines.transform.function;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
-import org.gbif.pipelines.transform.ExtendedOccurenceTransform;
+import org.gbif.pipelines.transform.ExtendedOccurrenceTransform;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,29 +18,30 @@ import org.apache.beam.sdk.values.KV;
  */
 public class InterpretedIssueRecordTransform extends DoFn<KV<String, CoGbkResult>, IssueLineageRecord> {
 
-  private final ExtendedOccurenceTransform extendedOccurenceTransform;
+  private final ExtendedOccurrenceTransform extendedOccurrenceTransform;
 
-  public InterpretedIssueRecordTransform(ExtendedOccurenceTransform extendedOccurenceTransform) {
-    this.extendedOccurenceTransform = extendedOccurenceTransform;
+  public InterpretedIssueRecordTransform(ExtendedOccurrenceTransform extendedOccurrenceTransform) {
+    this.extendedOccurrenceTransform = extendedOccurrenceTransform;
   }
 
   @DoFn.ProcessElement
   public void processElement(ProcessContext ctx) {
     KV<String, CoGbkResult> result = ctx.element();
     //get temporal and spatial issues info from the joined beam collection with tags
-    IssueLineageRecord evt = result.getValue().getOnly(extendedOccurenceTransform.getTemporalIssueTag());
-    IssueLineageRecord loc = result.getValue().getOnly(extendedOccurenceTransform.getSpatialIssueTag());
+    IssueLineageRecord event = result.getValue().getOnly(extendedOccurrenceTransform.getTemporalIssueTag());
+    IssueLineageRecord location = result.getValue().getOnly(extendedOccurrenceTransform.getSpatialIssueTag());
 
     Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
-    fieldIssueMap.putAll(evt.getFieldIssueMap());
-    fieldIssueMap.putAll(loc.getFieldIssueMap());
+    fieldIssueMap.putAll(event.getFieldIssueMap());
+    fieldIssueMap.putAll(location.getFieldIssueMap());
+
 
     Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
-    fieldLineageMap.putAll(evt.getFieldLineageMap());
-    fieldLineageMap.putAll(loc.getFieldLineageMap());
+    fieldLineageMap.putAll(event.getFieldLineageMap());
+    fieldLineageMap.putAll(location.getFieldLineageMap());
     //construct a final IssueLineageRecord for all categories
     IssueLineageRecord record = IssueLineageRecord.newBuilder()
-      .setOccurenceId(evt.getOccurenceId())
+      .setOccurenceId(event.getOccurenceId())
       .setFieldIssueMap(fieldIssueMap)
       .setFieldLineageMap(fieldLineageMap)
       .build();

@@ -42,9 +42,28 @@ public class LocationTransform extends DoFn<ExtendedRecord, KV<String, Location>
   @ProcessElement
   public void processElement(ProcessContext ctx) {
     ExtendedRecord record = ctx.element();
-    Function<DwcTerm, String> getValue = dwcterm -> record.getCoreTerms().get(dwcterm.qualifiedName());
 
-    Location loc = Location.newBuilder()
+    Location location = toLocation(record);
+
+    /*
+      Interpreting Country and Country code
+    */
+    IssueLineageRecord issueLineageRecord = Interpretation.of(record)
+      .using(LocationInterpreter.interpretCountry(location))
+      .using(LocationInterpreter.interpretCountryCode(location))
+      .using(LocationInterpreter.interpretContinent(location))
+      .getIssueLineageRecord(record.getId());
+
+    //all issues and lineages are dumped on this object
+    issueLineageRecord.setOccurenceId(record.getId());
+    LOG.debug("Raw records converted to spatial category reporting issues and lineages");
+    ctx.output(locationDataTag, KV.of(location.getOccurrenceID(), location));
+    ctx.output(locationIssueTag, KV.of(location.getOccurrenceID(), issueLineageRecord));
+  }
+
+  private static Location toLocation(ExtendedRecord record) {
+    Function<DwcTerm, String> getValue = term -> record.getCoreTerms().get(term.qualifiedName());
+    return Location.newBuilder()
       //mapping raw record with interpreted ones
       .setOccurrenceID(record.getId())
       .setLocationID(getValue.apply(DwcTerm.locationID))
@@ -96,18 +115,5 @@ public class LocationTransform extends DoFn<ExtendedRecord, KV<String, Location>
       .setInformationWithheld(getValue.apply(DwcTerm.informationWithheld))
       .setDataGeneralizations(getValue.apply(DwcTerm.dataGeneralizations))
       .build();
-        /*
-      Interpreting Country and Country code
-     */
-    final IssueLineageRecord issueLineageRecord = Interpretation.of(record)
-      .using(LocationInterpreter.interpretCountry(loc))
-      .using(LocationInterpreter.interpretCountryCode(loc))
-      .using(LocationInterpreter.interpretContinent(loc))
-      .getIssueLineageRecord(record.getId());
-    //all issues and lineages are dumped on this object
-    issueLineageRecord.setOccurenceId(record.getId());
-    LOG.debug("Raw records converted to spatial category reporting issues and lineages");
-    ctx.output(locationDataTag, KV.of(loc.getOccurrenceID(), loc));
-    ctx.output(locationIssueTag, KV.of(loc.getOccurrenceID(), issueLineageRecord));
   }
 }

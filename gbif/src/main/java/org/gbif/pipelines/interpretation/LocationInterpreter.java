@@ -19,8 +19,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
                                                                             extendedRecord.getCoreTerms()
                                                                               .get(DwcTerm.country.qualifiedName()));
       Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
-
-      locationRecord.setCountry(result.getResult().orElse(null));
+      result.getResult().ifPresent(locationRecord::setCountry);
       finalResult.withValidation(DwcTerm.country.name(), result.getIssueList())
         .withLineage(DwcTerm.country.name(), result.getLineageList());
 
@@ -37,7 +36,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
                                                                             extendedRecord.getCoreTerms()
                                                                               .get(DwcTerm.countryCode.qualifiedName()));
       Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
-      locationRecord.setCountryCode(result.getResult().orElse(null));
+      result.getResult().ifPresent(locationRecord::setCountryCode);
       finalResult.withValidation(DwcTerm.countryCode.name(), result.getIssueList())
         .withLineage(DwcTerm.countryCode.name(), result.getLineageList());
 
@@ -55,7 +54,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
                                                                               .get(DwcTerm.continent.qualifiedName()));
       Interpretation<ExtendedRecord> finalResult = Interpretation.of(extendedRecord);
 
-      locationRecord.setContinent(result.getResult().orElse(null));
+      result.getResult().ifPresent(locationRecord::setContinent);
       finalResult.withValidation(DwcTerm.continent.name(), result.getIssueList())
         .withLineage(DwcTerm.continent.name(), result.getLineageList());
 

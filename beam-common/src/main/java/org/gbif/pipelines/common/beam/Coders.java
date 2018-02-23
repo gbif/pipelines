@@ -60,7 +60,9 @@ public class Coders {
    * @param avroClasses array of avro classes in the order of tuple tags
    */
   public static void registerAvroCodersForKVTypes(
-    Pipeline p, TupleTag<KV<String, ? extends SpecificRecord>>[] tags, Class<? extends SpecificRecord>... avroClasses
+    Pipeline p,
+    TupleTag<KV<String, ? extends SpecificRecord>>[] tags,
+    Class<? extends SpecificRecord>... avroClasses
   ) {
     for (int i = 0; i < tags.length; i++) {
       LOG.debug("Registering default KV Coder for type {}", tags[i].getTypeDescriptor().getType());

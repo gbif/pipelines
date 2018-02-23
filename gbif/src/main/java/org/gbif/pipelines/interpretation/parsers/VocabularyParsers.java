@@ -90,18 +90,16 @@ public class VocabularyParsers<T extends Enum<T>> {
   }
 
   /**
-   *
    * @return a country parser.
    */
-  public static VocabularyParsers<Country> countryParser(){
+  public static VocabularyParsers<Country> countryParser() {
     return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.country);
   }
 
   /**
-   *
    * @return a continent parser.
    */
-  public static VocabularyParsers<Continent> continentParser(){
+  public static VocabularyParsers<Continent> continentParser() {
     return new VocabularyParsers<>(CONTINENT_PARSER, DwcTerm.continent);
   }
 
@@ -113,7 +111,7 @@ public class VocabularyParsers<T extends Enum<T>> {
    */
   public void parse(ExtendedRecord extendedRecord, Consumer<ParseResult<T>> onParse) {
     Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-      .ifPresent( value -> onParse.accept(parser.parse(value)));
+      .ifPresent(value -> onParse.accept(parser.parse(value)));
   }
 
   /**
@@ -146,13 +144,8 @@ public class VocabularyParsers<T extends Enum<T>> {
    * @param terms  to be used as input
    * @param mapper function mapper
    */
-  public <U> Optional<U> map(ExtendedRecord extendedRecord, Function<ParseResult<T>,U> mapper) {
-    return Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(value -> mapper.apply(parser.parse(value)));
-  public <U> Optional<U> map(Map<CharSequence, CharSequence> terms, Function<ParseResult<T>, U> mapper) {
-    return Optional.ofNullable(terms.get(term.qualifiedName()))
-      .map(value -> value.toString())
-      .map(value -> mapper.apply(parser.parse(value)));
+  public <U> Optional<U> map(Map<String, String> terms, Function<ParseResult<T>, U> mapper) {
+    return Optional.ofNullable(terms.get(term.qualifiedName())).map(value -> mapper.apply(parser.parse(value)));
   }
 
 }

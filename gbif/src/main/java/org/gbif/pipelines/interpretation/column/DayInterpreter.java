@@ -24,16 +24,14 @@ class DayInterpreter implements Interpretable<String, Integer> {
       return dayRangeCheck(Integer.parseInt(trimmedInput));
     } catch (NumberFormatException ex1) {
       //if parse failed
-      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                                                             .setIssueType(IssueType.PARSE_ERROR)
-                                                             .setRemark("Day cannot be parsed because of "
-                                                                        + ex1.getMessage())
-                                                             .build());
-      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
-                                                                 .setLineageType(LineageType.SET_TO_NULL)
-                                                                 .setRemark(
-                                                                   "Since day cannot be parsed setting it to null")
-                                                                 .build());
+      List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                       .setIssueType(IssueType.PARSE_ERROR)
+                                                       .setRemark("Day cannot be parsed because of " + ex1.getMessage())
+                                                       .build());
+      List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+                                                           .setLineageType(LineageType.SET_TO_NULL)
+                                                           .setRemark("Since day cannot be parsed setting it to null")
+                                                           .build());
       return InterpretationResult.withIssueAndLineage(null, issues, lineages);
     }
   }
@@ -43,16 +41,15 @@ class DayInterpreter implements Interpretable<String, Integer> {
    */
   private InterpretationResult<Integer> dayRangeCheck(Integer interpretedDay) {
     if (interpretedDay < MIN_DAY || interpretedDay > MAX_DAY) {
-      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                                                             .setIssueType(IssueType.DAY_OUT_OF_RANGE)
-                                                             .setRemark("Day can be between 1-31")
-                                                             .build());
-      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
-                                                                 .setLineageType(LineageType.SET_TO_NULL)
-                                                                 .setRemark("Since "
-                                                                            + IssueType.DAY_OUT_OF_RANGE.name()
-                                                                            + " setting it to null")
-                                                                 .build());
+      List<Issue> issues = Collections.singletonList(Issue.newBuilder()
+                                                       .setIssueType(IssueType.DAY_OUT_OF_RANGE)
+                                                       .setRemark("Day can be between 1-31")
+                                                       .build());
+      List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
+                                                           .setLineageType(LineageType.SET_TO_NULL)
+                                                           .setRemark("Since " + IssueType.DAY_OUT_OF_RANGE.name()
+                                                                      + " setting it to null")
+                                                           .build());
       return InterpretationResult.withIssueAndLineage(null, issues, lineages);
     }
     return InterpretationResult.withSuccess(interpretedDay);
