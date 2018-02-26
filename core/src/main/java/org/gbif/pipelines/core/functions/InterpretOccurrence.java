@@ -5,6 +5,8 @@ import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import java.io.IOException;
 
+import org.apache.beam.sdk.transforms.SerializableFunction;
+
 class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, TypedOccurrence> {
 
   @Override

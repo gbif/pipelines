@@ -1,9 +1,13 @@
 package org.gbif.pipelines.common.beam;
 
+import org.gbif.pipelines.core.io.DwCAReader;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.io.BoundedSource;
@@ -12,8 +16,6 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
-import org.gbif.pipelines.core.io.DwCAReader;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -9,6 +9,8 @@ import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.beam.sdk.transforms.SerializableFunction;
+
 /**
  * A builder of UntypedOccurrences which uses introspection to locate all suitable terms (e.g. Darwin Core) from the
  * source records.

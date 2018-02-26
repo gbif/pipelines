@@ -10,12 +10,12 @@ import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
+import org.gbif.pipelines.core.utils.Mapper;
+import org.gbif.pipelines.demo.transform.validator.UniqueOccurrenceIdTransform;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transform.ExtendedOccurenceAvroDump;
-import org.gbif.pipelines.transform.ExtendedOccurenceTransform;
-import org.gbif.pipelines.transform.InterpretedCategoryAvroDump;
-import org.gbif.pipelines.transform.InterpretedCategoryTransform;
+import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.transform.InterpretedExtendedRecordTransform;
 
 import java.util.Map;
 
@@ -24,7 +24,6 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,73 +43,45 @@ public class DwCA2InterpretedRecordsPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(DwCA2InterpretedRecordsPipeline.class);
 
   public static void main(String[] args) {
+
+    // STEP 0: Configure pipeline
     DataFlowPipelineOptions options = PipelineUtils.createPipelineOptions(args);
     Map<Interpretation, String> targetPaths = options.getTargetPaths();
-    InterpretedCategoryTransform transformer = new InterpretedCategoryTransform();
-    ExtendedOccurenceTransform interpretedRecordTransform = new ExtendedOccurenceTransform(transformer);
-    Pipeline p = Pipeline.create(options);
-    //register coders for the pipeline
-    registerPipeLineCoders(p, transformer, interpretedRecordTransform);
 
-    // Read the DwC-A using our custom reader
+    Pipeline p = Pipeline.create(options);
+
+    Coders.registerAvroCoders(p, ExtendedRecord.class, Event.class, Location.class, ExtendedOccurence.class);
+    Coders.registerAvroCoders(p, Issue.class, Lineage.class, IssueLineageRecord.class);
+
+    // STEP 1: Read the DwC-A using our custom reader
     PCollection<ExtendedRecord> rawRecords = p.apply("Read from Darwin Core Archive",
                                                      DwCAIO.Read.withPaths(options.getInputFile(),
-                                                                           targetPaths.get(Interpretation.TEMP_DwCA_PATH)));
+                                                                           targetPaths.get(Interpretation.TEMP_DWCA_PATH)));
 
-    // Write records in an avro file, this will be location of the hive table which has raw records
-    rawRecords.apply("Save the interpreted records as Avro",
-                     AvroIO.write(ExtendedRecord.class).to(targetPaths.get(Interpretation.RAW_OCCURRENCE)));
+    // STEP 2: Filter unique records by OccurrenceId
+    UniqueOccurrenceIdTransform uniqueTransform = new UniqueOccurrenceIdTransform();
+    PCollectionTuple uniqueTuple = rawRecords.apply(uniqueTransform);
+    PCollection<ExtendedRecord> uniqueRecords = uniqueTuple.get(uniqueTransform.getDataTag());
 
-    //Interpret the raw records as a tuple, which has both different categories of data and issue related to them
+    // STEP 3: Write records in an avro file, this will be location of the hive table which has raw records
+    uniqueRecords.apply("Save the interpreted records as Avro",
+                        AvroIO.write(ExtendedRecord.class).to(targetPaths.get(Interpretation.RAW_OCCURRENCE)));
 
-    PCollectionTuple interpretedCategory =
-      rawRecords.apply("split raw record to different category with isues and lineages", transformer);
+    // STEP 4: Interpret the raw records as a tuple, which has both different categories of data and issue related to them
+    InterpretedExtendedRecordTransform extendedRecordTransform = new InterpretedExtendedRecordTransform();
+    PCollectionTuple extendedRecordsTuple = uniqueRecords.apply(extendedRecordTransform);
+    PCollection<InterpretedExtendedRecord> extendedRecords =
+      extendedRecordsTuple.get(extendedRecordTransform.getDataTag()).apply(Mapper.toValueCollection());
 
-    // Write the individual category of the raw records to avro file
-    InterpretedCategoryAvroDump avroFileDumper = new InterpretedCategoryAvroDump(transformer, targetPaths);
-    interpretedCategory.apply("write the individual categories to different avro files", avroFileDumper);
-    // join the individual categories and create a flat interepreted occurence and write them to avro file.
-    PCollectionTuple interpretedoccurence = interpretedCategory.apply(
-      "join indiviual categories and issues to a flat interpreted occurence and issue lineage collections",
-      interpretedRecordTransform);
-    //writing interpreted occurence and issues to the avro file
-    interpretedoccurence.apply("Write interpreted occurence and issues to avro file",
-                               new ExtendedOccurenceAvroDump(interpretedRecordTransform, targetPaths));
+    // STEP 5: writing interpreted occurence and issues to the avro file
+    extendedRecords.apply("Save the processed records as Avro",
+                          AvroIO.write(InterpretedExtendedRecord.class)
+                            .to(targetPaths.get(Interpretation.INTERPRETED_OCURENCE)));
 
     LOG.info("Starting the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
     LOG.info("Pipeline finished with state: {} ", result.getState());
-  }
-
-  /**
-   * register Avro coders for serializing our messages
-   */
-  private static void registerPipeLineCoders(
-    Pipeline p, InterpretedCategoryTransform transformer, ExtendedOccurenceTransform interpretRecordTransform
-  ) {
-
-    Coders.registerAvroCoders(p,
-                              ExtendedRecord.class,
-                              Event.class,
-                              Location.class,
-                              ExtendedOccurence.class,
-                              Issue.class,
-                              Lineage.class,
-                              IssueLineageRecord.class);
-    Coders.registerAvroCodersForTypes(p,
-                                      interpretRecordTransform.getTemporalTag(),
-                                      interpretRecordTransform.getSpatialTag(),
-                                      interpretRecordTransform.getTemporalIssueTag(),
-                                      interpretRecordTransform.getSpatialIssueTag());
-    Coders.registerAvroCodersForKVTypes(p,
-                                        new TupleTag[] {transformer.getSpatialCategory(),
-                                          transformer.getSpatialCategory(), transformer.getTemporalCategoryIssues(),
-                                          transformer.getSpatialCategoryIssues()},
-                                        Event.class,
-                                        Location.class,
-                                        IssueLineageRecord.class,
-                                        IssueLineageRecord.class);
   }
 
 }

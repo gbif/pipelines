@@ -1,10 +1,11 @@
 package org.gbif.pipelines.livingatlases.indexing;
 
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
+
 import org.apache.avro.Schema;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 /**
  * A function to read an UntypedOccurrence and return it as a SOLR document.

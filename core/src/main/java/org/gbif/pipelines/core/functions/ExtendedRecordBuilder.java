@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.beam.sdk.transforms.SerializableFunction;
+
 class ExtendedRecordBuilder implements SerializableFunction<StarRecord, ExtendedRecord> {
 
   @Override

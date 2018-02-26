@@ -1,6 +1,5 @@
 package org.gbif.pipelines.interpretation;
 
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 import org.gbif.pipelines.interpretation.parsers.SimpleTypeParser;
@@ -9,6 +8,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -26,7 +27,9 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
         if(parseResult.isPresent()) {
           interpretedExtendedRecord.setIndividualCount(parseResult.get());
         } else {
-          interpretation.withValidation(Arrays.asList(Interpretation.Trace.of(DwcTerm.individualCount.name(),IssueType.INDIVIDUAL_COUNT_INVALID)));
+          List<Interpretation.Trace<IssueType>> traces =
+            Collections.singletonList(Interpretation.Trace.of(DwcTerm.individualCount.name(), IssueType.INDIVIDUAL_COUNT_INVALID));
+          interpretation.withValidation(traces);
         }
         return interpretation;
       });
@@ -44,7 +47,9 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
           if (parseResult.isSuccessful()) {
             interpretedExtendedRecord.setTypeStatus(parseResult.getPayload().name());
           } else {
-            interpretation.withValidation(Arrays.asList(Interpretation.Trace.of(DwcTerm.typeStatus.name(),IssueType.TYPE_STATUS_INVALID)));
+            List<Interpretation.Trace<IssueType>> traces =
+              Collections.singletonList(Interpretation.Trace.of(DwcTerm.typeStatus.name(), IssueType.TYPE_STATUS_INVALID));
+            interpretation.withValidation(traces);
           }
           return interpretation;
         }).get();

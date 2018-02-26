@@ -1,8 +1,6 @@
 package org.gbif.pipelines.interpretation.parsers.temporal;
 
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
-import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 
 import java.time.Month;
 import java.time.Year;

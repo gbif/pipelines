@@ -3,10 +3,11 @@ package org.gbif.pipelines.indexing;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
+import org.gbif.pipelines.core.utils.Mapper;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
-import org.gbif.pipelines.transform.ExtendedRecordTransform;
+import org.gbif.pipelines.transform.InterpretedExtendedRecordTransform;
 
 import java.util.Collections;
 
@@ -35,27 +36,31 @@ public class InterpretDwCAvroPipeline {
     Coders.registerAvroCoders(p, ExtendedRecord.class, InterpretedExtendedRecord.class);
 
     // Read Avro files
-    PCollection<ExtendedRecord> verbatimRecords = p.apply(
-      "Read Avro files", AvroIO.read(ExtendedRecord.class).from(options.getInputFile()))
-      .setCoder(AvroCoder.of(ExtendedRecord.class));
+    PCollection<ExtendedRecord> verbatimRecords =
+      p.apply("Read Avro files", AvroIO.read(ExtendedRecord.class).from(options.getInputFile()))
+        .setCoder(AvroCoder.of(ExtendedRecord.class));
 
     // Convert the objects (interpretation)
-    ExtendedRecordTransform transform = new ExtendedRecordTransform();
+    InterpretedExtendedRecordTransform transform = new InterpretedExtendedRecordTransform();
     PCollectionTuple interpreted = verbatimRecords.apply(transform);
 
-    //Record level interpretations
-    interpreted.get(transform.getDataTupleTag())
+    // Record level interpretations
+    interpreted.get(transform.getDataTag())
+      .apply(Mapper.toValueCollection())
       .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
-      .apply("Write Interpreted Avro files", AvroIO.write(InterpretedExtendedRecord.class)
-        .to(options.getTargetPaths().get(Interpretation.RECORD_LEVEL).getFilePath()));
+      .apply("Write Interpreted Avro files",
+             AvroIO.write(InterpretedExtendedRecord.class)
+               .to(options.getTargetPaths().get(Interpretation.RECORD_LEVEL).getFilePath()));
 
-    //Exporting issues
-    interpreted.get(transform.getIssueTupleTag())
-      .setCoder(AvroCoder.of(OccurrenceIssue.class))
-      .apply("Write Interpretation Issues Avro files", AvroIO.write(OccurrenceIssue.class)
-        .to(options.getTargetPaths().get(Interpretation.ISSUES).getFilePath()));
+    // Exporting issues
+    interpreted.get(transform.getIssueTag())
+      .apply(Mapper.toValueCollection())
+      .setCoder(AvroCoder.of(IssueLineageRecord.class))
+      .apply("Write Interpretation Issues Avro files",
+             AvroIO.write(IssueLineageRecord.class)
+               .to(options.getTargetPaths().get(Interpretation.ISSUES).getFilePath()));
 
-    // instruct the writer to use a provided document ID
+    // Instruct the writer to use a provided document ID
     LOG.info("Starting interpretation the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
@@ -67,8 +72,8 @@ public class InterpretDwCAvroPipeline {
    */
   private static DataProcessingPipelineOptions createPipelineOptions(String[] args) {
     Configuration conf = new Configuration(); // assume defaults on CP
-    DataProcessingPipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation()
-      .as(DataProcessingPipelineOptions.class);
+    DataProcessingPipelineOptions options =
+      PipelineOptionsFactory.fromArgs(args).withValidation().as(DataProcessingPipelineOptions.class);
     options.setHdfsConfiguration(Collections.singletonList(conf));
     return options;
   }

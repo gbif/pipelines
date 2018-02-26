@@ -28,15 +28,12 @@ public class InterpretationResult<T> {
   /**
    * use this method to get InterpretationResult when the interpretation was failed or interpreted with issues and lineages
    */
-  public static <U> InterpretationResult<U> withIssueAndLineage(
-    U interpretedResult, List<Issue> issues, List<Lineage> lineages
+  public static <U> InterpretationResult<U> withIssueAndLineage(U interpretedResult, List<Issue> issues, List<Lineage> lineages
   ) {
     return new InterpretationResult<>(interpretedResult, false, issues, lineages);
   }
 
-  private InterpretationResult(
-    T result, boolean isSuccessFull, List<Issue> issueList, List<Lineage> lineageList
-  ) {
+  private InterpretationResult(T result, boolean isSuccessFull, List<Issue> issueList, List<Lineage> lineageList) {
     this.result = result;
     this.isSuccessFull = isSuccessFull;
     this.issueList = issueList;

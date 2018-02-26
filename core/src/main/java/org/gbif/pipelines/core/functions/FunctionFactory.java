@@ -7,6 +7,8 @@ import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 
+import org.apache.beam.sdk.transforms.SerializableFunction;
+
 /**
  * Provider of reusable functions. All functions implement serializable.
  */

@@ -1,12 +1,9 @@
 package org.gbif.pipelines.interpretation.column;
 
-import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
-import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.core.functions.interpretation.error.LineageType;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.Objects;
 
 /**
  * interprets day and adds issues and lineages with it
@@ -18,23 +15,17 @@ class DayInterpreter implements Interpretable<String, Integer> {
 
   @Override
   public InterpretationResult<Integer> apply(String input) {
-    String trimmedInput = input == null ? null : input.trim();
+    if (Objects.isNull(input)) {
+      return null;
+    }
+
     try {
-      if (trimmedInput == null) return null;
-      return dayRangeCheck(Integer.parseInt(trimmedInput));
+      return dayRangeCheck(Integer.parseInt(input.trim()));
     } catch (NumberFormatException ex1) {
       //if parse failed
-      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                                                             .setIssueType(IssueType.PARSE_ERROR)
-                                                             .setRemark("Day cannot be parsed because of "
-                                                                        + ex1.getMessage())
-                                                             .build());
-      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
-                                                                 .setLineageType(LineageType.SET_TO_NULL)
-                                                                 .setRemark(
-                                                                   "Since day cannot be parsed setting it to null")
-                                                                 .build());
-      return InterpretationResult.withIssueAndLineage(null, issues, lineages);
+      String issueText = "Day cannot be parsed because of " + ex1.getMessage();
+      String lineageText = "Since day cannot be parsed setting it to null";
+      return withIssueAndLineage(IssueType.PARSE_ERROR, issueText, LineageType.SET_TO_NULL, lineageText);
     }
   }
 
@@ -42,18 +33,10 @@ class DayInterpreter implements Interpretable<String, Integer> {
    * check if the interpreted Day is out of range
    */
   private InterpretationResult<Integer> dayRangeCheck(Integer interpretedDay) {
-    if (interpretedDay < MIN_DAY || interpretedDay > MAX_DAY) {
-      final List<Issue> issues = Collections.singletonList(Issue.newBuilder()
-                                                             .setIssueType(IssueType.DAY_OUT_OF_RANGE)
-                                                             .setRemark("Day can be between 1-31")
-                                                             .build());
-      final List<Lineage> lineages = Collections.singletonList(Lineage.newBuilder()
-                                                                 .setLineageType(LineageType.SET_TO_NULL)
-                                                                 .setRemark("Since "
-                                                                            + IssueType.DAY_OUT_OF_RANGE.name()
-                                                                            + " setting it to null")
-                                                                 .build());
-      return InterpretationResult.withIssueAndLineage(null, issues, lineages);
+    if (MIN_DAY > interpretedDay || MAX_DAY < interpretedDay) {
+      String issueText = "Day can be between 1-31";
+      String lineageText = "Since " + IssueType.DAY_OUT_OF_RANGE.name() + " setting it to null";
+      return withIssueAndLineage(IssueType.DAY_OUT_OF_RANGE, issueText, LineageType.SET_TO_NULL, lineageText);
     }
     return InterpretationResult.withSuccess(interpretedDay);
   }

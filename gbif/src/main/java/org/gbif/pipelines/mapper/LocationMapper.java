@@ -1,51 +1,20 @@
-package org.gbif.pipelines.transform.function;
+package org.gbif.pipelines.mapper;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
-import org.gbif.pipelines.interpretation.Interpretation;
-import org.gbif.pipelines.interpretation.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.function.Function;
 
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.TupleTag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class LocationMapper {
 
-/**
- * This function converts an extended record to an interpreted KeyValue of occurrenceId and Event.
- * This function returns multiple outputs,
- * a. Interpreted version of raw temporal data as KV<String,Event>
- * b. Issues and lineages applied on raw data to get the interpreted result, as KV<String,IssueLineageRecord>
- */
-public class LocationTransform extends DoFn<ExtendedRecord, KV<String, Location>> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(LocationTransform.class);
-  /**
-   * tags for locating different type of outputs send by this function
-   */
-  private final TupleTag<KV<String, Location>> locationDataTag = new TupleTag<KV<String, Location>>() {};
-  private final TupleTag<KV<String, IssueLineageRecord>> locationIssueTag =
-    new TupleTag<KV<String, IssueLineageRecord>>() {};
-
-  public TupleTag<KV<String, Location>> getLocationDataTag() {
-    return locationDataTag;
+  private LocationMapper() {
+    //Can't have an instance
   }
 
-  public TupleTag<KV<String, IssueLineageRecord>> getLocationIssueTag() {
-    return locationIssueTag;
-  }
-
-  @ProcessElement
-  public void processElement(ProcessContext ctx) {
-    ExtendedRecord record = ctx.element();
+  public static Location map(ExtendedRecord record) {
     Function<DwcTerm, String> getValue = dwcterm -> record.getCoreTerms().get(dwcterm.qualifiedName());
-
-    Location loc = Location.newBuilder()
-      //mapping raw record with interpreted ones
+    return Location.newBuilder()
       .setOccurrenceID(record.getId())
       .setLocationID(getValue.apply(DwcTerm.locationID))
       .setHigherGeographyID(getValue.apply(DwcTerm.higherGeographyID))
@@ -96,18 +65,6 @@ public class LocationTransform extends DoFn<ExtendedRecord, KV<String, Location>
       .setInformationWithheld(getValue.apply(DwcTerm.informationWithheld))
       .setDataGeneralizations(getValue.apply(DwcTerm.dataGeneralizations))
       .build();
-        /*
-      Interpreting Country and Country code
-     */
-    final IssueLineageRecord issueLineageRecord = Interpretation.of(record)
-      .using(LocationInterpreter.interpretCountry(loc))
-      .using(LocationInterpreter.interpretCountryCode(loc))
-      .using(LocationInterpreter.interpretContinent(loc))
-      .getIssueLineageRecord(record.getId());
-    //all issues and lineages are dumped on this object
-    issueLineageRecord.setOccurenceId(record.getId());
-    LOG.debug("Raw records converted to spatial category reporting issues and lineages");
-    ctx.output(locationDataTag, KV.of(loc.getOccurrenceID(), loc));
-    ctx.output(locationIssueTag, KV.of(loc.getOccurrenceID(), issueLineageRecord));
   }
+
 }

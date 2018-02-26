@@ -5,6 +5,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Helper class for interpretation of raw records
@@ -30,8 +31,7 @@ public class InterpretationFactory {
    * use it if you have custom interpreter
    */
   public static <U, T> InterpretationResult<U> interpret(Interpretable<T, U> interpretable, T input) {
-    if (input == null) return InterpretationResult.withSuccess(null);
-    return interpretable.apply(input);
+    return Optional.ofNullable(input).map(interpretable).orElse(InterpretationResult.withSuccess(null));
   }
 
   /**

@@ -1,19 +1,16 @@
 package org.gbif.pipelines.transform;
 
+import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.interpretation.Interpretation;
 import org.gbif.pipelines.interpretation.TemporalRecordInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.Validation;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.values.KV;
 
 /**
- * This transformation provides interpretation for the fields: year, month, day and eventDate
+ * This transform provides interpretation for the fields: year, month, day and eventDate
  */
 public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, TemporalRecord> {
 
@@ -25,29 +22,26 @@ public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, Tem
    * Transforms a ExtendedRecord into a TemporalRecord.
    */
   @Override
-  DoFn<ExtendedRecord, TemporalRecord> interpret() {
-    return new DoFn<ExtendedRecord, TemporalRecord>() {
+  DoFn<ExtendedRecord, KV<String, TemporalRecord>> interpret() {
+    return new DoFn<ExtendedRecord, KV<String, TemporalRecord>>() {
       @ProcessElement
       public void processElement(ProcessContext context) {
 
-        //Context element to be interpreted
+        // Context element to be interpreted
         ExtendedRecord extendedRecord = context.element();
-        Collection<Validation> validations = new ArrayList<>();
 
-        //Transformation main output
+        // Transformation main output
         TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(extendedRecord.getId()).build();
 
-        Interpretation.of(extendedRecord)
+        final IssueLineageRecord issueLineageRecord = Interpretation.of(extendedRecord)
           .using(TemporalRecordInterpreter.interpretTemporal(temporalRecord))
-          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
+          .getIssueLineageRecord(extendedRecord.getId());
 
-        //additional outputs
-        if (!validations.isEmpty()) {
-          context.output(getIssueTupleTag(), OccurrenceIssue.newBuilder().setId(extendedRecord.getId()).setIssues(validations).build());
-        }
+        // Additional output
+        context.output(getIssueTag(), KV.of(temporalRecord.getId(), issueLineageRecord));
 
-        //main output
-        context.output(getDataTupleTag(), temporalRecord);
+        // Main output
+        context.output(getDataTag(), KV.of(temporalRecord.getId(), temporalRecord));
       }
     };
   }
