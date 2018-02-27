@@ -1,7 +1,10 @@
 package org.gbif.pipelines.interpretation.column;
 
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
+import org.gbif.pipelines.interpretation.Interpretation;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +31,13 @@ public class InterpretationResult<T> {
   /**
    * use this method to get InterpretationResult when the interpretation was failed or interpreted with issues and lineages
    */
-  public static <U> InterpretationResult<U> withIssueAndLineage(U interpretedResult, List<Issue> issues, List<Lineage> lineages
-  ) {
+  public static <U> InterpretationResult<U> withIssueAndLineage(U interpretedResult, List<Issue> issues,
+                                                                List<Lineage> lineages) {
     return new InterpretationResult<>(interpretedResult, false, issues, lineages);
   }
 
-  private InterpretationResult(T result, boolean isSuccessFull, List<Issue> issueList, List<Lineage> lineageList) {
+  private InterpretationResult(T result, boolean isSuccessFull, List<Issue> issueList,
+                               List<Lineage> lineageList) {
     this.result = result;
     this.isSuccessFull = isSuccessFull;
     this.issueList = issueList;
@@ -55,12 +59,11 @@ public class InterpretationResult<T> {
   }
 
   /**
-   * helps embedding custom code with appropriate actions when the result was succesfull or failed
+   * Helps embedding custom code with appropriate actions when the result was successful or failed.
    */
-  public void ifSuccessFulThenElse(
-    Consumer<InterpretationResult<T>> successfulConsumer, Consumer<InterpretationResult<T>> failedConsumer
-  ) {
-    if (this.isSuccessFull) {
+  public void ifSuccessfulThenElse(Consumer<InterpretationResult<T>> successfulConsumer,
+                                   Consumer<InterpretationResult<T>> failedConsumer) {
+    if (isSuccessFull) {
       successfulConsumer.accept(this);
     } else {
       failedConsumer.accept(this);
@@ -79,6 +82,13 @@ public class InterpretationResult<T> {
    */
   public List<Lineage> getLineageList() {
     return lineageList;
+  }
+
+  public <U> Interpretation<U> asInterpretationOf(U record) {
+    Interpretation<U> interpretation = Interpretation.of(record);
+    issueList.forEach(issue -> interpretation.withValidation(DwcTerm.day.name(), issue));
+    lineageList.forEach(lineage -> interpretation.withLineage(DwcTerm.day.name(), lineage));
+    return  interpretation;
   }
 
   @Override
