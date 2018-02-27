@@ -13,7 +13,7 @@ class ContinentInterpreter implements Interpretable<String, String> {
 
   @Override
   public InterpretationResult<String> apply(String input) {
-    final ParseResult<Continent> parse = ContinentParser.getInstance().parse(input);
+    ParseResult<Continent> parse = ContinentParser.getInstance().parse(input);
     if (parse.isSuccessful()) {
       return InterpretationResult.withSuccess(parse.getPayload().getTitle());
     }

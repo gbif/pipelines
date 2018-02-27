@@ -5,7 +5,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Helper class for interpretation of raw records
@@ -16,7 +15,7 @@ public class InterpretationFactory {
     // Can't have an instance
   }
 
-  private static final Map<DwcTerm, Interpretable> TERM_INTERPRETATION_MAP = new EnumMap<>(DwcTerm.class);
+  private static final Map<DwcTerm, Interpretable<String,?>> TERM_INTERPRETATION_MAP = new EnumMap<>(DwcTerm.class);
 
   static {
     TERM_INTERPRETATION_MAP.put(DwcTerm.day, new DayInterpreter());
@@ -30,16 +29,16 @@ public class InterpretationFactory {
   /**
    * use it if you have custom interpreter
    */
-  public static <U, T> InterpretationResult<U> interpret(Interpretable<T, U> interpretable, T input) {
-    return Optional.ofNullable(input).map(interpretable).orElse(InterpretationResult.withSuccess(null));
+  public static <T,U> InterpretationResult<U> interpret(Interpretable<T,U> interpretable, T input) {
+    return input == null ? InterpretationResult.withSuccess(null) : interpretable.apply(input);
   }
 
   /**
    * returns InterpretedResult if the interpreter is available else throw UnsupportedOperationException
    */
-  public static <U, T> InterpretationResult<U> interpret(DwcTerm term, T input) {
+  public static <U> InterpretationResult<U> interpret(DwcTerm term, String input) {
     String errorText = "Interpreter for the " + term.name() + " is not supported";
-    Interpretable interpretable = Objects.requireNonNull(TERM_INTERPRETATION_MAP.get(term), errorText);
+    Interpretable<String,U> interpretable = (Interpretable<String,U>)Objects.requireNonNull(TERM_INTERPRETATION_MAP.get(term), errorText);
     return interpret(interpretable, input);
   }
 
