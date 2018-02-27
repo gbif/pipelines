@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.dwca.avro.ExtendedOccurence;
+import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
@@ -8,7 +8,7 @@ import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.mapper.ExtendedOccurenceMapper;
+import org.gbif.pipelines.mapper.ExtendedOccurrenceMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,21 +27,21 @@ import org.apache.beam.sdk.values.TupleTag;
 /**
  *
  */
-public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, ExtendedOccurence> {
+public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord, ExtendedOccurrence> {
 
   private static final String DATA_STEP_NAME = "Interpret ExtendedOccurence record";
   private static final String ISSUE_STEP_NAME = "Interpret ExtendedOccurence issue";
 
-  // Data tupple tags
+  // Data tupple tags only for internal usage
   private final TupleTag<InterpretedExtendedRecord> recordDataTag = new TupleTag<InterpretedExtendedRecord>() {};
   private final TupleTag<Location> locationDataTag = new TupleTag<Location>() {};
   private final TupleTag<TemporalRecord> temporalDataTag = new TupleTag<TemporalRecord>() {};
-  // Issue tupple tags
+  // Issue tupple tags only for internal usage
   private final TupleTag<IssueLineageRecord> recordIssueTag = new TupleTag<IssueLineageRecord>() {};
   private final TupleTag<IssueLineageRecord> locationIssueTag = new TupleTag<IssueLineageRecord>() {};
   private final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
 
-  public ExtendedOccurenceTransform() {
+  public ExtendedOccurrenceTransform() {
     super(DATA_STEP_NAME);
   }
 
@@ -78,7 +78,7 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
         .apply(CoGroupByKey.create());
 
     // Map ExtendedOccurence records
-    PCollection<KV<String, ExtendedOccurence>> occurenceCollection = groupedData.apply(DATA_STEP_NAME, mapOccurenceParDo());
+    PCollection<KV<String, ExtendedOccurrence>> occurenceCollection = groupedData.apply(DATA_STEP_NAME, mapOccurenceParDo());
 
     // Map ExtendedOccurence issues
     PCollection<KV<String, IssueLineageRecord>> issueCollection = groupedIssue.apply(ISSUE_STEP_NAME, mapIssueParDo());
@@ -127,8 +127,8 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
   /**
    *
    */
-  private ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String, ExtendedOccurence>> mapOccurenceParDo() {
-    return ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<String, ExtendedOccurence>>() {
+  private ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String, ExtendedOccurrence>> mapOccurenceParDo() {
+    return ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<String, ExtendedOccurrence>>() {
       @ProcessElement
       public void processElement(ProcessContext c) {
         KV<String, CoGbkResult> element = c.element();
@@ -139,7 +139,7 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
         Location location = value.getOnly(locationDataTag);
         TemporalRecord temporal = value.getOnly(temporalDataTag);
 
-        ExtendedOccurence occurence = ExtendedOccurenceMapper.map(record, location, temporal);
+        ExtendedOccurrence occurence = ExtendedOccurrenceMapper.map(record, location, temporal);
 
         c.output(KV.of(element.getKey(), occurence));
       }
@@ -147,7 +147,7 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
   }
 
   @Override
-  DoFn<ExtendedRecord, KV<String, ExtendedOccurence>> interpret() {
+  DoFn<ExtendedRecord, KV<String, ExtendedOccurrence>> interpret() {
     throw new UnsupportedOperationException("The method is not implemented");
   }
 

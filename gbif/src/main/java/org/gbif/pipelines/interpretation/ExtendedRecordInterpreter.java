@@ -7,9 +7,6 @@ import org.gbif.pipelines.interpretation.parsers.VocabularyParsers;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Function;
 
 /**

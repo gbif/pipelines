@@ -4,7 +4,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.interpretation.Interpretation;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.ArrayList;
 import java.util.List;
