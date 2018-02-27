@@ -1,20 +1,20 @@
 package org.gbif.pipelines.mapper;
 
 import org.gbif.dwca.avro.Event;
-import org.gbif.dwca.avro.ExtendedOccurence;
+import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
-public class ExtendedOccurenceMapper {
+public class ExtendedOccurrenceMapper {
 
-  private ExtendedOccurenceMapper() {
+  private ExtendedOccurrenceMapper() {
     //Can't have an instance
   }
 
   //TODO: Fill all fields
-  public static ExtendedOccurence map(InterpretedExtendedRecord record, Location location, Event event, TemporalRecord temporal) {
-    return ExtendedOccurence.newBuilder()
+  public static ExtendedOccurrence map(InterpretedExtendedRecord record, Location location, Event event, TemporalRecord temporal) {
+    return ExtendedOccurrence.newBuilder()
       .setOccurrenceID(record.getId())
       .setBasisOfRecord(event.getBasisOfRecord())
       .setDay(temporal.getDay())

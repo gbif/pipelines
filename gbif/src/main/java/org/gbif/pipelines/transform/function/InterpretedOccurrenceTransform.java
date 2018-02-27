@@ -25,8 +25,8 @@ public class InterpretedOccurrenceTransform extends DoFn<KV<String, CoGbkResult>
     KV<String, CoGbkResult> result = ctx.element();
     //get temporal and spatial info from the joined beam collection with tags
 
-    Event event = result.getValue().getOnly(extendedOccurrenceTransform.getTemporalTag());
-    Location location = result.getValue().getOnly(extendedOccurrenceTransform.getSpatialTag());
+    Event event = result.getValue().getOnly(extendedOccurrenceTransform.getEventTag());
+    Location location = result.getValue().getOnly(extendedOccurrenceTransform.getLocationTag());
 
     //create final interpreted record with values from the interpreted category
     ExtendedOccurrence occurrence = ExtendedOccurrence.newBuilder()

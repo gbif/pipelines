@@ -27,9 +27,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
         if(parseResult.isPresent()) {
           interpretedExtendedRecord.setIndividualCount(parseResult.get());
         } else {
-          List<Interpretation.Trace<IssueType>> traces =
-            Collections.singletonList(Interpretation.Trace.of(DwcTerm.individualCount.name(), IssueType.INDIVIDUAL_COUNT_INVALID));
-          interpretation.withValidation(traces);
+          interpretation.withValidation(Interpretation.Trace.of(DwcTerm.individualCount.name(), IssueType.INDIVIDUAL_COUNT_INVALID));
         }
         return interpretation;
       });
@@ -47,9 +45,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
           if (parseResult.isSuccessful()) {
             interpretedExtendedRecord.setTypeStatus(parseResult.getPayload().name());
           } else {
-            List<Interpretation.Trace<IssueType>> traces =
-              Collections.singletonList(Interpretation.Trace.of(DwcTerm.typeStatus.name(), IssueType.TYPE_STATUS_INVALID));
-            interpretation.withValidation(traces);
+            interpretation.withValidation(Interpretation.Trace.of(DwcTerm.typeStatus.name(), IssueType.TYPE_STATUS_INVALID));
           }
           return interpretation;
         }).get();
@@ -115,7 +111,8 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
           if (parseResult.isSuccessful()) {
             interpretedExtendedRecord.setBasisOfRecord(parseResult.getPayload().name());
           } else {
-            interpretation.withValidation(Arrays.asList(Interpretation.Trace.of(DwcTerm.basisOfRecord.name(), IssueType.BASIS_OF_RECORD_INVALID)));
+            interpretation.withValidation(Interpretation.Trace.of(DwcTerm.basisOfRecord.name(),
+                                                                  IssueType.BASIS_OF_RECORD_INVALID));
           }
           return interpretation;
         }).get();

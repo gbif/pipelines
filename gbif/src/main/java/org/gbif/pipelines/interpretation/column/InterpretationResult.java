@@ -1,7 +1,10 @@
 package org.gbif.pipelines.interpretation.column;
 
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
+import org.gbif.pipelines.interpretation.Interpretation;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,6 +82,13 @@ public class InterpretationResult<T> {
    */
   public List<Lineage> getLineageList() {
     return lineageList;
+  }
+
+  public <U> Interpretation<U> asInterpretationOf(U record) {
+    Interpretation<U> interpretation = Interpretation.of(record);
+    issueList.forEach(issue -> interpretation.withValidation(DwcTerm.day.name(), issue));
+    lineageList.forEach(lineage -> interpretation.withLineage(DwcTerm.day.name(), lineage));
+    return  interpretation;
   }
 
   @Override
