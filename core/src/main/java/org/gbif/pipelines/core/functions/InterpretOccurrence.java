@@ -9,6 +9,8 @@ import org.apache.beam.sdk.transforms.SerializableFunction;
 
 class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, TypedOccurrence> {
 
+  private static final long serialVersionUID = -1358742571915657405L;
+
   @Override
   public TypedOccurrence apply(UntypedOccurrence source) {
     // worst code ever... quick test

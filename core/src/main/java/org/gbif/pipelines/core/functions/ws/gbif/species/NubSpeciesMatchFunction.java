@@ -16,6 +16,8 @@ import retrofit2.Response;
  */
 public class NubSpeciesMatchFunction implements SerializableFunction<TypedOccurrence, TypedOccurrence> {
 
+  private static final long serialVersionUID = 2403259142483478498L;
+
   private static final Logger LOG = LoggerFactory.getLogger(NubSpeciesMatchFunction.class);
 
   @Override

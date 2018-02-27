@@ -22,6 +22,8 @@ import java.util.function.Function;
  */
 public class Interpretation<T> implements Serializable {
 
+  private static final long serialVersionUID = -2685751511876257846L;
+
   //Element to be interpreted
   private final T value;
   //Stores the transformations and operations applied during an interpretation
@@ -138,6 +140,8 @@ public class Interpretation<T> implements Serializable {
    * @param <T> type of element to be tracked
    */
   public static class Trace<T> implements Serializable {
+
+    private static final long serialVersionUID = -2440861649944996782L;
 
     private final String fieldName;
     //What this class is tracing

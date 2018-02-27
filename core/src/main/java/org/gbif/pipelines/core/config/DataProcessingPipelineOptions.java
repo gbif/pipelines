@@ -60,8 +60,6 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
   void setTargetPaths(Map<Interpretation, TargetPath> targetPaths);
 
-
-
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
    */

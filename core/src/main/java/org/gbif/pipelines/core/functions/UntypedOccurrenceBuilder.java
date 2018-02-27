@@ -17,6 +17,8 @@ import org.apache.beam.sdk.transforms.SerializableFunction;
  */
 class UntypedOccurrenceBuilder implements SerializableFunction<ExtendedRecord, UntypedOccurrence> {
 
+  private static final long serialVersionUID = 6410728710062482765L;
+
   private static final String PREFIX = "http://rs.tdwg.org/dwc/terms/";
 
   @Override

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.config;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 import org.apache.beam.sdk.annotations.Experimental;
@@ -112,14 +112,13 @@ public interface DataFlowPipelineOptions extends HadoopFileSystemOptions {
     @Override
     public Map<Interpretation, String> create(PipelineOptions options) {
 
-      Map<Interpretation, String> targetPaths = new HashMap<>();
+      Map<Interpretation, String> targetPaths = new EnumMap<>(Interpretation.class);
 
       String defaultDir = options.as(DataFlowPipelineOptions.class).getDefaultTargetDirectory();
 
-      for (Interpretation interpretation : Interpretation.values()) {
-        targetPaths.put(interpretation,
-                        TargetPath.getFullPath(defaultDir,
-                                               interpretation.getDefaultFileName() + File.separator + "data"));
+      for (Interpretation interpr : Interpretation.values()) {
+        String fullPath = TargetPath.getFullPath(defaultDir, interpr.getDefaultFileName() + File.separator + "data");
+        targetPaths.put(interpr, fullPath);
       }
 
       return targetPaths;

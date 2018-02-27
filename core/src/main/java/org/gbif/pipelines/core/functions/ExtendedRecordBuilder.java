@@ -13,6 +13,8 @@ import org.apache.beam.sdk.transforms.SerializableFunction;
 
 class ExtendedRecordBuilder implements SerializableFunction<StarRecord, ExtendedRecord> {
 
+  private static final long serialVersionUID = -348908784086155755L;
+
   @Override
   public ExtendedRecord apply(StarRecord record) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder()

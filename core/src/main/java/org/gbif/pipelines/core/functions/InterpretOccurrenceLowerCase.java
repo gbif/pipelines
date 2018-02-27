@@ -7,6 +7,8 @@ import org.apache.beam.sdk.transforms.SerializableFunction;
 
 public class InterpretOccurrenceLowerCase implements SerializableFunction<UntypedOccurrenceLowerCase, TypedOccurrence> {
 
+  private static final long serialVersionUID = 773613097105994601L;
+
   @Override
   public TypedOccurrence apply(UntypedOccurrenceLowerCase source) {
     // worst code ever... quick test

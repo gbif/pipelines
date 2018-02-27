@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
@@ -36,12 +35,10 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
   // Data tupple tags
   private final TupleTag<InterpretedExtendedRecord> recordDataTag = new TupleTag<InterpretedExtendedRecord>() {};
   private final TupleTag<Location> locationDataTag = new TupleTag<Location>() {};
-  private final TupleTag<Event> eventDataTag = new TupleTag<Event>() {};
   private final TupleTag<TemporalRecord> temporalDataTag = new TupleTag<TemporalRecord>() {};
   // Issue tupple tags
   private final TupleTag<IssueLineageRecord> recordIssueTag = new TupleTag<IssueLineageRecord>() {};
   private final TupleTag<IssueLineageRecord> locationIssueTag = new TupleTag<IssueLineageRecord>() {};
-  private final TupleTag<IssueLineageRecord> eventIssueTag = new TupleTag<IssueLineageRecord>() {};
   private final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
 
   public ExtendedOccurenceTransform() {
@@ -62,10 +59,6 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
     LocationTransform locationTransform = new LocationTransform();
     PCollectionTuple locationTuple = input.apply(locationTransform);
 
-    // Collect Event
-    EventTransform eventTransform = new EventTransform();
-    PCollectionTuple eventTupple = input.apply(eventTransform);
-
     // Collect TemporalRecord
     TemporalRecordTransform temporalTransform = new TemporalRecordTransform();
     PCollectionTuple temporalTupple = input.apply(temporalTransform);
@@ -74,7 +67,6 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
     PCollection<KV<String, CoGbkResult>> groupedData =
       KeyedPCollectionTuple.of(recordDataTag, recordTupple.get(recordTransform.getDataTag()))
         .and(locationDataTag, locationTuple.get(locationTransform.getDataTag()))
-        .and(eventDataTag, eventTupple.get(eventTransform.getDataTag()))
         .and(temporalDataTag, temporalTupple.get(temporalTransform.getDataTag()))
         .apply(CoGroupByKey.create());
 
@@ -82,7 +74,6 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
     PCollection<KV<String, CoGbkResult>> groupedIssue =
       KeyedPCollectionTuple.of(recordIssueTag, recordTupple.get(recordTransform.getIssueTag()))
         .and(locationIssueTag, locationTuple.get(locationTransform.getIssueTag()))
-        .and(eventIssueTag, eventTupple.get(eventTransform.getIssueTag()))
         .and(temporalIssueTag, temporalTupple.get(temporalTransform.getIssueTag()))
         .apply(CoGroupByKey.create());
 
@@ -109,19 +100,16 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
 
         IssueLineageRecord record = value.getOnly(recordIssueTag);
         IssueLineageRecord location = value.getOnly(locationIssueTag);
-        IssueLineageRecord event = value.getOnly(eventIssueTag);
         IssueLineageRecord temporal = value.getOnly(temporalIssueTag);
 
         Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
         fieldIssueMap.putAll(record.getFieldIssueMap());
         fieldIssueMap.putAll(location.getFieldIssueMap());
-        fieldIssueMap.putAll(event.getFieldIssueMap());
         fieldIssueMap.putAll(temporal.getFieldIssueMap());
 
         Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
         fieldLineageMap.putAll(record.getFieldLineageMap());
         fieldLineageMap.putAll(location.getFieldLineageMap());
-        fieldLineageMap.putAll(event.getFieldLineageMap());
         fieldLineageMap.putAll(temporal.getFieldLineageMap());
 
         //construct a final IssueLineageRecord for all categories
@@ -149,10 +137,9 @@ public class ExtendedOccurenceTransform extends RecordTransform<ExtendedRecord, 
 
         InterpretedExtendedRecord record = value.getOnly(recordDataTag);
         Location location = value.getOnly(locationDataTag);
-        Event event = value.getOnly(eventDataTag);
         TemporalRecord temporal = value.getOnly(temporalDataTag);
 
-        ExtendedOccurence occurence = ExtendedOccurenceMapper.map(record, location, event, temporal);
+        ExtendedOccurence occurence = ExtendedOccurenceMapper.map(record, location, temporal);
 
         c.output(KV.of(element.getKey(), occurence));
       }

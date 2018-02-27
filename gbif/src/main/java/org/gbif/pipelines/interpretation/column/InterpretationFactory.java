@@ -19,9 +19,6 @@ public class InterpretationFactory {
   private static final Map<DwcTerm, Interpretable> TERM_INTERPRETATION_MAP = new EnumMap<>(DwcTerm.class);
 
   static {
-    TERM_INTERPRETATION_MAP.put(DwcTerm.day, new DayInterpreter());
-    TERM_INTERPRETATION_MAP.put(DwcTerm.month, new MonthInterpreter());
-    TERM_INTERPRETATION_MAP.put(DwcTerm.year, new YearInterpreter());
     TERM_INTERPRETATION_MAP.put(DwcTerm.country, new CountryInterpreter());
     TERM_INTERPRETATION_MAP.put(DwcTerm.countryCode, new CountryCodeInterpreter());
     TERM_INTERPRETATION_MAP.put(DwcTerm.continent, new ContinentInterpreter());

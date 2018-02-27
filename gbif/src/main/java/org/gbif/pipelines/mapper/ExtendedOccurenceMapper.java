@@ -1,6 +1,5 @@
 package org.gbif.pipelines.mapper;
 
-import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
@@ -13,10 +12,9 @@ public class ExtendedOccurenceMapper {
   }
 
   //TODO: Fill all fields
-  public static ExtendedOccurence map(InterpretedExtendedRecord record, Location location, Event event, TemporalRecord temporal) {
+  public static ExtendedOccurence map(InterpretedExtendedRecord record, Location location, TemporalRecord temporal) {
     return ExtendedOccurence.newBuilder()
       .setOccurrenceID(record.getId())
-      .setBasisOfRecord(event.getBasisOfRecord())
       .setDay(temporal.getDay())
       .setMonth(temporal.getMonth())
       .setYear(temporal.getYear())
