@@ -5,12 +5,12 @@ import org.gbif.dwca.avro.ExtendedOccurence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataFlowPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
-import org.gbif.pipelines.core.utils.Mapper;
 import org.gbif.pipelines.demo.transform.validator.UniqueOccurrenceIdTransform;
 import org.gbif.pipelines.demo.utils.PipelineUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -22,6 +22,8 @@ import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.slf4j.Logger;
@@ -70,8 +72,8 @@ public class DwCA2InterpretedRecordsPipeline {
     // STEP 4: Interpret the raw records as a tuple, which has both different categories of data and issue related to them
     InterpretedExtendedRecordTransform extendedRecordTransform = new InterpretedExtendedRecordTransform();
     PCollectionTuple extendedRecordsTuple = uniqueRecords.apply(extendedRecordTransform);
-    PCollection<InterpretedExtendedRecord> extendedRecords =
-      extendedRecordsTuple.get(extendedRecordTransform.getDataTag()).apply(Mapper.toValueCollection());
+    PCollection<InterpretedExtendedRecord> extendedRecords = extendedRecordsTuple.get(extendedRecordTransform.getDataTag())
+        .apply(MapElements.into(TypeDescriptors.interpretedExtendedRecord()).via(KV::getValue));
 
     // STEP 5: writing interpreted occurence and issues to the avro file
     extendedRecords.apply("Save the processed records as Avro",

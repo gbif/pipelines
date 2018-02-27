@@ -1,8 +1,8 @@
 package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.functions.FunctionFactory;
-import org.gbif.pipelines.core.utils.Mapper;
 import org.gbif.pipelines.hadoop.io.DwCAInputFormat;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
@@ -12,6 +12,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.hadoop.inputformat.HadoopInputFormatIO;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
@@ -42,8 +43,8 @@ public class DwCA2AvroPipeline extends AbstractSparkOnYarnPipeline {
       p.apply("Read DwC-A", HadoopInputFormatIO.<Text, ExtendedRecord>read().withConfiguration(conf));
 
     PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
-      "Convert to Avro"
-      , Mapper.via(x -> FunctionFactory.untypedOccurrenceBuilder().apply(x.getValue())));
+      "Convert to Avro", MapElements.into(TypeDescriptors.untypedOccurrence())
+        .via(x -> FunctionFactory.untypedOccurrenceBuilder().apply(x.getValue())));
 
     verbatimRecords.apply(
       "Write Avro files", AvroIO.write(UntypedOccurrence.class).to("hdfs://ha-nn/tmp/dwca-lep5.avro"));

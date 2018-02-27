@@ -1,10 +1,10 @@
 package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
-import org.gbif.pipelines.core.utils.Mapper;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.transform.InterpretedExtendedRecordTransform;
@@ -16,6 +16,8 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.hadoop.conf.Configuration;
@@ -46,7 +48,7 @@ public class InterpretDwCAvroPipeline {
 
     // Record level interpretations
     interpreted.get(transform.getDataTag())
-      .apply(Mapper.toValueCollection())
+      .apply(MapElements.into(TypeDescriptors.interpretedExtendedRecord()).via(KV::getValue))
       .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
       .apply("Write Interpreted Avro files",
              AvroIO.write(InterpretedExtendedRecord.class)
@@ -54,7 +56,7 @@ public class InterpretDwCAvroPipeline {
 
     // Exporting issues
     interpreted.get(transform.getIssueTag())
-      .apply(Mapper.toValueCollection())
+      .apply(MapElements.into(TypeDescriptors.issueLineageRecord()).via(KV::getValue))
       .setCoder(AvroCoder.of(IssueLineageRecord.class))
       .apply("Write Interpretation Issues Avro files",
              AvroIO.write(IssueLineageRecord.class)

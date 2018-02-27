@@ -20,7 +20,6 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -52,7 +51,6 @@ public class DwcaToHdfsTestingPipelineTest {
   }
 
   @Test
-  @Ignore
   public void givenHdfsClusterWhenWritingDwcaToHdfsThenFileCreated() throws Exception {
 
     // create options
@@ -85,7 +83,6 @@ public class DwcaToHdfsTestingPipelineTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  @Ignore
   public void missingPipelineOptionsTest() {
 
     // create options
@@ -99,7 +96,6 @@ public class DwcaToHdfsTestingPipelineTest {
   }
 
   @Test
-  @Ignore
   public void defaultTargetPathsTest() {
     // create options
     DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);

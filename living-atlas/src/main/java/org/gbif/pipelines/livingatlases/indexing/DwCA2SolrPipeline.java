@@ -2,8 +2,8 @@ package org.gbif.pipelines.livingatlases.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.functions.FunctionFactory;
-import org.gbif.pipelines.core.utils.Mapper;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
@@ -13,6 +13,7 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.solr.common.SolrInputDocument;
@@ -44,7 +45,7 @@ public class DwCA2SolrPipeline {
     // Convert the ExtendedRecord into an UntypedOccurrence record
     PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
       "Convert the objects into untyped DwC style records",
-      Mapper.via(FunctionFactory.untypedOccurrenceBuilder()));
+      MapElements.into(TypeDescriptors.untypedOccurrence()).via(FunctionFactory.untypedOccurrenceBuilder()));
 
     // Write the file to SOLR
     final SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration

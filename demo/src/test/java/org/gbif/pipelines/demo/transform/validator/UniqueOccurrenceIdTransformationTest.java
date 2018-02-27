@@ -13,7 +13,6 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,9 +29,8 @@ public class UniqueOccurrenceIdTransformationTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  @Ignore
   @Category(NeedsRunner.class)
-  public void Should_FilterDuplicateObjects_When_OccurrenceIdIsTheSame() {
+  public void testFilterDuplicateObjectsByOccurrenceId() {
     //State
     final List<ExtendedRecord> input = createCollection("0001", "0001", "0002", "0003", "0004");
     final List<ExtendedRecord> expected = createCollection("0002", "0003", "0004");

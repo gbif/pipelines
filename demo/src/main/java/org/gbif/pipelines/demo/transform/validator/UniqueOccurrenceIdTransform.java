@@ -1,6 +1,5 @@
 package org.gbif.pipelines.demo.transform.validator;
 
-import org.gbif.pipelines.core.utils.Mapper;
 import org.gbif.pipelines.demo.transform.ValidatorsTransform;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -8,12 +7,14 @@ import java.util.stream.StreamSupport;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,8 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
 
     //Convert from list to map where, key - occurrenceId, value - object instance
     PCollection<KV<String, ExtendedRecord>> map =
-      input.apply(MAP_STEP, Mapper.via((ExtendedRecord uo) -> KV.of(uo.getId(), uo)));
+      input.apply(MAP_STEP, MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
+        .via((ExtendedRecord uo) -> KV.of(uo.getId(), uo)));
 
     //Group map by key - occurrenceId
     PCollection<KV<String, Iterable<ExtendedRecord>>> group = map.apply(GROUP_STEP, GroupByKey.create());

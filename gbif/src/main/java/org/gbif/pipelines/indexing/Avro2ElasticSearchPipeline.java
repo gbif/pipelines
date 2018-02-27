@@ -1,7 +1,8 @@
 package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.utils.Mapper;
+import org.gbif.pipelines.core.TypeDescriptors;
+import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 
@@ -9,13 +10,11 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.gbif.pipelines.core.functions.FunctionFactory.gbifSpeciesMatch;
-import static org.gbif.pipelines.core.functions.FunctionFactory.interpretOccurrenceLowerCase;
 
 /**
  * A pipeline that reads an Avro file and indexes it into Elastic Search.
@@ -59,14 +58,17 @@ public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
 
     // Convert the objects (interpretation)
     PCollection<TypedOccurrence> interpreted =
-      verbatimRecords.apply("Interpret occurrence records", Mapper.via(interpretOccurrenceLowerCase()));
+      verbatimRecords.apply("Interpret occurrence records", MapElements.into(TypeDescriptors.typedOccurrence())
+        .via( FunctionFactory.interpretOccurrenceLowerCase()));
 
     // Do the nub lookup
     PCollection<TypedOccurrence> matched =
-      interpreted.apply("Align to backbone using species/match", Mapper.via(gbifSpeciesMatch()));
+      interpreted.apply("Align to backbone using species/match", MapElements.into(TypeDescriptors.typedOccurrence())
+        .via(FunctionFactory.gbifSpeciesMatch()));
 
     // Convert to JSON
-    PCollection<String> json = matched.apply("Convert to JSON", Mapper.via(TypedOccurrence::toString));
+    PCollection<String> json = matched.apply("Convert to JSON", MapElements.into(TypeDescriptors.string())
+      .via(TypedOccurrence::toString));
 
     // Write the file to ES
     ElasticsearchIO.ConnectionConfiguration conn =

@@ -2,7 +2,8 @@ package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.builder.SolrDocBuilder;
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.utils.Mapper;
+import org.gbif.pipelines.core.TypeDescriptors;
+import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 
@@ -10,15 +11,13 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.solr.SolrIO;
+import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.gbif.pipelines.core.functions.FunctionFactory.gbifSpeciesMatch;
-import static org.gbif.pipelines.core.functions.FunctionFactory.interpretOccurrenceLowerCase;
 
 /**
  * A pipeline that reads an Avro file and indexes it into Elastic Search.
@@ -57,12 +56,14 @@ public class Avro2SolrPipeline extends AbstractSparkOnYarnPipeline {
       p.apply("Read Avro files", AvroIO.read(UntypedOccurrenceLowerCase.class).from(SOURCE_PATH));
 
     // Convert the objects (interpretation)
-    PCollection<TypedOccurrence> interpreted =
-      verbatimRecords.apply("Interpret occurrence records", Mapper.via(interpretOccurrenceLowerCase()));
+    PCollection<TypedOccurrence> interpreted = verbatimRecords.apply("Interpret occurrence records",
+                                                                     MapElements.into(TypeDescriptors.typedOccurrence())
+                                                                       .via(FunctionFactory.interpretOccurrenceLowerCase()));
 
     // Do the nub lookup
-    PCollection<TypedOccurrence> matched =
-      interpreted.apply("Align to backbone using species/match", Mapper.via(gbifSpeciesMatch()));
+    PCollection<TypedOccurrence> matched = interpreted.apply("Align to backbone using species/match",
+                                                             MapElements.into(TypeDescriptors.typedOccurrence())
+                                                               .via(FunctionFactory.gbifSpeciesMatch()));
 
     // Write the file to SOLR
     final SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration.create(SOLR_HOST);

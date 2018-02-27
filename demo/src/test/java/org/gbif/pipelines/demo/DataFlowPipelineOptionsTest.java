@@ -11,13 +11,11 @@ import java.util.UUID;
 
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class DataFlowPipelineOptionsTest {
 
   @Test
-  @Ignore
   public void testWithDefaultTargetDirectoryAndSettingTargetPathsProgrammatically() {
     DataFlowPipelineOptions options =
       PipelineOptionsFactory.fromArgs(new String[] {"--datasetId=" + UUID.randomUUID().toString(),
@@ -54,7 +52,6 @@ public class DataFlowPipelineOptionsTest {
   }
 
   @Test
-  @Ignore
   public void testImplicitTargetPaths() throws IOException {
     DataFlowPipelineOptions options =
       PipelineOptionsFactory.fromArgs(new String[] {"--datasetId=" + UUID.randomUUID().toString(),
@@ -74,7 +71,6 @@ public class DataFlowPipelineOptionsTest {
   }
 
   @Test
-  @Ignore
   public void testExplicitTargetPaths() {
     String targetPathMap =
       "{\"TEMPORAL_ISSUE\":\"/Users/clf358/gbif-data/some-issue\",\"TEMP_DWCA_PATH\":\"/Users/clf358/gbif-data/temp\",\"LOCATION\":\"/Users/clf358/gbif-data/location\",\"RAW_OCCURRENCE\":\"/Users/clf358/gbif-data/raw_data\",\"TEMPORAL\":\"/Users/clf358/gbif-data/temporal\",\"LOCATION_ISSUE\":\"/Users/clf358/gbif-data/location_issue\",\"GBIF_BACKBONE\":\"/Users/clf358/gbif-data/gbif-backbone\",\"INTERPRETED_ISSUE\":\"/Users/clf358/gbif-data/interpreted-issue\",\"INTERPRETED_OCURENCE\":\"/Users/clf358/gbif-data/interpreted\",\"VERBATIM\":\"/Users/clf358/gbif-data/verbatim\"}";
