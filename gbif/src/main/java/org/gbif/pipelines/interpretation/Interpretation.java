@@ -129,7 +129,7 @@ public class Interpretation<T> implements Serializable {
     return IssueLineageRecord.newBuilder()
       .setFieldLineageMap(fieldLineageMap)
       .setFieldIssueMap(fieldIssueMap)
-      .setOccurenceId(occurrenceId)
+      .setOccurrenceId(occurrenceId)
       .build();
 
   }

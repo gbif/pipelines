@@ -29,14 +29,14 @@ import org.apache.beam.sdk.values.TupleTag;
  */
 public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord, ExtendedOccurrence> {
 
-  private static final String DATA_STEP_NAME = "Interpret ExtendedOccurence record";
-  private static final String ISSUE_STEP_NAME = "Interpret ExtendedOccurence issue";
+  private static final String DATA_STEP_NAME = "Interpret ExtendedOccurrence record";
+  private static final String ISSUE_STEP_NAME = "Interpret ExtendedOccurrence issue";
 
-  // Data tupple tags only for internal usage
+  // Data tupple tags for internal usage only
   private final TupleTag<InterpretedExtendedRecord> recordDataTag = new TupleTag<InterpretedExtendedRecord>() {};
   private final TupleTag<Location> locationDataTag = new TupleTag<Location>() {};
   private final TupleTag<TemporalRecord> temporalDataTag = new TupleTag<TemporalRecord>() {};
-  // Issue tupple tags only for internal usage
+  // Issue tupple tags for internal usage only
   private final TupleTag<IssueLineageRecord> recordIssueTag = new TupleTag<IssueLineageRecord>() {};
   private final TupleTag<IssueLineageRecord> locationIssueTag = new TupleTag<IssueLineageRecord>() {};
   private final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
@@ -77,14 +77,14 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
         .and(temporalIssueTag, temporalTupple.get(temporalTransform.getIssueTag()))
         .apply(CoGroupByKey.create());
 
-    // Map ExtendedOccurence records
-    PCollection<KV<String, ExtendedOccurrence>> occurenceCollection = groupedData.apply(DATA_STEP_NAME, mapOccurenceParDo());
+    // Map ExtendedOccurrence records
+    PCollection<KV<String, ExtendedOccurrence>> occurrenceCollection = groupedData.apply(DATA_STEP_NAME, mapOccurrenceParDo());
 
-    // Map ExtendedOccurence issues
+    // Map ExtendedOccurrence issues
     PCollection<KV<String, IssueLineageRecord>> issueCollection = groupedIssue.apply(ISSUE_STEP_NAME, mapIssueParDo());
 
     // Return data and issue
-    return PCollectionTuple.of(getDataTag(), occurenceCollection).and(getIssueTag(), issueCollection);
+    return PCollectionTuple.of(getDataTag(), occurrenceCollection).and(getIssueTag(), issueCollection);
   }
 
   /**
@@ -114,7 +114,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
 
         //construct a final IssueLineageRecord for all categories
         IssueLineageRecord issueLineageRecord = IssueLineageRecord.newBuilder()
-          .setOccurenceId(record.getOccurenceId())
+          .setOccurrenceId(record.getOccurrenceId())
           .setFieldIssueMap(fieldIssueMap)
           .setFieldLineageMap(fieldLineageMap)
           .build();
@@ -127,7 +127,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
   /**
    *
    */
-  private ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String, ExtendedOccurrence>> mapOccurenceParDo() {
+  private ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String, ExtendedOccurrence>> mapOccurrenceParDo() {
     return ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<String, ExtendedOccurrence>>() {
       @ProcessElement
       public void processElement(ProcessContext c) {
@@ -139,9 +139,9 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
         Location location = value.getOnly(locationDataTag);
         TemporalRecord temporal = value.getOnly(temporalDataTag);
 
-        ExtendedOccurrence occurence = ExtendedOccurrenceMapper.map(record, location, temporal);
+        ExtendedOccurrence occurrence = ExtendedOccurrenceMapper.map(record, location, temporal);
 
-        c.output(KV.of(element.getKey(), occurence));
+        c.output(KV.of(element.getKey(), occurrence));
       }
     });
   }
