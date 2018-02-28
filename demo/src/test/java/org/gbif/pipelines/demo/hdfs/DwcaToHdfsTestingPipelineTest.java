@@ -6,7 +6,6 @@ import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.config.TargetPath;
-import org.gbif.pipelines.core.config.option.FsTypeEnum;
 import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.demo.utils.DataPipelineOptionsFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -79,7 +78,6 @@ public class DwcaToHdfsTestingPipelineTest {
     options.setInputFile(DWCA_FILE_PATH);
     options.setDatasetId("123");
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + "/pipelines");
-    options.setFsType(FsTypeEnum.HDFS);
 
     // create and run pipeline
     createAndRunPipeline(options);
@@ -107,7 +105,6 @@ public class DwcaToHdfsTestingPipelineTest {
     // create options
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
     options.setRunner(DirectRunner.class);
-    options.setFsType(FsTypeEnum.HDFS);
 
     // create and run pipeline
     createAndRunPipeline(options);

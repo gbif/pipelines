@@ -2,7 +2,6 @@ package org.gbif.pipelines.demo.hdfs;
 
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.TargetPath;
-import org.gbif.pipelines.core.config.option.FsTypeEnum;
 import org.gbif.pipelines.demo.utils.DataPipelineOptionsFactory;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
@@ -70,7 +69,6 @@ public class AvroToHdfsTestingPipelineTest {
     options.setInputFile(AVRO_FILE_PATH);
     options.setDatasetId("123");
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + "pipelines");
-    options.setFsType(FsTypeEnum.HDFS);
 
     // create and run pipeline
     createAndRunPipeline(options);
