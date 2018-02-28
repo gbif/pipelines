@@ -1,6 +1,6 @@
 package org.gbif.pipelines.demo;
 
-import org.gbif.pipelines.core.config.DataFlowPipelineOptions;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.config.TargetPath;
 
@@ -18,17 +18,17 @@ public class DataFlowPipelineOptionsTest {
 
   @Test
   public void testWithDefaultTargetDirectoryAndSettingTargetPathsProgrammatically() {
-    DataFlowPipelineOptions options =
+    DataProcessingPipelineOptions options =
       PipelineOptionsFactory.fromArgs("--datasetId=" + UUID.randomUUID().toString(), "--inputFile=abc123")
         .withValidation()
-        .as(DataFlowPipelineOptions.class);
+        .as(DataProcessingPipelineOptions.class);
 
     String defaultTargetDirectory = "/Users/clf358/gbif/data";
     options.setDefaultTargetDirectory(defaultTargetDirectory);
 
-    Map<Interpretation, String> interpretationTargetMap = new HashMap<>();
+    Map<Interpretation, TargetPath> interpretationTargetMap = new HashMap<>();
     BiConsumer<Interpretation, String> putInter =
-      (i, p) -> interpretationTargetMap.put(i, new TargetPath(defaultTargetDirectory, p).getFullPath());
+      (i, p) -> interpretationTargetMap.put(i, new TargetPath(defaultTargetDirectory, p));
 
     putInter.accept(Interpretation.RAW_OCCURRENCE, "raw");
     putInter.accept(Interpretation.INTERPRETED_OCURENCE, "interpreted");
@@ -50,10 +50,10 @@ public class DataFlowPipelineOptionsTest {
 
   @Test
   public void testImplicitTargetPaths() throws IOException {
-    DataFlowPipelineOptions options =
+    DataProcessingPipelineOptions options =
       PipelineOptionsFactory.fromArgs("--datasetId=" + UUID.randomUUID().toString(), "--inputFile=abc123")
         .withValidation()
-        .as(DataFlowPipelineOptions.class);
+        .as(DataProcessingPipelineOptions.class);
 
     System.out.println(options.getDatasetId());
     System.out.println(options.getInputFile());
@@ -70,16 +70,16 @@ public class DataFlowPipelineOptionsTest {
     String targetPathMap =
       "{\"TEMPORAL_ISSUE\":\"/Users/clf358/gbif-data/some-issue\",\"TEMP_DWCA_PATH\":\"/Users/clf358/gbif-data/temp\",\"LOCATION\":\"/Users/clf358/gbif-data/location\",\"RAW_OCCURRENCE\":\"/Users/clf358/gbif-data/raw_data\",\"TEMPORAL\":\"/Users/clf358/gbif-data/temporal\",\"LOCATION_ISSUE\":\"/Users/clf358/gbif-data/location_issue\",\"GBIF_BACKBONE\":\"/Users/clf358/gbif-data/gbif-backbone\",\"INTERPRETED_ISSUE\":\"/Users/clf358/gbif-data/interpreted-issue\",\"INTERPRETED_OCURENCE\":\"/Users/clf358/gbif-data/interpreted\",\"VERBATIM\":\"/Users/clf358/gbif-data/verbatim\"}";
 
-    DataFlowPipelineOptions options =
+    DataProcessingPipelineOptions options =
       PipelineOptionsFactory.fromArgs("--datasetId=" + UUID.randomUUID().toString(), "--inputFile=abc123", "--targetPaths=" + targetPathMap)
       .withValidation()
-      .as(DataFlowPipelineOptions.class);
+      .as(DataProcessingPipelineOptions.class);
 
     System.out.println(options.getDatasetId());
     System.out.println(options.getInputFile());
     System.out.println(options.getDefaultTargetDirectory());
     System.out.println(options.getTargetPaths());
-    System.out.println("HDFS Configuration Directory:" + options.getHDFSConfigurationDirectory());
+    //System.out.println("HDFS Configuration Directory:" + options.getHDFSConfigurationDirectory());
 
     options.getTargetPaths().forEach((key, value) -> System.out.println(key + "->" + value));
   }

@@ -5,9 +5,18 @@ package org.gbif.pipelines.core.config;
  */
 public enum Interpretation {
 
-  RAW_OCCURRENCE("raw_data"), INTERPRETED_OCURENCE("interpreted_data"), VERBATIM("verbatim"), TEMPORAL("temporal"), LOCATION(
-    "location"), GBIF_BACKBONE("gbif-backbone"), TEMP_DWCA_PATH("temp"), TEMPORAL_ISSUE("temporal_issue"), LOCATION_ISSUE(
-    "location_issue"), INTERPRETED_ISSUE("interpreted_issue"), ISSUES("issues"), RECORD_LEVEL("interpreted");
+  RAW_OCCURRENCE("raw-data"),
+  INTERPRETED_OCURENCE("interpreted-data"),
+  VERBATIM("verbatim"),
+  TEMPORAL("temporal"),
+  LOCATION("location"),
+  GBIF_BACKBONE("gbif-backbone"),
+  TEMP_DWCA_PATH("temp"),
+  TEMPORAL_ISSUE("temporal-issue"),
+  LOCATION_ISSUE("location-issue"),
+  INTERPRETED_ISSUE("interpreted-issue"),
+  ISSUES("issues"),
+  RECORD_LEVEL("interpreted");
 
   private final String defaultFileName;
 

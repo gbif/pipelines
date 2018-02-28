@@ -1,10 +1,10 @@
 package org.gbif.pipelines.core.config;
 
-import java.io.File;
+import org.gbif.pipelines.core.config.option.FsTypeEnum;
+import org.gbif.pipelines.core.config.option.OptionsFactory;
+
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,8 +16,6 @@ import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.Validation;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
 /**
  * Pipeline options (configuration) for GBIF based data pipelines.
@@ -60,24 +58,20 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
   void setTargetPaths(Map<Interpretation, TargetPath> targetPaths);
 
+  @Description("")
+  @Default.Enum("LOCAL")
+  FsTypeEnum getFsType();
+
+  void setFsType(FsTypeEnum fsTypeEnum);
+
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
-
-    static Optional<String> getHadoopDefaultFs(PipelineOptions options) {
-      List<Configuration> configs = options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
-      if (configs != null && !configs.isEmpty()) {
-        // we take the first config as default
-        return Optional.ofNullable(configs.get(0).get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY));
-      }
-      return Optional.empty();
-    }
-
     @Override
     public String create(PipelineOptions options) {
-      // return root dir if no configurations are provided
-      return getHadoopDefaultFs(options).orElse("hdfs://");
+      FsTypeEnum fsType = ((DataProcessingPipelineOptions) options).getFsType();
+      return OptionsFactory.createOptions(fsType).createDefaultDirectoryFactory(options);
     }
   }
 
@@ -85,12 +79,10 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class TempDirectoryFactory implements DefaultValueFactory<String> {
-
     @Override
     public String create(PipelineOptions options) {
-      return DefaultDirectoryFactory.getHadoopDefaultFs(options)
-        .map(hadoopFs -> hadoopFs + File.separator + "tmp")
-        .orElse("hdfs://tmp"); // in case no configurations are provided
+      FsTypeEnum fsType = ((DataProcessingPipelineOptions) options).getFsType();
+      return OptionsFactory.createOptions(fsType).createTempDirectoryFactory(options);
     }
   }
 
@@ -98,10 +90,8 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class TargetPathFactory implements DefaultValueFactory<Map<Interpretation, TargetPath>> {
-
     @Override
     public Map<Interpretation, TargetPath> create(PipelineOptions options) {
-
       String defaultDir = options.as(DataProcessingPipelineOptions.class).getDefaultTargetDirectory();
 
       return Arrays.stream(Interpretation.values())

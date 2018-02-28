@@ -2,7 +2,7 @@ package org.gbif.pipelines.demo.hdfs;
 
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.TargetPath;
-import org.gbif.pipelines.demo.utils.PipelineUtils;
+import org.gbif.pipelines.demo.utils.DataPipelineOptionsFactory;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import org.apache.beam.sdk.Pipeline;
@@ -10,7 +10,6 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +27,7 @@ public class AvroToHdfsPipeline {
    */
   public static void main(String[] args) {
 
-    Configuration config = new Configuration();
-    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(config, args);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(args);
     Pipeline pipeline = Pipeline.create(options);
 
     String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());

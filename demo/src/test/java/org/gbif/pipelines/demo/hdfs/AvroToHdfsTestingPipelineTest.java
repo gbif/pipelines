@@ -2,12 +2,20 @@ package org.gbif.pipelines.demo.hdfs;
 
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.TargetPath;
-import org.gbif.pipelines.demo.utils.PipelineUtils;
+import org.gbif.pipelines.core.config.option.FsTypeEnum;
+import org.gbif.pipelines.demo.utils.DataPipelineOptionsFactory;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Objects;
 
 import org.apache.beam.runners.direct.DirectRunner;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.FileSystems;
+import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
@@ -19,11 +27,15 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests the class {@link AvroToHdfsTestingPipelineTest}.
  */
 public class AvroToHdfsTestingPipelineTest {
+
+  private static final Logger LOG = LoggerFactory.getLogger(AvroToHdfsTestingPipelineTest.class);
 
   private static final String AVRO_FILE_PATH = "data/exportData*";
 
@@ -52,16 +64,16 @@ public class AvroToHdfsTestingPipelineTest {
   public void givenHdfsClusterWhenWritingAvroToHdfsThenFileCreated() throws Exception {
 
     // create options
-    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
     options.setRunner(DirectRunner.class);
 
     options.setInputFile(AVRO_FILE_PATH);
     options.setDatasetId("123");
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + "pipelines");
+    options.setFsType(FsTypeEnum.HDFS);
 
     // create and run pipeline
-    AvroToHdfsTestingPipeline pipeline = new AvroToHdfsTestingPipeline(options);
-    pipeline.createAndRunPipeline();
+    createAndRunPipeline(options);
 
     // test results
     URI uriTargetPath =
@@ -78,6 +90,30 @@ public class AvroToHdfsTestingPipelineTest {
       Assert.assertTrue(fs.exists(fileStatus.getPath()));
     }
 
+  }
+
+  private void createAndRunPipeline(DataProcessingPipelineOptions options) {
+    Objects.requireNonNull(options, "Pipeline options cannot be null");
+
+    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
+
+    LOG.info("Target path : {}", targetPath);
+
+    Pipeline pipeline = Pipeline.create(options);
+
+    // Read Avro files
+    PCollection<UntypedOccurrence> verbatimRecords =
+      pipeline.apply("Read Avro files", AvroIO.read(UntypedOccurrence.class).from(options.getInputFile()));
+
+    verbatimRecords.apply("Write Avro files",
+                          AvroIO.write(UntypedOccurrence.class)
+                            .to(targetPath)
+                            .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
+
+    LOG.info("Starting the pipeline");
+    PipelineResult result = pipeline.run();
+    result.waitUntilFinish();
+    LOG.info("Pipeline finished with state: {} ", result.getState());
   }
 
 }

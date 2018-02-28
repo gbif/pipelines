@@ -1,15 +1,30 @@
 package org.gbif.pipelines.demo.hdfs;
 
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.config.TargetPath;
-import org.gbif.pipelines.demo.utils.PipelineUtils;
+import org.gbif.pipelines.core.config.option.FsTypeEnum;
+import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.demo.utils.DataPipelineOptionsFactory;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import java.io.File;
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.beam.runners.direct.DirectRunner;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.FileSystems;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
@@ -21,11 +36,15 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests the class {@link DwcaToHdfsTestingPipelineTest}.
  */
 public class DwcaToHdfsTestingPipelineTest {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DwcaToHdfsTestingPipelineTest.class);
 
   private static final String DWCA_FILE_PATH = "data/dwca.zip";
 
@@ -54,16 +73,16 @@ public class DwcaToHdfsTestingPipelineTest {
   public void givenHdfsClusterWhenWritingDwcaToHdfsThenFileCreated() throws Exception {
 
     // create options
-    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
     options.setRunner(DirectRunner.class);
 
     options.setInputFile(DWCA_FILE_PATH);
     options.setDatasetId("123");
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + "/pipelines");
+    options.setFsType(FsTypeEnum.HDFS);
 
     // create and run pipeline
-    DwcaToHdfsTestingPipeline pipeline = new DwcaToHdfsTestingPipeline(options);
-    pipeline.createAndRunPipeline();
+    createAndRunPipeline(options);
 
     // test results
     URI uriTargetPath =
@@ -86,26 +105,25 @@ public class DwcaToHdfsTestingPipelineTest {
   public void missingPipelineOptionsTest() {
 
     // create options
-    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
     options.setRunner(DirectRunner.class);
+    options.setFsType(FsTypeEnum.HDFS);
 
     // create and run pipeline
-    DwcaToHdfsTestingPipeline pipeline = new DwcaToHdfsTestingPipeline(options);
-    pipeline.createAndRunPipeline();
-
+    createAndRunPipeline(options);
   }
 
   @Test
   public void defaultTargetPathsTest() {
     // create options
-    DataProcessingPipelineOptions options = PipelineUtils.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
 
     Map<Interpretation, TargetPath> targetPaths = options.getTargetPaths();
 
     Assert.assertNotNull(targetPaths);
     Assert.assertEquals(Interpretation.values().length, targetPaths.size());
 
-    for(Interpretation interpretation : Interpretation.values()) {
+    for (Interpretation interpretation : Interpretation.values()) {
       TargetPath tp = targetPaths.get(interpretation);
 
       Assert.assertNotNull(tp);
@@ -115,5 +133,40 @@ public class DwcaToHdfsTestingPipelineTest {
 
   }
 
+  private void createAndRunPipeline(DataProcessingPipelineOptions options) {
+    Objects.requireNonNull(options, "Pipeline options cannot be null");
+
+    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
+
+    LOG.info("Target path : {}", targetPath);
+
+    Pipeline pipeline = Pipeline.create(options);
+
+    // register Avro coders for serializing our messages
+    Coders.registerAvroCoders(pipeline, ExtendedRecord.class, UntypedOccurrence.class);
+
+    // temp dir for Dwca
+    String tmpDirDwca = new File(options.getInputFile()).getParentFile().getPath() + File.separator + "tmpDwca";
+
+    // Read the DwC-A using our custom reader
+    PCollection<ExtendedRecord> rawRecords =
+      pipeline.apply("Read from Darwin Core Archive", DwCAIO.Read.withPaths(options.getInputFile(), tmpDirDwca));
+
+    // TODO: Explore the generics as to why the coder registry does not find it and we need to set the coder explicitly
+    PCollection<UntypedOccurrence> verbatimRecords = rawRecords.apply(
+      "Convert the objects into untyped DwC style records",
+      MapElements.into(TypeDescriptors.untypedOccurrence()).via(FunctionFactory.untypedOccurrenceBuilder()))
+      .setCoder(AvroCoder.of(UntypedOccurrence.class));
+
+    verbatimRecords.apply("Write Avro files",
+                          AvroIO.write(UntypedOccurrence.class)
+                            .to(targetPath)
+                            .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
+
+    LOG.info("Starting the pipeline");
+    PipelineResult result = pipeline.run();
+    result.waitUntilFinish();
+    LOG.info("Pipeline finished with state: {} ", result.getState());
+  }
 
 }
