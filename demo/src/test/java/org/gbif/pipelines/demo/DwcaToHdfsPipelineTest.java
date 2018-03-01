@@ -72,7 +72,7 @@ public class DwcaToHdfsPipelineTest {
   public void givenHdfsClusterWhenWritingDwcaToHdfsThenFileCreated() throws Exception {
 
     // create options
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
     options.setRunner(DirectRunner.class);
 
     options.setInputFile(DWCA_FILE_PATH);
@@ -103,7 +103,7 @@ public class DwcaToHdfsPipelineTest {
   public void missingPipelineOptionsTest() {
 
     // create options
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
     options.setRunner(DirectRunner.class);
 
     // create and run pipeline
@@ -113,7 +113,7 @@ public class DwcaToHdfsPipelineTest {
   @Test
   public void defaultTargetPathsTest() {
     // create options
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
     Map<Interpretation, TargetPath> targetPaths = options.getTargetPaths();
 

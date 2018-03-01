@@ -2,6 +2,8 @@ package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
+import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
@@ -12,7 +14,6 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * TODO: A lot of hard coded stuff here to sort out...
  */
-public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
+public class Avro2ElasticSearchPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(Avro2ElasticSearchPipeline.class);
 
@@ -48,8 +49,8 @@ public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
 
   public static void main(String[] args) {
 
-    Configuration conf = new Configuration(); // assume defaults on CP
-    Pipeline p = newPipeline(args, conf);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
+    Pipeline p = Pipeline.create(options);
     Coders.registerAvroCoders(p, UntypedOccurrenceLowerCase.class, TypedOccurrence.class);
 
     // Read Avro files

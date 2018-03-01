@@ -30,7 +30,7 @@ public class InterpretDwCAvroPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(InterpretDwCAvroPipeline.class);
 
   public static void main(String[] args) {
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(args);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
     Pipeline p = Pipeline.create(options);
     Coders.registerAvroCoders(p, ExtendedRecord.class, InterpretedExtendedRecord.class);
 

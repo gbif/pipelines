@@ -103,9 +103,9 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
         OccurrenceIssue locationIssue = value.getOnly(locationIssueTag);
         OccurrenceIssue temporalIssue = value.getOnly(temporalIssueTag);
 
-        List<Validation> recordIssueList = (List<Validation>) recordIssue.getIssues();
-        List<Validation> locationIssueList = (List<Validation>) locationIssue.getIssues();
-        List<Validation> temporalIssueList = (List<Validation>) temporalIssue.getIssues();
+        List<Validation> recordIssueList = cast(recordIssue.getIssues());
+        List<Validation> locationIssueList = cast(locationIssue.getIssues());
+        List<Validation> temporalIssueList = cast(temporalIssue.getIssues());
 
         int size = recordIssueList.size() + locationIssueList.size() + temporalIssueList.size();
         List<Validation> validations = new ArrayList<>(size);
@@ -145,6 +145,11 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
   @Override
   DoFn<ExtendedRecord, KV<String, ExtendedOccurrence>> interpret() {
     throw new UnsupportedOperationException("The method is not implemented");
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> T cast(final Object o) {
+    return (T) o;
   }
 
 }

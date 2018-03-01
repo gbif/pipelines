@@ -2,6 +2,8 @@ package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
+import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.hadoop.io.DwCAInputFormat;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -26,7 +28,7 @@ import org.slf4j.LoggerFactory;
  *
  * TODO: A lot of hard coded stuff here to sort out...
  */
-public class DwCA2AvroPipeline extends AbstractSparkOnYarnPipeline {
+public class DwCA2AvroPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(DwCA2AvroPipeline.class);
 
   public static void main(String[] args) {
@@ -36,7 +38,8 @@ public class DwCA2AvroPipeline extends AbstractSparkOnYarnPipeline {
     conf.setClass("key.class", Text.class, Object.class);
     conf.setClass("value.class", ExtendedRecord.class, Object.class);
 
-    Pipeline p = newPipeline(args, conf);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(conf, args);
+    Pipeline p = Pipeline.create(options);
     Coders.registerAvroCoders(p, UntypedOccurrence.class, TypedOccurrence.class, ExtendedRecord.class);
 
     PCollection<KV<Text, ExtendedRecord>> rawRecords =

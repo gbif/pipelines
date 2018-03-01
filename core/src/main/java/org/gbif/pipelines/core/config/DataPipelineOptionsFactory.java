@@ -19,7 +19,7 @@ public final class DataPipelineOptionsFactory {
    *
    * @return {@link DataProcessingPipelineOptions}
    */
-  public static DataProcessingPipelineOptions createPipelineOptions(Configuration config, String[] args) {
+  public static DataProcessingPipelineOptions create(Configuration config, String[] args) {
     PipelineOptionsFactory.register(DataProcessingPipelineOptions.class);
     DataProcessingPipelineOptions options =
       PipelineOptionsFactory.fromArgs(args).withValidation().as(DataProcessingPipelineOptions.class);
@@ -28,11 +28,11 @@ public final class DataPipelineOptionsFactory {
     return options;
   }
 
-  public static DataProcessingPipelineOptions createPipelineOptions(String[] args) {
-    return createPipelineOptions(new Configuration(), args);
+  public static DataProcessingPipelineOptions create(String[] args) {
+    return create(new Configuration(), args);
   }
 
-  public static DataProcessingPipelineOptions createPipelineOptions(Configuration config) {
+  public static DataProcessingPipelineOptions create(Configuration config) {
     PipelineOptionsFactory.register(DataProcessingPipelineOptions.class);
     DataProcessingPipelineOptions options = PipelineOptionsFactory.as(DataProcessingPipelineOptions.class);
     options.setHdfsConfiguration(Collections.singletonList(config));

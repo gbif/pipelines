@@ -63,7 +63,7 @@ public class AvroToHdfsPipelineTest {
   public void givenHdfsClusterWhenWritingAvroToHdfsThenFileCreated() throws Exception {
 
     // create options
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(configuration);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
     options.setRunner(DirectRunner.class);
 
     options.setInputFile(AVRO_FILE_PATH);

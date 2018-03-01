@@ -2,6 +2,8 @@ package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
+import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
+import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.indexing.builder.SolrDocBuilder;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
@@ -14,7 +16,6 @@ import org.apache.beam.sdk.io.solr.SolrIO;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * TODO: A lot of hard coded stuff here to sort out...
  */
-public class Avro2SolrPipeline extends AbstractSparkOnYarnPipeline {
+public class Avro2SolrPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(Avro2SolrPipeline.class);
 
@@ -47,8 +48,8 @@ public class Avro2SolrPipeline extends AbstractSparkOnYarnPipeline {
 
   public static void main(String[] args) {
 
-    Configuration conf = new Configuration(); // assume defaults on CP
-    Pipeline p = newPipeline(args, conf);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
+    Pipeline p = Pipeline.create(options);
     Coders.registerAvroCoders(p, UntypedOccurrenceLowerCase.class, TypedOccurrence.class);
 
     // Read Avro files

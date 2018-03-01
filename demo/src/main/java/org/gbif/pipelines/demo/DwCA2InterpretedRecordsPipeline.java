@@ -48,7 +48,7 @@ public class DwCA2InterpretedRecordsPipeline {
   public static void main(String[] args) {
 
     // STEP 0: Configure pipeline
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.createPipelineOptions(args);
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
     Map<Interpretation, TargetPath> targetPaths = options.getTargetPaths();
 
     Pipeline p = Pipeline.create(options);
