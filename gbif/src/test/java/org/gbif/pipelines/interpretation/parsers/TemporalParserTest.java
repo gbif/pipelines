@@ -9,10 +9,13 @@ import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+@RunWith(JUnit4.class)
 public class TemporalParserTest {
 
   @Test

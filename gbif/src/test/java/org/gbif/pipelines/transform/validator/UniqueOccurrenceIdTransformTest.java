@@ -1,8 +1,7 @@
-package org.gbif.pipelines.interpretation.transform.validator;
+package org.gbif.pipelines.transform.validator;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.Arrays;
 import java.util.List;
