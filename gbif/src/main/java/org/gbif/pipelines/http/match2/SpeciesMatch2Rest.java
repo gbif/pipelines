@@ -5,6 +5,8 @@ import org.gbif.pipelines.http.HttpConfigFactory;
 import org.gbif.pipelines.http.config.Config;
 import org.gbif.pipelines.http.config.Service;
 
+import java.util.Objects;
+
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -16,9 +18,9 @@ public class SpeciesMatch2Rest {
 
   private SpeciesMatch2Service service;
 
-  private SpeciesMatch2Rest() {
-    // load WS Config
-    Config wsConfig = HttpConfigFactory.createConfig(Service.SPECIES_MATCH2);
+  private static SpeciesMatch2Rest INSTANCE;
+
+  private SpeciesMatch2Rest(Config wsConfig) {
 
     // create client
     OkHttpClient client = HttpClientFactory.createClientWithCache(wsConfig);
@@ -33,12 +35,17 @@ public class SpeciesMatch2Rest {
     service = retrofit.create(SpeciesMatch2Service.class);
   }
 
-  private static class LazyHolder {
-    static final SpeciesMatch2Rest INSTANCE = new SpeciesMatch2Rest();
+  public static SpeciesMatch2Rest getInstance() {
+    return getInstance(HttpConfigFactory.createConfig(Service.SPECIES_MATCH2));
   }
 
-  public static SpeciesMatch2Rest getInstance() {
-    return LazyHolder.INSTANCE;
+  public static SpeciesMatch2Rest getInstance(Config config) {
+    synchronized (INSTANCE) {
+      if (Objects.isNull(INSTANCE)) {
+        INSTANCE = new SpeciesMatch2Rest(config);
+      }
+      return INSTANCE;
+    }
   }
 
   public SpeciesMatch2Service getService() {

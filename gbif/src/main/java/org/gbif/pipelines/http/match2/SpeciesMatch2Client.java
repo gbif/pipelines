@@ -24,8 +24,11 @@ import retrofit2.Response;
 public class SpeciesMatch2Client {
 
   private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatch2Client.class);
+  private final SpeciesMatch2Service service;
 
-  private SpeciesMatch2Client() {}
+  public SpeciesMatch2Client(SpeciesMatch2Service service) {
+    this.service = service;
+  }
 
   /**
    * Matches a {@link ExtendedRecord} to an existing specie using the species match 2 WS.
@@ -34,7 +37,7 @@ public class SpeciesMatch2Client {
    *
    * @return {@link NameUsageMatch2} with the match received from the WS.
    */
-  public static HttpResponse<NameUsageMatch2> getMatch(ExtendedRecord extendedRecord) {
+  public HttpResponse<NameUsageMatch2> getMatch(ExtendedRecord extendedRecord) {
     HttpResponse<NameUsageMatch2> response = tryNameMatch(extendedRecord.getCoreTerms());
 
     if (isSuccessfulMatch(response) || !hasIdentifications(extendedRecord)) {
@@ -52,12 +55,11 @@ public class SpeciesMatch2Client {
       .sorted(Comparator.comparing((Map<String, String> map) -> LocalDateTime.parse(map.get(DwcTerm.dateIdentified.qualifiedName()))).reversed())
       .filter(map -> isSuccessfulMatch(tryNameMatch(map)))
       .findFirst()
-      .map(SpeciesMatch2Client::tryNameMatch)
+      .map(this::tryNameMatch)
       .orElse(response);
   }
 
-  private static HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
-    SpeciesMatch2Service service = SpeciesMatch2Rest.getInstance().getService();
+  private HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
 
     Map<String, String> params = NameUsageMatchQueryConverter.convert(terms);
 
@@ -82,7 +84,7 @@ public class SpeciesMatch2Client {
 
   private static boolean isSuccessfulMatch(HttpResponse<NameUsageMatch2> response) {
     return !TaxonomyValidator.isEmpty(response.getBody())
-           && !MatchType.NONE.equals(response.getBody().getDiagnostics().getMatchType());
+           && MatchType.NONE != response.getBody().getDiagnostics().getMatchType();
   }
 
   private static boolean hasIdentifications(ExtendedRecord extendedRecord) {
