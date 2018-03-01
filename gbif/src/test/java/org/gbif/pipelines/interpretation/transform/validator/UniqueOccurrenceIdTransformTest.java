@@ -24,7 +24,7 @@ import org.junit.runners.JUnit4;
  * TODO: More tests to cover positive and negative cases
  */
 @RunWith(JUnit4.class)
-public class UniqueOccurrenceIdTransformationTest {
+public class UniqueOccurrenceIdTransformTest {
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
