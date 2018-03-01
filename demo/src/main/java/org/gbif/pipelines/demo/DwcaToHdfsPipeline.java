@@ -1,12 +1,12 @@
-package org.gbif.pipelines.demo.hdfs;
+package org.gbif.pipelines.demo;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.TypeDescriptors;
+import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.core.functions.FunctionFactory;
-import org.gbif.pipelines.demo.utils.DataPipelineOptionsFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 

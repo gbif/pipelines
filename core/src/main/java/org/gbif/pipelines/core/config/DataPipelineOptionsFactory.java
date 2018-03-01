@@ -1,6 +1,4 @@
-package org.gbif.pipelines.demo.utils;
-
-import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
+package org.gbif.pipelines.core.config;
 
 import java.util.Collections;
 

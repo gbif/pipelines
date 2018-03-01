@@ -2,17 +2,15 @@ package org.gbif.pipelines.transform;
 
 import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.functions.interpretation.error.Issue;
-import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
-import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.Validation;
 import org.gbif.pipelines.mapper.ExtendedOccurrenceMapper;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -37,9 +35,9 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
   private final TupleTag<Location> locationDataTag = new TupleTag<Location>() {};
   private final TupleTag<TemporalRecord> temporalDataTag = new TupleTag<TemporalRecord>() {};
   // Issue tupple tags for internal usage only
-  private final TupleTag<IssueLineageRecord> recordIssueTag = new TupleTag<IssueLineageRecord>() {};
-  private final TupleTag<IssueLineageRecord> locationIssueTag = new TupleTag<IssueLineageRecord>() {};
-  private final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
+  private final TupleTag<OccurrenceIssue> recordIssueTag = new TupleTag<OccurrenceIssue>() {};
+  private final TupleTag<OccurrenceIssue> locationIssueTag = new TupleTag<OccurrenceIssue>() {};
+  private final TupleTag<OccurrenceIssue> temporalIssueTag = new TupleTag<OccurrenceIssue>() {};
 
   public ExtendedOccurrenceTransform() {
     super(DATA_STEP_NAME);
@@ -51,6 +49,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
   @Override
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
 
+    // STEP 1: Collect all records
     // Collect ExtendedRecord
     InterpretedExtendedRecordTransform recordTransform = new InterpretedExtendedRecordTransform();
     PCollectionTuple recordTupple = input.apply(recordTransform);
@@ -63,6 +62,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
     TemporalRecordTransform temporalTransform = new TemporalRecordTransform();
     PCollectionTuple temporalTupple = input.apply(temporalTransform);
 
+    // STEP 2: Group records and issues by key
     // Group records collections
     PCollection<KV<String, CoGbkResult>> groupedData =
       KeyedPCollectionTuple.of(recordDataTag, recordTupple.get(recordTransform.getDataTag()))
@@ -78,10 +78,11 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
         .apply(CoGroupByKey.create());
 
     // Map ExtendedOccurrence records
-    PCollection<KV<String, ExtendedOccurrence>> occurrenceCollection = groupedData.apply(DATA_STEP_NAME, mapOccurrenceParDo());
+    PCollection<KV<String, ExtendedOccurrence>> occurrenceCollection =
+      groupedData.apply(DATA_STEP_NAME, mapOccurrenceParDo());
 
     // Map ExtendedOccurrence issues
-    PCollection<KV<String, IssueLineageRecord>> issueCollection = groupedIssue.apply(ISSUE_STEP_NAME, mapIssueParDo());
+    PCollection<KV<String, OccurrenceIssue>> issueCollection = groupedIssue.apply(ISSUE_STEP_NAME, mapIssueParDo());
 
     // Return data and issue
     return PCollectionTuple.of(getDataTag(), occurrenceCollection).and(getIssueTag(), issueCollection);
@@ -90,36 +91,31 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
   /**
    *
    */
-  private ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String, IssueLineageRecord>> mapIssueParDo() {
-    return ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<String, IssueLineageRecord>>() {
+  private ParDo.SingleOutput<KV<String, CoGbkResult>, KV<String, OccurrenceIssue>> mapIssueParDo() {
+    return ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<String, OccurrenceIssue>>() {
       @ProcessElement
       public void processElement(ProcessContext c) {
         KV<String, CoGbkResult> element = c.element();
 
         CoGbkResult value = element.getValue();
 
-        IssueLineageRecord record = value.getOnly(recordIssueTag);
-        IssueLineageRecord location = value.getOnly(locationIssueTag);
-        IssueLineageRecord temporal = value.getOnly(temporalIssueTag);
+        OccurrenceIssue recordIssue = value.getOnly(recordIssueTag);
+        OccurrenceIssue locationIssue = value.getOnly(locationIssueTag);
+        OccurrenceIssue temporalIssue = value.getOnly(temporalIssueTag);
 
-        Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
-        fieldIssueMap.putAll(record.getFieldIssueMap());
-        fieldIssueMap.putAll(location.getFieldIssueMap());
-        fieldIssueMap.putAll(temporal.getFieldIssueMap());
+        List<Validation> recordIssueList = (List<Validation>) recordIssue.getIssues();
+        List<Validation> locationIssueList = (List<Validation>) locationIssue.getIssues();
+        List<Validation> temporalIssueList = (List<Validation>) temporalIssue.getIssues();
 
-        Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
-        fieldLineageMap.putAll(record.getFieldLineageMap());
-        fieldLineageMap.putAll(location.getFieldLineageMap());
-        fieldLineageMap.putAll(temporal.getFieldLineageMap());
+        int size = recordIssueList.size() + locationIssueList.size() + temporalIssueList.size();
+        List<Validation> validations = new ArrayList<>(size);
+        validations.addAll(recordIssueList);
+        validations.addAll(locationIssueList);
+        validations.addAll(temporalIssueList);
 
-        //construct a final IssueLineageRecord for all categories
-        IssueLineageRecord issueLineageRecord = IssueLineageRecord.newBuilder()
-          .setOccurrenceId(record.getOccurrenceId())
-          .setFieldIssueMap(fieldIssueMap)
-          .setFieldLineageMap(fieldLineageMap)
-          .build();
+        OccurrenceIssue issues = OccurrenceIssue.newBuilder().setId(recordIssue.getId()).setIssues(validations).build();
 
-        c.output(KV.of(element.getKey(), issueLineageRecord));
+        c.output(KV.of(element.getKey(), issues));
       }
     });
   }

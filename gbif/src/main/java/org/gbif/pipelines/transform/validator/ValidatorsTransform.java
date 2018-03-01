@@ -1,4 +1,4 @@
-package org.gbif.pipelines.demo.transform;
+package org.gbif.pipelines.transform.validator;
 
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.PCollection;

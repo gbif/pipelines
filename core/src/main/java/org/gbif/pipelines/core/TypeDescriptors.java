@@ -2,6 +2,7 @@ package org.gbif.pipelines.core;
 
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
@@ -36,6 +37,10 @@ public class TypeDescriptors {
 
   public static TypeDescriptor<TemporalRecord> temporalRecord() {
     return new TypeDescriptor<TemporalRecord>() {};
+  }
+
+  public static TypeDescriptor<OccurrenceIssue> occurrenceIssue() {
+    return new TypeDescriptor<OccurrenceIssue>() {};
   }
 
 }

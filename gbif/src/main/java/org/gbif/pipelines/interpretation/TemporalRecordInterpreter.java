@@ -1,6 +1,7 @@
 package org.gbif.pipelines.interpretation;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.interpretation.Interpretation.Trace;
 import org.gbif.pipelines.interpretation.parsers.TemporalParser;
 import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -46,7 +47,7 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
 
       // Map to Interpretation
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      temporalDates.getIssueList().forEach(issue -> interpretation.withValidation(DwcTerm.eventDate.name(), issue));
+      temporalDates.getIssueList().forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.eventDate.name(), issue)));
       return interpretation;
     };
   }

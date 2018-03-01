@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.Validation;
 
 import org.apache.beam.sdk.transforms.DoFn;
@@ -15,6 +15,7 @@ import org.apache.beam.sdk.values.TupleTagList;
 
 /**
  * Common class for a transform recocd process
+ *
  * @param <T> transform "from" class
  * @param <R> transform "to" class
  */
@@ -26,7 +27,7 @@ public abstract class RecordTransform<T, R> extends PTransform<PCollection<T>, P
 
   private final String stepName;
   private final TupleTag<KV<String, R>> dataTag = new TupleTag<KV<String, R>>() {};
-  private final TupleTag<KV<String, IssueLineageRecord>> issueTag = new TupleTag<KV<String, IssueLineageRecord>>() {};
+  private final TupleTag<KV<String, OccurrenceIssue>> issueTag = new TupleTag<KV<String, OccurrenceIssue>>() {};
 
   @Override
   public PCollectionTuple expand(PCollection<T> input) {
@@ -45,17 +46,16 @@ public abstract class RecordTransform<T, R> extends PTransform<PCollection<T>, P
   /**
    * @return data only with issues
    */
-  public TupleTag<KV<String, IssueLineageRecord>> getIssueTag() {
+  public TupleTag<KV<String, OccurrenceIssue>> getIssueTag() {
     return issueTag;
   }
 
   /**
    * Translates a OccurrenceIssue into Validation object.
    */
-  static Validation toValidation(IssueType occurrenceIssue) {
+  static Validation toValidation(IssueType issueType) {
     return Validation.newBuilder()
-      .setName(occurrenceIssue.name())
-      .setSeverity(occurrenceIssue.name())
+      .setName(issueType.name())
       .build();
   }
 

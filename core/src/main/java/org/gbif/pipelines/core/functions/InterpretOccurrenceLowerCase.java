@@ -45,6 +45,7 @@ public class InterpretOccurrenceLowerCase implements SerializableFunction<Untype
       }
 
     } catch (NumberFormatException e) {
+      //NOP
     }
     return target;
   }

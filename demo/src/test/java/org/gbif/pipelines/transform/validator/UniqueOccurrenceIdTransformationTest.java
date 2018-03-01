@@ -1,4 +1,4 @@
-package org.gbif.pipelines.demo.transform.validator;
+package org.gbif.pipelines.transform.validator;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

@@ -6,17 +6,17 @@ import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.TypeDescriptors;
+import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.Interpretation;
 import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
-import org.gbif.pipelines.demo.transform.validator.UniqueOccurrenceIdTransform;
-import org.gbif.pipelines.demo.utils.DataPipelineOptionsFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.transform.InterpretedExtendedRecordTransform;
+import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.Map;
 

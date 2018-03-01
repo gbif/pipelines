@@ -1,10 +1,14 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.interpretation.ExtendedRecordInterpreter;
 import org.gbif.pipelines.interpretation.Interpretation;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.Validation;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
@@ -29,25 +33,30 @@ public class InterpretedExtendedRecordTransform extends RecordTransform<Extended
       public void processElement(ProcessContext context) {
 
         // Context element to be interpreted
-        ExtendedRecord record = context.element();
+        ExtendedRecord extendedRecord = context.element();
+        String id = extendedRecord.getId();
+        List<Validation> validations = new ArrayList<>();
 
         // Transformation main output
-        InterpretedExtendedRecord interpretedRecord = InterpretedExtendedRecord.newBuilder().setId(record.getId()).build();
+        InterpretedExtendedRecord interpretedRecord = InterpretedExtendedRecord.newBuilder().setId(id).build();
 
-        final IssueLineageRecord issueLineageRecord = Interpretation.of(record)
+        Interpretation.of(extendedRecord)
           .using(ExtendedRecordInterpreter.interpretBasisOfRecord(interpretedRecord))
           .using(ExtendedRecordInterpreter.interpretSex(interpretedRecord))
           .using(ExtendedRecordInterpreter.interpretEstablishmentMeans(interpretedRecord))
           .using(ExtendedRecordInterpreter.interpretLifeStage(interpretedRecord))
           .using(ExtendedRecordInterpreter.interpretTypeStatus(interpretedRecord))
           .using(ExtendedRecordInterpreter.interpretIndividualCount(interpretedRecord))
-          .getIssueLineageRecord(record.getId());
+          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
-        // Additional outputs
-        context.output(getIssueTag(), KV.of(interpretedRecord.getId(), issueLineageRecord));
+        //additional outputs
+        if (!validations.isEmpty()) {
+          OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
+          context.output(getIssueTag(), KV.of(id, issue));
+        }
 
-        // Main output
-        context.output(getDataTag(), KV.of(interpretedRecord.getId(), interpretedRecord));
+        //main output
+        context.output(getDataTag(), KV.of(id, interpretedRecord));
       }
     };
   }

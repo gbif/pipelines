@@ -3,8 +3,6 @@ package org.gbif.pipelines.core.functions;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
-import java.io.IOException;
-
 import org.apache.beam.sdk.transforms.SerializableFunction;
 
 class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, TypedOccurrence> {
@@ -47,32 +45,9 @@ class InterpretOccurrence implements SerializableFunction<UntypedOccurrence, Typ
       }
 
     } catch (NumberFormatException e) {
+      // NOP
     }
     return target;
-  }
-
-  public static void main(String[] args) throws IOException {
-    /*
-    TypedOccurrence t = new TypedOccurrence();
-    t.setLocation("41.12,-71.34");
-    Schema schema = t.getSchema();
-    DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
-
-    System.out.println(t.toString());
-
-    try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-      final JsonEncoder encoder = EncoderFactory.get().jsonEncoder(TypedOccurrence.getClassSchema(), os);
-
-      writer.write(t, encoder);
-      encoder.flush();
-
-      String s = new String(os.toByteArray(),"UTF-8");
-      System.out.println(s);
-
-
-    }
-    */
-
   }
 
 

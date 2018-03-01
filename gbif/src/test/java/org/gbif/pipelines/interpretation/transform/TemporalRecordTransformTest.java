@@ -2,9 +2,9 @@ package org.gbif.pipelines.interpretation.transform;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.TypeDescriptors;
-import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transform.TemporalRecordTransform;
 
@@ -72,7 +72,7 @@ public class TemporalRecordTransformTest {
     //When
     p.getCoderRegistry().registerCoderForClass(ExtendedRecord.class, AvroCoder.of(ExtendedRecord.class));
     p.getCoderRegistry().registerCoderForClass(TemporalRecord.class, AvroCoder.of(TemporalRecord.class));
-    p.getCoderRegistry().registerCoderForClass(IssueLineageRecord.class, AvroCoder.of(IssueLineageRecord.class));
+    p.getCoderRegistry().registerCoderForClass(OccurrenceIssue.class, AvroCoder.of(OccurrenceIssue.class));
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 

@@ -1,20 +1,20 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.interpretation.Interpretation;
 import org.gbif.pipelines.interpretation.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.Validation;
 import org.gbif.pipelines.mapper.LocationMapper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LocationTransform extends RecordTransform<ExtendedRecord, Location> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(LocationTransform.class);
 
   public LocationTransform() {
     super("Interpret loction record");
@@ -26,23 +26,26 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
       @ProcessElement
       public void processElement(ProcessContext context) {
 
-        ExtendedRecord record = context.element();
-        Location location = LocationMapper.map(record);
+        ExtendedRecord extendedRecord = context.element();
+        Location location = LocationMapper.map(extendedRecord);
+        String id = extendedRecord.getId();
+        List<Validation> validations = new ArrayList<>();
 
         // Interpreting Country and Country code
-        final IssueLineageRecord issueLineageRecord = Interpretation.of(record)
+        Interpretation.of(extendedRecord)
           .using(LocationInterpreter.interpretCountry(location))
           .using(LocationInterpreter.interpretCountryCode(location))
           .using(LocationInterpreter.interpretContinent(location))
-          .getIssueLineageRecord(record.getId());
+          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
-        LOG.debug("Raw records converted to spatial category reporting issues and lineages");
-
-        // Additional output
-        context.output(getIssueTag(), KV.of(location.getOccurrenceID(), issueLineageRecord));
+        //additional outputs
+        if (!validations.isEmpty()) {
+          OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
+          context.output(getIssueTag(), KV.of(id, issue));
+        }
 
         // Main output
-        context.output(getDataTag(), KV.of(location.getOccurrenceID(), location));
+        context.output(getDataTag(), KV.of(id, location));
       }
     };
   }

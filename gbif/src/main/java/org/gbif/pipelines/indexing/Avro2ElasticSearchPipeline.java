@@ -59,7 +59,7 @@ public class Avro2ElasticSearchPipeline extends AbstractSparkOnYarnPipeline {
     // Convert the objects (interpretation)
     PCollection<TypedOccurrence> interpreted =
       verbatimRecords.apply("Interpret occurrence records", MapElements.into(TypeDescriptors.typedOccurrence())
-        .via( FunctionFactory.interpretOccurrenceLowerCase()));
+        .via(FunctionFactory.interpretOccurrenceLowerCase()));
 
     // Do the nub lookup
     PCollection<TypedOccurrence> matched =

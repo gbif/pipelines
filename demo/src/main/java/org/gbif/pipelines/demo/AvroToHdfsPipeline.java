@@ -1,8 +1,8 @@
-package org.gbif.pipelines.demo.hdfs;
+package org.gbif.pipelines.demo;
 
+import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.TargetPath;
-import org.gbif.pipelines.demo.utils.DataPipelineOptionsFactory;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import org.apache.beam.sdk.Pipeline;

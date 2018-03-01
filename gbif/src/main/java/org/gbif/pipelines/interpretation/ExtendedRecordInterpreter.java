@@ -2,6 +2,7 @@ package org.gbif.pipelines.interpretation;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
+import org.gbif.pipelines.interpretation.Interpretation.Trace;
 import org.gbif.pipelines.interpretation.parsers.SimpleTypeParser;
 import org.gbif.pipelines.interpretation.parsers.VocabularyParsers;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -24,7 +25,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
         if(parseResult.isPresent()) {
           interpretedExtendedRecord.setIndividualCount(parseResult.get());
         } else {
-          interpretation.withValidation(Interpretation.Trace.of(DwcTerm.individualCount.name(), IssueType.INDIVIDUAL_COUNT_INVALID));
+          interpretation.withValidation(Trace.of(DwcTerm.individualCount.name(), IssueType.INDIVIDUAL_COUNT_INVALID));
         }
         return interpretation;
       });
@@ -42,7 +43,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
           if (parseResult.isSuccessful()) {
             interpretedExtendedRecord.setTypeStatus(parseResult.getPayload().name());
           } else {
-            interpretation.withValidation(Interpretation.Trace.of(DwcTerm.typeStatus.name(), IssueType.TYPE_STATUS_INVALID));
+            interpretation.withValidation(Trace.of(DwcTerm.typeStatus.name(), IssueType.TYPE_STATUS_INVALID));
           }
           return interpretation;
         }).get();
@@ -108,8 +109,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
           if (parseResult.isSuccessful()) {
             interpretedExtendedRecord.setBasisOfRecord(parseResult.getPayload().name());
           } else {
-            interpretation.withValidation(Interpretation.Trace.of(DwcTerm.basisOfRecord.name(),
-                                                                  IssueType.BASIS_OF_RECORD_INVALID));
+            interpretation.withValidation(Trace.of(DwcTerm.basisOfRecord.name(),IssueType.BASIS_OF_RECORD_INVALID));
           }
           return interpretation;
         }).get();
