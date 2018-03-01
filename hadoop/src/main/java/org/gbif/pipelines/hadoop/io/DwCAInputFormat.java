@@ -50,7 +50,7 @@ public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
 
     @Override
     public void initialize(InputSplit inputSplit, TaskAttemptContext context)
-      throws IOException, InterruptedException {
+      throws IOException {
 
       // what follows is very questionable but a quick test
       // the file is read from HDFS and copied to a temporary location

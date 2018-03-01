@@ -35,7 +35,7 @@ class ExtendedRecordBuilder implements SerializableFunction<StarRecord, Extended
         builder.getExtensions().getOrDefault(extensionType.qualifiedName(), new ArrayList<>());
 
       data.forEach(extensionRecord -> {
-        Map<String, String> extensionRecordTerms = new HashMap<String, String>();
+        Map<String, String> extensionRecordTerms = new HashMap<>();
         for (Term term : extensionRecord.terms()) {
           // filter unusable content
           if (term.qualifiedName() != null && extensionRecord.value(term) != null) {
