@@ -1,9 +1,9 @@
 package org.gbif.pipelines.indexing;
 
-import org.gbif.pipelines.builder.SolrDocBuilder;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.indexing.builder.SolrDocBuilder;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.builder;
+package org.gbif.pipelines.indexing.builder;
 
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
