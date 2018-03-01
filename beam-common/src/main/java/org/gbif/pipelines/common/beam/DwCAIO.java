@@ -88,19 +88,19 @@ public class DwCAIO {
      */
     @Override
     public List<? extends BoundedSource<ExtendedRecord>> split(long desiredBundleSizeBytes,
-                                                               PipelineOptions options) throws Exception {
+                                                               PipelineOptions options) {
       List<DwCASource> readers = new ArrayList<>();
       readers.add(this);
       return readers;
     }
 
     @Override
-    public long getEstimatedSizeBytes(PipelineOptions options) throws Exception {
+    public long getEstimatedSizeBytes(PipelineOptions options) {
       return 0; // unknown
     }
 
     @Override
-    public BoundedReader<ExtendedRecord> createReader(PipelineOptions options) throws IOException {
+    public BoundedReader<ExtendedRecord> createReader(PipelineOptions options) {
       return new BoundedDwCAReader(this);
     }
   }
@@ -123,7 +123,7 @@ public class DwCAIO {
     }
 
     @Override
-    public boolean advance() throws IOException {
+    public boolean advance() {
       return reader.advance();
     }
 

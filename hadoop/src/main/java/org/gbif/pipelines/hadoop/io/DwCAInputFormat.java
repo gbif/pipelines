@@ -38,9 +38,7 @@ public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
   }
 
   @Override
-  public RecordReader<Text, ExtendedRecord> createRecordReader(
-    InputSplit inputSplit, TaskAttemptContext taskAttemptContext
-  ) throws IOException, InterruptedException {
+  public RecordReader<Text, ExtendedRecord> createRecordReader(InputSplit inputSplit, TaskAttemptContext taskAttemptContext) {
     return new ExtendedRecordReader();
   }
 
@@ -49,7 +47,6 @@ public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
    */
   static class ExtendedRecordReader extends RecordReader<Text, ExtendedRecord> {
     private DwCAReader reader;
-    private long recordsReturned;
 
     @Override
     public void initialize(InputSplit inputSplit, TaskAttemptContext context)
@@ -76,12 +73,12 @@ public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
     }
 
     @Override
-    public boolean nextKeyValue() throws IOException, InterruptedException {
+    public boolean nextKeyValue() {
       return reader.advance();
     }
 
     @Override
-    public Text getCurrentKey() throws IOException, InterruptedException {
+    public Text getCurrentKey() {
       ExtendedRecord e = reader.getCurrent();
       if (e!=null) {
         // use the DwC record ID or else a UUID
@@ -93,12 +90,12 @@ public class DwCAInputFormat extends FileInputFormat<Text, ExtendedRecord> {
     }
 
     @Override
-    public ExtendedRecord getCurrentValue() throws IOException, InterruptedException {
+    public ExtendedRecord getCurrentValue() {
       return reader.getCurrent();
     }
 
     @Override
-    public float getProgress() throws IOException, InterruptedException {
+    public float getProgress() {
       return 0.5f; // Without access to size or total count no way to be truthful
     }
 
