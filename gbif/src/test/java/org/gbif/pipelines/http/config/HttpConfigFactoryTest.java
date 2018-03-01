@@ -1,4 +1,6 @@
-package org.gbif.pipelines.ws.config;
+package org.gbif.pipelines.http.config;
+
+import org.gbif.pipelines.http.HttpConfigFactory;
 
 import java.nio.file.Paths;
 
@@ -6,15 +8,15 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests the {@link WsConfigurer}.
+ * Tests the {@link HttpConfigFactory}.
  */
-public class WsConfigurerTest {
+public class HttpConfigFactoryTest {
 
   private static final String TEST_PROPERTIES_FILE = "ws-test.properties";
 
   @Test
   public void speciesMatch2ConfiguratorTest() {
-    Config config = WsConfigurer.createConfig(Service.SPECIES_MATCH2, Paths.get(TEST_PROPERTIES_FILE));
+    Config config = HttpConfigFactory.createConfig(Service.SPECIES_MATCH2, Paths.get(TEST_PROPERTIES_FILE));
 
     Assert.assertNotNull(config);
     // default timeout applies
@@ -26,17 +28,17 @@ public class WsConfigurerTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void givenWrongConfigurationWhenGettingConfigThenExceptionThrownl() {
-    WsConfigurer.createConfig(Service.GEO_CODE, Paths.get(TEST_PROPERTIES_FILE));
+    HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get(TEST_PROPERTIES_FILE));
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void givenWrongPropertiesPathWhenGettingConfigThenExceptionThrown() {
-    WsConfigurer.createConfig(Service.GEO_CODE, Paths.get("unknown"));
+    HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get("unknown"));
   }
 
   @Test(expected = NullPointerException.class)
   public void givenNullServiceWhenGettingConfigThenExceptionThrown() {
-    WsConfigurer.createConfig(null, Paths.get("unknown"));
+    HttpConfigFactory.createConfig(null, Paths.get("unknown"));
   }
 
 }

@@ -1,6 +1,6 @@
-package org.gbif.pipelines.ws.utils;
+package org.gbif.pipelines.http;
 
-import org.gbif.pipelines.ws.config.Config;
+import org.gbif.pipelines.http.config.Config;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,9 +13,9 @@ import okhttp3.OkHttpClient;
 /**
  * Utility class for the creation of WS.
  */
-public final class WsUtils {
+public final class HttpClientFactory {
 
-  private WsUtils() {}
+  private HttpClientFactory() {}
 
   /**
    * Creates a {@link OkHttpClient} with {@link Cache} from a specific {@link Config}.

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ws.config;
+package org.gbif.pipelines.http.config;
 
 /**
  * Enum of web services supported in the application.

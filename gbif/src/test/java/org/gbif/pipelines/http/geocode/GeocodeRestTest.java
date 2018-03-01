@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ws.geocode;
+package org.gbif.pipelines.http.geocode;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -12,9 +12,9 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 /**
- * Tests the {@link GeocodeServiceRestTest} and {@link GeocodeService}.
+ * Tests the {@link GeocodeRestTest} and {@link GeocodeService}.
  */
-public class GeocodeServiceRestTest {
+public class GeocodeRestTest {
 
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
@@ -23,7 +23,7 @@ public class GeocodeServiceRestTest {
 
   @Test
   public void simpleCallTest() {
-    GeocodeService service = GeocodeServiceRest.SINGLE.getService();
+    GeocodeService service = GeocodeRest.getInstance().getService();
 
     Call<Collection<GeocodeResponse>> call = service.reverse(LATITUDE_CANADA, LONGITUDE_CANADA);
 
@@ -50,7 +50,7 @@ public class GeocodeServiceRestTest {
 
   @Test
   public void nullParamsCallTest() {
-    GeocodeService service = GeocodeServiceRest.SINGLE.getService();
+    GeocodeService service = GeocodeRest.getInstance().getService();
 
     Call<Collection<GeocodeResponse>> call = service.reverse(null, null);
 
@@ -65,7 +65,7 @@ public class GeocodeServiceRestTest {
 
   @Test
   public void invalidParamsCallTest() {
-    GeocodeService service = GeocodeServiceRest.SINGLE.getService();
+    GeocodeService service = GeocodeRest.getInstance().getService();
 
     Call<Collection<GeocodeResponse>> call = service.reverse(300d, 300d);
 

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ws.geocode;
+package org.gbif.pipelines.http.geocode;
 
 import java.util.Collection;
 

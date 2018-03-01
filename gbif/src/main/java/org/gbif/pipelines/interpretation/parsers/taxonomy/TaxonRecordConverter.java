@@ -1,6 +1,7 @@
-package org.gbif.pipelines.interpretation.adapters;
+package org.gbif.pipelines.interpretation.parsers.taxonomy;
 
 import org.gbif.api.v2.NameUsageMatch2;
+import org.gbif.pipelines.interpretation.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.Diagnostics;
 import org.gbif.pipelines.io.avro.MatchType;
 import org.gbif.pipelines.io.avro.Nomenclature;
@@ -16,13 +17,13 @@ import java.util.stream.Collectors;
 /**
  * Adapts a {@link NameUsageMatch2} into a {@link TaxonRecord}
  */
-public class TaxonRecordAdapter {
+public class TaxonRecordConverter {
 
-  private TaxonRecordAdapter() {}
+  private TaxonRecordConverter() {}
 
   /**
    * I modify the parameter instead of creating a new one and returning it because the lambda parameters are final
-   * (used in {@link org.gbif.pipelines.interpretation.interpreters.TaxonomyInterpreter}.
+   * (used in {@link TaxonomyInterpreter}.
    */
   public static void adapt(NameUsageMatch2 nameUsageMatch2, TaxonRecord taxonRecord) {
     Objects.requireNonNull(nameUsageMatch2);
@@ -36,7 +37,7 @@ public class TaxonRecordAdapter {
     taxonRecord.setNomenclature(adaptNomenclature(source.getNomenclature()));
     taxonRecord.setClassification(source.getClassification()
                                     .stream()
-                                    .map(TaxonRecordAdapter::adaptRankedName)
+                                    .map(TaxonRecordConverter::adaptRankedName)
                                     .collect(Collectors.toList()));
     taxonRecord.setDiagnostics(adaptDiagnostics(source.getDiagnostics()));
 

@@ -30,6 +30,7 @@ public class Coders {
    * @param p              The pipeline into which the coders are to be registered
    * @param messageClasses To register coders for
    */
+  @SafeVarargs
   public static void registerAvroCoders(Pipeline p, Class<? extends SpecificRecord>... messageClasses) {
     for (Class<?> c : messageClasses) {
       LOG.debug("Registering default AvroCoder for {}", c);

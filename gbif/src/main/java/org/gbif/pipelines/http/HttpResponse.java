@@ -1,21 +1,19 @@
-package org.gbif.pipelines.ws;
-
-import java.util.function.Predicate;
+package org.gbif.pipelines.http;
 
 /**
  * Wraps the response from a WS.
  *
  * @param <T> type of the body of the response.
  */
-public class WsResponse<T> {
+public class HttpResponse<T> {
 
   private final T body;
   private final Integer httpResponseCode;
   private final boolean error;
-  private final WsErrorCode errorCode;
+  private final ErrorCode errorCode;
   private final String errorMessage;
 
-  private WsResponse(Builder<T> builder) {
+  private HttpResponse(Builder<T> builder) {
     this.body = builder.body;
     this.httpResponseCode = builder.httpResponseCode;
     this.error = builder.error;
@@ -24,16 +22,16 @@ public class WsResponse<T> {
   }
 
   /**
-   * Creates a {@link WsResponse} for a successful call.
+   * Creates a {@link HttpResponse} for a successful call.
    */
-  public static <S> WsResponse<S> success(S body) {
+  public static <S> HttpResponse<S> success(S body) {
     return Builder.<S>newBuilder().body(body).build();
   }
 
   /**
-   * Creates a {@link WsResponse} for a failed call.
+   * Creates a {@link HttpResponse} for a failed call.
    */
-  public static <S> WsResponse<S> fail(S body, int responseCode, String errorMessage, WsErrorCode errorCode) {
+  public static <S> HttpResponse<S> fail(S body, int responseCode, String errorMessage, ErrorCode errorCode) {
     return Builder.<S>newBuilder().body(body)
       .httpResponseCode(responseCode)
       .error(true)
@@ -43,21 +41,10 @@ public class WsResponse<T> {
   }
 
   /**
-   * Creates a {@link WsResponse} for a failed call.
+   * Creates a {@link HttpResponse} for a failed call.
    */
-  public static <S> WsResponse<S> fail(S body, String errorMessage, WsErrorCode errorCode) {
+  public static <S> HttpResponse<S> fail(S body, String errorMessage, ErrorCode errorCode) {
     return Builder.<S>newBuilder().body(body).error(true).errorCode(errorCode).errorMessage(errorMessage).build();
-  }
-
-  /**
-   * Checks if the response body is empty.
-   *
-   * @param emptyValidator {@link Predicate} that checks if the response is empty
-   *
-   * @return true if it is empty, false otherwise.
-   */
-  public boolean isResponsyEmpty(Predicate<T> emptyValidator) {
-    return emptyValidator.test(body);
   }
 
   public T getBody() {
@@ -72,7 +59,7 @@ public class WsResponse<T> {
     return error;
   }
 
-  public WsErrorCode getErrorCode() {
+  public ErrorCode getErrorCode() {
     return errorCode;
   }
 
@@ -85,40 +72,40 @@ public class WsResponse<T> {
     private T body;
     private int httpResponseCode;
     private boolean error;
-    private WsErrorCode errorCode;
+    private ErrorCode errorCode;
     private String errorMessage;
 
-    static Builder newBuilder() {
-      return new Builder();
+    static <T> Builder<T> newBuilder() {
+      return new Builder<>();
     }
 
-    Builder body(T body) {
+    Builder<T> body(T body) {
       this.body = body;
       return this;
     }
 
-    Builder httpResponseCode(int code) {
+    Builder<T> httpResponseCode(int code) {
       httpResponseCode = code;
       return this;
     }
 
-    Builder error(boolean error) {
+    Builder<T> error(boolean error) {
       this.error = error;
       return this;
     }
 
-    Builder errorCode(WsErrorCode errorCode) {
+    Builder<T> errorCode(ErrorCode errorCode) {
       this.errorCode = errorCode;
       return this;
     }
 
-    Builder errorMessage(String errorMessage) {
+    Builder<T> errorMessage(String errorMessage) {
       this.errorMessage = errorMessage;
       return this;
     }
 
-    WsResponse<T> build() {
-      return new WsResponse<>(this);
+    HttpResponse<T> build() {
+      return new HttpResponse<>(this);
     }
 
   }
@@ -126,7 +113,7 @@ public class WsResponse<T> {
   /**
    * Enum with the possible errors.
    */
-  public enum WsErrorCode {
+  public enum ErrorCode {
     CALL_FAILED, UNEXPECTED_ERROR;
   }
 

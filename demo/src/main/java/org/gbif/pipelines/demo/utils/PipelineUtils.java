@@ -6,7 +6,6 @@ import org.gbif.pipelines.core.config.RecordInterpretation;
 import org.gbif.pipelines.core.config.TargetPath;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -93,12 +92,11 @@ public final class PipelineUtils {
   private static List<Configuration> getHadoopConfiguration(String configurationDirectory) {
     Configuration config = new Configuration();
     File file = new File(configurationDirectory);
-    if (Files.exists(file.toPath())) {
+    if (file.isFile()) {
       //all xml files in one directory
-      if (Files.isDirectory(file.toPath())) {
-        final List<File> collect = Arrays.asList(file.listFiles())
-          .stream()
-          .filter((f) -> f.isFile() && f.getName().endsWith(".xml"))
+      if (file.isDirectory()) {
+        final List<File> collect = Arrays.stream(file.listFiles())
+          .filter(f -> f.isFile() && f.getName().endsWith(".xml"))
           .collect(Collectors.toList());
         for (File filteredFile : collect) {
           config.addResource(new Path(filteredFile.getAbsolutePath()));

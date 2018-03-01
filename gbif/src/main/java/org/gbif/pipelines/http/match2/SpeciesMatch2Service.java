@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ws.match2;
+package org.gbif.pipelines.http.match2;
 
 import org.gbif.api.v2.NameUsageMatch2;
 
@@ -12,7 +12,7 @@ import retrofit2.http.QueryMap;
 /**
  * API of the species match 2 WS.
  */
-public interface SpeciesMatchService2 {
+public interface SpeciesMatch2Service {
 
   @GET("/v1/species/match2")
   Call<NameUsageMatch2> match(

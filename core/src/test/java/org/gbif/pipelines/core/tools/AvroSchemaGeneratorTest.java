@@ -101,7 +101,7 @@ public class AvroSchemaGeneratorTest {
     Schema schemaGenerated = AvroSchemaGenerator.generateSchema(ClassWithEnum.class, name, null, namespace);
     System.out.println(schemaGenerated.toString(true));
 
-    List<String> rankValues = Arrays.stream(Rank.values()).map(value -> value.toString()).collect(Collectors.toList());
+    List<String> rankValues = Arrays.stream(Rank.values()).map(Enum::toString).collect(Collectors.toList());
 
     assertEquals(Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL),
                                                          Schema.createEnum("Rank", null, namespace, rankValues))),

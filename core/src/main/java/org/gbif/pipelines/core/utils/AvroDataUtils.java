@@ -16,7 +16,7 @@ public final class AvroDataUtils {
   public static void checkNullOrEmpty(ExtendedRecord extendedRecord) {
     Objects.requireNonNull(extendedRecord, "ExtendedRecord cannot be null");
 
-    if (extendedRecord.getId() == null || extendedRecord.getId() == "") {
+    if (extendedRecord.getId() == null || extendedRecord.getId().isEmpty()) {
       throw new IllegalArgumentException("ExtendedRecord with id is required");
     }
 

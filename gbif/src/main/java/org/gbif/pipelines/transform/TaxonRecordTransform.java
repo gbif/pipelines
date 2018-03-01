@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.pipelines.interpretation.Interpretation;
-import org.gbif.pipelines.interpretation.interpreters.TaxonomyInterpreter;
+import org.gbif.pipelines.interpretation.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;

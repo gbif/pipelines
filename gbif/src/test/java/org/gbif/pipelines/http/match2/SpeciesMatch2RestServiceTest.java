@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ws.match2;
+package org.gbif.pipelines.http.match2;
 
 import org.gbif.api.v2.NameUsageMatch2;
 
@@ -11,11 +11,11 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class SpeciesMatchService2RestTest {
+public class SpeciesMatch2RestServiceTest {
 
   @Test
   public void simpleCallTest() {
-    SpeciesMatchService2 service = SpeciesMatchServiceRest2.SINGLE.getService();
+    SpeciesMatch2Service service = SpeciesMatch2Rest.getInstance().getService();
 
     final String name = "Puma concolor";
 

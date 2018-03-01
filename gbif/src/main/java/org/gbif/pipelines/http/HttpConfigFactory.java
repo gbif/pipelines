@@ -1,4 +1,7 @@
-package org.gbif.pipelines.ws.config;
+package org.gbif.pipelines.http;
+
+import org.gbif.pipelines.http.config.Config;
+import org.gbif.pipelines.http.config.Service;
 
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -13,18 +16,18 @@ import org.slf4j.LoggerFactory;
 /**
  * Creates the configuration to use a specific WS. The supported web services are defined in {@link Service}.
  * <p>
- * By default it reads the configurarion from the "ws.properties" file.
+ * By default it reads the configurarion from the "http.properties" file.
  */
-public class WsConfigurer {
+public class HttpConfigFactory {
 
-  private static final Logger LOG = LoggerFactory.getLogger(WsConfigurer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HttpConfigFactory.class);
 
   // default properties
   private static final String PROPERTIES_FILE_PATH_DEFAULT = "ws.properties";
 
   // property suffixes
-  private static final String WS_BASE_PATH_PROP = ".ws.basePath";
-  private static final String WS_TIMEOUT_PROP = ".ws.timeoutSeconds";
+  private static final String WS_BASE_PATH_PROP = ".http.basePath";
+  private static final String WS_TIMEOUT_PROP = ".http.timeoutSeconds";
   private static final String CACHE_SIZE_PROP = ".cache.sizeInMb";
 
   // defaults
@@ -33,7 +36,7 @@ public class WsConfigurer {
 
   private static final String DEFAULT_CACHE_NAME_SUFFIX = "-cacheWs";
 
-  private WsConfigurer() {}
+  private HttpConfigFactory() {}
 
   public static Config createConfig(Service service) {
     Objects.requireNonNull(service);

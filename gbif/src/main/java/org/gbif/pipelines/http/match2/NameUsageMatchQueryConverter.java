@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ws.match2;
+package org.gbif.pipelines.http.match2;
 
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.Rank;
@@ -84,7 +84,7 @@ public class NameUsageMatchQueryConverter {
   }
 
   /**
-   * Converts a {@link Map} of terms to {@link Map} with the params needed to call the {@link SpeciesMatchService2}.
+   * Converts a {@link Map} of terms to {@link Map} with the params needed to call the {@link SpeciesMatch2Service}.
    */
   public static Map<String, String> convert(final Map<String, String> terms) {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
@@ -92,38 +92,26 @@ public class NameUsageMatchQueryConverter {
     AtomizedFields.Builder atomizedFieldsBuilder = AtomizedFields.newBuilder();
 
     getTaxonValue(terms, DwcTerm.kingdom).ifPresent(cleanValue -> builder.put("kingdom", cleanValue));
-
     getTaxonValue(terms, DwcTerm.phylum).ifPresent(cleanValue -> builder.put("phylum", cleanValue));
-
     getTaxonValue(terms, DwcTerm.class_).ifPresent(cleanValue -> builder.put("class", cleanValue));
-
     getTaxonValue(terms, DwcTerm.order).ifPresent(cleanValue -> builder.put("order", cleanValue));
-
     getTaxonValue(terms, DwcTerm.family).ifPresent(cleanValue -> builder.put("family", cleanValue));
-
+    getTaxonValue(terms, DwcTerm.specificEpithet).ifPresent(atomizedFieldsBuilder::withSpecificEpithet);
+    getTaxonValue(terms, DwcTerm.infraspecificEpithet).ifPresent(atomizedFieldsBuilder::withInfraspecificEpithet);
     getTaxonValue(terms, DwcTerm.genus).ifPresent(cleanValue -> {
       builder.put("genus", cleanValue);
       atomizedFieldsBuilder.withGenus(cleanValue);
     });
 
-    getTaxonValue(terms, DwcTerm.specificEpithet).ifPresent(cleanValue -> atomizedFieldsBuilder.withSpecificEpithet(
-      cleanValue));
-
-    getTaxonValue(terms,
-                  DwcTerm.infraspecificEpithet).ifPresent(cleanValue -> atomizedFieldsBuilder.withInfraspecificEpithet(
-      cleanValue));
-
-    Optional<String> genericName = getTaxonValue(terms, GbifTerm.genericName);
-    Optional<String> scientificNameAuthorship = getAuthorValue(terms, DwcTerm.scientificNameAuthorship);
+    String genericName = getTaxonValue(terms, GbifTerm.genericName).orElse(null);
+    String scientificNameAuthorship = getAuthorValue(terms, DwcTerm.scientificNameAuthorship).orElse(null);
 
     AtomizedFields atomizedFields = atomizedFieldsBuilder.build();
 
     interpretRank(terms, atomizedFields).ifPresent(rank -> builder.put("rank", rank.name()));
 
-    interpretScientificName(terms,
-                            atomizedFields,
-                            scientificNameAuthorship.orElse(null),
-                            genericName.orElse(null)).ifPresent(scientificName -> builder.put("name", scientificName));
+    interpretScientificName(terms, atomizedFields, scientificNameAuthorship, genericName)
+      .ifPresent(scientificName -> builder.put("name", scientificName));
 
     builder.put("strict", Boolean.FALSE.toString());
     builder.put("verbose", Boolean.FALSE.toString());
