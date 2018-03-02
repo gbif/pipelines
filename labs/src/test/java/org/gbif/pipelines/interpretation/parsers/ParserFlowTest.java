@@ -1,5 +1,7 @@
 package org.gbif.pipelines.interpretation.parsers;
 
+import org.gbif.pipelines.interpretation.lineage.quality.LocationAssessments;
+
 import java.util.Optional;
 
 import org.junit.Assert;
@@ -20,5 +22,13 @@ public class ParserFlowTest {
     Assert.assertEquals(Optional.empty(), parser.parse("199"));
     Assert.assertEquals(Optional.of(77), parser.parse("77"));
     Assert.assertEquals(Optional.empty(), parser.parse("NejNot"));
+  }
+
+  @Test
+  public void intAltitudeParseTest() {
+    //This is an example of naive Integer parser
+    Assert.assertEquals(Optional.empty(), ParserFlows.intParserFlow()
+      .withValidation(LocationAssessments.maxAltitudeCheck())
+      .parse("199999"));
   }
 }

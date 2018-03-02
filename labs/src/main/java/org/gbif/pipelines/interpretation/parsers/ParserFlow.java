@@ -85,7 +85,6 @@ public class ParserFlow<IN,OUT> {
    * Performs the parsing function.
    */
   public Optional<OUT> parse(IN input) {
-    Preconditions.checkNotNull(resultHandler);
     try {
       Optional<OUT> result = Optional.ofNullable(parser.apply(input));
       if (Objects.nonNull(resultErrorHandler) && !result.isPresent()) {
@@ -94,9 +93,9 @@ public class ParserFlow<IN,OUT> {
       if(result.isPresent()) {
         OUT parseResult = result.get();
         if(!matchValidation(input, parseResult)) {
-          resultHandler.accept(parseResult);
           return Optional.empty();
         }
+        resultHandler.accept(parseResult);
         return result;
       }
     } catch (Exception ex) {
