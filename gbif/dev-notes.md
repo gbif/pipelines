@@ -70,7 +70,7 @@ sudo systemctl restart elasticsearch.service
 
 
 Add a location as geoPoint
-
+```
 PUT /occurrence/_mapping/occurrence 
 {
   "properties": {
@@ -86,14 +86,16 @@ PUT occurrence/location/2
   "text": "Geo-point as a string",
   "location": "41.12,-71.34" 
 }
+```
 
 
-
-
-
+Delete the index
+```
 DELETE http://c3n3.gbif.org:9200/occurrence/
+```
 
-
+Recreate:
+```
 PUT /occurrence
 {
   "settings" : {
@@ -175,3 +177,4 @@ POST /occurrence/_search
         }
       }
 }
+```
