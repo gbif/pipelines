@@ -15,11 +15,8 @@ public class Coders {
 
   private static final Logger LOG = LoggerFactory.getLogger(Coders.class);
 
-  /**
-   * Can't instantiate utility classes.
-   */
   private Coders() {
-    //do nothing
+    // Can't instantiate utility classes.
   }
 
   /**

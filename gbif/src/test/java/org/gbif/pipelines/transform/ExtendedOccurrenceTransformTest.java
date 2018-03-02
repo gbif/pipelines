@@ -16,6 +16,8 @@ public class ExtendedOccurrenceTransformTest {
 
   @Test
   @Category(NeedsRunner.class)
-  public void testTransformation() {}
+  public void testTransformation() {
+
+  }
 
 }

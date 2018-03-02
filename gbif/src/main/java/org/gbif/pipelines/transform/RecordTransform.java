@@ -56,6 +56,7 @@ public abstract class RecordTransform<T, R> extends PTransform<PCollection<T>, P
   static Validation toValidation(IssueType issueType) {
     return Validation.newBuilder()
       .setName(issueType.name())
+      .setSeverity("") //TODO: MUST BE SOME VALUE
       .build();
   }
 

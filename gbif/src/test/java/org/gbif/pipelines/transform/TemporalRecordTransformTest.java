@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -16,7 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -40,25 +40,26 @@ public class TemporalRecordTransformTest {
   @Test
   @Category(NeedsRunner.class)
   public void testTransformation() {
-    //State
+    // State
     final List<ExtendedRecord> input =
-      createTypedOccurrenceList("1999-04-17T12:26Z/12:52:17Z", "1999-04/2010-05", "2010/2011");
+      createExtendedRecordList("1999-04-17T12:26Z/12:52:17Z", "1999-04/2010-05", "2010/2011");
 
-    //First
+    // Expected
+    // First
     final LocalDateTime fromOne = LocalDateTime.of(1999, 4, 17, 12, 26);
     final LocalDateTime toOne = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
     final ParsedTemporalDates periodOne = new ParsedTemporalDates(fromOne, toOne);
     periodOne.setYear(Year.of(1999));
     periodOne.setMonth(Month.of(10));
     periodOne.setDay(1);
-    //Second
+    // Second
     final YearMonth fromTwo = YearMonth.of(1999, 4);
     final YearMonth toTwo = YearMonth.of(2010, 5);
     final ParsedTemporalDates periodTwo = new ParsedTemporalDates(fromTwo, toTwo);
     periodTwo.setYear(Year.of(1999));
     periodTwo.setMonth(Month.of(10));
     periodTwo.setDay(1);
-    //Third
+    // Third
     final Year fromThree = Year.of(2010);
     final Year toThree = Year.of(2011);
     final ParsedTemporalDates periodThree = new ParsedTemporalDates(fromThree, toThree);
@@ -68,10 +69,8 @@ public class TemporalRecordTransformTest {
 
     final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, periodTwo, periodThree);
 
-    //When
-    p.getCoderRegistry().registerCoderForClass(ExtendedRecord.class, AvroCoder.of(ExtendedRecord.class));
-    p.getCoderRegistry().registerCoderForClass(TemporalRecord.class, AvroCoder.of(TemporalRecord.class));
-    p.getCoderRegistry().registerCoderForClass(OccurrenceIssue.class, AvroCoder.of(OccurrenceIssue.class));
+    // When
+    Coders.registerAvroCoders(p, ExtendedRecord.class, TemporalRecord.class, OccurrenceIssue.class);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 
@@ -81,12 +80,12 @@ public class TemporalRecordTransformTest {
     PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTag())
       .apply(MapElements.into(TypeDescriptors.temporalRecord()).via(KV::getValue));
 
-    //Should
+    // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);
     p.run();
   }
 
-  private List<ExtendedRecord> createTypedOccurrenceList(String... events) {
+  private List<ExtendedRecord> createExtendedRecordList(String... events) {
     return Arrays.stream(events).map(x -> {
       ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
       record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
