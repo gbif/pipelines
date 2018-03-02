@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transform.validator;
 
-import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Arrays;
@@ -36,11 +35,10 @@ public class UniqueOccurrenceIdTransformTest {
     final List<ExtendedRecord> expected = createCollection("0002", "0003", "0004");
 
     //When
-    Coders.registerAvroCoders(p, ExtendedRecord.class);
+    UniqueOccurrenceIdTransform transformationStream = new UniqueOccurrenceIdTransform().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 
-    UniqueOccurrenceIdTransform transformationStream = new UniqueOccurrenceIdTransform();
     PCollectionTuple tuple = inputStream.apply(transformationStream);
 
     PCollection<ExtendedRecord> collectionStream = tuple.get(transformationStream.getDataTag());

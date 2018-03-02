@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.dwca.avro.Location;
+import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.interpretation.Interpretation;
 import org.gbif.pipelines.interpretation.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -11,6 +12,7 @@ import org.gbif.pipelines.mapper.LocationMapper;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
@@ -48,6 +50,12 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
         context.output(getDataTag(), KV.of(id, location));
       }
     };
+  }
+
+  @Override
+  public LocationTransform withAvroCoders(Pipeline pipeline) {
+    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, Location.class, ExtendedRecord.class);
+    return this;
   }
 
 }

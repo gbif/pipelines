@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core;
 
+import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
@@ -46,6 +47,10 @@ public class TypeDescriptors {
 
   public static TypeDescriptor<Location> location() {
     return new TypeDescriptor<Location>() {};
+  }
+
+  public static TypeDescriptor<ExtendedOccurrence> extendedOccurrence() {
+    return new TypeDescriptor<ExtendedOccurrence>() {};
   }
 
 }

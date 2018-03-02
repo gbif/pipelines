@@ -1,9 +1,11 @@
 package org.gbif.pipelines.transform.validator;
 
+import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.stream.StreamSupport;
 
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.MapElements;
@@ -57,6 +59,11 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
         }
       }
     }).withOutputTags(dataTag, TupleTagList.of(issueTag)));
+  }
+
+  UniqueOccurrenceIdTransform withAvroCoders(Pipeline pipeline) {
+    Coders.registerAvroCoders(pipeline, ExtendedRecord.class);
+    return this;
   }
 
   public TupleTag<ExtendedRecord> getDataTag() {

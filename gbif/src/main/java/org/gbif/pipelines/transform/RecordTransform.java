@@ -4,6 +4,7 @@ import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.Validation;
 
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -60,4 +61,5 @@ public abstract class RecordTransform<T, R> extends PTransform<PCollection<T>, P
       .build();
   }
 
+  public abstract RecordTransform<T, R> withAvroCoders(Pipeline pipeline);
 }

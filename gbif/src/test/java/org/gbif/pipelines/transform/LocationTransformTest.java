@@ -2,10 +2,8 @@ package org.gbif.pipelines.transform;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,11 +42,10 @@ public class LocationTransformTest {
     final List<Location> locations = createLocationList(denmark, japan);
 
     // When
-    Coders.registerAvroCoders(p, ExtendedRecord.class, Location.class, OccurrenceIssue.class);
+    LocationTransform locationTransform = new LocationTransform().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(records));
 
-    LocationTransform locationTransform = new LocationTransform();
     PCollectionTuple tuple = inputStream.apply(locationTransform);
 
     PCollection<Location> recordCollection =

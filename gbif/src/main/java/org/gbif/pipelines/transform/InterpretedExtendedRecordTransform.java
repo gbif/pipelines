@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transform;
 
+import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.interpretation.ExtendedRecordInterpreter;
 import org.gbif.pipelines.interpretation.Interpretation;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -10,6 +11,7 @@ import org.gbif.pipelines.io.avro.Validation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
@@ -60,4 +62,11 @@ public class InterpretedExtendedRecordTransform extends RecordTransform<Extended
       }
     };
   }
+
+  @Override
+  public InterpretedExtendedRecordTransform withAvroCoders(Pipeline pipeline) {
+    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, InterpretedExtendedRecord.class, ExtendedRecord.class);
+    return this;
+  }
+
 }

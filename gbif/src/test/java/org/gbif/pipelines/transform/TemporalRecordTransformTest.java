@@ -1,11 +1,9 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.interpretation.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
 import java.time.LocalDateTime;
@@ -70,11 +68,11 @@ public class TemporalRecordTransformTest {
     final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, periodTwo, periodThree);
 
     // When
-    Coders.registerAvroCoders(p, ExtendedRecord.class, TemporalRecord.class, OccurrenceIssue.class);
+    //Coders.registerAvroCoders(p, ExtendedRecord.class, TemporalRecord.class, OccurrenceIssue.class);
 
+    TemporalRecordTransform temporalRecord = new TemporalRecordTransform().withAvroCoders(p);
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 
-    TemporalRecordTransform temporalRecord = new TemporalRecordTransform();
     PCollectionTuple tuple = inputStream.apply(temporalRecord);
 
     PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTag())

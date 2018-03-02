@@ -15,6 +15,12 @@ public class ExtendedOccurrenceMapper {
   public static ExtendedOccurrence map(InterpretedExtendedRecord record, Location location, TemporalRecord temporal) {
     return ExtendedOccurrence.newBuilder()
       .setOccurrenceID(record.getId())
+      .setTypeStatus(record.getTypeStatus())
+      .setEstablishmentMeans(record.getEstablishmentMeans())
+      .setLifeStage(record.getLifeStage())
+      .setSex(record.getSex())
+      .setBasisOfRecord(record.getBasisOfRecord())
+      .setIndividualCount(record.getIndividualCount().toString())
       .setDay(temporal.getDay())
       .setMonth(temporal.getMonth())
       .setYear(temporal.getYear())

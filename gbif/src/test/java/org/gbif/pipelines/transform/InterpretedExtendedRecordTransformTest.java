@@ -1,11 +1,9 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,11 +42,10 @@ public class InterpretedExtendedRecordTransformTest {
     final List<InterpretedExtendedRecord> interpretedRecords = createInterpretedExtendedRecordList(one, two);
 
     // When
-    Coders.registerAvroCoders(p, ExtendedRecord.class, InterpretedExtendedRecord.class, OccurrenceIssue.class);
+    InterpretedExtendedRecordTransform interpretedTransform = new InterpretedExtendedRecordTransform().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(records));
 
-    InterpretedExtendedRecordTransform interpretedTransform = new InterpretedExtendedRecordTransform();
     PCollectionTuple tuple = inputStream.apply(interpretedTransform);
 
     PCollection<InterpretedExtendedRecord> recordCollection = tuple.get(interpretedTransform.getDataTag())
