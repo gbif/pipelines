@@ -21,7 +21,7 @@ import org.junit.Test;
 /**
  * Tests the {@link TaxonomyInterpreter}.
  */
-public class TaxonomyInterpreterBaseTest extends MockServerBaseTest {
+public class TaxonomyInterpreterTest extends MockServerBaseTest {
 
   private static final String TEST_RECORD_ID = "testId";
 
