@@ -1,7 +1,7 @@
 package org.gbif.pipelines.http.match2;
 
 import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.pipelines.http.MockServerTest;
+import org.gbif.pipelines.http.MockServerBaseTest;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.http.HttpResponse;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -19,7 +19,7 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class SpeciesMatchv2RestServiceTest extends MockServerTest {
+public class SpeciesMatchv2RestServiceBaseTest extends MockServerBaseTest {
 
   @BeforeClass
   public static void setUp() throws IOException {

@@ -1,6 +1,6 @@
 package org.gbif.pipelines.http.geocode;
 
-import org.gbif.pipelines.http.MockServerTest;
+import org.gbif.pipelines.http.MockServerBaseTest;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -17,9 +17,9 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 /**
- * Tests the {@link GeocodeRestTest} and {@link GeocodeService}.
+ * Tests the {@link GeocodeRestBaseTest} and {@link GeocodeService}.
  */
-public class GeocodeRestTest extends MockServerTest {
+public class GeocodeRestBaseTest extends MockServerBaseTest {
 
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
