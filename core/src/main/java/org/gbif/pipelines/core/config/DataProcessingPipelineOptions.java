@@ -56,9 +56,9 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
                + "\"DefaultTargetDirectory\" option as directory and the name of the interpretation as file name. "
                + "Interpretations currently supported are verbatim, temporal, location and gbif-backbone.")
   @Default.InstanceFactory(TargetPathFactory.class)
-  Map<RecordInterpretation, TargetPath> getTargetPaths();
+  Map<OptionsKeyEnum, TargetPath> getTargetPaths();
 
-  void setTargetPaths(Map<RecordInterpretation, TargetPath> targetPaths);
+  void setTargetPaths(Map<OptionsKeyEnum, TargetPath> targetPaths);
 
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
@@ -95,12 +95,12 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
    */
-  class TargetPathFactory implements DefaultValueFactory<Map<Interpretation, TargetPath>> {
+  class TargetPathFactory implements DefaultValueFactory<Map<OptionsKeyEnum, TargetPath>> {
     @Override
-    public Map<Interpretation, TargetPath> create(PipelineOptions options) {
+    public Map<OptionsKeyEnum, TargetPath> create(PipelineOptions options) {
       String defaultDir = options.as(DataProcessingPipelineOptions.class).getDefaultTargetDirectory();
 
-      return Arrays.stream(RecordInterpretation.values())
+      return Arrays.stream(OptionsKeyEnum.values())
         .collect(Collectors.toMap(Function.identity(), i -> new TargetPath(defaultDir, i.getDefaultFileName())));
 
     }

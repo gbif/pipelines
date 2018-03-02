@@ -1,6 +1,6 @@
 package org.gbif.pipelines.interpretation.interpreters;
 
-import org.gbif.pipelines.http.MockServerTest;
+import org.gbif.pipelines.http.MockServerBaseTest;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.interpretation.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -21,7 +21,7 @@ import org.junit.Test;
 /**
  * Tests the {@link TaxonomyInterpreter}.
  */
-public class TaxonomyInterpreterTest extends MockServerTest {
+public class TaxonomyInterpreterBaseTest extends MockServerBaseTest {
 
   private static final String TEST_RECORD_ID = "testId";
 

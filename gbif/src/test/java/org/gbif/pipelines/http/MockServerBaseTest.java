@@ -14,7 +14,7 @@ import okio.Okio;
 /**
  * Base class for tests that need a {@link MockWebServer}.
  */
-public abstract class MockServerTest {
+public abstract class MockServerBaseTest {
 
   // mock match responses
   protected static final String MATCH_RESPONSES_FOLDER = "match-responses/";
