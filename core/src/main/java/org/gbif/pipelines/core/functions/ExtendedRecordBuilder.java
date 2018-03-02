@@ -9,7 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.beam.sdk.transforms.SerializableFunction;
+
 class ExtendedRecordBuilder implements SerializableFunction<StarRecord, ExtendedRecord> {
+
+  private static final long serialVersionUID = -348908784086155755L;
 
   @Override
   public ExtendedRecord apply(StarRecord record) {
@@ -31,7 +35,7 @@ class ExtendedRecordBuilder implements SerializableFunction<StarRecord, Extended
         builder.getExtensions().getOrDefault(extensionType.qualifiedName(), new ArrayList<>());
 
       data.forEach(extensionRecord -> {
-        Map<String, String> extensionRecordTerms = new HashMap<String, String>();
+        Map<String, String> extensionRecordTerms = new HashMap<>();
         for (Term term : extensionRecord.terms()) {
           // filter unusable content
           if (term.qualifiedName() != null && extensionRecord.value(term) != null) {

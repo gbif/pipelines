@@ -1,13 +1,21 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.dwca.avro.Event;
 import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
-import org.gbif.pipelines.transform.function.InterpretedIssueRecordTransform;
-import org.gbif.pipelines.transform.function.InterpretedOccurrenceTransform;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.mapper.ExtendedOccurrenceMapper;
 
-import org.apache.beam.sdk.transforms.PTransform;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -16,78 +24,141 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TupleTagList;
 
 /**
- * Transform Joins the Individual categories via occurenceId to create ExtendedOccurrence
+ *
  */
-public class ExtendedOccurrenceTransform extends PTransform<PCollectionTuple, PCollectionTuple> {
+public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord, ExtendedOccurrence> {
 
-  private final TupleTag<Event> tupleTag = new TupleTag<Event>() {};
-  private final TupleTag<Location> spatialTag = new TupleTag<Location>() {};
-  private final TupleTag<IssueLineageRecord> temporalIssueTag = new TupleTag<IssueLineageRecord>() {};
-  private final TupleTag<IssueLineageRecord> spatialIssueTag = new TupleTag<IssueLineageRecord>() {};
+  private static final String DATA_STEP_NAME = "Interpret ExtendedOccurrence record";
 
-  private final TupleTag<ExtendedOccurrence> interpretedOccurrence = new TupleTag<ExtendedOccurrence>() {};
-  private final TupleTag<IssueLineageRecord> interpretedIssue = new TupleTag<IssueLineageRecord>() {};
+  // Data tupple tags for internal usage only
+  private final TupleTag<InterpretedExtendedRecord> recordDataTag = new TupleTag<InterpretedExtendedRecord>() {};
+  private final TupleTag<Location> locationDataTag = new TupleTag<Location>() {};
+  private final TupleTag<TemporalRecord> temporalDataTag = new TupleTag<TemporalRecord>() {};
+  // Issue tupple tags for internal usage only
+  private final TupleTag<OccurrenceIssue> recordIssueTag = new TupleTag<OccurrenceIssue>() {};
+  private final TupleTag<OccurrenceIssue> locationIssueTag = new TupleTag<OccurrenceIssue>() {};
+  private final TupleTag<OccurrenceIssue> temporalIssueTag = new TupleTag<OccurrenceIssue>() {};
 
-  private final InterpretedCategoryTransform transformer;
+  public ExtendedOccurrenceTransform() {
+    super(DATA_STEP_NAME);
+  }
 
-  public ExtendedOccurrenceTransform(InterpretedCategoryTransform transformer) {
-    this.transformer = transformer;
+  /**
+   *
+   */
+  @Override
+  public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
+
+    // STEP 1: Collect all records
+    // Collect ExtendedRecord
+    InterpretedExtendedRecordTransform recordTransform = new InterpretedExtendedRecordTransform();
+    PCollectionTuple recordTupple = input.apply(recordTransform);
+
+    // Collect Location
+    LocationTransform locationTransform = new LocationTransform();
+    PCollectionTuple locationTuple = input.apply(locationTransform);
+
+    // Collect TemporalRecord
+    TemporalRecordTransform temporalTransform = new TemporalRecordTransform();
+    PCollectionTuple temporalTupple = input.apply(temporalTransform);
+
+    // STEP 2: Group records and issues by key
+    // Group records collections
+    PCollection<KV<String, CoGbkResult>> groupedData =
+      KeyedPCollectionTuple.of(recordDataTag, recordTupple.get(recordTransform.getDataTag()))
+        .and(locationDataTag, locationTuple.get(locationTransform.getDataTag()))
+        .and(temporalDataTag, temporalTupple.get(temporalTransform.getDataTag()))
+        .and(recordIssueTag, recordTupple.get(recordTransform.getIssueTag()))
+        .and(locationIssueTag, locationTuple.get(locationTransform.getIssueTag()))
+        .and(temporalIssueTag, temporalTupple.get(temporalTransform.getIssueTag()))
+        .apply(CoGroupByKey.create());
+
+    // Map ExtendedOccurrence records and issues
+    return groupedData.apply(DATA_STEP_NAME, proccessGroupDoFn());
+  }
+
+  private ParDo.MultiOutput<KV<String, CoGbkResult>, KV<String, ExtendedOccurrence>> proccessGroupDoFn() {
+    return ParDo.of(new DoFn<KV<String, CoGbkResult>, KV<String, ExtendedOccurrence>>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) {
+        KV<String, CoGbkResult> element = c.element();
+        String key = element.getKey();
+
+        // Map data
+        ExtendedOccurrence occurrence = mapToExtendedOccurrence(element);
+
+        // Map issues
+        OccurrenceIssue issue = mapToOccurrenceIssue(element);
+
+        // Output
+        c.output(getDataTag(), KV.of(key, occurrence));
+        c.output(getIssueTag(), KV.of(key, issue));
+      }
+    }).withOutputTags(getDataTag(), TupleTagList.of(getIssueTag()));
+  }
+
+  /**
+   * Group data
+   */
+  private ExtendedOccurrence mapToExtendedOccurrence(KV<String, CoGbkResult> element) {
+    CoGbkResult value = element.getValue();
+
+    InterpretedExtendedRecord record = value.getOnly(recordDataTag);
+    Location location = value.getOnly(locationDataTag);
+    TemporalRecord temporal = value.getOnly(temporalDataTag);
+
+    return ExtendedOccurrenceMapper.map(record, location, temporal);
+  }
+
+  /**
+   * Group issues
+   */
+  private OccurrenceIssue mapToOccurrenceIssue(KV<String, CoGbkResult> element) {
+    CoGbkResult value = element.getValue();
+    String key = element.getKey();
+
+    // default values
+    List<Validation> defaultValidationList = Collections.emptyList();
+    OccurrenceIssue defaultIssue = OccurrenceIssue.newBuilder().setId(key).setIssues(defaultValidationList).build();
+
+    OccurrenceIssue recordIssue = value.getOnly(recordIssueTag, defaultIssue);
+    OccurrenceIssue locationIssue = value.getOnly(locationIssueTag, defaultIssue);
+    OccurrenceIssue temporalIssue = value.getOnly(temporalIssueTag, defaultIssue);
+
+    List<Validation> recordIssueList = cast(recordIssue.getIssues());
+    List<Validation> locationIssueList = cast(locationIssue.getIssues());
+    List<Validation> temporalIssueList = cast(temporalIssue.getIssues());
+
+    int size = recordIssueList.size() + locationIssueList.size() + temporalIssueList.size();
+    if (size > 0) {
+      List<Validation> validations = new ArrayList<>(size);
+      validations.addAll(recordIssueList);
+      validations.addAll(locationIssueList);
+      validations.addAll(temporalIssueList);
+
+      return OccurrenceIssue.newBuilder().setId(key).setIssues(validations).build();
+    }
+    return defaultIssue;
   }
 
   @Override
-  public PCollectionTuple expand(PCollectionTuple interpretedCategory) {
-    /*
-      Joining temporal category issues and spatial category issues to get the overall issues together.
-     */
-    PCollection<KV<String, CoGbkResult>> joinedIssueCollection =
-      KeyedPCollectionTuple.of(temporalIssueTag, interpretedCategory.get(transformer.getTemporalCategoryIssues()))
-        .and(spatialIssueTag, interpretedCategory.get(transformer.getSpatialCategoryIssues()))
-        .apply(CoGroupByKey.create());
-
-    PCollection<IssueLineageRecord> interpretedIssueLineageRecords = joinedIssueCollection.apply(
-      "Applying join on the issues and lineages obtained",
-      ParDo.of(new InterpretedIssueRecordTransform(this)));
-
-    /*
-      Joining temporal category and spatial category to get the big flat interpreted record.
-     */
-    PCollection<KV<String, CoGbkResult>> joinedCollection =
-      KeyedPCollectionTuple.of(tupleTag, interpretedCategory.get(transformer.getTemporalCategory()))
-        .and(spatialTag, interpretedCategory.get(transformer.getSpatialCategory()))
-        .apply(CoGroupByKey.create());
-
-    PCollection<ExtendedOccurrence> interpretedRecords = joinedCollection.apply(
-      "Applying join on interpreted category of records to make a flat big interpreted record",
-      ParDo.of(new InterpretedOccurrenceTransform(this)));
-
-    return PCollectionTuple.of(interpretedOccurrence, interpretedRecords)
-      .and(interpretedIssue, interpretedIssueLineageRecords);
+  DoFn<ExtendedRecord, KV<String, ExtendedOccurrence>> interpret() {
+    throw new UnsupportedOperationException("The method is not implemented");
   }
 
-  public TupleTag<Event> getTemporalTag() {
-    return tupleTag;
+  @SuppressWarnings("unchecked")
+  private static <T> T cast(final Object o) {
+    return (T) o;
   }
 
-  public TupleTag<Location> getSpatialTag() {
-    return spatialTag;
-  }
-
-  public TupleTag<IssueLineageRecord> getTemporalIssueTag() {
-    return temporalIssueTag;
-  }
-
-  public TupleTag<IssueLineageRecord> getSpatialIssueTag() {
-    return spatialIssueTag;
-  }
-
-  public TupleTag<ExtendedOccurrence> getInterpretedOccurrence() {
-    return interpretedOccurrence;
-  }
-
-  public TupleTag<IssueLineageRecord> getInterpretedIssue() {
-    return interpretedIssue;
+  @Override
+  public ExtendedOccurrenceTransform withAvroCoders(Pipeline pipeline) {
+    Coders.registerAvroCoders(pipeline, ExtendedRecord.class, ExtendedOccurrence.class, OccurrenceIssue.class);
+    Coders.registerAvroCoders(pipeline, InterpretedExtendedRecord.class, TemporalRecord.class, Location.class);
+    return this;
   }
 
 }

@@ -60,14 +60,12 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
   void setTargetPaths(Map<Interpretation, TargetPath> targetPaths);
 
-
-
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 
-    static Optional<String> getHadoopDefaultFs(PipelineOptions options) {
+    private static Optional<String> getHadoopDefaultFs(PipelineOptions options) {
       List<Configuration> configs = options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
       if (configs != null && !configs.isEmpty()) {
         // we take the first config as default
@@ -87,11 +85,9 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class TempDirectoryFactory implements DefaultValueFactory<String> {
-
     @Override
     public String create(PipelineOptions options) {
-      return DefaultDirectoryFactory.getHadoopDefaultFs(options)
-        .map(hadoopFs -> hadoopFs + File.separator + "tmp")
+      return DefaultDirectoryFactory.getHadoopDefaultFs(options).map(hadoopFs -> hadoopFs + File.separator + "tmp")
         .orElse("hdfs://tmp"); // in case no configurations are provided
     }
   }
@@ -100,10 +96,8 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class TargetPathFactory implements DefaultValueFactory<Map<Interpretation, TargetPath>> {
-
     @Override
     public Map<Interpretation, TargetPath> create(PipelineOptions options) {
-
       String defaultDir = options.as(DataProcessingPipelineOptions.class).getDefaultTargetDirectory();
 
       return Arrays.stream(Interpretation.values())

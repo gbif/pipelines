@@ -1,8 +1,10 @@
 package org.gbif.pipelines.core.functions.ws.gbif.species;
 
-import java.io.IOException;
-import org.gbif.pipelines.core.functions.SerializableFunction;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
+
+import java.io.IOException;
+
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -13,6 +15,8 @@ import retrofit2.Response;
  * record.
  */
 public class NubSpeciesMatchFunction implements SerializableFunction<TypedOccurrence, TypedOccurrence> {
+
+  private static final long serialVersionUID = 2403259142483478498L;
 
   private static final Logger LOG = LoggerFactory.getLogger(NubSpeciesMatchFunction.class);
 

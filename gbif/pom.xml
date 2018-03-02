@@ -14,7 +14,7 @@
 
   <build>
     <plugins>
-      <!-- Shade the project into an über jar to send to Spark -->
+      <!-- Shade the project into an uber jar to send to Spark -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
