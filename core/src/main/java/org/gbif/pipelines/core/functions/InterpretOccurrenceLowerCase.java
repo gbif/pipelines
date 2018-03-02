@@ -3,7 +3,11 @@ package org.gbif.pipelines.core.functions;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 
-public class InterpretOccurrenceLowerCase  implements SerializableFunction<UntypedOccurrenceLowerCase, TypedOccurrence> {
+import org.apache.beam.sdk.transforms.SerializableFunction;
+
+public class InterpretOccurrenceLowerCase implements SerializableFunction<UntypedOccurrenceLowerCase, TypedOccurrence> {
+
+  private static final long serialVersionUID = 773613097105994601L;
 
   @Override
   public TypedOccurrence apply(UntypedOccurrenceLowerCase source) {
@@ -41,6 +45,7 @@ public class InterpretOccurrenceLowerCase  implements SerializableFunction<Untyp
       }
 
     } catch (NumberFormatException e) {
+      //NOP
     }
     return target;
   }

@@ -14,7 +14,7 @@
 
   <build>
     <plugins>
-      <!-- Shade the project into an über jar to send to Spark -->
+      <!-- Shade the project into an uber jar to send to Spark -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -57,7 +57,7 @@
 
                 <relocation>
                   <pattern>retrofit2</pattern>
-                  <shadedPattern>tim.retrofit2</shadedPattern>
+                  <shadedPattern>gbif.retrofit2</shadedPattern>
                 </relocation>
 
                 <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
@@ -66,45 +66,6 @@
                   <shadedPattern>hc45.org.apache.http</shadedPattern>
                 </relocation>
               </relocations>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <!--  Generate source from Avro definitions -->
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>schemas</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>schema</goal>
-            </goals>
-            <configuration>
-              <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
-              <outputDirectory>${project.basedir}/src/main/java-generated/</outputDirectory>
-              <testSourceDirectory>../gbif/src/main/java/test/avro/</testSourceDirectory>
-              <testOutputDirectory>../gbif/src/main/java/test/java-generated/</testOutputDirectory>
-              <stringType>String</stringType>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- Add the generated sources to the classpath for IDEs -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>${project.basedir}/src/main/java-generated/</source>
-              </sources>
             </configuration>
           </execution>
         </executions>

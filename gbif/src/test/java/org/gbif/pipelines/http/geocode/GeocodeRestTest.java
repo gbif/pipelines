@@ -1,6 +1,6 @@
 package org.gbif.pipelines.http.geocode;
 
-import org.gbif.pipelines.MockServerTest;
+import org.gbif.pipelines.http.MockServerTest;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

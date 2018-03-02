@@ -9,11 +9,15 @@ import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.beam.sdk.transforms.SerializableFunction;
+
 /**
  * A builder of UntypedOccurrences which uses introspection to locate all suitable terms (e.g. Darwin Core) from the
  * source records.
  */
 class UntypedOccurrenceBuilder implements SerializableFunction<ExtendedRecord, UntypedOccurrence> {
+
+  private static final long serialVersionUID = 6410728710062482765L;
 
   private static final String PREFIX = "http://rs.tdwg.org/dwc/terms/";
 

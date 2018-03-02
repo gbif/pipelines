@@ -4,7 +4,7 @@
   "namespace": "org.gbif.pipelines.core.functions.interpretation.error",
   "fields": [
     {
-      "name": "occurenceId",
+      "name": "occurrenceId",
       "type": "string"
     },
     {

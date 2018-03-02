@@ -1,7 +1,7 @@
 package org.gbif.pipelines.http.match2;
 
 import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.pipelines.MockServerTest;
+import org.gbif.pipelines.http.MockServerTest;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.http.HttpResponse;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

@@ -73,9 +73,7 @@ public class LineageExamplePipeline {
     results.get(data).apply("Save the records as Avro", AvroIO.write(UntypedOccurrence.class).to("demo/output/data"));
 
     // Collect all the lineage statements for each record
-    PCollection<KV<String, Iterable<String>>> finalLineage =
-
-      results.get(lineage).apply(GroupByKey.create());
+    PCollection<KV<String, Iterable<String>>> finalLineage = results.get(lineage).apply(GroupByKey.create());
 
     // Transform to "JSON-ish data"so we can save as a text file to read the output
     PCollection<String> lineageAsJSON = finalLineage.apply(ParDo.of(new DoFn<KV<String, Iterable<String>>, String>() {
@@ -83,12 +81,14 @@ public class LineageExamplePipeline {
       public void processElement(ProcessContext c) {
         // worst code follows - demo only!
         KV<String, Iterable<String>> record = c.element();
-        StringBuilder recordAsJSON =
-          new StringBuilder("{\n" + "  \"key\":" + record.getKey() + "\n" + "  \"lineage\": [\n");
-        recordAsJSON.append("    " + StreamSupport.stream(record.getValue().spliterator(), false)
-          .collect(Collectors.joining(",\n    ")));
-        recordAsJSON.append("\n  ]\n}\n");
-        c.output(recordAsJSON.toString());
+        String recordAsJson =
+          "{\n  \"key\":"
+          + record.getKey()
+          + "\n  \"lineage\": [\n"
+          + "    "
+          + StreamSupport.stream(record.getValue().spliterator(),false).collect(Collectors.joining(",\n    "))
+          + "\n  ]\n}\n";
+        c.output(recordAsJson);
       }
     }));
 

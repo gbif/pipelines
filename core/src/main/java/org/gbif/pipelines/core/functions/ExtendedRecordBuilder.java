@@ -9,7 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.beam.sdk.transforms.SerializableFunction;
+
 class ExtendedRecordBuilder implements SerializableFunction<StarRecord, ExtendedRecord> {
+
+  private static final long serialVersionUID = -348908784086155755L;
 
   @Override
   public ExtendedRecord apply(StarRecord record) {

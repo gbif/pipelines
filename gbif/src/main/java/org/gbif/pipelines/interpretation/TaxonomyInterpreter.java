@@ -12,7 +12,6 @@ import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 
-import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -76,7 +75,9 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
     /**
      * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
      */
-    private TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, SpeciesMatchv2Client speciesMatchv2Client) {
+    private TaxonomyInterpreter taxonomyInterpreter(
+      TaxonRecord taxonRecord, SpeciesMatchv2Client speciesMatchv2Client
+    ) {
       return (ExtendedRecord extendedRecord) -> {
 
         AvroDataValidator.checkNullOrEmpty(extendedRecord);
@@ -87,19 +88,16 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
         Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
         if (response.isError()) {
-          interpretation.withValidation(Collections.singletonList(Trace.of(null,
-                                                                           INTERPRETATION_ERROR,
-                                                                           response.getErrorCode().toString() + response
-                                                                             .getErrorMessage())));
+          interpretation.withValidation(Trace.of(null,
+                                                 INTERPRETATION_ERROR,
+                                                 response.getErrorCode().toString() + response.getErrorMessage()));
           return interpretation;
         }
 
         if (TaxonomyValidator.isEmpty(response.getBody())) {
           // TODO: maybe I would need to add to the enum a new issue for this, sth like "NO_MATCHING_RESULTS". This
           // happens when we get an empty response from the WS
-          interpretation.withValidation(Collections.singletonList(Trace.of(null,
-                                                                           TAXON_MATCH_NONE,
-                                                                           "No results from match service")));
+          interpretation.withValidation(Trace.of(null, TAXON_MATCH_NONE, "No results from match service"));
           return interpretation;
         }
 
@@ -107,11 +105,11 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
 
         // TODO: fieldName shouldn't be required in Trace. Remove nulls when Interpretation is fixed.
         if (MatchType.NONE.equals(matchType)) {
-          interpretation.withValidation(Collections.singletonList(Trace.of(null, TAXON_MATCH_NONE)));
+          interpretation.withValidation(Trace.of(null, TAXON_MATCH_NONE));
         } else if (MatchType.FUZZY.equals(matchType)) {
-          interpretation.withValidation(Collections.singletonList(Trace.of(null, TAXON_MATCH_FUZZY)));
+          interpretation.withValidation(Trace.of(null, TAXON_MATCH_FUZZY));
         } else if (MatchType.HIGHERRANK.equals(matchType)) {
-          interpretation.withValidation(Collections.singletonList(Trace.of(null, TAXON_MATCH_HIGHERRANK)));
+          interpretation.withValidation(Trace.of(null, TAXON_MATCH_HIGHERRANK));
         }
 
         // adapt taxon record

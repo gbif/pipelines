@@ -1,6 +1,6 @@
 package org.gbif.pipelines.interpretation.interpreters;
 
-import org.gbif.pipelines.MockServerTest;
+import org.gbif.pipelines.http.MockServerTest;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.interpretation.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

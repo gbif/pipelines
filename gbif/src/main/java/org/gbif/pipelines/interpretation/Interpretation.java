@@ -22,6 +22,8 @@ import java.util.function.Function;
  */
 public class Interpretation<T> implements Serializable {
 
+  private static final long serialVersionUID = -2685751511876257846L;
+
   //Element to be interpreted
   private final T value;
   //Stores the transformations and operations applied during an interpretation
@@ -48,36 +50,32 @@ public class Interpretation<T> implements Serializable {
   /**
    * Adds a validation to the applied interpretation.
    */
-  public Interpretation<T> withValidation(List<Trace<IssueType>> validations) {
-    this.validations.addAll(validations);
+  public Interpretation<T> withValidation(Trace<IssueType> validation) {
+    validations.add(validation);
     return this;
   }
 
   /**
    * Adds a validation to the applied interpretation.
    */
-  public Interpretation<T> withValidation(String fieldName, List<Issue> validations) {
-    validations.forEach(validation -> this.validations.add(Trace.of(fieldName,
-                                                                    validation.getIssueType(),
-                                                                    validation.getRemark())));
+  public Interpretation<T> withValidation(String fieldName, Issue validation) {
+    validations.add(Trace.of(fieldName, validation.getIssueType(), validation.getRemark()));
     return this;
   }
 
   /**
    * Adds a lineage trace to the interpretation operation.
    */
-  public Interpretation<T> withLineage(List<Trace<LineageType>> lineages) {
-    this.lineage.addAll(lineages);
+  public Interpretation<T> withLineage(Trace<LineageType> lineage) {
+    this.lineage.add(lineage);
     return this;
   }
 
   /**
    * Adds a lineage trace to the interpretation operation.
    */
-  public Interpretation<T> withLineage(String fieldName, List<Lineage> lineages) {
-    lineages.forEach(lineage -> this.lineage.add(Trace.of(fieldName,
-                                                            lineage.getLineageType(),
-                                                            lineage.getRemark())));
+  public Interpretation<T> withLineage(String fieldName, Lineage lineage) {
+    this.lineage.add(Trace.of(fieldName, lineage.getLineageType(), lineage.getRemark()));
     return this;
   }
 
@@ -131,7 +129,7 @@ public class Interpretation<T> implements Serializable {
     return IssueLineageRecord.newBuilder()
       .setFieldLineageMap(fieldLineageMap)
       .setFieldIssueMap(fieldIssueMap)
-      .setOccurenceId(occurrenceId)
+      .setOccurrenceId(occurrenceId)
       .build();
 
   }
@@ -142,6 +140,8 @@ public class Interpretation<T> implements Serializable {
    * @param <T> type of element to be tracked
    */
   public static class Trace<T> implements Serializable {
+
+    private static final long serialVersionUID = -2440861649944996782L;
 
     private final String fieldName;
     //What this class is tracing

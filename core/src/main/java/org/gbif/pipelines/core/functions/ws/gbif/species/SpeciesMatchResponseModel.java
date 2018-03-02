@@ -1,7 +1,8 @@
 package org.gbif.pipelines.core.functions.ws.gbif.species;
 
-import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
+
+import com.google.gson.annotations.SerializedName;
 
 /*
  * Response model for the WS call

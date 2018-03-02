@@ -2,8 +2,9 @@ package org.gbif.pipelines.demo;
 
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.config.RecordInterpretation;
+import org.gbif.pipelines.core.config.OptionsKeyEnum;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -14,13 +15,15 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileSystems;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.demo.utils.PipelineUtils.createDefaultTaxonOptions;
+import static org.gbif.pipelines.core.config.DataPipelineOptionsFactory.createDefaultTaxonOptions;
 
 /**
  * A simple demonstration showing a pipeline running locally which will read UntypedOccurrence from a DwC-A file and
@@ -68,19 +71,21 @@ public class TaxonomyInterpretationPipeline {
     PCollectionTuple taxonomicInterpreted = verbatimRecords.apply(taxonRecordTransform);
 
     // write taxon records
-    taxonomicInterpreted.get(taxonRecordTransform.getDataTupleTag())
+    taxonomicInterpreted.get(taxonRecordTransform.getDataTag())
+      .apply(MapElements.into(TypeDescriptors.taxonRecord()).via(KV::getValue))
       .setCoder(AvroCoder.of(TaxonRecord.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(TaxonRecord.class)
-               .to(options.getTargetPaths().get(RecordInterpretation.GBIF_BACKBONE).filePath())
+               .to(options.getTargetPaths().get(OptionsKeyEnum.GBIF_BACKBONE).filePath())
                .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     // write issues
-    taxonomicInterpreted.get(taxonRecordTransform.getIssueTupleTag())
+    taxonomicInterpreted.get(taxonRecordTransform.getIssueTag())
+      .apply(MapElements.into(TypeDescriptors.occurrenceIssue()).via(KV::getValue))
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(OccurrenceIssue.class)
-               .to(options.getTargetPaths().get(RecordInterpretation.ISSUES).filePath())
+               .to(options.getTargetPaths().get(OptionsKeyEnum.ISSUES).filePath())
                .withTempDirectory(FileSystems.matchNewResource(options.getHdfsTempLocation(), true)));
 
     LOG.info("Starting the pipeline");
