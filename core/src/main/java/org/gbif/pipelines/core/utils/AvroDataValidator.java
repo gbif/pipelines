@@ -4,9 +4,9 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Objects;
 
-public final class AvroDataUtils {
+public final class AvroDataValidator {
 
-  private AvroDataUtils() {
+  private AvroDataValidator() {
     // Do nothing
   }
 

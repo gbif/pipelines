@@ -2,7 +2,7 @@ package org.gbif.pipelines.interpretation;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.pipelines.core.utils.AvroDataUtils;
+import org.gbif.pipelines.core.utils.AvroDataValidator;
 import org.gbif.pipelines.http.HttpResponse;
 import org.gbif.pipelines.http.config.Config;
 import org.gbif.pipelines.http.match2.SpeciesMatchv2Client;
@@ -79,7 +79,7 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
     private TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, SpeciesMatchv2Client speciesMatchv2Client) {
       return (ExtendedRecord extendedRecord) -> {
 
-        AvroDataUtils.checkNullOrEmpty(extendedRecord);
+        AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
         // get match from WS
         HttpResponse<NameUsageMatch2> response = speciesMatchv2Client.getMatch(extendedRecord);
