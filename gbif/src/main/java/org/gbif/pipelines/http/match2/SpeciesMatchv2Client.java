@@ -11,6 +11,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -21,12 +22,12 @@ import retrofit2.Response;
 /**
  * Handles the calls to the species match WS.
  */
-public class SpeciesMatch2Client {
+public class SpeciesMatchv2Client {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatch2Client.class);
-  private final SpeciesMatch2Service service;
+  private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatchv2Client.class);
+  private final SpeciesMatchv2Service service;
 
-  public SpeciesMatch2Client(SpeciesMatch2Service service) {
+  public SpeciesMatchv2Client(SpeciesMatchv2Service service) {
     this.service = service;
   }
 
@@ -44,19 +45,25 @@ public class SpeciesMatch2Client {
       return response;
     }
 
-    // FIXME: use new generic functions to parse the date??
-    // get and sort them by date identified
-    // Ask Markus D if this can be moved to the API?
-    // TODO: CHECK ME
     LOG.info("Retrying match with identification extension");
-    return extendedRecord.getExtensions()
-      .get(DwcTerm.Identification.qualifiedName())
-      .stream()
-      .sorted(Comparator.comparing((Map<String, String> map) -> LocalDateTime.parse(map.get(DwcTerm.dateIdentified.qualifiedName()))).reversed())
-      .filter(map -> isSuccessfulMatch(tryNameMatch(map)))
-      .findFirst()
-      .map(this::tryNameMatch)
-      .orElse(response);
+    // get identifications
+    List<Map<String, String>> identifications =
+      extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
+
+    // FIXME: use new generic functions to parse the date??
+    // sort them by date identified
+    // Ask Markus D if this can be moved to the API?
+    identifications.sort(Comparator.comparing((Map<String, String> map) -> LocalDateTime.parse(map.get(DwcTerm.dateIdentified)))
+                           .reversed());
+    for (Map<String, String> record : identifications) {
+      response = tryNameMatch(record);
+      if (isSuccessfulMatch(response)) {
+        LOG.info("match with identificationId {} succeed", record.get(DwcTerm.identificationID.name()));
+        return response;
+      }
+    }
+
+    return response;
   }
 
   private HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
@@ -83,8 +90,9 @@ public class SpeciesMatch2Client {
   }
 
   private static boolean isSuccessfulMatch(HttpResponse<NameUsageMatch2> response) {
-    return !TaxonomyValidator.isEmpty(response.getBody())
-           && MatchType.NONE != response.getBody().getDiagnostics().getMatchType();
+    return !TaxonomyValidator.isEmpty(response.getBody()) && MatchType.NONE != response.getBody()
+      .getDiagnostics()
+      .getMatchType();
   }
 
   private static boolean hasIdentifications(ExtendedRecord extendedRecord) {

@@ -5,6 +5,8 @@ import org.gbif.pipelines.http.HttpConfigFactory;
 import org.gbif.pipelines.http.config.Config;
 import org.gbif.pipelines.http.config.Service;
 
+import java.util.Objects;
+
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -16,12 +18,12 @@ public class GeocodeRest {
 
   private GeocodeService service;
 
-  private GeocodeRest() {
-    // load WS Config
-    Config wsConfig = HttpConfigFactory.createConfig(Service.GEO_CODE);
+  private static GeocodeRest instance;
+
+  private GeocodeRest(Config wsConfig) {
 
     // create client
-    OkHttpClient client = HttpClientFactory.createClientWithCache(wsConfig);
+    OkHttpClient client = HttpClientFactory.createClient(wsConfig);
 
     // create service
     Retrofit retrofit = new Retrofit.Builder().client(client)
@@ -33,13 +35,17 @@ public class GeocodeRest {
     service = retrofit.create(GeocodeService.class);
   }
 
-  private static class LazyHolder {
-    static final GeocodeRest INSTANCE = new GeocodeRest();
-
+  public static GeocodeRest getInstance() {
+    return getInstance(HttpConfigFactory.createConfig(Service.GEO_CODE));
   }
 
-  public static GeocodeRest getInstance() {
-    return GeocodeRest.LazyHolder.INSTANCE;
+  public static GeocodeRest getInstance(Config config) {
+    synchronized (GeocodeRest.class) {
+      if (Objects.isNull(instance)) {
+        instance = new GeocodeRest(config);
+      }
+      return instance;
+    }
   }
 
   public GeocodeService getService() {

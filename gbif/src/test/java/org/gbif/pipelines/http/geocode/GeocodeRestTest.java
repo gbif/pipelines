@@ -1,12 +1,17 @@
 package org.gbif.pipelines.http.geocode;
 
+import org.gbif.pipelines.MockServerTest;
+
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.Collection;
 
 import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -14,16 +19,32 @@ import retrofit2.Response;
 /**
  * Tests the {@link GeocodeRestTest} and {@link GeocodeService}.
  */
-public class GeocodeRestTest {
+public class GeocodeRestTest extends MockServerTest {
 
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
   private static final String CANADA_COUNTRY_NAME = "Canada";
   private static final String CANADA_COUNTRY_CODE = "CA";
 
+  @BeforeClass
+  public static void setUp() throws IOException {
+    mockServerSetUp();
+  }
+
+  @AfterClass
+  public static void tearDown() throws IOException {
+    mockServerTearDown();
+  }
+
   @Test
-  public void simpleCallTest() {
-    GeocodeService service = GeocodeRest.getInstance().getService();
+  public void simpleCallTest() throws IOException {
+    // @formatter:off
+    // Call mocked: https://api.gbif-uat.org/v1/geocode/reverse?lat=60.4&lng=-131.3
+    // @formatter:on
+
+    enqueueResponse(REVERSE_CANADA_RESPONSE);
+
+    GeocodeService service = GeocodeRest.getInstance(configMockServer).getService();
 
     Call<Collection<GeocodeResponse>> call = service.reverse(LATITUDE_CANADA, LONGITUDE_CANADA);
 
@@ -50,7 +71,9 @@ public class GeocodeRestTest {
 
   @Test
   public void nullParamsCallTest() {
-    GeocodeService service = GeocodeRest.getInstance().getService();
+    GeocodeService service = GeocodeRest.getInstance(configMockServer).getService();
+
+    enqueueErrorResponse(HttpURLConnection.HTTP_BAD_REQUEST);
 
     Call<Collection<GeocodeResponse>> call = service.reverse(null, null);
 
@@ -65,7 +88,9 @@ public class GeocodeRestTest {
 
   @Test
   public void invalidParamsCallTest() {
-    GeocodeService service = GeocodeRest.getInstance().getService();
+    GeocodeService service = GeocodeRest.getInstance(configMockServer).getService();
+
+    enqueueErrorResponse(HttpURLConnection.HTTP_BAD_REQUEST);
 
     Call<Collection<GeocodeResponse>> call = service.reverse(300d, 300d);
 

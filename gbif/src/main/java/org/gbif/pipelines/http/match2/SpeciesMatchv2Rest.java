@@ -12,18 +12,18 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /*
- * Singleton to create the species match 2 service.
+ * Singleton to create the species match service v2.
  */
-public class SpeciesMatch2Rest {
+public class SpeciesMatchv2Rest {
 
-  private SpeciesMatch2Service service;
+  private SpeciesMatchv2Service service;
 
-  private static SpeciesMatch2Rest INSTANCE;
+  private static SpeciesMatchv2Rest instance;
 
-  private SpeciesMatch2Rest(Config wsConfig) {
+  private SpeciesMatchv2Rest(Config wsConfig) {
 
     // create client
-    OkHttpClient client = HttpClientFactory.createClientWithCache(wsConfig);
+    OkHttpClient client = HttpClientFactory.createClient(wsConfig);
 
     // create service
     Retrofit retrofit = new Retrofit.Builder().client(client)
@@ -32,23 +32,23 @@ public class SpeciesMatch2Rest {
       .validateEagerly(true)
       .build();
 
-    service = retrofit.create(SpeciesMatch2Service.class);
+    service = retrofit.create(SpeciesMatchv2Service.class);
   }
 
-  public static SpeciesMatch2Rest getInstance() {
+  public static SpeciesMatchv2Rest getInstance() {
     return getInstance(HttpConfigFactory.createConfig(Service.SPECIES_MATCH2));
   }
 
-  public static SpeciesMatch2Rest getInstance(Config config) {
-    synchronized (INSTANCE) {
-      if (Objects.isNull(INSTANCE)) {
-        INSTANCE = new SpeciesMatch2Rest(config);
+  public static SpeciesMatchv2Rest getInstance(Config config) {
+    synchronized (SpeciesMatchv2Rest.class) {
+      if (Objects.isNull(instance)) {
+        instance = new SpeciesMatchv2Rest(config);
       }
-      return INSTANCE;
+      return instance;
     }
   }
 
-  public SpeciesMatch2Service getService() {
+  public SpeciesMatchv2Service getService() {
     return service;
   }
 

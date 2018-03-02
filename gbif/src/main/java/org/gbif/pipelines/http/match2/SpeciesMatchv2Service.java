@@ -12,7 +12,7 @@ import retrofit2.http.QueryMap;
 /**
  * API of the species match 2 WS.
  */
-public interface SpeciesMatch2Service {
+public interface SpeciesMatchv2Service {
 
   @GET("/v1/species/match2")
   Call<NameUsageMatch2> match(

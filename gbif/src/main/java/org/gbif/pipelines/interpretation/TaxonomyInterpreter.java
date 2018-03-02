@@ -5,9 +5,8 @@ import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.utils.AvroDataUtils;
 import org.gbif.pipelines.http.HttpResponse;
 import org.gbif.pipelines.http.config.Config;
-import org.gbif.pipelines.http.match2.SpeciesMatch2Client;
-import org.gbif.pipelines.http.match2.SpeciesMatch2Rest;
-import org.gbif.pipelines.http.match2.SpeciesMatch2Service;
+import org.gbif.pipelines.http.match2.SpeciesMatchv2Client;
+import org.gbif.pipelines.http.match2.SpeciesMatchv2Rest;
 import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -33,43 +32,65 @@ import static org.gbif.pipelines.interpretation.Interpretation.Trace;
  */
 public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
-  public static class Builder  {
+  /**
+   * Creates a {@link TaxonomyInterpreter}.
+   */
+  static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord) {
+    return new Builder().build(taxonRecord);
+  }
+
+  /**
+   * Creates a {@link Builder}.
+   */
+  static Builder newBuilder() {
+    return new Builder();
+  }
+
+  /**
+   * Builder to create a {@link TaxonomyInterpreter}.
+   * <p>
+   * Specially useful for testing purposes.
+   */
+  class Builder {
 
     private Config config;
 
+    /**
+     * Config of the WS to use in the interpretation.
+     */
     public TaxonomyInterpreter.Builder withConfig(Config config) {
       this.config = config;
       return this;
     }
 
-    private SpeciesMatch2Client buildClient() {
-      return Objects.isNull(config) ? new SpeciesMatch2Client(SpeciesMatch2Rest.getInstance().getService()) :
-        new SpeciesMatch2Client(SpeciesMatch2Rest.getInstance(config).getService());
+    private SpeciesMatchv2Client buildClient() {
+      return Objects.isNull(config)
+        ? new SpeciesMatchv2Client(SpeciesMatchv2Rest.getInstance().getService())
+        : new SpeciesMatchv2Client(SpeciesMatchv2Rest.getInstance(config).getService());
     }
 
-    TaxonomyInterpreter build(TaxonRecord taxonRecord) {
+    public TaxonomyInterpreter build(TaxonRecord taxonRecord) {
       return taxonomyInterpreter(taxonRecord, buildClient());
     }
-
 
     /**
      * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
      */
-    private TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, SpeciesMatch2Client speciesMatch2Client) {
+    private TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, SpeciesMatchv2Client speciesMatchv2Client) {
       return (ExtendedRecord extendedRecord) -> {
 
         AvroDataUtils.checkNullOrEmpty(extendedRecord);
 
         // get match from WS
-        HttpResponse<NameUsageMatch2> response = speciesMatch2Client.getMatch(extendedRecord);
+        HttpResponse<NameUsageMatch2> response = speciesMatchv2Client.getMatch(extendedRecord);
 
         Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
         if (response.isError()) {
           interpretation.withValidation(Collections.singletonList(Trace.of(null,
                                                                            INTERPRETATION_ERROR,
-                                                                           response.getErrorCode().toString()
-                                                                           + response.getErrorMessage())));
+                                                                           response.getErrorCode().toString() + response
+                                                                             .getErrorMessage())));
           return interpretation;
         }
 
@@ -100,13 +121,6 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
         return interpretation;
       };
     }
-  }
-
-  /**
-   * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
-   */
-  static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord) {
-    return new Builder().build(taxonRecord);
   }
 
 }

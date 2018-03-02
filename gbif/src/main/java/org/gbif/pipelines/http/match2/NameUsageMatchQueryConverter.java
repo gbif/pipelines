@@ -84,7 +84,7 @@ public class NameUsageMatchQueryConverter {
   }
 
   /**
-   * Converts a {@link Map} of terms to {@link Map} with the params needed to call the {@link SpeciesMatch2Service}.
+   * Converts a {@link Map} of terms to {@link Map} with the params needed to call the {@link SpeciesMatchv2Service}.
    */
   public static Map<String, String> convert(final Map<String, String> terms) {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();

@@ -12,7 +12,7 @@ import org.junit.Test;
  */
 public class HttpConfigFactoryTest {
 
-  private static final String TEST_PROPERTIES_FILE = "ws-test.properties";
+  private static final String TEST_PROPERTIES_FILE = "ws-with-errors.properties";
 
   @Test
   public void speciesMatch2ConfiguratorTest() {

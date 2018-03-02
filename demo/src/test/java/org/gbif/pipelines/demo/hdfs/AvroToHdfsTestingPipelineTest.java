@@ -32,7 +32,7 @@ public class AvroToHdfsTestingPipelineTest {
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
+  public static void tearDown() {
     clusterConfig.hdfsCluster.shutdown();
   }
 
