@@ -44,7 +44,7 @@ public class GeocodeRestBaseTest extends MockServerBaseTest {
 
     enqueueResponse(REVERSE_CANADA_RESPONSE);
 
-    GeocodeService service = GeocodeRest.getInstance(configMockServer).getService();
+    GeocodeService service = GeocodeRest.getInstance().getService();
 
     Call<Collection<GeocodeResponse>> call = service.reverse(LATITUDE_CANADA, LONGITUDE_CANADA);
 
@@ -71,7 +71,7 @@ public class GeocodeRestBaseTest extends MockServerBaseTest {
 
   @Test
   public void nullParamsCallTest() {
-    GeocodeService service = GeocodeRest.getInstance(configMockServer).getService();
+    GeocodeService service = GeocodeRest.getInstance().getService();
 
     enqueueErrorResponse(HttpURLConnection.HTTP_BAD_REQUEST);
 
@@ -88,7 +88,7 @@ public class GeocodeRestBaseTest extends MockServerBaseTest {
 
   @Test
   public void invalidParamsCallTest() {
-    GeocodeService service = GeocodeRest.getInstance(configMockServer).getService();
+    GeocodeService service = GeocodeRest.getInstance().getService();
 
     enqueueErrorResponse(HttpURLConnection.HTTP_BAD_REQUEST);
 

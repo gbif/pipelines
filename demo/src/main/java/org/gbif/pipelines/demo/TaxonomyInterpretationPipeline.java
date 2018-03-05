@@ -1,6 +1,5 @@
 package org.gbif.pipelines.demo;
 
-import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
@@ -59,7 +58,7 @@ public class TaxonomyInterpretationPipeline {
     Coders.registerAvroCoders(pipeline, ExtendedRecord.class, TaxonRecord.class, OccurrenceIssue.class);
 
     // when we create a schema from a java class it does not implement SpecificRecord
-    pipeline.getCoderRegistry().registerCoderForClass(NameUsageMatch2.class, AvroCoder.of(NameUsageMatch2.class));
+    pipeline.getCoderRegistry().registerCoderForClass(TaxonRecord.class, AvroCoder.of(TaxonRecord.class));
 
     // Read Avro files
     PCollection<ExtendedRecord> verbatimRecords =

@@ -88,19 +88,26 @@ public class ExtendedRecordCustomBuilder {
 
   public ExtendedRecord build() {
     Map<String, String> terms = new HashMap<>();
-    terms.put(DwcTerm.kingdom.qualifiedName(), kingdom);
-    terms.put(DwcTerm.genus.qualifiedName(), genus);
-    terms.put(DwcTerm.scientificName.qualifiedName(), name);
-    terms.put(DwcTerm.scientificNameAuthorship.qualifiedName(), authorship);
-    terms.put(DwcTerm.taxonRank.qualifiedName(), rank);
-    terms.put(DwcTerm.phylum.qualifiedName(), phylum);
-    terms.put(DwcTerm.class_.qualifiedName(), clazz);
-    terms.put(DwcTerm.order.qualifiedName(), order);
-    terms.put(DwcTerm.family.qualifiedName(), family);
-    terms.put(DwcTerm.specificEpithet.qualifiedName(), specificEpithet);
-    terms.put(DwcTerm.infraspecificEpithet.qualifiedName(), infraspecificEpithet);
+
+    addToTerms(terms, DwcTerm.kingdom.qualifiedName(), kingdom);
+    addToTerms(terms, DwcTerm.genus.qualifiedName(), genus);
+    addToTerms(terms, DwcTerm.scientificName.qualifiedName(), name);
+    addToTerms(terms, DwcTerm.scientificNameAuthorship.qualifiedName(), authorship);
+    addToTerms(terms, DwcTerm.taxonRank.qualifiedName(), rank);
+    addToTerms(terms, DwcTerm.phylum.qualifiedName(), phylum);
+    addToTerms(terms, DwcTerm.class_.qualifiedName(), clazz);
+    addToTerms(terms, DwcTerm.order.qualifiedName(), order);
+    addToTerms(terms, DwcTerm.family.qualifiedName(), family);
+    addToTerms(terms, DwcTerm.specificEpithet.qualifiedName(), specificEpithet);
+    addToTerms(terms, DwcTerm.infraspecificEpithet.qualifiedName(), infraspecificEpithet);
 
     return ExtendedRecord.newBuilder().setId(id).setCoreTerms(terms).build();
+  }
+
+  private void addToTerms(Map<String, String> terms, String term, String value) {
+    if (value != null) {
+      terms.put(term, value);
+    }
   }
 
 }

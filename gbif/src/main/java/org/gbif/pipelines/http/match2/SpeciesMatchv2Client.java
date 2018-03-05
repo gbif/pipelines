@@ -25,11 +25,8 @@ import retrofit2.Response;
 public class SpeciesMatchv2Client {
 
   private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatchv2Client.class);
-  private final SpeciesMatchv2Service service;
 
-  public SpeciesMatchv2Client(SpeciesMatchv2Service service) {
-    this.service = service;
-  }
+  private SpeciesMatchv2Client() {}
 
   /**
    * Matches a {@link ExtendedRecord} to an existing specie using the species match 2 WS.
@@ -38,7 +35,7 @@ public class SpeciesMatchv2Client {
    *
    * @return {@link NameUsageMatch2} with the match received from the WS.
    */
-  public HttpResponse<NameUsageMatch2> getMatch(ExtendedRecord extendedRecord) {
+  public static HttpResponse<NameUsageMatch2> getMatch(ExtendedRecord extendedRecord) {
     HttpResponse<NameUsageMatch2> response = tryNameMatch(extendedRecord.getCoreTerms());
 
     if (isSuccessfulMatch(response) || !hasIdentifications(extendedRecord)) {
@@ -66,11 +63,10 @@ public class SpeciesMatchv2Client {
     return response;
   }
 
-  private HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
-
+  private static HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
     Map<String, String> params = NameUsageMatchQueryConverter.convert(terms);
 
-    Call<NameUsageMatch2> call = service.match(params);
+    Call<NameUsageMatch2> call = SpeciesMatchv2Rest.getInstance().getService().match(params);
 
     try {
       Response<NameUsageMatch2> response = call.execute();

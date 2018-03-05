@@ -1,7 +1,7 @@
 package org.gbif.pipelines.interpretation.interpreters;
 
-import org.gbif.pipelines.http.MockServerBaseTest;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
+import org.gbif.pipelines.http.MockServerBaseTest;
 import org.gbif.pipelines.interpretation.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Rank;
@@ -25,12 +25,9 @@ public class TaxonomyInterpreterTest extends MockServerBaseTest {
 
   private static final String TEST_RECORD_ID = "testId";
 
-  private static TaxonomyInterpreter.Builder interpreterBuilder;
-
   @BeforeClass
   public static void setUp() throws IOException {
     mockServerSetUp();
-    interpreterBuilder = TaxonomyInterpreter.newBuilder().withConfig(configMockServer);
   }
 
   @AfterClass
@@ -42,8 +39,7 @@ public class TaxonomyInterpreterTest extends MockServerBaseTest {
   public void testAssembledAuthor() throws IOException {
 
     // @formatter:off
-    // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma
-    // %20concolor&strict=false&verbose=false
+    // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
     // @formatter:on
     ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
       .genus("Puma")
@@ -55,7 +51,7 @@ public class TaxonomyInterpreterTest extends MockServerBaseTest {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter interpreter = interpreterBuilder.build(taxonRecord);
+    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord);
     interpreter.apply(record);
 
     Map<Rank, RankedName> ranksResponse =
@@ -121,7 +117,7 @@ public class TaxonomyInterpreterTest extends MockServerBaseTest {
 
     enqueueResponse(OENANTHE_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter interpreter = interpreterBuilder.build(taxonRecord);
+    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord);
     interpreter.apply(record);
 
     Map<Rank, RankedName> ranksResponse =
@@ -187,7 +183,7 @@ public class TaxonomyInterpreterTest extends MockServerBaseTest {
 
     enqueueResponse(ANNELIDA_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    interpreterBuilder.build(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
     // FIXME: this test does not pass. It is copied from old adapter but it returns a different response.Should we check it??
     // this is the old test
@@ -213,7 +209,7 @@ public class TaxonomyInterpreterTest extends MockServerBaseTest {
 
     enqueueResponse(CERATIACEAE_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    interpreterBuilder.build(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
     Map<Rank, RankedName> ranksResponse =
       taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
@@ -241,7 +237,7 @@ public class TaxonomyInterpreterTest extends MockServerBaseTest {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    interpreterBuilder.build(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
     Map<Rank, RankedName> ranksResponse =
       taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
@@ -260,7 +256,7 @@ public class TaxonomyInterpreterTest extends MockServerBaseTest {
 
     enqueueResponse(AGALLISUS_LEPTUROIDES_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    interpreterBuilder.build(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
 
     Assert.assertEquals(1118030, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1118026, taxonRecord.getAcceptedUsage().getKey().intValue());

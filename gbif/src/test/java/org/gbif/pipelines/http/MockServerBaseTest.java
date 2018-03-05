@@ -1,7 +1,5 @@
 package org.gbif.pipelines.http;
 
-import org.gbif.pipelines.http.config.Config;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -27,20 +25,18 @@ public abstract class MockServerBaseTest {
   protected static final String ANNELIDA_RESPONSE = MATCH_RESPONSES_FOLDER + "annelida.json";
   protected static final String CERATIACEAE_RESPONSE = MATCH_RESPONSES_FOLDER + "ceratiaceae.json";
   protected static final String AGALLISUS_LEPTUROIDES_RESPONSE = MATCH_RESPONSES_FOLDER + "agallisus-lepturoides.json";
+  protected static final String DUMMY_RESPONSE = MATCH_RESPONSES_FOLDER + "dummy-response.json";
 
   // mock geocode responses
   protected static final String GEOCODE_RESPONSES_FOLDER = "geocode-responses/";
   protected static final String REVERSE_CANADA_RESPONSE = GEOCODE_RESPONSES_FOLDER + "reverse-canada.json";
 
   protected static MockWebServer mockServer;
-  protected static Config configMockServer;
 
   protected static void mockServerSetUp() throws IOException {
     mockServer = new MockWebServer();
-
-    // config to use the mock server
-    configMockServer = new Config();
-    configMockServer.setBasePath(mockServer.url("/").toString());
+    // TODO: check if the port is in use??
+    mockServer.start(1111);
   }
 
   protected static void mockServerTearDown() throws IOException {

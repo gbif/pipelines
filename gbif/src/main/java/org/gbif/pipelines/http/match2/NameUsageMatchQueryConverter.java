@@ -166,7 +166,7 @@ public class NameUsageMatchQueryConverter {
     final Map<String, String> terms, AtomizedFields atomizedFields, String authorship, String genericName
   ) {
     Optional<String> interpretedScientificName =
-      Optional.of(terms.get(DwcTerm.scientificName.qualifiedName())).map(scientificNameValue -> {
+      Optional.ofNullable(terms.get(DwcTerm.scientificName.qualifiedName())).map(scientificNameValue -> {
         String scientificName = ClassificationUtils.clean(scientificNameValue);
         return scientificName != null && !Strings.isNullOrEmpty(authorship) && !scientificName.toLowerCase()
           .contains(authorship.toLowerCase()) ? scientificName + " " + authorship : scientificName;

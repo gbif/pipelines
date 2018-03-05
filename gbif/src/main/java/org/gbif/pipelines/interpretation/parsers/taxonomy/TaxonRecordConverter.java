@@ -25,26 +25,26 @@ public class TaxonRecordConverter {
    * I modify the parameter instead of creating a new one and returning it because the lambda parameters are final
    * (used in {@link TaxonomyInterpreter}.
    */
-  public static void adapt(NameUsageMatch2 nameUsageMatch2, TaxonRecord taxonRecord) {
+  public static void convert(NameUsageMatch2 nameUsageMatch2, TaxonRecord taxonRecord) {
     Objects.requireNonNull(nameUsageMatch2);
-    adaptInternal(nameUsageMatch2, taxonRecord);
+    convertInternal(nameUsageMatch2, taxonRecord);
   }
 
-  private static TaxonRecord adaptInternal(NameUsageMatch2 source, TaxonRecord taxonRecord) {
+  private static TaxonRecord convertInternal(NameUsageMatch2 source, TaxonRecord taxonRecord) {
     taxonRecord.setSynonym(source.isSynonym());
-    taxonRecord.setUsage(adaptRankedName(source.getUsage()));
-    taxonRecord.setAcceptedUsage(adaptRankedName(source.getAcceptedUsage()));
-    taxonRecord.setNomenclature(adaptNomenclature(source.getNomenclature()));
+    taxonRecord.setUsage(convertRankedName(source.getUsage()));
+    taxonRecord.setAcceptedUsage(convertRankedName(source.getAcceptedUsage()));
+    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
     taxonRecord.setClassification(source.getClassification()
                                     .stream()
-                                    .map(TaxonRecordConverter::adaptRankedName)
+                                    .map(TaxonRecordConverter::convertRankedName)
                                     .collect(Collectors.toList()));
-    taxonRecord.setDiagnostics(adaptDiagnostics(source.getDiagnostics()));
+    taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
     return taxonRecord;
   }
 
-  private static RankedName adaptRankedName(org.gbif.api.v2.RankedName rankedNameApi) {
+  private static RankedName convertRankedName(org.gbif.api.v2.RankedName rankedNameApi) {
     if (rankedNameApi == null) {
       return null;
     }
@@ -56,7 +56,7 @@ public class TaxonRecordConverter {
       .build();
   }
 
-  private static Nomenclature adaptNomenclature(NameUsageMatch2.Nomenclature nomenclatureApi) {
+  private static Nomenclature convertNomenclature(NameUsageMatch2.Nomenclature nomenclatureApi) {
     if (nomenclatureApi == null) {
       return null;
     }
@@ -64,24 +64,30 @@ public class TaxonRecordConverter {
     return Nomenclature.newBuilder().setId(nomenclatureApi.getId()).setSource(nomenclatureApi.getSource()).build();
   }
 
-  private static Diagnostics adaptDiagnostics(NameUsageMatch2.Diagnostics diagnosticsApi) {
+  private static Diagnostics convertDiagnostics(NameUsageMatch2.Diagnostics diagnosticsApi) {
     if (diagnosticsApi == null) {
       return null;
     }
 
+    // alternatives
     List<TaxonRecord> alternatives = diagnosticsApi.getAlternatives()
       .stream()
-      .map(nameUsageMatch -> adaptInternal(nameUsageMatch, new TaxonRecord()))
+      .map(nameUsageMatch -> convertInternal(nameUsageMatch, new TaxonRecord()))
       .collect(Collectors.toList());
 
-    return Diagnostics.newBuilder()
+    Diagnostics.Builder builder = Diagnostics.newBuilder()
       .setAlternatives(alternatives)
       .setConfidence(diagnosticsApi.getConfidence())
       .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
       .setNote(diagnosticsApi.getNote())
-      .setStatus(Status.valueOf(diagnosticsApi.getStatus().name()))
-      .setLineage(diagnosticsApi.getLineage())
-      .build();
+      .setLineage(diagnosticsApi.getLineage());
+
+    // status. A bit of deffensive programming...
+    if (diagnosticsApi.getStatus() != null) {
+      builder.setStatus(Status.valueOf(diagnosticsApi.getStatus().name()));
+    }
+
+    return builder.build();
   }
 
 }
