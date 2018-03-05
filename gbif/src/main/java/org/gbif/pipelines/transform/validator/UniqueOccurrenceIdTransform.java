@@ -38,9 +38,9 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
 
     //Convert from list to map where, key - occurrenceId, value - object instance
-    PCollection<KV<String, ExtendedRecord>> map =
-      input.apply(MAP_STEP, MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
-        .via((ExtendedRecord uo) -> KV.of(uo.getId(), uo)));
+    PCollection<KV<String, ExtendedRecord>> map = input.apply(MAP_STEP,
+                                                              MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
+                                                                .via((ExtendedRecord uo) -> KV.of(uo.getId(), uo)));
 
     //Group map by key - occurrenceId
     PCollection<KV<String, Iterable<ExtendedRecord>>> group = map.apply(GROUP_STEP, GroupByKey.create());
@@ -61,17 +61,18 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
     }).withOutputTags(dataTag, TupleTagList.of(issueTag)));
   }
 
-  UniqueOccurrenceIdTransform withAvroCoders(Pipeline pipeline) {
-    Coders.registerAvroCoders(pipeline, ExtendedRecord.class);
-    return this;
-  }
-
   public TupleTag<ExtendedRecord> getDataTag() {
     return dataTag;
   }
 
   public TupleTag<KV<String, Iterable<ExtendedRecord>>> getIssueTag() {
     return issueTag;
+  }
+
+  @Override
+  public UniqueOccurrenceIdTransform withAvroCoders(Pipeline pipeline) {
+    Coders.registerAvroCoders(pipeline, ExtendedRecord.class);
+    return this;
   }
 }
 
