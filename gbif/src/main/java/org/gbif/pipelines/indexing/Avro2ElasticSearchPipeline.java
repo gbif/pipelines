@@ -1,42 +1,30 @@
 package org.gbif.pipelines.indexing;
 
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.functions.FunctionFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Throwables;
-import org.apache.avro.Schema;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.solr.common.SolrInputDocument;
-import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A pipeline to build ElasticSearch from Avro files containing ExtendedRecord data.
- *
+ * <p>
  * The core fields are extracted and the simple name is used for the ES fields (no namespace).  A location
  * field is added suitable for `geopoint` indexing.
- *
+ * <p>
  * NOTE: This is a transient piece of code and will be removed when the interpretation pipelines are available.
  * As such code contains hard coded values and is not suitable for production use.
  */
@@ -46,15 +34,9 @@ public class Avro2ElasticSearchPipeline {
 
   private static final String SOURCE_PATH = "hdfs://ha-nn/pipelines/data/aves_large.avro/*";
   private static final String[] ES_HOSTS =
-    new String[] {"http://c4n1.gbif.org:9200",
-      "http://c4n2.gbif.org:9200",
-      "http://c4n3.gbif.org:9200",
-      "http://c4n4.gbif.org:9200",
-      "http://c4n5.gbif.org:9200",
-      "http://c4n6.gbif.org:9200",
-      "http://c4n7.gbif.org:9200",
-      "http://c4n8.gbif.org:9200",
-      "http://c4n9.gbif.org:9200"};
+    new String[] {"http://c4n1.gbif.org:9200", "http://c4n2.gbif.org:9200", "http://c4n3.gbif.org:9200",
+      "http://c4n4.gbif.org:9200", "http://c4n5.gbif.org:9200", "http://c4n6.gbif.org:9200",
+      "http://c4n7.gbif.org:9200", "http://c4n8.gbif.org:9200", "http://c4n9.gbif.org:9200"};
 
   private static final String ES_INDEX = "tim";
   private static final String ES_TYPE = "tim";
@@ -92,24 +74,17 @@ public class Avro2ElasticSearchPipeline {
    */
   public static class RecordFormatter extends DoFn<ExtendedRecord, String> {
 
-    private static final Schema SCHEMA = UntypedOccurrence.getClassSchema();
-    private static final float DEFAULT_BOOST = 1f;
-
     @ProcessElement
     public void processElement(ProcessContext c) {
       ExtendedRecord record = c.element();
       Map<String, String> terms = record.getCoreTerms();
       Map<String, String> stripped = new HashMap<>(record.getCoreTerms().size());
 
-      terms.forEach((k,v)-> {
-        stripped.put(stripNS(k), v);
-      });
+      terms.forEach((k, v) -> stripped.put(stripNS(k), v));
 
       // location suitable for geopoint format
-      if (stripped.get("decimalLatitude") != null &&
-          stripped.get("decimalLongitude") != null) {
-        stripped.put("location",
-                     stripped.get("decimalLatitude") + "," + stripped.get("decimalLongitude"));
+      if (stripped.get("decimalLatitude") != null && stripped.get("decimalLongitude") != null) {
+        stripped.put("location", stripped.get("decimalLatitude") + "," + stripped.get("decimalLongitude"));
       }
 
       try {
@@ -121,6 +96,6 @@ public class Avro2ElasticSearchPipeline {
   }
 
   static String stripNS(String source) {
-    return source.substring(source.lastIndexOf('/')+1);
+    return source.substring(source.lastIndexOf('/') + 1);
   }
 }
