@@ -90,7 +90,7 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   void setESType(String esType);
 
   @Description("Target ES Max Batch Size")
-  @Default.InstanceFactory(ESHostsFactory.class)
+  @Default.InstanceFactory(ESMaxBatchSize.class)
   Integer getESMaxBatchSize();
 
   void setESMaxBatchSize(Integer batchSize);
