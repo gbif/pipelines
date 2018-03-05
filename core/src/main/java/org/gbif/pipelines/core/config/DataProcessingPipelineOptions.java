@@ -26,6 +26,17 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 @Experimental(Kind.FILESYSTEM)
 public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
+  String[] DEFAULT_ES_HOSTS =
+    new String[] {"http://c4n1.gbif.org:9200", "http://c4n2.gbif.org:9200", "http://c4n3.gbif.org:9200",
+      "http://c4n4.gbif.org:9200", "http://c4n5.gbif.org:9200", "http://c4n6.gbif.org:9200",
+      "http://c4n7.gbif.org:9200", "http://c4n8.gbif.org:9200", "http://c4n9.gbif.org:9200"};
+
+  String DEFAULT_ES_INDEX = "interpreted-occurrence";
+
+  String DEFAULT_ES_TYPE = "es-type";
+
+  int DEFAULT_ES_BATCH_SIZE = 1000;
+
   @Description("Id of the dataset used to name the target file in HDFS.")
   @Validation.Required
   String getDatasetId();
@@ -60,6 +71,30 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
   void setTargetPaths(Map<Interpretation, TargetPath> targetPaths);
 
+  @Description("Target ES Hosts")
+  @Default.InstanceFactory(ESHostsFactory.class)
+  String[] getESHosts();
+
+  void setESHosts(String[] hosts);
+
+  @Description("Target ES Index")
+  @Default.InstanceFactory(ESIndexFactory.class)
+  String getESIndex();
+
+  void setESIndex(String index);
+
+  @Description("Target ES Type")
+  @Default.InstanceFactory(ESTypeFactory.class)
+  String getESType();
+
+  void setESType(String esType);
+
+  @Description("Target ES Max Batch Size")
+  @Default.InstanceFactory(ESHostsFactory.class)
+  Integer getESMaxBatchSize();
+
+  void setESMaxBatchSize(Integer batchSize);
+
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
    */
@@ -85,9 +120,11 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class TempDirectoryFactory implements DefaultValueFactory<String> {
+
     @Override
     public String create(PipelineOptions options) {
-      return DefaultDirectoryFactory.getHadoopDefaultFs(options).map(hadoopFs -> hadoopFs + File.separator + "tmp")
+      return DefaultDirectoryFactory.getHadoopDefaultFs(options)
+        .map(hadoopFs -> hadoopFs + File.separator + "tmp")
         .orElse("hdfs://tmp"); // in case no configurations are provided
     }
   }
@@ -96,6 +133,7 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
    * A {@link DefaultValueFactory} which locates a default directory.
    */
   class TargetPathFactory implements DefaultValueFactory<Map<Interpretation, TargetPath>> {
+
     @Override
     public Map<Interpretation, TargetPath> create(PipelineOptions options) {
       String defaultDir = options.as(DataProcessingPipelineOptions.class).getDefaultTargetDirectory();
@@ -103,6 +141,50 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
       return Arrays.stream(Interpretation.values())
         .collect(Collectors.toMap(Function.identity(), i -> new TargetPath(defaultDir, i.getDefaultFileName())));
 
+    }
+  }
+
+  /**
+   * A {@link DefaultValueFactory} which locates a default elastic search hosts.
+   */
+  class ESHostsFactory implements DefaultValueFactory<String[]> {
+
+    @Override
+    public String[] create(PipelineOptions options) {
+      return DEFAULT_ES_HOSTS;
+    }
+  }
+
+  /**
+   * A {@link DefaultValueFactory} which locates a default elastic search index.
+   */
+  class ESIndexFactory implements DefaultValueFactory<String> {
+
+    @Override
+    public String create(PipelineOptions options) {
+      return DEFAULT_ES_INDEX;
+    }
+  }
+
+  /**
+   * A {@link DefaultValueFactory} which locates a default elastic search index'es type.
+   */
+  class ESTypeFactory implements DefaultValueFactory<String> {
+
+    @Override
+    public String create(PipelineOptions options) {
+      return DEFAULT_ES_TYPE;
+    }
+  }
+
+  /**
+   * A {@link DefaultValueFactory} which locates a default elastic search type.
+   */
+  class ESMaxBatchSize implements DefaultValueFactory<Integer> {
+
+    @Override
+    public Integer create(PipelineOptions options) {
+      return DEFAULT_ES_BATCH_SIZE;
     }
   }
 
