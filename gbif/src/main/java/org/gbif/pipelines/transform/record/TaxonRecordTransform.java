@@ -1,12 +1,13 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.interpretation.Interpretation;
+import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.interpretation.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +27,7 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
   }
 
   @Override
-  DoFn<ExtendedRecord, KV<String, TaxonRecord>> interpret() {
+  public DoFn<ExtendedRecord, KV<String, TaxonRecord>> interpret() {
     return new DoFn<ExtendedRecord, KV<String, TaxonRecord>>() {
 
       @ProcessElement

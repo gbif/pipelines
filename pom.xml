@@ -35,11 +35,9 @@
   <modules>
     <module>core</module>
     <module>beam-common</module>
-    <module>demo</module>
+    <module>labs</module>
     <module>hadoop</module>
     <module>gbif</module>
-    <module>living-atlas</module>
-    <module>labs</module>
   </modules>
 
   <repositories>

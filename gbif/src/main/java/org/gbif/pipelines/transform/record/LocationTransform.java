@@ -1,13 +1,14 @@
 package org.gbif.pipelines.transform.record;
 
-import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.interpretation.Interpretation;
-import org.gbif.pipelines.interpretation.LocationInterpreter;
+import org.gbif.pipelines.core.interpretation.Interpretation;
+import org.gbif.pipelines.core.interpretation.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.Validation;
 import org.gbif.pipelines.mapper.LocationMapper;
+import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,11 +20,11 @@ import org.apache.beam.sdk.values.KV;
 public class LocationTransform extends RecordTransform<ExtendedRecord, Location> {
 
   public LocationTransform() {
-    super("Interpret loction record");
+    super("Interpret location record");
   }
 
   @Override
-  DoFn<ExtendedRecord, KV<String, Location>> interpret() {
+  public DoFn<ExtendedRecord, KV<String, Location>> interpret() {
     return new DoFn<ExtendedRecord, KV<String, Location>>() {
       @ProcessElement
       public void processElement(ProcessContext context) {

@@ -1,12 +1,13 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.interpretation.ExtendedRecordInterpreter;
-import org.gbif.pipelines.interpretation.Interpretation;
+import org.gbif.pipelines.core.interpretation.ExtendedRecordInterpreter;
+import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ public class InterpretedExtendedRecordTransform extends RecordTransform<Extended
    * Transforms a ExtendedRecord into a InterpretedExtendedRecord.
    */
   @Override
-  DoFn<ExtendedRecord, KV<String, InterpretedExtendedRecord>> interpret() {
+  public DoFn<ExtendedRecord, KV<String, InterpretedExtendedRecord>> interpret() {
     return new DoFn<ExtendedRecord, KV<String, InterpretedExtendedRecord>>() {
       @ProcessElement
       public void processElement(ProcessContext context) {

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.indexing.record;
 
-import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
-import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.config.DataPipelineOptionsFactory;
+import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transform.common.Kv2Value;

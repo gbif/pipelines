@@ -14,11 +14,79 @@
           }
         }
       ],
-      "properties": {
+      "properties" : {
         "coordinate": {
           "type": "geo_point"
+        },
+        "lastparsed" : {
+          "type": "date",
+          "format": "yyyy-MM-dd'T'HH:mm'Z'"
+        },
+        "lastcrawled" : {
+          "type": "date",
+          "format": "yyyy-MM-dd'T'HH:mm'Z'"
+        },
+        "lastinterpreted" : {
+          "type": "date",
+          "format": "yyyy-MM-dd'T'HH:mm'Z'"
+        },
+        "dateidentified" : {
+          "type": "date",
+          "format": "yyyy-MM-dd'T'HH:mm'Z'"
+        },
+        "eventdate" : {
+          "type": "date",
+          "format": "yyyy-MM-dd'T'HH:mm'Z'"
+        },
+        "modified" : {
+          "type": "date",
+          "format": "yyyy-MM-dd'T'HH:mm'Z'"
+        },
+        "decimallatitude" : {
+          "type":   "double"
+        },
+        "decimallongitude" : {
+          "type": "double"
+        },
+        "coordinateprecision" : {
+          "type": "double"
+        },
+        "elevation" : {
+          "type": "double"
+        },
+        "depth" : {
+          "type": "double"
+        },
+        "individualcount" : {
+          "type": "integer"
+        },
+        "coordinateuncertaintyinmeters" : {
+          "type": "double"
+        },
+        "coordinateaccuracy" : {
+          "type": "double"
+        },
+        "elevationaccuracy" : {
+          "type": "double"
+        },
+        "depthaccuracy" : {
+          "type": "double"
+        },
+        "year" : {
+          "type": "integer"
+        },
+        "month" : {
+          "type": "integer"
+        },
+        "day" : {
+          "type": "integer"
         }
       }
     }
+  },
+  "index" : {
+    "index.refresh_interval": "-1",
+    "index.number_of_replicas": "0",
+    "index.translog.durability": "async"
   }
 }

@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "IssueLineageRecord",
-  "namespace": "org.gbif.pipelines.core.functions.interpretation.error",
+  "namespace": "org.gbif.pipelines.io.avro",
   "fields": [
     {
       "name": "occurrenceId",
@@ -27,7 +27,7 @@
                 "type": {
                   "type": "enum",
                   "name": "IssueType",
-                  "namespace": "org.gbif.pipelines.core.functions.interpretation.error",
+                  "namespace": "org.gbif.pipelines.io.avro",
                   "symbols": [
                     "DAY_OUT_OF_RANGE",
                     "PARSE_ERROR",
@@ -112,7 +112,7 @@
                 "type": {
                   "type": "enum",
                   "name": "LineageType",
-                  "namespace": "org.gbif.pipelines.core.functions.interpretation.error",
+                  "namespace": "org.gbif.pipelines.io.avro",
                   "symbols": [
                     "OTHERS",
                     "SET_TO_NULL",

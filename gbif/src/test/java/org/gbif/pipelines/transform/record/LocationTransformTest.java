@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.transform.common.Kv2Value;
 
 import java.util.Arrays;
