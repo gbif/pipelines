@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
-import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.config.DataPipelineOptionsFactory;
+import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 
 import org.junit.Assert;
 import org.junit.Test;
