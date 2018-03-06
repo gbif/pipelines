@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.base.CaseFormat;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.codehaus.jackson.JsonNode;
@@ -42,31 +43,31 @@ public final class AvroSchemaGenerator {
   /**
    * key -> class name , value -> {@link Schema} with schema and default value.
    */
-  private static final Map<String, Schema> commonTypesSchemas = new HashMap<>();
+  private static final Map<String, Schema> COMMON_TYPES_SCHEMAS = new HashMap<>();
 
   /**
    * key -> {@link org.apache.avro.Schema.Type} , value -> {@link JsonNode} witht the default value.
    */
-  private static final EnumMap<Schema.Type, JsonNode> commonSchemasDefaults = new EnumMap<>(Schema.Type.class);
+  private static final EnumMap<Schema.Type, JsonNode> COMMON_SCHEMAS_DEFAULTS = new EnumMap<>(Schema.Type.class);
 
   static {
     // initialize schemas of common types
-    commonTypesSchemas.put(Integer.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.INT));
-    commonTypesSchemas.put(int.class.getSimpleName().toLowerCase(),
-                           commonTypesSchemas.get(Integer.class.getSimpleName().toLowerCase()));
-    commonTypesSchemas.put(String.class.getSimpleName(), Schema.create(Schema.Type.STRING));
-    commonTypesSchemas.put(Boolean.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.BOOLEAN));
-    commonTypesSchemas.put(Long.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.LONG));
-    commonTypesSchemas.put(Float.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.FLOAT));
-    commonTypesSchemas.put(Double.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.DOUBLE));
-    commonTypesSchemas.put(Byte.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.BYTES));
-    commonTypesSchemas.put(Short.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.INT));
-    commonTypesSchemas.put(Character.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.STRING));
-    commonTypesSchemas.put(char.class.getSimpleName().toLowerCase(),
-                           commonTypesSchemas.get(Character.class.getSimpleName().toLowerCase()));
+    COMMON_TYPES_SCHEMAS.put(Integer.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.INT));
+    COMMON_TYPES_SCHEMAS.put(int.class.getSimpleName().toLowerCase(),
+                             COMMON_TYPES_SCHEMAS.get(Integer.class.getSimpleName().toLowerCase()));
+    COMMON_TYPES_SCHEMAS.put(String.class.getSimpleName(), Schema.create(Schema.Type.STRING));
+    COMMON_TYPES_SCHEMAS.put(Boolean.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.BOOLEAN));
+    COMMON_TYPES_SCHEMAS.put(Long.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.LONG));
+    COMMON_TYPES_SCHEMAS.put(Float.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.FLOAT));
+    COMMON_TYPES_SCHEMAS.put(Double.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.DOUBLE));
+    COMMON_TYPES_SCHEMAS.put(Byte.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.BYTES));
+    COMMON_TYPES_SCHEMAS.put(Short.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.INT));
+    COMMON_TYPES_SCHEMAS.put(Character.class.getSimpleName().toLowerCase(), Schema.create(Schema.Type.STRING));
+    COMMON_TYPES_SCHEMAS.put(char.class.getSimpleName().toLowerCase(),
+                             COMMON_TYPES_SCHEMAS.get(Character.class.getSimpleName().toLowerCase()));
 
     // initialize defaults of common schemas
-    commonSchemasDefaults.put(Schema.Type.BOOLEAN, BooleanNode.getFalse());
+    COMMON_SCHEMAS_DEFAULTS.put(Schema.Type.BOOLEAN, BooleanNode.getFalse());
     // TODO: add more
   }
 
@@ -82,9 +83,7 @@ public final class AvroSchemaGenerator {
    *
    * @return {@link Schema} generated
    */
-  public static Schema generateSchema(
-    Class clazz, String schemaName, String schemaDoc, String namespace
-  ) {
+  public static Schema generateSchema(Class<?> clazz, String schemaName, String schemaDoc, String namespace) {
     return generateSchemaData(clazz, schemaName, schemaDoc, namespace).buildSchema();
   }
 
@@ -122,7 +121,7 @@ public final class AvroSchemaGenerator {
                 StandardOpenOption.CREATE);
   }
 
-  private static SchemaData generateSchemaData(Class clazz, String schemaName, String schemaDoc, String namespace) {
+  private static SchemaData generateSchemaData(Class<?> clazz, String schemaName, String schemaDoc, String namespace) {
 
     Objects.requireNonNull(clazz, "clazz argument is required");
     Objects.requireNonNull(schemaName, "schema name argument is required");
@@ -137,40 +136,40 @@ public final class AvroSchemaGenerator {
     // we always add the schema itself as a type
     customTypes.put(clazz.getSimpleName(), schemaGenerated);
 
-    List<Schema.Field> schemaFields = new ArrayList<>();
-
-    // get all the fields that will be added to the schema
-    createFieldsRecursive(schemaFields, clazz.getDeclaredFields(), customTypes, namespace);
+    List<Schema.Field> schemaFields = createFields(clazz, customTypes, namespace);
 
     // return data
     return new SchemaData(schemaGenerated, schemaFields);
   }
 
-  private static void createFieldsRecursive(
-    List<Schema.Field> avroFields, Field[] fields, Map<String, Schema> customSchemas, String namespace
-  ) {
+
+  private static List<Schema.Field> createFields(Class<?> clazz, Map<String, Schema> customSchemas,
+                                   String namespace) {
+    List<Schema.Field> schemaFields = new ArrayList<>();
+
+    // get all the fields that will be added to the schema
+    createFieldsRecursive(schemaFields, clazz.getDeclaredFields(), customSchemas, namespace);
+    return schemaFields;
+  }
+
+  private static void createFieldsRecursive(List<Schema.Field> avroFields, Field[] fields,
+                                            Map<String, Schema> customSchemas, String namespace) {
     for (Field field : fields) {
       // create schema depending on the file type TODO: handle more types (arrays, maps...)
-      Schema schema = null;
+      Schema schema;
       // enums
       if (field.getType().isEnum()) {
         schema = Schema.createEnum(capitalize(field.getName()),
                                    null,
                                    namespace,
                                    Arrays.stream(field.getType().getEnumConstants())
-                                     .map(value -> value.toString())
+                                     .map(Object::toString)
                                      .collect(Collectors.toList()));
-      }
-      // collections
-      else if (isCollection(field)) {
+      } else if (isCollection(field)) { // collections
         schema = Schema.createArray(createSchema(getCollectionType(field), customSchemas));
-      }
-      // java types
-      else if (isJavaType(field)) {
+      } else if (isJavaType(field)) { // java types
         schema = createSchema(field.getType().getSimpleName(), customSchemas);
-      }
-      // rest: custom types
-      else {
+      } else { // rest: custom types
         // to handle this type we create a new Schema of type record
         String recordName = capitalize(field.getType().getSimpleName());
         schema = Schema.createRecord(recordName, null, namespace, false);
@@ -226,11 +225,11 @@ public final class AvroSchemaGenerator {
       return customSchemas.get(className);
     }
 
-    if (commonTypesSchemas.get(className.toLowerCase()) == null) {
+    if (COMMON_TYPES_SCHEMAS.get(className.toLowerCase()) == null) {
       return Schema.create(Schema.Type.STRING);
     }
 
-    return Optional.ofNullable(commonTypesSchemas.get(className.toLowerCase()))
+    return Optional.ofNullable(COMMON_TYPES_SCHEMAS.get(className.toLowerCase()))
       .orElse(Schema.create(Schema.Type.STRING));
   }
 
@@ -241,35 +240,30 @@ public final class AvroSchemaGenerator {
   private static JsonNode defaultValueOf(Schema schema) {
     // according to the avro specification, in union schemas the default value corresponds to the first schema
     Schema.Type schemaType =
-      Schema.Type.UNION.equals(schema.getType()) ? schema.getTypes().get(0).getType() : schema.getType();
+      Schema.Type.UNION == schema.getType()? schema.getTypes().get(0).getType() : schema.getType();
 
-    return commonSchemasDefaults.getOrDefault(schemaType, NullNode.getInstance());
+    return COMMON_SCHEMAS_DEFAULTS.getOrDefault(schemaType, NullNode.getInstance());
   }
 
   /**
-   * Models the data neccessary to create a schema.
+   * Models the data necessary to create a schema.
    */
   private static class SchemaData {
 
-    private Schema rawSchema;
-    private List<Schema.Field> fields;
+    private final Schema rawSchema;
+    private final List<Schema.Field> fields;
 
-    SchemaData(Schema rawSchema, List<Schema.Field> fields) {
+    private SchemaData(Schema rawSchema, List<Schema.Field> fields) {
       this.rawSchema = rawSchema;
       this.fields = fields;
     }
 
-    SchemaData addField(Schema.Field field) {
-      fields.add(field);
-      return this;
-    }
-
-    SchemaData addFieldAsFirstElement(Schema.Field field) {
+    private SchemaData addFieldAsFirstElement(Schema.Field field) {
       fields.add(0, field);
       return this;
     }
 
-    Schema buildSchema() {
+    private Schema buildSchema() {
       rawSchema.setFields(fields);
       return rawSchema;
     }
