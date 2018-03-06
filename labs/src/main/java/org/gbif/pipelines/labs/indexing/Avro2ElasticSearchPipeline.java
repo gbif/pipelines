@@ -1,4 +1,4 @@
-package org.gbif.pipelines.indexing;
+package org.gbif.pipelines.labs.indexing;
 
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;

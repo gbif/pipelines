@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpretation.lineage;
+package org.gbif.pipelines.labs.interpretation.lineage;
 
 public class Trace {
 

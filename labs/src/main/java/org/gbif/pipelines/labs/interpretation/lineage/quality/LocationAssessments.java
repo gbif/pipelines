@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpretation.lineage.quality;
+package org.gbif.pipelines.labs.interpretation.lineage.quality;
 
 public class LocationAssessments {
 

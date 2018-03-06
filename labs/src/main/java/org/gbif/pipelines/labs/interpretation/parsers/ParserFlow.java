@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpretation.parsers;
+package org.gbif.pipelines.labs.interpretation.parsers;
 
 import java.util.HashMap;
 import java.util.Map;

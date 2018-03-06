@@ -2,13 +2,13 @@
 package org.gbif.pipelines.labs.transform;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.Validation;
-import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
 import org.gbif.pipelines.transform.RecordTransform;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;

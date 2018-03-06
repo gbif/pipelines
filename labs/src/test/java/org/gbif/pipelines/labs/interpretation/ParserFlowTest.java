@@ -1,6 +1,8 @@
-package org.gbif.pipelines.core.interpretation.parsers;
+package org.gbif.pipelines.labs.interpretation;
 
-import org.gbif.pipelines.core.interpretation.lineage.quality.LocationAssessments;
+import org.gbif.pipelines.labs.interpretation.lineage.quality.LocationAssessments;
+import org.gbif.pipelines.labs.interpretation.parsers.ParserFlow;
+import org.gbif.pipelines.labs.interpretation.parsers.ParserFlows;
 
 import java.util.Optional;
 

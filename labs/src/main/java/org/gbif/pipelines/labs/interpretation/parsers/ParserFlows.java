@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpretation.parsers;
+package org.gbif.pipelines.labs.interpretation.parsers;
 
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;

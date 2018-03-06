@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpretation.lineage;
+package org.gbif.pipelines.labs.interpretation.lineage;
 
 import java.util.ArrayList;
 import java.util.Collection;
