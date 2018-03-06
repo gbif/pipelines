@@ -1,0 +1,21 @@
+{
+  "synonym": "false",
+  "usage": {
+    "key": "123",
+    "name": "test",
+    "rank": "SPECIES"
+  },
+  "classification": [
+    {
+      "key": "1",
+      "name": "Animalia",
+      "rank": "KINGDOM"
+    }
+  ],
+  "diagnostics": {
+    "matchType": "EXACT",
+    "status": "ACCEPTED",
+    "lineage": [],
+    "alternatives": []
+  }
+}

@@ -1,9 +1,9 @@
-package org.gbif.pipelines.transform;
+package org.gbif.pipelines.transform.record;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transform.common.Kv2Value;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,8 +13,6 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.junit.Rule;
@@ -48,8 +46,7 @@ public class LocationTransformTest {
 
     PCollectionTuple tuple = inputStream.apply(locationTransform);
 
-    PCollection<Location> recordCollection =
-      tuple.get(locationTransform.getDataTag()).apply(MapElements.into(TypeDescriptors.location()).via(KV::getValue));
+    PCollection<Location> recordCollection = tuple.get(locationTransform.getDataTag()).apply(Kv2Value.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(locations);
