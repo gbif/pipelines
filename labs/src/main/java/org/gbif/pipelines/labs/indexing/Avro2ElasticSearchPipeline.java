@@ -6,6 +6,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 
 import com.google.common.base.Throwables;
 import org.apache.beam.sdk.Pipeline;
@@ -32,15 +34,11 @@ public class Avro2ElasticSearchPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(Avro2ElasticSearchPipeline.class);
 
-  private static final String SOURCE_PATH = "hdfs://ha-nn/pipelines/data/aves_large.avro/*";
-  private static final String[] ES_HOSTS =
-    new String[] {"http://c4n1.gbif.org:9200", "http://c4n2.gbif.org:9200", "http://c4n3.gbif.org:9200",
-      "http://c4n4.gbif.org:9200", "http://c4n5.gbif.org:9200", "http://c4n6.gbif.org:9200",
-      "http://c4n7.gbif.org:9200", "http://c4n8.gbif.org:9200", "http://c4n9.gbif.org:9200"};
+  private static final String DECIMAL_LATITUDE = "decimalLatitude";
+  private static final String DECIMAL_LONGITUDE = "decimalLongitude";
+  private static final String LOCATION = "location";
 
-  private static final String ES_INDEX = "tim";
-  private static final String ES_TYPE = "tim";
-  private static final int BATCH_SIZE = 1000;
+  private static final String SLASH_CONST = "/";
 
   public static void main(String[] args) {
 
@@ -48,18 +46,18 @@ public class Avro2ElasticSearchPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Read Avro files
-    PCollection<ExtendedRecord> verbatimRecords =
-      p.apply("Read Avro files", AvroIO.read(ExtendedRecord.class).from(SOURCE_PATH));
+    PCollection<ExtendedRecord> verbatimStream =
+      p.apply("Read Avro files", AvroIO.read(ExtendedRecord.class).from(options.getInputFile()));
 
     // Convert to JSON
-    PCollection<String> json = verbatimRecords.apply("Convert to JSON", ParDo.of(new RecordFormatter()));
-
-    // Write the file to ES
-    ElasticsearchIO.ConnectionConfiguration conn =
-      ElasticsearchIO.ConnectionConfiguration.create(ES_HOSTS, ES_INDEX, ES_TYPE);
+    PCollection<String> jsonInputStream = verbatimStream.apply("Convert to JSON", ParDo.of(new RecordFormatter()));
 
     // Index in ES
-    json.apply(ElasticsearchIO.write().withConnectionConfiguration(conn).withMaxBatchSize(BATCH_SIZE));
+    jsonInputStream.apply(ElasticsearchIO.write()
+                            .withConnectionConfiguration(ElasticsearchIO.ConnectionConfiguration.create(options.getESHosts(),
+                                                                                                        options.getESIndex(),
+                                                                                                        options.getESType()))
+                            .withMaxBatchSize(options.getESMaxBatchSize()));
 
     // instruct the writer to use a provided document ID
     LOG.info("Starting the pipeline");
@@ -72,7 +70,7 @@ public class Avro2ElasticSearchPipeline {
    * Returns a flat JSON String holding the core records only stripped of namespaces and with the addition of a
    * location field suitable for geopoint indexing in ElasticSearch.
    */
-  public static class RecordFormatter extends DoFn<ExtendedRecord, String> {
+  static class RecordFormatter extends DoFn<ExtendedRecord, String> {
 
     @ProcessElement
     public void processElement(ProcessContext c) {
@@ -80,11 +78,12 @@ public class Avro2ElasticSearchPipeline {
       Map<String, String> terms = record.getCoreTerms();
       Map<String, String> stripped = new HashMap<>(record.getCoreTerms().size());
 
-      terms.forEach((k, v) -> stripped.put(stripNS(k), v));
+      Function<String, String> stripNS = (source) -> source.substring(source.lastIndexOf(SLASH_CONST) + 1);
+      terms.forEach((k, v) -> stripped.put(stripNS.apply(k), v));
 
       // location suitable for geopoint format
-      if (stripped.get("decimalLatitude") != null && stripped.get("decimalLongitude") != null) {
-        stripped.put("location", stripped.get("decimalLatitude") + "," + stripped.get("decimalLongitude"));
+      if (Objects.nonNull(stripped.get(DECIMAL_LATITUDE)) && Objects.nonNull(stripped.get(DECIMAL_LONGITUDE))) {
+        stripped.put(LOCATION, stripped.get(DECIMAL_LONGITUDE).concat(",").concat(stripped.get(DECIMAL_LONGITUDE)));
       }
 
       try {
@@ -95,7 +94,4 @@ public class Avro2ElasticSearchPipeline {
     }
   }
 
-  static String stripNS(String source) {
-    return source.substring(source.lastIndexOf('/') + 1);
-  }
 }
