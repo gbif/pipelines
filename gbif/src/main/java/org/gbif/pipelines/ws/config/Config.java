@@ -1,7 +1,7 @@
-package org.gbif.pipelines.http.config;
+package org.gbif.pipelines.ws.config;
 
 /**
- * Models the http configuration.
+ * Models the ws configuration.
  */
 public class Config {
 

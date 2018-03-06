@@ -3,12 +3,12 @@ package org.gbif.pipelines.interpretation;
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.utils.AvroDataValidator;
-import org.gbif.pipelines.http.HttpResponse;
-import org.gbif.pipelines.http.match2.SpeciesMatchv2Client;
 import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.ws.HttpResponse;
+import org.gbif.pipelines.ws.client.match2.SpeciesMatchv2Client;
 
 import java.util.function.Function;
 

@@ -1,6 +1,6 @@
-package org.gbif.pipelines.http.geocode;
+package org.gbif.pipelines.ws.client.geocode;
 
-import org.gbif.pipelines.http.MockServerBaseTest;
+import org.gbif.pipelines.ws.MockServer;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -17,9 +17,9 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 /**
- * Tests the {@link GeocodeRestBaseTest} and {@link GeocodeService}.
+ * Tests the {@link GeocodeServiceRestTest} and {@link GeocodeService}.
  */
-public class GeocodeRestBaseTest extends MockServerBaseTest {
+public class GeocodeServiceRestTest extends MockServer {
 
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
@@ -44,7 +44,7 @@ public class GeocodeRestBaseTest extends MockServerBaseTest {
 
     enqueueResponse(REVERSE_CANADA_RESPONSE);
 
-    GeocodeService service = GeocodeRest.getInstance().getService();
+    GeocodeService service = GeocodeServiceRest.getInstance().getService();
 
     Call<Collection<GeocodeResponse>> call = service.reverse(LATITUDE_CANADA, LONGITUDE_CANADA);
 
@@ -71,7 +71,7 @@ public class GeocodeRestBaseTest extends MockServerBaseTest {
 
   @Test
   public void nullParamsCallTest() {
-    GeocodeService service = GeocodeRest.getInstance().getService();
+    GeocodeService service = GeocodeServiceRest.getInstance().getService();
 
     enqueueErrorResponse(HttpURLConnection.HTTP_BAD_REQUEST);
 
@@ -88,7 +88,7 @@ public class GeocodeRestBaseTest extends MockServerBaseTest {
 
   @Test
   public void invalidParamsCallTest() {
-    GeocodeService service = GeocodeRest.getInstance().getService();
+    GeocodeService service = GeocodeServiceRest.getInstance().getService();
 
     enqueueErrorResponse(HttpURLConnection.HTTP_BAD_REQUEST);
 

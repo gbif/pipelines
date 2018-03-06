@@ -8,6 +8,7 @@ import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.OptionsKeyEnum;
 import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.core.functions.FunctionFactory;
+import org.gbif.pipelines.demo.util.HdfsTestUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
@@ -43,12 +44,12 @@ public class DwcaToHdfsPipelineTest {
 
   private static final String DWCA_FILE_PATH = "data/dwca.zip";
 
-  private static TestUtils.MiniClusterConfig clusterConfig;
+  private static HdfsTestUtils.MiniClusterConfig clusterConfig;
   private static Configuration configuration = new Configuration();
 
   @BeforeClass
   public static void setUp() throws Exception {
-    clusterConfig = TestUtils.createMiniCluster(configuration);
+    clusterConfig = HdfsTestUtils.createMiniCluster(configuration);
   }
 
   @AfterClass

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.demo;
+package org.gbif.pipelines.demo.util;
 
 import java.io.File;
 import java.net.URI;
@@ -13,9 +13,9 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 /**
  * Utility class for testing purposes.
  */
-public final class TestUtils {
+public final class HdfsTestUtils {
 
-  private TestUtils() {}
+  private HdfsTestUtils() {}
 
   /**
    * Creates a HDFS mini cluster.

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.http.geocode;
+package org.gbif.pipelines.ws.client.geocode;
 
 import java.io.Serializable;
 

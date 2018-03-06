@@ -1,9 +1,9 @@
-package org.gbif.pipelines.http.geocode;
+package org.gbif.pipelines.ws.client.geocode;
 
-import org.gbif.pipelines.http.HttpClientFactory;
-import org.gbif.pipelines.http.HttpConfigFactory;
-import org.gbif.pipelines.http.config.Config;
-import org.gbif.pipelines.http.config.Service;
+import org.gbif.pipelines.ws.HttpClientFactory;
+import org.gbif.pipelines.ws.HttpConfigFactory;
+import org.gbif.pipelines.ws.config.Config;
+import org.gbif.pipelines.ws.config.Service;
 
 import java.util.Objects;
 
@@ -14,13 +14,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /*
  * Singleton to create the species match 2 service.
  */
-public class GeocodeRest {
+public class GeocodeServiceRest {
 
   private GeocodeService service;
 
-  private static GeocodeRest instance;
+  private static GeocodeServiceRest instance;
 
-  private GeocodeRest(Config wsConfig) {
+  private GeocodeServiceRest(Config wsConfig) {
 
     // create client
     OkHttpClient client = HttpClientFactory.createClient(wsConfig);
@@ -35,14 +35,14 @@ public class GeocodeRest {
     service = retrofit.create(GeocodeService.class);
   }
 
-  public static GeocodeRest getInstance() {
+  public static GeocodeServiceRest getInstance() {
     return getInstance(HttpConfigFactory.createConfig(Service.GEO_CODE));
   }
 
-  public static GeocodeRest getInstance(Config config) {
-    synchronized (GeocodeRest.class) {
+  public static GeocodeServiceRest getInstance(Config config) {
+    synchronized (GeocodeServiceRest.class) {
       if (Objects.isNull(instance)) {
-        instance = new GeocodeRest(config);
+        instance = new GeocodeServiceRest(config);
       }
       return instance;
     }

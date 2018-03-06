@@ -1,4 +1,4 @@
-package org.gbif.pipelines.http;
+package org.gbif.pipelines.ws;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +12,7 @@ import okio.Okio;
 /**
  * Base class for tests that need a {@link MockWebServer}.
  */
-public abstract class MockServerBaseTest {
+public abstract class MockServer {
 
   // mock match responses
   protected static final String MATCH_RESPONSES_FOLDER = "match-responses/";

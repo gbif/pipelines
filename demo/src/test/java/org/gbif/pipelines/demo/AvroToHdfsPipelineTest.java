@@ -3,6 +3,7 @@ package org.gbif.pipelines.demo;
 import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.TargetPath;
+import org.gbif.pipelines.demo.util.HdfsTestUtils;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import java.net.URI;
@@ -33,12 +34,12 @@ public class AvroToHdfsPipelineTest {
 
   private static final String AVRO_FILE_PATH = "data/exportData*";
 
-  private static TestUtils.MiniClusterConfig clusterConfig;
+  private static HdfsTestUtils.MiniClusterConfig clusterConfig;
   private static Configuration configuration = new Configuration();
 
   @BeforeClass
   public static void setUp() throws Exception {
-    clusterConfig = TestUtils.createMiniCluster(configuration);
+    clusterConfig = HdfsTestUtils.createMiniCluster(configuration);
   }
 
   @AfterClass

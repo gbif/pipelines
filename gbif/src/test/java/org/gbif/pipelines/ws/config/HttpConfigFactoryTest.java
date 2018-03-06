@@ -1,6 +1,6 @@
-package org.gbif.pipelines.http.config;
+package org.gbif.pipelines.ws.config;
 
-import org.gbif.pipelines.http.HttpConfigFactory;
+import org.gbif.pipelines.ws.HttpConfigFactory;
 
 import java.nio.file.Paths;
 

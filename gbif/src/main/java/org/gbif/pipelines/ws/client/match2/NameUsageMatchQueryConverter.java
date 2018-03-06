@@ -1,4 +1,4 @@
-package org.gbif.pipelines.http.match2;
+package org.gbif.pipelines.ws.client.match2;
 
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.Rank;

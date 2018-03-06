@@ -1,10 +1,10 @@
-package org.gbif.pipelines.http.match2;
+package org.gbif.pipelines.ws.client.match2;
 
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.http.HttpResponse;
-import org.gbif.pipelines.http.MockServerBaseTest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.ws.HttpResponse;
+import org.gbif.pipelines.ws.MockServer;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -19,7 +19,7 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class SpeciesMatchv2RestServiceBaseTest extends MockServerBaseTest {
+public class SpeciesMatchv2RestServiceTest extends MockServer {
 
   @BeforeClass
   public static void setUp() throws IOException {
@@ -33,7 +33,7 @@ public class SpeciesMatchv2RestServiceBaseTest extends MockServerBaseTest {
 
   @Test
   public void simpleCallTest() throws IOException {
-    SpeciesMatchv2Service service = SpeciesMatchv2Rest.getInstance().getService();
+    SpeciesMatchv2Service service = SpeciesMatchv2ServiceRest.getInstance().getService();
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
 
@@ -56,7 +56,7 @@ public class SpeciesMatchv2RestServiceBaseTest extends MockServerBaseTest {
 
   @Test
   public void shouldReturn500error() {
-    SpeciesMatchv2Service service = SpeciesMatchv2Rest.getInstance().getService();
+    SpeciesMatchv2Service service = SpeciesMatchv2ServiceRest.getInstance().getService();
 
     mockServer.enqueue(new MockResponse().setResponseCode(HttpURLConnection.HTTP_INTERNAL_ERROR));
 

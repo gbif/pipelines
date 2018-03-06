@@ -1,4 +1,4 @@
-package org.gbif.pipelines.http;
+package org.gbif.pipelines.ws;
 
 /**
  * Wraps the response from a WS.
@@ -114,7 +114,7 @@ public class HttpResponse<T> {
    * Enum with the possible errors.
    */
   public enum ErrorCode {
-    CALL_FAILED, UNEXPECTED_ERROR;
+    CALL_FAILED, UNEXPECTED_ERROR
   }
 
 }

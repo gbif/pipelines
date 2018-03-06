@@ -1,12 +1,12 @@
-package org.gbif.pipelines.http.match2;
+package org.gbif.pipelines.ws.client.match2;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.http.HttpResponse;
-import org.gbif.pipelines.http.HttpResponse.ErrorCode;
 import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.ws.HttpResponse;
+import org.gbif.pipelines.ws.HttpResponse.ErrorCode;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -50,7 +50,7 @@ public class SpeciesMatchv2Client {
     // FIXME: use new generic functions to parse the date??
     // sort them by date identified
     // Ask Markus D if this can be moved to the API?
-    identifications.sort(Comparator.comparing((Map<String, String> map) -> LocalDateTime.parse(map.get(DwcTerm.dateIdentified)))
+    identifications.sort(Comparator.comparing((Map<String, String> map) -> LocalDateTime.parse(map.get(DwcTerm.dateIdentified.qualifiedName())))
                            .reversed());
     for (Map<String, String> record : identifications) {
       response = tryNameMatch(record);
@@ -66,7 +66,7 @@ public class SpeciesMatchv2Client {
   private static HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
     Map<String, String> params = NameUsageMatchQueryConverter.convert(terms);
 
-    Call<NameUsageMatch2> call = SpeciesMatchv2Rest.getInstance().getService().match(params);
+    Call<NameUsageMatch2> call = SpeciesMatchv2ServiceRest.getInstance().getService().match(params);
 
     try {
       Response<NameUsageMatch2> response = call.execute();

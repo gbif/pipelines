@@ -1,7 +1,7 @@
-package org.gbif.pipelines.http;
+package org.gbif.pipelines.ws;
 
-import org.gbif.pipelines.http.config.Config;
-import org.gbif.pipelines.http.config.Service;
+import org.gbif.pipelines.ws.config.Config;
+import org.gbif.pipelines.ws.config.Service;
 
 import java.io.InputStream;
 import java.nio.file.Path;

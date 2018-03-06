@@ -1,6 +1,6 @@
-package org.gbif.pipelines.http;
+package org.gbif.pipelines.ws;
 
-import org.gbif.pipelines.http.config.Config;
+import org.gbif.pipelines.ws.config.Config;
 
 import java.io.File;
 import java.io.IOException;

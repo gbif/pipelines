@@ -2,6 +2,7 @@ package org.gbif.pipelines.demo;
 
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.OptionsKeyEnum;
+import org.gbif.pipelines.demo.util.HdfsTestUtils;
 
 import java.net.URI;
 
@@ -20,12 +21,12 @@ import static org.gbif.pipelines.core.config.DataPipelineOptionsFactory.createDe
  */
 public class TaxonomyInterpretationPipelineTest {
 
-  private static TestUtils.MiniClusterConfig clusterConfig;
+  private static HdfsTestUtils.MiniClusterConfig clusterConfig;
   private static Configuration configuration = new Configuration();
 
   @BeforeClass
   public static void setUp() throws Exception {
-    clusterConfig = TestUtils.createMiniCluster(configuration);
+    clusterConfig = HdfsTestUtils.createMiniCluster(configuration);
   }
 
   @AfterClass

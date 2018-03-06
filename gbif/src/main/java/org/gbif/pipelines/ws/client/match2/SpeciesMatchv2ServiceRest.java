@@ -1,9 +1,9 @@
-package org.gbif.pipelines.http.match2;
+package org.gbif.pipelines.ws.client.match2;
 
-import org.gbif.pipelines.http.HttpClientFactory;
-import org.gbif.pipelines.http.HttpConfigFactory;
-import org.gbif.pipelines.http.config.Config;
-import org.gbif.pipelines.http.config.Service;
+import org.gbif.pipelines.ws.HttpClientFactory;
+import org.gbif.pipelines.ws.HttpConfigFactory;
+import org.gbif.pipelines.ws.config.Config;
+import org.gbif.pipelines.ws.config.Service;
 
 import java.util.Objects;
 
@@ -14,13 +14,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /*
  * Singleton to create the species match service v2.
  */
-public class SpeciesMatchv2Rest {
+public class SpeciesMatchv2ServiceRest {
 
   private SpeciesMatchv2Service service;
 
-  private static SpeciesMatchv2Rest instance;
+  private static SpeciesMatchv2ServiceRest instance;
 
-  private SpeciesMatchv2Rest(Config wsConfig) {
+  private SpeciesMatchv2ServiceRest(Config wsConfig) {
 
     // create client
     OkHttpClient client = HttpClientFactory.createClient(wsConfig);
@@ -35,14 +35,14 @@ public class SpeciesMatchv2Rest {
     service = retrofit.create(SpeciesMatchv2Service.class);
   }
 
-  public static SpeciesMatchv2Rest getInstance() {
+  public static SpeciesMatchv2ServiceRest getInstance() {
     return getInstance(HttpConfigFactory.createConfig(Service.SPECIES_MATCH2));
   }
 
-  public static SpeciesMatchv2Rest getInstance(Config config) {
-    synchronized (SpeciesMatchv2Rest.class) {
+  public static SpeciesMatchv2ServiceRest getInstance(Config config) {
+    synchronized (SpeciesMatchv2ServiceRest.class) {
       if (Objects.isNull(instance)) {
-        instance = new SpeciesMatchv2Rest(config);
+        instance = new SpeciesMatchv2ServiceRest(config);
       }
       return instance;
     }
