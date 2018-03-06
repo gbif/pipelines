@@ -32,8 +32,8 @@ public class LocationTransformTest {
   public void testTransformation() {
 
     // State
-    final String[] denmark = {"0", "DENMARK", "DK", "EUROPE"};
-    final String[] japan = {"1", "JAPAN", "JP", "ASIA"};
+    final String[] denmark = {"0", "DENMARK", "DK", "EUROPE", "100", "110", "111", "200", "Ocean"};
+    final String[] japan = {"1", "JAPAN", "JP", "ASIA", "100", "110", "111", "200", "Ocean"};
     final List<ExtendedRecord> records = createExtendedRecordList(denmark, japan);
 
     // Expected
@@ -60,6 +60,11 @@ public class LocationTransformTest {
       record.getCoreTerms().put(DwcTerm.country.qualifiedName(), x[1]);
       record.getCoreTerms().put(DwcTerm.countryCode.qualifiedName(), x[2]);
       record.getCoreTerms().put(DwcTerm.continent.qualifiedName(), x[3]);
+      record.getCoreTerms().put(DwcTerm.minimumElevationInMeters.qualifiedName(), x[4]);
+      record.getCoreTerms().put(DwcTerm.maximumElevationInMeters.qualifiedName(), x[5]);
+      record.getCoreTerms().put(DwcTerm.minimumDepthInMeters.qualifiedName(), x[6]);
+      record.getCoreTerms().put(DwcTerm.maximumDepthInMeters.qualifiedName(), x[7]);
+      record.getCoreTerms().put(DwcTerm.waterBody.qualifiedName(), x[8]);
       return record;
     }).collect(Collectors.toList());
   }
@@ -71,6 +76,11 @@ public class LocationTransformTest {
         .setCountry(x[1])
         .setCountryCode(x[1])
         .setContinent(x[3])
+        .setMinimumElevationInMeters(x[4])
+        .setMaximumElevationInMeters(x[5])
+        .setMinimumDepthInMeters(x[6])
+        .setMaximumDepthInMeters(x[7])
+        .setWaterBody(x[8])
         .build())
       .collect(Collectors.toList());
   }

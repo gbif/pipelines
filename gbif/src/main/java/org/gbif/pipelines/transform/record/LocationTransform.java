@@ -38,6 +38,11 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
           .using(LocationInterpreter.interpretCountry(location))
           .using(LocationInterpreter.interpretCountryCode(location))
           .using(LocationInterpreter.interpretContinent(location))
+          .using(LocationInterpreter.interpretWaterBody(location))
+          .using(LocationInterpreter.interpretMinimumElevationInMeters(location))
+          .using(LocationInterpreter.interpretMaximumElevationInMeters(location))
+          .using(LocationInterpreter.interpretMinimumDepthInMeters(location))
+          .using(LocationInterpreter.interpretMaximumDepthInMeters(location))
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         //additional outputs

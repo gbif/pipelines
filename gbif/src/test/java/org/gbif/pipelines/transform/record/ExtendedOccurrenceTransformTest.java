@@ -32,8 +32,14 @@ public class ExtendedOccurrenceTransformTest {
   public void testTransformation() {
 
     // State
-    final String[] one = {"0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", "DENMARK", "DK", "EUROPE", "1", "1", "2018", "2018-01-01"};
-    final String[] two = {"1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", "JAPAN", "JP", "ASIA", "1", "1", "2018", "2018-01-01"};
+    final String[] one =
+      {"0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", "DENMARK", "DK", "EUROPE", "1", "1",
+        "2018", "2018-01-01", "100", "110", "111", "200", "Ocean"};
+
+    final String[] two =
+      {"1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", "JAPAN", "JP", "ASIA", "1", "1",
+        "2018", "2018-01-01", "100", "110", "111", "200", "Ocean"};
+
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
 
     // Expected
@@ -46,8 +52,8 @@ public class ExtendedOccurrenceTransformTest {
 
     PCollectionTuple tuple = inputStream.apply(occurrenceTransform);
 
-    PCollection<ExtendedOccurrence> recordCollection = tuple.get(occurrenceTransform.getDataTag())
-      .apply(Kv2Value.create());
+    PCollection<ExtendedOccurrence> recordCollection =
+      tuple.get(occurrenceTransform.getDataTag()).apply(Kv2Value.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(interpretedRecords);
@@ -71,7 +77,11 @@ public class ExtendedOccurrenceTransformTest {
       record.getCoreTerms().put(DwcTerm.month.qualifiedName(), x[11]);
       record.getCoreTerms().put(DwcTerm.year.qualifiedName(), x[12]);
       record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), x[13]);
-
+      record.getCoreTerms().put(DwcTerm.minimumDepthInMeters.qualifiedName(), x[14]);
+      record.getCoreTerms().put(DwcTerm.maximumDepthInMeters.qualifiedName(), x[15]);
+      record.getCoreTerms().put(DwcTerm.minimumElevationInMeters.qualifiedName(), x[16]);
+      record.getCoreTerms().put(DwcTerm.maximumElevationInMeters.qualifiedName(), x[17]);
+      record.getCoreTerms().put(DwcTerm.waterBody.qualifiedName(), x[18]);
       return record;
     }).collect(Collectors.toList());
   }
@@ -93,6 +103,11 @@ public class ExtendedOccurrenceTransformTest {
         .setMonth(Integer.valueOf(x[11]))
         .setYear(Integer.valueOf(x[12]))
         .setEventDate(x[13])
+        .setMinimumDepthInMeters(x[14])
+        .setMaximumDepthInMeters(x[15])
+        .setMinimumElevationInMeters(x[16])
+        .setMaximumElevationInMeters(x[17])
+        .setWaterBody(x[18])
         .build())
       .collect(Collectors.toList());
   }

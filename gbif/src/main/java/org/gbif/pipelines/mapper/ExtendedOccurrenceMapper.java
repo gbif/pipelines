@@ -30,6 +30,11 @@ public class ExtendedOccurrenceMapper {
       .setCountry(location.getCountry())
       .setCountryCode(location.getCountryCode())
       .setContinent(location.getContinent())
+      .setWaterBody(location.getWaterBody())
+      .setMinimumElevationInMeters(location.getMinimumElevationInMeters())
+      .setMaximumElevationInMeters(location.getMaximumElevationInMeters())
+      .setMinimumDepthInMeters(location.getMinimumDepthInMeters())
+      .setMaximumDepthInMeters(location.getMaximumDepthInMeters())
       .build();
   }
 

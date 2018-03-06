@@ -78,7 +78,12 @@
                     "MULTIMEDIA_URI_INVALID",
                     "REFERENCES_URI_INVALID",
                     "INTERPRETATION_ERROR",
-                    "INDIVIDUAL_COUNT_INVALID"
+                    "INDIVIDUAL_COUNT_INVALID",
+                    "WATER_BODY_INVALID",
+                    "MIN_ELEVATION_INVALID",
+                    "MAX_ELEVATION_INVALID",
+                    "MIN_DEPTH_INVALID",
+                    "MAX_DEPTH_INVALID"
                   ]
                 }
               }
