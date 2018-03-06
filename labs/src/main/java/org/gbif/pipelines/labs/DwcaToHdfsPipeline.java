@@ -8,7 +8,7 @@ import org.gbif.pipelines.config.TargetPath;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.gbif.pipelines.labs.functions.FunctionFactory;
-import org.gbif.pipelines.transform.TypeDescriptors;
+import org.gbif.pipelines.labs.transform.TypeDescriptors;
 
 import java.io.File;
 

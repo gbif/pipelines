@@ -16,10 +16,6 @@ public class FunctionFactory {
   private FunctionFactory() {
   }
 
-  public static SerializableFunction<UntypedOccurrence, TypedOccurrence> interpretOccurrence() {
-    return new InterpretOccurrence();
-  }
-
   public static SerializableFunction<UntypedOccurrenceLowerCase, TypedOccurrence> interpretOccurrenceLowerCase() {
     return new InterpretOccurrenceLowerCase();
   }
