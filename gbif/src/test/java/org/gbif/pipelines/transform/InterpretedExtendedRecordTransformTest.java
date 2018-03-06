@@ -1,7 +1,6 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 

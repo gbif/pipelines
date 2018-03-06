@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transform;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.interpretation.Interpretation;
-import org.gbif.pipelines.interpretation.TemporalRecordInterpreter;
+import org.gbif.pipelines.core.interpretation.Interpretation;
+import org.gbif.pipelines.core.interpretation.TemporalRecordInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -28,7 +28,7 @@ public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, Tem
    * Transforms a ExtendedRecord into a TemporalRecord.
    */
   @Override
-  DoFn<ExtendedRecord, KV<String, TemporalRecord>> interpret() {
+  public DoFn<ExtendedRecord, KV<String, TemporalRecord>> interpret() {
     return new DoFn<ExtendedRecord, KV<String, TemporalRecord>>() {
       @ProcessElement
       public void processElement(ProcessContext context) {

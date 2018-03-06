@@ -1,10 +1,10 @@
 package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.TypeDescriptors;
-import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
-import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.transform.TypeDescriptors;
+import org.gbif.pipelines.config.DataPipelineOptionsFactory;
+import org.gbif.pipelines.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.config.Interpretation;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
