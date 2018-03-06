@@ -1,18 +1,16 @@
 package org.gbif.pipelines.indexing.record;
 
 import org.gbif.dwca.avro.Location;
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transform.LocationTransform;
+import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.record.LocationTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.slf4j.Logger;
@@ -48,7 +46,7 @@ public class Location2AvroPipeline {
     // STEP 3: Run the main transform
     PCollectionTuple locationRecordTuple = extendedRecords.apply(locationTransform);
     PCollection<Location> locationRecords = locationRecordTuple.get(locationTransform.getDataTag())
-      .apply(MapElements.into(TypeDescriptors.location()).via(KV::getValue));
+      .apply(Kv2Value.create());
 
     // STEP 4: Save to an avro file
     locationRecords.apply(WRITE_STEP, AvroIO.write(Location.class).to(targetDirectory));

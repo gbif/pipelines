@@ -1,18 +1,16 @@
 package org.gbif.pipelines.indexing.record;
 
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.transform.InterpretedExtendedRecordTransform;
+import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.slf4j.Logger;
@@ -48,7 +46,7 @@ public class InterpretedExtended2AvroPipeline {
     // STEP 3: Run the main transform
     PCollectionTuple interpretedTuple = extendedRecords.apply(interpretedTransform);
     PCollection<InterpretedExtendedRecord> interpretedRecords = interpretedTuple.get(interpretedTransform.getDataTag())
-      .apply(MapElements.into(TypeDescriptors.interpretedExtendedRecord()).via(KV::getValue));
+      .apply(Kv2Value.create());
 
     // STEP 4: Save to an avro file
     interpretedRecords.apply(WRITE_STEP, AvroIO.write(InterpretedExtendedRecord.class).to(targetDirectory));

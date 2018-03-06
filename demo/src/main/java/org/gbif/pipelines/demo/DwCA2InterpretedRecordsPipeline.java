@@ -5,7 +5,6 @@ import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.OptionsKeyEnum;
@@ -15,7 +14,8 @@ import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord
 import org.gbif.pipelines.core.functions.interpretation.error.Lineage;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.transform.InterpretedExtendedRecordTransform;
+import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.Map;
@@ -23,8 +23,6 @@ import java.util.Map;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.slf4j.Logger;
@@ -76,7 +74,7 @@ public class DwCA2InterpretedRecordsPipeline {
     InterpretedExtendedRecordTransform extendedRecordTransform = new InterpretedExtendedRecordTransform();
     PCollectionTuple extendedRecordsTuple = uniqueRecords.apply(extendedRecordTransform);
     PCollection<InterpretedExtendedRecord> extendedRecords = extendedRecordsTuple.get(extendedRecordTransform.getDataTag())
-        .apply(MapElements.into(TypeDescriptors.interpretedExtendedRecord()).via(KV::getValue));
+        .apply(Kv2Value.create());
 
     // STEP 5: writing interpreted occurence and issues to the avro file
     extendedRecords.apply("Save the processed records as Avro",

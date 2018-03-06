@@ -1,21 +1,19 @@
 package org.gbif.pipelines.demo;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.OptionsKeyEnum;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.transform.TaxonRecordTransform;
+import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.record.TaxonRecordTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileSystems;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.hadoop.conf.Configuration;
@@ -71,7 +69,7 @@ public class TaxonomyInterpretationPipeline {
 
     // write taxon records
     taxonomicInterpreted.get(taxonRecordTransform.getDataTag())
-      .apply(MapElements.into(TypeDescriptors.taxonRecord()).via(KV::getValue))
+      .apply(Kv2Value.create())
       .setCoder(AvroCoder.of(TaxonRecord.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(TaxonRecord.class)
@@ -80,7 +78,7 @@ public class TaxonomyInterpretationPipeline {
 
     // write issues
     taxonomicInterpreted.get(taxonRecordTransform.getIssueTag())
-      .apply(MapElements.into(TypeDescriptors.occurrenceIssue()).via(KV::getValue))
+      .apply(Kv2Value.create())
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Save the taxon records as Avro",
              AvroIO.write(OccurrenceIssue.class)

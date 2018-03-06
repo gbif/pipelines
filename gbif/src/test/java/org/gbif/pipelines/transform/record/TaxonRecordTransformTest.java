@@ -1,14 +1,14 @@
-package org.gbif.pipelines.transform;
+package org.gbif.pipelines.transform.record;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.transform.common.Kv2Value;
 import org.gbif.pipelines.ws.MockServer;
 
 import java.io.IOException;
@@ -18,8 +18,6 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.junit.AfterClass;
@@ -67,7 +65,7 @@ public class TaxonRecordTransformTest extends MockServer {
     PCollectionTuple tuple = inputStream.apply(taxonRecordTransform);
 
     PCollection<TaxonRecord> recordCollection = tuple.get(taxonRecordTransform.getDataTag())
-      .apply(MapElements.into(TypeDescriptors.taxonRecord()).via(KV::getValue));
+      .apply(Kv2Value.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());

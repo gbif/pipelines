@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transform;
+package org.gbif.pipelines.transform.record;
 
 import org.gbif.dwca.avro.ExtendedOccurrence;
 import org.gbif.dwca.avro.Location;

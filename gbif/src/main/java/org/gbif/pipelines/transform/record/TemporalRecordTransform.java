@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transform;
+package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.interpretation.Interpretation;

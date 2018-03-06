@@ -1,21 +1,19 @@
 package org.gbif.pipelines.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.config.OptionsKeyEnum;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
-import org.gbif.pipelines.transform.InterpretedExtendedRecordTransform;
+import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.slf4j.Logger;
@@ -45,7 +43,7 @@ public class InterpretDwCAvroPipeline {
 
     // STEP 3: Record level interpretations
     interpreted.get(transform.getDataTag())
-      .apply(MapElements.into(TypeDescriptors.interpretedExtendedRecord()).via(KV::getValue))
+      .apply(Kv2Value.create())
       .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
       .apply("Write Interpreted Avro files",
              AvroIO.write(InterpretedExtendedRecord.class)
@@ -53,7 +51,7 @@ public class InterpretDwCAvroPipeline {
 
     // STEP 4: Exporting issues
     interpreted.get(transform.getIssueTag())
-      .apply(MapElements.into(TypeDescriptors.occurrenceIssue()).via(KV::getValue))
+      .apply(Kv2Value.create())
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
       .apply("Write Interpretation Issues Avro files",
              AvroIO.write(OccurrenceIssue.class).to(options.getTargetPaths().get(OptionsKeyEnum.ISSUES)

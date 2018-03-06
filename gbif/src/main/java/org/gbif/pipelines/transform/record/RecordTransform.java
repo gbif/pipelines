@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transform;
+package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.core.functions.interpretation.error.IssueType;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
