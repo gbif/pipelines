@@ -22,13 +22,13 @@ import org.apache.beam.sdk.values.TupleTagList;
  */
 public abstract class RecordTransform<T, R> extends PTransform<PCollection<T>, PCollectionTuple> {
 
-  RecordTransform(String stepName) {
-    this.stepName = stepName;
-  }
-
   private final String stepName;
   private final TupleTag<KV<String, R>> dataTag = new TupleTag<KV<String, R>>() {};
   private final TupleTag<KV<String, OccurrenceIssue>> issueTag = new TupleTag<KV<String, OccurrenceIssue>>() {};
+
+  RecordTransform(String stepName) {
+    this.stepName = stepName;
+  }
 
   @Override
   public PCollectionTuple expand(PCollection<T> input) {

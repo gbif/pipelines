@@ -1,7 +1,6 @@
-package org.gbif.pipelines.interpretation.interpreters;
+package org.gbif.pipelines.interpretation;
 
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.interpretation.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
