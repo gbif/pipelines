@@ -2,8 +2,8 @@ package org.gbif.pipelines.core.interpretation;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
-import org.gbif.pipelines.core.tools.parsers.TemporalParser;
-import org.gbif.pipelines.core.tools.parsers.temporal.ParsedTemporalDates;
+import org.gbif.pipelines.core.parsers.TemporalParser;
+import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 

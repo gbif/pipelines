@@ -16,8 +16,8 @@ import java.util.function.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
-import static org.gbif.pipelines.core.tools.parsers.VocabularyParsers.rankParser;
-import static org.gbif.pipelines.core.tools.parsers.VocabularyParsers.verbatimTaxonRankParser;
+import static org.gbif.pipelines.core.parsers.VocabularyParsers.rankParser;
+import static org.gbif.pipelines.core.parsers.VocabularyParsers.verbatimTaxonRankParser;
 
 /**
  * Converter to create queries for the name match service.
