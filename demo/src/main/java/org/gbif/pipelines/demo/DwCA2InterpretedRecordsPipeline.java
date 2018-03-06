@@ -8,7 +8,7 @@ import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.TypeDescriptors;
 import org.gbif.pipelines.core.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.core.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.config.Interpretation;
+import org.gbif.pipelines.core.config.OptionsKeyEnum;
 import org.gbif.pipelines.core.config.TargetPath;
 import org.gbif.pipelines.core.functions.interpretation.error.Issue;
 import org.gbif.pipelines.core.functions.interpretation.error.IssueLineageRecord;
@@ -49,7 +49,7 @@ public class DwCA2InterpretedRecordsPipeline {
 
     // STEP 0: Configure pipeline
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
-    Map<Interpretation, TargetPath> targetPaths = options.getTargetPaths();
+    Map<OptionsKeyEnum, TargetPath> targetPaths = options.getTargetPaths();
 
     Pipeline p = Pipeline.create(options);
 
@@ -59,8 +59,9 @@ public class DwCA2InterpretedRecordsPipeline {
     // STEP 1: Read the DwC-A using our custom reader
     PCollection<ExtendedRecord> rawRecords = p.apply("Read from Darwin Core Archive",
                                                      DwCAIO.Read.withPaths(options.getInputFile(),
-                                                                           targetPaths.get(Interpretation.TEMP_DWCA_PATH)
-                                                                             .getFullPath()));
+                                                                           targetPaths.get(OptionsKeyEnum
+                                                                                             .TEMP_DWCA_PATH)
+                                                                             .filePath()));
 
     // STEP 2: Filter unique records by OccurrenceId
     UniqueOccurrenceIdTransform uniqueTransform = new UniqueOccurrenceIdTransform();
@@ -69,7 +70,7 @@ public class DwCA2InterpretedRecordsPipeline {
 
     // STEP 3: Write records in an avro file, this will be location of the hive table which has raw records
     uniqueRecords.apply("Save the interpreted records as Avro",
-                        AvroIO.write(ExtendedRecord.class).to(targetPaths.get(Interpretation.RAW_OCCURRENCE).getFullPath()));
+                        AvroIO.write(ExtendedRecord.class).to(targetPaths.get(OptionsKeyEnum.RAW_OCCURRENCE).filePath()));
 
     // STEP 4: Interpret the raw records as a tuple, which has both different categories of data and issue related to them
     InterpretedExtendedRecordTransform extendedRecordTransform = new InterpretedExtendedRecordTransform();
@@ -80,7 +81,7 @@ public class DwCA2InterpretedRecordsPipeline {
     // STEP 5: writing interpreted occurence and issues to the avro file
     extendedRecords.apply("Save the processed records as Avro",
                           AvroIO.write(InterpretedExtendedRecord.class)
-                            .to(targetPaths.get(Interpretation.INTERPRETED_OCURENCE).getFullPath()));
+                            .to(targetPaths.get(OptionsKeyEnum.INTERPRETED_OCURENCE).filePath()));
 
     LOG.info("Starting the pipeline");
     PipelineResult result = p.run();
