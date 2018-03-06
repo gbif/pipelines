@@ -1,6 +1,6 @@
 package org.gbif.pipelines.labs.transform;
 
-import org.gbif.dwca.avro.ExtendedOccurrence;
+import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 
 import org.apache.beam.sdk.values.TypeDescriptor;
 

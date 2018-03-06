@@ -1,6 +1,6 @@
 {
     "type":"record",
-    "namespace":"org.gbif.dwca.avro",
+    "namespace":"org.gbif.pipelines.io.avro",
     "name":"Event",
     "doc":"An action that occurs at some location during some time.",
     "fields":[

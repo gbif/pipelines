@@ -2,10 +2,11 @@ package org.gbif.pipelines.labs;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.labs.util.HdfsTestUtils;
 import org.gbif.pipelines.transform.TypeDescriptors;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.config.Interpretation;
+import org.gbif.pipelines.config.OptionsKeyEnum;
 import org.gbif.pipelines.config.TargetPath;
 import org.gbif.pipelines.labs.functions.FunctionFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -25,12 +26,8 @@ import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -47,25 +44,17 @@ public class DwcaToHdfsPipelineTest {
 
   private static final String DWCA_FILE_PATH = "data/dwca.zip";
 
-  private static MiniDFSCluster hdfsCluster;
+  private static HdfsTestUtils.MiniClusterConfig clusterConfig;
   private static Configuration configuration = new Configuration();
-  private static FileSystem fs;
-  private static URI hdfsClusterBaseUri;
 
   @BeforeClass
   public static void setUp() throws Exception {
-    File baseDir = new File("./miniCluster/hdfs/").getAbsoluteFile();
-    FileUtil.fullyDelete(baseDir);
-    configuration.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.getAbsolutePath());
-    MiniDFSCluster.Builder builder = new MiniDFSCluster.Builder(configuration);
-    hdfsCluster = builder.build();
-    fs = FileSystem.newInstance(configuration);
-    hdfsClusterBaseUri = new URI(configuration.get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY) + "/");
+    clusterConfig = HdfsTestUtils.createMiniCluster(configuration);
   }
 
   @AfterClass
   public static void tearDown() {
-    hdfsCluster.shutdown();
+    clusterConfig.hdfsCluster.shutdown();
   }
 
   @Test
@@ -77,16 +66,16 @@ public class DwcaToHdfsPipelineTest {
 
     options.setInputFile(DWCA_FILE_PATH);
     options.setDatasetId("123");
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "/pipelines");
+    options.setDefaultTargetDirectory(clusterConfig.hdfsClusterBaseUri + "/pipelines");
 
     // create and run pipeline
     createAndRunPipeline(options);
 
     // test results
     URI uriTargetPath =
-      hdfsClusterBaseUri.resolve(TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId())
+      clusterConfig.hdfsClusterBaseUri.resolve(TargetPath.fullPath(options.getDefaultTargetDirectory(), options.getDatasetId())
                                  + "*");
-    FileStatus[] fileStatuses = fs.globStatus(new Path(uriTargetPath.toString()));
+    FileStatus[] fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);
     Assert.assertTrue(fileStatuses.length > 0);
@@ -94,7 +83,7 @@ public class DwcaToHdfsPipelineTest {
     // a bit redundant, just for demo purposes
     for (FileStatus fileStatus : fileStatuses) {
       Assert.assertTrue(fileStatus.isFile());
-      Assert.assertTrue(fs.exists(fileStatus.getPath()));
+      Assert.assertTrue(clusterConfig.fs.exists(fileStatus.getPath()));
     }
 
   }
@@ -115,12 +104,12 @@ public class DwcaToHdfsPipelineTest {
     // create options
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
-    Map<Interpretation, TargetPath> targetPaths = options.getTargetPaths();
+    Map<OptionsKeyEnum, TargetPath> targetPaths = options.getTargetPaths();
 
     Assert.assertNotNull(targetPaths);
-    Assert.assertEquals(Interpretation.values().length, targetPaths.size());
+    Assert.assertEquals(OptionsKeyEnum.values().length, targetPaths.size());
 
-    for (Interpretation interpretation : Interpretation.values()) {
+    for (OptionsKeyEnum interpretation : OptionsKeyEnum.values()) {
       TargetPath tp = targetPaths.get(interpretation);
 
       Assert.assertNotNull(tp);
@@ -133,7 +122,7 @@ public class DwcaToHdfsPipelineTest {
   private void createAndRunPipeline(DataProcessingPipelineOptions options) {
     Objects.requireNonNull(options, "Pipeline options cannot be null");
 
-    String targetPath = TargetPath.getFullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
+    String targetPath = TargetPath.fullPath(options.getDefaultTargetDirectory(), options.getDatasetId());
 
     LOG.info("Target path : {}", targetPath);
 

@@ -61,7 +61,7 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.32</gbif-parsers.version>
     <dwca-io.version>1.33-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>0.58</gbif-api.version>
+    <gbif-api.version>0.59-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.36</gbif-common.version>
     <dwc-api.version>1.18-SNAPSHOT</dwc-api.version>
 
@@ -79,6 +79,7 @@
     <slf4j.version>1.7.24</slf4j.version>
     <logback.version>1.1.5</logback.version>
     <commons-compress.version>1.16.1</commons-compress.version>
+    <mockwebserver.version>3.10.0</mockwebserver.version>
 
     <!-- Test libraries -->
     <junit.version>4.12</junit.version>
@@ -152,6 +153,12 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwc-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
@@ -326,7 +333,25 @@
         <version>${hamcrest.version}</version>
         <scope>test</scope>
       </dependency>
-
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>mockwebserver</artifactId>
+        <version>${mockwebserver.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-minicluster</artifactId>
+        <version>${hadoop-common.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs</artifactId>
+        <classifier>tests</classifier>
+        <version>${hadoop-common.version}</version>
+        <scope>test</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 </project>

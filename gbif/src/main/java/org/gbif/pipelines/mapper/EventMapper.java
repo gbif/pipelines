@@ -1,7 +1,7 @@
 package org.gbif.pipelines.mapper;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwca.avro.Event;
+import org.gbif.pipelines.io.avro.Event;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.function.Function;

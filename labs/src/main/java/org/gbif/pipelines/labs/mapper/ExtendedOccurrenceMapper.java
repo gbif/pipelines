@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs.mapper;
 
-import org.gbif.dwca.avro.ExtendedOccurrence;
-import org.gbif.dwca.avro.Location;
+import org.gbif.pipelines.io.avro.ExtendedOccurrence;
+import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 

@@ -57,7 +57,7 @@
 
                 <relocation>
                   <pattern>retrofit2</pattern>
-                  <shadedPattern>tim.retrofit2</shadedPattern>
+                  <shadedPattern>gbif.retrofit2</shadedPattern>
                 </relocation>
 
                 <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
@@ -77,6 +77,12 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-parsers</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gbif</groupId>
+          <artifactId>gbif-common</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -188,6 +194,11 @@
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-runners-direct-java</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
