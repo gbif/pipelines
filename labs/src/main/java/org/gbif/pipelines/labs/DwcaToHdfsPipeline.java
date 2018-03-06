@@ -2,13 +2,13 @@ package org.gbif.pipelines.labs;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.transform.TypeDescriptors;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.config.TargetPath;
-import org.gbif.pipelines.labs.functions.FunctionFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
+import org.gbif.pipelines.labs.functions.FunctionFactory;
+import org.gbif.pipelines.transform.TypeDescriptors;
 
 import java.io.File;
 

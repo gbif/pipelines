@@ -1,10 +1,10 @@
 package org.gbif.pipelines.labs.functions;
 
-import org.gbif.pipelines.labs.functions.ws.gbif.species.NubSpeciesMatchFunction;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
 import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
+import org.gbif.pipelines.labs.functions.ws.gbif.species.NubSpeciesMatchFunction;
 
 import org.apache.beam.sdk.transforms.SerializableFunction;
 

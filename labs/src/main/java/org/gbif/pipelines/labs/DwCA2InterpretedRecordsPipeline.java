@@ -1,19 +1,19 @@
 package org.gbif.pipelines.labs;
 
-import org.gbif.pipelines.io.avro.Event;
-import org.gbif.pipelines.io.avro.ExtendedOccurrence;
-import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.io.avro.Issue;
-import org.gbif.pipelines.io.avro.IssueLineageRecord;
-import org.gbif.pipelines.io.avro.Lineage;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.config.OptionsKeyEnum;
 import org.gbif.pipelines.config.TargetPath;
+import org.gbif.pipelines.io.avro.Event;
+import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.Issue;
+import org.gbif.pipelines.io.avro.IssueLineageRecord;
+import org.gbif.pipelines.io.avro.Lineage;
+import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.transform.common.Kv2Value;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;

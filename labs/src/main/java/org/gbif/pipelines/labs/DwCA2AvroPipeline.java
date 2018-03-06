@@ -2,9 +2,9 @@ package org.gbif.pipelines.labs;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.transform.TypeDescriptors;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.UntypedOccurrence;
+import org.gbif.pipelines.transform.TypeDescriptors;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;

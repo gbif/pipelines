@@ -4,8 +4,8 @@ import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.NormalizedDwcArchive;
 import org.gbif.dwca.io.Archive;
 import org.gbif.dwca.record.StarRecord;
-import org.gbif.pipelines.transform.functions.FunctionFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transform.functions.FunctionFactory;
 import org.gbif.utils.file.ClosableIterator;
 
 import java.io.IOException;

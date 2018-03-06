@@ -2,8 +2,8 @@ package org.gbif.pipelines.labs;
 
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.labs.transform.ExtendedOccurrenceTransform;
 import org.gbif.pipelines.transform.common.Kv2Value;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
