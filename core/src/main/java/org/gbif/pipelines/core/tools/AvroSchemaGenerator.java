@@ -20,7 +20,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.google.common.base.CaseFormat;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.codehaus.jackson.JsonNode;
