@@ -3,7 +3,7 @@ package org.gbif.pipelines.labs.transform;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.Kv2Value;
 
 import java.util.Arrays;
 import java.util.List;
