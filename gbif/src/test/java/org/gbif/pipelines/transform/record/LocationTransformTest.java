@@ -32,8 +32,8 @@ public class LocationTransformTest {
   public void testTransformation() {
 
     // State
-    final String[] denmark = {"0", "DENMARK", "DK", "EUROPE", "100.0", "110.0", "111.0", "200.0", "Ocean", "220.0", "222.0"};
-    final String[] japan = {"1", "JAPAN", "JP", "ASIA", "100.0", "110.0", "111.0", "200.0", "Ocean", "220.0", "222.0"};
+    final String[] denmark = {"0", "DENMARK", "DK", "EUROPE", "100.0", "110.0", "111.0", "200.0", "Ocean", "220.0", "222.0", "30.0", "0.00001"};
+    final String[] japan = {"1", "JAPAN", "JP", "ASIA", "100.0", "110.0", "111.0", "200.0", "Ocean", "220.0", "222.0", "30.0", "0.00001"};
     final List<ExtendedRecord> records = createExtendedRecordList(denmark, japan);
 
     // Expected
@@ -67,6 +67,8 @@ public class LocationTransformTest {
       record.getCoreTerms().put(DwcTerm.waterBody.qualifiedName(), x[8]);
       record.getCoreTerms().put(DwcTerm.minimumDistanceAboveSurfaceInMeters.qualifiedName(), x[9]);
       record.getCoreTerms().put(DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName(), x[10]);
+      record.getCoreTerms().put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), x[11]);
+      record.getCoreTerms().put(DwcTerm.coordinatePrecision.qualifiedName(), x[12]);
       return record;
     }).collect(Collectors.toList());
   }
@@ -85,6 +87,8 @@ public class LocationTransformTest {
         .setWaterBody(x[8])
         .setMinimumDistanceAboveSurfaceInMeters(Double.valueOf(x[9]))
         .setMaximumDistanceAboveSurfaceInMeters(Double.valueOf(x[10]))
+        .setCoordinateUncertaintyInMeters(Double.valueOf(x[11]))
+        .setCoordinatePrecision(Double.valueOf(x[12]))
         .build())
       .collect(Collectors.toList());
   }
