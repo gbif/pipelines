@@ -157,7 +157,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
         locationRecord.setMinimumDistanceAboveSurfaceInMeters(parseResult.getPayload());
       } else {
         interpretation.withValidation(Trace.of(DwcTerm.minimumDistanceAboveSurfaceInMeters.name(),
-                                               IssueType.MIN_DISTANCE_ABOVE_SURFACE));
+                                               IssueType.MIN_DISTANCE_ABOVE_SURFACE_INVALID));
       }
       return interpretation;
     };
@@ -175,7 +175,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
         locationRecord.setMaximumDistanceAboveSurfaceInMeters(parseResult.getPayload());
       } else {
         interpretation.withValidation(Trace.of(DwcTerm.maximumDistanceAboveSurfaceInMeters.name(),
-                                               IssueType.MAX_DISTANCE_ABOVE_SURFACE));
+                                               IssueType.MAX_DISTANCE_ABOVE_SURFACE_INVALID));
       }
       return interpretation;
     };
