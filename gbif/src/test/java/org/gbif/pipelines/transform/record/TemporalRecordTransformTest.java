@@ -4,7 +4,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.Kv2Value;
 
 import java.time.LocalDateTime;
 import java.time.Month;
