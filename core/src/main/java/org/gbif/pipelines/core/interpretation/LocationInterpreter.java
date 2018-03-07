@@ -26,48 +26,45 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
    * {@link DwcTerm#country} interpretation.
    */
   static LocationInterpreter interpretCountry(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) -> VocabularyParsers.countryParser()
-      .map(extendedRecord, parseResult -> {
-        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-        if (parseResult.isSuccessful()) {
-          locationRecord.setCountry(parseResult.getPayload().name());
-        } else {
-          interpretation.withValidation(Trace.of(DwcTerm.country.name(), IssueType.COUNTRY_INVALID));
-        }
-        return interpretation;
-      }).get();
+    return (ExtendedRecord extendedRecord) -> VocabularyParsers.countryParser().map(extendedRecord, parseResult -> {
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+      if (parseResult.isSuccessful()) {
+        locationRecord.setCountry(parseResult.getPayload().name());
+      } else {
+        interpretation.withValidation(Trace.of(DwcTerm.country.name(), IssueType.COUNTRY_INVALID));
+      }
+      return interpretation;
+    }).get();
   }
 
   /**
    * {@link DwcTerm#countryCode} interpretation.
    */
   static LocationInterpreter interpretCountryCode(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) -> VocabularyParsers.countryParser()
-      .map(extendedRecord, parseResult -> {
-        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-        if (parseResult.isSuccessful()) {
-          locationRecord.setCountryCode(parseResult.getPayload().name());
-        } else {
-          interpretation.withValidation(Trace.of(DwcTerm.countryCode.name(), IssueType.COUNTRY_INVALID));
-        }
-        return interpretation;
-      }).get();
+    return (ExtendedRecord extendedRecord) -> VocabularyParsers.countryParser().map(extendedRecord, parseResult -> {
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+      if (parseResult.isSuccessful()) {
+        locationRecord.setCountryCode(parseResult.getPayload().name());
+      } else {
+        interpretation.withValidation(Trace.of(DwcTerm.countryCode.name(), IssueType.COUNTRY_INVALID));
+      }
+      return interpretation;
+    }).get();
   }
 
   /**
    * {@link DwcTerm#continent} interpretation.
    */
   static LocationInterpreter interpretContinent(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) -> VocabularyParsers.continentParser()
-      .map(extendedRecord, parseResult -> {
-        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-        if (parseResult.isSuccessful()) {
-          locationRecord.setContinent(parseResult.getPayload().name());
-        } else {
-          interpretation.withValidation(Trace.of(DwcTerm.continent.name(), IssueType.CONTINENT_INVALID));
-        }
-        return interpretation;
-      }).get();
+    return (ExtendedRecord extendedRecord) -> VocabularyParsers.continentParser().map(extendedRecord, parseResult -> {
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+      if (parseResult.isSuccessful()) {
+        locationRecord.setContinent(parseResult.getPayload().name());
+      } else {
+        interpretation.withValidation(Trace.of(DwcTerm.continent.name(), IssueType.CONTINENT_INVALID));
+      }
+      return interpretation;
+    }).get();
   }
 
   /**
@@ -95,9 +92,8 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       if (parseResult.isSuccessful()) {
         locationRecord.setMinimumElevationInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(
-          Trace.of(DwcTerm.minimumElevationInMeters.name(), IssueType.MIN_ELEVATION_INVALID)
-        );
+        interpretation.withValidation(Trace.of(DwcTerm.minimumElevationInMeters.name(),
+                                               IssueType.MIN_ELEVATION_INVALID));
       }
       return interpretation;
     };
@@ -114,9 +110,8 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       if (parseResult.isSuccessful()) {
         locationRecord.setMaximumElevationInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(
-          Trace.of(DwcTerm.maximumElevationInMeters.name(), IssueType.MAX_ELEVATION_INVALID)
-        );
+        interpretation.withValidation(Trace.of(DwcTerm.maximumElevationInMeters.name(),
+                                               IssueType.MAX_ELEVATION_INVALID));
       }
       return interpretation;
     };
@@ -167,9 +162,8 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       if (parseResult.isSuccessful()) {
         locationRecord.setMinimumDistanceAboveSurfaceInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(
-          Trace.of(DwcTerm.minimumDistanceAboveSurfaceInMeters.name(), IssueType.MIN_DISTANCE_ABOVE_SURFACE_INVALID)
-        );
+        interpretation.withValidation(Trace.of(DwcTerm.minimumDistanceAboveSurfaceInMeters.name(),
+                                               IssueType.MIN_DISTANCE_ABOVE_SURFACE_INVALID));
       }
       return interpretation;
     };
@@ -186,8 +180,8 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       if (parseResult.isSuccessful()) {
         locationRecord.setMaximumDistanceAboveSurfaceInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(
-          Trace.of(DwcTerm.maximumDistanceAboveSurfaceInMeters.name(), IssueType.MAX_DISTANCE_ABOVE_SURFACE_INVALID));
+        interpretation.withValidation(Trace.of(DwcTerm.maximumDistanceAboveSurfaceInMeters.name(),
+                                               IssueType.MAX_DISTANCE_ABOVE_SURFACE_INVALID));
       }
       return interpretation;
     };
@@ -202,12 +196,13 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       String value = extendedRecord.getCoreTerms().get(DwcTerm.coordinateUncertaintyInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value.trim());
       Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
-      if (result != null && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
+      if (result != null
+          && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
+          && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
         locationRecord.setCoordinateUncertaintyInMeters(result);
       } else {
-        interpretation.withValidation(
-          Trace.of(DwcTerm.coordinateUncertaintyInMeters.name(), IssueType.COORDINATE_UNCERTAINTY_METERS_INVALID)
-        );
+        interpretation.withValidation(Trace.of(DwcTerm.coordinateUncertaintyInMeters.name(),
+                                               IssueType.COORDINATE_UNCERTAINTY_METERS_INVALID));
       }
       return interpretation;
     };
