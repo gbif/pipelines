@@ -46,8 +46,8 @@ public class TargetPath implements Serializable {
    * @return path generated
    */
   public static String fullPath(String directory, String fileName) {
-    Preconditions.checkArgument(Strings.isNullOrEmpty(directory),"missing directory argument");
-    Preconditions.checkArgument(Strings.isNullOrEmpty(fileName),"missing fileName argument");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(directory),"missing directory argument");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(fileName),"missing fileName argument");
     return directory.endsWith(File.separator) ? directory + fileName : directory + File.separator + fileName;
   }
 
