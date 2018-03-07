@@ -85,7 +85,8 @@
                     "MIN_DEPTH_INVALID",
                     "MAX_DEPTH_INVALID",
                     "MIN_DISTANCE_ABOVE_SURFACE_INVALID",
-                    "MAX_DISTANCE_ABOVE_SURFACE_INVALID"
+                    "MAX_DISTANCE_ABOVE_SURFACE_INVALID",
+                    "POINT_RADIUS_SPATIAL_FIT_INVALID"
                   ]
                 }
               }

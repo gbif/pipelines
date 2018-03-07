@@ -37,6 +37,8 @@ public class ExtendedOccurrenceMapper {
       .setMaximumDepthInMeters(location.getMaximumDepthInMeters())
       .setMinimumDistanceAboveSurfaceInMeters(location.getMinimumDistanceAboveSurfaceInMeters())
       .setMaximumDistanceAboveSurfaceInMeters(location.getMaximumDistanceAboveSurfaceInMeters())
+      .setCoordinatePrecision(location.getCoordinatePrecision())
+      .setCoordinateUncertaintyInMeters(location.getCoordinateUncertaintyInMeters())
       .build();
   }
 
