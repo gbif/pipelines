@@ -56,6 +56,7 @@ public class LocationMapper {
       .setDynamicProperties(getValue.apply(DwcTerm.dynamicProperties))
       .setInformationWithheld(getValue.apply(DwcTerm.informationWithheld))
       .setDataGeneralizations(getValue.apply(DwcTerm.dataGeneralizations))
+      .setPointRadiusSpatialFit(getValue.apply(DwcTerm.pointRadiusSpatialFit))
       .build();
   }
 
