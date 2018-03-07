@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transform.common;
+package org.gbif.pipelines.transform;
 
 import java.util.Collections;
 import java.util.List;

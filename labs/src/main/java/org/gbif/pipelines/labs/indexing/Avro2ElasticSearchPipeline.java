@@ -83,7 +83,7 @@ public class Avro2ElasticSearchPipeline {
 
       // location suitable for geopoint format
       if (Objects.nonNull(stripped.get(DECIMAL_LATITUDE)) && Objects.nonNull(stripped.get(DECIMAL_LONGITUDE))) {
-        stripped.put(LOCATION, stripped.get(DECIMAL_LONGITUDE).concat(",").concat(stripped.get(DECIMAL_LONGITUDE)));
+        stripped.put(LOCATION, stripped.get(DECIMAL_LATITUDE).concat(",").concat(stripped.get(DECIMAL_LONGITUDE)));
       }
 
       try {

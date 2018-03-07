@@ -83,7 +83,9 @@
                     "MIN_ELEVATION_INVALID",
                     "MAX_ELEVATION_INVALID",
                     "MIN_DEPTH_INVALID",
-                    "MAX_DEPTH_INVALID"
+                    "MAX_DEPTH_INVALID",
+                    "MIN_DISTANCE_ABOVE_SURFACE",
+                    "MAX_DISTANCE_ABOVE_SURFACE"
                   ]
                 }
               }

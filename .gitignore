@@ -5,6 +5,7 @@ target
 *.iml
 output
 *.log
-demo/miniCluster/
-demo/data/tmpDwca/
+labs/miniCluster
+labs/data/tmpDwca
+labs/src/main/java-generated
 core/src/main/java-generated

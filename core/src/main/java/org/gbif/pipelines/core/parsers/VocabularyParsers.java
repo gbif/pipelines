@@ -104,41 +104,6 @@ public class VocabularyParsers<T extends Enum<T>> {
   }
 
   /**
-   * @return a waterBody parser.
-   */
-  public static VocabularyParsers<Country> waterBodyParser() {
-    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.waterBody);
-  }
-
-  /**
-   * @return a minimumElevationInMeters parser.
-   */
-  public static VocabularyParsers<Country> minimumElevationInMetersParser() {
-    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.minimumElevationInMeters);
-  }
-
-  /**
-   * @return a maximumElevationInMeters parser.
-   */
-  public static VocabularyParsers<Country> maximumElevationInMetersParser() {
-    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.maximumElevationInMeters);
-  }
-
-  /**
-   * @return a minimumDepthInMeters parser.
-   */
-  public static VocabularyParsers<Country> minimumDepthInMetersParser() {
-    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.minimumDepthInMeters);
-  }
-
-  /**
-   * @return a maximumDepthInMeters parser.
-   */
-  public static VocabularyParsers<Country> maximumDepthInMetersParser() {
-    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.maximumDepthInMeters);
-  }
-
-  /**
    * Runs a parsing method on a extended record.
    *
    * @param extendedRecord to be used as input
