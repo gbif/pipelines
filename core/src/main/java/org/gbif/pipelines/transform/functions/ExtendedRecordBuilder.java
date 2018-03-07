@@ -16,8 +16,7 @@ class ExtendedRecordBuilder implements Function<StarRecord, ExtendedRecord> {
 
   @Override
   public ExtendedRecord apply(StarRecord record) {
-    ExtendedRecord.Builder builder = ExtendedRecord.newBuilder()
-                                                   .setId(record.core().id());
+    ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(record.core().id());
     builder.setCoreTerms(new HashMap<>());
 
     for (Term term : record.core().terms()) {

@@ -81,9 +81,7 @@ public class DwCAIO {
      * Will always return a single entry list of just ourselves. This is not splittable.
      */
     @Override
-    public List<? extends BoundedSource<ExtendedRecord>> split(
-      long desiredBundleSizeBytes, PipelineOptions options
-    ) {
+    public List<? extends BoundedSource<ExtendedRecord>> split(long desiredBundleSizeBytes, PipelineOptions options) {
       List<DwCASource> readers = new ArrayList<>();
       readers.add(this);
       return readers;

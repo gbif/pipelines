@@ -20,7 +20,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.google.common.base.CaseFormat;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.codehaus.jackson.JsonNode;
@@ -46,7 +45,7 @@ public final class AvroSchemaGenerator {
   private static final Map<String, Schema> COMMON_TYPES_SCHEMAS = new HashMap<>();
 
   /**
-   * key -> {@link org.apache.avro.Schema.Type} , value -> {@link JsonNode} witht the default value.
+   * key -> {@link org.apache.avro.Schema.Type} , value -> {@link JsonNode} with the default value.
    */
   private static final EnumMap<Schema.Type, JsonNode> COMMON_SCHEMAS_DEFAULTS = new EnumMap<>(Schema.Type.class);
 
@@ -122,7 +121,6 @@ public final class AvroSchemaGenerator {
   }
 
   private static SchemaData generateSchemaData(Class<?> clazz, String schemaName, String schemaDoc, String namespace) {
-
     Objects.requireNonNull(clazz, "clazz argument is required");
     Objects.requireNonNull(schemaName, "schema name argument is required");
     Objects.requireNonNull(namespace, "namespace argument is required");
@@ -136,10 +134,8 @@ public final class AvroSchemaGenerator {
     // we always add the schema itself as a type
     customTypes.put(clazz.getSimpleName(), schemaGenerated);
 
-    List<Schema.Field> schemaFields = createFields(clazz, customTypes, namespace);
-
     // return data
-    return new SchemaData(schemaGenerated, schemaFields);
+    return new SchemaData(schemaGenerated, createFields(clazz, customTypes, namespace));
   }
 
 
@@ -221,16 +217,9 @@ public final class AvroSchemaGenerator {
   }
 
   private static Schema createSchema(String className, Map<String, Schema> customSchemas) {
-    if (customSchemas.containsKey(className)) {
-      return customSchemas.get(className);
-    }
-
-    if (COMMON_TYPES_SCHEMAS.get(className.toLowerCase()) == null) {
-      return Schema.create(Schema.Type.STRING);
-    }
-
-    return Optional.ofNullable(COMMON_TYPES_SCHEMAS.get(className.toLowerCase()))
-      .orElse(Schema.create(Schema.Type.STRING));
+    return customSchemas.getOrDefault(className,
+                                      Optional.ofNullable(COMMON_TYPES_SCHEMAS.get(className.toLowerCase()))
+                                        .orElse(Schema.create(Schema.Type.STRING)));
   }
 
   /**

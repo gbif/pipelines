@@ -2,7 +2,9 @@ package org.gbif.pipelines.config;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.Optional;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 /**
  * Models a target path composed by the directory and the file name.
@@ -31,8 +33,8 @@ public class TargetPath implements Serializable {
 
   public TargetPath(String fullFilePath) {
     File f = new File(fullFilePath);
-    this.directory = f.getParentFile().getAbsolutePath();
-    this.fileName = f.getName();
+    directory = f.getParentFile().getAbsolutePath();
+    fileName = f.getName();
   }
 
   /**
@@ -44,14 +46,9 @@ public class TargetPath implements Serializable {
    * @return path generated
    */
   public static String fullPath(String directory, String fileName) {
-    String targetDir = Optional.ofNullable(directory)
-      .filter(s -> !s.isEmpty())
-      .orElseThrow(() -> new IllegalArgumentException("missing directory argument"));
-    String datasetId = Optional.ofNullable(fileName)
-      .filter(s -> !s.isEmpty())
-      .orElseThrow(() -> new IllegalArgumentException("missing fileName argument"));
-
-    return targetDir.endsWith(File.separator) ? targetDir + datasetId : targetDir + File.separator + datasetId;
+    Preconditions.checkArgument(Strings.isNullOrEmpty(directory),"missing directory argument");
+    Preconditions.checkArgument(Strings.isNullOrEmpty(fileName),"missing fileName argument");
+    return directory.endsWith(File.separator) ? directory + fileName : directory + File.separator + fileName;
   }
 
   public String getDirectory() {
@@ -66,7 +63,7 @@ public class TargetPath implements Serializable {
    * @return a full path which concatenates the directory and file names.
    */
   public String filePath() {
-    return TargetPath.fullPath(this.getDirectory(), this.getFileName());
+    return fullPath(directory, fileName);
   }
 
 }

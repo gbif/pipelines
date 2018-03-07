@@ -104,7 +104,7 @@ public class ExtendedRecordCustomBuilder {
     return ExtendedRecord.newBuilder().setId(id).setCoreTerms(terms).build();
   }
 
-  private void addToTerms(Map<String, String> terms, String term, String value) {
+  private static void addToTerms(Map<String, String> terms, String term, String value) {
     if (value != null) {
       terms.put(term, value);
     }

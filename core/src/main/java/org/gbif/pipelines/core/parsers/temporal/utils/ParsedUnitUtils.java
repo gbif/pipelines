@@ -5,7 +5,8 @@ import java.time.Year;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 /**
@@ -25,7 +26,7 @@ public class ParsedUnitUtils {
   }
 
   public static Optional<Integer> parseMonth(String month) {
-    if (isEmpty(month)) {
+    if (isNullOrEmpty(month)) {
       return Optional.empty();
     }
     return isNumeric(month) ? parseMonthAsInt(month) : parseMonthAsString(month);
@@ -69,7 +70,7 @@ public class ParsedUnitUtils {
    * @return parsed value or ISSUE(-1) value, if value is invalid
    */
   private static Optional<Integer> parseInteger(String rawValue, Predicate<Integer> validator) {
-    Integer value = (!isEmpty(rawValue) && isNumeric(rawValue) && rawValue.length() < 5) ? Integer.valueOf(rawValue) : -1;
+    Integer value = (!isNullOrEmpty(rawValue) && isNumeric(rawValue) && rawValue.length() < 5) ? Integer.valueOf(rawValue) : -1;
     return validator.test(value) ? Optional.empty() : Optional.of(value);
   }
 
