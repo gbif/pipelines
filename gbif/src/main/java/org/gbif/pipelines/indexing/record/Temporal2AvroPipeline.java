@@ -4,7 +4,7 @@ import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.record.TemporalRecordTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 

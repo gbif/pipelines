@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transform.common;
+package org.gbif.pipelines.transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.PTransform;

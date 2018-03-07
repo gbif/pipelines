@@ -6,7 +6,7 @@ import org.gbif.pipelines.config.OptionsKeyEnum;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.record.TaxonRecordTransform;
 
 import org.apache.beam.sdk.Pipeline;

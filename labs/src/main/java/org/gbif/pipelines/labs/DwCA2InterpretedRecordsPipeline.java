@@ -14,7 +14,7 @@ import org.gbif.pipelines.io.avro.Issue;
 import org.gbif.pipelines.io.avro.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.Lineage;
 import org.gbif.pipelines.io.avro.Location;
-import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 

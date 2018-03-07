@@ -8,7 +8,7 @@ import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.transform.common.Kv2Value;
+import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.ws.MockServer;
 
 import java.io.IOException;
