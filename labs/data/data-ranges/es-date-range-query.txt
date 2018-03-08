@@ -1,0 +1,12 @@
+POST es-date-ranges/_search
+{
+  "query" : {
+    "range" : {
+      "eventDate" : {
+        "gte" : "2010-01",
+        "lte" : "2011-01",
+        "relation" : "within"
+      }
+    }
+  }
+}

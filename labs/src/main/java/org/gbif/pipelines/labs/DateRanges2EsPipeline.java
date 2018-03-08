@@ -18,12 +18,14 @@ public class DateRanges2EsPipeline {
   private static final String ES_IDX = "es-date-ranges";
   private static final String[] ES_ADDRESSES = {"http://c3n1.gbif.org:9200", "http://c3n2.gbif.org:9200", "http://c3n3.gbif.org:9200"};
   private static final String FILE_PATH = "labs/data/data-ranges/es-date-ranges.txt";
+  private static final String DELETE_IDX = String.format("curl -X DELETE %s/%s", ES_ADDRESSES[0], ES_IDX);
+  private static final String CREATE_IDX = String.format("curl -X PUT %s/%s -d @labs/data/data-ranges/es-index-mapping.json", ES_ADDRESSES[0], ES_IDX);
 
   public static void main(String[] args) throws Exception {
 
-    // Prestep: Create ES index
-    Runtime.getRuntime().exec(String.format("curl -X DELETE %s/%s", ES_ADDRESSES[0], ES_IDX)).waitFor();
-    Runtime.getRuntime().exec(String.format("curl -X PUT %s/%s -d @labs/data/data-ranges/es-index-mapping.json", ES_ADDRESSES[0], ES_IDX)).waitFor();
+    // Prestep: Recreate ES index
+    Runtime.getRuntime().exec(DELETE_IDX).waitFor();
+    Runtime.getRuntime().exec(CREATE_IDX).waitFor();
 
     // Step 0: Options
     PipelineOptions options = PipelineOptionsFactory.create();
