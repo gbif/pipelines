@@ -54,7 +54,6 @@ public class ExtendedOccurrenceTransformTest {
 
   @Test
   @Category(NeedsRunner.class)
-
   public void testTransformation() {
 
     // State
