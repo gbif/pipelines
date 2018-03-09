@@ -3,6 +3,11 @@ package org.gbif.pipelines.core.parsers;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Models a parsed field.
+ * <p>
+ * A field can be as simple as a single {@link org.gbif.dwc.terms.DwcTerm} or a wrapper with several fields inside.
+ */
 public class ParsedField<T> {
 
   // TODO: do we need confidence??

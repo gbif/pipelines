@@ -8,6 +8,10 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
+/**
+ * Models an issue found during the interpretation process. It links the issue with the
+ * {@link org.gbif.dwc.terms.DwcTerm} associated that caused the issue.
+ */
 public class InterpretationIssue {
 
   private final List<Term> terms;

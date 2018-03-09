@@ -44,7 +44,7 @@ public class LocationParser {
     Optional<Country> countryCode = Optional.ofNullable(countryCodeParsed.getResult());
 
     // check for a mismatch between the country and the country code
-    if (countryName.isPresent() && countryCode.isPresent() && !countryName.get().equals(countryCode.get())) {
+    if (isCountryMismatch(countryName, countryCode)) {
       issues.add(new InterpretationIssue(IssueType.COUNTRY_MISMATCH, DwcTerm.country, DwcTerm.countryCode));
     }
 
@@ -62,36 +62,43 @@ public class LocationParser {
       return ParsedField.fail(parsedLocation, issues);
     }
 
-    // get result and issues from coordinates parsing
-    LatLng latLng = coordsParsed.getResult();
+    // add issues from coordinates parsing
     issues.addAll(coordsParsed.getIssues());
 
     // set current parsed valuies
-    ParsedLocation parsedLocation = ParsedLocation.newBuilder().country(countryMatched).latLng(latLng).build();
+    ParsedLocation parsedLocation = ParsedLocation.newBuilder().country(countryMatched).latLng(coordsParsed.getResult()).build();
 
     // if the coords parsing was succesfull we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
       LocationMatcher.newMatcher(parsedLocation.getLatLng(), parsedLocation.getCountry())
-        .addAdditionalTransform(CoordinatesTransformation.PRESUMED_NEGATED_LAT)
-        .addAdditionalTransform(CoordinatesTransformation.PRESUMED_NEGATED_LNG)
-        .addAdditionalTransform(CoordinatesTransformation.PRESUMED_NEGATED_COORDS)
-        .addAdditionalTransform(CoordinatesTransformation.PRESUMED_SWAPPED_COORDS)
+        .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LAT)
+        .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LNG)
+        .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_COORDS)
+        .addAdditionalTransform(CoordinatesFunction.PRESUMED_SWAPPED_COORDS)
         .applyMatch();
 
     // if the match succeed we use it as a result
     if (match.isSuccessful()) {
       issues.addAll(match.getIssues());
-      return ParsedField.<ParsedLocation>newBuilder().successful(match.isSuccessful() && countryMatched != null)
+      return ParsedField.<ParsedLocation>newBuilder().successful(isParsingSuccessful(countryMatched, match))
         .result(match.getResult())
         .issues(issues)
         .build();
     }
 
     // if match failed we return the previous values
-    return ParsedField.<ParsedLocation>newBuilder().successful(match.isSuccessful() && countryMatched != null)
+    return ParsedField.<ParsedLocation>newBuilder().successful(isParsingSuccessful(countryMatched, match))
       .result(parsedLocation)
       .issues(issues)
       .build();
+  }
+
+  private static boolean isParsingSuccessful(Country countryMatched, ParsedField<ParsedLocation> match) {
+    return match.isSuccessful() && countryMatched != null;
+  }
+
+  private static boolean isCountryMismatch(Optional<Country> countryName, Optional<Country> countryCode) {
+    return countryName.isPresent() && countryCode.isPresent() && !countryName.get().equals(countryCode.get());
   }
 
   private static ParsedField<Country> parseCountry(ExtendedRecord extendedRecord) {

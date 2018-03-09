@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-public enum CoordinatesTransformation {
+public enum CoordinatesFunction {
 
   IDENTITY(Function.identity()), // no location transform
   PRESUMED_NEGATED_LAT(Transformers.NEGATED_LAT_FN), // lat negated
@@ -18,7 +18,7 @@ public enum CoordinatesTransformation {
 
   private final Function<LatLng, LatLng> transformer;
 
-  CoordinatesTransformation(Function<LatLng, LatLng> transformer) {
+  CoordinatesFunction(Function<LatLng, LatLng> transformer) {
     this.transformer = transformer;
   }
 
@@ -38,7 +38,7 @@ public enum CoordinatesTransformation {
       (latLng) -> new LatLng(latLng.getLng(), latLng.getLat());
   }
 
-  public static List<IssueType> getIssueTypes(CoordinatesTransformation transformation) {
+  public static List<IssueType> getIssueTypes(CoordinatesFunction transformation) {
     if (transformation == PRESUMED_NEGATED_LAT) {
       return Collections.singletonList(IssueType.PRESUMED_NEGATED_LATITUDE);
     } else if (transformation == PRESUMED_NEGATED_LNG) {

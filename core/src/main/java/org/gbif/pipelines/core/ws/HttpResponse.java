@@ -31,9 +31,8 @@ public class HttpResponse<T> {
   /**
    * Creates a {@link HttpResponse} for a failed call.
    */
-  public static <S> HttpResponse<S> fail(S body, int responseCode, String errorMessage, ErrorCode errorCode) {
-    return Builder.<S>newBuilder().body(body)
-      .httpResponseCode(responseCode)
+  public static <S> HttpResponse<S> fail(int responseCode, String errorMessage, ErrorCode errorCode) {
+    return Builder.<S>newBuilder().httpResponseCode(responseCode)
       .error(true)
       .errorCode(errorCode)
       .errorMessage(errorMessage)
@@ -43,8 +42,8 @@ public class HttpResponse<T> {
   /**
    * Creates a {@link HttpResponse} for a failed call.
    */
-  public static <S> HttpResponse<S> fail(S body, String errorMessage, ErrorCode errorCode) {
-    return Builder.<S>newBuilder().body(body).error(true).errorCode(errorCode).errorMessage(errorMessage).build();
+  public static <S> HttpResponse<S> fail(String errorMessage, ErrorCode errorCode) {
+    return Builder.<S>newBuilder().error(true).errorCode(errorCode).errorMessage(errorMessage).build();
   }
 
   public T getBody() {

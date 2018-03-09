@@ -33,7 +33,7 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
       AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
       // get match from WS
-      HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.getMatch(extendedRecord);
+      HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.getInstance().getMatch(extendedRecord);
 
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 

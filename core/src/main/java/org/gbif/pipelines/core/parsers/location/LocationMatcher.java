@@ -27,7 +27,7 @@ public class LocationMatcher {
 
   private final LatLng latLng;
   private final Country country;
-  private List<CoordinatesTransformation> alternativeTransformations = new ArrayList<>();
+  private List<CoordinatesFunction> alternativeTransformations = new ArrayList<>();
 
   private LocationMatcher(LatLng latLng, Country country) {
     this.latLng = latLng;
@@ -42,7 +42,7 @@ public class LocationMatcher {
     return new LocationMatcher(latLng, null);
   }
 
-  public LocationMatcher addAdditionalTransform(CoordinatesTransformation transformType) {
+  public LocationMatcher addAdditionalTransform(CoordinatesFunction transformType) {
     alternativeTransformations.add(transformType);
     return this;
   }
@@ -67,7 +67,7 @@ public class LocationMatcher {
 
     if (this.country != null) {
       // try alternative transformations if the country was supplied
-      for (CoordinatesTransformation transformation : alternativeTransformations) {
+      for (CoordinatesFunction transformation : alternativeTransformations) {
         // transform location
         LatLng latLngTransformed = transformation.getTransformer().apply(this.latLng);
 
@@ -79,7 +79,7 @@ public class LocationMatcher {
           if (countryMatch.isPresent()) {
             // country found
             // add issue from the transformation
-            CoordinatesTransformation.getIssueTypes(transformation)
+            CoordinatesFunction.getIssueTypes(transformation)
               .forEach(issueType -> issues.add(new InterpretationIssue(issueType, getCountryAndCoordinatesTerms())));
             return ParsedField.success(ParsedLocation.newBuilder()
                                          .country(countryMatch.get())

@@ -5,8 +5,8 @@ import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
-import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.ParsedField;
+import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
 import org.gbif.pipelines.core.parsers.location.LocationParser;
 import org.gbif.pipelines.core.parsers.location.ParsedLocation;
@@ -26,6 +26,10 @@ import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINAT
 
 public interface LocationInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
+  /**
+   * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link DwcTerm#decimalLatitude} and the
+   * {@link DwcTerm#decimalLongitude} terms.
+   */
   static LocationInterpreter interpretCountryAndCoordinates(Location locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
 
@@ -224,17 +228,27 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
    * {@link DwcTerm#coordinatePrecision} interpretation.
    */
   static LocationInterpreter interpretCoordinatePrecision(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) ->
-      SimpleTypeParser.parseDouble(extendedRecord, DwcTerm.coordinatePrecision, parseResult -> {
-        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-        Double result = parseResult.orElse(null);
-        if (result != null && result >= COORDINATE_PRECISION_LOWER_BOUND && result <= COORDINATE_PRECISION_UPPER_BOUND) {
-          locationRecord.setCoordinatePrecision(result);
-        } else {
-          interpretation.withValidation(Trace.of(DwcTerm.coordinatePrecision.name(), IssueType.COORDINATE_PRECISION_INVALID));
-        }
-        return interpretation;
-      });
+    return (ExtendedRecord extendedRecord) -> SimpleTypeParser.parseDouble(extendedRecord,
+                                                                           DwcTerm.coordinatePrecision,
+                                                                           parseResult -> {
+                                                                             Interpretation<ExtendedRecord>
+                                                                               interpretation =
+                                                                               Interpretation.of(extendedRecord);
+                                                                             Double result = parseResult.orElse(null);
+                                                                             if (result != null
+                                                                                 && result
+                                                                                    >= COORDINATE_PRECISION_LOWER_BOUND
+                                                                                 && result
+                                                                                    <= COORDINATE_PRECISION_UPPER_BOUND) {
+                                                                               locationRecord.setCoordinatePrecision(
+                                                                                 result);
+                                                                             } else {
+                                                                               interpretation.withValidation(Trace.of(
+                                                                                 DwcTerm.coordinatePrecision.name(),
+                                                                                 IssueType.COORDINATE_PRECISION_INVALID));
+                                                                             }
+                                                                             return interpretation;
+                                                                           });
   }
 
 }
