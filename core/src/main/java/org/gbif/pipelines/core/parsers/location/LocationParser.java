@@ -29,6 +29,8 @@ public class LocationParser {
 
   private static final Logger LOG = LoggerFactory.getLogger(LocationParser.class);
 
+  private LocationParser() {}
+
   public static ParsedField<ParsedLocation> parseCountryAndCoordinates(ExtendedRecord extendedRecord) {
     AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
@@ -59,9 +61,8 @@ public class LocationParser {
       issues.add(new InterpretationIssue(IssueType.COUNTRY_MISMATCH, DwcTerm.country, DwcTerm.countryCode));
     }
 
-    // set the country. We take the country code parsing as default
-    Country countryMatched =
-      countryCode.isPresent() ? countryCode.get() : countryName.isPresent() ? countryName.get() : null;
+    // set the country.
+    Country countryMatched = getCountryMatched(countryName, countryCode);
 
     // parse coordinates
     ParsedField<LatLng> coordsParsed = parseLatLng(extendedRecord);
@@ -107,6 +108,18 @@ public class LocationParser {
       .result(match.getResult())
       .issues(issues)
       .build();
+  }
+
+  private static Country getCountryMatched(Optional<Country> countryName, Optional<Country> countryCode) {
+    // We take the country code parsing as default
+    if (countryCode.isPresent()) {
+      return countryCode.get();
+    }
+    if (countryName.isPresent()) {
+      countryName.get();
+    }
+
+    return null;
   }
 
   private static boolean isParsingSuccessful(Country countryMatched, ParsedField<ParsedLocation> match) {

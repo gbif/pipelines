@@ -52,7 +52,7 @@ public enum CoordinatesFunction {
       return Collections.singletonList(IssueType.PRESUMED_SWAPPED_COORDINATE);
     }
 
-    return null;
+    return Collections.emptyList();
   }
 
 }

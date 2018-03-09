@@ -148,7 +148,7 @@ public class LocationMatcher {
     }
 
     if (response.getBody() == null || response.getBody().isEmpty() && isAntarctica(latLng.getLat(), country)) {
-      return Optional.ofNullable(Collections.singletonList(Country.ANTARCTICA));
+      return Optional.of(Collections.singletonList(Country.ANTARCTICA));
     }
 
     return Optional.ofNullable(response.getBody());
@@ -160,7 +160,7 @@ public class LocationMatcher {
 
   private Optional<Country> containsAnyCountry(Collection<Country> possibilities, Collection<Country> countries) {
     if (possibilities != null) {
-      return possibilities.stream().filter(country -> countries.contains(country)).findFirst();
+      return possibilities.stream().filter(countries::contains).findFirst();
     }
     return Optional.empty();
   }

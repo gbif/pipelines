@@ -11,7 +11,7 @@ public final class CoordinatesValidator {
   private CoordinatesValidator() {}
 
   public static void checkEmptyCoordinates(LatLng latLng) {
-    if (latLng.getLat() == null || latLng.getLat() == null) {
+    if (latLng.getLat() == null || latLng.getLng() == null) {
       throw new IllegalArgumentException("Empty coordinates");
     }
   }
