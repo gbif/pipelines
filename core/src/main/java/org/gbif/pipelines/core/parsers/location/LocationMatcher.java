@@ -14,6 +14,7 @@ import org.gbif.pipelines.io.avro.IssueType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,6 +22,11 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.pipelines.core.parsers.location.CoordinatesValidator.isAntarctica;
+
+/**
+ * Matches the location fields related to Country and Coordinates to find possible mismatches.
+ */
 public class LocationMatcher {
 
   private static final Logger LOG = LoggerFactory.getLogger(LocationMatcher.class);
@@ -67,6 +73,7 @@ public class LocationMatcher {
 
     if (this.country != null) {
       // try alternative transformations if the country was supplied
+      LOG.info("Trying alternative transformations to the coordinates");
       for (CoordinatesFunction transformation : alternativeTransformations) {
         // transform location
         LatLng latLngTransformed = transformation.getTransformer().apply(this.latLng);
@@ -133,11 +140,15 @@ public class LocationMatcher {
   }
 
   private Optional<List<Country>> tryMatch(LatLng latLng) {
-    HttpResponse<List<Country>> response = GeocodeServiceClient.getCountriesFromLatLng(latLng, country);
+    HttpResponse<List<Country>> response = GeocodeServiceClient.getInstance().getCountriesFromLatLng(latLng);
 
     if (response.isError()) {
       LOG.info("Error calling the geocode WS: {}", response.getErrorMessage());
       return Optional.empty();
+    }
+
+    if (response.getBody() == null || response.getBody().isEmpty() && isAntarctica(latLng.getLat(), country)) {
+      return Optional.ofNullable(Collections.singletonList(Country.ANTARCTICA));
     }
 
     return Optional.ofNullable(response.getBody());

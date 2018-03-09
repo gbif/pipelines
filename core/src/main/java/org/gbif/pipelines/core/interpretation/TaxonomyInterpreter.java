@@ -52,7 +52,6 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
 
       MatchType matchType = response.getBody().getDiagnostics().getMatchType();
 
-      // TODO: fieldName shouldn't be required in Trace. Remove nulls when Interpretation is fixed.
       if (MatchType.NONE == matchType) {
         interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_NONE));
       } else if (MatchType.FUZZY == matchType) {

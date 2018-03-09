@@ -8,6 +8,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * Models a function that can be applied to a coordinates.
+ */
 public enum CoordinatesFunction {
 
   IDENTITY(Function.identity()), // no location transform

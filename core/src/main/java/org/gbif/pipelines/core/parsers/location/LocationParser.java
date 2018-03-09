@@ -17,9 +17,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Parses the location fields.
+ * <p>
+ * Currently, it parse the country, countryCode and coordinates together.
+ */
 public class LocationParser {
 
-  // TODO: meter logs
+  private static final Logger LOG = LoggerFactory.getLogger(LocationParser.class);
 
   public static ParsedField<ParsedLocation> parseCountryAndCoordinates(ExtendedRecord extendedRecord) {
     AvroDataValidator.checkNullOrEmpty(extendedRecord);
@@ -30,12 +38,14 @@ public class LocationParser {
     ParsedField<Country> countryParsed = parseCountry(extendedRecord);
 
     if (!countryParsed.isSuccessful()) {
+      LOG.info("country parsing failed");
       issues.addAll(countryParsed.getIssues());
     }
 
     // parse country code
     ParsedField<Country> countryCodeParsed = parseCountryCode(extendedRecord);
     if (!countryCodeParsed.isSuccessful()) {
+      LOG.info("countryCode parsing failed");
       issues.addAll(countryCodeParsed.getIssues());
     }
 
@@ -45,6 +55,7 @@ public class LocationParser {
 
     // check for a mismatch between the country and the country code
     if (isCountryMismatch(countryName, countryCode)) {
+      LOG.info("country mismatch found");
       issues.add(new InterpretationIssue(IssueType.COUNTRY_MISMATCH, DwcTerm.country, DwcTerm.countryCode));
     }
 
@@ -57,6 +68,7 @@ public class LocationParser {
 
     // return if coordinates parsing failed
     if (!coordsParsed.isSuccessful()) {
+      LOG.info("coordinates parsing failed");
       issues.addAll(coordsParsed.getIssues());
       ParsedLocation parsedLocation = ParsedLocation.newBuilder().country(countryMatched).build();
       return ParsedField.fail(parsedLocation, issues);
@@ -66,7 +78,8 @@ public class LocationParser {
     issues.addAll(coordsParsed.getIssues());
 
     // set current parsed valuies
-    ParsedLocation parsedLocation = ParsedLocation.newBuilder().country(countryMatched).latLng(coordsParsed.getResult()).build();
+    ParsedLocation parsedLocation =
+      ParsedLocation.newBuilder().country(countryMatched).latLng(coordsParsed.getResult()).build();
 
     // if the coords parsing was succesfull we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
@@ -77,18 +90,21 @@ public class LocationParser {
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_SWAPPED_COORDS)
         .applyMatch();
 
-    // if the match succeed we use it as a result
-    if (match.isSuccessful()) {
-      issues.addAll(match.getIssues());
+    // collect issues
+    issues.addAll(match.getIssues());
+
+    if (!match.isSuccessful()) {
+      // if match failed we return the previous values
+      LOG.info("location matching failed");
       return ParsedField.<ParsedLocation>newBuilder().successful(isParsingSuccessful(countryMatched, match))
-        .result(match.getResult())
+        .result(parsedLocation)
         .issues(issues)
         .build();
     }
 
-    // if match failed we return the previous values
+    // if the match succeed we use it as a result
     return ParsedField.<ParsedLocation>newBuilder().successful(isParsingSuccessful(countryMatched, match))
-      .result(parsedLocation)
+      .result(match.getResult())
       .issues(issues)
       .build();
   }
