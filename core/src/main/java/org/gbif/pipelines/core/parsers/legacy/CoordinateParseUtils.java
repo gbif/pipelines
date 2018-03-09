@@ -64,7 +64,9 @@ public class CoordinateParseUtils {
    */
   public static ParsedField<LatLng> parseLatLng(final String latitude, final String longitude) {
     if (Strings.isNullOrEmpty(latitude) || Strings.isNullOrEmpty(longitude)) {
-      return ParsedField.fail();
+      return ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID,
+                                                      DwcTerm.decimalLatitude,
+                                                      DwcTerm.decimalLongitude));
     }
     Double lat = NumberParser.parseDouble(latitude);
     Double lng = NumberParser.parseDouble(longitude);

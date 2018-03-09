@@ -46,6 +46,11 @@ public class LocationParserTest extends MockServer {
     extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).country("Spain").countryCode("ES").build();
     result = LocationParser.parseCountryAndCoordinates(extendedRecord);
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
+    Assert.assertTrue(result.getIssues()
+                        .stream()
+                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .collect(Collectors.toList())
+                        .contains(IssueType.COORDINATE_INVALID));
   }
 
   @Test
@@ -123,15 +128,14 @@ public class LocationParserTest extends MockServer {
                         .contains(IssueType.GEODETIC_DATUM_ASSUMED_WGS84));
   }
 
-  @Test( expected = NullPointerException.class)
+  @Test(expected = NullPointerException.class)
   public void nullArgs() {
     LocationParser.parseCountryAndCoordinates(null);
   }
 
-  @Test( expected = IllegalArgumentException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void invalidArgs() {
     LocationParser.parseCountryAndCoordinates(new ExtendedRecord());
   }
-
 
 }
