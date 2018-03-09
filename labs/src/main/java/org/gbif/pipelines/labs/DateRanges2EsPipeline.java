@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * FOR DEMO ONLY
+ * FOR DEMO ONLY, CONTAINS LOTS OF HARD CODED VALUES
  */
 public class DateRanges2EsPipeline {
 

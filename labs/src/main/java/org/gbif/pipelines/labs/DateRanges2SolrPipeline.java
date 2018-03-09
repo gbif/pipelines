@@ -18,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * FOR DEMO ONLY
+ * FOR DEMO ONLY, CONTAINS LOTS OF HARD CODED VALUES
+ *
+ * Use solr-setup.md as an example how to upload a solr schema (labs/data/data-ranges/solr/conf)
  */
 public class DateRanges2SolrPipeline {
 
@@ -57,28 +59,27 @@ public class DateRanges2SolrPipeline {
     PCollection<String> rawCollection = p.apply(TextIO.read().from(FILE_PATH));
 
     // Step 2: Convert string to SOLR document
-    PCollection<SolrInputDocument> inputDocs =
-      rawCollection.apply(ParDo.of(new DoFn<String, SolrInputDocument>() {
-        @ProcessElement
-        public void processElement(ProcessContext c) {
-          String element = c.element();
+    PCollection<SolrInputDocument> inputDocs = rawCollection.apply(ParDo.of(new DoFn<String, SolrInputDocument>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) {
+        String element = c.element();
 
-          String[] split = RGX.split(element);
+        String[] split = RGX.split(element);
 
-          SolrInputDocument outputRecord = new SolrInputDocument();
+        SolrInputDocument outputRecord = new SolrInputDocument();
 
-          SolrInputField idField = new SolrInputField(FIELD_ID);
-          idField.addValue(split[0], DEFAULT_BOOST);
+        SolrInputField idField = new SolrInputField(FIELD_ID);
+        idField.addValue(split[0], DEFAULT_BOOST);
 
-          SolrInputField inputField = new SolrInputField(FIELD_NAME);
-          inputField.addValue(split[1], DEFAULT_BOOST);
+        SolrInputField inputField = new SolrInputField(FIELD_NAME);
+        inputField.addValue(split[1], DEFAULT_BOOST);
 
-          outputRecord.put(FIELD_ID, idField);
-          outputRecord.put(FIELD_NAME, inputField);
+        outputRecord.put(FIELD_ID, idField);
+        outputRecord.put(FIELD_NAME, inputField);
 
-          c.output(outputRecord);
-        }
-      }));
+        c.output(outputRecord);
+      }
+    }));
 
     // Step 3: Write SOLR index
     final SolrIO.ConnectionConfiguration conn = SolrIO.ConnectionConfiguration.create(SOLR_HOST);
