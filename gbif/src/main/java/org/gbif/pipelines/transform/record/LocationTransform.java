@@ -46,6 +46,8 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
           .using(LocationInterpreter.interpretMaximumDepthInMeters(location))
           .using(LocationInterpreter.interpretMinimumDistanceAboveSurfaceInMeters(location))
           .using(LocationInterpreter.interpretMaximumDistanceAboveSurfaceInMeters(location))
+          .using(LocationInterpreter.interpretCoordinatePrecision(location))
+          .using(LocationInterpreter.interpretCoordinateUncertaintyInMeters(location))
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         //additional outputs

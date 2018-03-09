@@ -50,7 +50,7 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
         // issues
         if (!validations.isEmpty()) {
           OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
-          context.output((getIssueTag()), KV.of(id, issue));
+          context.output(getIssueTag(), KV.of(id, issue));
         }
 
       }

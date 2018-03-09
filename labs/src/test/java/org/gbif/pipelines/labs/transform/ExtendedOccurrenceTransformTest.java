@@ -54,18 +54,19 @@ public class ExtendedOccurrenceTransformTest {
 
   @Test
   @Category(NeedsRunner.class)
+
   public void testTransformation() {
 
     // State
     final String[] one =
       {"0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", Country.DENMARK.getTitle(),
         Country.DENMARK.getIso2LetterCode(), "EUROPE", "1", "1", "2018", "2018-01-01", "100.0", "110.0", "111.0",
-        "200.0", "Ocean", "220.0", "222.0", "56.26", "9.51"};
+        "200.0", "Ocean", "220.0", "222.0", "30.0", "0.00001", "56.26", "9.51"};
 
     final String[] two =
       {"1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", Country.JAPAN.getTitle(),
         Country.JAPAN.getIso2LetterCode(), "ASIA", "1", "1", "2018", "2018-01-01", "100.0", "110.0", "111.0", "200.0",
-        "Ocean", "220.0", "222.0", "36.21", "138.25"};
+        "Ocean", "220.0", "222.0", "30.0", "0.00001", "36.21", "138.25"};
     enqueueGeocodeResponses();
 
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
@@ -112,8 +113,11 @@ public class ExtendedOccurrenceTransformTest {
       record.getCoreTerms().put(DwcTerm.waterBody.qualifiedName(), x[18]);
       record.getCoreTerms().put(DwcTerm.minimumDistanceAboveSurfaceInMeters.qualifiedName(), x[19]);
       record.getCoreTerms().put(DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName(), x[20]);
-      record.getCoreTerms().put(DwcTerm.decimalLatitude.qualifiedName(), x[21]);
-      record.getCoreTerms().put(DwcTerm.decimalLongitude.qualifiedName(), x[22]);
+      record.getCoreTerms().put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), x[21]);
+      record.getCoreTerms().put(DwcTerm.coordinatePrecision.qualifiedName(), x[22]);
+      record.getCoreTerms().put(DwcTerm.decimalLatitude.qualifiedName(), x[23]);
+      record.getCoreTerms().put(DwcTerm.decimalLongitude.qualifiedName(), x[24]);
+
       return record;
     }).collect(Collectors.toList());
   }
@@ -142,8 +146,10 @@ public class ExtendedOccurrenceTransformTest {
         .setWaterBody(x[18])
         .setMinimumDistanceAboveSurfaceInMeters(Double.valueOf(x[19]))
         .setMaximumDistanceAboveSurfaceInMeters(Double.valueOf(x[20]))
-        .setDecimalLatitude(Double.valueOf(x[21]))
-        .setDecimalLongitude(Double.valueOf(x[22]))
+        .setCoordinateUncertaintyInMeters(Double.valueOf(x[21]))
+        .setCoordinatePrecision(Double.valueOf(x[22]))
+        .setDecimalLatitude(Double.valueOf(x[23]))
+        .setDecimalLongitude(Double.valueOf(x[24]))
         .build())
       .collect(Collectors.toList());
   }

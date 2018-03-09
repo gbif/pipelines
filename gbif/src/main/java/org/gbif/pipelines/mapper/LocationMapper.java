@@ -30,9 +30,6 @@ public class LocationMapper {
       .setLocationAccordingTo(getValue.apply(DwcTerm.locationAccordingTo))
       .setLocationRemarks(getValue.apply(DwcTerm.locationRemarks))
       .setGeodeticDatum(getValue.apply(DwcTerm.geodeticDatum))
-      .setCoordinateUncertaintyInMeters(getValue.apply(DwcTerm.coordinateUncertaintyInMeters))
-      .setCoordinatePrecision(getValue.apply(DwcTerm.coordinatePrecision))
-      .setPointRadiusSpatialFit(getValue.apply(DwcTerm.pointRadiusSpatialFit))
       .setVerbatimCoordinates(getValue.apply(DwcTerm.verbatimCoordinates))
       .setVerbatimLatitude(getValue.apply(DwcTerm.verbatimLatitude))
       .setVerbatimLongitude(getValue.apply(DwcTerm.verbatimLongitude))
@@ -57,6 +54,7 @@ public class LocationMapper {
       .setDynamicProperties(getValue.apply(DwcTerm.dynamicProperties))
       .setInformationWithheld(getValue.apply(DwcTerm.informationWithheld))
       .setDataGeneralizations(getValue.apply(DwcTerm.dataGeneralizations))
+      .setPointRadiusSpatialFit(getValue.apply(DwcTerm.pointRadiusSpatialFit))
       .build();
   }
 

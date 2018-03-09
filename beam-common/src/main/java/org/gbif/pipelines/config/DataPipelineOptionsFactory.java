@@ -42,9 +42,8 @@ public final class DataPipelineOptionsFactory {
     return options;
   }
 
-  public static DataProcessingPipelineOptions createPipelineOptionsFromArgsWithoutValidation(
-    Configuration config, String[] args
-  ) {
+  private static DataProcessingPipelineOptions createPipelineOptionsFromArgsWithoutValidation(Configuration config,
+                                                                                             String[] args) {
     DataProcessingPipelineOptions options =
       PipelineOptionsFactory.fromArgs(args).as(DataProcessingPipelineOptions.class);
     options.setHdfsConfiguration(Collections.singletonList(config));
@@ -56,9 +55,9 @@ public final class DataPipelineOptionsFactory {
    * Creates a PipelineOptions suitable to interpret taxonomic records in HDFS.
    */
   @VisibleForTesting
-  public static DataProcessingPipelineOptions createDefaultTaxonOptions(
-    Configuration config, String sourcePath, String taxonOutPath, String issuesOutPath, String[] args
-  ) {
+  public static DataProcessingPipelineOptions createDefaultTaxonOptions(Configuration config, String sourcePath,
+                                                                        String taxonOutPath, String issuesOutPath,
+                                                                        String[] args) {
     // create options
     DataProcessingPipelineOptions options = createPipelineOptionsFromArgsWithoutValidation(config, args);
     options.setInputFile(sourcePath);

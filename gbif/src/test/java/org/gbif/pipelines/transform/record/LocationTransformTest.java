@@ -59,10 +59,11 @@ public class LocationTransformTest {
     // State
     final String[] denmark =
       {"0", Country.DENMARK.getTitle(), Country.DENMARK.getIso2LetterCode(), "EUROPE", "100.0", "110.0", "111.0",
-        "200.0", "Ocean", "220.0", "222.0", "56.26", "9.51"};
+        "200.0", "Ocean", "220.0", "222.0", "30.0", "0.00001", "56.26", "9.51"};
     final String[] japan =
       {"1", Country.JAPAN.getTitle(), Country.JAPAN.getIso2LetterCode(), "ASIA", "100.0", "110.0", "111.0", "200.0",
-        "Ocean", "220.0", "222.0", "36.21", "138.25"};
+        "Ocean", "220.0", "222.0", "30.0", "0.00001", "36.21", "138.25"};
+
     final List<ExtendedRecord> records = createExtendedRecordList(denmark, japan);
     enqueueGeocodeResponses();
 
@@ -97,9 +98,10 @@ public class LocationTransformTest {
       record.getCoreTerms().put(DwcTerm.waterBody.qualifiedName(), x[8]);
       record.getCoreTerms().put(DwcTerm.minimumDistanceAboveSurfaceInMeters.qualifiedName(), x[9]);
       record.getCoreTerms().put(DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName(), x[10]);
-      record.getCoreTerms().put(DwcTerm.decimalLatitude.qualifiedName(), x[11]);
-      record.getCoreTerms().put(DwcTerm.decimalLongitude.qualifiedName(), x[12]);
-
+      record.getCoreTerms().put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), x[11]);
+      record.getCoreTerms().put(DwcTerm.coordinatePrecision.qualifiedName(), x[12]);
+      record.getCoreTerms().put(DwcTerm.decimalLatitude.qualifiedName(), x[13]);
+      record.getCoreTerms().put(DwcTerm.decimalLongitude.qualifiedName(), x[14]);
       return record;
     }).collect(Collectors.toList());
   }
@@ -118,8 +120,10 @@ public class LocationTransformTest {
         .setWaterBody(x[8])
         .setMinimumDistanceAboveSurfaceInMeters(Double.valueOf(x[9]))
         .setMaximumDistanceAboveSurfaceInMeters(Double.valueOf(x[10]))
-        .setDecimalLatitude(Double.valueOf(x[11]))
-        .setDecimalLongitude(Double.valueOf(x[12]))
+        .setCoordinateUncertaintyInMeters(Double.valueOf(x[11]))
+        .setCoordinatePrecision(Double.valueOf(x[12]))
+        .setDecimalLatitude(Double.valueOf(x[13]))
+        .setDecimalLongitude(Double.valueOf(x[14]))
         .build())
       .collect(Collectors.toList());
   }

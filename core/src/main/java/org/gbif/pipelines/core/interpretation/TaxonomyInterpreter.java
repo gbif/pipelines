@@ -38,28 +38,27 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       if (response.isError()) {
-        interpretation.withValidation(Trace.of(null,
-                                               IssueType.INTERPRETATION_ERROR,
-                                               response.getErrorCode().toString() + response.getErrorMessage()));
+        interpretation.withValidation(Trace.of(IssueType.INTERPRETATION_ERROR,
+                                               response.getErrorCode() + response.getErrorMessage()));
         return interpretation;
       }
 
       if (TaxonomyValidator.isEmpty(response.getBody())) {
         // TODO: maybe I would need to add to the enum a new issue for this, sth like "NO_MATCHING_RESULTS". This
         // happens when we get an empty response from the WS
-        interpretation.withValidation(Trace.of(null, IssueType.TAXON_MATCH_NONE, "No results from match service"));
+        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_NONE, "No results from match service"));
         return interpretation;
       }
 
       MatchType matchType = response.getBody().getDiagnostics().getMatchType();
 
       // TODO: fieldName shouldn't be required in Trace. Remove nulls when Interpretation is fixed.
-      if (MatchType.NONE.equals(matchType)) {
-        interpretation.withValidation(Trace.of(null, IssueType.TAXON_MATCH_NONE));
-      } else if (MatchType.FUZZY.equals(matchType)) {
-        interpretation.withValidation(Trace.of(null, IssueType.TAXON_MATCH_FUZZY));
-      } else if (MatchType.HIGHERRANK.equals(matchType)) {
-        interpretation.withValidation(Trace.of(null, IssueType.TAXON_MATCH_HIGHERRANK));
+      if (MatchType.NONE == matchType) {
+        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_NONE));
+      } else if (MatchType.FUZZY == matchType) {
+        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_FUZZY));
+      } else if (MatchType.HIGHERRANK == matchType) {
+        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_HIGHERRANK));
       }
 
       // convert taxon record

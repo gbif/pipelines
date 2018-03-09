@@ -5,6 +5,7 @@ import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
+import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
 import org.gbif.pipelines.core.parsers.location.LocationParser;
@@ -17,6 +18,11 @@ import org.gbif.pipelines.io.avro.Location;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
+
+import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINATE_PRECISION_LOWER_BOUND;
+import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINATE_PRECISION_UPPER_BOUND;
+import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND;
+import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND;
 
 public interface LocationInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
@@ -192,4 +198,43 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       return interpretation;
     };
   }
+
+  /**
+   * {@link DwcTerm#coordinateUncertaintyInMeters} interpretation.
+   */
+  static LocationInterpreter interpretCoordinateUncertaintyInMeters(Location locationRecord) {
+    return (ExtendedRecord extendedRecord) -> {
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+      String value = extendedRecord.getCoreTerms().get(DwcTerm.coordinateUncertaintyInMeters.qualifiedName());
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value.trim());
+      Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
+      if (result != null
+          && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
+          && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
+        locationRecord.setCoordinateUncertaintyInMeters(result);
+      } else {
+        interpretation.withValidation(Trace.of(DwcTerm.coordinateUncertaintyInMeters.name(),
+                                               IssueType.COORDINATE_UNCERTAINTY_METERS_INVALID));
+      }
+      return interpretation;
+    };
+  }
+
+  /**
+   * {@link DwcTerm#coordinatePrecision} interpretation.
+   */
+  static LocationInterpreter interpretCoordinatePrecision(Location locationRecord) {
+    return (ExtendedRecord extendedRecord) ->
+      SimpleTypeParser.parseDouble(extendedRecord, DwcTerm.coordinatePrecision, parseResult -> {
+        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+        Double result = parseResult.orElse(null);
+        if (result != null && result >= COORDINATE_PRECISION_LOWER_BOUND && result <= COORDINATE_PRECISION_UPPER_BOUND) {
+          locationRecord.setCoordinatePrecision(result);
+        } else {
+          interpretation.withValidation(Trace.of(DwcTerm.coordinatePrecision.name(), IssueType.COORDINATE_PRECISION_INVALID));
+        }
+        return interpretation;
+      });
+  }
+
 }

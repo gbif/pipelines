@@ -155,7 +155,21 @@ public class Interpretation<T> implements Serializable {
      * Factory method to create a instance of trace object using a context element.
      */
     public static <U> Trace<U> of(String fieldName, U context) {
-      return Trace.of(fieldName, context, null);
+      return of(fieldName, context, null);
+    }
+
+    /**
+     * Factory method to create a instance of trace object using a context element.
+     */
+    public static <U> Trace<U> of( U context, String remark) {
+      return of(null, context, null);
+    }
+
+    /**
+     * Factory method to create a instance of trace object using a context element.
+     */
+    public static <U> Trace<U> of(U context) {
+      return of(null, context, null);
     }
 
     /**
