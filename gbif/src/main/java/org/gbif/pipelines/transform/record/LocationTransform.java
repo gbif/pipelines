@@ -30,14 +30,14 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
       public void processElement(ProcessContext context) {
 
         ExtendedRecord extendedRecord = context.element();
+        // do we really need to do this mapping?
         Location location = LocationMapper.map(extendedRecord);
         String id = extendedRecord.getId();
         List<Validation> validations = new ArrayList<>();
 
         // Interpreting Country and Country code
         Interpretation.of(extendedRecord)
-          .using(LocationInterpreter.interpretCountry(location))
-          .using(LocationInterpreter.interpretCountryCode(location))
+          .using(LocationInterpreter.interpretCountryAndCoordinates(location))
           .using(LocationInterpreter.interpretContinent(location))
           .using(LocationInterpreter.interpretWaterBody(location))
           .using(LocationInterpreter.interpretMinimumElevationInMeters(location))

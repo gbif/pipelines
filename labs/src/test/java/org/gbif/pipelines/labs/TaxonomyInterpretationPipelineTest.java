@@ -12,6 +12,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.gbif.pipelines.config.DataPipelineOptionsFactory.createDefaultTaxonOptions;
@@ -35,6 +36,7 @@ public class TaxonomyInterpretationPipelineTest {
   }
 
   @Test
+  @Ignore("No longer needed")
   public void taxonomyInterpretationPipelineTest() throws Exception {
 
     final String sourcePath = "data/extendedRecords*";

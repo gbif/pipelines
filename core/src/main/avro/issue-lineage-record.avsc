@@ -47,6 +47,7 @@
                     "COUNTRY_COORDINATE_MISMATCH",
                     "COUNTRY_MISMATCH",
                     "COUNTRY_INVALID",
+                    "COUNTRY_CODE_INVALID",
                     "COUNTRY_DERIVED_FROM_COORDINATES",
                     "CONTINENT_COUNTRY_MISMATCH",
                     "CONTINENT_INVALID",

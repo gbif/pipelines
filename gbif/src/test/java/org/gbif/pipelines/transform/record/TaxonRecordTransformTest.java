@@ -4,16 +4,21 @@ import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.interpretation.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.transform.Kv2Value;
-import org.gbif.pipelines.ws.MockServer;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okio.BufferedSource;
+import okio.Okio;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -31,28 +36,32 @@ import org.junit.runners.JUnit4;
 import static org.gbif.api.vocabulary.TaxonomicStatus.ACCEPTED;
 
 @RunWith(JUnit4.class)
-public class TaxonRecordTransformTest extends MockServer {
+public class TaxonRecordTransformTest {
 
   private static final String TEST_ID = "1";
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
+  private static MockWebServer mockServer;
+
   @BeforeClass
   public static void setUp() throws IOException {
-    mockServerSetUp();
+    mockServer = new MockWebServer();
+    // TODO: check if the port is in use??
+    mockServer.start(1111);
   }
 
   @AfterClass
   public static void tearDown() throws IOException {
-    mockServerTearDown();
+    mockServer.shutdown();
   }
 
   @Test
   @Category(NeedsRunner.class)
   public void testTransformation() throws IOException {
 
-    enqueueResponse(DUMMY_RESPONSE);
+    enqueueDummyResponse();
 
     // State
     ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).name("foo").build();
@@ -64,8 +73,7 @@ public class TaxonRecordTransformTest extends MockServer {
 
     PCollectionTuple tuple = inputStream.apply(taxonRecordTransform);
 
-    PCollection<TaxonRecord> recordCollection = tuple.get(taxonRecordTransform.getDataTag())
-      .apply(Kv2Value.create());
+    PCollection<TaxonRecord> recordCollection = tuple.get(taxonRecordTransform.getDataTag()).apply(Kv2Value.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());
@@ -104,6 +112,14 @@ public class TaxonRecordTransformTest extends MockServer {
     nameUsageMatch2.setDiagnostics(diagnostics);
 
     return nameUsageMatch2;
+  }
+
+  private static void enqueueDummyResponse() throws IOException {
+    InputStream inputStream =
+      Thread.currentThread().getContextClassLoader().getResourceAsStream("dummy-match-response.json");
+    BufferedSource source = Okio.buffer(Okio.source(inputStream));
+    MockResponse mockResponse = new MockResponse();
+    mockServer.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
   }
 
 }
