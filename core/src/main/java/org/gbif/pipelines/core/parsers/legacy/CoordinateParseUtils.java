@@ -15,8 +15,6 @@ import java.util.regex.Pattern;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for assisting in the parsing of latitude and longitude strings into Decimals.
@@ -37,8 +35,6 @@ public class CoordinateParseUtils {
   private CoordinateParseUtils() {
     throw new UnsupportedOperationException("Can't initialize class");
   }
-
-  private static final Logger LOG = LoggerFactory.getLogger(CoordinateParseUtils.class);
 
   /**
    * This parses string representations of latitude and longitude values. It tries its best to interpret the values and

@@ -37,6 +37,8 @@ public class Wgs84Projection {
   private static final double SUSPICIOUS_SHIFT = 0.1d;
   private static DatumAuthorityFactory DATUM_FACTORY;
 
+  private Wgs84Projection() {}
+
   static {
     try {
       DATUM_FACTORY = BasicFactories.getDefault().getDatumAuthorityFactory();

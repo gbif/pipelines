@@ -23,6 +23,8 @@ public class CountryMaps {
 
   private static final String CONFUSED_COUNTRY_FILE = "confused-country-pairs.txt";
 
+  private CountryMaps() {}
+
   /*
    Some countries are commonly mislabeled and are close to correct, so we want to accommodate them, e.g. Northern
    Ireland mislabeled as Ireland (should be GB). Add comma separated pairs of acceptable country swaps in the
