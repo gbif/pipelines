@@ -116,7 +116,7 @@ public class LocationParser {
       return countryCode.get();
     }
     if (countryName.isPresent()) {
-      countryName.get();
+      return countryName.get();
     }
 
     return null;
