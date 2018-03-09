@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<schema name="solr-date-range" version="1.5">
+
+  <types>
+    <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+    <fieldType name="long" class="solr.TrieLongField" precisionStep="0" omitNorms="true" positionIncrementGap="0" sortMissingLast="true"/>
+    <fieldType name="dateRange" class="solr.DateRangeField" omitNorms="true"/>
+  </types>
+
+  <fields>
+    <field name="id" type="string" indexed="true" stored="true" required="true" docValues="true"/>
+    <field name="eventDate" type="dateRange" indexed="true" stored="true"/>
+    <!-- required for both indexed and docValues -->
+    <field name="_version_" type="long" indexed="true" stored="true"/>
+  </fields>
+
+  <uniqueKey>id</uniqueKey>
+
+  <defaultSearchField>eventDate</defaultSearchField>
+  <solrQueryParser defaultOperator="AND" />
+
+</schema>

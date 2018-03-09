@@ -1,9 +1,0 @@
-{"eventDate": {"gte": "2010","lte": "2011"}}
-{"eventDate": {"gte": "2010-02","lte": "2011-03"}}
-{"eventDate": {"gte": "2010-03-03","lte": "2011-04-04"}}
-{"eventDate": {"gte": "2010-03-03T10:10:10","lte": "2011-04-04T10:10:10"}}
-{"eventDate": {"gte": "2010"}}
-{"eventDate": {"gte": "2010-02"}}
-{"eventDate": {"gte": "2010-03-03"}}
-{"eventDate": {"gte": "2010-03-03T10:10:10"}}
-{"eventDate": {}}

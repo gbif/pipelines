@@ -1,0 +1,1 @@
+http://c3n1.gbif.org:8983/solr/solr-date-range/select?q=eventDate:2010&wt=json&indent=true
