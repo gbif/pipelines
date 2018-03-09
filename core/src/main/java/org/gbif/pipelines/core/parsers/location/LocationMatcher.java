@@ -78,21 +78,23 @@ public class LocationMatcher {
         // transform location
         LatLng latLngTransformed = transformation.getTransformer().apply(this.latLng);
 
-        Optional<List<Country>> countriesOpt = tryMatch(latLngTransformed);
+        // call ws
+        Optional<List<Country>> countriesOpt = getCountriesFromCoordinates(latLngTransformed);
+        if (!countriesFound(countriesOpt)) {
+          continue;
+        }
 
-        if (countriesOpt.filter(countries -> !countries.isEmpty()).isPresent()) {
-          countryMatch = matchWithCountry(countriesOpt.get());
-
-          if (countryMatch.isPresent()) {
-            // country found
-            // add issue from the transformation
-            CoordinatesFunction.getIssueTypes(transformation)
-              .forEach(issueType -> issues.add(new InterpretationIssue(issueType, getCountryAndCoordinatesTerms())));
-            return ParsedField.success(ParsedLocation.newBuilder()
-                                         .country(countryMatch.get())
-                                         .latLng(latLngTransformed)
-                                         .build(), issues);
-          }
+        // match with the country supplied
+        countryMatch = matchWithCountry(countriesOpt.get());
+        if (countryMatch.isPresent()) {
+          // country found
+          // add issue from the transformation
+          CoordinatesFunction.getIssueTypes(transformation)
+            .forEach(issueType -> issues.add(new InterpretationIssue(issueType, getCountryAndCoordinatesTerms())));
+          return ParsedField.success(ParsedLocation.newBuilder()
+                                       .country(countryMatch.get())
+                                       .latLng(latLngTransformed)
+                                       .build(), issues);
         }
       }
     }
@@ -104,9 +106,9 @@ public class LocationMatcher {
 
   private Optional<Country> tryIdentityMatch(List<InterpretationIssue> issues) {
     // call WS with identity coords
-    Optional<List<Country>> countriesOpt = tryMatch(latLng);
+    Optional<List<Country>> countriesOpt = getCountriesFromCoordinates(latLng);
 
-    if (!countriesOpt.filter(countries -> !countries.isEmpty()).isPresent()) {
+    if (!countriesFound(countriesOpt)) {
       return Optional.empty();
     }
 
@@ -139,7 +141,7 @@ public class LocationMatcher {
     return Optional.empty();
   }
 
-  private Optional<List<Country>> tryMatch(LatLng latLng) {
+  private Optional<List<Country>> getCountriesFromCoordinates(LatLng latLng) {
     HttpResponse<List<Country>> response = GeocodeServiceClient.getInstance().getCountriesFromLatLng(latLng);
 
     if (response.isError()) {
@@ -152,6 +154,10 @@ public class LocationMatcher {
     }
 
     return Optional.ofNullable(response.getBody());
+  }
+
+  private boolean countriesFound(Optional<List<Country>> countriesOpt) {
+    return countriesOpt.filter(countries -> !countries.isEmpty()).isPresent();
   }
 
   private Optional<Country> matchWithCountry(List<Country> countries) {
@@ -168,5 +174,4 @@ public class LocationMatcher {
   private List<Term> getCountryAndCoordinatesTerms() {
     return Arrays.asList(DwcTerm.country, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude);
   }
-
 }
