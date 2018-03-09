@@ -147,7 +147,7 @@ public class LocationMatcher {
       return Optional.empty();
     }
 
-    if (response.getBody() == null || response.getBody().isEmpty() && isAntarctica(latLng.getLat(), country)) {
+    if ((response.getBody() == null || response.getBody().isEmpty()) && isAntarctica(latLng.getLat(), country)) {
       return Optional.of(Collections.singletonList(Country.ANTARCTICA));
     }
 
