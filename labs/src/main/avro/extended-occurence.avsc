@@ -1,3 +1,12 @@
+[{
+  "type":"record",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "name":"EventDate",
+  "fields":[
+    {"name":"gte","type":["null","string"],"default":null},
+    {"name":"lte","type":["null","string"],"default":null}
+  ]
+},
 {
     "type":"record",
     "namespace":"org.gbif.pipelines.io.avro",
@@ -23,7 +32,7 @@
         {"name":"behavior","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/behavior"},
         {"name":"dcterms_language","type":["null","string"],"default":null, "doc":"http://purl.org/dc/terms/language"},
         {"name":"samplingEffort","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/samplingEffort"},
-        {"name":"eventDate","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/eventDate"},
+        {"name":"eventDate","type":["null","EventDate"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/eventDate"},
         {"name":"vernacularName","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/vernacularName"},
         {"name":"namePublishedInID","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/namePublishedInID"},
         {"name":"phylum","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/phylum"},
@@ -190,4 +199,4 @@
         {"name":"nomenclaturalStatus","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/nomenclaturalStatus"},
         {"name":"verbatimCoordinates","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/verbatimCoordinates"}
     ]
-}
+}]

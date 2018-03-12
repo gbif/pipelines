@@ -1,6 +1,7 @@
 package org.gbif.pipelines.labs.transform;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.Kv2Value;
@@ -106,7 +107,7 @@ public class ExtendedOccurrenceTransformTest {
         .setDay(Integer.valueOf(x[10]))
         .setMonth(Integer.valueOf(x[11]))
         .setYear(Integer.valueOf(x[12]))
-        .setEventDate(x[13])
+        .setEventDate(EventDate.newBuilder().setGte(x[13]).build())
         .setMinimumDepthInMeters(Double.valueOf(x[14]))
         .setMaximumDepthInMeters(Double.valueOf(x[15]))
         .setMinimumElevationInMeters(Double.valueOf(x[16]))
