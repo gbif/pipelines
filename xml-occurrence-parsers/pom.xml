@@ -18,37 +18,17 @@
   </description>
 
   <dependencies>
-    <dependency>
-      <groupId>commons-digester</groupId>
-      <artifactId>commons-digester</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-api</artifactId>
-    </dependency>
+
+    <!--GBIF dependencies-->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwca-io</artifactId>
     </dependency>
+
+    <!--Common dependencies-->
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>gbif-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
+      <groupId>commons-digester</groupId>
+      <artifactId>commons-digester</artifactId>
     </dependency>
 
     <!--Test dependencies-->
