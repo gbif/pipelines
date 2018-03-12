@@ -1,0 +1,69 @@
+<occurrence>
+  <OriginalSource>
+    <SourceInstitutionCode>TLMF</SourceInstitutionCode>
+    <SourceName>Tiroler Landesmuseum Ferdinandeum</SourceName>
+    <SourceLastUpdatedDate>2004-07-20</SourceLastUpdatedDate>
+  </OriginalSource>
+  <Unit>
+    <UnitID>D707085E-593A-4828-A802-00C9D5AFEA84</UnitID>
+    <RecordBasis>PreservedSpecimen</RecordBasis>
+    <NamedCollections>
+      <NamedCollection>TLMF Botanik</NamedCollection>
+    </NamedCollections>
+    <Identifications>
+      <Identification>
+        <TaxonIdentified>
+          <NameAuthorYearString>Abies balsamen Miller</NameAuthorYearString>
+          <ScientificNameAtomized>
+            <Botanical>
+              <Genus>Abies</Genus>
+              <FirstEpithet>balsamen Miller</FirstEpithet>
+            </Botanical>
+          </ScientificNameAtomized>
+        </TaxonIdentified>
+      </Identification>
+    </Identifications>
+    <Gathering>
+      <GatheringAgents>
+        <GatheringAgentsText>Heimerl A.</GatheringAgentsText>
+      </GatheringAgents>
+      <GatheringSite>
+        <LocalityText>Brixen/ Vahrn, im Park der Villa May</LocalityText>
+        <Country>
+          <ISO3Letter>ITA</ISO3Letter>
+        </Country>
+        <NamedAreas>
+          <NamedArea>
+            <NamedAreaClass>Bundesland</NamedAreaClass>
+            <NamedAreaName>Südtirol</NamedAreaName>
+          </NamedArea>
+        </NamedAreas>
+        <SiteCoordinateSets>
+          <SiteCoordinates>
+            <CoordinateMethod>ÖK200</CoordinateMethod>
+            <CoordinatesLatLong>
+              <LongitudeDecimal>11.6344444444</LongitudeDecimal>
+              <LatitudeDecimal>46.7405555556</LatitudeDecimal>
+              <SpatialDatum>WGS84</SpatialDatum>
+            </CoordinatesLatLong>
+          </SiteCoordinates>
+        </SiteCoordinateSets>
+        <Altitude>
+          <MeasurementAtomized>
+            <MeasurementLowerValue>660</MeasurementLowerValue>
+          </MeasurementAtomized>
+        </Altitude>
+        <Synecology>
+          <AssociatedTaxa>
+            <TaxonIdentified>
+              <HigherTaxa>
+                <HigherTaxon TaxonRank="Family">Pinaceae</HigherTaxon>
+              </HigherTaxa>
+              <InformalNameString Language="de"/>
+            </TaxonIdentified>
+          </AssociatedTaxa>
+        </Synecology>
+      </GatheringSite>
+    </Gathering>
+  </Unit>
+</occurrence>

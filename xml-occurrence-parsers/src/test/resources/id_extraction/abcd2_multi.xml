@@ -1,0 +1,126 @@
+<Unit>
+  <SourceInstitutionID>BGBM</SourceInstitutionID>
+  <SourceID>Bridel Herbar</SourceID>
+  <UnitID>Bridel-1-428</UnitID>
+  <Identifications>
+    <Identification>
+      <Result>
+        <TaxonIdentified>
+          <HigherTaxa>
+            <HigherTaxon>
+              <HigherTaxonName>Grimmiaceae</HigherTaxonName>
+              <HigherTaxonRank>familia</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Grimmiales</HigherTaxonName>
+              <HigherTaxonRank>ordo</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Bryidae</HigherTaxonName>
+              <HigherTaxonRank>subclassis</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Bryopsida</HigherTaxonName>
+              <HigherTaxonRank>classis</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Musci</HigherTaxonName>
+              <HigherTaxonRank>subdivisio</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Bryophyta</HigherTaxonName>
+              <HigherTaxonRank>divisio</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Plantae</HigherTaxonName>
+              <HigherTaxonRank>regnum</HigherTaxonRank>
+            </HigherTaxon>
+          </HigherTaxa>
+          <ScientificName>
+            <FullScientificNameString>Schistidium agassizii Sull. &amp; Lesq. in Sull.</FullScientificNameString>
+          </ScientificName>
+        </TaxonIdentified>
+      </Result>
+      <PreferredFlag>0</PreferredFlag>
+      <Identifiers>
+        <Identifier>
+          <PersonName>
+            <FullName>Ochyra, Ryszard</FullName>
+          </PersonName>
+        </Identifier>
+      </Identifiers>
+      <Date>
+        <DateText>2002-10-17</DateText>
+      </Date>
+    </Identification>
+    <Identification>
+      <Result>
+        <TaxonIdentified>
+          <HigherTaxa>
+            <HigherTaxon>
+              <HigherTaxonName>Grimmiaceae</HigherTaxonName>
+              <HigherTaxonRank>familia</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Grimmiales</HigherTaxonName>
+              <HigherTaxonRank>ordo</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Bryidae</HigherTaxonName>
+              <HigherTaxonRank>subclassis</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Bryopsida</HigherTaxonName>
+              <HigherTaxonRank>classis</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Musci</HigherTaxonName>
+              <HigherTaxonRank>subdivisio</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Bryophyta</HigherTaxonName>
+              <HigherTaxonRank>divisio</HigherTaxonRank>
+            </HigherTaxon>
+            <HigherTaxon>
+              <HigherTaxonName>Plantae</HigherTaxonName>
+              <HigherTaxonRank>regnum</HigherTaxonRank>
+            </HigherTaxon>
+          </HigherTaxa>
+          <ScientificName>
+            <FullScientificNameString>Grimmia alpicola Sw. ex Hedw.</FullScientificNameString>
+          </ScientificName>
+        </TaxonIdentified>
+      </Result>
+      <PreferredFlag>0</PreferredFlag>
+      <Identifiers>
+        <Identifier>
+          <PersonName>
+            <FullName>Bridel, Samuel</FullName>
+          </PersonName>
+        </Identifier>
+      </Identifiers>
+      <Notes>Isotype, Lectotype in G</Notes>
+    </Identification>
+  </Identifications>
+  <RecordBasis>PreservedSpecimen</RecordBasis>
+  <SpecimenUnit>
+    <Preparations>
+      <Preparation>
+        <PreparationType>Herbarbogen</PreparationType>
+      </Preparation>
+    </Preparations>
+  </SpecimenUnit>
+  <Gathering>
+    <DateTime>
+      <DateText>0</DateText>
+    </DateTime>
+    <LocalityText language="DE"/>
+    <AreaDetail language="DE">[Sueica] ipse Swarzius misit</AreaDetail>
+    <Biotope>
+      <Name language="EN"/>
+      <Text language="DE"/>
+    </Biotope>
+    <Notes language="EN"/>
+  </Gathering>
+  <Notes>Barcode: B 31 0121 01; Herb. De Candolle</Notes>
+</Unit>
