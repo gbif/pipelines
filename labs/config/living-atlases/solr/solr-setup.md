@@ -6,12 +6,12 @@ To set up the SOLR 5 server on the dev cluster you do something like so:
 ### copy the config to the gateway
 ```
 scp -r solr trobertson@c3gateway-vh.gbif-dev.org:/home/trobertson
-ssh trobertson@devgateway-vh.gbif.org
+ssh trobertson@c3gateway-vh.gbif.org
 ```
 
 ### install the configs into ZK 
 ```
-/opt/cloudera/parcels/CDH-5.12.1-1.cdh5.12.1.p0.3/lib/solr/bin/zkcli.sh -zkhost c3master1-vh.gbif.org:2181,c3master2-vh.gbif.org:2181,c3master3-vh.gbif.org:2181/solr5c2 -cmd upconfig -confname beam-demo1 -confdir ./solr/conf
+/opt/cloudera/parcels/SOLR5/server/scripts/cloud-scripts/zkcli.sh -zkhost c3master1-vh.gbif.org:2181,c3master2-vh.gbif.org:2181,c3master3-vh.gbif.org:2181/solr5c2 -cmd upconfig -confname beam-demo1 -confdir solr/conf
 ```
 
 ### create a collection

@@ -2,6 +2,7 @@ package org.gbif.pipelines.transform.record;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
+import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transform.Kv2Value;
@@ -101,7 +102,7 @@ public class TemporalRecordTransformTest {
         .setYear(x.getYear().map(Year::getValue).orElse(null))
         .setMonth(x.getMonth().map(Month::getValue).orElse(null))
         .setDay(x.getDay().orElse(null))
-        .setEventDate(String.join("/", from, to))
+        .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
         .build();
     }).collect(Collectors.toList());
   }

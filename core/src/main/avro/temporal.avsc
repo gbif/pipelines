@@ -1,6 +1,16 @@
 /**
  * Represents the interpreted fields of terms related to temporal.
  */
+
+[{
+  "type":"record",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "name":"EventDate",
+  "fields":[
+    {"name":"gte","type":["null","string"],"default":null},
+    {"name":"lte","type":["null","string"],"default":null}
+  ]
+},
 {
   "name": "TemporalRecord",
   "namespace": "org.gbif.pipelines.io.avro",
@@ -16,6 +26,6 @@
     {"name": "modified", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null },
     {"name": "dateIdentified", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null },
     {"name": "eventTime", "type": ["null", "long"], "logicalType":"time-millis", "default" : null },
-    {"name": "eventDate", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null }
+    {"name": "eventDate", "type": ["null", "EventDate"], "default" : null }
   ]
-}
+}]
