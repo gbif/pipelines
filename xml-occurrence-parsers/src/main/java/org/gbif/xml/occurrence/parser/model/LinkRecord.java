@@ -21,6 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 
 public class LinkRecord implements Serializable {
 
+  private static final long serialVersionUID = 4281236213527332610L;
+
   private String rawLinkType;
   private Integer linkType;
   private String url;

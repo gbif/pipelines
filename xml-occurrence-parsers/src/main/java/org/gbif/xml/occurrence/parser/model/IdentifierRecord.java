@@ -23,6 +23,8 @@ import java.io.Serializable;
  */
 public class IdentifierRecord implements Serializable {
 
+  private static final long serialVersionUID = 7608063144083531629L;
+
   // TODO: change this to int backed enum
   private Integer identifierType;
   private String identifier;

@@ -82,7 +82,9 @@ public class Identification extends PropertyPrioritizer {
     record.setDateIdentified(this.dateIdentified);
     record.setScientificName(this.scientificName);
     record.setIdentifierName(this.identifierName);
-    if (setUnitQualifier) record.setUnitQualifier(this.scientificName);
+    if (setUnitQualifier) {
+      record.setUnitQualifier(this.scientificName);
+    }
     for (Taxon taxon : higherTaxons) {
       switch (taxon.getRank()) {
         case KINGDOM:

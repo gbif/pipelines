@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ImageRecord extends PropertyPrioritizer implements Serializable {
 
+  private static final long serialVersionUID = -4610903747490605198L;
+
   private static final Logger LOG = LoggerFactory.getLogger(ImageRecord.class);
 
   private String rawImageType;

@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RawOccurrenceRecord implements Serializable {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RawOccurrenceRecord.class);
+  private static final long serialVersionUID = -2763668230804275054L;
 
   // TODO: why aren't these private?
   protected String id;

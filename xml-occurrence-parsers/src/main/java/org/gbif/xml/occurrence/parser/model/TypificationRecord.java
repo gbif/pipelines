@@ -21,13 +21,14 @@ import org.apache.commons.lang3.StringUtils;
 
 public class TypificationRecord implements Serializable {
 
+  private static final long serialVersionUID = 9038478890028911433L;
+
   private String scientificName;
   private String publication;
   private String typeStatus;
   private String notes;
 
   public TypificationRecord() {
-
   }
 
   public TypificationRecord(String scientificName, String publication, String typeStatus, String notes) {

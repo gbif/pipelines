@@ -47,6 +47,7 @@ public class PublisherProvidedUniqueIdentifier implements UniqueIdentifier {
       return false;
     }
     final PublisherProvidedUniqueIdentifier other = (PublisherProvidedUniqueIdentifier) obj;
+
     return Objects.equals(this.datasetKey, other.datasetKey)
            && Objects.equals(this.publisherProvidedIdentifier, other.publisherProvidedIdentifier);
   }
