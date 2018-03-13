@@ -1,0 +1,36 @@
+<DarwinRecord>
+  <GlobalUniqueIdentifier>ZMA:Entomology:Diptera_Tipulidae_NL_TEMP_09183</GlobalUniqueIdentifier>
+  <DateLastModified>2007-05-02</DateLastModified>
+  <BasisOfRecord>Museum specimen</BasisOfRecord>
+  <InstitutionCode>ZMA</InstitutionCode>
+  <CollectionCode>Tipulidae</CollectionCode>
+  <CatalogNumber>TEMP_09183</CatalogNumber>
+  <ScientificName>Ctenophora (Cnemoncosis) festiva Meigen, 1804</ScientificName>
+  <Kingdom>Animalia</Kingdom>
+  <Phylum nil="true"/>
+  <Class>Insecta</Class>
+  <Order nil="true"/>
+  <Family>Tipulidae</Family>
+  <Genus>Ctenophora</Genus>
+  <SpecificEpithet>festiva</SpecificEpithet>
+  <InfraspecificEpithet nil="true"/>
+  <Continent nil="true"/>
+  <WaterBody nil="true"/>
+  <Country>Netherlands</Country>
+  <StateProvince>Utrecht</StateProvince>
+  <Locality>Leusden</Locality>
+  <MinimumElevationInMeters nil="true"/>
+  <MaximumElevationInMeters nil="true"/>
+  <MinimumDepthInMeters nil="true"/>
+  <MaximumDepthInMeters nil="true"/>
+  <CollectingMethod>unrecorded</CollectingMethod>
+  <EarliestDateCollected>1985-06-08 00:00:00</EarliestDateCollected>
+  <LatestDateCollected>1985-06-08 00:00:00</LatestDateCollected>
+  <DayOfYear nil="true"/>
+  <Collector>Zeegers, T.</Collector>
+  <DecimalLatitude nil="true"/>
+  <DecimalLongitude nil="true"/>
+  <CoordinateUncertaintyInMeters nil="true"/>
+  <Preparations>dry pinned</Preparations>
+  <TypeStatus nil="true"/>
+</DarwinRecord>

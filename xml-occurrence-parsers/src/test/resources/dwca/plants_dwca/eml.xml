@@ -1,0 +1,98 @@
+<!--
+  ~ Copyright 2011 Global Biodiversity Information Facility (GBIF)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/dev/eml.xsd"
+         packageId="ef4c9b66-95ba-4584-9e0c-4d62ccc5978d/v9" system="http://gbif.org" scope="system" xml:lang="eng">
+
+  <dataset>
+    <alternateIdentifier>ef4c9b66-95ba-4584-9e0c-4d62ccc5978d</alternateIdentifier>
+    <title xml:lang="eng">TEST ARCHIVE TITLE</title>
+    <creator>
+      <individualName>
+        <givenName>kyle</givenName>
+        <surName>braak</surName>
+      </individualName>
+      <organizationName>gBIF</organizationName>
+      <positionName>programmer</positionName>
+      <address>
+        <deliveryPoint>universitetsparken 15</deliveryPoint>
+        <city>copenhagen</city>
+        <postalCode>2100</postalCode>
+        <country>DK</country>
+      </address>
+      <phone>21178990</phone>
+      <electronicMailAddress>kbraak@gbif.org</electronicMailAddress>
+      <onlineUrl>http://www.gbif.org</onlineUrl>
+      <role>ORIGINATOR</role>
+    </creator>
+    <metadataProvider>
+      <individualName>
+        <givenName>kyle</givenName>
+        <surName>braak</surName>
+      </individualName>
+      <organizationName>gBIF</organizationName>
+      <positionName>programmer</positionName>
+      <address>
+        <deliveryPoint>universitetsparken 15</deliveryPoint>
+        <city>copenhagen</city>
+        <postalCode>2100</postalCode>
+        <country>DK</country>
+      </address>
+      <phone>21178990</phone>
+      <electronicMailAddress>kbraak@gbif.org</electronicMailAddress>
+      <onlineUrl>http://www.gbif.org</onlineUrl>
+    </metadataProvider>
+    <pubDate>2010-12-30</pubDate>
+    <language>dan</language>
+    <abstract>
+      <para>test description</para>
+    </abstract>
+    <contact>
+      <individualName>
+        <givenName>kyle</givenName>
+        <surName>braak</surName>
+      </individualName>
+      <organizationName>gBIF</organizationName>
+      <positionName>programmer</positionName>
+      <address>
+        <deliveryPoint>universitetsparken 15</deliveryPoint>
+        <city>copenhagen</city>
+        <postalCode>2100</postalCode>
+        <country>DK</country>
+      </address>
+      <phone>21178990</phone>
+      <electronicMailAddress>kbraak@gbif.org</electronicMailAddress>
+      <onlineUrl>http://www.gbif.org</onlineUrl>
+      <role>POINT_OF_CONTACT</role>
+    </contact>
+  </dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+        <dateStamp>2010-12-30T12:09:57.974+01:00</dateStamp>
+        <hierarchyLevel>dataset</hierarchyLevel>
+        <citation identifier="http://testDoi.doi">test resource citation!!!</citation>
+        <bibliography>
+          <citation identifier="http://testDoi2.doi">test resource citation 2!!!</citation>
+          <citation identifier="http://testDoi3.doi">test resource citation 3!!!</citation>
+        </bibliography>
+        <dc:replaces>ef4c9b66-95ba-4584-9e0c-4d62ccc5978d/eml-8.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>

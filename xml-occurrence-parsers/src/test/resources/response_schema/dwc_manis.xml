@@ -1,0 +1,65 @@
+<record>
+  <InstitutionCode>ANSP</InstitutionCode>
+  <CollectionCode>HRP</CollectionCode>
+  <CatalogNumberText>502</CatalogNumberText>
+  <ScientificName>Bolitoglossa platydactyla</ScientificName>
+  <TypeStatus>0</TypeStatus>
+  <Sex nil="true"/>
+  <AgeClass nil="true"/>
+  <Preparations nil="true"/>
+  <Tissues nil="true"/>
+  <Country>USA</Country>
+  <StateProvince>Texas</StateProvince>
+  <County>Bexar Co.</County>
+  <Island nil="true"/>
+  <IslandGroup nil="true"/>
+  <ContinentOcean>North America</ContinentOcean>
+  <Locality nil="true"/>
+  <YearCollected/>
+  <MonthCollected/>
+  <DayCollected/>
+  <TimeCollected nil="true"/>
+  <VerbatimCollectingDate nil="true"/>
+  <Collector>G. W. Marnock</Collector>
+  <CollectorNumber>757 or 957</CollectorNumber>
+  <FieldNumber nil="true"/>
+  <FieldNotes nil="true"/>
+  <JulianDay nil="true"/>
+  <DecimalLatitude nil="true"/>
+  <DecimalLongitude nil="true"/>
+  <HorizontalDatum nil="true"/>
+  <CoordinateUncertaintyInMeters nil="true"/>
+  <OriginalCoordinateSystem nil="true"/>
+  <VerbatimLatitude nil="true"/>
+  <VerbatimLongitude nil="true"/>
+  <GeorefMethod nil="true"/>
+  <LatLongComments nil="true"/>
+  <MinimumElevationInMeters nil="true"/>
+  <MaximumElevationInMeters nil="true"/>
+  <VerbatimElevation nil="true"/>
+  <MinimumDepthInMeters nil="true"/>
+  <MaximumDepthInMeters nil="true"/>
+  <VerbatimDepth nil="true"/>
+  <Remarks nil="true"/>
+  <Kingdom nil="true"/>
+  <Phylum nil="true"/>
+  <Class>Amphibia</Class>
+  <Order>Caudata</Order>
+  <Family>Plethodontidae</Family>
+  <Genus>Bolitoglossa</Genus>
+  <Species>platydactyla</Species>
+  <Subspecies/>
+  <ScientificNameAuthor nil="true"/>
+  <IdentificationModifier nil="true"/>
+  <IdentifiedBy nil="true"/>
+  <YearIdentified nil="true"/>
+  <MonthIdentified nil="true"/>
+  <DayIdentified nil="true"/>
+  <IndividualCount nil="true"/>
+  <GenBankNum nil="true"/>
+  <OtherCatalogNumbers nil="true"/>
+  <RelatedCatalogedItems nil="true"/>
+  <CatalogNumberNumeric nil="true"/>
+  <BasisOfRecord>PreservedSpecimen</BasisOfRecord>
+  <DateLastModified>1992-04-08T00:00:00-04:00</DateLastModified>
+</record>
