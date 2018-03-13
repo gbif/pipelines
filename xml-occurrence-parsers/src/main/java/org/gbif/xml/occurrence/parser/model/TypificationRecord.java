@@ -32,14 +32,24 @@ public class TypificationRecord implements Serializable {
   }
 
   public TypificationRecord(String scientificName, String publication, String typeStatus, String notes) {
-    if (scientificName != null && !scientificName.isEmpty()) this.scientificName = scientificName;
-    if (publication != null && !publication.isEmpty()) this.publication = publication;
-    if (typeStatus != null && !typeStatus.isEmpty()) this.typeStatus = typeStatus;
-    if (notes != null && !notes.isEmpty()) this.notes = notes;
+    if (!StringUtils.isEmpty(scientificName)) {
+      this.scientificName = scientificName;
+    }
+    if (!StringUtils.isEmpty(publication)) {
+      this.publication = publication;
+    }
+    if (!StringUtils.isEmpty(typeStatus)) {
+      this.typeStatus = typeStatus;
+    }
+    if (!StringUtils.isEmpty(notes)) {
+      this.notes = notes;
+    }
   }
 
   public boolean isEmpty() {
-    return StringUtils.isEmpty(notes) && StringUtils.isEmpty(typeStatus) && StringUtils.isEmpty(publication)
+    return StringUtils.isEmpty(notes)
+           && StringUtils.isEmpty(typeStatus)
+           && StringUtils.isEmpty(publication)
            && StringUtils.isEmpty(scientificName);
   }
 

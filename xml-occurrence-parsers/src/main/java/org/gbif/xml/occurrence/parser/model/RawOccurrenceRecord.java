@@ -21,9 +21,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 /**
  * This is mostly cut and paste from synchronizer-gbif, intended as a place holder until this project is
