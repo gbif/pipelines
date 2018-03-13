@@ -1,0 +1,69 @@
+<occurrence>
+  <DataSource>
+    <OriginalSource>
+      <SourceInstitutionCode>TLMF</SourceInstitutionCode>
+      <SourceName>Tiroler Landesmuseum Ferdinandeum</SourceName>
+      <SourceLastUpdatedDate>2004-07-20</SourceLastUpdatedDate>
+    </OriginalSource>
+  </DataSource>
+  <Unit>
+    <UnitID>82D45C93-B297-490E-B7B0-E0A9BEED1326</UnitID>
+    <NamedCollections>
+      <NamedCollection>TLMF Botanik</NamedCollection>
+    </NamedCollections>
+    <Identifications>
+      <Identification>
+        <TaxonIdentified>
+          <NameAuthorYearString>Betula pubescens Ehrh.</NameAuthorYearString>
+          <ScientificNameAtomized>
+            <Botanical>
+              <Genus>Betula</Genus>
+              <FirstEpithet>pubescens Ehrh.</FirstEpithet>
+            </Botanical>
+          </ScientificNameAtomized>
+        </TaxonIdentified>
+      </Identification>
+    </Identifications>
+    <Gathering>
+      <GatheringAgents>"
+        +
+        "<GatheringAgentsText>Oschütz</GatheringAgentsText>" +
+        "
+      </GatheringAgents>
+      <GatheringSite>
+        <LocalityText>Seefeld</LocalityText>
+        <Country>
+          <ISO3Letter>AUT</ISO3Letter>
+        </Country>
+        <NamedAreas>
+          <NamedArea>
+            <NamedAreaClass>Bundesland</NamedAreaClass>
+            <NamedAreaName>Nordtirol</NamedAreaName>
+          </NamedArea>
+        </NamedAreas>
+        <SiteCoordinateSets>
+          <SiteCoordinates>
+            <CoordinatesLatLong>
+              <LongitudeDecimal>11.2041081855</LongitudeDecimal>
+              <LatitudeDecimal>47.3303167192</LatitudeDecimal>
+              <SpatialDatum>WGS84</SpatialDatum>
+            </CoordinatesLatLong>
+          </SiteCoordinates>
+        </SiteCoordinateSets>
+        <Synecology>
+          <AssociatedTaxa>
+            <TaxonIdentified>
+              <HigherTaxa>
+                <HigherTaxon TaxonRank="Family">Betulaceae</HigherTaxon>
+              </HigherTaxa>
+              <InformalNameString Language="de">Moor-Birke</InformalNameString>
+            </TaxonIdentified>
+          </AssociatedTaxa>
+        </Synecology>
+      </GatheringSite>
+      <GatheringDateTime>
+        <ISODateTimeEnd>1999-12-31</ISODateTimeEnd>
+      </GatheringDateTime>
+    </Gathering>
+  </Unit>
+</occurrence>

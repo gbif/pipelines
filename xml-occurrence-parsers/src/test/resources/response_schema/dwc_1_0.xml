@@ -1,0 +1,49 @@
+<record>
+  <DateLastModified>2007-03-06T00:00:00+01:00</DateLastModified>
+  <InstitutionCode>BR</InstitutionCode>
+  <CollectionCode>MYCO</CollectionCode>
+  <CatalogNumber>2383</CatalogNumber>
+  <ScientificName>cf. Badhamia</ScientificName>
+  <BasisOfRecord>S</BasisOfRecord>
+  <Kingdom>Protista</Kingdom>
+  <Phylum>Myxomycota</Phylum>
+  <Class>Myxomycetes</Class>
+  <Order>PHYSARALES</Order>
+  <Family>PHYSARACEAE</Family>
+  <Genus>Badhamia</Genus>
+  <Species nil="true"/>
+  <Subspecies nil="true"/>
+  <ScientificNameAuthor nil="true"/>
+  <IdentifiedBy nil="true"/>
+  <YearIdentified nil="true"/>
+  <MonthIdentified nil="true"/>
+  <DayIdentified nil="true"/>
+  <TypeStatus nil="true"/>
+  <CollectorNumber>4469</CollectorNumber>
+  <FieldNumber nil="true"/>
+  <Collector>Nannenga-Bremekamp N.</Collector>
+  <YearCollected>1960</YearCollected>
+  <MonthCollected>9</MonthCollected>
+  <DayCollected>4</DayCollected>
+  <JulianDay nil="true"/>
+  <TimeOfDay nil="true"/>
+  <ContinentOcean nil="true"/>
+  <Country>NL</Country>
+  <StateProvince nil="true"/>
+  <County nil="true"/>
+  <Locality>Doorwerth; Duno - Dunolaan</Locality>
+  <Longitude>5.8151</Longitude>
+  <Latitude>51.9733</Latitude>
+  <CoordinatePrecision nil="true"/>
+  <MinimumElevation nil="true"/>
+  <MaximumElevation nil="true"/>
+  <MinimumDepth nil="true"/>
+  <MaximumDepth nil="true"/>
+  <Sex nil="true"/>
+  <PreparationType nil="true"/>
+  <IndividualCount nil="true"/>
+  <PreviousCatalogNumber nil="true"/>
+  <RelationshipType nil="true"/>
+  <RelatedCatalogItem nil="true"/>
+  <Notes>barcode:5020056128621, substrate:beukenstronk -andere kant als 4468</Notes>
+</record>

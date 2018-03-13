@@ -8,15 +8,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 class ExtendedRecordBuilder implements Function<StarRecord, ExtendedRecord> {
 
-  private static final long serialVersionUID = -348908784086155755L;
-
   @Override
   public ExtendedRecord apply(StarRecord record) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(record.core().id());
+    Optional.ofNullable(record.core().rowType()).ifPresent(x->builder.setCoreRowType(x.qualifiedName()));
     builder.setCoreTerms(new HashMap<>());
 
     for (Term term : record.core().terms()) {
