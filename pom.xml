@@ -81,6 +81,7 @@
     <logback.version>1.1.5</logback.version>
     <commons-compress.version>1.16.1</commons-compress.version>
     <commons-digester.version>2.1</commons-digester.version>
+    <mapdb.version>3.0.5</mapdb.version>
 
     <!-- Test libraries -->
     <mockwebserver.version>3.10.0</mockwebserver.version>
@@ -325,6 +326,11 @@
         <groupId>commons-digester</groupId>
         <artifactId>commons-digester</artifactId>
         <version>${commons-digester.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mapdb</groupId>
+        <artifactId>mapdb</artifactId>
+        <version>${mapdb.version}</version>
       </dependency>
 
       <!--Test dependencies-->

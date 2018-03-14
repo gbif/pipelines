@@ -121,6 +121,8 @@ public class XmlFragmentParser {
    * This method is a hack to return a single result where ScientificName matches the given unitQualifier. This
    * behaviour is only relevant for ABCD 2.06 - the others all produce a single record anyway.
    * TODO: refactor the parse/builder to return what we want, rather than hacking around
+   *
+   * TODO : SET OCCURRENCE ID!!!
    */
   public static RawOccurrenceRecord parseRecord(byte[] xml, OccurrenceSchemaType schemaType, String unitQualifier) {
     RawOccurrenceRecord result = null;
