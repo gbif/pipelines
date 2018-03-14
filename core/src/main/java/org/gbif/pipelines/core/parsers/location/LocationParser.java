@@ -178,6 +178,7 @@ public class LocationParser {
 
     ParsedField.Builder<LatLng> builder = ParsedField.newBuilder();
     if (!parsedLatLon.isSuccessful()) {
+      // TODO: try with verbatim fields (issue #71)
       // coords parsing failed
       return builder.issues(issues).build();
     }
