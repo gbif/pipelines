@@ -184,7 +184,9 @@ public class XmlFragmentParser {
             LOG.info("No holy triplet for an xml snippet in dataset [{}] and schema [{}], got error [{}]",
               datasetKey.toString(), schemaType.toString(), e.getMessage());
           }
-          if (holyTriplet != null) ids.add(holyTriplet);
+          if (holyTriplet != null) {
+            ids.add(holyTriplet);
+          }
         }
 
         if (useOccurrenceId && record.getIdentifierRecords() != null && !record.getIdentifierRecords().isEmpty()) {

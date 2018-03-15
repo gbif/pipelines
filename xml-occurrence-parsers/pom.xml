@@ -62,11 +62,23 @@
       <groupId>org.gbif</groupId>
       <artifactId>dwca-io</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
 
     <!--Common dependencies-->
     <dependency>
       <groupId>commons-digester</groupId>
       <artifactId>commons-digester</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
     </dependency>
 
     <!--Test dependencies-->
