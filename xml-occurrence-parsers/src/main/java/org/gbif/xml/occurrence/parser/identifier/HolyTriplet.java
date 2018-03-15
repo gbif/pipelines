@@ -41,6 +41,20 @@ public class HolyTriplet implements UniqueIdentifier {
     this.unitQualifier = unitQualifier;
   }
 
+  public HolyTriplet(String institutionCode, String collectionCode, String catalogNumber) {
+    Preconditions.checkArgument(institutionCode != null && !institutionCode.isEmpty(),
+                                "institutionCode can't be null or empty");
+    Preconditions.checkArgument(collectionCode != null && !collectionCode.isEmpty(),
+                                "collectionCode can't be null or empty");
+    Preconditions.checkArgument(catalogNumber != null && !catalogNumber.isEmpty(),
+                                "catalogNumber can't be null or empty");
+    this.institutionCode = institutionCode;
+    this.collectionCode = collectionCode;
+    this.catalogNumber = catalogNumber;
+    this.datasetKey = null;
+    this.unitQualifier  = null;
+  }
+
   public String getInstitutionCode() {
     return institutionCode;
   }

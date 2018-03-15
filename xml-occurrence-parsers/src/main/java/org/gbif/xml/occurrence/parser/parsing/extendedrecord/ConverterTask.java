@@ -10,21 +10,24 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The task for CompletableFuture which reads a xml response file, parses and converts to ExtendedRecord avro file
+ */
 public class ConverterTask implements Runnable {
 
   private static final Logger LOG = LoggerFactory.getLogger(ConverterTask.class);
 
-  private final File file;
+  private final File inputFile;
   private final DataFileWriterProxy dataFileWriter;
 
-  public ConverterTask(File file, DataFileWriterProxy dataFileWriter) {
-    this.file = file;
+  public ConverterTask(File inputFile, DataFileWriterProxy dataFileWriter) {
+    this.inputFile = inputFile;
     this.dataFileWriter = dataFileWriter;
   }
 
   @Override
   public void run() {
-    new OccurrenceParser().parseFile(file).stream()
+    new OccurrenceParser().parseFile(inputFile).stream()
       .map(XmlFragmentParser::parseRecord)
       .forEach(rawRecords -> rawRecords.stream()
         .filter(MapCache.getInstance()::isUnique)

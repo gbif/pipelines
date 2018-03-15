@@ -2,30 +2,39 @@ package org.gbif.xml.occurrence.parser.parsing.extendedrecord;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.xml.occurrence.parser.identifier.HolyTriplet;
+import org.gbif.xml.occurrence.parser.identifier.OccurrenceKeyHelper;
 import org.gbif.xml.occurrence.parser.model.RawOccurrenceRecord;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 
 public class ExtendedRecordConverter {
 
-  private ExtendedRecordConverter(){
+  private ExtendedRecordConverter() {
     // NOP
   }
 
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
-    //TODO: REMOVE AFTER
-    String id = Optional.ofNullable(rawRecord.getId()).orElse("1");
-    ExtendedRecord record = ExtendedRecord.newBuilder().setId(id).build();
+    String recordId = rawRecord.getId();
+    if (Objects.isNull(recordId)) {
+      HolyTriplet holyTriplet = new HolyTriplet(rawRecord.getInstitutionCode(), rawRecord.getCollectionCode(), rawRecord.getCatalogueNumber());
+      recordId = OccurrenceKeyHelper.toKey(holyTriplet);
+    }
 
-    final BiConsumer<DwcTerm, String> setter =
-      (term, value) -> Optional.ofNullable(value).ifPresent(x -> record.getCoreTerms().put(term.qualifiedName(), x));
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId(recordId).build();
+
+    final BiConsumer<DwcTerm, String> setter = (term, value) -> Optional.ofNullable(value)
+      .filter(str -> !str.isEmpty())
+      .ifPresent(x -> record.getCoreTerms().put(term.qualifiedName(), x));
 
     setter.accept(DwcTerm.institutionCode, rawRecord.getInstitutionCode());
     setter.accept(DwcTerm.collectionCode, rawRecord.getCollectionCode());
     setter.accept(DwcTerm.catalogNumber, rawRecord.getCatalogueNumber());
-    setter.accept(DwcTerm.scientificName ,rawRecord.getScientificName());
+    setter.accept(DwcTerm.scientificName, rawRecord.getScientificName());
     setter.accept(DwcTerm.scientificNameAuthorship, rawRecord.getAuthor());
     setter.accept(DwcTerm.taxonRank, rawRecord.getRank());
     setter.accept(DwcTerm.kingdom, rawRecord.getKingdom());
@@ -50,24 +59,25 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.county, rawRecord.getCounty());
     setter.accept(DwcTerm.recordedBy, rawRecord.getCollectorName());
     setter.accept(DwcTerm.fieldNumber, rawRecord.getCollectorsFieldNumber());
-    setter.accept(DwcTerm.locality ,rawRecord.getLocality());
+    setter.accept(DwcTerm.locality, rawRecord.getLocality());
     setter.accept(DwcTerm.year, rawRecord.getYear());
     setter.accept(DwcTerm.month, rawRecord.getMonth());
     setter.accept(DwcTerm.day, rawRecord.getDay());
     setter.accept(DwcTerm.eventDate, rawRecord.getOccurrenceDate());
     setter.accept(DwcTerm.basisOfRecord, rawRecord.getBasisOfRecord());
     setter.accept(DwcTerm.identifiedBy, rawRecord.getIdentifierName());
-
-    //TODO - dateIdentified
-    //setter.accept(DwcTerm., rawRecord.getYearIdentified());
-    //setter.accept(DwcTerm., rawRecord.getMonthIdentified());
-    //setter.accept(DwcTerm., rawRecord.getDayIdentified());
-
     setter.accept(DwcTerm.dateIdentified, rawRecord.getDateIdentified());
     setter.accept(DwcTerm.identificationQualifier, rawRecord.getUnitQualifier());
 
+    if (Objects.isNull(rawRecord.getDateIdentified())) {
+      StringJoiner joiner = new StringJoiner("-");
+      Optional.ofNullable(rawRecord.getYearIdentified()).ifPresent(joiner::add);
+      Optional.ofNullable(rawRecord.getMonthIdentified()).ifPresent(joiner::add);
+      Optional.ofNullable(rawRecord.getDayIdentified()).ifPresent(joiner::add);
+      setter.accept(DwcTerm.identifiedBy, joiner.toString());
+    }
+
     return record;
   }
-
 
 }
