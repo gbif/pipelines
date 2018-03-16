@@ -97,12 +97,8 @@ public class ExtendedRecordParserTest {
     // Deserialize ExtendedRecord from disk
     DatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
     try (DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(verbatim, datumReader)) {
-      ExtendedRecord record = null;
       while (dataFileReader.hasNext()) {
-        // Reuse user object by passing it to next(). This saves us from
-        // allocating and garbage collecting many objects for files with
-        // many items.
-        record = dataFileReader.next(record);
+        ExtendedRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
         Assert.assertNotNull(record.getId());
       }
