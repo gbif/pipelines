@@ -17,7 +17,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ExtendedRecordParserTest {
 
-  private final String PATH = getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
+  private final String inpPath = getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
+  private final String outPath = inpPath + "verbatim.avro";
 
   @Test(expected = ParsingException.class)
   public void testInputPathIsAbsent() {
@@ -47,7 +48,7 @@ public class ExtendedRecordParserTest {
   @Test(expected = ParsingException.class)
   public void testInputFileWrongExtension() {
     // State
-    String inputPath = PATH + "61.zip";
+    String inputPath = inpPath + "61.zip";
 
     // When
     ExtendedRecordParser.convertFromXML(inputPath, "test");
@@ -56,14 +57,13 @@ public class ExtendedRecordParserTest {
   @Test
   public void testParsingDirectory() throws IOException {
     // State
-    String inputPath = PATH + "61";
-    String outputPath = PATH + "verbatim.avro";
+    String inputPath = inpPath + "61";
 
     // When
-    ExtendedRecordParser.convertFromXML(inputPath, outputPath);
+    ExtendedRecordParser.convertFromXML(inputPath, outPath);
 
     // Should
-    File verbtim = new File(outputPath);
+    File verbtim = new File(outPath);
     Assert.assertTrue(verbtim.exists());
     Files.deleteIfExists(verbtim.toPath());
   }
@@ -71,14 +71,13 @@ public class ExtendedRecordParserTest {
   @Test
   public void testParsingArchive() throws IOException {
     // State
-    String inputPath = PATH + "61.tar.xz";
-    String outputPath = PATH + "verbatim.avro";
+    String inputPath = inpPath + "61.tar.xz";
 
     // When
-    ExtendedRecordParser.convertFromXML(inputPath, outputPath);
+    ExtendedRecordParser.convertFromXML(inputPath, outPath);
 
     // Should
-    File verbtim = new File(outputPath);
+    File verbtim = new File(outPath);
     Assert.assertTrue(verbtim.exists());
     Files.deleteIfExists(verbtim.toPath());
   }
@@ -86,14 +85,13 @@ public class ExtendedRecordParserTest {
   @Test
   public void testAvroDeserializing() throws IOException {
     // State
-    String inputPath = PATH + "61";
-    String outputPath = PATH + "verbatim.avro";
+    String inputPath = inpPath + "61";
 
     // When
-    ExtendedRecordParser.convertFromXML(inputPath, outputPath);
+    ExtendedRecordParser.convertFromXML(inputPath, outPath);
 
     // Should
-    File verbtim = new File(outputPath);
+    File verbtim = new File(outPath);
     Assert.assertTrue(verbtim.exists());
 
     // Deserialize ExtendedRecord from disk
