@@ -88,7 +88,7 @@ public class OccurrenceKeyHelper {
 
   private static String join(String... values) {
     StringJoiner joiner = new StringJoiner(DELIM);
-    Arrays.stream(values).forEach(x -> Optional.ofNullable(x).filter(String::isEmpty).ifPresent(joiner::add));
+    Arrays.stream(values).forEach(x -> Optional.ofNullable(x).filter(f->!f.isEmpty()).ifPresent(joiner::add));
     return joiner.toString();
   }
 }

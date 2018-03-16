@@ -3,6 +3,7 @@ package org.gbif.xml.occurrence.parser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ConverterTask;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.DataFileWriterProxy;
+import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.MapCache;
 
 import java.io.File;
@@ -17,6 +18,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +29,8 @@ public class ExtendedRecordParser {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExtendedRecordParser.class);
 
-  private static final String UNCOMPRESS_CMD = "tar -xvzf ";
   private static final String FILE_PREFIX = ".response";
-  private static final String TMP_PATH = "/tmp/";
+  private static final int COMPRESS_LEVEL = 5;
 
   private ExtendedRecordParser() {
     // NOP
@@ -41,9 +42,12 @@ public class ExtendedRecordParser {
    */
   public static void convertFromXML(String inputPath, String outputPath) {
 
-    File inputFile = getInputFile(inputPath);
-    File outputFile = new File(outputPath);
+    if (StringUtils.isEmpty(inputPath) || StringUtils.isEmpty(outputPath) ) {
+      throw new ParsingException("Input or output path must not be empty or null!");
+    }
 
+    File inputFile = ParserFileUtils.uncompressAndGetInputFile(inputPath);
+    File outputFile = new File(outputPath);
     Schema schema = ExtendedRecord.getClassSchema();
 
     try (DataFileWriter<ExtendedRecord> dataFileWriter = new DataFileWriter<>(new SpecificDatumWriter<>(schema));
@@ -54,7 +58,7 @@ public class ExtendedRecordParser {
         Files.createDirectories(outputFile.getParentFile().toPath());
       }
 
-      dataFileWriter.setCodec(CodecFactory.deflateCodec(5));
+      dataFileWriter.setCodec(CodecFactory.deflateCodec(COMPRESS_LEVEL));
       dataFileWriter.setFlushOnEveryBlock(false);
       dataFileWriter.create(schema, outputFile);
 
@@ -81,44 +85,6 @@ public class ExtendedRecordParser {
     } finally {
       // Close cache instance which was opened during processing ConverterTasks
       MapCache.getInstance().close();
-    }
-  }
-
-  /**
-   * @param inputPath path to a folder with xmls or a tar.xz archive
-   * @return the new File object, path to xml files folder
-   */
-  private static File getInputFile(String inputPath) {
-    // Check directory
-    File inputFile = new File(inputPath);
-    if (!inputFile.exists()) {
-      LOG.error("Directory or file {} does not exist", inputFile.getAbsolutePath());
-      throw new ParsingException("Directory or file " + inputFile.getAbsolutePath() + " does not exist");
-    }
-
-    // Uncompress if it is a tar.xz
-    if (inputFile.isFile()) {
-      return uncompress(inputFile);
-    }
-
-    return inputFile;
-  }
-
-  /**
-   * Uncompress a tar.xz archive
-   * @param inputFile - *.tar.xz file
-   * @return the new File object, path to uncompressed files folder
-   */
-  private static File uncompress(File inputFile) {
-    try {
-      File parentFile = new File(inputFile.getParentFile().getAbsolutePath() + TMP_PATH);
-      Files.createDirectories(parentFile.toPath());
-      String cmd = UNCOMPRESS_CMD + inputFile.getAbsolutePath() + " -C " + parentFile.getAbsolutePath();
-      Runtime.getRuntime().exec(cmd).waitFor();
-      return parentFile;
-    } catch (InterruptedException | IOException ex) {
-      LOG.error("Directory or file {} does not exist", inputFile.getAbsolutePath());
-      throw new ParsingException(ex);
     }
   }
 

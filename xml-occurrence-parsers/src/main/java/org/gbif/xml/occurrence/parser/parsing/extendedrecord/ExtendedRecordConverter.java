@@ -2,14 +2,16 @@ package org.gbif.xml.occurrence.parser.parsing.extendedrecord;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.xml.occurrence.parser.ParsingException;
 import org.gbif.xml.occurrence.parser.identifier.HolyTriplet;
 import org.gbif.xml.occurrence.parser.identifier.OccurrenceKeyHelper;
 import org.gbif.xml.occurrence.parser.model.RawOccurrenceRecord;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class ExtendedRecordConverter {
 
@@ -20,9 +22,12 @@ public class ExtendedRecordConverter {
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
     String recordId = rawRecord.getId();
-    if (Objects.isNull(recordId)) {
+    if (StringUtils.isEmpty(recordId)) {
       HolyTriplet holyTriplet = new HolyTriplet(rawRecord.getInstitutionCode(), rawRecord.getCollectionCode(), rawRecord.getCatalogueNumber());
       recordId = OccurrenceKeyHelper.toKey(holyTriplet);
+      if(StringUtils.isEmpty(recordId)){
+        throw new ParsingException("Record id null or empty");
+      }
     }
 
     ExtendedRecord record = ExtendedRecord.newBuilder().setId(recordId).build();
@@ -69,7 +74,7 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.dateIdentified, rawRecord.getDateIdentified());
     setter.accept(DwcTerm.identificationQualifier, rawRecord.getUnitQualifier());
 
-    if (Objects.isNull(rawRecord.getDateIdentified())) {
+    if (StringUtils.isEmpty(rawRecord.getDateIdentified())) {
       StringJoiner joiner = new StringJoiner("-");
       Optional.ofNullable(rawRecord.getYearIdentified()).ifPresent(joiner::add);
       Optional.ofNullable(rawRecord.getMonthIdentified()).ifPresent(joiner::add);
