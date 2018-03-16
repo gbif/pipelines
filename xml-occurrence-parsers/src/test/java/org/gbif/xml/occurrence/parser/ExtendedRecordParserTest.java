@@ -63,9 +63,9 @@ public class ExtendedRecordParserTest {
     ExtendedRecordParser.convertFromXML(inputPath, outPath);
 
     // Should
-    File verbtim = new File(outPath);
-    Assert.assertTrue(verbtim.exists());
-    Files.deleteIfExists(verbtim.toPath());
+    File verbatim = new File(outPath);
+    Assert.assertTrue(verbatim.exists());
+    Files.deleteIfExists(verbatim.toPath());
   }
 
   @Test
@@ -77,9 +77,9 @@ public class ExtendedRecordParserTest {
     ExtendedRecordParser.convertFromXML(inputPath, outPath);
 
     // Should
-    File verbtim = new File(outPath);
-    Assert.assertTrue(verbtim.exists());
-    Files.deleteIfExists(verbtim.toPath());
+    File verbatim = new File(outPath);
+    Assert.assertTrue(verbatim.exists());
+    Files.deleteIfExists(verbatim.toPath());
   }
 
   @Test
@@ -91,20 +91,24 @@ public class ExtendedRecordParserTest {
     ExtendedRecordParser.convertFromXML(inputPath, outPath);
 
     // Should
-    File verbtim = new File(outPath);
-    Assert.assertTrue(verbtim.exists());
+    File verbatim = new File(outPath);
+    Assert.assertTrue(verbatim.exists());
 
     // Deserialize ExtendedRecord from disk
     DatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
-    DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(verbtim, datumReader);
-    ExtendedRecord record = null;
-    while (dataFileReader.hasNext()) {
-      record = dataFileReader.next(record);
-      Assert.assertNotNull(record);
-      Assert.assertNotNull(record.getId());
+    try (DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(verbatim, datumReader)) {
+      ExtendedRecord record = null;
+      while (dataFileReader.hasNext()) {
+        // Reuse user object by passing it to next(). This saves us from
+        // allocating and garbage collecting many objects for files with
+        // many items.
+        record = dataFileReader.next(record);
+        Assert.assertNotNull(record);
+        Assert.assertNotNull(record.getId());
+      }
     }
 
-    Files.deleteIfExists(verbtim.toPath());
+    Files.deleteIfExists(verbatim.toPath());
   }
 
 }

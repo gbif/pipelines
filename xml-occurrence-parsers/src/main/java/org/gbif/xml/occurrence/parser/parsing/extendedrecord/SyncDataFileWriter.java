@@ -7,13 +7,13 @@ import java.io.IOException;
 import org.apache.avro.file.DataFileWriter;
 
 /**
- * Proxy class for avro DataFileWriter, created to avoid an issue during file writing
+ * Sync class for avro DataFileWriter, created to avoid an issue during file writing
  */
-public class DataFileWriterProxy {
+public class SyncDataFileWriter {
 
   private final DataFileWriter<ExtendedRecord> dataFileWriter;
 
-  public DataFileWriterProxy(DataFileWriter<ExtendedRecord> dataFileWriter) {
+  public SyncDataFileWriter(DataFileWriter<ExtendedRecord> dataFileWriter) {
     this.dataFileWriter = dataFileWriter;
   }
 

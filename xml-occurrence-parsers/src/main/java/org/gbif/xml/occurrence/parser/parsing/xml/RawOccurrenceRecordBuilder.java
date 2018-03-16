@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,11 +156,11 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   }
 
   private static String reconcileDate(String reconciledDate, String year, String month, String day) {
-    if (StringUtils.isEmpty(reconciledDate) && !StringUtils.isEmpty(year)) {
+    if (Strings.isNullOrEmpty(reconciledDate) && !Strings.isNullOrEmpty(year)) {
       reconciledDate = year;
-      if (!StringUtils.isEmpty(month)) {
+      if (!Strings.isNullOrEmpty(month)) {
         reconciledDate = reconciledDate + "-" + month;
-        if (!StringUtils.isEmpty(day)) reconciledDate = reconciledDate + "-" + day;
+        if (!Strings.isNullOrEmpty(day)) reconciledDate = reconciledDate + "-" + day;
       }
     }
 
@@ -633,11 +633,11 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   public void setDateIdentified(String year, String month, String day) {
     // build our own "verbatim" string
     String result = null;
-    if (!StringUtils.isEmpty(year)) {
+    if (!Strings.isNullOrEmpty(year)) {
       result = year;
-      if (!StringUtils.isEmpty(month)) {
+      if (!Strings.isNullOrEmpty(month)) {
         result = result + "-" + month;
-        if (!StringUtils.isEmpty(day)) result = result + "-" + day;
+        if (!Strings.isNullOrEmpty(day)) result = result + "-" + day;
       }
     }
     if (result != null) this.dateIdentified = result;

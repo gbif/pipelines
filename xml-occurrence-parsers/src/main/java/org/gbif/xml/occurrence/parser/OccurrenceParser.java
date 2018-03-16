@@ -93,6 +93,16 @@ public class OccurrenceParser {
     }
   }
 
+  /**
+   * This parses a xml file of uncompressed ABCD or DwC Occurrences into {@link RawXmlOccurrence}s.
+   * No care is taken to handle wrong encodings or character sets in general. This might be changed later on.
+   *
+   * @param file xml response file
+   *
+   * @return list of parsed occurrences
+   *
+   * @throws ParsingException if there were any problems during parsing the stream
+   */
   public List<RawXmlOccurrence> parseFile(File file) {
     try (InputStream inputStream = new FileInputStream(file)) {
       return parseStream(inputStream);
@@ -215,6 +225,11 @@ public class OccurrenceParser {
     return charsets;
   }
 
+  /**
+   * A Digester parser, uses ABCD and DwC rules to parse XML input source
+   * @param inputSource xml response
+   * @param responseBody storage for Digester
+   */
   private void parse(InputSource inputSource, ParsedSearchResponse responseBody)
     throws ParserConfigurationException, SAXException, IOException {
 

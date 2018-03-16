@@ -22,7 +22,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,9 +122,8 @@ public class ImageRecord extends PropertyPrioritizer implements Serializable {
   }
 
   public boolean isEmpty() {
-    return StringUtils.isEmpty(rawImageType) && imageType == null && StringUtils.isEmpty(url) && StringUtils
-      .isEmpty(pageUrl) &&
-           StringUtils.isEmpty(description) && StringUtils.isEmpty(rights) && StringUtils.isEmpty(htmlForDisplay);
+    return Strings.isNullOrEmpty(rawImageType) && imageType == null && Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(pageUrl) &&
+           Strings.isNullOrEmpty(description) && Strings.isNullOrEmpty(rights) && Strings.isNullOrEmpty(htmlForDisplay);
   }
 
   public String debugDump() {

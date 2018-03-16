@@ -22,7 +22,7 @@ public class OccurrenceKeyHelper {
   }
 
   @Nullable
-  public static String buildKey(@Nullable HolyTriplet triplet) {
+  public static String buildKey(@Nullable Triplet triplet) {
     if (Objects.isNull(triplet)
         || Objects.isNull(triplet.getDatasetKey())
         || Objects.isNull(triplet.getInstitutionCode())
@@ -31,7 +31,8 @@ public class OccurrenceKeyHelper {
       return null;
     }
 
-    return join(triplet.getDatasetKey().toString(),
+    return join(DELIM,
+                triplet.getDatasetKey().toString(),
                 triplet.getInstitutionCode(),
                 triplet.getCollectionCode(),
                 triplet.getCatalogNumber(),
@@ -46,7 +47,7 @@ public class OccurrenceKeyHelper {
       return null;
     }
 
-    return join(pubProvided.getDatasetKey().toString(), pubProvided.getPublisherProvidedIdentifier());
+    return join(DELIM, pubProvided.getDatasetKey().toString(), pubProvided.getPublisherProvidedIdentifier());
   }
 
   @Nullable
@@ -59,7 +60,7 @@ public class OccurrenceKeyHelper {
   }
 
   @Nullable
-  public static String buildUnscopedKey(@Nullable HolyTriplet triplet) {
+  public static String buildUnscopedKey(@Nullable Triplet triplet) {
     if (Objects.isNull(triplet)
         || Objects.isNull(triplet.getDatasetKey())
         || Objects.isNull(triplet.getInstitutionCode())
@@ -68,14 +69,15 @@ public class OccurrenceKeyHelper {
       return null;
     }
 
-    return join(triplet.getInstitutionCode(),
+    return join(DELIM,
+                triplet.getInstitutionCode(),
                 triplet.getCollectionCode(),
                 triplet.getCatalogNumber(),
                 triplet.getUnitQualifier());
   }
 
   @Nullable
-  public static String toKey(@Nullable HolyTriplet triplet) {
+  public static String toKey(@Nullable Triplet triplet) {
     if (Objects.isNull(triplet)
         || Objects.isNull(triplet.getInstitutionCode())
         || Objects.isNull(triplet.getCollectionCode())
@@ -83,12 +85,17 @@ public class OccurrenceKeyHelper {
       return null;
     }
 
-    return join(triplet.getInstitutionCode(), triplet.getCollectionCode(), triplet.getCatalogNumber());
+    // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
+    return join(":",
+                "urn:catalog",
+                triplet.getInstitutionCode(),
+                triplet.getCollectionCode(),
+                triplet.getCatalogNumber());
   }
 
-  private static String join(String... values) {
-    StringJoiner joiner = new StringJoiner(DELIM);
-    Arrays.stream(values).forEach(x -> Optional.ofNullable(x).filter(f->!f.isEmpty()).ifPresent(joiner::add));
+  private static String join(String delim, String... values) {
+    StringJoiner joiner = new StringJoiner(delim);
+    Arrays.stream(values).forEach(x -> Optional.ofNullable(x).filter(f -> !f.isEmpty()).ifPresent(joiner::add));
     return joiner.toString();
   }
 }

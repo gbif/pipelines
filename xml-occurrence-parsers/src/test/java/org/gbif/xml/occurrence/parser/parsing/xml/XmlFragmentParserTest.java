@@ -1,9 +1,9 @@
 package org.gbif.xml.occurrence.parser.parsing.xml;
 
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.xml.occurrence.parser.identifier.HolyTriplet;
 import org.gbif.xml.occurrence.parser.identifier.OccurrenceKeyHelper;
 import org.gbif.xml.occurrence.parser.identifier.PublisherProvidedUniqueIdentifier;
+import org.gbif.xml.occurrence.parser.identifier.Triplet;
 import org.gbif.xml.occurrence.parser.identifier.UniqueIdentifier;
 import org.gbif.xml.occurrence.parser.model.RawOccurrenceRecord;
 import org.gbif.xml.occurrence.parser.parsing.RawXmlOccurrence;
@@ -89,9 +89,9 @@ public class XmlFragmentParserTest {
   public void testIdExtractionSimple() throws IOException {
     String xml = Resources.toString(Resources.getResource("id_extraction/abcd1_simple.xml"), StandardCharsets.UTF_8);
     UUID datasetKey = UUID.randomUUID();
-    HolyTriplet target =
-      new HolyTriplet(datasetKey, "TLMF", "Tiroler Landesmuseum Ferdinandeum", "82D45C93-B297-490E-B7B0-E0A9BEED1326",
-        null);
+    Triplet target =
+      new Triplet(datasetKey, "TLMF", "Tiroler Landesmuseum Ferdinandeum", "82D45C93-B297-490E-B7B0-E0A9BEED1326",
+                  null);
     byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
     Set<IdentifierExtractionResult> extractionResults =
       XmlFragmentParser.extractIdentifiers(datasetKey, xmlBytes, OccurrenceSchemaType.ABCD_1_2, true,
@@ -112,15 +112,15 @@ public class XmlFragmentParserTest {
     Set<IdentifierExtractionResult> extractionResults =
       XmlFragmentParser.extractIdentifiers(datasetKey, xmlBytes, OccurrenceSchemaType.ABCD_2_0_6, true,
         true);
-    HolyTriplet holyTriplet1 =
-      new HolyTriplet(datasetKey, "BGBM", "Bridel Herbar", "Bridel-1-428", "Grimmia alpicola Sw. ex Hedw.");
-    HolyTriplet holyTriplet2 = new HolyTriplet(datasetKey, "BGBM", "Bridel Herbar", "Bridel-1-428",
-      "Schistidium agassizii Sull. & Lesq. in Sull.");
+    Triplet triplet1 =
+      new Triplet(datasetKey, "BGBM", "Bridel Herbar", "Bridel-1-428", "Grimmia alpicola Sw. ex Hedw.");
+    Triplet triplet2 = new Triplet(datasetKey, "BGBM", "Bridel Herbar", "Bridel-1-428",
+                                   "Schistidium agassizii Sull. & Lesq. in Sull.");
     assertEquals(2, extractionResults.size());
     for (IdentifierExtractionResult result : extractionResults) {
       String uniqueId = result.getUniqueIdentifiers().iterator().next().getUniqueString();
-      assertTrue(uniqueId.equals(OccurrenceKeyHelper.buildKey(holyTriplet1)) || uniqueId
-        .equals(OccurrenceKeyHelper.buildKey(holyTriplet2)));
+      assertTrue(uniqueId.equals(OccurrenceKeyHelper.buildKey(triplet1)) || uniqueId
+        .equals(OccurrenceKeyHelper.buildKey(triplet2)));
     }
   }
 
@@ -135,10 +135,10 @@ public class XmlFragmentParserTest {
     Set<UniqueIdentifier> ids = extractionResults.iterator().next().getUniqueIdentifiers();
     PublisherProvidedUniqueIdentifier pubProvided =
       new PublisherProvidedUniqueIdentifier(datasetKey, "UGENT:vertebrata:50058");
-    HolyTriplet holyTriplet = new HolyTriplet(datasetKey, "UGENT", "vertebrata", "50058", null);
+    Triplet triplet = new Triplet(datasetKey, "UGENT", "vertebrata", "50058", null);
     assertEquals(2, ids.size());
     for (UniqueIdentifier id : ids) {
-      assertTrue(id.getUniqueString().equals(OccurrenceKeyHelper.buildKey(holyTriplet)) || id.getUniqueString()
+      assertTrue(id.getUniqueString().equals(OccurrenceKeyHelper.buildKey(triplet)) || id.getUniqueString()
         .equals(OccurrenceKeyHelper.buildKey(pubProvided)));
     }
   }

@@ -18,9 +18,9 @@ public class ConverterTask implements Runnable {
   private static final Logger LOG = LoggerFactory.getLogger(ConverterTask.class);
 
   private final File inputFile;
-  private final DataFileWriterProxy dataFileWriter;
+  private final SyncDataFileWriter dataFileWriter;
 
-  public ConverterTask(File inputFile, DataFileWriterProxy dataFileWriter) {
+  public ConverterTask(File inputFile, SyncDataFileWriter dataFileWriter) {
     this.inputFile = inputFile;
     this.dataFileWriter = dataFileWriter;
   }

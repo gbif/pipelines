@@ -3,15 +3,15 @@ package org.gbif.xml.occurrence.parser.parsing.extendedrecord;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.xml.occurrence.parser.ParsingException;
-import org.gbif.xml.occurrence.parser.identifier.HolyTriplet;
 import org.gbif.xml.occurrence.parser.identifier.OccurrenceKeyHelper;
+import org.gbif.xml.occurrence.parser.identifier.Triplet;
 import org.gbif.xml.occurrence.parser.model.RawOccurrenceRecord;
 
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Strings;
 
 public class ExtendedRecordConverter {
 
@@ -22,10 +22,10 @@ public class ExtendedRecordConverter {
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
     String recordId = rawRecord.getId();
-    if (StringUtils.isEmpty(recordId)) {
-      HolyTriplet holyTriplet = new HolyTriplet(rawRecord.getInstitutionCode(), rawRecord.getCollectionCode(), rawRecord.getCatalogueNumber());
-      recordId = OccurrenceKeyHelper.toKey(holyTriplet);
-      if(StringUtils.isEmpty(recordId)){
+    if (Strings.isNullOrEmpty(recordId)) {
+      Triplet triplet = new Triplet(rawRecord.getInstitutionCode(), rawRecord.getCollectionCode(), rawRecord.getCatalogueNumber());
+      recordId = OccurrenceKeyHelper.toKey(triplet);
+      if(Strings.isNullOrEmpty(recordId)){
         throw new ParsingException("Record id null or empty");
       }
     }
@@ -74,7 +74,7 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.dateIdentified, rawRecord.getDateIdentified());
     setter.accept(DwcTerm.identificationQualifier, rawRecord.getUnitQualifier());
 
-    if (StringUtils.isEmpty(rawRecord.getDateIdentified())) {
+    if (Strings.isNullOrEmpty(rawRecord.getDateIdentified())) {
       StringJoiner joiner = new StringJoiner("-");
       Optional.ofNullable(rawRecord.getYearIdentified()).ifPresent(joiner::add);
       Optional.ofNullable(rawRecord.getMonthIdentified()).ifPresent(joiner::add);

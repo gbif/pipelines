@@ -2,9 +2,9 @@ package org.gbif.xml.occurrence.parser;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ConverterTask;
-import org.gbif.xml.occurrence.parser.parsing.extendedrecord.DataFileWriterProxy;
-import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.MapCache;
+import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ParserFileUtils;
+import org.gbif.xml.occurrence.parser.parsing.extendedrecord.SyncDataFileWriter;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,11 +14,11 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import com.google.common.base.Strings;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class ExtendedRecordParser {
    */
   public static void convertFromXML(String inputPath, String outputPath) {
 
-    if (StringUtils.isEmpty(inputPath) || StringUtils.isEmpty(outputPath) ) {
+    if (Strings.isNullOrEmpty(inputPath) || Strings.isNullOrEmpty(outputPath) ) {
       throw new ParsingException("Input or output path must not be empty or null!");
     }
 
@@ -62,8 +62,8 @@ public class ExtendedRecordParser {
       dataFileWriter.setFlushOnEveryBlock(false);
       dataFileWriter.create(schema, outputFile);
 
-      // Proxy to avoid problem with writing
-      DataFileWriterProxy writerWrapper = new DataFileWriterProxy(dataFileWriter);
+      // Class with sync method to avoid problem with writing
+      SyncDataFileWriter writerWrapper = new SyncDataFileWriter(dataFileWriter);
 
       // Run async process - read a file, convert to ExtendedRecord and write to avro
       CompletableFuture[] futures = walk.filter(x -> x.toFile().isFile() && x.toString().endsWith(FILE_PREFIX))
@@ -82,6 +82,7 @@ public class ExtendedRecordParser {
       } catch (IOException ioex) {
         LOG.error(ioex.getMessage(), ioex);
       }
+      throw new ParsingException(ex);
     } finally {
       // Close cache instance which was opened during processing ConverterTasks
       MapCache.getInstance().close();
