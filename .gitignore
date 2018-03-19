@@ -9,3 +9,4 @@ data/tmpDwca
 java-generated
 miniCluster
 bin
+.DS_Store

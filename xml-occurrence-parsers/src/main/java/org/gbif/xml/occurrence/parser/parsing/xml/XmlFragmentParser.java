@@ -16,8 +16,8 @@
 package org.gbif.xml.occurrence.parser.parsing.xml;
 
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.xml.occurrence.parser.identifier.HolyTriplet;
 import org.gbif.xml.occurrence.parser.identifier.PublisherProvidedUniqueIdentifier;
+import org.gbif.xml.occurrence.parser.identifier.Triplet;
 import org.gbif.xml.occurrence.parser.identifier.UniqueIdentifier;
 import org.gbif.xml.occurrence.parser.model.IdentifierRecord;
 import org.gbif.xml.occurrence.parser.model.RawOccurrenceRecord;
@@ -177,16 +177,18 @@ public class XmlFragmentParser {
         Set<UniqueIdentifier> ids = Sets.newHashSet();
 
         if (useTriplet) {
-          HolyTriplet holyTriplet = null;
+          Triplet triplet = null;
           try {
-            holyTriplet = new HolyTriplet(datasetKey, record.getInstitutionCode(), record.getCollectionCode(),
-              record.getCatalogueNumber(), record.getUnitQualifier());
+            triplet = new Triplet(datasetKey, record.getInstitutionCode(), record.getCollectionCode(),
+                                  record.getCatalogueNumber(), record.getUnitQualifier());
           } catch (IllegalArgumentException e) {
             // some of the triplet was null or empty, so it's not valid - that's highly suspicious, but could be ok...
             LOG.info("No holy triplet for an xml snippet in dataset [{}] and schema [{}], got error [{}]",
               datasetKey.toString(), schemaType.toString(), e.getMessage());
           }
-          if (holyTriplet != null) ids.add(holyTriplet);
+          if (triplet != null) {
+            ids.add(triplet);
+          }
         }
 
         if (useOccurrenceId && record.getIdentifierRecords() != null && !record.getIdentifierRecords().isEmpty()) {

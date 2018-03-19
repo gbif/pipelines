@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
  * CollectionCode, and CatalogNumber. It additionally includes an optional unitQualifier, a GBIF specific term used
  * for differentiating between multiple occurrences within a single ABCD 2.06 record.
  */
-public class HolyTriplet implements UniqueIdentifier {
+public class Triplet implements UniqueIdentifier {
 
   private final UUID datasetKey;
   private final String institutionCode;
@@ -25,7 +25,7 @@ public class HolyTriplet implements UniqueIdentifier {
    * @throws IllegalArgumentException if institutionCode, collectionCode, or catalogNumber are null or empty
    * @throws NullPointerException     if datasetKey is null
    */
-  public HolyTriplet(
+  public Triplet(
     UUID datasetKey, String institutionCode, String collectionCode, String catalogNumber, @Nullable String unitQualifier
   ) {
     this.datasetKey = Objects.requireNonNull(datasetKey, "datasetKey can't be null");
@@ -39,6 +39,20 @@ public class HolyTriplet implements UniqueIdentifier {
     this.collectionCode = collectionCode;
     this.catalogNumber = catalogNumber;
     this.unitQualifier = unitQualifier;
+  }
+
+  public Triplet(String institutionCode, String collectionCode, String catalogNumber) {
+    Preconditions.checkArgument(institutionCode != null && !institutionCode.isEmpty(),
+                                "institutionCode can't be null or empty");
+    Preconditions.checkArgument(collectionCode != null && !collectionCode.isEmpty(),
+                                "collectionCode can't be null or empty");
+    Preconditions.checkArgument(catalogNumber != null && !catalogNumber.isEmpty(),
+                                "catalogNumber can't be null or empty");
+    this.institutionCode = institutionCode;
+    this.collectionCode = collectionCode;
+    this.catalogNumber = catalogNumber;
+    datasetKey = null;
+    unitQualifier  = null;
   }
 
   public String getInstitutionCode() {
@@ -85,7 +99,7 @@ public class HolyTriplet implements UniqueIdentifier {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    final HolyTriplet other = (HolyTriplet) obj;
+    final Triplet other = (Triplet) obj;
     return Objects.equals(this.datasetKey, other.datasetKey)
            && Objects.equals(this.institutionCode, other.institutionCode)
            && Objects.equals(this.collectionCode, other.collectionCode)

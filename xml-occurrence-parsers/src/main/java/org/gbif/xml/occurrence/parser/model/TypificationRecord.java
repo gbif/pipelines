@@ -17,7 +17,7 @@ package org.gbif.xml.occurrence.parser.model;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Strings;
 
 public class TypificationRecord implements Serializable {
 
@@ -32,25 +32,25 @@ public class TypificationRecord implements Serializable {
   }
 
   public TypificationRecord(String scientificName, String publication, String typeStatus, String notes) {
-    if (!StringUtils.isEmpty(scientificName)) {
+    if (!Strings.isNullOrEmpty(scientificName)) {
       this.scientificName = scientificName;
     }
-    if (!StringUtils.isEmpty(publication)) {
+    if (!Strings.isNullOrEmpty(publication)) {
       this.publication = publication;
     }
-    if (!StringUtils.isEmpty(typeStatus)) {
+    if (!Strings.isNullOrEmpty(typeStatus)) {
       this.typeStatus = typeStatus;
     }
-    if (!StringUtils.isEmpty(notes)) {
+    if (!Strings.isNullOrEmpty(notes)) {
       this.notes = notes;
     }
   }
 
   public boolean isEmpty() {
-    return StringUtils.isEmpty(notes)
-           && StringUtils.isEmpty(typeStatus)
-           && StringUtils.isEmpty(publication)
-           && StringUtils.isEmpty(scientificName);
+    return Strings.isNullOrEmpty(notes)
+           && Strings.isNullOrEmpty(typeStatus)
+           && Strings.isNullOrEmpty(publication)
+           && Strings.isNullOrEmpty(scientificName);
   }
 
   public String debugDump() {

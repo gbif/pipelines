@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +53,8 @@ public class HigherTaxonParser {
    */
   public Taxon parseTaxon(String rawTaxonRank, String taxonName) {
     Taxon taxon = null;
-    String processedTaxonRank = StringUtils.trimToNull(rawTaxonRank);
-    if (processedTaxonRank != null && !StringUtils.equals(processedTaxonRank, "null")) {
+    String processedTaxonRank = Strings.emptyToNull(rawTaxonRank);
+    if (processedTaxonRank != null && !"null".equals(processedTaxonRank)) {
       processedTaxonRank = processedTaxonRank.replaceAll(" ", "").toUpperCase();
       String rawRank = taxonRankMapping.getProperty(processedTaxonRank);
       if (rawRank == null) {

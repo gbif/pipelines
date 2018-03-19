@@ -71,6 +71,8 @@
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
     <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
     <commons-lang3.version>3.4</commons-lang3.version>
+    <commons-beanutils.version>1.9.2</commons-beanutils.version>
+    <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <solr.version>5.5.4</solr.version>
     <protobuf.version>3.5.1</protobuf.version>
     <retrofit.version>2.3.0</retrofit.version>
@@ -331,6 +333,16 @@
         <groupId>org.mapdb</groupId>
         <artifactId>mapdb</artifactId>
         <version>${mapdb.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>${findbugs-jsr305.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>${commons-beanutils.version}</version>
       </dependency>
 
       <!--Test dependencies-->
