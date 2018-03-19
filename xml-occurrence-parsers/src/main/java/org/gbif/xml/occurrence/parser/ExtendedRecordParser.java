@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+import java.util.zip.Deflater;
 
 import com.google.common.base.Strings;
 import org.apache.avro.Schema;
@@ -30,7 +31,6 @@ public class ExtendedRecordParser {
   private static final Logger LOG = LoggerFactory.getLogger(ExtendedRecordParser.class);
 
   private static final String FILE_PREFIX = ".response";
-  private static final int COMPRESS_LEVEL = 5;
 
   private ExtendedRecordParser() {
     // NOP
@@ -58,7 +58,7 @@ public class ExtendedRecordParser {
         Files.createDirectories(outputFile.getParentFile().toPath());
       }
 
-      dataFileWriter.setCodec(CodecFactory.deflateCodec(COMPRESS_LEVEL));
+      dataFileWriter.setCodec(CodecFactory.deflateCodec(Deflater.BEST_SPEED));
       dataFileWriter.setFlushOnEveryBlock(false);
       dataFileWriter.create(schema, outputFile);
 
