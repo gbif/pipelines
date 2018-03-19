@@ -21,12 +21,18 @@ import org.slf4j.LoggerFactory;
  */
 public class DwCAReader {
 
+  private static final String UNCOMPRESSED = "UNCOMPRESSED";
+
   private static final Logger LOG = LoggerFactory.getLogger(DwCAReader.class);
   private final String source;
   private final String workingDir;
   private ClosableIterator<StarRecord> starRecordsIt;
   private long recordsReturned;
   private ExtendedRecord current;
+
+  public DwCAReader(String workingDir) {
+    this(UNCOMPRESSED, workingDir);
+  }
 
   public DwCAReader(String source, String workingDir) {
     this.source = source;
@@ -36,7 +42,14 @@ public class DwCAReader {
   public boolean init() throws IOException {
     LOG.info("Opening DwC-A from[{}] with working directory[{}]", source, workingDir);
     Path extractToFolder = Paths.get(workingDir);
-    Archive dwcArchive = DwcFiles.fromCompressed(Paths.get(source), extractToFolder);
+
+    Archive dwcArchive;
+    if (UNCOMPRESSED.equals(source)) {
+      dwcArchive = DwcFiles.fromLocation(Paths.get(workingDir));
+    } else {
+      dwcArchive = DwcFiles.fromCompressed(Paths.get(source), extractToFolder);
+    }
+
     NormalizedDwcArchive nda = DwcFiles.prepareArchive(dwcArchive, false, false);
     starRecordsIt = nda.iterator();
     return advance();

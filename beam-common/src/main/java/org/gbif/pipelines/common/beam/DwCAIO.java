@@ -36,11 +36,21 @@ public class DwCAIO {
 
   public static class Read extends PTransform<PBegin, PCollection<ExtendedRecord>> {
 
+    private static final String UNCOMPRESSED = "UNCOMPRESSED";
+
     private final String path;
     private final String workingPath;
 
+    public static Read withPaths(String working) {
+      return new Read(working);
+    }
+
     public static Read withPaths(String file, String working) {
       return new Read(file, working);
+    }
+
+    private Read(String workingPath) {
+      this(UNCOMPRESSED, workingPath);
     }
 
     private Read(String filePath, String workingPath) {
@@ -112,7 +122,12 @@ public class DwCAIO {
 
     @Override
     public boolean start() throws IOException {
-      reader = new DwCAReader(source.read.path, source.read.workingPath);
+      if (Read.UNCOMPRESSED.equals(source.read.path)) {
+        reader = new DwCAReader(source.read.workingPath);
+      } else {
+        reader = new DwCAReader(source.read.path, source.read.workingPath);
+      }
+
       return reader.init();
     }
 
