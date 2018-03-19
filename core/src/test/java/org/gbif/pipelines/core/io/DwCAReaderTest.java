@@ -12,7 +12,7 @@ import static org.junit.Assert.assertNotNull;
 public class DwCAReaderTest {
 
   @Test
-  public void testZipFileReader() throws IOException {
+  public void testUncompressedReader() throws IOException {
     // State
     String fileName = getClass().getResource("/dwca/plants_dwca").getFile();
 
@@ -27,7 +27,7 @@ public class DwCAReaderTest {
   }
 
   @Test
-  public void testUncompressedReader() throws IOException {
+  public void testZipFileReader() throws IOException {
     // State
     String fileName = getClass().getResource("/dwca/plants.zip").getFile();
     String fileOut = new File("target/tmp").getAbsolutePath();
