@@ -41,18 +41,36 @@ public class DwCAIO {
     private final String path;
     private final String workingPath;
 
+    /**
+     * Reads an expanded/uncompressed DwCA content
+     * @param working path to an expanded/uncompressed DwCA content
+     */
     public static Read withPaths(String working) {
       return new Read(working);
     }
 
+    /**
+     * Reads a DwCA archive and stores uncompressed DwCA content to a working directory
+     * @param file path to a DwCA archive
+     * @param working path to a directory for storing uncompressed DwCA content
+     */
     public static Read withPaths(String file, String working) {
       return new Read(file, working);
     }
 
+    /**
+     * Reads an expanded/uncompressed DwCA content
+     * @param workingPath path to an expanded/uncompressed DwCA content
+     */
     private Read(String workingPath) {
       this(UNCOMPRESSED, workingPath);
     }
 
+    /**
+     * Reads a DwCA archive and stores uncompressed DwCA content to a working directory
+     * @param filePath path to a DwCA archive
+     * @param workingPath path to a directory for storing uncompressed DwCA content
+     */
     private Read(String filePath, String workingPath) {
       path = filePath;
       this.workingPath = workingPath;
