@@ -1,5 +1,9 @@
 package org.gbif.xml.occurrence.parser.identifier;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.StringJoiner;
 import javax.annotation.Nullable;
 
 /**
@@ -8,7 +12,7 @@ import javax.annotation.Nullable;
  */
 public class OccurrenceKeyHelper {
 
-  private static final char DELIM = '|';
+  private static final String DELIM = "|";
 
   private OccurrenceKeyHelper() {
   }
@@ -18,35 +22,32 @@ public class OccurrenceKeyHelper {
   }
 
   @Nullable
-  public static String buildKey(@Nullable HolyTriplet triplet) {
-    if (triplet == null
-        || triplet.getDatasetKey() == null
-        || triplet.getInstitutionCode() == null
-        || triplet.getCollectionCode() == null
-        || triplet.getCatalogNumber() == null) {
+  public static String buildKey(@Nullable Triplet triplet) {
+    if (Objects.isNull(triplet)
+        || Objects.isNull(triplet.getDatasetKey())
+        || Objects.isNull(triplet.getInstitutionCode())
+        || Objects.isNull(triplet.getCollectionCode())
+        || Objects.isNull(triplet.getCatalogNumber())) {
       return null;
     }
 
-    return triplet.getDatasetKey().toString()
-           + DELIM
-           + triplet.getInstitutionCode()
-           + DELIM
-           + triplet.getCollectionCode()
-           + DELIM
-           + triplet.getCatalogNumber()
-           + DELIM
-           + triplet.getUnitQualifier();
+    return join(DELIM,
+                triplet.getDatasetKey().toString(),
+                triplet.getInstitutionCode(),
+                triplet.getCollectionCode(),
+                triplet.getCatalogNumber(),
+                triplet.getUnitQualifier());
   }
 
   @Nullable
   public static String buildKey(@Nullable PublisherProvidedUniqueIdentifier pubProvided) {
-    if (pubProvided == null
-        || pubProvided.getDatasetKey() == null
-        || pubProvided.getPublisherProvidedIdentifier() == null) {
+    if (Objects.isNull(pubProvided)
+        || Objects.isNull(pubProvided.getDatasetKey())
+        || Objects.isNull(pubProvided.getPublisherProvidedIdentifier())) {
       return null;
     }
 
-    return pubProvided.getDatasetKey().toString() + DELIM + pubProvided.getPublisherProvidedIdentifier();
+    return join(DELIM, pubProvided.getDatasetKey().toString(), pubProvided.getPublisherProvidedIdentifier());
   }
 
   @Nullable
@@ -59,21 +60,42 @@ public class OccurrenceKeyHelper {
   }
 
   @Nullable
-  public static String buildUnscopedKey(@Nullable HolyTriplet triplet) {
-    if (triplet == null
-        || triplet.getDatasetKey() == null
-        || triplet.getInstitutionCode() == null
-        || triplet.getCollectionCode() == null
-        || triplet.getCatalogNumber() == null) {
+  public static String buildUnscopedKey(@Nullable Triplet triplet) {
+    if (Objects.isNull(triplet)
+        || Objects.isNull(triplet.getDatasetKey())
+        || Objects.isNull(triplet.getInstitutionCode())
+        || Objects.isNull(triplet.getCollectionCode())
+        || Objects.isNull(triplet.getCatalogNumber())) {
       return null;
     }
 
-    return triplet.getInstitutionCode()
-           + DELIM
-           + triplet.getCollectionCode()
-           + DELIM
-           + triplet.getCatalogNumber()
-           + DELIM
-           + triplet.getUnitQualifier();
+    return join(DELIM,
+                triplet.getInstitutionCode(),
+                triplet.getCollectionCode(),
+                triplet.getCatalogNumber(),
+                triplet.getUnitQualifier());
+  }
+
+  @Nullable
+  public static String toKey(@Nullable Triplet triplet) {
+    if (Objects.isNull(triplet)
+        || Objects.isNull(triplet.getInstitutionCode())
+        || Objects.isNull(triplet.getCollectionCode())
+        || Objects.isNull(triplet.getCatalogNumber())) {
+      return null;
+    }
+
+    // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
+    return join(":",
+                "urn:catalog",
+                triplet.getInstitutionCode(),
+                triplet.getCollectionCode(),
+                triplet.getCatalogNumber());
+  }
+
+  private static String join(String delim, String... values) {
+    StringJoiner joiner = new StringJoiner(delim);
+    Arrays.stream(values).forEach(x -> Optional.ofNullable(x).filter(f -> !f.isEmpty()).ifPresent(joiner::add));
+    return joiner.toString();
   }
 }

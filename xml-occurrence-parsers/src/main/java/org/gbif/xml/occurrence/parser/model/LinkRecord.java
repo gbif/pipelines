@@ -17,7 +17,7 @@ package org.gbif.xml.occurrence.parser.model;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Strings;
 
 public class LinkRecord implements Serializable {
 
@@ -61,7 +61,7 @@ public class LinkRecord implements Serializable {
   }
 
   public boolean isEmpty() {
-    return StringUtils.isEmpty(rawLinkType) && StringUtils.isEmpty(url) && StringUtils.isEmpty(description);
+    return Strings.isNullOrEmpty(rawLinkType) && Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(description);
   }
 
   public String debugDump() {
