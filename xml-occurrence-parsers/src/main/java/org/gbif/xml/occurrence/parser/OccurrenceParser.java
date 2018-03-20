@@ -78,42 +78,13 @@ public class OccurrenceParser {
    * @throws ParsingException if there were any problems during parsing the stream
    */
   // TODO: Optionally handle compressed streams
-  public List<RawXmlOccurrence> parseStream(InputStream is) throws ParsingException {
+  public List<RawXmlOccurrence> parseStream(InputStream is) {
     Objects.requireNonNull(is, "is can't be null");
     try {
       ParsedSearchResponse responseBody = new ParsedSearchResponse();
-      InputSource inputSource = new InputSource(is);
 
-      Digester digester = new Digester();
-      digester.setNamespaceAware(true);
-      digester.setValidating(false);
-      digester.push(responseBody);
+      parse(new InputSource(is), responseBody);
 
-      NodeCreateRule rawAbcd = new NodeCreateRule();
-      digester.addRule(ExtractionSimpleXPaths.ABCD_RECORD_XPATH, rawAbcd);
-      digester.addSetNext(ExtractionSimpleXPaths.ABCD_RECORD_XPATH, ADD_RECORD_AS_XML);
-
-      NodeCreateRule rawAbcd1Header = new NodeCreateRule();
-      digester.addRule(ExtractionSimpleXPaths.ABCD_HEADER_XPATH, rawAbcd1Header);
-      digester.addSetNext(ExtractionSimpleXPaths.ABCD_HEADER_XPATH, SET_ABCD_1_HEADER);
-
-      NodeCreateRule rawDwc1_0 = new NodeCreateRule();
-      digester.addRule(ExtractionSimpleXPaths.DWC_1_0_RECORD_XPATH, rawDwc1_0);
-      digester.addSetNext(ExtractionSimpleXPaths.DWC_1_0_RECORD_XPATH, ADD_RECORD_AS_XML);
-
-      NodeCreateRule rawDwc1_4 = new NodeCreateRule();
-      digester.addRule(ExtractionSimpleXPaths.DWC_1_4_RECORD_XPATH, rawDwc1_4);
-      digester.addSetNext(ExtractionSimpleXPaths.DWC_1_4_RECORD_XPATH, ADD_RECORD_AS_XML);
-
-      //      NodeCreateRule rawDwcManis = new NodeCreateRule();
-      //      digester.addRule(ExtractionSimpleXPaths.DWC_MANIS_RECORD_XPATH, rawDwcManis);
-      //      digester.addSetNext(ExtractionSimpleXPaths.DWC_MANIS_RECORD_XPATH, "addRecordAsXml");
-
-      NodeCreateRule rawDwc2009 = new NodeCreateRule();
-      digester.addRule(ExtractionSimpleXPaths.DWC_2009_RECORD_XPATH, rawDwc2009);
-      digester.addSetNext(ExtractionSimpleXPaths.DWC_2009_RECORD_XPATH, ADD_RECORD_AS_XML);
-
-      digester.parse(inputSource);
       return responseBody.getRecords();
     } catch (ParserConfigurationException | TransformerException e) {
       throw new ServiceUnavailableException("Error setting up Commons Digester", e);
@@ -121,6 +92,25 @@ public class OccurrenceParser {
       throw new ParsingException("Parsing failed", e);
     }
   }
+
+  /**
+   * This parses a xml file of uncompressed ABCD or DwC Occurrences into {@link RawXmlOccurrence}s.
+   * No care is taken to handle wrong encodings or character sets in general. This might be changed later on.
+   *
+   * @param file xml response file
+   *
+   * @return list of parsed occurrences
+   *
+   * @throws ParsingException if there were any problems during parsing the stream
+   */
+  public List<RawXmlOccurrence> parseFile(File file) {
+    try (InputStream inputStream = new FileInputStream(file)) {
+      return parseStream(inputStream);
+    } catch (IOException ex) {
+      throw new ParsingException("Parsing failed", ex);
+    }
+  }
+
 
   /**
    * Parses a single response gzipFile and returns a List of the contained RawXmlOccurrences.
@@ -141,36 +131,8 @@ public class OccurrenceParser {
              GZIPInputStream inputStream = new GZIPInputStream(fis);
              BufferedReader inputReader =
                new BufferedReader(new XmlSanitizingReader(new InputStreamReader(inputStream, charsetName)))) {
-          InputSource inputSource = new InputSource(inputReader);
 
-          Digester digester = new Digester();
-          digester.setNamespaceAware(true);
-          digester.setValidating(false);
-          digester.push(responseBody);
-
-          NodeCreateRule rawAbcd = new NodeCreateRule();
-          digester.addRule(ExtractionSimpleXPaths.ABCD_RECORD_XPATH, rawAbcd);
-          digester.addSetNext(ExtractionSimpleXPaths.ABCD_RECORD_XPATH, ADD_RECORD_AS_XML);
-
-          NodeCreateRule rawAbcd1Header = new NodeCreateRule();
-          digester.addRule(ExtractionSimpleXPaths.ABCD_HEADER_XPATH, rawAbcd1Header);
-          digester.addSetNext(ExtractionSimpleXPaths.ABCD_HEADER_XPATH, SET_ABCD_1_HEADER);
-
-          NodeCreateRule rawDwc1_0 = new NodeCreateRule();
-          digester.addRule(ExtractionSimpleXPaths.DWC_1_0_RECORD_XPATH, rawDwc1_0);
-          digester.addSetNext(ExtractionSimpleXPaths.DWC_1_0_RECORD_XPATH, ADD_RECORD_AS_XML);
-
-          NodeCreateRule rawDwc1_4 = new NodeCreateRule();
-          digester.addRule(ExtractionSimpleXPaths.DWC_1_4_RECORD_XPATH, rawDwc1_4);
-          digester.addSetNext(ExtractionSimpleXPaths.DWC_1_4_RECORD_XPATH, ADD_RECORD_AS_XML);
-
-          // TODO: dwc_manis appears to work without a NodeCreateRule here - why?
-
-          NodeCreateRule rawDwc2009 = new NodeCreateRule();
-          digester.addRule(ExtractionSimpleXPaths.DWC_2009_RECORD_XPATH, rawDwc2009);
-          digester.addSetNext(ExtractionSimpleXPaths.DWC_2009_RECORD_XPATH, ADD_RECORD_AS_XML);
-
-          digester.parse(inputSource);
+          parse(new InputSource(inputReader), responseBody);
 
           LOG.debug("Success with charset [{}] - skipping any others", charsetName);
           goodCharset = charsetName;
@@ -206,7 +168,9 @@ public class OccurrenceParser {
                gzipFile.getAbsolutePath(), e);
     }
 
-    if (LOG.isDebugEnabled()) LOG.debug("<< parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("<< parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
+    }
     return (responseBody == null) ? null : responseBody.getRecords();
   }
 
@@ -259,6 +223,44 @@ public class OccurrenceParser {
     // attempt detection from bytes
     charsets.add(CharsetDetection.detectEncoding(gzipFile).name());
     return charsets;
+  }
+
+  /**
+   * A Digester parser, uses ABCD and DwC rules to parse XML input source
+   * @param inputSource xml response
+   * @param responseBody storage for Digester
+   */
+  private void parse(InputSource inputSource, ParsedSearchResponse responseBody)
+    throws ParserConfigurationException, SAXException, IOException {
+
+    Digester digester = new Digester();
+    digester.setNamespaceAware(true);
+    digester.setValidating(false);
+    digester.push(responseBody);
+
+    NodeCreateRule rawAbcd = new NodeCreateRule();
+    digester.addRule(ExtractionSimpleXPaths.ABCD_RECORD_XPATH, rawAbcd);
+    digester.addSetNext(ExtractionSimpleXPaths.ABCD_RECORD_XPATH, ADD_RECORD_AS_XML);
+
+    NodeCreateRule rawAbcd1Header = new NodeCreateRule();
+    digester.addRule(ExtractionSimpleXPaths.ABCD_HEADER_XPATH, rawAbcd1Header);
+    digester.addSetNext(ExtractionSimpleXPaths.ABCD_HEADER_XPATH, SET_ABCD_1_HEADER);
+
+    NodeCreateRule rawDwc1_0 = new NodeCreateRule();
+    digester.addRule(ExtractionSimpleXPaths.DWC_1_0_RECORD_XPATH, rawDwc1_0);
+    digester.addSetNext(ExtractionSimpleXPaths.DWC_1_0_RECORD_XPATH, ADD_RECORD_AS_XML);
+
+    NodeCreateRule rawDwc1_4 = new NodeCreateRule();
+    digester.addRule(ExtractionSimpleXPaths.DWC_1_4_RECORD_XPATH, rawDwc1_4);
+    digester.addSetNext(ExtractionSimpleXPaths.DWC_1_4_RECORD_XPATH, ADD_RECORD_AS_XML);
+
+    // TODO: dwc_manis appears to work without a NodeCreateRule here - why?
+
+    NodeCreateRule rawDwc2009 = new NodeCreateRule();
+    digester.addRule(ExtractionSimpleXPaths.DWC_2009_RECORD_XPATH, rawDwc2009);
+    digester.addSetNext(ExtractionSimpleXPaths.DWC_2009_RECORD_XPATH, ADD_RECORD_AS_XML);
+
+    digester.parse(inputSource);
   }
 
   public List<RawOccurrenceRecord> parseRawXmlToRor(List<RawXmlOccurrence> raws) {

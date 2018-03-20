@@ -3,7 +3,7 @@ package org.gbif.xml.occurrence.parser;
 /**
  * Thrown when there are any problems parsing content that we couldn't recover from.
  */
-public class ParsingException extends Exception {
+public class ParsingException extends RuntimeException {
 
   private static final long serialVersionUID = -8057678047764064262L;
 
