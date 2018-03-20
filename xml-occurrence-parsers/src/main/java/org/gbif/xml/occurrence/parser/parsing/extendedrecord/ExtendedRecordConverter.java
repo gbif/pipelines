@@ -22,10 +22,12 @@ public class ExtendedRecordConverter {
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
     String recordId = rawRecord.getId();
+    // FIXME: check if this has to be done here or in the XmlFragmentParser or in both places
     if (Strings.isNullOrEmpty(recordId)) {
-      Triplet triplet = new Triplet(rawRecord.getInstitutionCode(), rawRecord.getCollectionCode(), rawRecord.getCatalogueNumber());
+      Triplet triplet =
+        new Triplet(rawRecord.getInstitutionCode(), rawRecord.getCollectionCode(), rawRecord.getCatalogueNumber());
       recordId = OccurrenceKeyHelper.toKey(triplet);
-      if(Strings.isNullOrEmpty(recordId)){
+      if (Strings.isNullOrEmpty(recordId)) {
         throw new ParsingException("Record id null or empty");
       }
     }

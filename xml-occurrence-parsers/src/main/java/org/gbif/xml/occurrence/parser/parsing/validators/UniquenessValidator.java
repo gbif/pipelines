@@ -10,14 +10,14 @@ import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
 /**
- * Validates the uniqueness of the String IDs passed using a map backed by a temp file. This class uses the mapdb
+ * Validates the uniqueness of the String IDs passed using a map backed by a temp file. It uses the mapdb
  * library to implement the map (http://www.mapdb.org/).
  * <p>
  * This class is intended to be used per process that needs this validation, so a new instance has to be created each
- * time. At the moment of creating the instance, a {@link DB} on disk is created.
+ * time. At the moment of creating the instance, a {@link DB} backed by a temp file is created.
  * <p>
- * Keep in mind that the {@link UniquenessValidator#close()} method has to be called when finishing the validation.
- * Also notice that the class implements the {@link AutoCloseable} interface.
+ * Keep in mind that {@link UniquenessValidator#close()} has to be called when finishing the validation in order to
+ * release the resources used. Also notice that the class implements the {@link AutoCloseable} interface.
  */
 public class UniquenessValidator implements AutoCloseable {
 
@@ -34,7 +34,7 @@ public class UniquenessValidator implements AutoCloseable {
     // prefix name to create the map
     long time = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
 
-    // map that will be populated with the data expired from the memory map
+    // map to store the values
     setOnDisk = dbDisk.hashSet(time + "-disk").serializer(Serializer.STRING).createOrOpen();
   }
 

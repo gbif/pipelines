@@ -18,13 +18,15 @@ import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Tests different configurations to use mapdb.
+ */
 @Ignore("Tests to see how mapdb works")
 public class MapDbTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(MapDbTest.class);
 
   private static final long MEMORY_SIZE_10MB = 10 * 1024 * 1024;
-  private static final long MEMORY_SIZE_1GB = 1 * 1024 * 1024 * 1024;
   private static final long MEMORY_SIZE_10GB = 10 * 1024 * 1024 * 1024;
 
   @Test

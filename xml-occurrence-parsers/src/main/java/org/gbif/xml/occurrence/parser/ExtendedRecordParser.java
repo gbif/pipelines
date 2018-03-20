@@ -2,9 +2,9 @@ package org.gbif.xml.occurrence.parser;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ConverterTask;
-import org.gbif.xml.occurrence.parser.parsing.extendedrecord.MapCache;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.SyncDataFileWriter;
+import org.gbif.xml.occurrence.parser.parsing.validators.UniquenessValidator;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,12 +37,12 @@ public class ExtendedRecordParser {
   }
 
   /**
-   * @param inputPath path to directory with response files or a tar.xz archive
+   * @param inputPath  path to directory with response files or a tar.xz archive
    * @param outputPath output path to avro file
    */
   public static void convertFromXML(String inputPath, String outputPath) {
 
-    if (Strings.isNullOrEmpty(inputPath) || Strings.isNullOrEmpty(outputPath) ) {
+    if (Strings.isNullOrEmpty(inputPath) || Strings.isNullOrEmpty(outputPath)) {
       throw new ParsingException("Input or output path must not be empty or null!");
     }
 
@@ -51,7 +51,8 @@ public class ExtendedRecordParser {
     Schema schema = ExtendedRecord.getClassSchema();
 
     try (DataFileWriter<ExtendedRecord> dataFileWriter = new DataFileWriter<>(new SpecificDatumWriter<>(schema));
-         Stream<Path> walk = Files.walk(inputFile.toPath())) {
+         Stream<Path> walk = Files.walk(inputFile.toPath());
+         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
       // Create directories if they are absent
       if (Objects.nonNull(outputFile.getParentFile()) && !outputFile.getParentFile().exists()) {
@@ -68,7 +69,7 @@ public class ExtendedRecordParser {
       // Run async process - read a file, convert to ExtendedRecord and write to avro
       CompletableFuture[] futures = walk.filter(x -> x.toFile().isFile() && x.toString().endsWith(FILE_PREFIX))
         .map(Path::toFile)
-        .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writerWrapper)))
+        .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writerWrapper, validator)))
         .toArray(CompletableFuture[]::new);
 
       // Wait all threads
@@ -83,9 +84,6 @@ public class ExtendedRecordParser {
         LOG.error(ioex.getMessage(), ioex);
       }
       throw new ParsingException(ex);
-    } finally {
-      // Close cache instance which was opened during processing ConverterTasks
-      MapCache.getInstance().close();
     }
   }
 
