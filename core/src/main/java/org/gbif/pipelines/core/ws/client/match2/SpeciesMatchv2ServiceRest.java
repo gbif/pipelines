@@ -16,7 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public class SpeciesMatchv2ServiceRest {
 
-  private SpeciesMatchv2Service service;
+  private final SpeciesMatchv2Service service;
 
   private static SpeciesMatchv2ServiceRest instance;
 

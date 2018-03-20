@@ -72,14 +72,17 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     return performCall(params);
   }
 
+  @Override
   protected Call<NameUsageMatch2> getCall(Map<String, String> params) {
     return SpeciesMatchv2ServiceRest.getInstance().getService().match(params);
   }
 
+  @Override
   protected String getErrorMessage() {
     return "Call to species match name WS failed";
   }
 
+  @Override
   protected NameUsageMatch2 parseResponse(NameUsageMatch2 body) {
     return body;
   }

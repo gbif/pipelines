@@ -37,10 +37,8 @@ public class CountryMaps {
   private static final Map<Country, Set<Country>> EQUIVALENT_COUNTRIES = Maps.newHashMap();
 
   static {
-
-    InputStream in = CountryMaps.class.getClassLoader().getResourceAsStream(CONFUSED_COUNTRY_FILE);
-    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-    try {
+    try (InputStream in = CountryMaps.class.getClassLoader().getResourceAsStream(CONFUSED_COUNTRY_FILE);
+         BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
       String nextLine;
       while ((nextLine = reader.readLine()) != null) {
         if (!nextLine.isEmpty() && !nextLine.startsWith("#")) {

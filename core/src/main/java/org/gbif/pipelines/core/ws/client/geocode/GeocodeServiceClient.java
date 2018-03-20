@@ -32,7 +32,7 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
     return performCall(createParamsMap(latLng));
   }
 
-  private Map<String, String> createParamsMap(LatLng latLng) {
+  private static Map<String, String> createParamsMap(LatLng latLng) {
     Map<String, String> params = new HashMap<>();
     params.put("lat", String.valueOf(latLng.getLat()));
     params.put("lng", String.valueOf(latLng.getLat()));
@@ -40,14 +40,17 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
     return params;
   }
 
+  @Override
   protected Call<Collection<GeocodeResponse>> getCall(Map<String, String> params) {
     return GeocodeServiceRest.getInstance().getService().reverse(params);
   }
 
+  @Override
   protected String getErrorMessage() {
     return "Error calling the geocode reverse WS";
   }
 
+  @Override
   protected List<Country> parseResponse(Collection<GeocodeResponse> response) {
     if (response != null && !response.isEmpty()) {
       return response.stream()

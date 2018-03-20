@@ -21,16 +21,16 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class CoordinateParseUtils {
 
-  private final static String DMS = "\\s*(\\d{1,3})\\s*[°d ]"
+  private static final String DMS = "\\s*(\\d{1,3})\\s*[°d ]"
                                     + "\\s*([0-6]?\\d)\\s*['m ]"
                                     + "\\s*(?:"
                                     + "([0-6]?\\d(?:[,.]\\d+)?)"
                                     + "\\s*(?:\"|''|s)?"
                                     + ")?\\s*";
-  private final static Pattern DMS_SINGLE = Pattern.compile("^" + DMS + "$", Pattern.CASE_INSENSITIVE);
-  private final static Pattern DMS_COORD =
+  private static final Pattern DMS_SINGLE = Pattern.compile("^" + DMS + "$", Pattern.CASE_INSENSITIVE);
+  private static final Pattern DMS_COORD =
     Pattern.compile("^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
-  private final static String POSITIVE = "NEO";
+  private static final String POSITIVE = "NEO";
 
   private CoordinateParseUtils() {
     throw new UnsupportedOperationException("Can't initialize class");
@@ -85,20 +85,14 @@ public class CoordinateParseUtils {
   }
 
   private static boolean inRange(double lat, double lon) {
-    if (Double.compare(lat, 90) <= 0
-        && Double.compare(lat, -90) >= 0
-        && Double.compare(lon, 180) <= 0
-        && Double.compare(lon, -180) >= 0) {
-      return true;
-    }
-    return false;
+    return Double.compare(lat, 90) <= 0
+           && Double.compare(lat, -90) >= 0
+           && Double.compare(lon, 180) <= 0
+           && Double.compare(lon, -180) >= 0;
   }
 
   private static boolean isLat(String direction) {
-    if ("NS".contains(direction.toUpperCase())) {
-      return true;
-    }
-    return false;
+    return "NS".contains(direction.toUpperCase());
   }
 
   private static int coordSign(String direction) {
@@ -178,14 +172,11 @@ public class CoordinateParseUtils {
     // note that should we desire to trust the following records, we would need to clear the flag for the records to
     // appear in
     // search results and maps etc. however, this is logic decision, that goes above the capabilities of this method
-    if (Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) {
-      // try and swap
-      if (inRange(lon, lat)) {
-        issues.add(new InterpretationIssue(IssueType.PRESUMED_SWAPPED_COORDINATE,
-                                           DwcTerm.decimalLatitude,
-                                           DwcTerm.decimalLongitude));
-        return ParsedField.fail(new LatLng(lat, lon), issues);
-      }
+    if ((Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) && inRange(lon, lat)) {
+      issues.add(new InterpretationIssue(IssueType.PRESUMED_SWAPPED_COORDINATE,
+                                         DwcTerm.decimalLatitude,
+                                         DwcTerm.decimalLongitude));
+      return ParsedField.fail(new LatLng(lat, lon), issues);
     }
 
     // then something is out of range
@@ -221,7 +212,7 @@ public class CoordinateParseUtils {
         return coordFromMatcher(m, 1, 2, 3, String.valueOf(dir));
       }
     }
-    throw new IllegalArgumentException();
+    throw new IllegalArgumentException("Coordinates could not be parsed: " + coord);
   }
 
   private static double coordFromMatcher(Matcher m, int idx1, int idx2, int idx3, String sign) {

@@ -56,122 +56,107 @@ public class LocationMatcher {
   public ParsedField<ParsedLocation> applyMatch() {
     Objects.requireNonNull(latLng);
     CoordinatesValidator.checkEmptyCoordinates(latLng);
+    return country != null ? applyMatchWithCountry() : applyMatchWithoutCountry();
+  }
 
-    List<InterpretationIssue> issues = new ArrayList<>();
+  private ParsedField<ParsedLocation> applyMatchWithCountry() {
+    // call WS with identity coords
+    List<Country> countries = getCountriesFromCoordinates(latLng);
 
-    // try identity first
-    Optional<Country> countryMatch = tryIdentityMatch(issues);
-
-    if (countryMatch.isPresent()) {
-      // country found
-      if (country == null) {
-        issues.add(new InterpretationIssue(IssueType.COUNTRY_DERIVED_FROM_COORDINATES, DwcTerm.country));
-      }
-      return ParsedField.success(ParsedLocation.newBuilder().country(countryMatch.get()).latLng(latLng).build(),
-                                 issues);
+    if (countries == null || countries.isEmpty()) {
+      // no countries returned from the WS
+      return getFailResponse();
     }
 
-    if (this.country != null) {
-      // try alternative transformations if the country was supplied
-      LOG.info("Trying alternative transformations to the coordinates");
-      for (CoordinatesFunction transformation : alternativeTransformations) {
-        // transform location
-        LatLng latLngTransformed = transformation.getTransformer().apply(this.latLng);
+    if (countries.contains(country)) {
+      // country found
+      return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLng).build());
+    }
 
-        // call ws
-        Optional<List<Country>> countriesOpt = getCountriesFromCoordinates(latLngTransformed);
-        if (!countriesFound(countriesOpt)) {
-          continue;
-        }
+    // if we have not found it yet, we try with equivalent countries
+    if (containsAnyCountry(CountryMaps.equivalent(country), countries).isPresent()) {
+      // country found
+      return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLng).build());
+    }
 
-        // match with the country supplied
-        countryMatch = matchWithCountry(countriesOpt.get());
-        if (countryMatch.isPresent()) {
-          // country found
-          // add issue from the transformation
-          CoordinatesFunction.getIssueTypes(transformation)
-            .forEach(issueType -> issues.add(new InterpretationIssue(issueType, getCountryAndCoordinatesTerms())));
-          return ParsedField.success(ParsedLocation.newBuilder()
-                                       .country(countryMatch.get())
-                                       .latLng(latLngTransformed)
-                                       .build(), issues);
-        }
+    // if we have not found it yet, we try with confused countries
+    if (containsAnyCountry(CountryMaps.confused(country), countries).isPresent()) {
+      // country found
+      return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLng).build(),
+                                 Collections.singletonList(new InterpretationIssue(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
+                                                                                   DwcTerm.country)));
+    }
+
+    // if still not found, try alternatives
+    LOG.info("Trying alternative transformations to the coordinates");
+    for (CoordinatesFunction transformation : alternativeTransformations) {
+      // transform location
+      LatLng latLngTransformed = transformation.getTransformer().apply(latLng);
+
+      // call ws
+      List<Country> countriesFound = getCountriesFromCoordinates(latLngTransformed);
+      if (countriesFound == null || countriesFound.isEmpty()) {
+        continue;
+      }
+
+      if (countriesFound.contains(country)) {
+        // country found
+        // Add issues from the transformation
+        List<InterpretationIssue> issues = new ArrayList<>();
+        CoordinatesFunction.getIssueTypes(transformation)
+          .forEach(issueType -> issues.add(new InterpretationIssue(issueType, getCountryAndCoordinatesTerms())));
+        // return success with the issues
+        return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLngTransformed).build(),
+                                   issues);
       }
     }
 
     // no result found
-    issues.add(new InterpretationIssue(IssueType.COUNTRY_COORDINATE_MISMATCH, getCountryAndCoordinatesTerms()));
-    return ParsedField.fail(issues);
+    return getFailResponse();
   }
 
-  private Optional<Country> tryIdentityMatch(List<InterpretationIssue> issues) {
+  private ParsedField<ParsedLocation> applyMatchWithoutCountry() {
     // call WS with identity coords
-    Optional<List<Country>> countriesOpt = getCountriesFromCoordinates(latLng);
+    List<Country> countries = getCountriesFromCoordinates(latLng);
 
-    if (!countriesFound(countriesOpt)) {
-      return Optional.empty();
+    if (countries == null || countries.isEmpty()) {
+      // country not found
+      return getFailResponse();
     }
 
-    List<Country> countries = countriesOpt.get();
-    // if not country supplied
-    if (country == null) {
-      return Optional.ofNullable(countries.get(0));
-    }
-
-    // else try toi match with the country supplied
-    Optional<Country> countryMatched = matchWithCountry(countries);
-
-    if (countryMatched.isPresent()) {
-      return countryMatched;
-    }
-
-    // if we have not found it yet, we try with equivalent countries
-    Optional<Country> countryMatch = containsAnyCountry(CountryMaps.equivalent(country), countries);
-    if (countryMatch.isPresent()) {
-      return countryMatch;
-    }
-
-    // if we have not found it yet, we try with confused countries
-    countryMatch = containsAnyCountry(CountryMaps.confused(country), countries);
-    if (countryMatch.isPresent()) {
-      issues.add(new InterpretationIssue(IssueType.COUNTRY_DERIVED_FROM_COORDINATES, DwcTerm.country));
-      return countryMatch;
-    }
-
-    return Optional.empty();
+    // country found
+    return ParsedField.success(ParsedLocation.newBuilder().country(countries.get(0)).latLng(latLng).build(),
+                               Collections.singletonList(new InterpretationIssue(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
+                                                                                 DwcTerm.country)));
   }
 
-  private Optional<List<Country>> getCountriesFromCoordinates(LatLng latLng) {
+  private List<Country> getCountriesFromCoordinates(LatLng latLng) {
     HttpResponse<List<Country>> response = GeocodeServiceClient.getInstance().getCountriesFromLatLng(latLng);
 
     if (response.isError()) {
       LOG.info("Error calling the geocode WS: {}", response.getErrorMessage());
-      return Optional.empty();
+      return Collections.emptyList();
     }
 
     if ((response.getBody() == null || response.getBody().isEmpty()) && isAntarctica(latLng.getLat(), country)) {
-      return Optional.of(Collections.singletonList(Country.ANTARCTICA));
+      return Collections.singletonList(Country.ANTARCTICA);
     }
 
-    return Optional.ofNullable(response.getBody());
+    return response.getBody();
   }
 
-  private boolean countriesFound(Optional<List<Country>> countriesOpt) {
-    return countriesOpt.filter(countries -> !countries.isEmpty()).isPresent();
+  private static Optional<Country> containsAnyCountry(
+    Collection<Country> possibilities, Collection<Country> countries
+  ) {
+    return possibilities != null ? possibilities.stream().filter(countries::contains).findFirst() : Optional.empty();
   }
 
-  private Optional<Country> matchWithCountry(List<Country> countries) {
-    return countries.contains(country) ? Optional.ofNullable(country) : Optional.empty();
+  private static ParsedField<ParsedLocation> getFailResponse() {
+    return ParsedField.fail(Collections.singletonList(new InterpretationIssue(IssueType.COUNTRY_COORDINATE_MISMATCH,
+                                                                              getCountryAndCoordinatesTerms())));
   }
 
-  private Optional<Country> containsAnyCountry(Collection<Country> possibilities, Collection<Country> countries) {
-    if (possibilities != null) {
-      return possibilities.stream().filter(countries::contains).findFirst();
-    }
-    return Optional.empty();
-  }
-
-  private List<Term> getCountryAndCoordinatesTerms() {
+  private static List<Term> getCountryAndCoordinatesTerms() {
     return Arrays.asList(DwcTerm.country, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude);
   }
 }

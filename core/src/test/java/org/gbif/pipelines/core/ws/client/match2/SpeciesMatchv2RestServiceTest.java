@@ -12,24 +12,12 @@ import java.net.HttpURLConnection;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import okhttp3.mockwebserver.MockResponse;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 
 public class SpeciesMatchv2RestServiceTest extends MockServer {
-
-  @BeforeClass
-  public static void setUp() throws IOException {
-    mockServerSetUp();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    mockServerTearDown();
-  }
 
   @Test
   public void simpleCallTest() throws IOException {

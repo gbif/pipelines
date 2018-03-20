@@ -16,7 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public class GeocodeServiceRest {
 
-  private GeocodeService service;
+  private final GeocodeService service;
 
   private static GeocodeServiceRest instance;
 

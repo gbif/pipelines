@@ -44,11 +44,14 @@ public enum CoordinatesFunction {
   public static List<IssueType> getIssueTypes(CoordinatesFunction transformation) {
     if (transformation == PRESUMED_NEGATED_LAT) {
       return Collections.singletonList(IssueType.PRESUMED_NEGATED_LATITUDE);
-    } else if (transformation == PRESUMED_NEGATED_LNG) {
+    }
+    if (transformation == PRESUMED_NEGATED_LNG) {
       return Collections.singletonList(IssueType.PRESUMED_NEGATED_LONGITUDE);
-    } else if (transformation == PRESUMED_NEGATED_COORDS) {
+    }
+    if (transformation == PRESUMED_NEGATED_COORDS) {
       return Arrays.asList(IssueType.PRESUMED_NEGATED_LATITUDE, IssueType.PRESUMED_NEGATED_LONGITUDE);
-    } else if (transformation == PRESUMED_SWAPPED_COORDS) {
+    }
+    if (transformation == PRESUMED_SWAPPED_COORDS) {
       return Collections.singletonList(IssueType.PRESUMED_SWAPPED_COORDINATE);
     }
 

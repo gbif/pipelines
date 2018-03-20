@@ -8,11 +8,17 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.BufferedSource;
 import okio.Okio;
+import org.junit.ClassRule;
+import org.junit.rules.ExternalResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for tests that need a {@link MockWebServer}.
  */
 public abstract class MockServer {
+
+  private static final Logger LOG = LoggerFactory.getLogger(MockServer.class);
 
   // mock match responses
   protected static final String MATCH_RESPONSES_FOLDER = "match-responses/";
@@ -45,15 +51,24 @@ public abstract class MockServer {
 
   protected static MockWebServer mockServer;
 
-  protected static void mockServerSetUp() throws IOException {
-    mockServer = new MockWebServer();
-    // TODO: check if the port is in use??
-    mockServer.start(1111);
-  }
+  @ClassRule
+  public static ExternalResource serverResource = new ExternalResource() {
+    @Override
+    protected void before() throws Throwable {
+      mockServer = new MockWebServer();
+      // TODO: check if the port is in use??
+      mockServer.start(1111);
+    }
 
-  protected static void mockServerTearDown() throws IOException {
-    mockServer.shutdown();
-  }
+    @Override
+    protected void after() {
+      try {
+        mockServer.shutdown();
+      } catch (IOException e) {
+        LOG.error("Could not stop the mock server", e);
+      }
+    }
+  };
 
   protected static void enqueueResponse(String fileName) throws IOException {
     InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);

@@ -228,27 +228,17 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
    * {@link DwcTerm#coordinatePrecision} interpretation.
    */
   static LocationInterpreter interpretCoordinatePrecision(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) -> SimpleTypeParser.parseDouble(extendedRecord,
-                                                                           DwcTerm.coordinatePrecision,
-                                                                           parseResult -> {
-                                                                             Interpretation<ExtendedRecord>
-                                                                               interpretation =
-                                                                               Interpretation.of(extendedRecord);
-                                                                             Double result = parseResult.orElse(null);
-                                                                             if (result != null
-                                                                                 && result
-                                                                                    >= COORDINATE_PRECISION_LOWER_BOUND
-                                                                                 && result
-                                                                                    <= COORDINATE_PRECISION_UPPER_BOUND) {
-                                                                               locationRecord.setCoordinatePrecision(
-                                                                                 result);
-                                                                             } else {
-                                                                               interpretation.withValidation(Trace.of(
-                                                                                 DwcTerm.coordinatePrecision.name(),
-                                                                                 IssueType.COORDINATE_PRECISION_INVALID));
-                                                                             }
-                                                                             return interpretation;
-                                                                           });
+    return (ExtendedRecord extendedRecord) ->
+      SimpleTypeParser.parseDouble(extendedRecord, DwcTerm.coordinatePrecision, parseResult -> {
+        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+        Double result = parseResult.orElse(null);
+        if (result != null && result >= COORDINATE_PRECISION_LOWER_BOUND && result <= COORDINATE_PRECISION_UPPER_BOUND) {
+          locationRecord.setCoordinatePrecision(result);
+        } else {
+          interpretation.withValidation(Trace.of(DwcTerm.coordinatePrecision.name(), IssueType.COORDINATE_PRECISION_INVALID));
+        }
+        return interpretation;
+      });
   }
 
 }

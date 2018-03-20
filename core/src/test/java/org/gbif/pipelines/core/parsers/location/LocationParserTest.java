@@ -11,24 +11,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class LocationParserTest extends MockServer {
 
   private static final String TEST_ID = "1";
-
-  @BeforeClass
-  public static void setUp() throws IOException {
-    mockServerSetUp();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    mockServerTearDown();
-  }
 
   @Test
   public void givenCountryWhenParsedThenReturnCountry() {
@@ -59,7 +47,7 @@ public class LocationParserTest extends MockServer {
     ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).country("foo").build();
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord);
     Assert.assertFalse(result.isSuccessful());
-    Assert.assertEquals(null, result.getResult().getCountry());
+    Assert.assertNull(result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
                         .stream()
                         .map(interpretationIssue -> interpretationIssue.getIssueType())
@@ -73,7 +61,7 @@ public class LocationParserTest extends MockServer {
     ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).countryCode("foo").build();
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord);
     Assert.assertFalse(result.isSuccessful());
-    Assert.assertEquals(null, result.getResult().getCountry());
+    Assert.assertNull(result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
                         .stream()
                         .map(interpretationIssue -> interpretationIssue.getIssueType())
@@ -91,8 +79,8 @@ public class LocationParserTest extends MockServer {
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
-    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat().doubleValue(), 0);
-    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng().doubleValue(), 0);
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
     Assert.assertTrue(result.getIssues()
                         .stream()
                         .map(interpretationIssue -> interpretationIssue.getIssueType())

@@ -12,14 +12,14 @@ public class ParsedField<T> {
 
   // TODO: do we need confidence??
 
-  private T result;
-  private List<InterpretationIssue> issues = new ArrayList<>();
-  private boolean successful;
+  private final T result;
+  private final List<InterpretationIssue> issues;
+  private final boolean successful;
 
   private ParsedField(Builder<T> builder) {
-    this.result = builder.result;
-    this.issues = builder.issues;
-    this.successful = builder.successful;
+    result = builder.result;
+    issues = builder.issues;
+    successful = builder.successful;
   }
 
   public static <S> ParsedField<S> fail(S result, List<InterpretationIssue> issues) {
@@ -40,6 +40,10 @@ public class ParsedField<T> {
 
   public static <S> ParsedField<S> success(S result, List<InterpretationIssue> issues) {
     return ParsedField.<S>newBuilder().successful(true).result(result).issues(issues).build();
+  }
+
+  public static <S> ParsedField<S> success(S result) {
+    return ParsedField.<S>newBuilder().successful(true).result(result).build();
   }
 
   public T getResult() {

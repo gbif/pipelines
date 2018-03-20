@@ -1,8 +1,6 @@
 package org.gbif.pipelines.core.ws.config;
 
 import org.gbif.pipelines.core.ws.HttpConfigFactory;
-import org.gbif.pipelines.core.ws.config.Config;
-import org.gbif.pipelines.core.ws.config.Service;
 
 import java.nio.file.Paths;
 
@@ -24,8 +22,7 @@ public class HttpConfigFactoryTest {
     // default timeout applies
     Assert.assertEquals(60, config.getTimeout());
     Assert.assertNotNull(config.getCacheConfig());
-    Assert.assertEquals(Service.SPECIES_MATCH2.name().toLowerCase().concat("-cacheWs"),
-                        config.getCacheConfig().getName());
+    Assert.assertEquals(Service.SPECIES_MATCH2.name().toLowerCase() + "-cacheWs", config.getCacheConfig().getName());
   }
 
   @Test(expected = IllegalArgumentException.class)

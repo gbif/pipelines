@@ -103,7 +103,7 @@ public class Wgs84Projection {
           return ParsedField.fail(new LatLng(lat, lon), issues);
         }
         // flag the record if coords actually changed
-        if (lat != lat2 || lon != lon2) {
+        if (Double.compare(lat, lat2) + Double.compare(lon, lon2) != 0 ) {
           issues.add(new InterpretationIssue(IssueType.COORDINATE_REPROJECTED, DwcTerm.geodeticDatum));
         }
         return ParsedField.success(new LatLng(lat2, lon2), issues);

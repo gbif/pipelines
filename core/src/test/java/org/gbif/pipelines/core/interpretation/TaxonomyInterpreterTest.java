@@ -12,9 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -23,16 +21,6 @@ import org.junit.Test;
 public class TaxonomyInterpreterTest extends MockServer {
 
   private static final String TEST_RECORD_ID = "testId";
-
-  @BeforeClass
-  public static void setUp() throws IOException {
-    mockServerSetUp();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    mockServerTearDown();
-  }
 
   @Test
   public void testAssembledAuthor() throws IOException {

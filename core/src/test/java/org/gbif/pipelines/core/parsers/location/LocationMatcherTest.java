@@ -9,22 +9,10 @@ import org.gbif.pipelines.io.avro.IssueType;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class LocationMatcherTest extends MockServer {
-
-  @BeforeClass
-  public static void setUp() throws IOException {
-    mockServerSetUp();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    mockServerTearDown();
-  }
 
   @Test
   public void givenCountryAndCoordsWhenMatchIdentityThenSuccess() throws IOException {
@@ -68,7 +56,7 @@ public class LocationMatcherTest extends MockServer {
     Assert.assertEquals(canada, match.getResult().getCountry());
     Assert.assertEquals(coordsCanada, match.getResult().getLatLng());
     Assert.assertTrue(match.isSuccessful());
-    Assert.assertTrue(match.getIssues().get(0).getIssueType().equals(IssueType.COUNTRY_DERIVED_FROM_COORDINATES));
+    Assert.assertEquals(match.getIssues().get(0).getIssueType(), IssueType.COUNTRY_DERIVED_FROM_COORDINATES);
   }
 
   @Test
@@ -85,7 +73,7 @@ public class LocationMatcherTest extends MockServer {
       .applyMatch();
 
     Assert.assertFalse(match.isSuccessful());
-    Assert.assertTrue(match.getIssues().get(0).getIssueType().equals(IssueType.COUNTRY_COORDINATE_MISMATCH));
+    Assert.assertEquals(match.getIssues().get(0).getIssueType(), IssueType.COUNTRY_COORDINATE_MISMATCH);
   }
 
   @Test
@@ -194,7 +182,7 @@ public class LocationMatcherTest extends MockServer {
 
   @Test
   public void givenCountryAndSwappedCoordsWhenMatchWithAdditionalTransformThenSuccess() throws IOException {
-    // only needs to enqueu one response because the first try is out of range and does not call the ws
+    // only needs to enqueue one response because the first try is out of range and does not call the ws
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
     Country canada = Country.CANADA;
@@ -251,7 +239,7 @@ public class LocationMatcherTest extends MockServer {
     Assert.assertEquals(Country.GREENLAND, match.getResult().getCountry());
     Assert.assertEquals(coords, match.getResult().getLatLng());
     Assert.assertTrue(match.isSuccessful());
-    Assert.assertTrue(match.getIssues().get(0).getIssueType().equals(IssueType.COUNTRY_DERIVED_FROM_COORDINATES));
+    Assert.assertEquals(match.getIssues().get(0).getIssueType(), IssueType.COUNTRY_DERIVED_FROM_COORDINATES);
   }
 
   @Test(expected = NullPointerException.class)
@@ -269,7 +257,7 @@ public class LocationMatcherTest extends MockServer {
     ParsedField<ParsedLocation> match = LocationMatcher.newMatcher(new LatLng(200, 200)).applyMatch();
 
     Assert.assertFalse(match.isSuccessful());
-    Assert.assertTrue(match.getIssues().get(0).getIssueType().equals(IssueType.COUNTRY_COORDINATE_MISMATCH));
+    Assert.assertEquals(match.getIssues().get(0).getIssueType(), IssueType.COUNTRY_COORDINATE_MISMATCH);
   }
 
 }

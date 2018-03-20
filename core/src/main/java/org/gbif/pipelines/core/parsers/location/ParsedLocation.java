@@ -12,8 +12,8 @@ public class ParsedLocation {
   private final LatLng latLng;
 
   private ParsedLocation(Builder builder) {
-    this.country = builder.country;
-    this.latLng = builder.latLng;
+    country = builder.country;
+    latLng = builder.latLng;
   }
 
   public Country getCountry() {

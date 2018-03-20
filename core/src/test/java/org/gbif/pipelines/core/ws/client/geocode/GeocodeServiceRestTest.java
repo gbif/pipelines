@@ -10,9 +10,7 @@ import java.util.Collection;
 import com.google.common.collect.Iterables;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -21,16 +19,6 @@ import retrofit2.Response;
  * Tests the {@link GeocodeServiceRestTest} and {@link GeocodeService}.
  */
 public class GeocodeServiceRestTest extends MockServer {
-
-  @BeforeClass
-  public static void setUp() throws IOException {
-    mockServerSetUp();
-  }
-
-  @AfterClass
-  public static void tearDown() throws IOException {
-    mockServerTearDown();
-  }
 
   @Test
   public void simpleCallTest() throws IOException {
