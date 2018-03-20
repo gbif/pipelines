@@ -1,6 +1,5 @@
 package org.gbif.xml.occurrence.parser.parsing.validators;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -35,17 +34,14 @@ public class UniquenessValidatorTest {
   public void givenDuplicatedIdsWhenMappedThenDuplicateFound() {
     // increase it to test with a higher volume of data
     int n = 10;
-    int duplicatesFound = 0;
 
     try (UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
       // add duplicates
-      List<String> duplicates = new ArrayList<>(Arrays.asList("12.1", "1234.1", "111.1", "12.12"));
+      List<String> duplicates = Arrays.asList("12.1", "1234.1", "111.1", "12.12");
 
-      for (String duplicate : duplicates) {
-        if (!validator.isUnique(duplicate)) {
-          duplicatesFound++;
-        }
-      }
+      long duplicatesFound = duplicates.stream().filter(id -> !validator.isUnique(id)).count();
+
+      Assert.assertEquals(0, duplicatesFound);
 
       // add more values to test with high volume of data
       Stopwatch watch = Stopwatch.createStarted();
@@ -54,29 +50,17 @@ public class UniquenessValidatorTest {
           duplicatesFound++;
         }
       }
-      LOG.info("time: " + watch.stop().elapsed(TimeUnit.MILLISECONDS));
+      LOG.info("time: {}", watch.stop().elapsed(TimeUnit.MILLISECONDS));
+
+      Assert.assertEquals(0, duplicatesFound);
 
       // add more duplicates
-      duplicates = new ArrayList<>(Arrays.asList("12.1",
-                                                 "1234.1",
-                                                 "11.1",
-                                                 "12.1",
-                                                 "1234.1",
-                                                 "11.1",
-                                                 "12.12",
-                                                 "12.1",
-                                                 "1234.1",
-                                                 "11.1"));
+      duplicates = Arrays.asList("12.1", "1234.1", "11.1", "12.1", "1234.1", "11.1", "12.12", "12.1", "1234.1", "11.1");
 
-      for (String duplicate : duplicates) {
-        if (!validator.isUnique(duplicate)) {
-          duplicatesFound++;
-        }
-      }
+      duplicatesFound = duplicates.stream().filter(id -> !validator.isUnique(id)).count();
 
+      Assert.assertEquals(9, duplicatesFound);
     }
-
-    Assert.assertEquals(9, duplicatesFound);
   }
 
   @Test(expected = NullPointerException.class)

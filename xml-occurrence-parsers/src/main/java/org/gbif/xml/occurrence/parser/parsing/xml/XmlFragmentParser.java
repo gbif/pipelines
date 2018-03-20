@@ -91,7 +91,7 @@ public class XmlFragmentParser {
     } catch (SAXException e) {
       LOG.warn("SAXException parsing xml string [{}]", xml, e);
     }
-    return filterRecords(records);
+    return forceIdentifiers(records);
   }
 
   public static List<RawOccurrenceRecord> parseRecord(byte[] xml, OccurrenceSchemaType schemaType) {
@@ -169,8 +169,9 @@ public class XmlFragmentParser {
    *
    * @see UniqueIdentifier
    */
-  public static Set<IdentifierExtractionResult> extractIdentifiers(UUID datasetKey, byte[] xml,
-    OccurrenceSchemaType schemaType, boolean useTriplet, boolean useOccurrenceId) {
+  public static Set<IdentifierExtractionResult> extractIdentifiers(
+    UUID datasetKey, byte[] xml, OccurrenceSchemaType schemaType, boolean useTriplet, boolean useOccurrenceId
+  ) {
     Set<IdentifierExtractionResult> results = Sets.newHashSet();
 
     // this is somewhat wasteful, but a whole separate stack of parsing to extract triplet seems excessive
@@ -217,7 +218,7 @@ public class XmlFragmentParser {
   /**
    * Filters the records by discarding the ones without ID.
    */
-  private static List<RawOccurrenceRecord> filterRecords(List<RawOccurrenceRecord> records) {
+  private static List<RawOccurrenceRecord> forceIdentifiers(List<RawOccurrenceRecord> records) {
     if (records == null) {
       return Collections.emptyList();
     }
@@ -227,16 +228,20 @@ public class XmlFragmentParser {
       // try to set an id in case it is missing
       if (Strings.isNullOrEmpty(record.getId())) {
         // try to create a triplet
-        Triplet triplet = null;
         try {
-          triplet = new Triplet(record.getInstitutionCode(), record.getCollectionCode(), record.getCatalogueNumber());
+          record.setId(OccurrenceKeyHelper.toKey(new Triplet(record.getInstitutionCode(),
+                                                             record.getCollectionCode(),
+                                                             record.getCatalogueNumber())));
         } catch (Exception e) {
           LOG.info("Could not create a triplet for record with institution code {}, collection code {} and catalogue "
-                   + "number {}", record.getInstitutionCode(), record.getCollectionCode(), record.getCatalogueNumber());
+                   + "number {}",
+                   record.getInstitutionCode(),
+                   record.getCollectionCode(),
+                   record.getCatalogueNumber(),
+                   e);
           // record discarded
           continue;
         }
-        record.setId(OccurrenceKeyHelper.toKey(triplet));
       }
       result.add(record);
     }

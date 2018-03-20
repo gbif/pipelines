@@ -2,9 +2,6 @@ package org.gbif.xml.occurrence.parser.parsing.extendedrecord;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.xml.occurrence.parser.ParsingException;
-import org.gbif.xml.occurrence.parser.identifier.OccurrenceKeyHelper;
-import org.gbif.xml.occurrence.parser.identifier.Triplet;
 import org.gbif.xml.occurrence.parser.model.RawOccurrenceRecord;
 
 import java.util.Optional;
@@ -21,18 +18,7 @@ public class ExtendedRecordConverter {
 
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
-    String recordId = rawRecord.getId();
-    // FIXME: check if this has to be done here or in the XmlFragmentParser or in both places
-    if (Strings.isNullOrEmpty(recordId)) {
-      Triplet triplet =
-        new Triplet(rawRecord.getInstitutionCode(), rawRecord.getCollectionCode(), rawRecord.getCatalogueNumber());
-      recordId = OccurrenceKeyHelper.toKey(triplet);
-      if (Strings.isNullOrEmpty(recordId)) {
-        throw new ParsingException("Record id null or empty");
-      }
-    }
-
-    ExtendedRecord record = ExtendedRecord.newBuilder().setId(recordId).build();
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId(rawRecord.getId()).build();
 
     final BiConsumer<DwcTerm, String> setter = (term, value) -> Optional.ofNullable(value)
       .filter(str -> !str.isEmpty())
