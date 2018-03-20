@@ -46,22 +46,16 @@ public class CountryMaps {
           Country countryA = Country.fromIsoCode(countries[0].trim().toUpperCase());
           Country countryB = Country.fromIsoCode(countries[1].trim().toUpperCase());
           boolean addIssue = Boolean.parseBoolean(countries[2].trim());
-          LOG.info("Adding [{}][{}] ({}) pair to confused country matches.", countryA, countryB, addIssue ? "with issue" : "without issue");
+          LOG.info("Adding [{}][{}] ({}) pair to confused country matches.",
+                   countryA,
+                   countryB,
+                   addIssue ? "with issue" : "without issue");
           addConfusedCountry(countryA, countryB, addIssue);
           addConfusedCountry(countryB, countryA, addIssue);
         }
       }
     } catch (IOException e) {
       throw new RuntimeException("Can't read [" + CONFUSED_COUNTRY_FILE + "] - aborting", e);
-    } finally {
-      try {
-        reader.close();
-        if (in != null) {
-          in.close();
-        }
-      } catch (IOException e) {
-        LOG.warn("Couldn't close [{}] - continuing anyway", CONFUSED_COUNTRY_FILE, e);
-      }
     }
   }
 

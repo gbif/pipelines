@@ -63,28 +63,28 @@ public class LocationMatcher {
     // call WS with identity coords
     List<Country> countries = getCountriesFromCoordinates(latLng);
 
-    if (countries == null || countries.isEmpty()) {
-      // no countries returned from the WS
-      return getFailResponse();
-    }
+    // if the WS returned countries we try to match with them
+    if (countries != null && !countries.isEmpty()) {
+      if (countries.contains(country)) {
+        // country found
+        return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLng).build());
+      }
 
-    if (countries.contains(country)) {
-      // country found
-      return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLng).build());
-    }
+      // if not found, try with equivalent countries
+      Optional<Country> equivalentMatch = containsAnyCountry(CountryMaps.equivalent(country), countries);
+      if (equivalentMatch.isPresent()) {
+        // country found
+        return ParsedField.success(ParsedLocation.newBuilder().country(equivalentMatch.get()).latLng(latLng).build());
+      }
 
-    // if we have not found it yet, we try with equivalent countries
-    if (containsAnyCountry(CountryMaps.equivalent(country), countries).isPresent()) {
-      // country found
-      return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLng).build());
-    }
-
-    // if we have not found it yet, we try with confused countries
-    if (containsAnyCountry(CountryMaps.confused(country), countries).isPresent()) {
-      // country found
-      return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLng).build(),
-                                 Collections.singletonList(new InterpretationIssue(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
-                                                                                   DwcTerm.country)));
+      // if not found, try with confused countries
+      Optional<Country> confusedMatch = containsAnyCountry(CountryMaps.confused(country), countries);
+      if (confusedMatch.isPresent()) {
+        // country found
+        return ParsedField.success(ParsedLocation.newBuilder().country(confusedMatch.get()).latLng(latLng).build(),
+                                   Collections.singletonList(new InterpretationIssue(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
+                                                                                     DwcTerm.country)));
+      }
     }
 
     // if still not found, try alternatives

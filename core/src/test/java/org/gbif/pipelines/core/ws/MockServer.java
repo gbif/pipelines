@@ -65,7 +65,7 @@ public abstract class MockServer {
       try {
         mockServer.shutdown();
       } catch (IOException e) {
-        LOG.error("Could not stop the mock server", e);
+        LOG.error("Could not stop the mock web server", e);
       }
     }
   };
