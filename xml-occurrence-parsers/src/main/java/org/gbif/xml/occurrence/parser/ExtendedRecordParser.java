@@ -7,7 +7,7 @@ import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.SyncDataFileWriter;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -37,30 +37,27 @@ public class ExtendedRecordParser {
   }
 
   /**
-   * @param inputPath path to directory with response files or a tar.xz archive
-   * @param outputPath output path to avro file
+   * @param inputPath  path to directory with response files or a tar.xz archive
+   * @param outputStream output stream to support any file system
    */
-  public static void convertFromXML(String inputPath, String outputPath) {
+  public static void convertFromXML(String inputPath, OutputStream outputStream) {
 
-    if (Strings.isNullOrEmpty(inputPath) || Strings.isNullOrEmpty(outputPath) ) {
-      throw new ParsingException("Input or output path must not be empty or null!");
+
+    if (Strings.isNullOrEmpty(inputPath) || Objects.isNull(outputStream)) {
+      throw new ParsingException("Input or output stream must not be empty or null!");
     }
 
     File inputFile = ParserFileUtils.uncompressAndGetInputFile(inputPath);
-    File outputFile = new File(outputPath);
     Schema schema = ExtendedRecord.getClassSchema();
+
+    MapCache.getInstance().create();
 
     try (DataFileWriter<ExtendedRecord> dataFileWriter = new DataFileWriter<>(new SpecificDatumWriter<>(schema));
          Stream<Path> walk = Files.walk(inputFile.toPath())) {
 
-      // Create directories if they are absent
-      if (Objects.nonNull(outputFile.getParentFile()) && !outputFile.getParentFile().exists()) {
-        Files.createDirectories(outputFile.getParentFile().toPath());
-      }
-
       dataFileWriter.setCodec(CodecFactory.deflateCodec(Deflater.BEST_SPEED));
       dataFileWriter.setFlushOnEveryBlock(false);
-      dataFileWriter.create(schema, outputFile);
+      dataFileWriter.create(schema, outputStream);
 
       // Class with sync method to avoid problem with writing
       SyncDataFileWriter writerWrapper = new SyncDataFileWriter(dataFileWriter);
@@ -77,14 +74,8 @@ public class ExtendedRecordParser {
 
     } catch (Exception ex) {
       LOG.error(ex.getMessage(), ex);
-      try {
-        Files.deleteIfExists(outputFile.toPath());
-      } catch (IOException ioex) {
-        LOG.error(ioex.getMessage(), ioex);
-      }
       throw new ParsingException(ex);
     } finally {
-      // Close cache instance which was opened during processing ConverterTasks
       MapCache.getInstance().close();
     }
   }

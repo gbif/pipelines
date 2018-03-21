@@ -19,6 +19,9 @@ public class MapCache {
     return true;
   }
 
+  public void create() {
+  }
+
   public void close() {
   }
 

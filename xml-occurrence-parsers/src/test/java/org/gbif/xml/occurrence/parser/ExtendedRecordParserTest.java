@@ -3,7 +3,9 @@ package org.gbif.xml.occurrence.parser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 
 import org.apache.avro.file.DataFileReader;
@@ -17,22 +19,29 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ExtendedRecordParserTest {
 
-  private final String inpPath = getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
+  private final String inpPath =
+    getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
   private final String outPath = inpPath + "verbatim.avro";
 
   @Test(expected = ParsingException.class)
-  public void testInputPathIsAbsent() {
-    ExtendedRecordParser.convertFromXML("", "test");
+  public void testInputPathIsAbsent() throws IOException {
+    try (OutputStream output = new FileOutputStream(outPath)) {
+      ExtendedRecordParser.convertFromXML("", output);
+    }
   }
 
   @Test(expected = ParsingException.class)
-  public void testOutputPathIsAbsent() {
-    ExtendedRecordParser.convertFromXML("test", "");
+  public void testOutputPathIsAbsent() throws IOException {
+    try (OutputStream output = new FileOutputStream(outPath)) {
+      ExtendedRecordParser.convertFromXML("test", output);
+    }
   }
 
   @Test(expected = ParsingException.class)
-  public void testInputPathIsNull() {
-    ExtendedRecordParser.convertFromXML(null, "test");
+  public void testInputPathIsNull() throws IOException {
+    try (OutputStream output = new FileOutputStream(outPath)) {
+      ExtendedRecordParser.convertFromXML(null, output);
+    }
   }
 
   @Test(expected = ParsingException.class)
@@ -41,17 +50,21 @@ public class ExtendedRecordParserTest {
   }
 
   @Test(expected = ParsingException.class)
-  public void testInputPathNotValid() {
-    ExtendedRecordParser.convertFromXML("test", "test");
+  public void testInputPathNotValid() throws IOException {
+    try (OutputStream output = new FileOutputStream(outPath)) {
+      ExtendedRecordParser.convertFromXML("test", output);
+    }
   }
 
   @Test(expected = ParsingException.class)
-  public void testInputFileWrongExtension() {
+  public void testInputFileWrongExtension() throws IOException {
     // State
     String inputPath = inpPath + "61.zip";
 
     // When
-    ExtendedRecordParser.convertFromXML(inputPath, "test");
+    try (OutputStream output = new FileOutputStream(outPath)) {
+      ExtendedRecordParser.convertFromXML(inputPath, output);
+    }
   }
 
   @Test
@@ -60,7 +73,9 @@ public class ExtendedRecordParserTest {
     String inputPath = inpPath + "61";
 
     // When
-    ExtendedRecordParser.convertFromXML(inputPath, outPath);
+    try (OutputStream output = new FileOutputStream(outPath)) {
+      ExtendedRecordParser.convertFromXML(inputPath, output);
+    }
 
     // Should
     File verbatim = new File(outPath);
@@ -74,7 +89,9 @@ public class ExtendedRecordParserTest {
     String inputPath = inpPath + "61.tar.xz";
 
     // When
-    ExtendedRecordParser.convertFromXML(inputPath, outPath);
+    try (OutputStream output = new FileOutputStream(outPath)) {
+      ExtendedRecordParser.convertFromXML(inputPath, output);
+    }
 
     // Should
     File verbatim = new File(outPath);
@@ -88,7 +105,9 @@ public class ExtendedRecordParserTest {
     String inputPath = inpPath + "61";
 
     // When
-    ExtendedRecordParser.convertFromXML(inputPath, outPath);
+    try (OutputStream output = new FileOutputStream(outPath)) {
+      ExtendedRecordParser.convertFromXML(inputPath, output);
+    }
 
     // Should
     File verbatim = new File(outPath);
