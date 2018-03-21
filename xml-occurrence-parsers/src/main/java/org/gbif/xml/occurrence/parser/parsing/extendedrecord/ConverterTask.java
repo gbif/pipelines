@@ -33,10 +33,11 @@ public class ConverterTask implements Runnable {
     new OccurrenceParser().parseFile(inputFile).stream()
       .map(XmlFragmentParser::parseRecord)
       .forEach(rawRecords -> rawRecords.stream()
-        .filter(rawOccurrenceRecord -> validator.isUnique(rawOccurrenceRecord.getId()))
-        .forEach(rawRecord -> {
+        .map(ExtendedRecordConverter::from)
+        .filter(extendedRecord -> validator.isUnique(extendedRecord.getId()))
+        .forEach(extendedRecord -> {
           try {
-            dataFileWriter.append(ExtendedRecordConverter.from(rawRecord));
+            dataFileWriter.append(extendedRecord);
           } catch (IOException ex) {
             LOG.error(ex.getMessage(), ex);
             throw new ParsingException("Parsing failed", ex);
