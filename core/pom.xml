@@ -12,6 +12,8 @@
 
   <artifactId>core</artifactId>
 
+  <name>Pipelines :: Core</name>
+
   <properties>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
   </properties>

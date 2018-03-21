@@ -12,6 +12,8 @@
 
   <artifactId>beam-common</artifactId>
 
+  <name>Pipelines :: Beam</name>
+
   <dependencies>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

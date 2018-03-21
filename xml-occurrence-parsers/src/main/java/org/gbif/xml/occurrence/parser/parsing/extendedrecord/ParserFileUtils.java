@@ -14,7 +14,7 @@ public class ParserFileUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(ParserFileUtils.class);
 
-  private static final BiFunction<String, String, String> UNCOMPRESS = (inPath, outPath) -> String.format("tar -xvzf %s -C %s", inPath, outPath);
+  private static final BiFunction<String, String, String> UNCOMPRESS = (inPath, outPath) -> String.format("tar -xf %s -C %s", inPath, outPath);
   private static final String ARCHIVE_PREFIX = ".tar.xz";
   private static final String TMP_PATH = "/tmp/";
 
