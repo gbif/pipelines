@@ -249,5 +249,10 @@
       <artifactId>hamcrest-all</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.mapdb</groupId>
+      <artifactId>mapdb</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

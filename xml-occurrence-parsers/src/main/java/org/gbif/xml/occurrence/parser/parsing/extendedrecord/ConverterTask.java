@@ -2,6 +2,7 @@ package org.gbif.xml.occurrence.parser.parsing.extendedrecord;
 
 import org.gbif.xml.occurrence.parser.OccurrenceParser;
 import org.gbif.xml.occurrence.parser.ParsingException;
+import org.gbif.xml.occurrence.parser.parsing.validators.UniquenessValidator;
 import org.gbif.xml.occurrence.parser.parsing.xml.XmlFragmentParser;
 
 import java.io.File;
@@ -19,10 +20,12 @@ public class ConverterTask implements Runnable {
 
   private final File inputFile;
   private final SyncDataFileWriter dataFileWriter;
+  private final UniquenessValidator validator;
 
-  public ConverterTask(File inputFile, SyncDataFileWriter dataFileWriter) {
+  public ConverterTask(File inputFile, SyncDataFileWriter dataFileWriter, UniquenessValidator validator) {
     this.inputFile = inputFile;
     this.dataFileWriter = dataFileWriter;
+    this.validator = validator;
   }
 
   @Override
@@ -30,7 +33,7 @@ public class ConverterTask implements Runnable {
     new OccurrenceParser().parseFile(inputFile).stream()
       .map(XmlFragmentParser::parseRecord)
       .forEach(rawRecords -> rawRecords.stream()
-        .filter(MapCache.getInstance()::isUnique)
+        .filter(rawOccurrenceRecord -> validator.isUnique(rawOccurrenceRecord.getId()))
         .forEach(rawRecord -> {
           try {
             dataFileWriter.append(ExtendedRecordConverter.from(rawRecord));

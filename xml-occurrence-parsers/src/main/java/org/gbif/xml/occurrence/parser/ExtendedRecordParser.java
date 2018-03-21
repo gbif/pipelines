@@ -2,9 +2,9 @@ package org.gbif.xml.occurrence.parser;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ConverterTask;
-import org.gbif.xml.occurrence.parser.parsing.extendedrecord.MapCache;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.SyncDataFileWriter;
+import org.gbif.xml.occurrence.parser.parsing.validators.UniquenessValidator;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -50,10 +50,9 @@ public class ExtendedRecordParser {
     File inputFile = ParserFileUtils.uncompressAndGetInputFile(inputPath);
     Schema schema = ExtendedRecord.getClassSchema();
 
-    MapCache.getInstance().create();
-
     try (DataFileWriter<ExtendedRecord> dataFileWriter = new DataFileWriter<>(new SpecificDatumWriter<>(schema));
-         Stream<Path> walk = Files.walk(inputFile.toPath())) {
+         Stream<Path> walk = Files.walk(inputFile.toPath());
+         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
       dataFileWriter.setCodec(CodecFactory.deflateCodec(Deflater.BEST_SPEED));
       dataFileWriter.setFlushOnEveryBlock(false);
@@ -65,7 +64,7 @@ public class ExtendedRecordParser {
       // Run async process - read a file, convert to ExtendedRecord and write to avro
       CompletableFuture[] futures = walk.filter(x -> x.toFile().isFile() && x.toString().endsWith(FILE_PREFIX))
         .map(Path::toFile)
-        .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writerWrapper)))
+        .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writerWrapper, validator)))
         .toArray(CompletableFuture[]::new);
 
       // Wait all threads
@@ -75,8 +74,6 @@ public class ExtendedRecordParser {
     } catch (Exception ex) {
       LOG.error(ex.getMessage(), ex);
       throw new ParsingException(ex);
-    } finally {
-      MapCache.getInstance().close();
     }
   }
 
