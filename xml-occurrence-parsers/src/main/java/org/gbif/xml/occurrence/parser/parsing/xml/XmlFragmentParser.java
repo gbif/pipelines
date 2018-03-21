@@ -16,6 +16,7 @@
 package org.gbif.xml.occurrence.parser.parsing.xml;
 
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
+import org.gbif.xml.occurrence.parser.identifier.OccurrenceKeyHelper;
 import org.gbif.xml.occurrence.parser.identifier.PublisherProvidedUniqueIdentifier;
 import org.gbif.xml.occurrence.parser.identifier.Triplet;
 import org.gbif.xml.occurrence.parser.identifier.UniqueIdentifier;
@@ -32,11 +33,14 @@ import org.gbif.xml.occurrence.parser.parsing.xml.rules.DwcManisRuleSet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.commons.digester.Digester;
@@ -87,7 +91,7 @@ public class XmlFragmentParser {
     } catch (SAXException e) {
       LOG.warn("SAXException parsing xml string [{}]", xml, e);
     }
-    return records;
+    return forceIdentifiers(records);
   }
 
   public static List<RawOccurrenceRecord> parseRecord(byte[] xml, OccurrenceSchemaType schemaType) {
@@ -121,6 +125,7 @@ public class XmlFragmentParser {
    * This method is a hack to return a single result where ScientificName matches the given unitQualifier. This
    * behaviour is only relevant for ABCD 2.06 - the others all produce a single record anyway.
    * TODO: refactor the parse/builder to return what we want, rather than hacking around
+   * FIXME: never used, can it be deleted?? if it is gonna be used we will have to set the missing ids
    */
   public static RawOccurrenceRecord parseRecord(byte[] xml, OccurrenceSchemaType schemaType, String unitQualifier) {
     RawOccurrenceRecord result = null;
@@ -164,8 +169,9 @@ public class XmlFragmentParser {
    *
    * @see UniqueIdentifier
    */
-  public static Set<IdentifierExtractionResult> extractIdentifiers(UUID datasetKey, byte[] xml,
-    OccurrenceSchemaType schemaType, boolean useTriplet, boolean useOccurrenceId) {
+  public static Set<IdentifierExtractionResult> extractIdentifiers(
+    UUID datasetKey, byte[] xml, OccurrenceSchemaType schemaType, boolean useTriplet, boolean useOccurrenceId
+  ) {
     Set<IdentifierExtractionResult> results = Sets.newHashSet();
 
     // this is somewhat wasteful, but a whole separate stack of parsing to extract triplet seems excessive
@@ -208,4 +214,38 @@ public class XmlFragmentParser {
 
     return results;
   }
+
+  /**
+   * Filters the records by discarding the ones without ID.
+   */
+  private static List<RawOccurrenceRecord> forceIdentifiers(List<RawOccurrenceRecord> records) {
+    if (records == null) {
+      return Collections.emptyList();
+    }
+
+    List<RawOccurrenceRecord> result = new ArrayList<>(records.size());
+    for (RawOccurrenceRecord record : records) {
+      // try to set an id in case it is missing
+      if (Strings.isNullOrEmpty(record.getId())) {
+        // try to create a triplet
+        try {
+          record.setId(OccurrenceKeyHelper.toKey(new Triplet(record.getInstitutionCode(),
+                                                             record.getCollectionCode(),
+                                                             record.getCatalogueNumber())));
+        } catch (Exception e) {
+          LOG.info("Could not create a triplet for record with institution code {}, collection code {} and catalogue "
+                   + "number {}",
+                   record.getInstitutionCode(),
+                   record.getCollectionCode(),
+                   record.getCatalogueNumber(),
+                   e);
+          // record discarded
+          continue;
+        }
+      }
+      result.add(record);
+    }
+    return result;
+  }
+
 }
