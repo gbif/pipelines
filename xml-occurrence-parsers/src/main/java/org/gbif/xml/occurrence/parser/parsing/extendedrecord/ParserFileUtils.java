@@ -54,7 +54,11 @@ public class ParserFileUtils {
       File parentFile = new File(inputFile.getParentFile(), TMP_PATH);
       Files.createDirectories(parentFile.toPath());
       String cmd = UNCOMPRESS.apply(inputFile.getAbsolutePath(), parentFile.getAbsolutePath());
+
+      LOG.info("Uncompressing a tar.xz archive {}", cmd);
       Runtime.getRuntime().exec(cmd).waitFor();
+      LOG.info("The archive has been uncompressed");
+
       return parentFile;
     } catch (InterruptedException | IOException ex) {
       LOG.error("Directory or file {} does not exist", inputFile.getAbsolutePath());
