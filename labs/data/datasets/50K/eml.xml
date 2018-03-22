@@ -1,0 +1,224 @@
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1"
+         xmlns:dc="http://purl.org/dc/terms/"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         packageId="22a66350-7947-4a49-84a3-39c7c1b0881f/v8.1" system="http://gbif.org" scope="system"
+         xml:lang="eng">
+
+<dataset>
+  <alternateIdentifier>22a66350-7947-4a49-84a3-39c7c1b0881f</alternateIdentifier>
+  <alternateIdentifier>http://ipt.vertnet.org:8080/ipt/resource?r=msu_mammals_birds_vertpaleo</alternateIdentifier>
+  <title xml:lang="eng">MSU Mammalogy, Ornithology and Vertebrate Paleontology Collections</title>
+      <creator>
+    <individualName>
+        <givenName>Laura</givenName>
+      <surName>Abraczinskas</surName>
+    </individualName>
+    <organizationName>Michigan State University Museum</organizationName>
+    <positionName>Collections Manager</positionName>
+    <address>
+        <deliveryPoint>409 West Circle Drive</deliveryPoint>
+        <city>East Lansing</city>
+        <administrativeArea>MI</administrativeArea>
+        <postalCode>48824</postalCode>
+        <country>US</country>
+    </address>
+    <phone>+01 517-355-1290</phone>
+    <electronicMailAddress>abraczi1@msu.edu</electronicMailAddress>
+    <onlineUrl>http://museum.msu.edu/</onlineUrl>
+      </creator>
+      <metadataProvider>
+    <individualName>
+        <givenName>Laura</givenName>
+      <surName>Abraczinskas</surName>
+    </individualName>
+    <organizationName>Michigan State University Museum</organizationName>
+    <positionName>Collections Manager</positionName>
+    <address>
+        <deliveryPoint>409 West Circle Drive</deliveryPoint>
+        <city>East Lansing</city>
+        <administrativeArea>MI</administrativeArea>
+        <postalCode>48824</postalCode>
+        <country>US</country>
+    </address>
+    <phone>+01 517-355-1290</phone>
+    <electronicMailAddress>abraczi1@msu.edu</electronicMailAddress>
+    <onlineUrl>http://museum.msu.edu/</onlineUrl>
+      </metadataProvider>
+      <associatedParty>
+    <individualName>
+        <givenName>Laura</givenName>
+      <surName>Russell</surName>
+    </individualName>
+    <organizationName>VertNet</organizationName>
+    <positionName>Programmer</positionName>
+    <electronicMailAddress>larussell@vertnet.org</electronicMailAddress>
+    <onlineUrl>http://www.vertnet.org</onlineUrl>
+    <role>programmer</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+        <givenName>David</givenName>
+      <surName>Bloom</surName>
+    </individualName>
+    <organizationName>VertNet</organizationName>
+    <positionName>Coordinator</positionName>
+    <electronicMailAddress>dbloom@vertnet.org</electronicMailAddress>
+    <onlineUrl>http://www.vertnet.org</onlineUrl>
+    <role>programmer</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+        <givenName>John</givenName>
+      <surName>Wieczorek</surName>
+    </individualName>
+    <organizationName>Museum of Vertebrate Zoology at UC Berkeley</organizationName>
+    <positionName>Information Architect</positionName>
+    <electronicMailAddress>tuco@berkeley.edu</electronicMailAddress>
+    <role>programmer</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+        <givenName>Barbara</givenName>
+      <surName>Lundrigan</surName>
+    </individualName>
+    <organizationName>Michigan State University Museum</organizationName>
+    <positionName>Curator of Mammalogy and Ornithology</positionName>
+    <address>
+        <deliveryPoint>409 West Circle Drive</deliveryPoint>
+        <city>East Lansing</city>
+        <administrativeArea>MI</administrativeArea>
+        <postalCode>48824</postalCode>
+        <country>US</country>
+    </address>
+    <phone>+01 517-355-6752</phone>
+    <electronicMailAddress>lundriga@msu.edu</electronicMailAddress>
+    <onlineUrl>http://museum.msu.edu/</onlineUrl>
+    <role>curator</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+        <givenName>Pamela</givenName>
+      <surName>Rasmussen</surName>
+    </individualName>
+    <organizationName>Michigan State University Museum</organizationName>
+    <positionName>Assistant Curator of Mammalogy and Ornithology</positionName>
+    <address>
+        <deliveryPoint>409 West Circle Drive</deliveryPoint>
+        <city>East Lansing</city>
+        <administrativeArea>MI</administrativeArea>
+        <postalCode>48824</postalCode>
+        <country>US</country>
+    </address>
+    <phone>+01 517-432-0872</phone>
+    <electronicMailAddress>rasmus39@msu.edu</electronicMailAddress>
+    <onlineUrl>http://museum.msu.edu/</onlineUrl>
+    <role>curator</role>
+      </associatedParty>
+      <associatedParty>
+    <individualName>
+        <givenName>Michael</givenName>
+      <surName>Gottfried</surName>
+    </individualName>
+    <organizationName>Michigan State University Museum</organizationName>
+    <positionName>Curator of Vertebrate Paleontology</positionName>
+    <address>
+        <deliveryPoint>409 West Circle Drive</deliveryPoint>
+        <city>East Lansing</city>
+        <administrativeArea>MI</administrativeArea>
+        <postalCode>48824</postalCode>
+        <country>US</country>
+    </address>
+    <phone>+01 517-432-7445</phone>
+    <electronicMailAddress>gottfrie@msu.edu</electronicMailAddress>
+    <onlineUrl>http://museum.msu.edu/</onlineUrl>
+    <role>curator</role>
+      </associatedParty>
+  <pubDate>
+      2016-12-22
+  </pubDate>
+  <language>eng</language>
+  <abstract>
+    <para>The Michigan State University Museum (MSU) Mammal Research Collection includes more than 39,500 specimens, approximately 8,000 of which are from the Great Lakes region. Mexico, Chile, Argentina, and Ecuador are also well represented. The collection includes skeletons, study skins, skulls, tanned hides, frozen tissues, and fluid-preserved specimens.&lt;br&gt;&lt;br&gt;
+The Ornithology Research Collection includes over 13,000 specimens; more than one third are from Michigan. Also well-represented are Mexico, Argentina, Colombia, Chile, and Brazil. Many of the specimens were part of the original holdings of the Michigan Agricultural College Museum, among them historically important series collected by naturalists Walter Barrows and Dillman S. Bullock. The collection includes study skins, skeletons, taxidermy mounts, eggs, nests, and fluid-preserved specimens.&lt;br&gt;&lt;br&gt;
+The Vertebrate Paleontology Research collection includes over 4,200 specimens, approximately 90% of which are from North America. The most significant holdings are Cenozoic amphibians and reptiles from throughout North America, Permian fishes and tetrapods from Texas, and Late Pleistocene faunal remains from the Great Lakes region.</para>
+  </abstract>
+      <keywordSet>
+            <keyword>Occurrence</keyword>
+        <keywordThesaurus>GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml</keywordThesaurus>
+      </keywordSet>
+      <keywordSet>
+            <keyword>Specimen</keyword>
+        <keywordThesaurus>GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml</keywordThesaurus>
+      </keywordSet>
+  <additionalInfo>
+    <para>http://vertnet.org/resources/norms.html</para>
+  </additionalInfo>
+  <intellectualRights>
+    <para>To the extent possible under law, the publisher has waived all rights to these data and has dedicated them to the <ulink url="http://creativecommons.org/publicdomain/zero/1.0/legalcode"><citetitle>Public Domain (CC0 1.0)</citetitle></ulink>. Users may copy, modify, distribute and use the work, including for commercial purposes, without restriction.</para>
+  </intellectualRights>
+  <distribution scope="document">
+    <online>
+      <url function="information">http://museum.msu.edu/?q=natural</url>
+    </online>
+  </distribution>
+  <coverage>
+      <geographicCoverage>
+          <geographicDescription>Mammalogy holdings are from the Great Lakes region. Mexico, Chile, Argentina, and Ecuador are also well represented.&lt;br&gt;&lt;br&gt;
+More than one third of the Ornithology holdings are from Michigan. Also well-represented are Mexico, Argentina, Colombia, Chile, and Brazil.&lt;br&gt;&lt;br&gt;
+Approximately 90% the Vertebrate Paleontology holdings are from North America.</geographicDescription>
+        <boundingCoordinates>
+          <westBoundingCoordinate>-180</westBoundingCoordinate>
+          <eastBoundingCoordinate>180</eastBoundingCoordinate>
+          <northBoundingCoordinate>90</northBoundingCoordinate>
+          <southBoundingCoordinate>-90</southBoundingCoordinate>
+        </boundingCoordinates>
+      </geographicCoverage>
+          <taxonomicCoverage>
+              <taxonomicClassification>
+                  <taxonRankName>class</taxonRankName>
+                <taxonRankValue>Mammalia</taxonRankValue>
+              </taxonomicClassification>
+              <taxonomicClassification>
+                  <taxonRankName>class</taxonRankName>
+                <taxonRankValue>Aves</taxonRankValue>
+              </taxonomicClassification>
+          </taxonomicCoverage>
+  </coverage>
+  <maintenance>
+    <description>
+      <para></para>
+    </description>
+    <maintenanceUpdateFrequency>unkown</maintenanceUpdateFrequency>
+  </maintenance>
+
+      <contact>
+    <individualName>
+        <givenName>Laura</givenName>
+      <surName>Abraczinskas</surName>
+    </individualName>
+    <organizationName>Michigan State University Museum</organizationName>
+    <positionName>Collections Manager</positionName>
+    <address>
+        <deliveryPoint>409 West Circle Drive</deliveryPoint>
+        <city>East Lansing</city>
+        <administrativeArea>MI</administrativeArea>
+        <postalCode>48824</postalCode>
+        <country>US</country>
+    </address>
+    <phone>+01 517-355-1290</phone>
+    <electronicMailAddress>abraczi1@msu.edu</electronicMailAddress>
+    <onlineUrl>http://museum.msu.edu/</onlineUrl>
+      </contact>
+</dataset>
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+          <dateStamp>2014-05-27T03:10:34.772-05:00</dateStamp>
+          <hierarchyLevel>dataset</hierarchyLevel>
+            <citation>MSU Mammalogy, Ornithology and Vertebrate Paleontology Collections</citation>
+          <dc:replaces>22a66350-7947-4a49-84a3-39c7c1b0881f/v8.1.xml</dc:replaces>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+</eml:eml>
