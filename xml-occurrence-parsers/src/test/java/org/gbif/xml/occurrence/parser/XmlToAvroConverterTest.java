@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
@@ -17,8 +18,9 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class ExtendedRecordParserTest {
-
+public class XmlToAvroConverterTest {
+  private final int syncInterval= 1048576;
+  private final CodecFactory codec= CodecFactory.snappyCodec();
   private final String inpPath =
     getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
   private final String outPath = inpPath + "verbatim.avro";
@@ -26,33 +28,33 @@ public class ExtendedRecordParserTest {
   @Test(expected = ParsingException.class)
   public void testInputPathIsAbsent() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath)) {
-      ExtendedRecordParser.convertFromXML("", output);
+      XmlToAvroConverter.readFrom("").writeWithConfiguration(output,syncInterval,codec);
     }
   }
 
   @Test(expected = ParsingException.class)
   public void testOutputPathIsAbsent() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath)) {
-      ExtendedRecordParser.convertFromXML("test", output);
+      XmlToAvroConverter.readFrom("test").writeWithConfiguration(output,syncInterval,codec);
     }
   }
 
   @Test(expected = ParsingException.class)
   public void testInputPathIsNull() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath)) {
-      ExtendedRecordParser.convertFromXML(null, output);
+      XmlToAvroConverter.readFrom(null).writeWithConfiguration(output,syncInterval,codec);
     }
   }
 
   @Test(expected = ParsingException.class)
   public void testOutputPathIsNull() {
-    ExtendedRecordParser.convertFromXML("test", null);
+    XmlToAvroConverter.readFrom("test").writeWithConfiguration(null,syncInterval,codec);
   }
 
   @Test(expected = ParsingException.class)
   public void testInputPathNotValid() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath)) {
-      ExtendedRecordParser.convertFromXML("test", output);
+      XmlToAvroConverter.readFrom("test").writeWithConfiguration(output,syncInterval,codec);
     }
   }
 
@@ -63,7 +65,7 @@ public class ExtendedRecordParserTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath)) {
-      ExtendedRecordParser.convertFromXML(inputPath, output);
+      XmlToAvroConverter.readFrom(inputPath).writeWithConfiguration(output,syncInterval,codec);
     }
   }
 
@@ -74,7 +76,7 @@ public class ExtendedRecordParserTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath)) {
-      ExtendedRecordParser.convertFromXML(inputPath, output);
+      XmlToAvroConverter.readFrom(inputPath).writeWithConfiguration(output,syncInterval,codec);
     }
 
     // Should
@@ -90,7 +92,7 @@ public class ExtendedRecordParserTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath)) {
-      ExtendedRecordParser.convertFromXML(inputPath, output);
+      XmlToAvroConverter.readFrom(inputPath).writeWithConfiguration(output,syncInterval,codec);
     }
 
     // Should
@@ -106,7 +108,7 @@ public class ExtendedRecordParserTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath)) {
-      ExtendedRecordParser.convertFromXML(inputPath, output);
+      XmlToAvroConverter.readFrom(inputPath).writeWithConfiguration(output,syncInterval,codec);
     }
 
     // Should
