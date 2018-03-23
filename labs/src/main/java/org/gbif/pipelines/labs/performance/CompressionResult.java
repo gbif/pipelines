@@ -15,13 +15,13 @@ public class CompressionResult {
 
   private final Path dataset;
   private final int syncInterval;
+  private final long originalSize;
+  private final CodecFactory codecFactoryType;
+  private final LongSummaryStatistics compressedSize = new LongSummaryStatistics();
+  private final LongSummaryStatistics readTime = new LongSummaryStatistics();
+  private final LongSummaryStatistics writeTime = new LongSummaryStatistics();
   private int count = 0;
-  private long originalSize;
   private int noOfOccurrence = 0;
-  private CodecFactory codecFactoryType;
-  private LongSummaryStatistics compressedSize = new LongSummaryStatistics();
-  private LongSummaryStatistics readTime = new LongSummaryStatistics();
-  private LongSummaryStatistics writeTime = new LongSummaryStatistics();
 
   public CompressionResult(Path dataset, int syncInterval, long originalSize, CodecFactory codecFactory) {
     this.dataset = dataset;
@@ -128,25 +128,34 @@ public class CompressionResult {
   }
 
   public String toCSV() {
-    return new StringBuffer().append(dataset.toFile().getName() + ",")
-      .append(syncInterval + ",")
-      .append(count + ",")
-      .append(originalSize + ",")
-      .append(compressedSize.getAverage() + ",")
-      .append(getFormattedFileSize(BigDecimal.valueOf(originalSize)) + ",")
-      .append(getFormattedFileSize(BigDecimal.valueOf(compressedSize.getAverage())) + ",")
-      .append(readTime.getAverage() + ",")
-      .append(writeTime.getAverage() + ",")
-      .append(codecFactoryType + ",")
-      .append(noOfOccurrence)
-      .toString();
+    return dataset.toFile().getName()
+           + ","
+           + syncInterval
+           + ","
+           + count
+           + ","
+           + originalSize
+           + ","
+           + compressedSize.getAverage()
+           + ","
+           + getFormattedFileSize(BigDecimal.valueOf(originalSize))
+           + ","
+           + getFormattedFileSize(BigDecimal.valueOf(compressedSize.getAverage()))
+           + ","
+           + readTime.getAverage()
+           + ","
+           + writeTime.getAverage()
+           + ","
+           + codecFactoryType
+           + ","
+           + noOfOccurrence;
   }
 
   /**
    * Formats file size with KBs,MBs,GBs suffix.
    */
   private String getFormattedFileSize(BigDecimal size) {
-    String hrSize = "";
+    String hrSize;
     BigDecimal k = size.divide(BigDecimal.valueOf(1024.0));
     BigDecimal m = size.divide(BigDecimal.valueOf(1024.0 * 1024.0));
     BigDecimal g = size.divide(BigDecimal.valueOf(1024.0 * 1024.0 * 1024.0));

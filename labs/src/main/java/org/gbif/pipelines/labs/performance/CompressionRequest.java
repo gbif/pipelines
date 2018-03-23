@@ -8,6 +8,7 @@ import org.apache.avro.file.CodecFactory;
  * Request parameters for performing compression test.
  */
 public class CompressionRequest {
+
   private final Path dataset;
   private final int syncInterval;
   private final int repetition;
@@ -22,7 +23,6 @@ public class CompressionRequest {
 
   /**
    * Path of dataset.
-   * @return
    */
   public Path getDataset() {
     return dataset;
@@ -30,7 +30,6 @@ public class CompressionRequest {
 
   /**
    * the approximate number of uncompressed bytes to write in each block
-   * @return
    */
   public int getSyncInterval() {
     return syncInterval;
@@ -38,7 +37,6 @@ public class CompressionRequest {
 
   /**
    * Repetition for compression tests to be performed on provided dataset.
-   * @return
    */
   public int getRepetition() {
     return repetition;
@@ -46,7 +44,6 @@ public class CompressionRequest {
 
   /**
    * Compression codec to be used.
-   * @return
    */
   public CodecFactory getCodec() {
     return codec;

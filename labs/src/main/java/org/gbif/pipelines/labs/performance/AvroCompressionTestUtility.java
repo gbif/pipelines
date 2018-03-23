@@ -26,24 +26,21 @@ public class AvroCompressionTestUtility {
 
   private static final Logger LOG = LoggerFactory.getLogger(AvroCompressionTestUtility.class);
 
-  static void runCompressionTest(String basePath) throws IOException {
+  static void runCompressionTest(String basePath, String resultPath, int repetition, Integer[] syncIntervals)
+    throws IOException {
     //configuring dwca dataset path (make sure DwC dataset are expanded)
     Path[] datasets;
-    try(Stream<Path> pathStream=Files.list(Paths.get(basePath))){
-      datasets= (Path[]) pathStream
-        .filter((path) -> path.toFile().isDirectory())
-        .collect(Collectors.toList())
-        .toArray(new Path[] {});
+    try (Stream<Path> pathStream = Files.list(Paths.get(basePath))) {
+      datasets =
+        pathStream.filter((path) -> path.toFile().isDirectory()).collect(Collectors.toList()).toArray(new Path[] {});
     }
-    //various syncInterval configurations
-    Integer[] syncIntervals = new Integer[] {128 * 1024, 256 * 1024, 512 * 1024, 1024 * 1024, 2048 * 1024};
     //deflate,no codecs and snappy codec
     Supplier<List<CodecFactory>> codecFactorySupplier = () -> {
       List<CodecFactory> factories = new ArrayList<>();
       for (int i = 1; i <= 9; i++) {
         factories.add(CodecFactory.deflateCodec(i));
       }
-      factories.addAll(Arrays.asList(new CodecFactory[] {CodecFactory.snappyCodec(), CodecFactory.nullCodec()}));
+      factories.addAll(Arrays.asList(CodecFactory.snappyCodec(), CodecFactory.nullCodec()));
       return factories;
     };
 
@@ -52,20 +49,26 @@ public class AvroCompressionTestUtility {
     List<CompressionResult> compressionResults = CompressionTestBuilder.forAll(datasets)
       .withEach(codecs)
       .forEach(syncIntervals)
-      .times(3)
+      .times(repetition)
       .performTestUsing(new DwCToAvroDatasetFunction());
     //dump the result in a file
-    StringBuffer buffer = new StringBuffer();
+    StringBuilder buffer = new StringBuilder();
     buffer.append(
       "Dataset,syncInterval,repetition,original file size(in bytes),compressed file size(in bytes),formatted original file size,formatted compressed file size,read time (in ms),write time (in ms),codec,number of occurrence\n");
     for (CompressionResult result : compressionResults) {
-      buffer.append(result.toCSV() + "\n");
+      buffer.append(result.toCSV()).append("\n");
     }
-    Files.write(new File("compressionTestResult.csv").toPath(), buffer.toString().getBytes(StandardCharsets.UTF_8));
+    Files.write(new File(resultPath).toPath(), buffer.toString().getBytes(StandardCharsets.UTF_8));
   }
 
   public static void main(String[] args) throws IOException {
-    runCompressionTest(args[0]);
+    if (args.length != 3) {
+      System.err.println(
+        "Usage java -jar labs.jar org.gbif.pipelines.labs.performance.AvroCompressionTestUtility /path/to/dataset /path/to/result.csv 2");
+      System.exit(1);
+    }
+    Integer[] syncIntervals = new Integer[] {128 * 1024, 256 * 1024, 512 * 1024, 1024 * 1024, 2048 * 1024};
+    runCompressionTest(args[0], args[1], Integer.parseInt(args[2]), syncIntervals);
   }
 
 }

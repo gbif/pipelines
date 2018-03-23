@@ -1,9 +1,9 @@
 package org.gbif.pipelines.labs.performance.avro;
 
-import org.gbif.pipelines.labs.performance.CompressionRequest;
-import org.gbif.pipelines.labs.performance.CompressionResult;
 import org.gbif.pipelines.core.io.DwCAReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.labs.performance.CompressionRequest;
+import org.gbif.pipelines.labs.performance.CompressionResult;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,26 +28,26 @@ public class DwCToAvroDatasetFunction implements Function<CompressionRequest, Co
 
   private static final Logger LOG = LoggerFactory.getLogger(DwCToAvroDatasetFunction.class);
 
-  private CompressionResult result;
   private Path dumpedFilePath;
   private int noOfOccurrence = 0;
   private int syncInterval;
   private CodecFactory codec;
 
   public CompressionResult apply(CompressionRequest compressionRequest) {
-    result = new CompressionResult(compressionRequest.getDataset(),
-                                   compressionRequest.getSyncInterval(),
-                                   FileUtils.sizeOfDirectory(compressionRequest.getDataset().toFile()),
-                                   compressionRequest.getCodec());
+    CompressionResult result = new CompressionResult(compressionRequest.getDataset(),
+                                                     compressionRequest.getSyncInterval(),
+                                                     FileUtils.sizeOfDirectory(compressionRequest.getDataset()
+                                                                                 .toFile()),
+                                                     compressionRequest.getCodec());
     dumpedFilePath = Paths.get(compressionRequest.getDataset().toUri().getPath(),
                                "result"
                                + compressionRequest.getSyncInterval()
                                + "-"
                                + compressionRequest.getCodec()
                                + ".avro");
-    LOG.warn("Performance request " + compressionRequest + " started");
+    LOG.info("Performance request {} started", compressionRequest);
     for (int i = 0; i < compressionRequest.getRepetition(); i++) {
-      LOG.warn("Repetition " + (i + 1) + " started");
+      LOG.info("Repetition {} started ", +(i + 1));
 
       long writeTime = performWriteTest(compressionRequest.getDataset(),
                                         compressionRequest.getSyncInterval(),
@@ -57,13 +57,13 @@ public class DwCToAvroDatasetFunction implements Function<CompressionRequest, Co
       try {
         Files.deleteIfExists(dumpedFilePath);
       } catch (IOException e) {
-
+        System.err.println("Error deleting file " + dumpedFilePath.toFile().getPath());
       }
       result.updateReadings(readTime, writeTime, compressedSize);
       result.setNoOfOccurrence(noOfOccurrence);
-      noOfOccurrence=0;
+      noOfOccurrence = 0;
     }
-    LOG.warn("Result of request: " + result.toCSV());
+    LOG.info("Result of request: {}", result.toCSV());
     return result;
   }
 
@@ -73,27 +73,26 @@ public class DwCToAvroDatasetFunction implements Function<CompressionRequest, Co
   private long performReadTest() {
     long startTime = System.currentTimeMillis();
     try (DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(dumpedFilePath.toFile(),
-                                                                              new SpecificDatumReader<ExtendedRecord>(
-                                                                                ExtendedRecord.class))) {
+                                                                              new SpecificDatumReader<>(ExtendedRecord.class))) {
       ExtendedRecord record = null;
       while (dataFileReader.hasNext()) {
         record = dataFileReader.next(record);
         ++noOfOccurrence;
       }
     } catch (IOException e) {
-
+      System.err.println("Error reading file " + dumpedFilePath.toFile().getPath());
     }
-    long runTime = System.currentTimeMillis() - startTime;
-    return runTime;
+    return System.currentTimeMillis() - startTime;
   }
+
   /**
    * Performs write converting dwca to avro returns time taken to write file.
    */
   private long performWriteTest(Path dataset, int syncInterval, CodecFactory codec) {
     long startTime = System.currentTimeMillis();
     try (
-      DataFileWriter<ExtendedRecord> dataFileWriter = new DataFileWriter<>(new SpecificDatumWriter<ExtendedRecord>())
-        .setCodec(codec)
+      DataFileWriter<ExtendedRecord> dataFileWriter = new DataFileWriter<>(new SpecificDatumWriter<ExtendedRecord>()).setCodec(
+        codec)
         .setSyncInterval(syncInterval)
         .create(ExtendedRecord.getClassSchema(), new FileOutputStream(dumpedFilePath.toFile()))) {
 
@@ -106,7 +105,6 @@ public class DwCToAvroDatasetFunction implements Function<CompressionRequest, Co
     } catch (IOException e) {
       throw new IllegalStateException("Failed performing conversion on " + dataset.toUri().getPath());
     }
-    long runTime = System.currentTimeMillis() - startTime;
-    return runTime;
+    return System.currentTimeMillis() - startTime;
   }
 }

@@ -24,8 +24,6 @@ public class CompressionTestBuilder {
 
   /**
    * Path of datasets.
-   * @param datasets
-   * @return
    */
   public static CompressionTestBuilder forAll(Path[] datasets) {
     return new CompressionTestBuilder(Arrays.asList(datasets));
@@ -37,8 +35,6 @@ public class CompressionTestBuilder {
 
   /**
    * list of syncIntervals to try all pair of datasets,codec combinations.
-   * @param syncIntervals
-   * @return
    */
   public CompressionTestBuilder forEach(Integer[] syncIntervals) {
     this.syncIntervals = Arrays.asList(syncIntervals);
@@ -47,8 +43,6 @@ public class CompressionTestBuilder {
 
   /**
    * Repeat tests for every unique combination of datasets , codecfactory and syncInterval tuple, to get average results.
-   * @param repeatTests
-   * @return
    */
   public CompressionTestBuilder times(int repeatTests) {
     this.repeatTests = repeatTests;
@@ -57,8 +51,6 @@ public class CompressionTestBuilder {
 
   /**
    * list of codecs to apply for the pairs of dataset.
-   * @param codecFactories
-   * @return
    */
   public CompressionTestBuilder withEach(CodecFactory[] codecFactories) {
     this.codecFactories = Arrays.asList(codecFactories);
@@ -67,40 +59,38 @@ public class CompressionTestBuilder {
 
   /**
    * Execute compression function and get compression results.
-   * @param datasetFunction
-   * @return
    */
   public List<CompressionResult> performTestUsing(Function<CompressionRequest, CompressionResult> datasetFunction) {
     List<CompressionResult> results = new ArrayList<>();
     List<CodecFactory> codecFactories = this.getCodecFactories();
     List<Integer> syncIntervals = this.getSyncIntervals();
     List<Path> datasets = this.getDatasets();
-    for (int i = 0; i < datasets.size(); i++) {
-      for (int j = 0; j < codecFactories.size(); j++) {
-        for (int k = 0; k < syncIntervals.size(); k++) {
-          results.add(datasetFunction.apply(new CompressionRequest(datasets.get(i),
-                                                            syncIntervals.get(k),
-                                                            this.getRepeatTests(),
-                                                            codecFactories.get(j))));
+    for (Path dataset : datasets) {
+      for (CodecFactory codecFactory : codecFactories) {
+        for (Integer syncInterval : syncIntervals) {
+          results.add(datasetFunction.apply(new CompressionRequest(dataset,
+                                                                   syncInterval,
+                                                                   this.getRepeatTests(),
+                                                                   codecFactory)));
         }
       }
     }
     return results;
   }
 
-  public List<Path> getDatasets() {
+  private List<Path> getDatasets() {
     return datasets;
   }
 
-  public List<Integer> getSyncIntervals() {
+  private List<Integer> getSyncIntervals() {
     return syncIntervals;
   }
 
-  public int getRepeatTests() {
+  private int getRepeatTests() {
     return repeatTests;
   }
 
-  public List<CodecFactory> getCodecFactories() {
+  private List<CodecFactory> getCodecFactories() {
     return codecFactories;
   }
 }
