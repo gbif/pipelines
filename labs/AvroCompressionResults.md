@@ -22,28 +22,28 @@ All tests are run on single thread and average of 3 runs are taken.
 #### Results
 Results for 50K datasets are shown below:
 
-<table border="2">
+<table border="0">
 <tr><th>Dataset</th><th>syncInterval</th><th>originalsize</th><th>compressedsize</th><th>read(ms)</th><th>write(ms)</th><th>codec</th><th>occurrences</th></tr>
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>14.33MB</td><td>894.3333333333334</td><td>1920.0</td><td>deflate-1</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>14.27MB</td><td>891.6666666666666</td><td>1944.0</td><td>deflate-1</td><td>50316</td></tr>
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>13.36MB</td><td>866.0</td><td>1931.3333333333333</td><td>deflate-2</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>13.30MB</td><td>872.6666666666666</td><td>1919.0</td><td>deflate-2</td><td>50316</td></tr>   
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>12.21MB</td><td>861.6666666666666</td><td>1923.0</td><td>deflate-3</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>12.15MB</td><td>858.3333333333334</td><td>1888.6666666666667</td><td>deflate-3</td><td>50316</td></tr>
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>11.91MB</td><td>879.3333333333334</td><td>2453.3333333333335</td><td>deflate-4</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>11.84MB</td><td>870.0</td><td>2381.3333333333335</td><td>deflate-4</td><td>50316</td></tr>  
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>14.33MB</td><td>894.4</td><td>1920.0</td><td>deflate-1</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>14.27MB</td><td>891.6</td><td>1944.0</td><td>deflate-1</td><td>50316</td></tr>
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>13.36MB</td><td>866.0</td><td>1931.33</td><td>deflate-2</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>13.30MB</td><td>872.66</td><td>1919.0</td><td>deflate-2</td><td>50316</td></tr>   
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>12.21MB</td><td>861.66</td><td>1923.0</td><td>deflate-3</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>12.15MB</td><td>858.34</td><td>1888.67</td><td>deflate-3</td><td>50316</td></tr>
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>11.91MB</td><td>879.34</td><td>2453.35</td><td>deflate-4</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>11.84MB</td><td>870.0</td><td>2381.35</td><td>deflate-4</td><td>50316</td></tr>  
 <tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>10.43MB</td><td>842.0</td><td>2436.0</td><td>deflate-5</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>10.36MB</td><td>855.6666666666666</td><td>2479.3333333333335</td><td>deflate-5</td><td>50316</td></tr>
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>9.58MB</td><td>809.6666666666666</td><td>2598.0</td><td>deflate-6</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>9.51MB</td><td>818.0</td><td>2607.6666666666665</td><td>deflate-6</td><td>50316</td></tr>
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>9.50MB</td><td>823.0</td><td>2668.3333333333335</td><td>deflate-7</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>9.42MB</td><td>821.0</td><td>2644.3333333333335</td><td>deflate-7</td><td>50316</td></tr>
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>9.25MB</td><td>845.0</td><td>3569.6666666666665</td><td>deflate-8</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>9.17MB</td><td>776.0</td><td>3387.3333333333335</td><td>deflate-8</td><td>50316</td></tr>
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>9.24MB</td><td>784.3333333333334</td><td>4742.333333333333</td><td>deflate-9</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>9.17MB</td><td>900.0</td><td>4735.6666666666</td><td>deflate-9</td><td>50316</td></tr>
-<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>23.80MB</td><td>574.0</td><td>1498.3333333333333</td><td>snappy</td><td>50316</td></tr>
-<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>23.78MB</td><td>571.6666666666666</td><td>1482.3333333333333</td><td>snappy</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>10.36MB</td><td>855.66</td><td>2479.35</td><td>deflate-5</td><td>50316</td></tr>
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>9.58MB</td><td>809.66</td><td>2598.0</td><td>deflate-6</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>9.51MB</td><td>818.0</td><td>2607.65</td><td>deflate-6</td><td>50316</td></tr>
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>9.50MB</td><td>823.0</td><td>2668.35</td><td>deflate-7</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>9.42MB</td><td>821.0</td><td>2644.35</td><td>deflate-7</td><td>50316</td></tr>
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>9.25MB</td><td>845.0</td><td>3569.65</td><td>deflate-8</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>9.17MB</td><td>776.0</td><td>3387.35</td><td>deflate-8</td><td>50316</td></tr>
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>9.24MB</td><td>784.34</td><td>4742.3</td><td>deflate-9</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>9.17MB</td><td>900.0</td><td>4735.66</td><td>deflate-9</td><td>50316</td></tr>
+<tr><td>50K</td><td>1048576</td><td>46.85MB</td><td>23.80MB</td><td>574.0</td><td>1498.33</td><td>snappy</td><td>50316</td></tr>
+<tr><td>50K</td><td>2097152</td><td>46.85MB</td><td>23.78MB</td><td>571.66</td><td>1482.33</td><td>snappy</td><td>50316</td></tr>
 </table> 
 
 #### Analysis and Conclusion
