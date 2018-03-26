@@ -42,7 +42,6 @@ public class ExtendedRecordParser {
    */
   public static void convertFromXML(String inputPath, OutputStream outputStream) {
 
-
     if (Strings.isNullOrEmpty(inputPath) || Objects.isNull(outputStream)) {
       throw new ParsingException("Input or output stream must not be empty or null!");
     }
@@ -59,12 +58,12 @@ public class ExtendedRecordParser {
       dataFileWriter.create(schema, outputStream);
 
       // Class with sync method to avoid problem with writing
-      SyncDataFileWriter writerWrapper = new SyncDataFileWriter(dataFileWriter);
+      SyncDataFileWriter syncWriter = new SyncDataFileWriter(dataFileWriter);
 
       // Run async process - read a file, convert to ExtendedRecord and write to avro
       CompletableFuture[] futures = walk.filter(x -> x.toFile().isFile() && x.toString().endsWith(FILE_PREFIX))
         .map(Path::toFile)
-        .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writerWrapper, validator)))
+        .map(file -> CompletableFuture.runAsync(new ConverterTask(file, syncWriter, validator)))
         .toArray(CompletableFuture[]::new);
 
       // Wait all threads

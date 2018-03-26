@@ -12,6 +12,8 @@
 
   <artifactId>labs</artifactId>
 
+  <name>Pipelines :: Labs</name>
+
   <profiles>
     <profile>
       <id>direct-runner</id>

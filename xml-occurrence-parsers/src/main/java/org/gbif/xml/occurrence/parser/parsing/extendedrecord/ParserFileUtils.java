@@ -14,7 +14,7 @@ public class ParserFileUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(ParserFileUtils.class);
 
-  private static final BiFunction<String, String, String> UNCOMPRESS = (inPath, outPath) -> String.format("tar -xvzf %s -C %s", inPath, outPath);
+  private static final BiFunction<String, String, String> UNCOMPRESS = (inPath, outPath) -> String.format("tar -xf %s -C %s", inPath, outPath);
   private static final String ARCHIVE_PREFIX = ".tar.xz";
   private static final String TMP_PATH = "/tmp/";
 
@@ -54,7 +54,11 @@ public class ParserFileUtils {
       File parentFile = new File(inputFile.getParentFile(), TMP_PATH);
       Files.createDirectories(parentFile.toPath());
       String cmd = UNCOMPRESS.apply(inputFile.getAbsolutePath(), parentFile.getAbsolutePath());
+
+      LOG.info("Uncompressing a tar.xz archive {}", cmd);
       Runtime.getRuntime().exec(cmd).waitFor();
+      LOG.info("The archive has been uncompressed");
+
       return parentFile;
     } catch (InterruptedException | IOException ex) {
       LOG.error("Directory or file {} does not exist", inputFile.getAbsolutePath());

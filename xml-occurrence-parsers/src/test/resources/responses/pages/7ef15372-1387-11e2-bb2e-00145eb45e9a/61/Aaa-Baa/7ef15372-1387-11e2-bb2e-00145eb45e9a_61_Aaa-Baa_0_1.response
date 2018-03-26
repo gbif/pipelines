@@ -11,7 +11,7 @@
     <biocase:destination>130.225.43.10</biocase:destination>
     <biocase:type>search</biocase:type>
   </biocase:header>
-  <biocase:content recordCount="20" recordDropped="0" recordStart="0" totalSearchHits="21">
+  <biocase:content recordCount="21" recordDropped="0" recordStart="0" totalSearchHits="22">
     <abcd:DataSets>
       <abcd:DataSet>
         <abcd:TechnicalContacts>
@@ -363,6 +363,67 @@
               </abcd:Country>
             </abcd:Gathering>
             <abcd:RecordURI>http://sesam.senckenberg.de/page/index.asp?objekt_id=704385&amp;sprache_kurz=en</abcd:RecordURI>
+          </abcd:Unit>
+          <abcd:Unit>
+            <abcd:SourceInstitutionID>SMF</abcd:SourceInstitutionID>
+            <abcd:SourceID>Collection Myriapoda</abcd:SourceID>
+            <abcd:UnitID>6919</abcd:UnitID>
+            <abcd:UnitContentContacts>
+              <abcd:UnitContentContact>
+                <abcd:Person>
+                  <abcd:FullName>Dr. Peter Jäger</abcd:FullName>
+                </abcd:Person>
+                <abcd:EmailAddresses>
+                  <abcd:EmailAddress>info_SeSam@senckenberg.de</abcd:EmailAddress>
+                </abcd:EmailAddresses>
+              </abcd:UnitContentContact>
+            </abcd:UnitContentContacts>
+            <abcd:Identifications>
+              <abcd:Identification>
+                <abcd:Result>
+                  <abcd:TaxonIdentified>
+                    <abcd:HigherTaxa>
+                      <abcd:HigherTaxon>
+                        <abcd:HigherTaxonName>Abacionidae</abcd:HigherTaxonName>
+                        <abcd:HigherTaxonRank>familia</abcd:HigherTaxonRank>
+                      </abcd:HigherTaxon>
+                    </abcd:HigherTaxa>
+                    <abcd:ScientificName>
+                      <abcd:FullScientificNameString>Abacion magnum (Loomis 1943)</abcd:FullScientificNameString>
+                    </abcd:ScientificName>
+                  </abcd:TaxonIdentified>
+                </abcd:Result>
+                <abcd:Date>
+                  <abcd:DateText>2007</abcd:DateText>
+                </abcd:Date>
+              </abcd:Identification>
+            </abcd:Identifications>
+            <abcd:RecordBasis>PreservedSpecimen</abcd:RecordBasis>
+            <abcd:KindOfUnit>whole organisms</abcd:KindOfUnit>
+            <abcd:SpecimenUnit>
+              <abcd:Owner>
+                <abcd:Organisation>
+                  <abcd:Name>
+                    <abcd:Representation language="DE">
+                      <abcd:Text>Senckenberg Gesellschaft für Naturforschung</abcd:Text>
+                    </abcd:Representation>
+                  </abcd:Name>
+                </abcd:Organisation>
+                <abcd:EmailAddresses>
+                  <abcd:EmailAddress>info_SeSam@senckenberg.de</abcd:EmailAddress>
+                </abcd:EmailAddresses>
+              </abcd:Owner>
+            </abcd:SpecimenUnit>
+            <abcd:Gathering>
+              <abcd:DateTime>
+                <abcd:DateText>15.08.1992</abcd:DateText>
+              </abcd:DateTime>
+              <abcd:LocalityText>Yancey County, Mt. Mitchell Parking Lot</abcd:LocalityText>
+              <abcd:Country>
+                <abcd:Name>United States</abcd:Name>
+              </abcd:Country>
+            </abcd:Gathering>
+            <abcd:RecordURI>http://sesam.senckenberg.de/page/index.asp?objekt_id=704472&amp;sprache_kurz=en</abcd:RecordURI>
           </abcd:Unit>
           <abcd:Unit>
             <abcd:SourceInstitutionID>SMF</abcd:SourceInstitutionID>

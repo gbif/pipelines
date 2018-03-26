@@ -12,6 +12,8 @@
 
   <artifactId>hadoop</artifactId>
 
+  <name>Pipelines :: Hadoop</name>
+
   <dependencies>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

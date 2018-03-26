@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.NotNull;
 
 import com.google.common.base.Stopwatch;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -26,8 +26,8 @@ public class MapDbTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(MapDbTest.class);
 
-  private static final long MEMORY_SIZE_10MB = 10 * 1024 * 1024;
-  private static final long MEMORY_SIZE_10GB = 10 * 1024 * 1024 * 1024;
+  private static final long MEMORY_SIZE_10MB = 10L * 1024L * 1024L;
+  private static final long MEMORY_SIZE_10GB = 10L * 1024L * 1024L * 1024L;
 
   @Test
   public void givenHybridMapWithLowMemoryWhenMappedThenMoreRecordsInDiskThanInMemTest() {

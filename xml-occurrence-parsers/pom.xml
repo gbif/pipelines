@@ -12,7 +12,7 @@
   <artifactId>xml-occurrence-parsers</artifactId>
   <packaging>jar</packaging>
 
-  <name>xml-occurrence-parsers</name>
+  <name>Pipelines :: XML occurrence parsers</name>
   <description>Parser that accepts streams of occurrence records as provided by publishers.
     In XML, using any of these schemas: DWC 1.0, DWC 1.4, ABCD 1.2, ABCD 2.06. It also handles DwCA
   </description>

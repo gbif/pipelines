@@ -12,6 +12,8 @@
 
   <artifactId>gbif-pipelines</artifactId>
 
+  <name>Pipelines :: GBIF</name>
+
   <build>
     <plugins>
       <!-- Shade the project into an uber jar to send to Spark -->
