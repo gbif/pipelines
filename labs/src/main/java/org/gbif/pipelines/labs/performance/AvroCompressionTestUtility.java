@@ -8,14 +8,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import org.apache.avro.file.CodecFactory;
 import org.slf4j.Logger;
@@ -42,10 +39,11 @@ public class AvroCompressionTestUtility {
       .withSyncIntervals(syncIntervals)
       .times(repetition)
       .performTestUsing(new DwCToAvroDatasetFunction());
+
     //dump the result in a file
     StringJoiner joiner = new StringJoiner(System.lineSeparator());
     joiner.add(
-      "Dataset,syncInterval,repetition,original file size(in bytes),compressed file size(in bytes),formatted original file size,formatted compressed file size,read time (in ms),write time (in ms),codec,number of occurrence\n");
+      "Dataset,syncInterval,repetition,original file size(in bytes),compressed file size(in bytes),formatted original file size,formatted compressed file size,read time (in ms),write time (in ms),codec,number of occurrence");
     compressionResults.forEach(result -> joiner.add(result.toCSV()));
 
     Files.write(new File(resultPath).toPath(), joiner.toString().getBytes(StandardCharsets.UTF_8));
