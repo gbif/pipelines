@@ -11,8 +11,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.avro.file.CodecFactory;
@@ -29,36 +31,45 @@ public class AvroCompressionTestUtility {
   static void runCompressionTest(String basePath, String resultPath, int repetition, Integer[] syncIntervals)
     throws IOException {
     //configuring dwca dataset path (make sure DwC dataset are expanded)
-    Path[] datasets;
-    try (Stream<Path> pathStream = Files.list(Paths.get(basePath))) {
-      datasets =
-        pathStream.filter((path) -> path.toFile().isDirectory()).collect(Collectors.toList()).toArray(new Path[] {});
-    }
-    //deflate,no codecs and snappy codec
-    Supplier<List<CodecFactory>> codecFactorySupplier = () -> {
-      List<CodecFactory> factories = new ArrayList<>();
-      for (int i = 1; i <= 9; i++) {
-        factories.add(CodecFactory.deflateCodec(i));
-      }
-      factories.addAll(Arrays.asList(CodecFactory.snappyCodec(), CodecFactory.nullCodec()));
-      return factories;
-    };
+    Path[] datasets = testingDatasets(basePath);
 
-    CodecFactory[] codecs = codecFactorySupplier.get().toArray(new CodecFactory[] {});
+    //deflate,no codecs and snappy codec
+    CodecFactory[] codecs = testingCodecs();
+
     //create compression test and fetch result
-    List<CompressionResult> compressionResults = CompressionTestBuilder.forAll(datasets)
+    List<CompressionResult> compressionResults = CompressionTestBuilder.withDatasets(datasets)
       .withEach(codecs)
-      .forEach(syncIntervals)
+      .withSyncIntervals(syncIntervals)
       .times(repetition)
       .performTestUsing(new DwCToAvroDatasetFunction());
     //dump the result in a file
-    StringBuilder buffer = new StringBuilder();
-    buffer.append(
+    StringJoiner joiner = new StringJoiner(System.lineSeparator());
+    joiner.add(
       "Dataset,syncInterval,repetition,original file size(in bytes),compressed file size(in bytes),formatted original file size,formatted compressed file size,read time (in ms),write time (in ms),codec,number of occurrence\n");
-    for (CompressionResult result : compressionResults) {
-      buffer.append(result.toCSV()).append("\n");
-    }
-    Files.write(new File(resultPath).toPath(), buffer.toString().getBytes(StandardCharsets.UTF_8));
+    compressionResults.forEach(result -> joiner.add(result.toCSV()));
+
+    Files.write(new File(resultPath).toPath(), joiner.toString().getBytes(StandardCharsets.UTF_8));
+  }
+
+  /**
+   * Get list of dexpanded dwca data sets from the provided base folder
+   * @param basePath
+   * @return
+   */
+  private static Path[] testingDatasets(String basePath) {
+    return Arrays.stream(Paths.get(basePath).toFile().listFiles(File::isDirectory))
+      .map(file -> Paths.get(file.getPath()))
+      .toArray(Path[]::new);
+  }
+
+  /**
+   * Get list of deflate,snappy and null codecs
+   */
+  private static CodecFactory[] testingCodecs() {
+    List<CodecFactory> factories = IntStream.rangeClosed(1, 9).mapToObj(CodecFactory::deflateCodec).collect(Collectors.toList());
+    factories.add(CodecFactory.snappyCodec());
+    factories.add(CodecFactory.nullCodec());
+    return factories.toArray(new CodecFactory[factories.size()]);
   }
 
   public static void main(String[] args) throws IOException {
@@ -67,7 +78,7 @@ public class AvroCompressionTestUtility {
         "Usage java -jar labs.jar org.gbif.pipelines.labs.performance.AvroCompressionTestUtility /path/to/dataset /path/to/result.csv 2");
       System.exit(1);
     }
-    Integer[] syncIntervals = new Integer[] {128 * 1024, 256 * 1024, 512 * 1024, 1024 * 1024, 2048 * 1024};
+    Integer[] syncIntervals = {128 * 1024, 256 * 1024, 512 * 1024, 1024 * 1024, 2048 * 1024};
     runCompressionTest(args[0], args[1], Integer.parseInt(args[2]), syncIntervals);
   }
 

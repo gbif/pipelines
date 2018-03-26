@@ -30,9 +30,8 @@ public class DwCToAvroDatasetFunction implements Function<CompressionRequest, Co
 
   private Path dumpedFilePath;
   private int noOfOccurrence = 0;
-  private int syncInterval;
-  private CodecFactory codec;
 
+  @Override
   public CompressionResult apply(CompressionRequest compressionRequest) {
     CompressionResult result = new CompressionResult(compressionRequest.getDataset(),
                                                      compressionRequest.getSyncInterval(),
@@ -57,7 +56,7 @@ public class DwCToAvroDatasetFunction implements Function<CompressionRequest, Co
       try {
         Files.deleteIfExists(dumpedFilePath);
       } catch (IOException e) {
-        System.err.println("Error deleting file " + dumpedFilePath.toFile().getPath());
+        LOG.error("Error deleting file " + dumpedFilePath.toFile().getPath());
       }
       result.updateReadings(readTime, writeTime, compressedSize);
       result.setNoOfOccurrence(noOfOccurrence);
@@ -80,7 +79,7 @@ public class DwCToAvroDatasetFunction implements Function<CompressionRequest, Co
         ++noOfOccurrence;
       }
     } catch (IOException e) {
-      System.err.println("Error reading file " + dumpedFilePath.toFile().getPath());
+      LOG.error("Error reading file " + dumpedFilePath.toFile().getPath());
     }
     return System.currentTimeMillis() - startTime;
   }
@@ -103,7 +102,7 @@ public class DwCToAvroDatasetFunction implements Function<CompressionRequest, Co
       }
 
     } catch (IOException e) {
-      throw new IllegalStateException("Failed performing conversion on " + dataset.toUri().getPath());
+      throw new IllegalStateException("Failed performing conversion on " + dataset.toUri().getPath(),e);
     }
     return System.currentTimeMillis() - startTime;
   }
