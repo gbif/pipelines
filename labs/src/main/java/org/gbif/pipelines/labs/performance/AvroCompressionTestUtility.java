@@ -63,7 +63,7 @@ public class AvroCompressionTestUtility {
 
   public static void main(String[] args) throws IOException {
     if (args.length != 3) {
-      System.err.println(
+      LOG.error(
         "Usage java -jar labs.jar org.gbif.pipelines.labs.performance.AvroCompressionTestUtility /path/to/dataset /path/to/result.csv 2");
       System.exit(1);
     }
