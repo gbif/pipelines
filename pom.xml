@@ -61,10 +61,10 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.32</gbif-parsers.version>
-    <dwca-io.version>1.33-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>0.59-SNAPSHOT</gbif-api.version>
+    <dwca-io.version>1.32</dwca-io.version>
+    <gbif-api.version>0.61</gbif-api.version>
     <gbif-common.version>0.36</gbif-common.version>
-    <dwc-api.version>1.18-SNAPSHOT</dwc-api.version>
+    <dwc-api.version>1.17</dwc-api.version>
 
     <apache.beam.version>2.2.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
