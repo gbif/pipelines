@@ -10,10 +10,8 @@ import org.gbif.xml.occurrence.parser.parsing.validators.UniquenessValidator;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Stream;
 
 import com.google.common.base.Strings;
@@ -30,26 +28,14 @@ public class ExtendedRecordConverter {
 
   private static final String FILE_PREFIX = ".response";
 
-  private Executor executor = ForkJoinPool.commonPool();
+  private final Executor executor;
 
-  private ExtendedRecordConverter(Executor executor, Integer parallelism) {
-    if (Objects.nonNull(executor)) {
-      this.executor = executor;
-    } else if (Objects.nonNull(parallelism)) {
-      this.executor = ExecutorPool.getInstance(parallelism).getPool();
-    }
+  private ExtendedRecordConverter(int parallelism) {
+    this.executor = ExecutorPool.getInstance(parallelism);
   }
 
-  public static ExtendedRecordConverter crete(Executor executor) {
-    return new ExtendedRecordConverter(executor, null);
-  }
-
-  public static ExtendedRecordConverter crete(Integer parallelism) {
-    return new ExtendedRecordConverter(null, parallelism);
-  }
-
-  public static ExtendedRecordConverter crete() {
-    return new ExtendedRecordConverter(null, null);
+  public static ExtendedRecordConverter crete(int parallelism) {
+    return new ExtendedRecordConverter(parallelism);
   }
 
   /**

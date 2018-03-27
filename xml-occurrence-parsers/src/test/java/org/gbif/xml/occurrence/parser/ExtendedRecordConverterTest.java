@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.concurrent.ForkJoinPool;
 import java.util.zip.Deflater;
 
 import org.apache.avro.file.CodecFactory;
@@ -22,6 +23,8 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class ExtendedRecordConverterTest {
+  
+  private final int number = ForkJoinPool.getCommonPoolParallelism();
 
   private final String inpPath =
     getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
@@ -36,7 +39,7 @@ public class ExtendedRecordConverterTest {
            .codec(codec)
            .outputStream(output)
            .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse("", dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("", dataFileWrite);
     }
   }
 
@@ -48,7 +51,7 @@ public class ExtendedRecordConverterTest {
            .codec(codec)
            .outputStream(output)
            .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse("test", dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
     }
   }
 
@@ -60,7 +63,7 @@ public class ExtendedRecordConverterTest {
            .codec(codec)
            .outputStream(output)
            .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse(null, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(null, dataFileWrite);
     }
   }
 
@@ -71,7 +74,7 @@ public class ExtendedRecordConverterTest {
       .codec(codec)
       .outputStream(null)
       .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse("test", dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
     }
   }
 
@@ -83,7 +86,7 @@ public class ExtendedRecordConverterTest {
            .codec(codec)
            .outputStream(output)
            .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse("test", dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
     }
   }
 
@@ -99,7 +102,7 @@ public class ExtendedRecordConverterTest {
            .codec(codec)
            .outputStream(output)
            .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse(inputPath, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
   }
 
@@ -115,7 +118,7 @@ public class ExtendedRecordConverterTest {
            .codec(codec)
            .outputStream(output)
            .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse(inputPath, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
     // Should
@@ -136,7 +139,7 @@ public class ExtendedRecordConverterTest {
            .codec(codec)
            .outputStream(output)
            .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse(inputPath, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
     // Should
@@ -157,7 +160,7 @@ public class ExtendedRecordConverterTest {
            .codec(codec)
            .outputStream(output)
            .build()) {
-      ExtendedRecordConverter.crete().toAvroFromXmlResponse(inputPath, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
     // Should

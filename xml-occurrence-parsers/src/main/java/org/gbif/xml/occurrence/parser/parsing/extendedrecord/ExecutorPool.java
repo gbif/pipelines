@@ -1,33 +1,27 @@
 package org.gbif.xml.occurrence.parser.parsing.extendedrecord;
 
-import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 
 /**
- * Singleton class to create only one ForkJoinPool instance
+ * Singleton class to create only one Executor instance
  */
 public class ExecutorPool {
 
-  private final Executor pool;
+  private static volatile Executor instance;
+  private static final Object MUTEX = new Object();
 
-  private ExecutorPool(int parallelism) {
-    pool = new ForkJoinPool(parallelism);
+  private ExecutorPool() {
   }
 
-  private static class LazyHolder {
-
-    private static ExecutorPool instance;
-  }
-
-  public static ExecutorPool getInstance(int parallelism) {
-    if (Objects.isNull(LazyHolder.instance)) {
-      LazyHolder.instance = new ExecutorPool(parallelism);
+  public static Executor getInstance(int parallelism) {
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = Executors.newFixedThreadPool(parallelism);
+        }
+      }
     }
-    return LazyHolder.instance;
-  }
-
-  public Executor getPool() {
-    return pool;
+    return instance;
   }
 }
