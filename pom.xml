@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -13,7 +11,7 @@
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.1-SNAPSHOT</version>
 
   <name>Pipelines :: Mother POM</name>
   <url>http://github.com/gbif/pipelines</url>
@@ -66,10 +64,10 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.32</gbif-parsers.version>
-    <dwca-io.version>1.33-SNAPSHOT</dwca-io.version>
-    <gbif-api.version>0.59-SNAPSHOT</gbif-api.version>
+    <dwca-io.version>1.32</dwca-io.version>
+    <gbif-api.version>0.61</gbif-api.version>
     <gbif-common.version>0.36</gbif-common.version>
-    <dwc-api.version>1.18-SNAPSHOT</dwc-api.version>
+    <dwc-api.version>1.17</dwc-api.version>
 
     <apache.beam.version>2.2.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
