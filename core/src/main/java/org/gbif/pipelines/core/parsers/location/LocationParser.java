@@ -7,7 +7,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
-import org.gbif.pipelines.core.parsers.legacy.CoordinateParseUtils;
 import org.gbif.pipelines.core.parsers.legacy.Wgs84Projection;
 import org.gbif.pipelines.core.utils.AvroDataValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -23,7 +22,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Parses the location fields.
  * <p>
- * Currently, it parse the country, countryCode and coordinates together.
+ * Currently, it parses the country, countryCode and coordinates together.
  */
 public class LocationParser {
 
@@ -160,20 +159,14 @@ public class LocationParser {
   }
 
   private static ParsedField<LatLng> parseLatLng(ExtendedRecord extendedRecord) {
-    final String decimalLatitudeVerbatim = extendedRecord.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName());
-    final String decimalLongitudeVerbatim = extendedRecord.getCoreTerms().get(DwcTerm.decimalLongitude.qualifiedName());
-
-    ParsedField<LatLng> parsedLatLon =
-      CoordinateParseUtils.parseLatLng(decimalLatitudeVerbatim, decimalLongitudeVerbatim);
+    ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(extendedRecord);
 
     // collect issues form the coords parsing
     List<InterpretationIssue> issues = parsedLatLon.getIssues();
 
-    ParsedField.Builder<LatLng> builder = ParsedField.newBuilder();
     if (!parsedLatLon.isSuccessful()) {
-      // TODO: try with verbatim fields (issue #71)
       // coords parsing failed
-      return builder.issues(issues).build();
+      return ParsedField.<LatLng>newBuilder().issues(issues).build();
     }
 
     // interpret geodetic datum and reproject if needed
@@ -185,6 +178,7 @@ public class LocationParser {
     // collect issues from the projection parsing
     issues.addAll(projectedLatLon.getIssues());
 
-    return builder.successful(true).result(projectedLatLon.getResult()).issues(issues).build();
+    return ParsedField.<LatLng>newBuilder().successful(true).result(projectedLatLon.getResult()).issues(issues).build();
   }
+
 }

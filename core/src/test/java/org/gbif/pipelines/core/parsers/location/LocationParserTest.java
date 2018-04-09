@@ -93,6 +93,48 @@ public class LocationParserTest extends MockServer {
   }
 
   @Test
+  public void givenOnlyVerbatimCoordsWhenParsedThenReturnCoordsWithDerivedCountry() throws IOException {
+    enqueueResponse(CHINA_REVERSE_RESPONSE);
+    enqueueResponse(CHINA_REVERSE_RESPONSE);
+
+    // only with verbatim latitude and longitude
+    ExtendedRecord extendedRecord =
+      new ExtendedRecordCustomBuilder().id(TEST_ID).verbatimLatitude("30.2").verbatimLongitude("100.2344349").build();
+    ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord);
+    Assert.assertFalse(result.isSuccessful());
+    Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
+    Assert.assertTrue(result.getIssues()
+                        .stream()
+                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .collect(Collectors.toList())
+                        .containsAll(Arrays.asList(IssueType.COUNTRY_CODE_INVALID,
+                                                   IssueType.COUNTRY_INVALID,
+                                                   IssueType.COORDINATE_ROUNDED,
+                                                   IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
+                                                   IssueType.GEODETIC_DATUM_ASSUMED_WGS84)));
+
+    // only with verbatim latitude and longitude
+    extendedRecord =
+      new ExtendedRecordCustomBuilder().id(TEST_ID).verbatimCoords("30.2, 100.2344349").build();
+    result = LocationParser.parseCountryAndCoordinates(extendedRecord);
+    Assert.assertFalse(result.isSuccessful());
+    Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
+    Assert.assertTrue(result.getIssues()
+                        .stream()
+                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .collect(Collectors.toList())
+                        .containsAll(Arrays.asList(IssueType.COUNTRY_CODE_INVALID,
+                                                   IssueType.COUNTRY_INVALID,
+                                                   IssueType.COORDINATE_ROUNDED,
+                                                   IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
+                                                   IssueType.GEODETIC_DATUM_ASSUMED_WGS84)));
+  }
+
+  @Test
   public void givenCoordsAndCountryWhenParsedThenReturnCoordsAndCountry() throws IOException {
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 

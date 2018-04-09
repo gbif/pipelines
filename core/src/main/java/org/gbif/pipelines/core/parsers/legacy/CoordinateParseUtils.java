@@ -102,7 +102,7 @@ public class CoordinateParseUtils {
   // 02° 49' 52" N	131° 47' 03" E
   public static ParsedField<LatLng> parseVerbatimCoordinates(final String coordinates) {
     if (Strings.isNullOrEmpty(coordinates)) {
-      return ParsedField.fail();
+      return ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID, DwcTerm.verbatimCoordinates));
     }
     Matcher m = DMS_COORD.matcher(coordinates);
     if (m.find()) {

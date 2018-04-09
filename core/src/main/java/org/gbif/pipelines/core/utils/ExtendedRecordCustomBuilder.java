@@ -17,6 +17,9 @@ public class ExtendedRecordCustomBuilder {
   private String countryCode;
   private String decimalLatitude;
   private String decimalLongitude;
+  private String verbatimLatitude;
+  private String verbatimLongitude;
+  private String verbatimCoords;
   private String geodeticDatum;
   private String kingdom;
   private String phylum;
@@ -48,6 +51,21 @@ public class ExtendedRecordCustomBuilder {
 
   public ExtendedRecordCustomBuilder decimalLongitude(String decimalLongitude) {
     this.decimalLongitude = decimalLongitude;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder verbatimLatitude(String verbatimLatitude) {
+    this.verbatimLatitude = verbatimLatitude;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder verbatimLongitude(String verbatimLongitude) {
+    this.verbatimLongitude = verbatimLongitude;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder verbatimCoords(String verbatimCoords) {
+    this.verbatimCoords = verbatimCoords;
     return this;
   }
 
@@ -123,6 +141,9 @@ public class ExtendedRecordCustomBuilder {
     addToTerms(terms, DwcTerm.countryCode.qualifiedName(), countryCode);
     addToTerms(terms, DwcTerm.decimalLatitude.qualifiedName(), decimalLatitude);
     addToTerms(terms, DwcTerm.decimalLongitude.qualifiedName(), decimalLongitude);
+    addToTerms(terms, DwcTerm.verbatimLatitude.qualifiedName(), verbatimLatitude);
+    addToTerms(terms, DwcTerm.verbatimLongitude.qualifiedName(), verbatimLongitude);
+    addToTerms(terms, DwcTerm.verbatimCoordinates.qualifiedName(), verbatimCoords);
     addToTerms(terms, DwcTerm.geodeticDatum.qualifiedName(), geodeticDatum);
     addToTerms(terms, DwcTerm.kingdom.qualifiedName(), kingdom);
     addToTerms(terms, DwcTerm.genus.qualifiedName(), genus);
