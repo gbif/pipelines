@@ -1,0 +1,139 @@
+# If the coordinates are in XX, but the provider says YY, then we change the country to XX and
+# (usually) add an issue.  Or, the other way around.
+#
+# If GBIF's usage of the ISO code / country varies from the standard, we don't add the issue.
+# At present, this is only done for Western Sahara.
+# This change is also done for occurrences without co-ordinates.
+#
+# If the ISO standard includes regions at more than one level, in some cases we don't add the issue.
+# At present, this is done for the French overseas departments (GP=FR-GP, etc) and Kosovo (XK=RS-KM).
+#
+# Record counts are approximate, from January 2016.
+#
+# XX,YY,add_issue
+#
+
+# Australia
+# Christmas Island, 10000+ records
+CX,AU,true
+# Cocos (Keeling) Islands, 4500 records
+CC,AU,true
+# Heard and McDonald Islands, 5000 records.
+HM,AU,true
+# Norfolk Island, 21,000 records!
+NF,AU,true
+# (Indian Ocean Territories, Coral Sea Islands, Ashmore and Cartier Islands have no ISO code.)
+
+# China
+HK,CN,true
+MO,CN,true
+
+# Denmark
+# Faroe Islands, just 19 records.
+# FO,DK,true
+# Greenland, 2000 records
+GL,DK,true
+
+# Finland and Åland, 5000 records.
+AX,FI,true
+
+# French overseas departments: Guadeloupe, French Guiana, Martinique, Réunion, Mayotte
+# French overseas collectivities: French Polynesia, Saint Pierre and Miquelon, Wallis and Futuna, Saint Martin, Saint Barthélemy.
+# French special collectivity: New Caledonia. 7,600 records.
+# French overseas territory: French Southern and Antarctic Lands. 60 records.
+# Accept either code, since ISO 3166-2:FR also includes codes for these places (FR-GP, FR-GF etc).
+FR,GP,false
+FR,GF,false
+FR,MQ,false
+FR,RE,false
+FR,YT,false
+FR,PF,false
+FR,PM,false
+FR,WF,false
+FR,MF,false
+FR,BL,false
+FR,NC,false
+FR,TF,false
+# (NB TF includes the Scattered Islands in the Indian Ocean: https://en.wikipedia.org/wiki/Scattered_Islands_in_the_Indian_Ocean )
+
+# Northern Ireland is often marked as Ireland.
+IE,GB,true
+
+# Isreal and Palestine
+# Difficult to count, probably around 15,000-20,000
+IL,PS,true
+
+# Accept either code for Kosovo
+XK,RS,false
+
+# Morocco
+# Western Sahara, 571 records.  Either ISO code accepted.
+EH,MA,false
+
+# Netherlands
+# Aruba, 103 records.
+# AW,NL,true
+# Curaçao, 360 records.
+# CW,NL,true
+# Sint Maarten, 12 records.
+# SX,NL,true
+
+# New Zealand
+# Cook Islands, 4500 records
+CK,NZ,true
+# Niue, < 10, but included for consistency with Cook Islands.
+NU,NZ,true
+# Tokelau, 16
+TK,NZ,true
+
+# Norway.  Svalbard and San Mayan is part of the kingdom, and possibly should
+# be treated like the French overseas departments.  Bouvet Island is a territory.
+# Svalbard and San Mayan, over 200,000 records.
+SJ,NO,true
+# Bouvet Island, 116 records.
+# BV,NO,true
+
+# United Kingdom
+# Isle of Man, 2000 records
+IM,GB,true
+# Jersey and Guernsey, 1300 records
+JE,GB,true
+GG,GB,true
+# Anguilla, 13
+# AI,GB,true
+# Bermuda, 1430
+# BM,GB,true
+# Cayman Islands, 205
+# KY,GB,true
+# Falkland Islands, 206
+# FK,GB,true
+# [Falklands vs. Argentina, over 1000]
+# [FK,AG,true]
+# Gibraltar, 55
+# GI,GB,true
+# Indian Ocean Territory, 19
+# IO,GB,true
+# British Virgin Islands, 94
+# VG,GB,true
+# Turks and Caicos Islands, 124
+# TC,GB,true
+# Montserrat, 75
+# MS,GB,true
+# Pitcairn, 100
+# PN,GB,true
+# Saint Helena, Ascension and Tristan da Cunha, 1100
+# SH,GB,true
+# South Georgia and the South Sandwich Islands, 580
+# GS,GB,true
+
+# United States of America
+# Virgin Islands plus Puerto Rico, 10,000
+VI,US,true
+PR,US,true
+# American Samoa, 150-ish, included for consistency.
+AS,US,true
+# Northern Mariana Islands, 25,000
+MP,US,true
+# United States Minor Outlying Islands plus Guam, 4300
+UM,US,true
+GU,US,true
