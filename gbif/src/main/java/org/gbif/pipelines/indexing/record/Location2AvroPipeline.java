@@ -33,8 +33,8 @@ public class Location2AvroPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Transforms to use
-    UniqueOccurrenceIdTransform uniquenessTransform = new UniqueOccurrenceIdTransform().withAvroCoders(p);
-    LocationTransform locationTransform = new LocationTransform().withAvroCoders(p);
+    UniqueOccurrenceIdTransform uniquenessTransform = UniqueOccurrenceIdTransform.create().withAvroCoders(p);
+    LocationTransform locationTransform = LocationTransform.create().withAvroCoders(p);
 
     // STEP 1: Read Avro files
     PCollection<ExtendedRecord> verbatimRecords = p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));

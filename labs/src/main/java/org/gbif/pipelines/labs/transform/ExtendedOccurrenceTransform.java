@@ -47,8 +47,12 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
   private final TupleTag<OccurrenceIssue> locationIssueTag = new TupleTag<OccurrenceIssue>() {};
   private final TupleTag<OccurrenceIssue> temporalIssueTag = new TupleTag<OccurrenceIssue>() {};
 
-  public ExtendedOccurrenceTransform() {
+  private ExtendedOccurrenceTransform() {
     super(DATA_STEP_NAME);
+  }
+
+  public static ExtendedOccurrenceTransform create(){
+    return new ExtendedOccurrenceTransform();
   }
 
   /**
@@ -59,15 +63,15 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
 
     // STEP 1: Collect all records
     // Collect ExtendedRecord
-    InterpretedExtendedRecordTransform recordTransform = new InterpretedExtendedRecordTransform();
+    InterpretedExtendedRecordTransform recordTransform = InterpretedExtendedRecordTransform.create();
     PCollectionTuple recordTupple = input.apply(recordTransform);
 
     // Collect Location
-    LocationTransform locationTransform = new LocationTransform();
+    LocationTransform locationTransform = LocationTransform.create();
     PCollectionTuple locationTuple = input.apply(locationTransform);
 
     // Collect TemporalRecord
-    TemporalRecordTransform temporalTransform = new TemporalRecordTransform();
+    TemporalRecordTransform temporalTransform = TemporalRecordTransform.create();
     PCollectionTuple temporalTupple = input.apply(temporalTransform);
 
     // STEP 2: Group records and issues by key

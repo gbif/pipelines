@@ -40,7 +40,7 @@ public class InterpretedExtendedRecordTransformTest {
     final List<InterpretedExtendedRecord> interpretedRecords = createInterpretedExtendedRecordList(one, two);
 
     // When
-    InterpretedExtendedRecordTransform interpretedTransform = new InterpretedExtendedRecordTransform().withAvroCoders(p);
+    InterpretedExtendedRecordTransform interpretedTransform = InterpretedExtendedRecordTransform.create().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(records));
 

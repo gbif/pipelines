@@ -38,7 +38,7 @@ public class InterpretDwCAvroPipeline {
         .setCoder(AvroCoder.of(ExtendedRecord.class));
 
     // STEP 2: Convert the objects (interpretation)
-    InterpretedExtendedRecordTransform transform = new InterpretedExtendedRecordTransform();
+    InterpretedExtendedRecordTransform transform = InterpretedExtendedRecordTransform.create();
     PCollectionTuple interpreted = verbatimRecords.apply(transform);
 
     // STEP 3: Record level interpretations

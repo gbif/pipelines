@@ -22,8 +22,12 @@ import org.apache.beam.sdk.values.KV;
  */
 public class InterpretedExtendedRecordTransform extends RecordTransform<ExtendedRecord, InterpretedExtendedRecord> {
 
-  public InterpretedExtendedRecordTransform() {
+  private InterpretedExtendedRecordTransform() {
     super("Interpreting record level terms");
+  }
+
+  public static InterpretedExtendedRecordTransform create(){
+    return new InterpretedExtendedRecordTransform();
   }
 
   /**

@@ -35,7 +35,7 @@ public class UniqueOccurrenceIdTransformTest {
     final List<ExtendedRecord> expected = createCollection("0002", "0003", "0004");
 
     //When
-    UniqueOccurrenceIdTransform transformationStream = new UniqueOccurrenceIdTransform().withAvroCoders(p);
+    UniqueOccurrenceIdTransform transformationStream = UniqueOccurrenceIdTransform.create().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 

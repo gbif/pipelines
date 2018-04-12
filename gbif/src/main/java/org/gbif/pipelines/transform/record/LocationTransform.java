@@ -19,8 +19,12 @@ import org.apache.beam.sdk.values.KV;
 
 public class LocationTransform extends RecordTransform<ExtendedRecord, Location> {
 
-  public LocationTransform() {
+  private LocationTransform() {
     super("Interpret location record");
+  }
+
+  public static LocationTransform create(){
+    return new LocationTransform();
   }
 
   @Override

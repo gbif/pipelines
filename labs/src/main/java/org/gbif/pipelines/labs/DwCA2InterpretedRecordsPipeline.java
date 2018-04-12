@@ -62,7 +62,7 @@ public class DwCA2InterpretedRecordsPipeline {
                                                                              .filePath()));
 
     // STEP 2: Filter unique records by OccurrenceId
-    UniqueOccurrenceIdTransform uniqueTransform = new UniqueOccurrenceIdTransform();
+    UniqueOccurrenceIdTransform uniqueTransform = UniqueOccurrenceIdTransform.create();
     PCollectionTuple uniqueTuple = rawRecords.apply(uniqueTransform);
     PCollection<ExtendedRecord> uniqueRecords = uniqueTuple.get(uniqueTransform.getDataTag());
 
@@ -71,7 +71,7 @@ public class DwCA2InterpretedRecordsPipeline {
                         AvroIO.write(ExtendedRecord.class).to(targetPaths.get(OptionsKeyEnum.RAW_OCCURRENCE).filePath()));
 
     // STEP 4: Interpret the raw records as a tuple, which has both different categories of data and issue related to them
-    InterpretedExtendedRecordTransform extendedRecordTransform = new InterpretedExtendedRecordTransform();
+    InterpretedExtendedRecordTransform extendedRecordTransform = InterpretedExtendedRecordTransform.create();
     PCollectionTuple extendedRecordsTuple = uniqueRecords.apply(extendedRecordTransform);
     PCollection<InterpretedExtendedRecord> extendedRecords = extendedRecordsTuple.get(extendedRecordTransform.getDataTag())
         .apply(Kv2Value.create());

@@ -32,8 +32,8 @@ public class ExtendedOccurrence2AvroPipeline {
     String targetDirectory = options.getDefaultTargetDirectory();
 
     // Transforms to use
-    UniqueOccurrenceIdTransform uniquenessTransform = new UniqueOccurrenceIdTransform().withAvroCoders(p);
-    ExtendedOccurrenceTransform extendedOccurrenceTransform = new ExtendedOccurrenceTransform().withAvroCoders(p);
+    UniqueOccurrenceIdTransform uniquenessTransform = UniqueOccurrenceIdTransform.create().withAvroCoders(p);
+    ExtendedOccurrenceTransform extendedOccurrenceTransform = ExtendedOccurrenceTransform.create().withAvroCoders(p);
 
     // STEP 1: Read Avro files
     PCollection<ExtendedRecord> verbatimRecords = p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));
