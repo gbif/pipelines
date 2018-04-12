@@ -31,7 +31,8 @@ public final class DataPipelineOptionsFactory {
   }
 
   public static DataProcessingPipelineOptions create(String[] args) {
-    return create(new Configuration(), args);
+    PipelineOptionsFactory.register(DataProcessingPipelineOptions.class);
+    return PipelineOptionsFactory.fromArgs(args).withValidation().as(DataProcessingPipelineOptions.class);
   }
 
   public static DataProcessingPipelineOptions create(Configuration config) {
@@ -42,8 +43,10 @@ public final class DataPipelineOptionsFactory {
     return options;
   }
 
-  private static DataProcessingPipelineOptions createPipelineOptionsFromArgsWithoutValidation(Configuration config,
-                                                                                             String[] args) {
+  private static DataProcessingPipelineOptions createPipelineOptionsFromArgsWithoutValidation(
+    Configuration config, String[] args
+  ) {
+    PipelineOptionsFactory.register(DataProcessingPipelineOptions.class);
     DataProcessingPipelineOptions options =
       PipelineOptionsFactory.fromArgs(args).as(DataProcessingPipelineOptions.class);
     options.setHdfsConfiguration(Collections.singletonList(config));
@@ -55,9 +58,9 @@ public final class DataPipelineOptionsFactory {
    * Creates a PipelineOptions suitable to interpret taxonomic records in HDFS.
    */
   @VisibleForTesting
-  public static DataProcessingPipelineOptions createDefaultTaxonOptions(Configuration config, String sourcePath,
-                                                                        String taxonOutPath, String issuesOutPath,
-                                                                        String[] args) {
+  public static DataProcessingPipelineOptions createDefaultTaxonOptions(
+    Configuration config, String sourcePath, String taxonOutPath, String issuesOutPath, String[] args
+  ) {
     // create options
     DataProcessingPipelineOptions options = createPipelineOptionsFromArgsWithoutValidation(config, args);
     options.setInputFile(sourcePath);
@@ -66,8 +69,7 @@ public final class DataPipelineOptionsFactory {
     EnumMap<OptionsKeyEnum, TargetPath> targetPaths = new EnumMap<>(OptionsKeyEnum.class);
     targetPaths.put(OptionsKeyEnum.GBIF_BACKBONE,
                     new TargetPath(taxonOutPath, OptionsKeyEnum.GBIF_BACKBONE.getDefaultFileName()));
-    targetPaths.put(OptionsKeyEnum.ISSUES,
-                    new TargetPath(issuesOutPath, OptionsKeyEnum.ISSUES.getDefaultFileName()));
+    targetPaths.put(OptionsKeyEnum.ISSUES, new TargetPath(issuesOutPath, OptionsKeyEnum.ISSUES.getDefaultFileName()));
     options.setTargetPaths(targetPaths);
 
     return options;
