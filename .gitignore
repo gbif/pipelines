@@ -5,7 +5,7 @@ target
 *.iml
 output
 *.log
-data/tmpDwca
+tmpDwca
 java-generated
 miniCluster
 bin

@@ -97,6 +97,13 @@ public class VocabularyParsers<T extends Enum<T>> {
   }
 
   /**
+   * @return a country parser.
+   */
+  public static VocabularyParsers<Country> countryCodeParser() {
+    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.countryCode);
+  }
+
+  /**
    * @return a continent parser.
    */
   public static VocabularyParsers<Continent> continentParser() {

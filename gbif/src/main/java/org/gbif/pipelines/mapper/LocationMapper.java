@@ -29,8 +29,6 @@ public class LocationMapper {
       .setVerbatimElevation(getValue.apply(DwcTerm.verbatimElevation))
       .setLocationAccordingTo(getValue.apply(DwcTerm.locationAccordingTo))
       .setLocationRemarks(getValue.apply(DwcTerm.locationRemarks))
-      .setDecimalLatitude(getValue.apply(DwcTerm.decimalLatitude))
-      .setDecimalLongitude(getValue.apply(DwcTerm.decimalLongitude))
       .setGeodeticDatum(getValue.apply(DwcTerm.geodeticDatum))
       .setVerbatimCoordinates(getValue.apply(DwcTerm.verbatimCoordinates))
       .setVerbatimLatitude(getValue.apply(DwcTerm.verbatimLatitude))

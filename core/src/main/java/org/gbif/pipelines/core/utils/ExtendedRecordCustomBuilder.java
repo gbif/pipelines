@@ -13,6 +13,14 @@ import java.util.Map;
  */
 public class ExtendedRecordCustomBuilder {
 
+  private String country;
+  private String countryCode;
+  private String decimalLatitude;
+  private String decimalLongitude;
+  private String verbatimLatitude;
+  private String verbatimLongitude;
+  private String verbatimCoords;
+  private String geodeticDatum;
   private String kingdom;
   private String phylum;
   private String clazz;
@@ -25,6 +33,46 @@ public class ExtendedRecordCustomBuilder {
   private String id;
   private String specificEpithet;
   private String infraspecificEpithet;
+
+  public ExtendedRecordCustomBuilder country(String country) {
+    this.country = country;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder countryCode(String countryCode) {
+    this.countryCode = countryCode;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder decimalLatitude(String decimalLatitude) {
+    this.decimalLatitude = decimalLatitude;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder decimalLongitude(String decimalLongitude) {
+    this.decimalLongitude = decimalLongitude;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder verbatimLatitude(String verbatimLatitude) {
+    this.verbatimLatitude = verbatimLatitude;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder verbatimLongitude(String verbatimLongitude) {
+    this.verbatimLongitude = verbatimLongitude;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder verbatimCoords(String verbatimCoords) {
+    this.verbatimCoords = verbatimCoords;
+    return this;
+  }
+
+  public ExtendedRecordCustomBuilder geodeticDatum(String geodeticDatum) {
+    this.geodeticDatum = geodeticDatum;
+    return this;
+  }
 
   public ExtendedRecordCustomBuilder kingdom(String kingdom) {
     this.kingdom = kingdom;
@@ -89,6 +137,14 @@ public class ExtendedRecordCustomBuilder {
   public ExtendedRecord build() {
     Map<String, String> terms = new HashMap<>();
 
+    addToTerms(terms, DwcTerm.country.qualifiedName(), country);
+    addToTerms(terms, DwcTerm.countryCode.qualifiedName(), countryCode);
+    addToTerms(terms, DwcTerm.decimalLatitude.qualifiedName(), decimalLatitude);
+    addToTerms(terms, DwcTerm.decimalLongitude.qualifiedName(), decimalLongitude);
+    addToTerms(terms, DwcTerm.verbatimLatitude.qualifiedName(), verbatimLatitude);
+    addToTerms(terms, DwcTerm.verbatimLongitude.qualifiedName(), verbatimLongitude);
+    addToTerms(terms, DwcTerm.verbatimCoordinates.qualifiedName(), verbatimCoords);
+    addToTerms(terms, DwcTerm.geodeticDatum.qualifiedName(), geodeticDatum);
     addToTerms(terms, DwcTerm.kingdom.qualifiedName(), kingdom);
     addToTerms(terms, DwcTerm.genus.qualifiedName(), genus);
     addToTerms(terms, DwcTerm.scientificName.qualifiedName(), name);

@@ -1,0 +1,100 @@
+package org.gbif.pipelines.core.ws.client.match2;
+
+import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
+import org.gbif.api.v2.NameUsageMatch2;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
+import org.gbif.pipelines.core.ws.HttpResponse;
+import org.gbif.pipelines.core.ws.client.BaseServiceClient;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import retrofit2.Call;
+
+/**
+ * Handles the calls to the species match WS.
+ */
+public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, NameUsageMatch2> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatchv2Client.class);
+
+  private SpeciesMatchv2Client() {}
+
+  public static SpeciesMatchv2Client getInstance() {
+    return new SpeciesMatchv2Client();
+  }
+
+  /**
+   * Matches a {@link ExtendedRecord} to an existing specie using the species match 2 WS.
+   *
+   * @param extendedRecord avro file with the taxonomic data
+   *
+   * @return {@link NameUsageMatch2} with the match received from the WS.
+   */
+  public HttpResponse<NameUsageMatch2> getMatch(ExtendedRecord extendedRecord) {
+    HttpResponse<NameUsageMatch2> response = tryNameMatch(extendedRecord.getCoreTerms());
+
+    if (isSuccessfulMatch(response) || !hasIdentifications(extendedRecord)) {
+      return response;
+    }
+
+    LOG.info("Retrying match with identification extension");
+    // get identifications
+    List<Map<String, String>> identifications =
+      extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
+
+    // FIXME: use new generic functions to parse the date??
+    // sort them by date identified
+    // Ask Markus D if this can be moved to the API?
+    identifications.sort(Comparator.comparing((Map<String, String> map) -> LocalDateTime.parse(map.get(DwcTerm.dateIdentified
+                                                                                                         .qualifiedName())))
+                           .reversed());
+    for (Map<String, String> record : identifications) {
+      response = tryNameMatch(record);
+      if (isSuccessfulMatch(response)) {
+        LOG.info("match with identificationId {} succeed", record.get(DwcTerm.identificationID.name()));
+        return response;
+      }
+    }
+
+    return response;
+  }
+
+  private HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
+    Map<String, String> params = NameUsageMatchQueryConverter.convert(terms);
+
+    return performCall(params);
+  }
+
+  @Override
+  protected Call<NameUsageMatch2> getCall(Map<String, String> params) {
+    return SpeciesMatchv2ServiceRest.getInstance().getService().match(params);
+  }
+
+  @Override
+  protected String getErrorMessage() {
+    return "Call to species match name WS failed";
+  }
+
+  @Override
+  protected NameUsageMatch2 parseResponse(NameUsageMatch2 body) {
+    return body;
+  }
+
+  private static boolean isSuccessfulMatch(HttpResponse<NameUsageMatch2> response) {
+    return !TaxonomyValidator.isEmpty(response.getBody()) && MatchType.NONE != response.getBody()
+      .getDiagnostics()
+      .getMatchType();
+  }
+
+  private static boolean hasIdentifications(ExtendedRecord extendedRecord) {
+    return extendedRecord.getExtensions().containsKey(DwcTerm.Identification.qualifiedName());
+  }
+
+}

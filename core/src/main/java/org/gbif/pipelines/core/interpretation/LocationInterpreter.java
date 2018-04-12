@@ -3,9 +3,13 @@ package org.gbif.pipelines.core.interpretation;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
+import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
+import org.gbif.pipelines.core.parsers.location.LocationParser;
+import org.gbif.pipelines.core.parsers.location.ParsedLocation;
 import org.gbif.pipelines.core.utils.StringUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueType;
@@ -23,33 +27,45 @@ import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINAT
 public interface LocationInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
   /**
-   * {@link DwcTerm#country} interpretation.
+   * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link DwcTerm#decimalLatitude} and the
+   * {@link DwcTerm#decimalLongitude} terms.
    */
-  static LocationInterpreter interpretCountry(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) -> VocabularyParsers.countryParser().map(extendedRecord, parseResult -> {
-      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      if (parseResult.isSuccessful()) {
-        locationRecord.setCountry(parseResult.getPayload().name());
-      } else {
-        interpretation.withValidation(Trace.of(DwcTerm.country.name(), IssueType.COUNTRY_INVALID));
-      }
-      return interpretation;
-    }).get();
-  }
+  static LocationInterpreter interpretCountryAndCoordinates(Location locationRecord) {
+    return (ExtendedRecord extendedRecord) -> {
 
-  /**
-   * {@link DwcTerm#countryCode} interpretation.
-   */
-  static LocationInterpreter interpretCountryCode(Location locationRecord) {
-    return (ExtendedRecord extendedRecord) -> VocabularyParsers.countryParser().map(extendedRecord, parseResult -> {
-      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      if (parseResult.isSuccessful()) {
-        locationRecord.setCountryCode(parseResult.getPayload().name());
-      } else {
-        interpretation.withValidation(Trace.of(DwcTerm.countryCode.name(), IssueType.COUNTRY_INVALID));
+      // parse the terms
+      ParsedField<ParsedLocation> parsedResult = LocationParser.parseCountryAndCoordinates(extendedRecord);
+
+      // set values in the location record
+      ParsedLocation parsedLocation = parsedResult.getResult();
+      if (parsedLocation.getCountry() != null) {
+        locationRecord.setCountry(parsedLocation.getCountry().getTitle());
+        locationRecord.setCountryCode(parsedLocation.getCountry().getIso2LetterCode());
       }
+
+      if (parsedLocation.getLatLng() != null) {
+        locationRecord.setDecimalLatitude(parsedLocation.getLatLng().getLat());
+        locationRecord.setDecimalLongitude(parsedLocation.getLatLng().getLng());
+      }
+
+      // TODO: do we have to parse the datum here?? now it is just used in the coordinates interpretation
+
+      // create the interpretation
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+
+      // set the issues to the interpretation
+      parsedResult.getIssues().forEach(issue -> {
+        Term term = null;
+        if (issue.getTerms() != null && !issue.getTerms().isEmpty()) {
+          // FIXME: now we take the first term. Should Trace accept a list of terms??
+          term = issue.getTerms().get(0);
+        }
+
+        interpretation.withValidation(Trace.of(term.simpleName(), issue.getIssueType()));
+      });
+
       return interpretation;
-    }).get();
+    };
   }
 
   /**

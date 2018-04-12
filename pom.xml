@@ -45,6 +45,11 @@
       <url>http://repository.gbif.org/content/groups/gbif</url>
     </repository>
     <repository>
+      <id>osgeo</id>
+      <name>Open Source Geospatial Foundation Repository</name>
+      <url>http://download.osgeo.org/webdav/geotools/</url>
+    </repository>
+    <repository>
       <id>cloudera-release</id>
       <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
@@ -80,6 +85,7 @@
     <slf4j.version>1.7.24</slf4j.version>
     <logback.version>1.1.5</logback.version>
     <commons-compress.version>1.16.1</commons-compress.version>
+    <geotools.version>12.1</geotools.version>
     <commons-digester.version>2.1</commons-digester.version>
     <mapdb.version>3.0.5</mapdb.version>
 
@@ -341,6 +347,48 @@
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
         <version>${commons-beanutils.version}</version>
+      </dependency>
+
+      <!-- geotools -->
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-api</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-transform</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-geometry</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-referencing</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-epsg-hsql</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-metadata</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-opengis</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-main</artifactId>
+        <version>${geotools.version}</version>
       </dependency>
 
       <!--Test dependencies-->
