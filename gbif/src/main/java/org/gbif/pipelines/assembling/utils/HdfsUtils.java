@@ -9,11 +9,18 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+/**
+ * Utility class to work with HDFS.
+ */
 public final class HdfsUtils {
 
   private HdfsUtils() {}
 
-  public static String getHdfsPath(Configuration hdfsConfig, String...values) {
+  /**
+   * Returns a HDFS path for the concatenation of the values received. It creates the necessary directories if they
+   * don't exist.
+   */
+  public static String getHdfsPath(Configuration hdfsConfig, String... values) {
     Path path = buildPath(values);
     createParentDirectory(hdfsConfig, path);
     return path.toString();

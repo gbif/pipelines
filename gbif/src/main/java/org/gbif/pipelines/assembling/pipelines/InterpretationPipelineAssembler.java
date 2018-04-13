@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import com.google.common.base.Preconditions;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -35,8 +36,10 @@ public class InterpretationPipelineAssembler
     this.interpretationTypes = interpretationTypes;
   }
 
-  public static InterpretationPipelineBuilderSteps.WithOptionsStep of(List<InterpretationType> steps) {
-    return new InterpretationPipelineAssembler(steps);
+  public static InterpretationPipelineBuilderSteps.WithOptionsStep of(List<InterpretationType> types) {
+    Objects.requireNonNull(types);
+    Preconditions.checkArgument(!types.isEmpty(), "Interpretation types are required");
+    return new InterpretationPipelineAssembler(types);
   }
 
   @Override
@@ -48,12 +51,14 @@ public class InterpretationPipelineAssembler
 
   @Override
   public InterpretationPipelineBuilderSteps.UsingStep withInput(String input) {
+    Objects.requireNonNull(input);
     this.input = input;
     return this;
   }
 
   @Override
   public InterpretationPipelineBuilderSteps.FinalStep using(Function<List<InterpretationType>, List<InterpretationStep>> stepsCreator) {
+    Objects.requireNonNull(stepsCreator);
     this.stepsCreator = stepsCreator;
     return this;
   }

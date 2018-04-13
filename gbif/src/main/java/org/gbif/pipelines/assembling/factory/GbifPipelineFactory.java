@@ -40,7 +40,7 @@ public class GbifPipelineFactory extends BasePipelineFactory {
     initStepsMap();
   }
 
-  public static GbifPipelineFactory newInstance(DataProcessingPipelineOptions options) {
+  static GbifPipelineFactory newInstance(DataProcessingPipelineOptions options) {
     return new GbifPipelineFactory(options);
   }
 
