@@ -21,6 +21,7 @@ import static org.gbif.pipelines.assembling.pipelines.InterpretationStepSupplier
 import static org.gbif.pipelines.assembling.pipelines.InterpretationStepSupplier.locationGbif;
 import static org.gbif.pipelines.assembling.pipelines.InterpretationStepSupplier.taxonomyGbif;
 import static org.gbif.pipelines.assembling.pipelines.InterpretationStepSupplier.temporalGbif;
+import static org.gbif.pipelines.config.InterpretationType.*;
 
 /**
  * Gbif implementation for a {@link PipelineFactory}.
@@ -45,10 +46,10 @@ public class GbifPipelineFactory extends BasePipelineFactory {
   }
 
   private void initStepsMap() {
-    stepsMap.put(InterpretationType.LOCATION, locationGbif(createTargetPaths(options, InterpretationType.LOCATION)));
-    stepsMap.put(InterpretationType.TEMPORAL, temporalGbif(createTargetPaths(options, InterpretationType.TEMPORAL)));
-    stepsMap.put(InterpretationType.TAXONOMY, taxonomyGbif(createTargetPaths(options, InterpretationType.TAXONOMY)));
-    stepsMap.put(InterpretationType.COMMON, commonGbif(createTargetPaths(options, InterpretationType.COMMON)));
+    stepsMap.put(LOCATION, locationGbif(createTargetPaths(options, LOCATION)));
+    stepsMap.put(TEMPORAL, temporalGbif(createTargetPaths(options, TEMPORAL)));
+    stepsMap.put(TAXONOMY, taxonomyGbif(createTargetPaths(options, TAXONOMY)));
+    stepsMap.put(COMMON, commonGbif(createTargetPaths(options, COMMON)));
   }
 
   @Override

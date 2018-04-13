@@ -14,6 +14,8 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.values.PCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Assembles a {@link Pipeline} dynamically that performs interpretations of verbatim data.
@@ -21,6 +23,8 @@ import org.apache.beam.sdk.values.PCollection;
 public class InterpretationPipelineAssembler
   implements InterpretationPipelineBuilderSteps.WithOptionsStep, InterpretationPipelineBuilderSteps.WithInputStep,
   InterpretationPipelineBuilderSteps.UsingStep, InterpretationPipelineBuilderSteps.FinalStep {
+
+  private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipelineAssembler.class);
 
   private static final String READ_STEP = "Read Avro files";
 
@@ -83,21 +87,26 @@ public class InterpretationPipelineAssembler
   @Override
   public Pipeline assemble() {
     // STEP 0: create pipeline from options
+    LOG.info("Creating pipeline from options");
     Pipeline pipeline = Pipeline.create(options);
 
     // STEP 1: Read Avro files
+    LOG.info("Reading Avro records");
     PCollection<ExtendedRecord> verbatimRecords =
       pipeline.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(input));
 
     // STEP 2: Common operations before running the interpretations
+    LOG.info("{} steps before interpretation", Objects.nonNull(beforeHandler) ? "Adding" : "Skipping");
     PCollection<ExtendedRecord> extendedRecords =
       Objects.nonNull(beforeHandler) ? beforeHandler.apply(verbatimRecords, pipeline) : verbatimRecords;
 
     // STEP 3: interpretations
-    stepsCreator.apply(interpretationTypes).forEach(step -> step.appendToPipeline(extendedRecords, pipeline));
+    LOG.info("Adding interpretation steps");
+    stepsCreator.apply(interpretationTypes).forEach(step -> step.appendToPipeline(extendedRecords));
 
     // STEP 4: additional operations
     if (Objects.nonNull(otherOperationsHandler)) {
+      LOG.info("Adding other operations to the pipeline");
       otherOperationsHandler.accept(extendedRecords, pipeline);
     }
 

@@ -24,6 +24,8 @@ public class PipelineManager {
 
     Pipeline pipeline = PipelineAbstractFactory.from(args).createPipeline();
 
+    LOG.info("Pipeline created");
+
     PipelineResult.State state = pipeline.run().waitUntilFinish();
 
     LOG.info("Pipeline finished with state {}", state.toString());

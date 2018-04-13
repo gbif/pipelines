@@ -48,22 +48,24 @@ public class InterpretationStep<T> {
    * Appends the current of this interpretation step to the desired {@link Pipeline}.
    *
    * @param extendedRecords {@link PCollection} with the records that are gonna be interpreted by this step.
-   * @param pipeline        {@link Pipeline} to append this step to.
    */
-  public void appendToPipeline(PCollection<ExtendedRecord> extendedRecords, Pipeline pipeline) {
+  public void appendToPipeline(PCollection<ExtendedRecord> extendedRecords) {
     // apply transformation
     PCollectionTuple interpretedRecordTuple = extendedRecords.apply(transform);
 
     // Get data and save it to an avro file
     PCollection<T> interpretedRecords = interpretedRecordTuple.get(transform.getDataTag()).apply(Kv2Value.create());
-
-    interpretedRecords.apply(String.format(WRITE_DATA_MSG_PATTERN, interpretationType.name()),
-                             AvroIO.write(avroClass).to(dataTargetPath).withoutSharding());
+    if (interpretedRecords != null) {
+      interpretedRecords.apply(String.format(WRITE_DATA_MSG_PATTERN, interpretationType.name()),
+                               AvroIO.write(avroClass).to(dataTargetPath).withoutSharding());
+    }
 
     // Get issues and save them to an avro file
     PCollection<OccurrenceIssue> issues = interpretedRecordTuple.get(transform.getIssueTag()).apply(Kv2Value.create());
-    issues.apply(String.format(WRITE_ISSUES_MSG_PATTERN, interpretationType.name()),
-                 AvroIO.write(OccurrenceIssue.class).to(issuesTargetPath).withoutSharding());
+    if (issues != null) {
+      issues.apply(String.format(WRITE_ISSUES_MSG_PATTERN, interpretationType.name()),
+                   AvroIO.write(OccurrenceIssue.class).to(issuesTargetPath).withoutSharding());
+    }
   }
 
   private static class Builder<T>
@@ -76,35 +78,35 @@ public class InterpretationStep<T> {
     private String issuesTargetPath;
 
     @Override
-    public AvroClassStep interpretationType(InterpretationType interpretationType) {
+    public AvroClassStep<T> interpretationType(InterpretationType interpretationType) {
       Objects.requireNonNull(interpretationType);
       this.interpretationType = interpretationType;
       return this;
     }
 
     @Override
-    public TransformStep avroClass(Class avroClass) {
+    public TransformStep<T> avroClass(Class avroClass) {
       Objects.requireNonNull(avroClass);
       this.avroClass = avroClass;
       return this;
     }
 
     @Override
-    public DataTargetPathStep transform(RecordTransform transform) {
+    public DataTargetPathStep<T> transform(RecordTransform transform) {
       Objects.requireNonNull(transform);
       this.transform = transform;
       return this;
     }
 
     @Override
-    public IssuesTargetPathStep dataTargetPath(String dataTargetPath) {
+    public IssuesTargetPathStep<T> dataTargetPath(String dataTargetPath) {
       Objects.requireNonNull(dataTargetPath);
       this.dataTargetPath = dataTargetPath;
       return this;
     }
 
     @Override
-    public Build issuesTargetPath(String issuesTargetPath) {
+    public Build<T> issuesTargetPath(String issuesTargetPath) {
       Objects.requireNonNull(issuesTargetPath);
       this.issuesTargetPath = issuesTargetPath;
       return this;
