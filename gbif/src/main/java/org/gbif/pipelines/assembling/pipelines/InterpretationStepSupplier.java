@@ -12,11 +12,15 @@ import org.gbif.pipelines.transform.record.TemporalRecordTransform;
 
 import java.util.function.Supplier;
 
-import org.apache.beam.sdk.PipelineResult;
-
+/**
+ * {@link Supplier} that supplies a {@link InterpretationStep}.
+ */
 public interface InterpretationStepSupplier extends Supplier<InterpretationStep> {
 
-  static InterpretationStepSupplier locationGbif(PipelinePaths paths) {
+  /**
+   * Gbif location interpretation.
+   */
+  static InterpretationStepSupplier locationGbif(PipelineTargetPaths paths) {
     return () -> {
       InterpretationStep<Location> locationStep =
         InterpretationStep.<Location>newBuilder().interpretationType(InterpretationType.LOCATION)
@@ -30,7 +34,10 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
     };
   }
 
-  static InterpretationStepSupplier temporalGbif(PipelinePaths paths) {
+  /**
+   * Gbif temporal interpretation.
+   */
+  static InterpretationStepSupplier temporalGbif(PipelineTargetPaths paths) {
     return () -> {
       InterpretationStep<TemporalRecord> temporalStep =
         InterpretationStep.<TemporalRecord>newBuilder().interpretationType(InterpretationType.TEMPORAL)
@@ -44,7 +51,10 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
     };
   }
 
-  static InterpretationStepSupplier taxonomyGbif(PipelinePaths paths) {
+  /**
+   * Gbif taxonomy interpretation.
+   */
+  static InterpretationStepSupplier taxonomyGbif(PipelineTargetPaths paths) {
     return () -> {
       InterpretationStep<TaxonRecord> taxonomyStep =
         InterpretationStep.<TaxonRecord>newBuilder().interpretationType(InterpretationType.TAXONOMY)
@@ -58,7 +68,10 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
     };
   }
 
-  static InterpretationStepSupplier commonGbif(PipelinePaths paths) {
+  /**
+   * Gbif common interpretations.
+   */
+  static InterpretationStepSupplier commonGbif(PipelineTargetPaths paths) {
     return () -> {
       InterpretationStep<InterpretedExtendedRecord> interpretedExtendedStep =
         InterpretationStep.<InterpretedExtendedRecord>newBuilder().interpretationType(InterpretationType.COMMON)

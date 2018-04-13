@@ -20,7 +20,7 @@ import static org.gbif.pipelines.config.DataPipelineOptionsFactory.createDefault
 /**
  * Tests the {@link TaxonomyInterpretationPipeline}.
  */
-public class TaxonomyInterpretationPipelineTest {
+public class TaxonomyInterpretationPipelineAssemblerOldTest {
 
   private static HdfsTestUtils.MiniClusterConfig clusterConfig;
   private static Configuration configuration = new Configuration();

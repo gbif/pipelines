@@ -13,6 +13,9 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
+/**
+ * Defines an interpretation step of a {@link Pipeline}.
+ */
 public class InterpretationStep<T> {
 
   private static final String WRITE_DATA_MSG_PATTERN = "Write %s data to avro";
@@ -41,6 +44,12 @@ public class InterpretationStep<T> {
     return new Builder<>();
   }
 
+  /**
+   * Appends the current of this interpretation step to the desired {@link Pipeline}.
+   *
+   * @param extendedRecords {@link PCollection} with the records that are gonna be interpreted by this step.
+   * @param pipeline        {@link Pipeline} to append this step to.
+   */
   public void appendToPipeline(PCollection<ExtendedRecord> extendedRecords, Pipeline pipeline) {
     // apply transformation
     PCollectionTuple interpretedRecordTuple = extendedRecords.apply(transform);
@@ -49,12 +58,12 @@ public class InterpretationStep<T> {
     PCollection<T> interpretedRecords = interpretedRecordTuple.get(transform.getDataTag()).apply(Kv2Value.create());
 
     interpretedRecords.apply(String.format(WRITE_DATA_MSG_PATTERN, interpretationType.name()),
-                             AvroIO.write(avroClass).to(dataTargetPath));
+                             AvroIO.write(avroClass).to(dataTargetPath).withoutSharding());
 
     // Get issues and save them to an avro file
     PCollection<OccurrenceIssue> issues = interpretedRecordTuple.get(transform.getIssueTag()).apply(Kv2Value.create());
     issues.apply(String.format(WRITE_ISSUES_MSG_PATTERN, interpretationType.name()),
-                 AvroIO.write(OccurrenceIssue.class).to(issuesTargetPath));
+                 AvroIO.write(OccurrenceIssue.class).to(issuesTargetPath).withoutSharding());
   }
 
   private static class Builder<T>
