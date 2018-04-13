@@ -8,19 +8,19 @@ public class PipelineTargetPaths {
   private String dataTargetPath;
   private String issuesTargetPath;
 
-  String getDataTargetPath() {
+  public String getDataTargetPath() {
     return dataTargetPath;
   }
 
-  String getIssuesTargetPath() {
+  public String getIssuesTargetPath() {
     return issuesTargetPath;
   }
 
-  void setDataTargetPath(String dataTargetPath) {
+  public void setDataTargetPath(String dataTargetPath) {
     this.dataTargetPath = dataTargetPath;
   }
 
-  void setIssuesTargetPath(String issuesTargetPath) {
+  public void setIssuesTargetPath(String issuesTargetPath) {
     this.issuesTargetPath = issuesTargetPath;
   }
 }
