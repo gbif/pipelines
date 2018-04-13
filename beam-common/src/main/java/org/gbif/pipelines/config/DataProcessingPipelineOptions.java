@@ -26,6 +26,8 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 @Experimental(Kind.FILESYSTEM)
 public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
+  // TODO: move all the ES fields to a subclass.
+
   String[] DEFAULT_ES_HOSTS =
     new String[] {"http://c4n1.gbif.org:9200", "http://c4n2.gbif.org:9200", "http://c4n3.gbif.org:9200",
       "http://c4n4.gbif.org:9200", "http://c4n5.gbif.org:9200", "http://c4n6.gbif.org:9200",
@@ -67,8 +69,11 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
                + "\"DefaultTargetDirectory\" option as directory and the name of the interpretation as file name. "
                + "Interpretations currently supported are verbatim, temporal, location and gbif-backbone.")
   @Default.InstanceFactory(TargetPathFactory.class)
+  // TODO: remove or move to subclass
+  @Deprecated
   Map<OptionsKeyEnum, TargetPath> getTargetPaths();
 
+  @Deprecated
   void setTargetPaths(Map<OptionsKeyEnum, TargetPath> targetPaths);
 
   @Description("Target ES Hosts")
@@ -94,6 +99,12 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   Integer getESMaxBatchSize();
 
   void setESMaxBatchSize(Integer batchSize);
+
+  // FIXME: use the same as Nikolay
+  // TODO: annotations and default??
+  List<InterpretationType> getInterpretationTypes();
+
+  void setInterpretationTypes(List<InterpretationType> types);
 
   /**
    * A {@link DefaultValueFactory} which locates a default directory.

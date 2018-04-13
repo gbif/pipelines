@@ -3,6 +3,7 @@ package org.gbif.pipelines.config;
 /***
  * Definition of recognized outputs of the data pipeline.
  */
+@Deprecated
 public enum OptionsKeyEnum {
 
   RAW_OCCURRENCE("raw-data"),
