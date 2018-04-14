@@ -34,6 +34,13 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
   private final TupleTag<KV<String, Iterable<ExtendedRecord>>> issueTag =
     new TupleTag<KV<String, Iterable<ExtendedRecord>>>() {};
 
+  private UniqueOccurrenceIdTransform() {
+  }
+
+  public static UniqueOccurrenceIdTransform create(){
+    return new UniqueOccurrenceIdTransform();
+  }
+
   @Override
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
 

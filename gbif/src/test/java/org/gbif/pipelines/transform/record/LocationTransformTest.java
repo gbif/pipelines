@@ -71,7 +71,7 @@ public class LocationTransformTest {
     final List<Location> locations = createLocationList(denmark, japan);
 
     // When
-    LocationTransform locationTransform = new LocationTransform().withAvroCoders(p);
+    LocationTransform locationTransform = LocationTransform.create().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(records));
 

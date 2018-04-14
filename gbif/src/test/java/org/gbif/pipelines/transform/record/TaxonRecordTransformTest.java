@@ -67,7 +67,7 @@ public class TaxonRecordTransformTest {
     ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).name("foo").build();
 
     // When
-    TaxonRecordTransform taxonRecordTransform = new TaxonRecordTransform().withAvroCoders(p);
+    TaxonRecordTransform taxonRecordTransform = TaxonRecordTransform.create().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(extendedRecord));
 

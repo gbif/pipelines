@@ -22,8 +22,12 @@ import org.apache.beam.sdk.values.KV;
  */
 public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonRecord> {
 
-  public TaxonRecordTransform() {
+  private TaxonRecordTransform() {
     super("Interpret taxonomic record");
+  }
+
+  public static TaxonRecordTransform create(){
+    return new TaxonRecordTransform();
   }
 
   @Override

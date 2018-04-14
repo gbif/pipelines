@@ -21,8 +21,12 @@ import org.apache.beam.sdk.values.KV;
  */
 public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, TemporalRecord> {
 
-  public TemporalRecordTransform() {
+  private TemporalRecordTransform() {
     super("Interpret temporal record");
+  }
+
+  public static TemporalRecordTransform create(){
+    return new TemporalRecordTransform();
   }
 
   /**

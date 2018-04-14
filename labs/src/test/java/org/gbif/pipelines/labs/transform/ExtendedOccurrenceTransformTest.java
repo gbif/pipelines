@@ -75,7 +75,7 @@ public class ExtendedOccurrenceTransformTest {
     final List<ExtendedOccurrence> interpretedRecords = createInterpretedExtendedRecordList(one, two);
 
     // When
-    ExtendedOccurrenceTransform occurrenceTransform = new ExtendedOccurrenceTransform().withAvroCoders(p);
+    ExtendedOccurrenceTransform occurrenceTransform = ExtendedOccurrenceTransform.create().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(records));
 
