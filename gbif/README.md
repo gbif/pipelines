@@ -27,3 +27,8 @@ sudo -u hdfs spark-submit --class org.gbif.pipelines.indexing.InterpretDwCAvroPi
 
 sudo -u hdfs spark-submit --conf spark.default.parallelism=24 --class org.gbif.pipelines.indexing.Avro2ElasticSearchPipeline --master yarn --executor-memory 8G --executor-cores 8 --num-executors 3 /home/trobertson/gbif-pipelines-1.0-SNAPSHOT-shaded.jar --runner=SparkRunner
 ```
+
+Example to run a pipeline programmatically:
+```
+sudo -u hdfs hadoop jar /home/mlopez/gbif-pipelines-1.1-SNAPSHOT-shaded.jar org.gbif.pipelines.assembling.PipelineHandler --runner=DirectRunner --defaultTargetDirectory=hdfs://ha-nn/pipelines --datasetId=exp1 --inputFile=hdfs://ha-nn/data/ingest/00332477-cc35-42e3-9618-9dd1467f92fe/1/verbatim.avro --interpretationTypes=TEMPORAL
+```
