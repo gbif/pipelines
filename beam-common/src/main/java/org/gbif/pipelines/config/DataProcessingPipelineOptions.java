@@ -66,8 +66,16 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   void setTargetParallelism(int target);
 
   @Description("Types for an interpretation - ALL, TAXON, LOCATION and etc.")
-  String[] getInterpretationTypes();
-  void setInterpretationTypes(String[] types);
+  String[] getInterpretTypes();
+  void setInterpretTypes(String[] types);
+
+  @Description("Avro compression type")
+  String getAvroCompressionType();
+  void setAvroCompressionType(String compressionType);
+
+  @Description("Avro sync interval time")
+  int getAvroSyncInterval();
+  void setAvroSyncInterval(int syncInterval);
 
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
