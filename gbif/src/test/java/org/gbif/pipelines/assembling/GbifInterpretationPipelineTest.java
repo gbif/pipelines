@@ -197,7 +197,7 @@ public class GbifInterpretationPipelineTest {
       checkAvroFileCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                                           options.getDatasetId(),
                                                                           interpretationType.name().toLowerCase(),
-                                                                          "interpreted").toString()));
+                                                                          "interpreted.avro").toString()));
       // check ISSUES DIR
       checkDirCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                                      options.getDatasetId(),
@@ -208,7 +208,7 @@ public class GbifInterpretationPipelineTest {
                                                                           options.getDatasetId(),
                                                                           interpretationType.name().toLowerCase(),
                                                                           "issues",
-                                                                          "issues").toString()));
+                                                                          "issues.avro").toString()));
     }
   }
 
