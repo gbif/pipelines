@@ -39,17 +39,19 @@ import org.junit.Test;
  */
 public class GbifInterpretationPipelineTest {
 
+  private static final String INPUT = "avro/extendedRecords*";
+  private static final String OUTPUT = "output";
+
   private static Configuration configuration = new Configuration();
   private static MiniDFSCluster hdfsCluster;
   private static FileSystem fs;
   private static URI hdfsClusterBaseUri;
   private static MockWebServer mockServer;
-  private static File baseDir;
 
   @BeforeClass
   public static void setUp() throws Exception {
     // mini cluster
-    baseDir = new File("./miniCluster/hdfs/").getAbsoluteFile();
+    File baseDir = new File("./miniCluster/hdfs/").getAbsoluteFile();
     FileUtil.fullyDelete(baseDir);
 
     configuration.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.getAbsolutePath());
@@ -73,8 +75,8 @@ public class GbifInterpretationPipelineTest {
   public void temporalInterpretationTest() throws IOException {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
-    options.setInputFile("avro/extendedRecords*");
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "output");
+    options.setInputFile(INPUT);
+    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
     options.setInterpretationTypes(Collections.singletonList(InterpretationType.TEMPORAL));
 
@@ -103,8 +105,8 @@ public class GbifInterpretationPipelineTest {
     List<InterpretationType> interpretations =
       Arrays.asList(InterpretationType.COMMON, InterpretationType.TEMPORAL, InterpretationType.LOCATION);
 
-    options.setInputFile("avro/extendedRecords*");
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "output");
+    options.setInputFile(INPUT);
+    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
     options.setInterpretationTypes(interpretations);
 
@@ -131,8 +133,8 @@ public class GbifInterpretationPipelineTest {
   public void nullInterpretationParamTest() throws IOException {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
-    options.setInputFile("avro/extendedRecords*");
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "output");
+    options.setInputFile(INPUT);
+    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
 
     Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
@@ -153,7 +155,7 @@ public class GbifInterpretationPipelineTest {
   public void nullInputTest() {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "output");
+    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
 
     GbifInterpretationPipeline.newInstance(options).createPipeline();
@@ -163,7 +165,7 @@ public class GbifInterpretationPipelineTest {
   public void nullDatasetIdTest() {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "output");
+    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
 
     GbifInterpretationPipeline.newInstance(options).createPipeline();
   }
@@ -172,8 +174,8 @@ public class GbifInterpretationPipelineTest {
   public void nullHdfsConfigTest() {
     DataProcessingPipelineOptions options = PipelineOptionsFactory.as(DataProcessingPipelineOptions.class);
 
-    options.setInputFile("avro/extendedRecords*");
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + "output");
+    options.setInputFile(INPUT);
+    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
 
     GbifInterpretationPipeline.newInstance(options).createPipeline();

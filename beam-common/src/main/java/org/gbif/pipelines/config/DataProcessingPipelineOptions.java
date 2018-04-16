@@ -100,8 +100,7 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
   void setESMaxBatchSize(Integer batchSize);
 
-  // FIXME: use the same as Nikolay
-  // TODO: annotations and default??
+  // FIXME: temporal. Use the same as Nikolay when merged.
   List<InterpretationType> getInterpretationTypes();
 
   void setInterpretationTypes(List<InterpretationType> types);

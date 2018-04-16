@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
  * <p>
  * This class is intended to be run from the command line.
  */
-public class PipelineManager {
+public class PipelineHandler {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PipelineManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PipelineHandler.class);
 
   /**
    * Main method that receives the command line arguments and invokes the method to create and run the {@link Pipeline}.
