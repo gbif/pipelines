@@ -1,4 +1,4 @@
-package org.gbif.pipelines.assembling.pipelines;
+package org.gbif.pipelines.assembling.interpretation.steps;
 
 /**
  * Wrapper for the target paths needed in a {@link org.apache.beam.sdk.Pipeline}.
@@ -7,6 +7,7 @@ public class PipelineTargetPaths {
 
   private String dataTargetPath;
   private String issuesTargetPath;
+  private String tempDir;
 
   public String getDataTargetPath() {
     return dataTargetPath;
@@ -22,5 +23,13 @@ public class PipelineTargetPaths {
 
   public void setIssuesTargetPath(String issuesTargetPath) {
     this.issuesTargetPath = issuesTargetPath;
+  }
+
+  public String getTempDir() {
+    return tempDir;
+  }
+
+  public void setTempDir(String tempDir) {
+    this.tempDir = tempDir;
   }
 }

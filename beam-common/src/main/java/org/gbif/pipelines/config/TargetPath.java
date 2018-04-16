@@ -9,7 +9,6 @@ import com.google.common.base.Strings;
 /**
  * Models a target path composed by the directory and the file name.
  */
-@Deprecated
 public class TargetPath implements Serializable {
 
   private static final long serialVersionUID = 1843400832026524345L;

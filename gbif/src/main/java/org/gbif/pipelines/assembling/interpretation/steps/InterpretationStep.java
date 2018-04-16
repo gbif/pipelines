@@ -1,4 +1,4 @@
-package org.gbif.pipelines.assembling.pipelines;
+package org.gbif.pipelines.assembling.interpretation.steps;
 
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -8,8 +8,11 @@ import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
@@ -31,6 +34,8 @@ public class InterpretationStep<T> {
   private final String dataTargetPath;
   // path where issues will be written to
   private final String issuesTargetPath;
+  // temp dir for beam
+  private final String tempDir;
 
   private InterpretationStep(Builder<T> builder) {
     this.interpretationType = builder.interpretationType;
@@ -38,6 +43,7 @@ public class InterpretationStep<T> {
     this.transform = builder.transform;
     this.dataTargetPath = builder.dataTargetPath;
     this.issuesTargetPath = builder.issuesTargetPath;
+    this.tempDir = builder.tempDir;
   }
 
   public static <T> InterpretationTypeStep<T> newBuilder() {
@@ -49,7 +55,10 @@ public class InterpretationStep<T> {
    *
    * @param extendedRecords {@link PCollection} with the records that are gonna be interpreted by this step.
    */
-  public void appendToPipeline(PCollection<ExtendedRecord> extendedRecords) {
+  public void appendToPipeline(PCollection<ExtendedRecord> extendedRecords, Pipeline pipeline) {
+    // add coders
+    transform.withAvroCoders(pipeline);
+
     // apply transformation
     PCollectionTuple interpretedRecordTuple = extendedRecords.apply(transform);
 
@@ -57,15 +66,23 @@ public class InterpretationStep<T> {
     PCollection<T> interpretedRecords = interpretedRecordTuple.get(transform.getDataTag()).apply(Kv2Value.create());
     if (interpretedRecords != null) {
       interpretedRecords.apply(String.format(WRITE_DATA_MSG_PATTERN, interpretationType.name()),
-                               AvroIO.write(avroClass).to(dataTargetPath).withoutSharding());
+                               createAvroWriter(avroClass, dataTargetPath));
     }
 
     // Get issues and save them to an avro file
     PCollection<OccurrenceIssue> issues = interpretedRecordTuple.get(transform.getIssueTag()).apply(Kv2Value.create());
     if (issues != null) {
       issues.apply(String.format(WRITE_ISSUES_MSG_PATTERN, interpretationType.name()),
-                   AvroIO.write(OccurrenceIssue.class).to(issuesTargetPath).withoutSharding());
+                   createAvroWriter(OccurrenceIssue.class, issuesTargetPath));
     }
+  }
+
+  private <U> AvroIO.Write<U> createAvroWriter(Class<U> avroClass, String path) {
+    AvroIO.Write<U> writer = AvroIO.write(avroClass).to(path).withoutSharding();
+
+    return Strings.isNullOrEmpty(tempDir)
+      ? writer
+      : writer.withTempDirectory(FileSystems.matchNewResource(tempDir, true));
   }
 
   private static class Builder<T>
@@ -76,38 +93,41 @@ public class InterpretationStep<T> {
     private RecordTransform<ExtendedRecord, T> transform;
     private String dataTargetPath;
     private String issuesTargetPath;
+    private String tempDir;
 
     @Override
     public AvroClassStep<T> interpretationType(InterpretationType interpretationType) {
-      Objects.requireNonNull(interpretationType);
+      Objects.requireNonNull(interpretationType, "Interpretation type cannot be null");
       this.interpretationType = interpretationType;
       return this;
     }
 
     @Override
     public TransformStep<T> avroClass(Class avroClass) {
-      Objects.requireNonNull(avroClass);
+      Objects.requireNonNull(avroClass, "Avro class cannot be null");
       this.avroClass = avroClass;
       return this;
     }
 
     @Override
     public DataTargetPathStep<T> transform(RecordTransform transform) {
-      Objects.requireNonNull(transform);
+      Objects.requireNonNull(transform, "RecordTransform cannot be null");
       this.transform = transform;
       return this;
     }
 
     @Override
     public IssuesTargetPathStep<T> dataTargetPath(String dataTargetPath) {
-      Objects.requireNonNull(dataTargetPath);
+      Objects.requireNonNull(dataTargetPath, "DataTargetPath cannot be null");
+      Preconditions.checkArgument(!Strings.isNullOrEmpty(dataTargetPath), "DataTargetPath cannot be empty");
       this.dataTargetPath = dataTargetPath;
       return this;
     }
 
     @Override
     public Build<T> issuesTargetPath(String issuesTargetPath) {
-      Objects.requireNonNull(issuesTargetPath);
+      Objects.requireNonNull(issuesTargetPath, "IssuesTargetPath cannot be null");
+      Preconditions.checkArgument(!Strings.isNullOrEmpty(issuesTargetPath), "IssuesTargetPath cannot be empty");
       this.issuesTargetPath = issuesTargetPath;
       return this;
     }
@@ -115,6 +135,12 @@ public class InterpretationStep<T> {
     @Override
     public InterpretationStep<T> build() {
       return new InterpretationStep<>(this);
+    }
+
+    @Override
+    public Build tempDirectory(String tempDir) {
+      this.tempDir = tempDir;
+      return this;
     }
   }
 
@@ -146,6 +172,8 @@ public class InterpretationStep<T> {
   public interface Build<T> {
 
     InterpretationStep<T> build();
+
+    Build<T> tempDirectory(String tempDir);
   }
 
 }

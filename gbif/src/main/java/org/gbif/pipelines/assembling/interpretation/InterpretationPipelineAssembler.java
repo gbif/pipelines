@@ -1,15 +1,17 @@
-package org.gbif.pipelines.assembling.pipelines;
+package org.gbif.pipelines.assembling.interpretation;
 
+import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier;
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -20,9 +22,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Assembles a {@link Pipeline} dynamically that performs interpretations of verbatim data.
  */
-public class InterpretationPipelineAssembler
-  implements InterpretationPipelineBuilderSteps.WithOptionsStep, InterpretationPipelineBuilderSteps.WithInputStep,
-  InterpretationPipelineBuilderSteps.UsingStep, InterpretationPipelineBuilderSteps.FinalStep {
+class InterpretationPipelineAssembler
+  implements InterpretationAssemblerBuilderSteps.WithOptionsStep, InterpretationAssemblerBuilderSteps.WithInputStep,
+  InterpretationAssemblerBuilderSteps.UsingStep, InterpretationAssemblerBuilderSteps.FinalStep {
 
   private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipelineAssembler.class);
 
@@ -31,50 +33,65 @@ public class InterpretationPipelineAssembler
   private PipelineOptions options;
   private String input;
   private List<InterpretationType> interpretationTypes;
-
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler;
   private BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler;
-  private Function<List<InterpretationType>, List<InterpretationStep>> stepsCreator;
+  private EnumMap<InterpretationType, InterpretationStepSupplier> interpretationSteps;
 
   private InterpretationPipelineAssembler(List<InterpretationType> interpretationTypes) {
     this.interpretationTypes = interpretationTypes;
   }
 
-  public static InterpretationPipelineBuilderSteps.WithOptionsStep of(List<InterpretationType> types) {
-    Objects.requireNonNull(types);
-    Preconditions.checkArgument(!types.isEmpty(), "Interpretation types are required");
-    return new InterpretationPipelineAssembler(types);
+  /**
+   * Creates a {@link InterpretationPipelineAssembler} for the list of {@link InterpretationType} received.
+   */
+  public static InterpretationAssemblerBuilderSteps.WithOptionsStep of(List<InterpretationType> interpretationTypes) {
+    return new InterpretationPipelineAssembler(filterInterpretations(interpretationTypes));
+  }
+
+  /**
+   * Filters the interpretations received.
+   * <p>
+   * By default, we use all the interpretations in case that we receive a null or empty list of
+   * {@link InterpretationType}.
+   */
+  private static List<InterpretationType> filterInterpretations(List<InterpretationType> types) {
+    return types == null || types.isEmpty() || types.contains(InterpretationType.ALL)
+      ? InterpretationType.ALL_INTERPRETATIONS
+      : types;
   }
 
   @Override
-  public InterpretationPipelineBuilderSteps.WithInputStep withOptions(PipelineOptions options) {
-    Objects.requireNonNull(options);
+  public InterpretationAssemblerBuilderSteps.WithInputStep withOptions(PipelineOptions options) {
+    Objects.requireNonNull(options, "PipelineOptions cannot be null");
     this.options = options;
     return this;
   }
 
   @Override
-  public InterpretationPipelineBuilderSteps.UsingStep withInput(String input) {
-    Objects.requireNonNull(input);
+  public InterpretationAssemblerBuilderSteps.UsingStep withInput(String input) {
+    Objects.requireNonNull(input, "Input cannot be null");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(input), "Input cannot be empty");
     this.input = input;
     return this;
   }
 
   @Override
-  public InterpretationPipelineBuilderSteps.FinalStep using(Function<List<InterpretationType>, List<InterpretationStep>> stepsCreator) {
-    Objects.requireNonNull(stepsCreator);
-    this.stepsCreator = stepsCreator;
+  public InterpretationAssemblerBuilderSteps.FinalStep using(
+    EnumMap<InterpretationType, InterpretationStepSupplier> interpretationSteps
+  ) {
+    Objects.requireNonNull(interpretationSteps, "Interpretation steps map cannot be null");
+    this.interpretationSteps = interpretationSteps;
     return this;
   }
 
   @Override
-  public InterpretationPipelineBuilderSteps.FinalStep onBeforeInterpretations(BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler) {
+  public InterpretationAssemblerBuilderSteps.FinalStep onBeforeInterpretations(BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler) {
     this.beforeHandler = beforeHandler;
     return this;
   }
 
   @Override
-  public InterpretationPipelineBuilderSteps.FinalStep onOtherOperations(
+  public InterpretationAssemblerBuilderSteps.FinalStep onOtherOperations(
     BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler
   ) {
     this.otherOperationsHandler = otherOperationsHandler;
@@ -102,7 +119,14 @@ public class InterpretationPipelineAssembler
 
     // STEP 3: interpretations
     LOG.info("Adding interpretation steps");
-    stepsCreator.apply(interpretationTypes).forEach(step -> step.appendToPipeline(extendedRecords));
+    interpretationTypes.stream()
+      .peek(type -> LOG.debug("Processing interpretation type {}", type))
+      .filter(type -> interpretationSteps.get(type) != null)
+      .peek(type -> LOG.debug("Step supplier found for interpretation type {}", type))
+      .map(type -> interpretationSteps.get(type).get())
+      .filter(Objects::nonNull)
+      .peek(step -> LOG.debug("Interpretation step found"))
+      .forEach(step -> step.appendToPipeline(extendedRecords, pipeline));
 
     // STEP 4: additional operations
     if (Objects.nonNull(otherOperationsHandler)) {

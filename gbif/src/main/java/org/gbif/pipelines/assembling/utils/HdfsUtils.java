@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.StringJoiner;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -26,6 +27,16 @@ public final class HdfsUtils {
     return path.toString();
   }
 
+  /**
+   * Build a {@link Path} from an array of string values.
+   */
+  @VisibleForTesting
+  public static Path buildPath(String... values) {
+    StringJoiner joiner = new StringJoiner(Path.SEPARATOR);
+    Arrays.stream(values).forEach(joiner::add);
+    return new Path(joiner.toString());
+  }
+
   private static void createParentDirectory(Configuration config, Path path) {
     FileSystem fs = getFileSystem(config, path);
 
@@ -42,12 +53,6 @@ public final class HdfsUtils {
     } catch (IOException e) {
       throw new IllegalStateException("Can't get a valid filesystem from provided uri " + path.toString(), e);
     }
-  }
-
-  private static Path buildPath(String... values) {
-    StringJoiner joiner = new StringJoiner(Path.SEPARATOR);
-    Arrays.stream(values).forEach(joiner::add);
-    return new Path(joiner.toString());
   }
 
 }
