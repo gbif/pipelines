@@ -45,8 +45,8 @@ public class LocationParser {
     // check for a mismatch between the country and the country code
     checkCountryMismatch(issues, countryName, countryCode);
 
-    // get the final country from the 2 previous parsings.
-    Country countryMatched = getFinalCountryMatch(countryName, countryCode);
+    // get the final country from the 2 previous parsings. We take the country code parsed as default
+    Country countryMatched = countryCode.orElseGet(() -> countryName.orElse(null));
 
     // parse coordinates
     ParsedField<LatLng> coordsParsed = parseLatLng(extendedRecord);
@@ -98,11 +98,6 @@ public class LocationParser {
     }
 
     return Optional.ofNullable(countryParsed.getResult());
-  }
-
-  private static Country getFinalCountryMatch(Optional<Country> countryName, Optional<Country> countryCode) {
-    // We take the country code parsed as default
-    return countryCode.orElseGet(() -> countryName.orElse(null));
   }
 
   private static boolean isParsingSuccessful(Country countryMatched, ParsedField<ParsedLocation> match) {
