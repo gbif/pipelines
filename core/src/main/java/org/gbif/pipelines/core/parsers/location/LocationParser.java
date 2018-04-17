@@ -30,7 +30,9 @@ public class LocationParser {
 
   private LocationParser() {}
 
-  public static ParsedField<ParsedLocation> parseCountryAndCoordinates(ExtendedRecord extendedRecord) {
+  public static ParsedField<ParsedLocation> parseCountryAndCoordinates(
+    ExtendedRecord extendedRecord, String wsPropertiesPath
+  ) {
     AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
     List<InterpretationIssue> issues = new ArrayList<>();
@@ -65,7 +67,7 @@ public class LocationParser {
 
     // if the coords parsing was succesful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-      LocationMatcher.newMatcher(parsedLocation.getLatLng(), parsedLocation.getCountry())
+      LocationMatcher.newMatcher(parsedLocation.getLatLng(), parsedLocation.getCountry(), wsPropertiesPath)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LAT)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LNG)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_COORDS)

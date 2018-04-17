@@ -81,6 +81,10 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   int getAvroSyncInterval();
   void setAvroSyncInterval(int syncInterval);
 
+  @Description("WS properties for interpretations that require the use of external web services")
+  String getWsProperties();
+  void setWsProperties(String path);
+
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
    */

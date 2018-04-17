@@ -48,7 +48,7 @@ public class SpeciesMatchv2RestServiceTest extends MockServer {
 
     ExtendedRecord record = new ExtendedRecordCustomBuilder().name("Puma concolor").id("1").build();
 
-    HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.getInstance().getMatch(record);
+    HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance().getMatch(record);
 
     Assert.assertEquals(HttpURLConnection.HTTP_INTERNAL_ERROR, response.getHttpResponseCode().intValue());
     Assert.assertEquals(HttpResponse.ErrorCode.CALL_FAILED, response.getErrorCode());

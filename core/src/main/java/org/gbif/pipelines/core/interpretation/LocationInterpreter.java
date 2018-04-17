@@ -30,11 +30,12 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link DwcTerm#decimalLatitude} and the
    * {@link DwcTerm#decimalLongitude} terms.
    */
-  static LocationInterpreter interpretCountryAndCoordinates(Location locationRecord) {
+  static LocationInterpreter interpretCountryAndCoordinates(Location locationRecord, String wsPropertiesPath) {
     return (ExtendedRecord extendedRecord) -> {
 
       // parse the terms
-      ParsedField<ParsedLocation> parsedResult = LocationParser.parseCountryAndCoordinates(extendedRecord);
+      ParsedField<ParsedLocation> parsedResult =
+        LocationParser.parseCountryAndCoordinates(extendedRecord, wsPropertiesPath);
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();
