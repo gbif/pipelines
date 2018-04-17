@@ -16,6 +16,7 @@ import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
@@ -38,9 +39,16 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
   private static final String ISSUES_FOLDER = "issues";
   private static final String ISSUES_FILENAME = "issues";
 
+  // avro codecs
+  private static final String DEFLATE = "deflate";
+  private static final String SNAPPY = "snappy";
+  private static final String BZIP2 = "bzip2";
+  private static final String XZ = "xz";
+
   private final EnumMap<InterpretationType, InterpretationStepSupplier> stepsMap =
     new EnumMap<>(InterpretationType.class);
   private final DataProcessingPipelineOptions options;
+  private final CodecFactory avroCodec;
 
   private GbifInterpretationPipeline(DataProcessingPipelineOptions options) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
@@ -49,6 +57,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
     Preconditions.checkArgument(options.getHdfsConfiguration() != null && !options.getHdfsConfiguration().isEmpty(),
                                 "HDFS configuration is required");
     this.options = options;
+    avroCodec = parseAvroCodec(options.getAvroCompressionType());
     initStepsMap();
   }
 
@@ -60,10 +69,10 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
   }
 
   private void initStepsMap() {
-    stepsMap.put(LOCATION, locationGbif(createPaths(options, InterpretationType.LOCATION)));
-    stepsMap.put(TEMPORAL, temporalGbif(createPaths(options, InterpretationType.TEMPORAL)));
-    stepsMap.put(TAXONOMY, taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY)));
-    stepsMap.put(COMMON, commonGbif(createPaths(options, InterpretationType.COMMON)));
+    stepsMap.put(LOCATION, locationGbif(createPaths(options, InterpretationType.LOCATION), avroCodec));
+    stepsMap.put(TEMPORAL, temporalGbif(createPaths(options, InterpretationType.TEMPORAL), avroCodec));
+    stepsMap.put(TAXONOMY, taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY), avroCodec));
+    stepsMap.put(COMMON, commonGbif(createPaths(options, InterpretationType.COMMON), avroCodec));
   }
 
   @Override
@@ -103,6 +112,40 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
     paths.setTempDir(options.getHdfsTempLocation());
 
     return paths;
+  }
+
+  private static CodecFactory parseAvroCodec(String codec) {
+    if (Strings.isNullOrEmpty(codec)) {
+      return null;
+    }
+
+    if (codec.toLowerCase().startsWith(DEFLATE)) {
+      String[] pieces = codec.split("_");
+      int compressionLevel = CodecFactory.DEFAULT_DEFLATE_LEVEL;
+      if (pieces.length > 1) {
+        compressionLevel = Integer.parseInt(pieces[1]);
+      }
+      return CodecFactory.deflateCodec(compressionLevel);
+    }
+
+    if (SNAPPY.equalsIgnoreCase(codec)) {
+      return CodecFactory.snappyCodec();
+    }
+
+    if (BZIP2.equalsIgnoreCase(codec)) {
+      return CodecFactory.bzip2Codec();
+    }
+
+    if (codec.toLowerCase().startsWith(XZ)) {
+      String[] pieces = codec.split("_");
+      int compressionLevel = CodecFactory.DEFAULT_XZ_LEVEL;
+      if (pieces.length > 1) {
+        compressionLevel = Integer.parseInt(pieces[1]);
+      }
+      return CodecFactory.xzCodec(compressionLevel);
+    }
+
+    throw new IllegalArgumentException("CodecFactory not found for codec " + codec);
   }
 
 }

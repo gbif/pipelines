@@ -11,6 +11,7 @@ import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileSystems;
@@ -37,6 +38,8 @@ public class InterpretationStep<T> {
   private final String issuesTargetPath;
   // temp dir for beam
   private final String tempDir;
+  // avro codec
+  private final CodecFactory avroCodec;
 
   private InterpretationStep(Builder<T> builder) {
     this.interpretationType = builder.interpretationType;
@@ -45,6 +48,7 @@ public class InterpretationStep<T> {
     this.dataTargetPath = builder.dataTargetPath;
     this.issuesTargetPath = builder.issuesTargetPath;
     this.tempDir = builder.tempDir;
+    this.avroCodec = builder.avroCodec;
   }
 
   public static <T> InterpretationTypeStep<T> newBuilder() {
@@ -81,9 +85,15 @@ public class InterpretationStep<T> {
   private <U> AvroIO.Write<U> createAvroWriter(Class<U> avroClass, String path) {
     AvroIO.Write<U> writer = AvroIO.write(avroClass).to(path).withoutSharding().withSuffix(".avro");
 
-    return Strings.isNullOrEmpty(tempDir)
-      ? writer
-      : writer.withTempDirectory(FileSystems.matchNewResource(tempDir, true));
+    if (!Strings.isNullOrEmpty(tempDir)) {
+      writer = writer.withTempDirectory(FileSystems.matchNewResource(tempDir, true));
+    }
+
+    if (!Objects.isNull(avroCodec)) {
+      writer = writer.withCodec(avroCodec);
+    }
+
+    return writer;
   }
 
   private static class Builder<T>
@@ -95,6 +105,7 @@ public class InterpretationStep<T> {
     private String dataTargetPath;
     private String issuesTargetPath;
     private String tempDir;
+    private CodecFactory avroCodec;
 
     @Override
     public AvroClassStep<T> interpretationType(InterpretationType interpretationType) {
@@ -138,6 +149,12 @@ public class InterpretationStep<T> {
     }
 
     @Override
+    public Build avroCodec(CodecFactory avroCodec) {
+      this.avroCodec = avroCodec;
+      return this;
+    }
+
+    @Override
     public InterpretationStep<T> build() {
       return new InterpretationStep<>(this);
     }
@@ -173,6 +190,8 @@ public class InterpretationStep<T> {
     InterpretationStep<T> build();
 
     Build<T> tempDirectory(String tempDir);
+
+    Build<T> avroCodec(CodecFactory codecFactory);
   }
 
 }
