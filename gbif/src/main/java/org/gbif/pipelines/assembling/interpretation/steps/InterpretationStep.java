@@ -148,7 +148,7 @@ public class InterpretationStep<T> {
     }
 
     @Override
-    public Build avroCodec(CodecFactory avroCodec) {
+    public Build<T> avroCodec(CodecFactory avroCodec) {
       this.avroCodec = avroCodec;
       return this;
     }
