@@ -5,6 +5,7 @@ import org.gbif.pipelines.assembling.interpretation.steps.PipelineTargetPaths;
 import org.gbif.pipelines.assembling.utils.HdfsUtils;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.config.InterpretationType;
+import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
@@ -40,7 +41,6 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
   private final EnumMap<InterpretationType, InterpretationStepSupplier> stepsMap =
     new EnumMap<>(InterpretationType.class);
   private final DataProcessingPipelineOptions options;
-  private final Function<InterpretationType, PipelineTargetPaths> pathsGenerator;
 
   private GbifInterpretationPipeline(DataProcessingPipelineOptions options) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
@@ -49,7 +49,6 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
     Preconditions.checkArgument(options.getHdfsConfiguration() != null && !options.getHdfsConfiguration().isEmpty(),
                                 "HDFS configuration is required");
     this.options = options;
-    this.pathsGenerator = createPathsGenerator(options);
     initStepsMap();
   }
 
@@ -61,11 +60,10 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
   }
 
   private void initStepsMap() {
-    Objects.requireNonNull(pathsGenerator);
-    stepsMap.put(LOCATION, locationGbif(pathsGenerator));
-    stepsMap.put(TEMPORAL, temporalGbif(pathsGenerator));
-    stepsMap.put(TAXONOMY, taxonomyGbif(pathsGenerator));
-    stepsMap.put(COMMON, commonGbif(pathsGenerator));
+    stepsMap.put(LOCATION, locationGbif(createPaths(options, InterpretationType.LOCATION)));
+    stepsMap.put(TEMPORAL, temporalGbif(createPaths(options, InterpretationType.TEMPORAL)));
+    stepsMap.put(TAXONOMY, taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY)));
+    stepsMap.put(COMMON, commonGbif(createPaths(options, InterpretationType.COMMON)));
   }
 
   @Override
@@ -87,28 +85,24 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
 
   }
 
-  private static Function<InterpretationType, PipelineTargetPaths> createPathsGenerator(
-    DataProcessingPipelineOptions options
+  private static PipelineTargetPaths createPaths(
+    DataProcessingPipelineOptions options, InterpretationType interpretationType
   ) {
-    return (interpretationType) -> {
-      PipelineTargetPaths paths = new PipelineTargetPaths();
-      paths.setDataTargetPath(HdfsUtils.getHdfsPath(options.getHdfsConfiguration().get(0),
-                                                    options.getDefaultTargetDirectory(),
-                                                    options.getDatasetId(),
-                                                    interpretationType.name().toLowerCase(),
-                                                    DATA_FILENAME));
+    PipelineTargetPaths paths = new PipelineTargetPaths();
+    paths.setDataTargetPath(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
+                                                options.getDatasetId(),
+                                                interpretationType.name().toLowerCase(),
+                                                DATA_FILENAME).toString());
 
-      paths.setIssuesTargetPath(HdfsUtils.getHdfsPath(options.getHdfsConfiguration().get(0),
-                                                      options.getDefaultTargetDirectory(),
-                                                      options.getDatasetId(),
-                                                      interpretationType.name().toLowerCase(),
-                                                      ISSUES_FOLDER,
-                                                      ISSUES_FILENAME));
+    paths.setIssuesTargetPath(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
+                                                  options.getDatasetId(),
+                                                  interpretationType.name().toLowerCase(),
+                                                  ISSUES_FOLDER,
+                                                  ISSUES_FILENAME).toString());
 
-      paths.setTempDir(options.getHdfsTempLocation());
+    paths.setTempDir(options.getHdfsTempLocation());
 
-      return paths;
-    };
+    return paths;
   }
 
 }
