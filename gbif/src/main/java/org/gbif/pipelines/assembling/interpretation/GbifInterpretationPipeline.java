@@ -41,6 +41,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
   private static final String SNAPPY = "snappy";
   private static final String BZIP2 = "bzip2";
   private static final String XZ = "xz";
+  private static final String CODEC_SEPARATOR = "_";
 
   private final EnumMap<InterpretationType, InterpretationStepSupplier> stepsMap =
     new EnumMap<>(InterpretationType.class);
@@ -115,7 +116,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
     }
 
     if (codec.toLowerCase().startsWith(DEFLATE)) {
-      String[] pieces = codec.split("_");
+      String[] pieces = codec.split(CODEC_SEPARATOR);
       int compressionLevel = CodecFactory.DEFAULT_DEFLATE_LEVEL;
       if (pieces.length > 1) {
         compressionLevel = Integer.parseInt(pieces[1]);
@@ -132,7 +133,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
     }
 
     if (codec.toLowerCase().startsWith(XZ)) {
-      String[] pieces = codec.split("_");
+      String[] pieces = codec.split(CODEC_SEPARATOR);
       int compressionLevel = CodecFactory.DEFAULT_XZ_LEVEL;
       if (pieces.length > 1) {
         compressionLevel = Integer.parseInt(pieces[1]);
