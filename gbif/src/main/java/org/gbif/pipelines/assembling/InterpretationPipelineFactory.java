@@ -9,6 +9,8 @@ import org.gbif.pipelines.config.DataPipelineOptionsFactory;
  */
 public class InterpretationPipelineFactory {
 
+  private InterpretationPipelineFactory() {}
+
   /**
    * Creates a {@link InterpretationPipeline} from the parameters received.
    */
