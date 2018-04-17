@@ -78,7 +78,7 @@ public class GbifInterpretationPipelineTest {
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
-    options.setInterpretationTypes(Collections.singletonList(InterpretationType.TEMPORAL));
+    options.setInterpretTypes(Collections.singletonList(InterpretationType.TEMPORAL));
 
     Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
 
@@ -109,7 +109,7 @@ public class GbifInterpretationPipelineTest {
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
-    options.setInterpretationTypes(interpretations);
+    options.setInterpretTypes(interpretations);
 
     Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
 

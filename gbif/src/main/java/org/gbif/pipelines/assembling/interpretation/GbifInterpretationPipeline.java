@@ -68,7 +68,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
 
   @Override
   public Pipeline createPipeline() {
-    return InterpretationPipelineAssembler.of(options.getInterpretationTypes())
+    return InterpretationPipelineAssembler.of(options.getInterpretTypes())
       .withOptions(options)
       .withInput(options.getInputFile())
       .using(stepsMap)
