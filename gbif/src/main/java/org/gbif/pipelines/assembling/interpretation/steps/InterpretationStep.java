@@ -7,7 +7,6 @@ import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

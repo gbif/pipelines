@@ -5,14 +5,11 @@ import org.gbif.pipelines.assembling.interpretation.steps.PipelineTargetPaths;
 import org.gbif.pipelines.assembling.utils.HdfsUtils;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.config.InterpretationType;
-import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.EnumMap;
-import java.util.Objects;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -54,8 +51,6 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),
                                 "defaultTargetDirectory " + "is required");
-    Preconditions.checkArgument(options.getHdfsConfiguration() != null && !options.getHdfsConfiguration().isEmpty(),
-                                "HDFS configuration is required");
     this.options = options;
     avroCodec = parseAvroCodec(options.getAvroCompressionType());
     initStepsMap();
@@ -77,7 +72,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
 
   @Override
   public Pipeline createPipeline() {
-    return InterpretationPipelineAssembler.of(options.getInterpretTypes())
+    return InterpretationPipelineAssembler.of(options.getInterpretationTypes())
       .withOptions(options)
       .withInput(options.getInputFile())
       .using(stepsMap)

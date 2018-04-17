@@ -1,7 +1,5 @@
 package org.gbif.pipelines.config;
 
-import org.gbif.pipelines.core.interpretation.Interpretation;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -72,8 +70,8 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   void setTargetParallelism(int target);
 
   @Description("Types for an interpretation - ALL, TAXON, LOCATION and etc.")
-  List<InterpretationType> getInterpretTypes();
-  void setInterpretTypes(List<InterpretationType> types);
+  List<InterpretationType> getInterpretationTypes();
+  void setInterpretationTypes(List<InterpretationType> types);
 
   @Description("Avro compression type")
   String getAvroCompressionType();

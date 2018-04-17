@@ -26,7 +26,7 @@ public class PipelineHandler {
     LOG.info("Pipeline created");
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();
-    LOG.info("Pipeline finished with state {}", state.toString());
+    LOG.info("Pipeline finished with state {}", state);
   }
 
 }

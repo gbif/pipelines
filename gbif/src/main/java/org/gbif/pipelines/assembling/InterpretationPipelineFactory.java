@@ -2,9 +2,7 @@ package org.gbif.pipelines.assembling;
 
 import org.gbif.pipelines.assembling.interpretation.GbifInterpretationPipeline;
 import org.gbif.pipelines.assembling.interpretation.InterpretationPipeline;
-import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 
 /**
  * Factory that creates {@link InterpretationPipeline} implementations.
@@ -16,8 +14,7 @@ public class InterpretationPipelineFactory {
    */
   public static InterpretationPipeline from(String[] args) {
     // currently we only support Gbif factory. To use more factories add the logic here.
-    return GbifInterpretationPipeline.newInstance(PipelineOptionsFactory.fromArgs(args)
-                                                    .as(DataProcessingPipelineOptions.class));
+    return GbifInterpretationPipeline.newInstance(DataPipelineOptionsFactory.create(args));
   }
 
 }

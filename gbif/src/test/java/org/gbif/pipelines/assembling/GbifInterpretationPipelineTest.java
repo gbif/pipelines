@@ -21,7 +21,6 @@ import okio.BufferedSource;
 import okio.Okio;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
@@ -78,7 +77,7 @@ public class GbifInterpretationPipelineTest {
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
-    options.setInterpretTypes(Collections.singletonList(InterpretationType.TEMPORAL));
+    options.setInterpretationTypes(Collections.singletonList(InterpretationType.TEMPORAL));
 
     Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
 
@@ -109,7 +108,7 @@ public class GbifInterpretationPipelineTest {
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
-    options.setInterpretTypes(interpretations);
+    options.setInterpretationTypes(interpretations);
 
     Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
 
@@ -169,17 +168,6 @@ public class GbifInterpretationPipelineTest {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
-
-    GbifInterpretationPipeline.newInstance(options).createPipeline();
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void nullHdfsConfigTest() {
-    DataProcessingPipelineOptions options = PipelineOptionsFactory.as(DataProcessingPipelineOptions.class);
-
-    options.setInputFile(INPUT);
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
-    options.setDatasetId("123");
 
     GbifInterpretationPipeline.newInstance(options).createPipeline();
   }

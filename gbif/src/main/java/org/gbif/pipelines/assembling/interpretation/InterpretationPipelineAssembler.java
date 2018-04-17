@@ -1,5 +1,6 @@
 package org.gbif.pipelines.assembling.interpretation;
 
+import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStep;
 import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier;
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -9,6 +10,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -120,12 +123,9 @@ class InterpretationPipelineAssembler
     // STEP 3: interpretations
     LOG.info("Adding interpretation steps");
     interpretationTypes.stream()
-      .peek(type -> LOG.debug("Processing interpretation type {}", type))
-      .filter(type -> interpretationSteps.get(type) != null)
-      .peek(type -> LOG.debug("Step supplier found for interpretation type {}", type))
-      .map(type -> interpretationSteps.get(type).get())
+      .filter(stepSupplierFilter())
+      .map(interpretationStepMapper())
       .filter(Objects::nonNull)
-      .peek(step -> LOG.debug("Interpretation step found"))
       .forEach(step -> step.appendToPipeline(extendedRecords, pipeline));
 
     // STEP 4: additional operations
@@ -136,4 +136,25 @@ class InterpretationPipelineAssembler
 
     return pipeline;
   }
+
+  private Predicate<InterpretationType> stepSupplierFilter() {
+    return (type) -> {
+      if (Objects.isNull(interpretationSteps.get(type))) {
+        LOG.debug("No interpretation step found for type {}", type);
+        return false;
+      }
+      return true;
+    };
+  }
+
+  private Function<InterpretationType, InterpretationStep> interpretationStepMapper() {
+    return (type) -> {
+      InterpretationStep step = interpretationSteps.get(type).get();
+      if (step == null) {
+        LOG.debug("Interpretation step not found for interpretation type {}", type);
+      }
+      return step;
+    };
+  }
+
 }
