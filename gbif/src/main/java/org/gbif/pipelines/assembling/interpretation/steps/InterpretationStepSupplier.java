@@ -22,67 +22,43 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
    * Gbif location interpretation.
    */
   static InterpretationStepSupplier locationGbif(Function<InterpretationType, PipelineTargetPaths> pathsGenerator) {
-    return () -> {
-      PipelineTargetPaths paths = pathsGenerator.apply(InterpretationType.LOCATION);
-
-      return InterpretationStep.<Location>newBuilder().interpretationType(InterpretationType.LOCATION)
-        .avroClass(Location.class)
-        .transform(LocationTransform.create())
-        .dataTargetPath(paths.getDataTargetPath())
-        .issuesTargetPath(paths.getIssuesTargetPath())
-        .tempDirectory(paths.getTempDir())
-        .build();
-    };
+    return () -> InterpretationStep.<Location>newBuilder().interpretationType(InterpretationType.LOCATION)
+      .avroClass(Location.class)
+      .transform(LocationTransform.create())
+      .pathsGenerator(pathsGenerator)
+      .build();
   }
 
   /**
    * Gbif temporal interpretation.
    */
   static InterpretationStepSupplier temporalGbif(Function<InterpretationType, PipelineTargetPaths> pathsGenerator) {
-    return () -> {
-      PipelineTargetPaths paths = pathsGenerator.apply(InterpretationType.TEMPORAL);
-
-      return InterpretationStep.<TemporalRecord>newBuilder().interpretationType(InterpretationType.TEMPORAL)
-        .avroClass(TemporalRecord.class)
-        .transform(TemporalRecordTransform.create())
-        .dataTargetPath(paths.getDataTargetPath())
-        .issuesTargetPath(paths.getIssuesTargetPath())
-        .tempDirectory(paths.getTempDir())
-        .build();
-    };
+    return () -> InterpretationStep.<TemporalRecord>newBuilder().interpretationType(InterpretationType.TEMPORAL)
+      .avroClass(TemporalRecord.class)
+      .transform(TemporalRecordTransform.create())
+      .pathsGenerator(pathsGenerator)
+      .build();
   }
 
   /**
    * Gbif taxonomy interpretation.
    */
   static InterpretationStepSupplier taxonomyGbif(Function<InterpretationType, PipelineTargetPaths> pathsGenerator) {
-    return () -> {
-      PipelineTargetPaths paths = pathsGenerator.apply(InterpretationType.TAXONOMY);
-
-      return InterpretationStep.<TaxonRecord>newBuilder().interpretationType(InterpretationType.TAXONOMY)
-        .avroClass(TaxonRecord.class)
-        .transform(TaxonRecordTransform.create())
-        .dataTargetPath(paths.getDataTargetPath())
-        .issuesTargetPath(paths.getIssuesTargetPath())
-        .tempDirectory(paths.getTempDir())
-        .build();
-    };
+    return () -> InterpretationStep.<TaxonRecord>newBuilder().interpretationType(InterpretationType.TAXONOMY)
+      .avroClass(TaxonRecord.class)
+      .transform(TaxonRecordTransform.create())
+      .pathsGenerator(pathsGenerator)
+      .build();
   }
 
   /**
    * Gbif common interpretations.
    */
   static InterpretationStepSupplier commonGbif(Function<InterpretationType, PipelineTargetPaths> pathsGenerator) {
-    return () -> {
-      PipelineTargetPaths paths = pathsGenerator.apply(InterpretationType.COMMON);
-
-      return InterpretationStep.<InterpretedExtendedRecord>newBuilder().interpretationType(InterpretationType.COMMON)
-        .avroClass(InterpretedExtendedRecord.class)
-        .transform(InterpretedExtendedRecordTransform.create())
-        .dataTargetPath(paths.getDataTargetPath())
-        .issuesTargetPath(paths.getIssuesTargetPath())
-        .tempDirectory(paths.getTempDir())
-        .build();
-    };
+    return () -> InterpretationStep.<InterpretedExtendedRecord>newBuilder().interpretationType(InterpretationType.COMMON)
+      .avroClass(InterpretedExtendedRecord.class)
+      .transform(InterpretedExtendedRecordTransform.create())
+      .pathsGenerator(pathsGenerator)
+      .build();
   }
 }

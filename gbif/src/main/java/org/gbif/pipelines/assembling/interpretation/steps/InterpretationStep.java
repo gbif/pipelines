@@ -7,6 +7,7 @@ import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -30,20 +31,14 @@ public class InterpretationStep<T> {
   private final Class<T> avroClass;
   // PTransformation to transfotm ExtendedRecord to T
   private final RecordTransform<ExtendedRecord, T> transform;
-  // path where data will be written to
-  private final String dataTargetPath;
-  // path where issues will be written to
-  private final String issuesTargetPath;
-  // temp dir for beam
-  private final String tempDir;
+  // generates the necessary paths
+  private Function<InterpretationType, PipelineTargetPaths> pathsGenerator;
 
   private InterpretationStep(Builder<T> builder) {
     this.interpretationType = builder.interpretationType;
     this.avroClass = builder.avroClass;
     this.transform = builder.transform;
-    this.dataTargetPath = builder.dataTargetPath;
-    this.issuesTargetPath = builder.issuesTargetPath;
-    this.tempDir = builder.tempDir;
+    this.pathsGenerator = builder.pathsGenerator;
   }
 
   public static <T> InterpretationTypeStep<T> newBuilder() {
@@ -62,22 +57,26 @@ public class InterpretationStep<T> {
     // apply transformation
     PCollectionTuple interpretedRecordTuple = extendedRecords.apply(transform);
 
+    // generate paths
+    PipelineTargetPaths paths = pathsGenerator.apply(interpretationType);
+
     // Get data and save it to an avro file
     PCollection<T> interpretedRecords = interpretedRecordTuple.get(transform.getDataTag()).apply(Kv2Value.create());
     if (interpretedRecords != null) {
       interpretedRecords.apply(String.format(WRITE_DATA_MSG_PATTERN, interpretationType.name()),
-                               createAvroWriter(avroClass, dataTargetPath));
+                               createAvroWriter(avroClass, paths.getDataTargetPath(), paths.getTempDir()));
     }
 
     // Get issues and save them to an avro file
     PCollection<OccurrenceIssue> issues = interpretedRecordTuple.get(transform.getIssueTag()).apply(Kv2Value.create());
     if (issues != null) {
       issues.apply(String.format(WRITE_ISSUES_MSG_PATTERN, interpretationType.name()),
-                   createAvroWriter(OccurrenceIssue.class, issuesTargetPath));
+                   createAvroWriter(OccurrenceIssue.class, paths.getIssuesTargetPath(), paths.getTempDir()));
     }
   }
 
-  private <U> AvroIO.Write<U> createAvroWriter(Class<U> avroClass, String path) {
+  private <U> AvroIO.Write<U> createAvroWriter(Class<U> avroClass, String path, String tempDir) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(path), "Target path is required");
     AvroIO.Write<U> writer = AvroIO.write(avroClass).to(path).withoutSharding().withSuffix(".avro");
 
     return Strings.isNullOrEmpty(tempDir)
@@ -85,15 +84,12 @@ public class InterpretationStep<T> {
       : writer.withTempDirectory(FileSystems.matchNewResource(tempDir, true));
   }
 
-  private static class Builder<T>
-    implements Build, InterpretationTypeStep, AvroClassStep, TransformStep, DataTargetPathStep, IssuesTargetPathStep {
+  private static class Builder<T> implements Build, InterpretationTypeStep, AvroClassStep, TransformStep, PathsGeneratorStep {
 
     private InterpretationType interpretationType;
     private Class<T> avroClass;
     private RecordTransform<ExtendedRecord, T> transform;
-    private String dataTargetPath;
-    private String issuesTargetPath;
-    private String tempDir;
+    private Function<InterpretationType, PipelineTargetPaths> pathsGenerator;
 
     @Override
     public AvroClassStep<T> interpretationType(InterpretationType interpretationType) {
@@ -110,37 +106,22 @@ public class InterpretationStep<T> {
     }
 
     @Override
-    public DataTargetPathStep<T> transform(RecordTransform transform) {
+    public PathsGeneratorStep<T> transform(RecordTransform transform) {
       Objects.requireNonNull(transform, "RecordTransform cannot be null");
       this.transform = transform;
       return this;
     }
 
     @Override
-    public IssuesTargetPathStep<T> dataTargetPath(String dataTargetPath) {
-      Objects.requireNonNull(dataTargetPath, "DataTargetPath cannot be null");
-      Preconditions.checkArgument(!Strings.isNullOrEmpty(dataTargetPath), "DataTargetPath cannot be empty");
-      this.dataTargetPath = dataTargetPath;
-      return this;
-    }
-
-    @Override
-    public Build<T> issuesTargetPath(String issuesTargetPath) {
-      Objects.requireNonNull(issuesTargetPath, "IssuesTargetPath cannot be null");
-      Preconditions.checkArgument(!Strings.isNullOrEmpty(issuesTargetPath), "IssuesTargetPath cannot be empty");
-      this.issuesTargetPath = issuesTargetPath;
+    public Build pathsGenerator(Function pathsGenerator) {
+      Objects.requireNonNull(pathsGenerator);
+      this.pathsGenerator = pathsGenerator;
       return this;
     }
 
     @Override
     public InterpretationStep<T> build() {
       return new InterpretationStep<>(this);
-    }
-
-    @Override
-    public Build tempDirectory(String tempDir) {
-      this.tempDir = tempDir;
-      return this;
     }
   }
 
@@ -156,24 +137,17 @@ public class InterpretationStep<T> {
 
   public interface TransformStep<T> {
 
-    DataTargetPathStep<T> transform(RecordTransform<ExtendedRecord, T> transform);
+    PathsGeneratorStep<T> transform(RecordTransform<ExtendedRecord, T> transform);
   }
 
-  public interface DataTargetPathStep<T> {
+  public interface PathsGeneratorStep<T> {
 
-    IssuesTargetPathStep<T> dataTargetPath(String dataTargetPath);
-  }
-
-  public interface IssuesTargetPathStep<T> {
-
-    Build<T> issuesTargetPath(String issuesTargetPath);
+    Build<T> pathsGenerator(Function<InterpretationType, PipelineTargetPaths> pathsGenerator);
   }
 
   public interface Build<T> {
 
     InterpretationStep<T> build();
-
-    Build<T> tempDirectory(String tempDir);
   }
 
 }

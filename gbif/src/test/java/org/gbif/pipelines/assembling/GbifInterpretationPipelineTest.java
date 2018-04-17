@@ -93,6 +93,7 @@ public class GbifInterpretationPipelineTest {
     // check interpretation dir
     checkInterpretationFiles(options, InterpretationType.TEMPORAL);
 
+    // delete files created to leave the FS clean for other tests
     fs.delete(HdfsUtils.buildPath(options.getDefaultTargetDirectory()), true);
   }
 
@@ -126,6 +127,7 @@ public class GbifInterpretationPipelineTest {
       checkInterpretationFiles(options, interpretationType);
     }
 
+    // delete files created to leave the FS clean for other tests
     fs.delete(HdfsUtils.buildPath(options.getDefaultTargetDirectory()), true);
   }
 
@@ -148,6 +150,7 @@ public class GbifInterpretationPipelineTest {
                                                                    options.getDatasetId()).toString()),
                     InterpretationType.ALL_INTERPRETATIONS.size());
 
+    // delete files created to leave the FS clean for other tests
     fs.delete(HdfsUtils.buildPath(options.getDefaultTargetDirectory()), true);
   }
 
