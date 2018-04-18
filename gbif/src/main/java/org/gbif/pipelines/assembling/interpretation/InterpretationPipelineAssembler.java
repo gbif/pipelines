@@ -6,6 +6,7 @@ import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -35,12 +36,12 @@ class InterpretationPipelineAssembler
 
   private PipelineOptions options;
   private String input;
-  private List<InterpretationType> interpretationTypes;
+  private EnumSet<InterpretationType> interpretationTypes;
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler;
   private BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler;
   private EnumMap<InterpretationType, InterpretationStepSupplier> interpretationSteps;
 
-  private InterpretationPipelineAssembler(List<InterpretationType> interpretationTypes) {
+  private InterpretationPipelineAssembler(EnumSet<InterpretationType> interpretationTypes) {
     this.interpretationTypes = interpretationTypes;
   }
 
@@ -57,10 +58,9 @@ class InterpretationPipelineAssembler
    * By default, we use all the interpretations in case that we receive a null or empty list of
    * {@link InterpretationType}.
    */
-  private static List<InterpretationType> filterInterpretations(List<InterpretationType> types) {
-    return types == null || types.isEmpty() || types.contains(InterpretationType.ALL)
-      ? InterpretationType.ALL_INTERPRETATIONS
-      : types;
+  private static EnumSet<InterpretationType> filterInterpretations(List<InterpretationType> types) {
+    return types == null || types.isEmpty() || types.contains(InterpretationType.ALL) ?
+      EnumSet.complementOf(EnumSet.of(InterpretationType.ALL)) : EnumSet.copyOf(types);
   }
 
   @Override

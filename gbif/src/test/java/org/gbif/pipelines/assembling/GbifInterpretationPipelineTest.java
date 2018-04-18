@@ -147,7 +147,7 @@ public class GbifInterpretationPipelineTest {
     // check dataset dir
     checkDirCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                                    options.getDatasetId()).toString()),
-                    InterpretationType.ALL_INTERPRETATIONS.size());
+                    InterpretationType.values().length - 1);
 
     // delete files created to leave the FS clean for other tests
     fs.delete(HdfsUtils.buildPath(options.getDefaultTargetDirectory()), true);

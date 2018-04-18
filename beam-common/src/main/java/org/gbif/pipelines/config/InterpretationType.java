@@ -11,7 +11,4 @@ public enum InterpretationType {
 
   ALL, LOCATION, TEMPORAL, TAXONOMY, COMMON;
 
-  public static final List<InterpretationType> ALL_INTERPRETATIONS =
-    ImmutableList.of(LOCATION, TEMPORAL, TAXONOMY, COMMON);
-
 }
