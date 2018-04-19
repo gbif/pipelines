@@ -49,8 +49,6 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
         locationRecord.setDecimalLongitude(parsedLocation.getLatLng().getLng());
       }
 
-      // TODO: do we have to parse the datum here?? now it is just used in the coordinates interpretation
-
       // create the interpretation
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 

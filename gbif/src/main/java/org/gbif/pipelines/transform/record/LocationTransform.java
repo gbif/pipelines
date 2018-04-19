@@ -35,7 +35,6 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
       public void processElement(ProcessContext context) {
 
         ExtendedRecord extendedRecord = context.element();
-        // TODO: do we really need to do this mapping? should not verbatim fields be deleted??
         Location location = LocationMapper.map(extendedRecord);
         String id = extendedRecord.getId();
         List<Validation> validations = new ArrayList<>();
