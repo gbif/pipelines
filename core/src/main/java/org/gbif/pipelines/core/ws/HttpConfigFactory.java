@@ -48,10 +48,7 @@ public class HttpConfigFactory {
   }
 
   public static Config createConfig(Service service, Path propertiesPath) {
-    Objects.requireNonNull(service);
-    Objects.requireNonNull(propertiesPath);
-
-    return createConfigInternal(service, propertiesPath);
+    return createConfigInternal(Objects.requireNonNull(service), Objects.requireNonNull(propertiesPath));
   }
 
   private static Config createConfigInternal(Service service, Path propertiesPath) {

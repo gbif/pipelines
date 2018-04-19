@@ -16,6 +16,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -51,6 +53,7 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
    * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from the path received.
    */
   public static SpeciesMatchv2Client newInstance(String wsPropertiesPath) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(wsPropertiesPath), "ws properties path is required");
     return new SpeciesMatchv2Client(wsPropertiesPath);
   }
 

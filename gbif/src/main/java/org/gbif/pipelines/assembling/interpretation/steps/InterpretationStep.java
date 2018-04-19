@@ -96,7 +96,8 @@ public class InterpretationStep<T> {
   }
 
   private static class Builder<T>
-    implements Build, InterpretationTypeStep, AvroClassStep, TransformStep, DataTargetPathStep, IssuesTargetPathStep {
+    implements Build<T>, InterpretationTypeStep<T>, AvroClassStep<T>, TransformStep<T>, DataTargetPathStep<T>,
+    IssuesTargetPathStep<T> {
 
     private InterpretationType interpretationType;
     private Class<T> avroClass;
@@ -114,14 +115,14 @@ public class InterpretationStep<T> {
     }
 
     @Override
-    public TransformStep<T> avroClass(Class avroClass) {
+    public TransformStep<T> avroClass(Class<T> avroClass) {
       Objects.requireNonNull(avroClass, "Avro class cannot be null");
       this.avroClass = avroClass;
       return this;
     }
 
     @Override
-    public DataTargetPathStep<T> transform(RecordTransform transform) {
+    public DataTargetPathStep<T> transform(RecordTransform<ExtendedRecord, T> transform) {
       Objects.requireNonNull(transform, "RecordTransform cannot be null");
       this.transform = transform;
       return this;

@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import retrofit2.Call;
 
 import static org.gbif.pipelines.core.parsers.location.CoordinatesValidator.isInRange;
@@ -44,6 +46,7 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
    * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from the path received.
    */
   public static GeocodeServiceClient newInstance(String wsPropertiesPath) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(wsPropertiesPath), "ws properties path is required");
     return new GeocodeServiceClient(wsPropertiesPath);
   }
 

@@ -16,7 +16,7 @@ import org.apache.beam.sdk.values.PCollection;
 /**
  * Defines the necessary interfaces to implement a step builder for {@link InterpretationPipelineAssembler}.
  */
-public class InterpretationAssemblerBuilderSteps {
+class InterpretationAssemblerBuilderSteps {
 
   /**
    * Defines the step to add {@link PipelineOptions}.
