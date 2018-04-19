@@ -23,10 +23,10 @@ public class PipelineHandler {
 
   private static void createAndRunPipeline(String[] args) {
     Pipeline pipeline = InterpretationPipelineFactory.from(args).createPipeline();
-    LOG.info("Pipeline created");
+    LOG.info("Pipeline created from args: {}", args);
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();
-    LOG.info("Pipeline finished with state {}", state);
+    LOG.info("Pipeline finished with state {} from args: {}", state, args);
   }
 
 }
