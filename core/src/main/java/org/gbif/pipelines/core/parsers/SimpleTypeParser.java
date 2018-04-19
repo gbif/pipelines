@@ -1,23 +1,29 @@
 package org.gbif.pipelines.core.parsers;
 
 
+import com.google.common.base.Function;
 import org.gbif.common.parsers.BooleanParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.parsers.memoize.ParserMemoizer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Utility class that parses basic data types.
  */
 public class SimpleTypeParser {
 
+
   //Caching instance of BooleanParser since it is a file based parser
-  private static final BooleanParser BOOLEAN_PARSER = BooleanParser.getInstance();
+  private static final ParserMemoizer<String,ParseResult<Boolean>> BOOLEAN_PARSER = ParserMemoizer.memoize(BooleanParser.getInstance());
+
+  private static final ParserMemoizer<String,Integer> INTEGER_PARSER = ParserMemoizer.integerMemoizer();
+
+  private static final ParserMemoizer<String,Double> DOUBLE_PARSER = ParserMemoizer.doubleMemoizer();
 
   /**
    * Utility class.
@@ -41,7 +47,7 @@ public class SimpleTypeParser {
   public static <U> U parseInt(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Integer>, U> mapper) {
     return Optional
             .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseInteger(termValue))))
+            .map(termValue -> mapper.apply(Optional.ofNullable(INTEGER_PARSER.parse(termValue))))
             .get();
   }
 
@@ -60,7 +66,7 @@ public class SimpleTypeParser {
   public static <U> U parseDouble(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Double>, U> mapper) {
     return Optional
             .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseDouble(termValue))))
+            .map(termValue -> mapper.apply(Optional.ofNullable(DOUBLE_PARSER.parse(termValue))))
             .get();
   }
 

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.parsers;
 
+import org.gbif.pipelines.core.parsers.memoize.ParserMemoizer;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
 import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulatorConverter;
@@ -12,6 +13,7 @@ import java.time.Year;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -24,11 +26,64 @@ public class TemporalParser {
   private static final BiFunction<ChronoAccumulator, List<IssueType>, Temporal> TEMPORAL_FUNC =
     (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
+  private static final ParserMemoizer<RawDate,ParsedTemporalDates> MEMOIZER = ParserMemoizer.memoize(TemporalParser::parseRawDate);
+
+  /**
+   * This class is used to cache parsed value into the MEMOIZER. It is required to have a consistent hashing.
+   */
+  private static class RawDate {
+
+     private final String rawYear;
+     private final String rawMonth;
+     private final String rawDay;
+     private final String rawDate;
+
+     private RawDate(String rawYear, String rawMonth, String rawDay, String rawDate) {
+        this.rawYear = rawYear;
+        this.rawMonth = rawMonth;
+        this.rawDay = rawDay;
+        this.rawDate = rawDate;
+     }
+
+      @Override
+     public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RawDate rawDate1 = (RawDate) o;
+        return Objects.equals(rawYear, rawDate1.rawYear) &&
+                 Objects.equals(rawMonth, rawDate1.rawMonth) &&
+                 Objects.equals(rawDay, rawDate1.rawDay) &&
+                 Objects.equals(rawDate, rawDate1.rawDate);
+     }
+
+     @Override
+     public int hashCode() {
+        return Objects.hash(rawYear, rawMonth, rawDay, rawDate);
+     }
+
+     public static RawDate of(String rawYear, String rawMonth, String rawDay, String rawDate) {
+        return new RawDate(rawYear, rawMonth, rawDay, rawDate);
+     }
+  }
+
+  /**
+   * Private constructor.
+   */
   private TemporalParser() {
     // Can't have an instance
   }
 
-  public static ParsedTemporalDates parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
+  /**
+   * Performs a parser by creating a RawDate instance that is stores in the cache.
+   */
+  private static ParsedTemporalDates parseRawDate(RawDate rawDate) {
+     return doParse(rawDate.rawYear, rawDate.rawMonth, rawDate.rawDay, rawDate.rawDate);
+  }
+
+  /**
+   * Performs the date parsing from raw values.
+   */
+  private static ParsedTemporalDates doParse(String rawYear, String rawMonth, String rawDay, String rawDate) {
     // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
     if (isEmpty(rawYear) && isEmpty(rawDate)) {
       return new ParsedTemporalDates();
@@ -81,4 +136,10 @@ public class TemporalParser {
     return temporalDates;
   }
 
+  /**
+   * Performs the parser of raw elements.
+  */
+  public static ParsedTemporalDates parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
+     return MEMOIZER.parse(RawDate.of(rawYear, rawMonth, rawDay, rawDate));
+  }
 }
