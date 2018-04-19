@@ -82,7 +82,7 @@ public class InterpretationStep<T> {
   }
 
   private <U> AvroIO.Write<U> createAvroWriter(Class<U> avroClass, String path) {
-    AvroIO.Write<U> writer = AvroIO.write(avroClass).to(path).withoutSharding().withSuffix(".avro");
+    AvroIO.Write<U> writer = AvroIO.write(avroClass).to(path).withSuffix(".avro");
 
     if (!Strings.isNullOrEmpty(tempDir)) {
       writer = writer.withTempDirectory(FileSystems.matchNewResource(tempDir, true));
