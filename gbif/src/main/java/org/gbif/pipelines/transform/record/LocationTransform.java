@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -23,7 +24,7 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
     super("Interpret location record");
   }
 
-  public static LocationTransform create(){
+  public static LocationTransform create() {
     return new LocationTransform();
   }
 
@@ -34,14 +35,17 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
       public void processElement(ProcessContext context) {
 
         ExtendedRecord extendedRecord = context.element();
-        // do we really need to do this mapping?
         Location location = LocationMapper.map(extendedRecord);
         String id = extendedRecord.getId();
         List<Validation> validations = new ArrayList<>();
 
+        // read the ws properties path from the PipelineOptions
+        String wsPropertiesPath =
+          context.getPipelineOptions().as(DataProcessingPipelineOptions.class).getWsProperties();
+
         // Interpreting Country and Country code
         Interpretation.of(extendedRecord)
-          .using(LocationInterpreter.interpretCountryAndCoordinates(location))
+          .using(LocationInterpreter.interpretCountryAndCoordinates(location, wsPropertiesPath))
           .using(LocationInterpreter.interpretContinent(location))
           .using(LocationInterpreter.interpretWaterBody(location))
           .using(LocationInterpreter.interpretMinimumElevationInMeters(location))

@@ -30,7 +30,9 @@ public class LocationParser {
 
   private LocationParser() {}
 
-  public static ParsedField<ParsedLocation> parseCountryAndCoordinates(ExtendedRecord extendedRecord) {
+  public static ParsedField<ParsedLocation> parseCountryAndCoordinates(
+    ExtendedRecord extendedRecord, String wsPropertiesPath
+  ) {
     AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
     List<InterpretationIssue> issues = new ArrayList<>();
@@ -43,8 +45,8 @@ public class LocationParser {
     // check for a mismatch between the country and the country code
     checkCountryMismatch(issues, countryName, countryCode);
 
-    // get the final country from the 2 previous parsings.
-    Country countryMatched = getFinalCountryMatch(countryName, countryCode);
+    // get the final country from the 2 previous parsings. We take the country code parsed as default
+    Country countryMatched = countryCode.orElseGet(() -> countryName.orElse(null));
 
     // parse coordinates
     ParsedField<LatLng> coordsParsed = parseLatLng(extendedRecord);
@@ -65,7 +67,7 @@ public class LocationParser {
 
     // if the coords parsing was succesful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-      LocationMatcher.newMatcher(parsedLocation.getLatLng(), parsedLocation.getCountry())
+      LocationMatcher.newMatcher(parsedLocation.getLatLng(), parsedLocation.getCountry(), wsPropertiesPath)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LAT)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LNG)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_COORDS)
@@ -96,11 +98,6 @@ public class LocationParser {
     }
 
     return Optional.ofNullable(countryParsed.getResult());
-  }
-
-  private static Country getFinalCountryMatch(Optional<Country> countryName, Optional<Country> countryCode) {
-    // We take the country code parsed as default
-    return countryCode.orElseGet(() -> countryName.orElse(null));
   }
 
   private static boolean isParsingSuccessful(Country countryMatched, ParsedField<ParsedLocation> match) {

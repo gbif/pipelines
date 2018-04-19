@@ -4,15 +4,20 @@ import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
+import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.BaseServiceClient;
+import org.gbif.pipelines.core.ws.config.Service;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -24,10 +29,32 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
 
   private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatchv2Client.class);
 
-  private SpeciesMatchv2Client() {}
+  private final SpeciesMatchv2ServiceRest speciesMatchv2ServiceRest;
 
-  public static SpeciesMatchv2Client getInstance() {
+  private SpeciesMatchv2Client() {
+    speciesMatchv2ServiceRest = SpeciesMatchv2ServiceRest.getInstance();
+  }
+
+  private SpeciesMatchv2Client(String wsPropertiesPath) {
+    speciesMatchv2ServiceRest =
+      SpeciesMatchv2ServiceRest.getInstance(HttpConfigFactory.createConfig(Service.SPECIES_MATCH2,
+                                                                           Paths.get(wsPropertiesPath)));
+  }
+
+  /**
+   * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from a 'ws.properties' file
+   * present in the classpath.
+   */
+  public static SpeciesMatchv2Client newInstance() {
     return new SpeciesMatchv2Client();
+  }
+
+  /**
+   * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from the path received.
+   */
+  public static SpeciesMatchv2Client newInstance(String wsPropertiesPath) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(wsPropertiesPath), "ws properties path is required");
+    return new SpeciesMatchv2Client(wsPropertiesPath);
   }
 
   /**
@@ -74,7 +101,7 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
 
   @Override
   protected Call<NameUsageMatch2> getCall(Map<String, String> params) {
-    return SpeciesMatchv2ServiceRest.getInstance().getService().match(params);
+    return speciesMatchv2ServiceRest.getService().match(params);
   }
 
   @Override

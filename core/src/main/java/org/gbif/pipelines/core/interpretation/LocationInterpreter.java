@@ -30,11 +30,12 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link DwcTerm#decimalLatitude} and the
    * {@link DwcTerm#decimalLongitude} terms.
    */
-  static LocationInterpreter interpretCountryAndCoordinates(Location locationRecord) {
+  static LocationInterpreter interpretCountryAndCoordinates(Location locationRecord, String wsPropertiesPath) {
     return (ExtendedRecord extendedRecord) -> {
 
       // parse the terms
-      ParsedField<ParsedLocation> parsedResult = LocationParser.parseCountryAndCoordinates(extendedRecord);
+      ParsedField<ParsedLocation> parsedResult =
+        LocationParser.parseCountryAndCoordinates(extendedRecord, wsPropertiesPath);
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();
@@ -47,8 +48,6 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
         locationRecord.setDecimalLatitude(parsedLocation.getLatLng().getLat());
         locationRecord.setDecimalLongitude(parsedLocation.getLatLng().getLng());
       }
-
-      // TODO: do we have to parse the datum here?? now it is just used in the coordinates interpretation
 
       // create the interpretation
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);

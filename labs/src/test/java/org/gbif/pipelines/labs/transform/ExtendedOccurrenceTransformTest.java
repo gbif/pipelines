@@ -2,6 +2,7 @@ package org.gbif.pipelines.labs.transform;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -18,6 +19,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.BufferedSource;
 import okio.Okio;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -35,6 +37,8 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class ExtendedOccurrenceTransformTest {
+
+  private final static String WS_PROPERTIES_PATH = "ws.properties";
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
@@ -86,8 +90,11 @@ public class ExtendedOccurrenceTransformTest {
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(interpretedRecords);
-    p.run();
 
+    // run pipeline with the options required
+    DataProcessingPipelineOptions options = PipelineOptionsFactory.create().as(DataProcessingPipelineOptions.class);
+    options.setWsProperties(WS_PROPERTIES_PATH);
+    p.run(options);
   }
 
   private List<ExtendedRecord> createExtendedRecordList(String[]... records) {

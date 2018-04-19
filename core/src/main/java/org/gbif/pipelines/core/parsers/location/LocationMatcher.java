@@ -33,15 +33,27 @@ public class LocationMatcher {
 
   private final LatLng latLng;
   private final Country country;
+  private final GeocodeServiceClient geocodeServiceClient;
   private List<CoordinatesFunction> alternativeTransformations = new ArrayList<>();
 
   private LocationMatcher(LatLng latLng, Country country) {
     this.latLng = latLng;
     this.country = country;
+    this.geocodeServiceClient = GeocodeServiceClient.newInstance();
+  }
+
+  private LocationMatcher(LatLng latLng, Country country, String wsPropertiesPath) {
+    this.latLng = latLng;
+    this.country = country;
+    this.geocodeServiceClient = GeocodeServiceClient.newInstance(wsPropertiesPath);
   }
 
   public static LocationMatcher newMatcher(LatLng latLng, Country country) {
     return new LocationMatcher(latLng, country);
+  }
+
+  public static LocationMatcher newMatcher(LatLng latLng, Country country, String wsPropertiesPath) {
+    return new LocationMatcher(latLng, country, wsPropertiesPath);
   }
 
   public static LocationMatcher newMatcher(LatLng latLng) {
@@ -131,7 +143,7 @@ public class LocationMatcher {
   }
 
   private List<Country> getCountriesFromCoordinates(LatLng latLng) {
-    HttpResponse<List<Country>> response = GeocodeServiceClient.getInstance().getCountriesFromLatLng(latLng);
+    HttpResponse<List<Country>> response = geocodeServiceClient.getCountriesFromLatLng(latLng);
 
     if (response.isError()) {
       LOG.info("Error calling the geocode WS: {}", response.getErrorMessage());

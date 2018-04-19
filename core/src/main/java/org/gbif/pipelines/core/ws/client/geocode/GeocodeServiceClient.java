@@ -2,9 +2,12 @@ package org.gbif.pipelines.core.ws.client.geocode;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.BaseServiceClient;
+import org.gbif.pipelines.core.ws.config.Service;
 
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,16 +15,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import retrofit2.Call;
 
 import static org.gbif.pipelines.core.parsers.location.CoordinatesValidator.isInRange;
 
 public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeResponse>, List<Country>> {
 
-  private GeocodeServiceClient() {}
+  private final GeocodeServiceRest geocodeServiceRest;
 
-  public static GeocodeServiceClient getInstance() {
+  private GeocodeServiceClient() {
+    geocodeServiceRest = GeocodeServiceRest.getInstance();
+  }
+
+  private GeocodeServiceClient(String wsPropertiesPath) {
+    geocodeServiceRest =
+      GeocodeServiceRest.getInstance(HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get(wsPropertiesPath)));
+  }
+
+  /**
+   * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from a 'ws.properties' file
+   * present in the classpath.
+   */
+  public static GeocodeServiceClient newInstance() {
     return new GeocodeServiceClient();
+  }
+
+  /**
+   * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from the path received.
+   */
+  public static GeocodeServiceClient newInstance(String wsPropertiesPath) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(wsPropertiesPath), "ws properties path is required");
+    return new GeocodeServiceClient(wsPropertiesPath);
   }
 
   public HttpResponse<List<Country>> getCountriesFromLatLng(LatLng latLng) {
@@ -42,7 +68,7 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
 
   @Override
   protected Call<Collection<GeocodeResponse>> getCall(Map<String, String> params) {
-    return GeocodeServiceRest.getInstance().getService().reverse(params);
+    return geocodeServiceRest.getService().reverse(params);
   }
 
   @Override

@@ -21,6 +21,7 @@ import org.junit.Test;
 public class TaxonomyInterpreterTest extends MockServer {
 
   private static final String TEST_RECORD_ID = "testId";
+  private static final String WS_PROPERTIES_PATH = "ws.properties";
 
   @Test
   public void testAssembledAuthor() throws IOException {
@@ -38,7 +39,7 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord);
+    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH);
     interpreter.apply(record);
 
     Map<Rank, RankedName> ranksResponse =
@@ -104,7 +105,7 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(OENANTHE_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord);
+    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH);
     interpreter.apply(record);
 
     Map<Rank, RankedName> ranksResponse =
@@ -170,7 +171,7 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(ANNELIDA_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
 
     // FIXME: this test does not pass. It is copied from old adapter but it returns a different response.Should we check it??
     // this is the old test
@@ -196,7 +197,7 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(CERATIACEAE_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
 
     Map<Rank, RankedName> ranksResponse =
       taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
@@ -224,7 +225,7 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
 
     Map<Rank, RankedName> ranksResponse =
       taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
@@ -243,7 +244,7 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(AGALLISUS_LEPTUROIDES_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
 
     Assert.assertEquals(1118030, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1118026, taxonRecord.getAcceptedUsage().getKey().intValue());
@@ -253,13 +254,13 @@ public class TaxonomyInterpreterTest extends MockServer {
 
   @Test(expected = NullPointerException.class)
   public void testMatchNullTaxonRecord() {
-    TaxonomyInterpreter.taxonomyInterpreter(null).apply(null);
+    TaxonomyInterpreter.taxonomyInterpreter(null, null).apply(null);
   }
 
   @Test(expected = NullPointerException.class)
   public void testMatchNullArgs() {
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(null);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -267,7 +268,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     ExtendedRecord record = new ExtendedRecord();
     record.setCoreTerms(new HashMap<>());
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord).apply(record);
+    TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
   }
 
 }

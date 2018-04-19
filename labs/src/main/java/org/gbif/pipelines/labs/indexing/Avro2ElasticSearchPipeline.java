@@ -1,7 +1,6 @@
 package org.gbif.pipelines.labs.indexing;
 
-import org.gbif.pipelines.config.DataPipelineOptionsFactory;
-import org.gbif.pipelines.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.config.EsProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.HashMap;
@@ -14,6 +13,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
@@ -42,7 +42,8 @@ public class Avro2ElasticSearchPipeline {
 
   public static void main(String[] args) {
 
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
+    EsProcessingPipelineOptions options =
+      PipelineOptionsFactory.fromArgs(args).create().as(EsProcessingPipelineOptions.class);
     Pipeline p = Pipeline.create(options);
 
     // Read Avro files
@@ -78,7 +79,7 @@ public class Avro2ElasticSearchPipeline {
       Map<String, String> terms = record.getCoreTerms();
       Map<String, String> stripped = new HashMap<>(record.getCoreTerms().size());
 
-      Function<String, String> stripNS = (source) -> source.substring(source.lastIndexOf(SLASH_CONST) + 1);
+      Function<String, String> stripNS = source -> source.substring(source.lastIndexOf(SLASH_CONST) + 1);
       terms.forEach((k, v) -> stripped.put(stripNS.apply(k), v));
 
       // location suitable for geopoint format

@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.beam.runners.direct.DirectOptions;
 import org.apache.beam.sdk.annotations.Experimental;
 import org.apache.beam.sdk.annotations.Experimental.Kind;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
@@ -26,21 +27,9 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 @Experimental(Kind.FILESYSTEM)
 public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
 
-  String[] DEFAULT_ES_HOSTS =
-    new String[] {"http://c4n1.gbif.org:9200", "http://c4n2.gbif.org:9200", "http://c4n3.gbif.org:9200",
-      "http://c4n4.gbif.org:9200", "http://c4n5.gbif.org:9200", "http://c4n6.gbif.org:9200",
-      "http://c4n7.gbif.org:9200", "http://c4n8.gbif.org:9200", "http://c4n9.gbif.org:9200"};
-
-  String DEFAULT_ES_INDEX = "interpreted-occurrence";
-
-  String DEFAULT_ES_TYPE = "es-type";
-
-  int DEFAULT_ES_BATCH_SIZE = 1000;
-
   @Description("Id of the dataset used to name the target file in HDFS.")
   @Validation.Required
   String getDatasetId();
-
   void setDatasetId(String id);
 
   @Description("Default directory where the target file will be written. By default, it takes the hdfs root directory "
@@ -60,40 +49,41 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
                + "By default uses a tmp directory in the root folder")
   @Default.InstanceFactory(TempDirectoryFactory.class)
   String getHdfsTempLocation();
-
   void setHdfsTempLocation(String value);
 
   @Description("Target paths for the different data interpretations. If they are not specified, it uses the "
                + "\"DefaultTargetDirectory\" option as directory and the name of the interpretation as file name. "
                + "Interpretations currently supported are verbatim, temporal, location and gbif-backbone.")
   @Default.InstanceFactory(TargetPathFactory.class)
+  // TODO: remove or move to subclass
+  @Deprecated
   Map<OptionsKeyEnum, TargetPath> getTargetPaths();
 
+  @Deprecated
   void setTargetPaths(Map<OptionsKeyEnum, TargetPath> targetPaths);
 
-  @Description("Target ES Hosts")
-  @Default.InstanceFactory(ESHostsFactory.class)
-  String[] getESHosts();
+  @Default.InstanceFactory(DirectOptions.AvailableParallelismFactory.class)
+  @Description("Controls the amount of target parallelism the DirectRunner will use. Defaults to"
+               + " the greater of the number of available processors and 3. Must be a value greater"
+               + " than zero.")
+  int getTargetParallelism();
+  void setTargetParallelism(int target);
 
-  void setESHosts(String[] hosts);
+  @Description("Types for an interpretation - ALL, TAXON, LOCATION and etc.")
+  List<InterpretationType> getInterpretationTypes();
+  void setInterpretationTypes(List<InterpretationType> types);
 
-  @Description("Target ES Index")
-  @Default.InstanceFactory(ESIndexFactory.class)
-  String getESIndex();
+  @Description("Avro compression type")
+  String getAvroCompressionType();
+  void setAvroCompressionType(String compressionType);
 
-  void setESIndex(String index);
+  @Description("Avro sync interval time")
+  int getAvroSyncInterval();
+  void setAvroSyncInterval(int syncInterval);
 
-  @Description("Target ES Type")
-  @Default.InstanceFactory(ESTypeFactory.class)
-  String getESType();
-
-  void setESType(String esType);
-
-  @Description("Target ES Max Batch Size")
-  @Default.InstanceFactory(ESMaxBatchSize.class)
-  Integer getESMaxBatchSize();
-
-  void setESMaxBatchSize(Integer batchSize);
+  @Description("WS properties for interpretations that require the use of external web services")
+  String getWsProperties();
+  void setWsProperties(String path);
 
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
@@ -140,50 +130,6 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
       return Arrays.stream(OptionsKeyEnum.values())
         .collect(Collectors.toMap(Function.identity(), i -> new TargetPath(defaultDir, i.getDefaultFileName())));
 
-    }
-  }
-
-  /**
-   * A {@link DefaultValueFactory} which locates a default elastic search hosts.
-   */
-  class ESHostsFactory implements DefaultValueFactory<String[]> {
-
-    @Override
-    public String[] create(PipelineOptions options) {
-      return DEFAULT_ES_HOSTS;
-    }
-  }
-
-  /**
-   * A {@link DefaultValueFactory} which locates a default elastic search index.
-   */
-  class ESIndexFactory implements DefaultValueFactory<String> {
-
-    @Override
-    public String create(PipelineOptions options) {
-      return DEFAULT_ES_INDEX;
-    }
-  }
-
-  /**
-   * A {@link DefaultValueFactory} which locates a default elastic search index'es type.
-   */
-  class ESTypeFactory implements DefaultValueFactory<String> {
-
-    @Override
-    public String create(PipelineOptions options) {
-      return DEFAULT_ES_TYPE;
-    }
-  }
-
-  /**
-   * A {@link DefaultValueFactory} which locates a default elastic search type.
-   */
-  class ESMaxBatchSize implements DefaultValueFactory<Integer> {
-
-    @Override
-    public Integer create(PipelineOptions options) {
-      return DEFAULT_ES_BATCH_SIZE;
     }
   }
 

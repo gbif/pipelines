@@ -4,6 +4,7 @@ import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -19,6 +20,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.BufferedSource;
 import okio.Okio;
+import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -37,6 +39,8 @@ import static org.gbif.api.vocabulary.TaxonomicStatus.ACCEPTED;
 
 @RunWith(JUnit4.class)
 public class TaxonRecordTransformTest {
+
+  private final static String WS_PROPERTIES_PATH = "ws.properties";
 
   private static final String TEST_ID = "1";
 
@@ -77,8 +81,11 @@ public class TaxonRecordTransformTest {
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());
-    p.run();
 
+    // run pipeline with the options required
+    DataProcessingPipelineOptions options = PipelineOptionsFactory.create().as(DataProcessingPipelineOptions.class);
+    options.setWsProperties(WS_PROPERTIES_PATH);
+    p.run(options);
   }
 
   private TaxonRecord createTaxonRecordExpected() {

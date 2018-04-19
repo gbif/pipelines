@@ -27,13 +27,14 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
-  static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord) {
+  static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, String wsPropertiesPath) {
     return (ExtendedRecord extendedRecord) -> {
 
       AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
       // get match from WS
-      HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.getInstance().getMatch(extendedRecord);
+      HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance(wsPropertiesPath).getMatch
+        (extendedRecord);
 
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
