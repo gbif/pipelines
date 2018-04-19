@@ -7,7 +7,7 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
 @Experimental(Experimental.Kind.FILESYSTEM)
-public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptions{
+public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptions {
 
   int DEFAULT_ES_BATCH_SIZE = 1_000;
 
@@ -27,19 +27,8 @@ public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptio
   void setESType(String esType);
 
   @Description("Target ES Max Batch Size")
-  @Default.InstanceFactory(ESMaxBatchSize.class)
+  @Default.Integer(DEFAULT_ES_BATCH_SIZE)
   Integer getESMaxBatchSize();
 
   void setESMaxBatchSize(Integer batchSize);
-
-  /**
-   * A {@link DefaultValueFactory} which locates a default elastic search type.
-   */
-  class ESMaxBatchSize implements DefaultValueFactory<Integer> {
-
-    @Override
-    public Integer create(PipelineOptions options) {
-      return DEFAULT_ES_BATCH_SIZE;
-    }
-  }
 }
