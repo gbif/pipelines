@@ -22,7 +22,7 @@ public class PipelineHandler {
   }
 
   private static void createAndRunPipeline(String[] args) {
-    Pipeline pipeline = InterpretationPipelineFactory.from(args).createPipeline();
+    Pipeline pipeline = InterpretationPipelineFactory.from(args).get();
     LOG.info("Pipeline created from args: {}", args);
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();

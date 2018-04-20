@@ -10,6 +10,7 @@ import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.EnumMap;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -30,7 +31,7 @@ import static org.gbif.pipelines.config.InterpretationType.TEMPORAL;
 /**
  * Gbif implementation for a {@link InterpretationPipeline}.
  */
-public class GbifInterpretationPipeline implements InterpretationPipeline {
+public class GbifInterpretationPipeline implements Supplier<Pipeline> {
 
   private static final String DATA_FILENAME = "interpreted";
   private static final String ISSUES_FOLDER = "issues";
@@ -50,8 +51,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
 
   private GbifInterpretationPipeline(DataProcessingPipelineOptions options) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),
-                                "defaultTargetDirectory " + "is required");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),"defaultTargetDirectory is required");
     this.options = options;
     avroCodec = parseAvroCodec(options.getAvroCompressionType());
     initStepsMap();
@@ -72,7 +72,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
   }
 
   @Override
-  public Pipeline createPipeline() {
+  public Pipeline get() {
     return InterpretationPipelineAssembler.of(options.getInterpretationTypes())
       .withOptions(options)
       .withInput(options.getInputFile())

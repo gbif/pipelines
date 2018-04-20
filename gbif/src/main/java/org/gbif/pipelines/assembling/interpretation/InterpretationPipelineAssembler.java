@@ -5,10 +5,7 @@ import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupp
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -39,7 +36,7 @@ class InterpretationPipelineAssembler
   private EnumSet<InterpretationType> interpretationTypes;
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler;
   private BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler;
-  private EnumMap<InterpretationType, InterpretationStepSupplier> interpretationSteps;
+  private Map<InterpretationType, InterpretationStepSupplier> interpretationSteps;
 
   private InterpretationPipelineAssembler(EnumSet<InterpretationType> interpretationTypes) {
     this.interpretationTypes = interpretationTypes;
@@ -80,7 +77,7 @@ class InterpretationPipelineAssembler
 
   @Override
   public InterpretationAssemblerBuilderSteps.FinalStep using(
-    EnumMap<InterpretationType, InterpretationStepSupplier> interpretationSteps
+    Map<InterpretationType, InterpretationStepSupplier> interpretationSteps
   ) {
     Objects.requireNonNull(interpretationSteps, "Interpretation steps map cannot be null");
     this.interpretationSteps = interpretationSteps;
