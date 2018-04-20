@@ -140,7 +140,7 @@ class InterpretationPipelineAssembler
   private Predicate<InterpretationType> stepSupplierFilter() {
     return (type) -> {
       if (Objects.isNull(interpretationSteps.get(type))) {
-        LOG.debug("No interpretation step found for type {}", type);
+        LOG.warn("No interpretation step supplier found for interpretation type {}", type);
         return false;
       }
       return true;
@@ -151,7 +151,7 @@ class InterpretationPipelineAssembler
     return (type) -> {
       InterpretationStep step = interpretationSteps.get(type).get();
       if (step == null) {
-        LOG.debug("Interpretation step not found for interpretation type {}", type);
+        LOG.warn("No interpretation step found for interpretation type {}", type);
       }
       return step;
     };
