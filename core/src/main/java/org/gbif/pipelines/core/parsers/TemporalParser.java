@@ -26,19 +26,19 @@ public class TemporalParser {
   private static final BiFunction<ChronoAccumulator, List<IssueType>, Temporal> TEMPORAL_FUNC =
     (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
-  private static final ParserMemoizer<RawDate,ParsedTemporalDates> MEMOIZER = ParserMemoizer.memoize(TemporalParser::parseRawDate);
+  private static final ParserMemoizer<RawDateFields,ParsedTemporalDates> MEMOIZER = ParserMemoizer.memoize(TemporalParser::parseRawDate);
 
   /**
    * This class is used to cache parsed value into the MEMOIZER. It is required to have a consistent hashing.
    */
-  private static class RawDate {
+  private static class RawDateFields {
 
      private final String rawYear;
      private final String rawMonth;
      private final String rawDay;
      private final String rawDate;
 
-     private RawDate(String rawYear, String rawMonth, String rawDay, String rawDate) {
+     private RawDateFields(String rawYear, String rawMonth, String rawDay, String rawDate) {
         this.rawYear = rawYear;
         this.rawMonth = rawMonth;
         this.rawDay = rawDay;
@@ -49,11 +49,11 @@ public class TemporalParser {
      public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RawDate rawDate1 = (RawDate) o;
-        return Objects.equals(rawYear, rawDate1.rawYear) &&
-                 Objects.equals(rawMonth, rawDate1.rawMonth) &&
-                 Objects.equals(rawDay, rawDate1.rawDay) &&
-                 Objects.equals(rawDate, rawDate1.rawDate);
+        RawDateFields rawDateFields1 = (RawDateFields) o;
+        return Objects.equals(rawYear, rawDateFields1.rawYear) &&
+                 Objects.equals(rawMonth, rawDateFields1.rawMonth) &&
+                 Objects.equals(rawDay, rawDateFields1.rawDay) &&
+                 Objects.equals(rawDate, rawDateFields1.rawDate);
      }
 
      @Override
@@ -61,8 +61,8 @@ public class TemporalParser {
         return Objects.hash(rawYear, rawMonth, rawDay, rawDate);
      }
 
-     public static RawDate of(String rawYear, String rawMonth, String rawDay, String rawDate) {
-        return new RawDate(rawYear, rawMonth, rawDay, rawDate);
+     public static RawDateFields of(String rawYear, String rawMonth, String rawDay, String rawDate) {
+        return new RawDateFields(rawYear, rawMonth, rawDay, rawDate);
      }
   }
 
@@ -74,10 +74,10 @@ public class TemporalParser {
   }
 
   /**
-   * Performs a parser by creating a RawDate instance that is stores in the cache.
+   * Performs a parser by creating a RawDateFields instance that is stores in the cache.
    */
-  private static ParsedTemporalDates parseRawDate(RawDate rawDate) {
-     return doParse(rawDate.rawYear, rawDate.rawMonth, rawDate.rawDay, rawDate.rawDate);
+  private static ParsedTemporalDates parseRawDate(RawDateFields rawDateFields) {
+     return doParse(rawDateFields.rawYear, rawDateFields.rawMonth, rawDateFields.rawDay, rawDateFields.rawDate);
   }
 
   /**
@@ -140,6 +140,6 @@ public class TemporalParser {
    * Performs the parser of raw elements.
   */
   public static ParsedTemporalDates parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
-     return MEMOIZER.parse(RawDate.of(rawYear, rawMonth, rawDay, rawDate));
+     return MEMOIZER.parse(RawDateFields.of(rawYear, rawMonth, rawDay, rawDate));
   }
 }

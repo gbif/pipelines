@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.parsers.location;
 
 import org.gbif.api.vocabulary.Country;
-import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.InterpretationIssue;
@@ -27,6 +26,10 @@ import org.slf4j.LoggerFactory;
 public class LocationParser {
 
   private static final Logger LOG = LoggerFactory.getLogger(LocationParser.class);
+
+  private static final ParsedField<Country> INVALID_COUNTRY_RESPONSE =  ParsedField.<Country>newBuilder().withIssue(new InterpretationIssue(IssueType.COUNTRY_INVALID, DwcTerm.country)).build();
+
+  private static final ParsedField<Country> INVALID_COUNTRY_CODE_RESPONSE =  ParsedField.<Country>newBuilder().withIssue(new InterpretationIssue(IssueType.COUNTRY_CODE_INVALID, DwcTerm.countryCode)).build();
 
   private LocationParser() {}
 
@@ -114,45 +117,18 @@ public class LocationParser {
   }
 
   private static ParsedField<Country> parseCountry(ExtendedRecord extendedRecord) {
-    Optional<ParseResult<Country>> parseResultOpt =
-      VocabularyParsers.countryParser().map(extendedRecord, parseRes -> parseRes);
-
-    if (!parseResultOpt.isPresent()) {
-      // case when the country is null in the extended record. We return an issue not to break the whole interpretation
-      return ParsedField.<Country>newBuilder().withIssue(new InterpretationIssue(IssueType.COUNTRY_INVALID,
-                                                                                 DwcTerm.country)).build();
-    }
-
-    ParseResult<Country> parseResult = parseResultOpt.get();
-    ParsedField.Builder<Country> builder = ParsedField.newBuilder();
-    if (parseResult.isSuccessful()) {
-      builder.successful(true);
-      builder.result(parseResult.getPayload());
-    } else {
-      builder.withIssue(new InterpretationIssue(IssueType.COUNTRY_INVALID, DwcTerm.country));
-    }
-    return builder.build();
+    return VocabularyParsers.countryParser()
+            .map(extendedRecord, parseResult ->
+                    parseResult.isSuccessful()? ParsedField.<Country>newBuilder()
+                            .successful(true).result(parseResult.getPayload()).build() : INVALID_COUNTRY_RESPONSE)
+            .orElse(INVALID_COUNTRY_RESPONSE);
   }
 
   private static ParsedField<Country> parseCountryCode(ExtendedRecord extendedRecord) {
-    Optional<ParseResult<Country>> parseResultOpt =
-      VocabularyParsers.countryCodeParser().map(extendedRecord, parseRes -> parseRes);
-
-    if (!parseResultOpt.isPresent()) {
-      // case when the country is null in the extended record. We return an issue not to break the whole interpretation
-      return ParsedField.<Country>newBuilder().withIssue(new InterpretationIssue(IssueType.COUNTRY_CODE_INVALID,
-                                                                                 DwcTerm.countryCode)).build();
-    }
-
-    ParseResult<Country> parseResult = parseResultOpt.get();
-    ParsedField.Builder<Country> builder = ParsedField.newBuilder();
-    if (parseResult.isSuccessful()) {
-      builder.successful(true);
-      builder.result(parseResult.getPayload());
-    } else {
-      builder.withIssue(new InterpretationIssue(IssueType.COUNTRY_CODE_INVALID, DwcTerm.countryCode));
-    }
-    return builder.build();
+    return VocabularyParsers.countryCodeParser().map(extendedRecord, parseResult ->
+            parseResult.isSuccessful()? ParsedField.<Country>newBuilder()
+                    .successful(true).result(parseResult.getPayload()).build() : INVALID_COUNTRY_CODE_RESPONSE)
+            .orElse(INVALID_COUNTRY_CODE_RESPONSE);
   }
 
   private static ParsedField<LatLng> parseLatLng(ExtendedRecord extendedRecord) {

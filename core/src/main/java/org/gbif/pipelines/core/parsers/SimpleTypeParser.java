@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.parsers;
 
 import com.google.common.base.Function;
 import org.gbif.common.parsers.BooleanParser;
-import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.memoize.ParserMemoizer;
@@ -38,7 +37,7 @@ public class SimpleTypeParser {
   public static void parseInt(ExtendedRecord extendedRecord, DwcTerm term, Consumer<Optional<Integer>> consumer) {
     Optional
       .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-      .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseInteger(termValue))));
+      .ifPresent(termValue -> consumer.accept(Optional.ofNullable(INTEGER_PARSER.parse(termValue))));
   }
 
   /**
@@ -57,7 +56,7 @@ public class SimpleTypeParser {
   public static void parseDouble(ExtendedRecord extendedRecord, DwcTerm term, Consumer<Optional<Double>> consumer) {
     Optional
       .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-      .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseDouble(termValue))));
+      .ifPresent(termValue -> consumer.accept(Optional.ofNullable(DOUBLE_PARSER.parse(termValue))));
   }
 
   /**
@@ -89,4 +88,5 @@ public class SimpleTypeParser {
             .map(termValue -> mapper.apply(BOOLEAN_PARSER.parse(termValue)))
             .get();
   }
+
 }

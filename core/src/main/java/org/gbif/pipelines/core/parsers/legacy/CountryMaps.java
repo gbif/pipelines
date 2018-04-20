@@ -63,7 +63,7 @@ public class CountryMaps {
     Map<Country, Set<Country>> map = withIssue ? CONFUSED_COUNTRIES : EQUIVALENT_COUNTRIES;
 
     if (!map.containsKey(countryA)) {
-      map.put(countryA, Sets.<Country>newHashSet());
+      map.put(countryA, Sets.newHashSet());
     }
 
     Set<Country> confused = map.get(countryA);
