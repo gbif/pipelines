@@ -1,8 +1,8 @@
 package org.gbif.pipelines.core.parsers.location;
 
-import com.google.common.base.Functions;
 import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.parsers.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.legacy.CoordinateParseUtils;
 import org.gbif.pipelines.core.parsers.memoize.ParserMemoizer;
@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
+import org.gbif.pipelines.io.avro.IssueType;
 
 /**
  * Parser for the Dwc Terms related with the coordinates.
@@ -21,7 +22,7 @@ public class CoordinatesParser {
   private static final ParserMemoizer<RawLatLng,ParsedField<LatLng>> LAT_LNG_PARSER = ParserMemoizer.<RawLatLng,ParsedField<LatLng>>memoize(rawLatLng ->
     CoordinateParseUtils.parseLatLng(rawLatLng.getLat(), rawLatLng.getLng()));
 
-  private static final ParserMemoizer<String,ParsedField<LatLng>> VERTBATIM_COORD_PARSER = ParserMemoizer.memoize(CoordinateParseUtils::parseVerbatimCoordinates);
+  private static final ParserMemoizer<String,ParsedField<LatLng>> VERTBATIM_COORD_PARSER = ParserMemoizer.memoize(CoordinateParseUtils::parseVerbatimCoordinates, ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID, DwcTerm.verbatimCoordinates)));
 
   // parses decimal latitude and longitude fields
   private static final Function<ExtendedRecord, ParsedField<LatLng>> DECIMAL_LAT_LNG_FN =
