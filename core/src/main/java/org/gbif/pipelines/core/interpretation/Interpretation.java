@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.interpretation;
 
 
 import org.gbif.pipelines.io.avro.Issue;
-import org.gbif.pipelines.io.avro.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.IssueType;
 import org.gbif.pipelines.io.avro.Lineage;
 import org.gbif.pipelines.io.avro.LineageType;
@@ -10,9 +9,7 @@ import org.gbif.pipelines.io.avro.LineageType;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -106,35 +103,6 @@ public class Interpretation<T> implements Serializable {
     lineage.forEach(traceConsumer);
   }
 
-  public IssueLineageRecord getIssueLineageRecord(String occurrenceId) {
-    Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
-    Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
-
-    forEachValidation(issueTrace -> {
-      Issue build = Issue.newBuilder().setRemark(issueTrace.getRemark()).setIssueType(issueTrace.context).build();
-      if (fieldIssueMap.containsKey(issueTrace.fieldName)) {
-        fieldIssueMap.get(issueTrace.fieldName).add(build);
-      }
-      fieldIssueMap.putIfAbsent(issueTrace.fieldName, new ArrayList<>(Collections.singletonList(build)));
-    });
-
-    forEachLineage(lineageTrace -> {
-      Lineage build = Lineage.newBuilder().setRemark(lineageTrace.getRemark())
-        .setLineageType(lineageTrace.context).build();
-      if (fieldLineageMap.containsKey(lineageTrace.fieldName)) {
-        fieldLineageMap.get(lineageTrace.fieldName).add(build);
-      }
-      fieldLineageMap.putIfAbsent(lineageTrace.fieldName, new ArrayList<>(Collections.singletonList(build)));
-    });
-
-    return IssueLineageRecord.newBuilder()
-      .setFieldLineageMap(fieldLineageMap)
-      .setFieldIssueMap(fieldIssueMap)
-      .setOccurrenceId(occurrenceId)
-      .build();
-
-  }
-
   /**
    * Container class for an element that needs to be tracked during an interpretation.
    *
@@ -144,7 +112,7 @@ public class Interpretation<T> implements Serializable {
 
     private static final long serialVersionUID = -2440861649944996782L;
 
-    private final String fieldName;
+    private final List<String> fieldName;
     //What this class is tracing
     private final T context;
 
@@ -161,8 +129,8 @@ public class Interpretation<T> implements Serializable {
     /**
      * Factory method to create a instance of trace object using a context element.
      */
-    public static <U> Trace<U> of( U context, String remark) {
-      return of(null, context, null);
+    public static <U> Trace<U> of(U context, String remark) {
+      return of(null, context, remark);
     }
 
     /**
@@ -183,7 +151,7 @@ public class Interpretation<T> implements Serializable {
      * Creates an instance of traceable element.
      */
     private Trace(String fieldName, T context, String remark) {
-      this.fieldName = fieldName;
+      this.fieldName = Collections.singletonList(fieldName);
       this.context = context;
       this.remark = remark;
     }
@@ -191,7 +159,7 @@ public class Interpretation<T> implements Serializable {
     /**
      * field name of element being traced
      */
-    public String getFieldName() {
+    public List<String> getFieldName() {
       return fieldName;
     }
 
