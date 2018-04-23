@@ -85,6 +85,14 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   String getWsProperties();
   void setWsProperties(String path);
 
+  @Description("Path to hdfs-site-config.xml")
+  String getHdfsSiteConfig();
+  void setHdfsSiteConfig(String path);
+
+  @Description("Path to core-site-config.xml")
+  String getCoreSiteConfig();
+  void setCoreSiteConfig(String path);
+
   /**
    * A {@link DefaultValueFactory} which locates a default directory.
    */
