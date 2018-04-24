@@ -1,6 +1,5 @@
 package org.gbif.pipelines.assembling.interpretation;
 
-import org.gbif.pipelines.assembling.interpretation.InterpretationPipelineAssembler;
 import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier;
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

@@ -1,7 +1,5 @@
 package org.gbif.pipelines.core.tools;
 
-import org.gbif.pipelines.core.tools.AvroSchemaGenerator;
-
 import java.io.IOException;
 
 import org.apache.avro.Schema;
