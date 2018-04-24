@@ -111,7 +111,7 @@ class InterpretationPipelineAssembler
     Pipeline pipeline = Pipeline.create(options);
 
     // STEP 1: Read Avro files
-    LOG.info("Reading Avro records");
+    LOG.info("Reading Avro records from {}", input);
     PCollection<ExtendedRecord> verbatimRecords =
       pipeline.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(input));
 
