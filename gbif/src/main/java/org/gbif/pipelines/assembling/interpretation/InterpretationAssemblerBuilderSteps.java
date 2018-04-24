@@ -4,7 +4,7 @@ import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupp
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.EnumMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -38,7 +38,7 @@ class InterpretationAssemblerBuilderSteps {
    */
   public interface UsingStep {
 
-    FinalStep using(EnumMap<InterpretationType, InterpretationStepSupplier> interpretationSteps);
+    FinalStep using(Map<InterpretationType, InterpretationStepSupplier> interpretationSteps);
   }
 
   /**

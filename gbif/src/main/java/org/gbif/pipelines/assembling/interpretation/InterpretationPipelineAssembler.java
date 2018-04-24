@@ -5,10 +5,11 @@ import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupp
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -36,10 +37,10 @@ class InterpretationPipelineAssembler
 
   private PipelineOptions options;
   private String input;
-  private EnumSet<InterpretationType> interpretationTypes;
+  private Set<InterpretationType> interpretationTypes;
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler;
   private BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler;
-  private EnumMap<InterpretationType, InterpretationStepSupplier> interpretationSteps;
+  private Map<InterpretationType, InterpretationStepSupplier> interpretationSteps;
 
   private InterpretationPipelineAssembler(EnumSet<InterpretationType> interpretationTypes) {
     this.interpretationTypes = interpretationTypes;
@@ -59,7 +60,7 @@ class InterpretationPipelineAssembler
    * {@link InterpretationType}.
    */
   private static EnumSet<InterpretationType> filterInterpretations(List<InterpretationType> types) {
-    return types == null || types.isEmpty() || types.contains(InterpretationType.ALL) ?
+    return Objects.isNull(types) || types.isEmpty() || types.contains(InterpretationType.ALL) ?
       EnumSet.complementOf(EnumSet.of(InterpretationType.ALL)) : EnumSet.copyOf(types);
   }
 
@@ -80,7 +81,7 @@ class InterpretationPipelineAssembler
 
   @Override
   public InterpretationAssemblerBuilderSteps.FinalStep using(
-    EnumMap<InterpretationType, InterpretationStepSupplier> interpretationSteps
+    Map<InterpretationType, InterpretationStepSupplier> interpretationSteps
   ) {
     Objects.requireNonNull(interpretationSteps, "Interpretation steps map cannot be null");
     this.interpretationSteps = interpretationSteps;
@@ -138,7 +139,7 @@ class InterpretationPipelineAssembler
   }
 
   private Predicate<InterpretationType> stepSupplierFilter() {
-    return (type) -> {
+    return type -> {
       if (Objects.isNull(interpretationSteps.get(type))) {
         LOG.warn("No interpretation step supplier found for interpretation type {}", type);
         return false;
@@ -148,7 +149,7 @@ class InterpretationPipelineAssembler
   }
 
   private Function<InterpretationType, InterpretationStep> interpretationStepMapper() {
-    return (type) -> {
+    return type -> {
       InterpretationStep step = interpretationSteps.get(type).get();
       if (step == null) {
         LOG.warn("No interpretation step found for interpretation type {}", type);
