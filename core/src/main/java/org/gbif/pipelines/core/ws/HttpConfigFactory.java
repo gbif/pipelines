@@ -3,12 +3,15 @@ package org.gbif.pipelines.core.ws;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.core.ws.config.Service;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,10 +87,21 @@ public class HttpConfigFactory {
   }
 
   private static Optional<Properties> loadProperties(Path propertiesPath) {
+    Function<Path, InputStream> absolute = path -> {
+      try {
+        return new FileInputStream(path.toFile());
+      } catch (FileNotFoundException ex) {
+        throw new IllegalArgumentException(ex.getMessage(), ex);
+      }
+    };
+
+    Function<Path, InputStream> resource =
+      path -> Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
+
+    Function<Path, InputStream> function = propertiesPath.isAbsolute() ? absolute : resource;
+
     Properties props = new Properties();
-    try (InputStream in = Thread.currentThread()
-      .getContextClassLoader()
-      .getResourceAsStream(propertiesPath.toFile().getPath())) {
+    try (InputStream in = function.apply(propertiesPath)) {
       // read properties from input stream
       props.load(in);
     } catch (Exception e) {
