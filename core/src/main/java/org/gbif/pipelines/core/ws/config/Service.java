@@ -4,7 +4,7 @@ package org.gbif.pipelines.core.ws.config;
  * Enum of web services supported in the application.
  */
 public enum Service {
-  SPECIES_MATCH2("match"), GEO_CODE("geocode");
+  SPECIES_MATCH2("match"), GEO_CODE("geocode"),GBIF_INTERNAL("internal");
 
   // path to use in the properties file
   private String path;

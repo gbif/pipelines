@@ -1,0 +1,255 @@
+{
+  "key": "4fa7b334-ce0d-4e88-aaae-2e0c138d049e",
+  "installationKey": "7182d304-b0a2-404b-baba-2086a325c221",
+  "publishingOrganizationKey": "e2e717bf-551a-4917-bdc9-4fa0f342c530",
+  "doi": "10.15468/aomfnb",
+  "external": false,
+  "numConstituents": 0,
+  "type": "OCCURRENCE",
+  "title": "EOD - eBird Observation Dataset",
+  "description": "eBird is a collective enterprise that takes a novel approach to citizen science by developing cooperative partnerships among experts in a wide range of fields: population ecologists, conservation biologists, quantitative ecologists, statisticians, computer scientists, GIS and informatics specialists, application developers, and data administrators. Managed by the Cornell Lab of Ornithology eBird’s goal is to increase data quantity through participant recruitment and engagement globally, but also to quantify and control for data quality issues such as observer variability, imperfect detection of species, and both spatial and temporal bias in data collection. eBird data are openly available and used by a broad spectrum of students, teachers, scientists, NGOs, government agencies, land managers, and policy makers. The result is that eBird has become a major source of biodiversity data, increasing our knowledge of the dynamics of species distributions, and having a direct impact on the conservation of birds and their habitats.",
+  "language": "eng",
+  "homepage": "https://ebird.org/",
+  "logoUrl": "https://ebird.org/content/ebird/wp-content/uploads/sites/55/white_logo.png",
+  "citation": {
+    "text": "Levatich T, Padilla F (2017). EOD - eBird Observation Dataset. Cornell Lab of Ornithology. Occurrence Dataset https://doi.org/10.15468/aomfnb accessed via GBIF.org on 2018-04-25."
+  },
+  "lockedForAutoUpdate": false,
+  "createdBy": "registry-migration.gbif.org",
+  "modifiedBy": "MattBlissett",
+  "created": "2010-09-16T11:58:24.000+0000",
+  "modified": "2018-02-08T16:35:18.061+0000",
+  "contacts": [
+    {
+      "key": 821419,
+      "type": "ORIGINATOR",
+      "primary": true,
+      "userId": [],
+      "firstName": "Tim",
+      "lastName": "Levatich",
+      "position": [
+        "Database Administrator"
+      ],
+      "email": [
+        "tpl10@cornell.edu"
+      ],
+      "phone": [],
+      "homepage": [
+        "http://ebird.org/"
+      ],
+      "organization": "Cornell Lab of Ornithology",
+      "address": [
+        "Information Science, 159 Sapsucker Woods Road"
+      ],
+      "city": "Ithaca",
+      "province": "NY",
+      "country": "US",
+      "postalCode": "14850",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2017-12-14T15:57:27.413+0000",
+      "modified": "2017-12-14T15:57:27.413+0000"
+    },
+    {
+      "key": 821420,
+      "type": "METADATA_AUTHOR",
+      "primary": true,
+      "userId": [],
+      "firstName": "Francisco",
+      "lastName": "Padilla",
+      "position": [
+        "Database Administrator"
+      ],
+      "email": [
+        "fp235@cornell.edu"
+      ],
+      "phone": [],
+      "homepage": [
+        "http://ebird.org/"
+      ],
+      "organization": "Cornell Lab of Ornithology",
+      "address": [
+        "Information Science, 159 Sapsucker Woods Road"
+      ],
+      "city": "Ithaca",
+      "province": "NY",
+      "country": "US",
+      "postalCode": "14850",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2017-12-14T15:57:27.427+0000",
+      "modified": "2017-12-14T15:57:27.427+0000"
+    },
+    {
+      "key": 821421,
+      "type": "ADMINISTRATIVE_POINT_OF_CONTACT",
+      "primary": true,
+      "userId": [],
+      "firstName": "Jeff",
+      "lastName": "Gerbracht",
+      "position": [
+        "Applications Leader for Information Science"
+      ],
+      "email": [
+        "jag73@cornell.edu"
+      ],
+      "phone": [],
+      "homepage": [
+        "http://ebird.org/"
+      ],
+      "organization": "Cornell Lab of Ornithology",
+      "address": [
+        "Information Science, 159 Sapsucker Woods Road"
+      ],
+      "city": "Ithaca",
+      "province": "NY",
+      "country": "US",
+      "postalCode": "14850",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2017-12-14T15:57:27.431+0000",
+      "modified": "2017-12-14T15:57:27.431+0000"
+    }
+  ],
+  "endpoints": [
+    {
+      "key": 259643,
+      "type": "DWC_ARCHIVE",
+      "url": "http://download.gbif.org/2017/12/eBird/dwca-1.0.zip",
+      "description": "Incorrect syntax in meta.xml fixed",
+      "createdBy": "MattBlissett",
+      "modifiedBy": "MattBlissett",
+      "created": "2018-03-05T14:15:37.924+0000",
+      "modified": "2018-03-05T14:15:37.924+0000",
+      "machineTags": []
+    },
+    {
+      "key": 254135,
+      "type": "DWC_ARCHIVE",
+      "url": "http://ebirddata.ornith.cornell.edu/downloads/gbiff/dwca-1.0.zip",
+      "description": "EOD DwC Archive",
+      "createdBy": "MattBlissett",
+      "modifiedBy": "MattBlissett",
+      "created": "2018-02-08T16:29:16.399+0000",
+      "modified": "2018-02-08T16:29:16.399+0000",
+      "machineTags": []
+    }
+  ],
+  "machineTags": [
+    {
+      "key": 169862,
+      "namespace": "crawler.gbif.org",
+      "name": "omitFromScheduledCrawl",
+      "value": "true",
+      "createdBy": "trobertson",
+      "created": "2015-07-30T09:17:16.814+0000"
+    },
+    {
+      "key": 1315444,
+      "namespace": "crawler.gbif.org",
+      "name": "crawl_attempt",
+      "value": "10",
+      "createdBy": "crawler.gbif.org",
+      "created": "2018-03-05T14:16:38.087+0000"
+    }
+  ],
+  "tags": [],
+  "identifiers": [
+    {
+      "key": 28386,
+      "type": "UUID",
+      "identifier": "4fa7b334-ce0d-4e88-aaae-2e0c138d049e",
+      "createdBy": "crawler.gbif.org",
+      "created": "2015-11-08T19:04:01.701+0000"
+    },
+    {
+      "key": 23613,
+      "type": "UNKNOWN",
+      "identifier": "CLOEODMETADATA.05192014.1",
+      "createdBy": "markus",
+      "created": "2014-10-22T15:34:29.009+0000"
+    },
+    {
+      "key": 11965,
+      "type": "GBIF_PORTAL",
+      "identifier": "43",
+      "createdBy": "registry-migration.gbif.org",
+      "created": "2012-09-05T14:04:22.000+0000"
+    }
+  ],
+  "comments": [
+    {
+      "key": 16200,
+      "content": "Auto-deletion of stale records: 2370286 occurrence(s) flagged for deletion. 8 was identified as the last normal crawl attempt.",
+      "createdBy": "crawler.gbif.org",
+      "modifiedBy": "crawler.gbif.org",
+      "created": "2017-12-16T11:57:59.590+0000",
+      "modified": "2017-12-16T11:57:59.590+0000"
+    },
+    {
+      "key": 2545,
+      "content": "Import script set license to CC0_1_0",
+      "createdBy": "License Import script",
+      "modifiedBy": "License Import script",
+      "created": "2016-08-18T12:36:25.225+0000",
+      "modified": "2016-08-18T12:36:25.225+0000"
+    }
+  ],
+  "bibliographicCitations": [],
+  "curatorialUnits": [],
+  "taxonomicCoverages": [
+    {
+      "description": "taxonomic authority: The Clements Checklist of Birds, Sixth Edition",
+      "coverages": [
+        {
+          "scientificName": "Aves",
+          "commonName": "birds",
+          "rank": {
+            "verbatim": "class",
+            "interpreted": "CLASS"
+          }
+        }
+      ]
+    }
+  ],
+  "geographicCoverages": [
+    {
+      "description": "Worldwide",
+      "boundingBox": {
+        "minLatitude": -90,
+        "maxLatitude": 90,
+        "minLongitude": -180,
+        "maxLongitude": 180,
+        "globalCoverage": true
+      }
+    }
+  ],
+  "temporalCoverages": [
+    {
+      "@type": "range",
+      "start": "1810-03-04T23:00:00.000+0000",
+      "end": "2016-12-30T23:00:00.000+0000"
+    }
+  ],
+  "keywordCollections": [
+    {
+      "thesaurus": "GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml",
+      "keywords": [
+        "Occurrence"
+      ]
+    },
+    {
+      "thesaurus": "GBIF Dataset Subtype Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_subtype.xml",
+      "keywords": [
+        "Observation"
+      ]
+    }
+  ],
+  "countryCoverage": [],
+  "collections": [],
+  "dataDescriptions": [],
+  "dataLanguage": "eng",
+  "additionalInfo": "Data release annually.  These data are made available through the Cornell Lab of Ornithology at Cornell University. No warranty either expressed or implied is made regarding the accuracy of these data.",
+  "pubDate": "2017-12-11T23:00:00.000+0000",
+  "license": "http://creativecommons.org/publicdomain/zero/1.0/legalcode"
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "key": "7ddd1f14-a2b0-4838-95b0-785846f656f3",
+    "title": "VertNet",
+    "description": "VertNet is a biodiversity data publishing network specializing in occurrence and observation data.  Since 1999 VertNet has worked with data publishers to make their data discoverable and available broadly through multiple biodiversity data portals.  We publish according to best practices, utilize the Integrated Publishing Toolkit, and implement a range of unique data quality improvement services to make data more complete and fit for use.  More detail are available at http://www.vertnet.org/.",
+    "language": "eng",
+    "numConstituents": 134,
+    "homepage": [
+      "http://vertnet.org/index.php"
+    ],
+    "logoUrl": "http://www.vertnet.org/images/VNLogo_Full_Transparent-303x85.png",
+    "createdBy": "ADMIN",
+    "modifiedBy": "jlegind",
+    "created": "2012-12-13T11:14:15.000+0000",
+    "modified": "2014-07-04T14:14:33.874+0000",
+    "contacts": [],
+    "endpoints": [],
+    "machineTags": [],
+    "tags": [],
+    "identifiers": [],
+    "comments": []
+  },
+  {
+    "key": "e8fbd857-c988-48e5-954f-6e14d0961137",
+    "title": "ORNIS",
+    "description": "Over 5 million bird specimens are housed in North American biocollections, documenting the global composition, identity, spatial distribution, ecology, systematics, and history of the world's estimated 10,000-16,000 bird species. Furthermore, millions of additional observational records are held in diverse data sets. ORNIS addresses the urgent call for increased access to these data across collections and databases, in an open and collaborative manner, and involves development of a suite of online software tools for data analysis and error-checking. This project, funded by the National Science Foundation, expands on existing infrastructure developed for distributed mammal (MaNIS), amphibian and reptile (HerpNet), and fish (FishNet) databases. Improved access to avian data sets will allow predictive uses to reveal patterns and processes of evolutionary and ecological phenomena that have not been apparent heretofore. In conjunction with similar infrastructures for other vertebrate groups, it also will enable detailed and synthetic knowledge of the earth's biodiversity for tracking climate change, emerging diseases (e.g., West Nile Virus), and other conservation challenges for species in the 21st century. ",
+    "language": "eng",
+    "numConstituents": 15,
+    "homepage": [
+      "http://olla.berkeley.edu/ornisnet/"
+    ],
+    "logoUrl": "http://olla.berkeley.edu/ornisnet/files/bluemarine_logo.gif",
+    "createdBy": "ADMIN",
+    "modifiedBy": "ADMIN",
+    "created": "2007-04-03T08:31:37.000+0000",
+    "modified": "2012-12-13T11:07:54.000+0000",
+    "contacts": [],
+    "endpoints": [],
+    "machineTags": [],
+    "tags": [],
+    "identifiers": [],
+    "comments": []
+  }
+]
