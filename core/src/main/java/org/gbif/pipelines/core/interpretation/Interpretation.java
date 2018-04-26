@@ -1,15 +1,12 @@
 package org.gbif.pipelines.core.interpretation;
 
 import org.gbif.pipelines.io.avro.Issue;
-import org.gbif.pipelines.io.avro.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.IssueType;
 import org.gbif.pipelines.io.avro.Lineage;
 import org.gbif.pipelines.io.avro.LineageType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
