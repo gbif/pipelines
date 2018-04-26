@@ -15,7 +15,7 @@ import org.apache.commons.compress.utils.Charsets;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class GBIFInternalWSClientTest extends MockServer {
+public class DatasetMetaInfoServiceClientTest extends MockServer {
 
   private static final String DATASET_KEY = "key";
   private static final String PUBLISHING_COUNTRY_KEY = "country";
@@ -39,7 +39,7 @@ public class GBIFInternalWSClientTest extends MockServer {
   public void testDatasetResponse() throws IOException {
     enqueueResponse(EOD_DATASET_INTERNAL_RESPONSE);
 
-    JsonObject response = GBIFInternalServiceClient.client().getDatasetInfo(DATASET_KEY_VAL);
+    JsonObject response = DatasetMetaInfoServiceClient.client().getDatasetInfo(DATASET_KEY_VAL);
     Assert.assertEquals(DATASET_KEY_VAL, response.get(DATASET_KEY).getAsString());
     Assert.assertEquals(DATASET_TITLE_KEY_VAL, response.get(DATASET_TITLE_KEY).getAsString());
     Assert.assertEquals(PUBLISH_ORG_KEY_VAL, response.get(PUBLISH_ORG_KEY).getAsString());
@@ -49,7 +49,7 @@ public class GBIFInternalWSClientTest extends MockServer {
   public void testNetworkResponse() throws IOException {
     enqueueResponse(EOD_NETWORKS_INTERNAL_RESPONSE);
 
-    JsonArray response = GBIFInternalServiceClient.client().getNetworkFromDataset(DATASET_KEY_VAL);
+    JsonArray response = DatasetMetaInfoServiceClient.client().getNetworkFromDataset(DATASET_KEY_VAL);
     System.out.println(prettyPrint(response));
     Assert.assertEquals(2, response.size());
     Assert.assertEquals(NETWORK_KEY_VAL[0],
@@ -62,7 +62,7 @@ public class GBIFInternalWSClientTest extends MockServer {
   public void testOrganizationResponse() throws IOException {
     enqueueResponse(EOD_ORGANIZATION_INTERNAL_RESPONSE);
 
-    JsonObject response = GBIFInternalServiceClient.client().getOrganizationInfo(PUBLISH_ORG_KEY_VAL);
+    JsonObject response = DatasetMetaInfoServiceClient.client().getOrganizationInfo(PUBLISH_ORG_KEY_VAL);
     System.out.println(prettyPrint(response));
     Assert.assertEquals(PUBLISHING_COUNTRY_KEY_VAL, response.get(PUBLISHING_COUNTRY_KEY).getAsString());
   }
@@ -71,7 +71,7 @@ public class GBIFInternalWSClientTest extends MockServer {
   public void testInstallationResponse() throws IOException {
     enqueueResponse(EOD_INSTALL_INTERNAL_RESPONSE);
 
-    JsonObject response = GBIFInternalServiceClient.client().getInstallationInfo(INSTALLATION_KEY_VALUE);
+    JsonObject response = DatasetMetaInfoServiceClient.client().getInstallationInfo(INSTALLATION_KEY_VALUE);
     System.out.println(prettyPrint(response));
     Assert.assertEquals(PROTOCOL_KEY_VAL, response.get(PROTOCOL_KEY).getAsString());
   }
@@ -98,7 +98,7 @@ public class GBIFInternalWSClientTest extends MockServer {
   }
 
   String validatePositive(String datasetUUID) throws ExecutionException {
-    GBIFInternalResponse object = GBIFInternalServiceClient.client().getInternalResponse(datasetUUID);
+    DatasetMetaInfoResponse object = DatasetMetaInfoServiceClient.client().getDatasetMetaInfo(datasetUUID);
     return prettyPrint(object);
   }
 

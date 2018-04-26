@@ -8,7 +8,7 @@ import com.google.common.base.MoreObjects;
 /**
  * Response structure of the aggregated gbif terms
  */
-public class GBIFInternalResponse implements Serializable {
+public class DatasetMetaInfoResponse implements Serializable {
 
   private static final long serialVersionUID = -9137655613118727430L;
 

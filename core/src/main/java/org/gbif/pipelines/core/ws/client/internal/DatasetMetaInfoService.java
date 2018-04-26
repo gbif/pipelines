@@ -8,7 +8,7 @@ import retrofit2.http.Path;
 /**
  * retro client for gbif services.
  */
-interface GBIFInternalService {
+interface DatasetMetaInfoService {
 
   @GET("dataset/{datasetUUID}/networks")
   Call<JsonElement> getNetworkFromDataset(@Path("datasetUUID") String UUID);

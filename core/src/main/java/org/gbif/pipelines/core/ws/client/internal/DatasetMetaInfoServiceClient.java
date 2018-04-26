@@ -10,11 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -27,7 +28,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * rest client for getting gbif internal api responses
  */
-public class GBIFInternalServiceClient {
+public class DatasetMetaInfoServiceClient {
 
   private static final String INSTALLATION_KEY = "installationKey";
   private static final String PUB_ORGANIZATION_KEY = "publishingOrganizationKey";
@@ -35,15 +36,22 @@ public class GBIFInternalServiceClient {
   private static final String PUB_ORG_COUNTRY_KEY = "country";
   private static final String INSTALLATION_TYPE_KEY = "type";
   private static final String DATASET_NETWORK_KEY = "key";
-  private final GBIFInternalService service;
+  private final DatasetMetaInfoService service;
   //caches the last requests obtained
-  private final Cache<String, GBIFInternalResponse> datasetResponseCache =
-    CacheBuilder.newBuilder().maximumSize(10000).build();
+  private final LoadingCache<String, DatasetMetaInfoResponse> datasetResponseCache = CacheBuilder.newBuilder()
+    .maximumSize(10000)
+    .expireAfterWrite(30, TimeUnit.MINUTES)
+    .build(new CacheLoader<String, DatasetMetaInfoResponse>() {
+      @Override
+      public DatasetMetaInfoResponse load(String datasetUUID) {
+        return getDatasetMetaInfoFromService(datasetUUID);
+      }
+    });
 
   /**
    * create client from provided configuration
    */
-  public static GBIFInternalServiceClient from(Config wsConfig) {
+  public static DatasetMetaInfoServiceClient from(Config wsConfig) {
     // create client
     OkHttpClient client = HttpClientFactory.createClient(wsConfig);
 
@@ -54,17 +62,30 @@ public class GBIFInternalServiceClient {
       .validateEagerly(true)
       .build();
 
-    return new GBIFInternalServiceClient(retrofit.create(GBIFInternalService.class));
+    return new DatasetMetaInfoServiceClient(retrofit.create(DatasetMetaInfoService.class));
   }
 
   /**
    * initialize Client with default values
    */
-  public static GBIFInternalServiceClient client() {
-    return GBIFInternalServiceClient.from(HttpConfigFactory.createConfig(Service.GBIF_INTERNAL));
+  public static DatasetMetaInfoServiceClient client() {
+    return DatasetMetaInfoServiceClient.from(HttpConfigFactory.createConfig(Service.GBIF_INTERNAL));
   }
 
-  private GBIFInternalServiceClient(GBIFInternalService internalService) { this.service = internalService;}
+  private DatasetMetaInfoServiceClient(DatasetMetaInfoService internalService) { this.service = internalService;}
+
+  /**
+   * perform webservice call when needed to aggregate the needed GBIF terms
+   *
+   * @param datasetUUID datasetUUID
+   *
+   * @return aggregated GBIFTerms response for the provided datasetUUID
+   */
+  public DatasetMetaInfoResponse getDatasetMetaInfo(String datasetUUID) throws ExecutionException {
+    Objects.requireNonNull(datasetUUID, "DatasetUUID cannot be null");
+    //create callable on cache miss the DatasetMetaInfoResponse for the dataset id is stored in the cache
+    return datasetResponseCache.get(datasetUUID);
+  }
 
   /**
    * requests https://api.gbif.org/v1/dataset/{datasetid}/networks
@@ -107,47 +128,37 @@ public class GBIFInternalServiceClient {
   }
 
   /**
-   * perform webservice call to aggregate the needed GBIF terms
-   *
-   * @param datasetUUID datasetUUID
-   *
-   * @return aggregated GBIFTerms response for the provided datasetUUID
+   * used for loading gbif internal response in loading cache when needed.
    */
-  public GBIFInternalResponse getInternalResponse(String datasetUUID) throws ExecutionException {
-    Objects.requireNonNull(datasetUUID, "DatasetUUID cannot be null");
-    //create callable on cache miss the GBIFInternalResponse for the dataset id is stored in the cache
-    Callable<GBIFInternalResponse> callableResponse = () -> {
-      GBIFInternalResponse response = new GBIFInternalResponse();
-      response.setDatasetKey(datasetUUID);
+  private DatasetMetaInfoResponse getDatasetMetaInfoFromService(String datasetUUID) {
+    Objects.requireNonNull(datasetUUID,"DatasetUUID cannot be null");
+    DatasetMetaInfoResponse response = new DatasetMetaInfoResponse();
+    response.setDatasetKey(datasetUUID);
 
-      JsonObject dataset = getDatasetInfo(datasetUUID);
+    JsonObject dataset = getDatasetInfo(datasetUUID);
 
-      Optional.ofNullable(dataset.getAsJsonPrimitive(DATASET_TITLE_KEY))
-        .ifPresent((title) -> response.setDatasetTitle(title.getAsString()));
+    Optional.ofNullable(dataset.getAsJsonPrimitive(DATASET_TITLE_KEY))
+      .ifPresent(title -> response.setDatasetTitle(title.getAsString()));
 
-      Optional.ofNullable(dataset.getAsJsonPrimitive(PUB_ORGANIZATION_KEY)).ifPresent((orgKey) -> {
-        JsonObject orgInfo = getOrganizationInfo(orgKey.getAsString());
-        response.setPublishingOrgKey(orgKey.getAsString());
-        Optional.ofNullable(orgInfo.getAsJsonPrimitive(PUB_ORG_COUNTRY_KEY))
-          .ifPresent((countryObject) -> response.setPublishingCountry(countryObject.getAsString()));
-      });
+    Optional.ofNullable(dataset.getAsJsonPrimitive(PUB_ORGANIZATION_KEY)).ifPresent((orgKey) -> {
+      JsonObject orgInfo = getOrganizationInfo(orgKey.getAsString());
+      response.setPublishingOrgKey(orgKey.getAsString());
+      Optional.ofNullable(orgInfo.getAsJsonPrimitive(PUB_ORG_COUNTRY_KEY))
+        .ifPresent(countryObject -> response.setPublishingCountry(countryObject.getAsString()));
+    });
 
-      Optional.ofNullable(dataset.getAsJsonPrimitive(INSTALLATION_KEY)).ifPresent((key) -> {
-        JsonObject installationInfo = getInstallationInfo(key.getAsString());
-        Optional.ofNullable(installationInfo.getAsJsonPrimitive(INSTALLATION_TYPE_KEY))
-          .ifPresent((type) -> response.setProtocol(type.getAsString()));
-      });
+    Optional.ofNullable(dataset.getAsJsonPrimitive(INSTALLATION_KEY)).ifPresent((key) -> {
+      JsonObject installationInfo = getInstallationInfo(key.getAsString());
+      Optional.ofNullable(installationInfo.getAsJsonPrimitive(INSTALLATION_TYPE_KEY))
+        .ifPresent(type -> response.setProtocol(type.getAsString()));
+    });
 
-      JsonArray networks = getNetworkFromDataset(datasetUUID);
-      List<String> networkKeys = new ArrayList<>(networks.size());
-      networks.iterator()
-        .forEachRemaining((element) -> networkKeys.add(element.getAsJsonObject()
-                                                         .get(DATASET_NETWORK_KEY)
-                                                         .getAsString()));
-      response.setNetworkKey(networkKeys);
-      return response;
-    };
-    return datasetResponseCache.get(datasetUUID, callableResponse);
+    JsonArray networks = getNetworkFromDataset(datasetUUID);
+    List<String> networkKeys = new ArrayList<>(networks.size());
+    networks.iterator()
+      .forEachRemaining(element -> networkKeys.add(element.getAsJsonObject().get(DATASET_NETWORK_KEY).getAsString()));
+    response.setNetworkKey(networkKeys);
+    return response;
   }
 
   /**
