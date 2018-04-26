@@ -39,7 +39,7 @@ public class DatasetMetaInfoServiceClientTest extends MockServer {
   public void testDatasetResponse() throws IOException {
     enqueueResponse(EOD_DATASET_INTERNAL_RESPONSE);
 
-    JsonObject response = DatasetMetaInfoServiceClient.client().getDatasetInfo(DATASET_KEY_VAL);
+    JsonObject response = DatasetMetaInfoServiceClient.client().getDataset(DATASET_KEY_VAL);
     Assert.assertEquals(DATASET_KEY_VAL, response.get(DATASET_KEY).getAsString());
     Assert.assertEquals(DATASET_TITLE_KEY_VAL, response.get(DATASET_TITLE_KEY).getAsString());
     Assert.assertEquals(PUBLISH_ORG_KEY_VAL, response.get(PUBLISH_ORG_KEY).getAsString());
@@ -62,7 +62,7 @@ public class DatasetMetaInfoServiceClientTest extends MockServer {
   public void testOrganizationResponse() throws IOException {
     enqueueResponse(EOD_ORGANIZATION_INTERNAL_RESPONSE);
 
-    JsonObject response = DatasetMetaInfoServiceClient.client().getOrganizationInfo(PUBLISH_ORG_KEY_VAL);
+    JsonObject response = DatasetMetaInfoServiceClient.client().getOrganization(PUBLISH_ORG_KEY_VAL);
     System.out.println(prettyPrint(response));
     Assert.assertEquals(PUBLISHING_COUNTRY_KEY_VAL, response.get(PUBLISHING_COUNTRY_KEY).getAsString());
   }
@@ -71,7 +71,7 @@ public class DatasetMetaInfoServiceClientTest extends MockServer {
   public void testInstallationResponse() throws IOException {
     enqueueResponse(EOD_INSTALL_INTERNAL_RESPONSE);
 
-    JsonObject response = DatasetMetaInfoServiceClient.client().getInstallationInfo(INSTALLATION_KEY_VALUE);
+    JsonObject response = DatasetMetaInfoServiceClient.client().getInstallation(INSTALLATION_KEY_VALUE);
     System.out.println(prettyPrint(response));
     Assert.assertEquals(PROTOCOL_KEY_VAL, response.get(PROTOCOL_KEY).getAsString());
   }

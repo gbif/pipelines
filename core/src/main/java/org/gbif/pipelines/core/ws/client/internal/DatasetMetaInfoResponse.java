@@ -4,11 +4,12 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 /**
  * Response structure of the aggregated gbif terms
  */
-public class DatasetMetaInfoResponse implements Serializable {
+public final class DatasetMetaInfoResponse implements Serializable {
 
   private static final long serialVersionUID = -9137655613118727430L;
 
@@ -18,6 +19,8 @@ public class DatasetMetaInfoResponse implements Serializable {
   private String publishingOrgKey;
   private List<String> networkKey;
   private String datasetTitle;
+
+  DatasetMetaInfoResponse(){}
 
   public String getDatasetKey() {
     return datasetKey;
@@ -65,6 +68,24 @@ public class DatasetMetaInfoResponse implements Serializable {
 
   public void setDatasetTitle(String datasetTitle) {
     this.datasetTitle = datasetTitle;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    DatasetMetaInfoResponse that = (DatasetMetaInfoResponse) o;
+    return Objects.equal(datasetKey, that.datasetKey)
+           && Objects.equal(publishingCountry, that.publishingCountry)
+           && Objects.equal(protocol, that.protocol)
+           && Objects.equal(publishingOrgKey, that.publishingOrgKey)
+           && Objects.equal(networkKey, that.networkKey)
+           && Objects.equal(datasetTitle, that.datasetTitle);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(datasetKey, publishingCountry, protocol, publishingOrgKey, networkKey, datasetTitle);
   }
 
   @Override

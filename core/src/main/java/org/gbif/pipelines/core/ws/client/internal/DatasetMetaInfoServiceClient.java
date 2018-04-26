@@ -37,16 +37,6 @@ public class DatasetMetaInfoServiceClient {
   private static final String INSTALLATION_TYPE_KEY = "type";
   private static final String DATASET_NETWORK_KEY = "key";
   private final DatasetMetaInfoService service;
-  //caches the last requests obtained
-  private final LoadingCache<String, DatasetMetaInfoResponse> datasetResponseCache = CacheBuilder.newBuilder()
-    .maximumSize(10000)
-    .expireAfterWrite(30, TimeUnit.MINUTES)
-    .build(new CacheLoader<String, DatasetMetaInfoResponse>() {
-      @Override
-      public DatasetMetaInfoResponse load(String datasetUUID) {
-        return getDatasetMetaInfoFromService(datasetUUID);
-      }
-    });
 
   /**
    * create client from provided configuration
@@ -69,7 +59,7 @@ public class DatasetMetaInfoServiceClient {
    * initialize Client with default values
    */
   public static DatasetMetaInfoServiceClient client() {
-    return DatasetMetaInfoServiceClient.from(HttpConfigFactory.createConfig(Service.GBIF_INTERNAL));
+    return DatasetMetaInfoServiceClient.from(HttpConfigFactory.createConfig(Service.DATASET_META));
   }
 
   private DatasetMetaInfoServiceClient(DatasetMetaInfoService internalService) { this.service = internalService;}
@@ -82,73 +72,24 @@ public class DatasetMetaInfoServiceClient {
    * @return aggregated GBIFTerms response for the provided datasetUUID
    */
   public DatasetMetaInfoResponse getDatasetMetaInfo(String datasetUUID) throws ExecutionException {
-    Objects.requireNonNull(datasetUUID, "DatasetUUID cannot be null");
-    //create callable on cache miss the DatasetMetaInfoResponse for the dataset id is stored in the cache
-    return datasetResponseCache.get(datasetUUID);
-  }
-
-  /**
-   * requests https://api.gbif.org/v1/dataset/{datasetid}/networks
-   *
-   * @return array of networks for provided datasetID
-   */
-  public JsonArray getNetworkFromDataset(String datasetUUID) {
-    Objects.requireNonNull(datasetUUID);
-    return performCall(service.getNetworkFromDataset(datasetUUID)).getAsJsonArray();
-  }
-
-  /**
-   * requests https://api.gbif.org/v1/organisation/{organisationid}
-   *
-   * @return organisation info for provided organisation id
-   */
-  public JsonObject getOrganizationInfo(String organizationUUID) {
-    Objects.requireNonNull(organizationUUID);
-    return performCall(service.getOrganizationInfo(organizationUUID)).getAsJsonObject();
-  }
-
-  /**
-   * requests http://api.gbif.org/v1/dataset/{datasetid}
-   *
-   * @return dataset info for provided dataset id
-   */
-  public JsonObject getDatasetInfo(String datasetUUID) {
-    Objects.requireNonNull(datasetUUID);
-    return performCall(service.getDatasetInfo(datasetUUID)).getAsJsonObject();
-  }
-
-  /**
-   * requests http://api.gbif.org/v1/installation/{installation_id}
-   *
-   * @return installation info
-   */
-  public JsonObject getInstallationInfo(String installationUUID) {
-    Objects.requireNonNull(installationUUID);
-    return performCall(service.getInstallationInfo(installationUUID)).getAsJsonObject();
-  }
-
-  /**
-   * used for loading gbif internal response in loading cache when needed.
-   */
-  private DatasetMetaInfoResponse getDatasetMetaInfoFromService(String datasetUUID) {
     Objects.requireNonNull(datasetUUID,"DatasetUUID cannot be null");
     DatasetMetaInfoResponse response = new DatasetMetaInfoResponse();
     response.setDatasetKey(datasetUUID);
 
-    JsonObject dataset = getDatasetInfo(datasetUUID);
+    JsonObject dataset = getDataset(datasetUUID);
 
     Optional.ofNullable(dataset.getAsJsonPrimitive(DATASET_TITLE_KEY))
       .ifPresent(title -> response.setDatasetTitle(title.getAsString()));
 
     Optional.ofNullable(dataset.getAsJsonPrimitive(PUB_ORGANIZATION_KEY)).ifPresent((orgKey) -> {
-      JsonObject orgInfo = getOrganizationInfo(orgKey.getAsString());
+      JsonObject orgInfo = getOrganization(orgKey.getAsString());
       response.setPublishingOrgKey(orgKey.getAsString());
       Optional.ofNullable(orgInfo.getAsJsonPrimitive(PUB_ORG_COUNTRY_KEY))
         .ifPresent(countryObject -> response.setPublishingCountry(countryObject.getAsString()));
     });
 
     Optional.ofNullable(dataset.getAsJsonPrimitive(INSTALLATION_KEY)).ifPresent((key) -> {
-      JsonObject installationInfo = getInstallationInfo(key.getAsString());
+      JsonObject installationInfo = getInstallation(key.getAsString());
       Optional.ofNullable(installationInfo.getAsJsonPrimitive(INSTALLATION_TYPE_KEY))
         .ifPresent(type -> response.setProtocol(type.getAsString()));
     });
@@ -159,6 +100,46 @@ public class DatasetMetaInfoServiceClient {
       .forEachRemaining(element -> networkKeys.add(element.getAsJsonObject().get(DATASET_NETWORK_KEY).getAsString()));
     response.setNetworkKey(networkKeys);
     return response;
+  }
+
+  /**
+   * requests https://api.gbif.org/v1/dataset/{datasetid}/networks
+   *
+   * @return array of networks for provided datasetID
+   */
+  public JsonArray getNetworkFromDataset(String datasetUUID) {
+    Objects.requireNonNull(datasetUUID);
+    return performCall(service.getNetworks(datasetUUID)).getAsJsonArray();
+  }
+
+  /**
+   * requests https://api.gbif.org/v1/organisation/{organisationid}
+   *
+   * @return organisation info for provided organisation id
+   */
+  public JsonObject getOrganization(String organizationUUID) {
+    Objects.requireNonNull(organizationUUID);
+    return performCall(service.getOrganization(organizationUUID)).getAsJsonObject();
+  }
+
+  /**
+   * requests http://api.gbif.org/v1/dataset/{datasetid}
+   *
+   * @return dataset info for provided dataset id
+   */
+  public JsonObject getDataset(String datasetUUID) {
+    Objects.requireNonNull(datasetUUID);
+    return performCall(service.getDataset(datasetUUID)).getAsJsonObject();
+  }
+
+  /**
+   * requests http://api.gbif.org/v1/installation/{installation_id}
+   *
+   * @return installation info
+   */
+  public JsonObject getInstallation(String installationUUID) {
+    Objects.requireNonNull(installationUUID);
+    return performCall(service.getInstallation(installationUUID)).getAsJsonObject();
   }
 
   /**

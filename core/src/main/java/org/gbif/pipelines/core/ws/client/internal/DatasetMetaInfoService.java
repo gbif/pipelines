@@ -10,16 +10,36 @@ import retrofit2.http.Path;
  */
 interface DatasetMetaInfoService {
 
+  /**
+   * get networks info of provided dataset uuid.
+   * @param UUID
+   * @return JsonElement with networks info for provided dataset uuid.
+   */
   @GET("dataset/{datasetUUID}/networks")
-  Call<JsonElement> getNetworkFromDataset(@Path("datasetUUID") String UUID);
+  Call<JsonElement> getNetworks(@Path("datasetUUID") String UUID);
 
+  /**
+   * get dataset info of provided dataset uuid.
+   * @param UUID
+   * @return JsonElement with provided dataset info.
+   */
   @GET("dataset/{datasetUUID}")
-  Call<JsonElement> getDatasetInfo(@Path("datasetUUID") String UUID);
+  Call<JsonElement> getDataset(@Path("datasetUUID") String UUID);
 
+  /**
+   * get installation info of provided installation uuid.
+   * @param UUID
+   * @return JsonElement with provided installation info.
+   */
   @GET("installation/{installationUUID}")
-  Call<JsonElement> getInstallationInfo(@Path("installationUUID") String UUID);
+  Call<JsonElement> getInstallation(@Path("installationUUID") String UUID);
 
+  /**
+   * get organization info of provided organization uuid.
+   * @param UUID
+   * @return JsonElement with organization info
+   */
   @GET("organization/{organizationUUID}")
-  Call<JsonElement> getOrganizationInfo(@Path("organizationUUID") String UUID);
+  Call<JsonElement> getOrganization(@Path("organizationUUID") String UUID);
 
 }
