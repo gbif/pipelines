@@ -5,6 +5,9 @@ import java.util.List;
 
 import com.google.common.base.MoreObjects;
 
+/**
+ * Response structure of the aggregated gbif terms
+ */
 public class GBIFInternalResponse implements Serializable {
 
   private static final long serialVersionUID = -9137655613118727430L;
@@ -15,10 +18,6 @@ public class GBIFInternalResponse implements Serializable {
   private String publishingOrgKey;
   private List<String> networkKey;
   private String datasetTitle;
-
-  public static long getSerialVersionUID() {
-    return serialVersionUID;
-  }
 
   public String getDatasetKey() {
     return datasetKey;

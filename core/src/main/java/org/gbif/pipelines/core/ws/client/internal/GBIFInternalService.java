@@ -5,7 +5,10 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 
-public interface GBIFInternalService {
+/**
+ * retro client for gbif services.
+ */
+interface GBIFInternalService {
 
   @GET("dataset/{datasetUUID}/networks")
   Call<JsonElement> getNetworkFromDataset(@Path("datasetUUID") String UUID);
