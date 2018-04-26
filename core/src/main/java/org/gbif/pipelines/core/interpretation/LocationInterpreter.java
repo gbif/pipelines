@@ -79,7 +79,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
         interpretation.withValidation(Trace.of(DwcTerm.continent.name(), IssueType.CONTINENT_INVALID));
       }
       return interpretation;
-    }).get();
+    }).orElse(Interpretation.of(extendedRecord));
   }
 
   /**
@@ -209,7 +209,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.coordinateUncertaintyInMeters.qualifiedName());
-      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value.trim());
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
       if (result != null
           && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
@@ -237,7 +237,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
           interpretation.withValidation(Trace.of(DwcTerm.coordinatePrecision.name(), IssueType.COORDINATE_PRECISION_INVALID));
         }
         return interpretation;
-      });
+      }).orElse(Interpretation.of(extendedRecord));
   }
 
 }

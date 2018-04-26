@@ -91,6 +91,7 @@ public class HttpConfigFactory {
       try {
         return new FileInputStream(path.toFile());
       } catch (FileNotFoundException ex) {
+        LOG.error("Properties could not be read from {}", propertiesPath.toString(), ex);
         throw new IllegalArgumentException(ex.getMessage(), ex);
       }
     };

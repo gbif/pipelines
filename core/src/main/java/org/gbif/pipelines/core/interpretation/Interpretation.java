@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpretation;
 
-
 import org.gbif.pipelines.io.avro.Issue;
 import org.gbif.pipelines.io.avro.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.IssueType;
