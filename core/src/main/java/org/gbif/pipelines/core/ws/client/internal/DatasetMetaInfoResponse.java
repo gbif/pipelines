@@ -20,13 +20,17 @@ public final class DatasetMetaInfoResponse implements Serializable {
   private List<String> networkKey;
   private String datasetTitle;
 
-  DatasetMetaInfoResponse(){}
+  private DatasetMetaInfoResponse(){}
+
+  public static DatasetMetaInfoResponseBuilder newBuilder(){
+    return new DatasetMetaInfoResponseBuilder();
+  }
 
   public String getDatasetKey() {
     return datasetKey;
   }
 
-  public void setDatasetKey(String datasetKey) {
+  private void setDatasetKey(String datasetKey) {
     this.datasetKey = datasetKey;
   }
 
@@ -34,7 +38,7 @@ public final class DatasetMetaInfoResponse implements Serializable {
     return publishingCountry;
   }
 
-  public void setPublishingCountry(String publishingCountry) {
+  private void setPublishingCountry(String publishingCountry) {
     this.publishingCountry = publishingCountry;
   }
 
@@ -42,7 +46,7 @@ public final class DatasetMetaInfoResponse implements Serializable {
     return protocol;
   }
 
-  public void setProtocol(String protocol) {
+  private void setProtocol(String protocol) {
     this.protocol = protocol;
   }
 
@@ -50,7 +54,7 @@ public final class DatasetMetaInfoResponse implements Serializable {
     return publishingOrgKey;
   }
 
-  public void setPublishingOrgKey(String publishingOrgKey) {
+  private void setPublishingOrgKey(String publishingOrgKey) {
     this.publishingOrgKey = publishingOrgKey;
   }
 
@@ -58,7 +62,7 @@ public final class DatasetMetaInfoResponse implements Serializable {
     return networkKey;
   }
 
-  public void setNetworkKey(List<String> networkKey) {
+  private void setNetworkKey(List<String> networkKey) {
     this.networkKey = networkKey;
   }
 
@@ -66,9 +70,11 @@ public final class DatasetMetaInfoResponse implements Serializable {
     return datasetTitle;
   }
 
-  public void setDatasetTitle(String datasetTitle) {
+  private void setDatasetTitle(String datasetTitle) {
     this.datasetTitle = datasetTitle;
   }
+
+
 
   @Override
   public boolean equals(Object o) {
@@ -98,5 +104,44 @@ public final class DatasetMetaInfoResponse implements Serializable {
       .add("networkKey", networkKey)
       .add("datasetTitle", datasetTitle)
       .toString();
+  }
+
+  static final class DatasetMetaInfoResponseBuilder {
+
+    private DatasetMetaInfoResponse datasetMetaInfoResponse;
+
+    private DatasetMetaInfoResponseBuilder() { datasetMetaInfoResponse = new DatasetMetaInfoResponse(); }
+
+    public DatasetMetaInfoResponseBuilder using(String datasetKey) {
+      datasetMetaInfoResponse.setDatasetKey(datasetKey);
+      return this;
+    }
+
+    public DatasetMetaInfoResponseBuilder addPublishingCountry(String publishingCountry) {
+      datasetMetaInfoResponse.setPublishingCountry(publishingCountry);
+      return this;
+    }
+
+    public DatasetMetaInfoResponseBuilder addProtocol(String protocol) {
+      datasetMetaInfoResponse.setProtocol(protocol);
+      return this;
+    }
+
+    public DatasetMetaInfoResponseBuilder addPublishingOrgKey(String publishingOrgKey) {
+      datasetMetaInfoResponse.setPublishingOrgKey(publishingOrgKey);
+      return this;
+    }
+
+    public DatasetMetaInfoResponseBuilder addNetworkKey(List<String> networkKey) {
+      datasetMetaInfoResponse.setNetworkKey(networkKey);
+      return this;
+    }
+
+    public DatasetMetaInfoResponseBuilder addDatasetTitle(String datasetTitle) {
+      datasetMetaInfoResponse.setDatasetTitle(datasetTitle);
+      return this;
+    }
+
+    public DatasetMetaInfoResponse build() { return datasetMetaInfoResponse; }
   }
 }

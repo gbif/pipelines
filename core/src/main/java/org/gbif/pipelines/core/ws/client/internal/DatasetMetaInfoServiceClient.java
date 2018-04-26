@@ -73,33 +73,33 @@ public class DatasetMetaInfoServiceClient {
    */
   public DatasetMetaInfoResponse getDatasetMetaInfo(String datasetUUID) throws ExecutionException {
     Objects.requireNonNull(datasetUUID,"DatasetUUID cannot be null");
-    DatasetMetaInfoResponse response = new DatasetMetaInfoResponse();
-    response.setDatasetKey(datasetUUID);
+    DatasetMetaInfoResponse.DatasetMetaInfoResponseBuilder responseBuilder = DatasetMetaInfoResponse.newBuilder().using(datasetUUID);
+
 
     JsonObject dataset = getDataset(datasetUUID);
 
     Optional.ofNullable(dataset.getAsJsonPrimitive(DATASET_TITLE_KEY))
-      .ifPresent(title -> response.setDatasetTitle(title.getAsString()));
+      .ifPresent(title -> responseBuilder.addDatasetTitle(title.getAsString()));
 
     Optional.ofNullable(dataset.getAsJsonPrimitive(PUB_ORGANIZATION_KEY)).ifPresent((orgKey) -> {
       JsonObject orgInfo = getOrganization(orgKey.getAsString());
-      response.setPublishingOrgKey(orgKey.getAsString());
+      responseBuilder.addPublishingOrgKey(orgKey.getAsString());
       Optional.ofNullable(orgInfo.getAsJsonPrimitive(PUB_ORG_COUNTRY_KEY))
-        .ifPresent(countryObject -> response.setPublishingCountry(countryObject.getAsString()));
+        .ifPresent(countryObject -> responseBuilder.addPublishingCountry(countryObject.getAsString()));
     });
 
     Optional.ofNullable(dataset.getAsJsonPrimitive(INSTALLATION_KEY)).ifPresent((key) -> {
       JsonObject installationInfo = getInstallation(key.getAsString());
       Optional.ofNullable(installationInfo.getAsJsonPrimitive(INSTALLATION_TYPE_KEY))
-        .ifPresent(type -> response.setProtocol(type.getAsString()));
+        .ifPresent(type -> responseBuilder.addProtocol(type.getAsString()));
     });
 
     JsonArray networks = getNetworkFromDataset(datasetUUID);
     List<String> networkKeys = new ArrayList<>(networks.size());
     networks.iterator()
       .forEachRemaining(element -> networkKeys.add(element.getAsJsonObject().get(DATASET_NETWORK_KEY).getAsString()));
-    response.setNetworkKey(networkKeys);
-    return response;
+    responseBuilder.addNetworkKey(networkKeys);
+    return responseBuilder.build();
   }
 
   /**
