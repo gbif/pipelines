@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -83,10 +83,14 @@ public class Interpretation<T> implements Serializable {
     Interpretation<U> interpretation = mapper.apply(value);
 
     List<Trace<LineageType>> newLineage = new ArrayList<>(lineage);
-    newLineage.addAll(interpretation.lineage);
+    if (Objects.nonNull(interpretation.lineage)) {
+        newLineage.addAll(interpretation.lineage);
+    }
 
     List<Trace<IssueType>> newValidations = new ArrayList<>(validations);
-    newValidations.addAll(interpretation.validations);
+    if (Objects.nonNull(interpretation.validations)) {
+       newValidations.addAll(interpretation.validations);
+    }
 
     return new Interpretation<>(interpretation.value, newValidations, newLineage);
   }
@@ -105,34 +109,7 @@ public class Interpretation<T> implements Serializable {
     lineage.forEach(traceConsumer);
   }
 
-  public IssueLineageRecord getIssueLineageRecord(String occurrenceId) {
-    Map<String, List<Issue>> fieldIssueMap = new HashMap<>();
-    Map<String, List<Lineage>> fieldLineageMap = new HashMap<>();
 
-    forEachValidation(issueTrace -> {
-      Issue build = Issue.newBuilder().setRemark(issueTrace.getRemark()).setIssueType(issueTrace.context).build();
-      if (fieldIssueMap.containsKey(issueTrace.fieldName)) {
-        fieldIssueMap.get(issueTrace.fieldName).add(build);
-      }
-      fieldIssueMap.putIfAbsent(issueTrace.fieldName, new ArrayList<>(Collections.singletonList(build)));
-    });
-
-    forEachLineage(lineageTrace -> {
-      Lineage build = Lineage.newBuilder().setRemark(lineageTrace.getRemark())
-        .setLineageType(lineageTrace.context).build();
-      if (fieldLineageMap.containsKey(lineageTrace.fieldName)) {
-        fieldLineageMap.get(lineageTrace.fieldName).add(build);
-      }
-      fieldLineageMap.putIfAbsent(lineageTrace.fieldName, new ArrayList<>(Collections.singletonList(build)));
-    });
-
-    return IssueLineageRecord.newBuilder()
-      .setFieldLineageMap(fieldLineageMap)
-      .setFieldIssueMap(fieldIssueMap)
-      .setOccurrenceId(occurrenceId)
-      .build();
-
-  }
 
   /**
    * Container class for an element that needs to be tracked during an interpretation.
