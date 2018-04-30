@@ -108,7 +108,7 @@ public final class DatasetMetaInfoResponse implements Serializable {
 
   static final class DatasetMetaInfoResponseBuilder {
 
-    private DatasetMetaInfoResponse datasetMetaInfoResponse;
+    private final DatasetMetaInfoResponse datasetMetaInfoResponse;
 
     private DatasetMetaInfoResponseBuilder() { datasetMetaInfoResponse = new DatasetMetaInfoResponse(); }
 

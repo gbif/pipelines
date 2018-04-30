@@ -12,7 +12,7 @@ interface DatasetMetaInfoService {
 
   /**
    * get networks info of provided dataset uuid.
-   * @param UUID
+   * @param UUID datasetUUID
    * @return JsonElement with networks info for provided dataset uuid.
    */
   @GET("dataset/{datasetUUID}/networks")
@@ -20,7 +20,7 @@ interface DatasetMetaInfoService {
 
   /**
    * get dataset info of provided dataset uuid.
-   * @param UUID
+   * @param UUID datasetUUID
    * @return JsonElement with provided dataset info.
    */
   @GET("dataset/{datasetUUID}")
@@ -28,7 +28,7 @@ interface DatasetMetaInfoService {
 
   /**
    * get installation info of provided installation uuid.
-   * @param UUID
+   * @param UUID installationUUID
    * @return JsonElement with provided installation info.
    */
   @GET("installation/{installationUUID}")
@@ -36,7 +36,7 @@ interface DatasetMetaInfoService {
 
   /**
    * get organization info of provided organization uuid.
-   * @param UUID
+   * @param UUID organizationUUID
    * @return JsonElement with organization info
    */
   @GET("organization/{organizationUUID}")

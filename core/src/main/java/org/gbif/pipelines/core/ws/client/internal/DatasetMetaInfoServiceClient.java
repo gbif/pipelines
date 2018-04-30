@@ -11,11 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -71,7 +67,7 @@ public class DatasetMetaInfoServiceClient {
    *
    * @return aggregated GBIFTerms response for the provided datasetUUID
    */
-  public DatasetMetaInfoResponse getDatasetMetaInfo(String datasetUUID) throws ExecutionException {
+  public DatasetMetaInfoResponse getDatasetMetaInfo(String datasetUUID) {
     Objects.requireNonNull(datasetUUID,"DatasetUUID cannot be null");
     DatasetMetaInfoResponse.DatasetMetaInfoResponseBuilder responseBuilder = DatasetMetaInfoResponse.newBuilder().using(datasetUUID);
 
