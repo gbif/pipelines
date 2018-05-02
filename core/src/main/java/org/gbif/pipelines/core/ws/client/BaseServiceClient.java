@@ -28,15 +28,15 @@ public abstract class BaseServiceClient<T, R> {
       Response<T> response = call.execute();
 
       if (!response.isSuccessful()) {
-        String errorMessage = getErrorMessage() + response.message();
+        String errorMessage = getErrorMessage() + " - " + response.message();
+        LOG.error(errorMessage);
         return HttpResponse.<R>fail(response.code(), errorMessage, HttpResponse.ErrorCode.CALL_FAILED);
       }
 
       return HttpResponse.<R>success(parseResponse(response.body()));
     } catch (IOException e) {
-      LOG.error("Error calling the geocode reverse WS", e);
-      String errorMessage = "Error calling the geocode reverse WS";
-      return HttpResponse.<R>fail(errorMessage, HttpResponse.ErrorCode.UNEXPECTED_ERROR);
+      LOG.error(getErrorMessage(), e);
+      return HttpResponse.<R>fail(getErrorMessage(), HttpResponse.ErrorCode.UNEXPECTED_ERROR);
     }
   }
 

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -79,9 +80,13 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     // FIXME: use new generic functions to parse the date??
     // sort them by date identified
     // Ask Markus D if this can be moved to the API?
-    identifications.sort(Comparator.comparing((Map<String, String> map) -> LocalDateTime.parse(map.get(DwcTerm.dateIdentified
-                                                                                                         .qualifiedName())))
-                           .reversed());
+    identifications.sort(Comparator.comparing((Map<String, String> map) -> {
+      if (!map.containsKey(DwcTerm.dateIdentified.qualifiedName())
+          || Objects.isNull(map.get(DwcTerm.dateIdentified.qualifiedName()))) {
+        return LocalDateTime.MIN;
+      }
+      return LocalDateTime.parse(map.get(DwcTerm.dateIdentified.qualifiedName()));
+    }).reversed());
     for (Map<String, String> record : identifications) {
       response = tryNameMatch(record);
       if (isSuccessfulMatch(response)) {
