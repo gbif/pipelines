@@ -77,6 +77,7 @@ public class GbifInterpretationPipelineTest {
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
+    options.setAttempt(1);
     options.setInterpretationTypes(Collections.singletonList(InterpretationType.TEMPORAL));
 
     Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
@@ -87,7 +88,9 @@ public class GbifInterpretationPipelineTest {
 
     // check dataset dir
     checkDirCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
-                                                                   options.getDatasetId()).toString()), 1);
+                                                                   options.getDatasetId(),
+                                                                   options.getAttempt().toString())
+                                                 .toString()), 1);
 
     // check interpretation dir
     checkInterpretationFiles(options, InterpretationType.TEMPORAL);
@@ -108,6 +111,7 @@ public class GbifInterpretationPipelineTest {
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
+    options.setAttempt(1);
     options.setInterpretationTypes(interpretations);
 
     Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
@@ -118,8 +122,9 @@ public class GbifInterpretationPipelineTest {
 
     // check dataset dir
     checkDirCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
-                                                                   options.getDatasetId()).toString()),
-                    interpretations.size());
+                                                                   options.getDatasetId(),
+                                                                   options.getAttempt().toString())
+                                                 .toString()), interpretations.size());
 
     // check interpretation dirs
     for (InterpretationType interpretationType : interpretations) {
@@ -137,6 +142,7 @@ public class GbifInterpretationPipelineTest {
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
+    options.setAttempt(1);
 
     Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
 
@@ -146,8 +152,9 @@ public class GbifInterpretationPipelineTest {
 
     // check dataset dir
     checkDirCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
-                                                                   options.getDatasetId()).toString()),
-                    InterpretationType.values().length - 1);
+                                                                   options.getDatasetId(),
+                                                                   options.getAttempt().toString())
+                                                 .toString()), InterpretationType.values().length - 1);
 
     // delete files created to leave the FS clean for other tests
     fs.delete(HdfsUtils.buildPath(options.getDefaultTargetDirectory()), true);
@@ -159,6 +166,7 @@ public class GbifInterpretationPipelineTest {
 
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
+    options.setAttempt(1);
 
     GbifInterpretationPipeline.newInstance(options).createPipeline();
   }
@@ -182,21 +190,25 @@ public class GbifInterpretationPipelineTest {
       // check interpretation DIR
       checkDirCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                                      options.getDatasetId(),
+                                                                     options.getAttempt().toString(),
                                                                      interpretationType.name().toLowerCase())
                                                    .toString()), 2);
       // check interpretation AVRO FILE
       checkAvroFileCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                                           options.getDatasetId(),
+                                                                          options.getAttempt().toString(),
                                                                           interpretationType.name().toLowerCase(),
                                                                           "interpreted*").toString()));
       // check ISSUES DIR
       checkDirCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                                      options.getDatasetId(),
+                                                                     options.getAttempt().toString(),
                                                                      interpretationType.name().toLowerCase(),
                                                                      "issues").toString()), 1);
       // check ISSUES AVRO FILE
       checkAvroFileCreated(hdfsClusterBaseUri.resolve(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                                           options.getDatasetId(),
+                                                                          options.getAttempt().toString(),
                                                                           interpretationType.name().toLowerCase(),
                                                                           "issues",
                                                                           "issues*").toString()));

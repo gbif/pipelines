@@ -34,7 +34,8 @@ public final class HttpClientFactory {
     File httpCacheDirectory;
     try {
       // use a new file cache for the current session
-      httpCacheDirectory = Files.createTempDirectory(config.getCacheConfig().getName()).toFile();
+      httpCacheDirectory = Files.createTempFile(config.getCacheConfig().getName(), ".tmp").toFile();
+      httpCacheDirectory.deleteOnExit();
     } catch (IOException e) {
       throw new IllegalStateException("Cannot run without the ability to create temporary cache directory", e);
     }

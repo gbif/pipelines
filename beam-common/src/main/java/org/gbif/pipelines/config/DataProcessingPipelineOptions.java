@@ -32,6 +32,11 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   String getDatasetId();
   void setDatasetId(String id);
 
+  @Description("Attempt of the dataset used to name the target file in HDFS.")
+  @Validation.Required
+  Integer getAttempt();
+  void setAttempt(Integer attempt);
+
   @Description("Default directory where the target file will be written. By default, it takes the hdfs root directory "
                + "specified in \"fs.defaultFS\". If no configurations are set it takes \"hdfs://\" as default")
   @Default.InstanceFactory(DefaultDirectoryFactory.class)

@@ -12,16 +12,21 @@ import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.KV;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link PTransform} to convert {@link ExtendedRecord} into {@link TaxonRecord} with its {@link OccurrenceIssue}.
  */
 public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonRecord> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(TaxonRecordTransform.class);
 
   private TaxonRecordTransform() {
     super("Interpret taxonomic record");
@@ -55,14 +60,19 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // taxon record result
-        context.output(getDataTag(), KV.of(id, taxonRecord));
+        if (Objects.nonNull(taxonRecord.getId())) {
+          // the id is null when there is an error in the interpretation. In these cases we do not write the
+          // taxonRecord because it is totally empty.
+          context.output(getDataTag(), KV.of(id, taxonRecord));
+        } else {
+          LOG.info("TaxonRecord empty for extended record {} -- Not written.", id);
+        }
 
         // issues
         if (!validations.isEmpty()) {
           OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
           context.output(getIssueTag(), KV.of(id, issue));
         }
-
       }
 
     };

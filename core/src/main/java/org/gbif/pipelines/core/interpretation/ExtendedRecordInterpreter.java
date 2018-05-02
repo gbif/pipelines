@@ -28,7 +28,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
           interpretation.withValidation(Trace.of(DwcTerm.individualCount.name(), IssueType.INDIVIDUAL_COUNT_INVALID));
         }
         return interpretation;
-      });
+      }).orElse(Interpretation.of(extendedRecord));
   }
 
   /**
@@ -46,7 +46,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
             interpretation.withValidation(Trace.of(DwcTerm.typeStatus.name(), IssueType.TYPE_STATUS_INVALID));
           }
           return interpretation;
-        }).get();
+        }).orElse(Interpretation.of(extendedRecord));
   }
 
   /**
@@ -62,7 +62,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
             interpretedExtendedRecord.setLifeStage(parseResult.getPayload().name());
           }
           return interpretation;
-        }).get();
+        }).orElse(Interpretation.of(extendedRecord));
   }
 
   /**
@@ -78,7 +78,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
             interpretedExtendedRecord.setEstablishmentMeans(parseResult.getPayload().name());
           }
           return interpretation;
-        }).get();
+        }).orElse(Interpretation.of(extendedRecord));
   }
 
   /**
@@ -94,7 +94,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
             interpretedExtendedRecord.setSex(parseResult.getPayload().name());
           }
           return interpretation;
-        }).get();
+        }).orElse(Interpretation.of(extendedRecord));
   }
 
   /**
@@ -112,6 +112,6 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
             interpretation.withValidation(Trace.of(DwcTerm.basisOfRecord.name(),IssueType.BASIS_OF_RECORD_INVALID));
           }
           return interpretation;
-        }).get();
+        }).orElse(Interpretation.of(extendedRecord));
   }
 }

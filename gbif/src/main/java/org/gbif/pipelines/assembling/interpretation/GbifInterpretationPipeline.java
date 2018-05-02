@@ -9,6 +9,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.EnumMap;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import com.google.common.base.Preconditions;
@@ -50,8 +51,8 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
 
   private GbifInterpretationPipeline(DataProcessingPipelineOptions options) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),
-                                "defaultTargetDirectory " + "is required");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),"defaultTargetDirectory is required");
+    Preconditions.checkArgument(Objects.nonNull(options.getAttempt()),"attempt is required");
     this.options = options;
     avroCodec = parseAvroCodec(options.getAvroCompressionType());
     initStepsMap();
@@ -94,13 +95,16 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
     DataProcessingPipelineOptions options, InterpretationType interpretationType
   ) {
     PipelineTargetPaths paths = new PipelineTargetPaths();
+
     paths.setDataTargetPath(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                 options.getDatasetId(),
+                                                options.getAttempt().toString(),
                                                 interpretationType.name().toLowerCase(),
                                                 DATA_FILENAME).toString());
 
     paths.setIssuesTargetPath(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                   options.getDatasetId(),
+                                                  options.getAttempt().toString(),
                                                   interpretationType.name().toLowerCase(),
                                                   ISSUES_FOLDER,
                                                   ISSUES_FILENAME).toString());

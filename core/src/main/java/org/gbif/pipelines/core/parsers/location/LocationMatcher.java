@@ -100,7 +100,7 @@ public class LocationMatcher {
     }
 
     // if still not found, try alternatives
-    LOG.info("Trying alternative transformations to the coordinates");
+    LOG.info("Trying alternative transformations to the coordinates - {}", latLng);
     for (CoordinatesFunction transformation : alternativeTransformations) {
       // transform location
       LatLng latLngTransformed = transformation.getTransformer().apply(latLng);

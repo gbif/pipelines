@@ -1,5 +1,7 @@
 package org.gbif.pipelines.assembling;
 
+import java.util.Arrays;
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.slf4j.Logger;
@@ -23,10 +25,11 @@ public class PipelineHandler {
 
   private static void createAndRunPipeline(String[] args) {
     Pipeline pipeline = InterpretationPipelineFactory.from(args).createPipeline();
-    LOG.info("Pipeline created from args: {}", args);
+    LOG.info("Pipeline created from args: {}", Arrays.asList(args));
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();
     LOG.info("Pipeline finished with state {} from args: {}", state, args);
   }
 
 }
+
