@@ -32,14 +32,14 @@ public class NameUsageMatchQueryConverter {
     private final String specificEpithet;
     private final String infraspecificEpithet;
 
-    private static Builder newBuilder() {
-      return new Builder();
-    }
-
     private AtomizedFields(Builder builder) {
       genus = builder.genus;
       specificEpithet = builder.specificEpithet;
       infraspecificEpithet = builder.infraspecificEpithet;
+    }
+
+    private static Builder newBuilder() {
+      return new Builder();
     }
 
     public String getGenus() {
@@ -62,17 +62,17 @@ public class NameUsageMatchQueryConverter {
 
       private Builder() {}
 
-      public Builder withGenus(String genus) {
+      Builder withGenus(String genus) {
         this.genus = Strings.emptyToNull(genus);
         return this;
       }
 
-      public Builder withSpecificEpithet(String specificEpithet) {
+      Builder withSpecificEpithet(String specificEpithet) {
         this.specificEpithet = Strings.emptyToNull(specificEpithet);
         return this;
       }
 
-      public Builder withInfraspecificEpithet(String infraspecificEpithet) {
+      Builder withInfraspecificEpithet(String infraspecificEpithet) {
         this.infraspecificEpithet = Strings.emptyToNull(infraspecificEpithet);
         return this;
       }
@@ -138,7 +138,7 @@ public class NameUsageMatchQueryConverter {
     Optional<Rank> interpretedRank = rankParser().map(terms, Function.identity())
       .map(rankParseResult -> rankParseResult.isSuccessful()
         ? rankParseResult.getPayload()
-        : verbatimTaxonRankParser().map(terms, ParseResult::getPayload).get());
+        : verbatimTaxonRankParser().map(terms, ParseResult::getPayload).orElse(null));
 
     if (!interpretedRank.isPresent()) {
       return fromAtomizedFields(atomizedFields);
