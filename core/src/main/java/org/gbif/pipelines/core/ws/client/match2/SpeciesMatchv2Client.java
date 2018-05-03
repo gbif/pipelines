@@ -3,7 +3,9 @@ package org.gbif.pipelines.core.ws.client.match2;
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.parsers.TemporalParser;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
+import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.BaseServiceClient;
@@ -11,11 +13,10 @@ import org.gbif.pipelines.core.ws.config.Service;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -81,11 +82,10 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     // sort them by date identified
     // Ask Markus D if this can be moved to the API?
     identifications.sort(Comparator.comparing((Map<String, String> map) -> {
-      if (!map.containsKey(DwcTerm.dateIdentified.qualifiedName())
-          || Objects.isNull(map.get(DwcTerm.dateIdentified.qualifiedName()))) {
-        return LocalDateTime.MIN;
-      }
-      return LocalDateTime.parse(map.get(DwcTerm.dateIdentified.qualifiedName()));
+      // parse dateIdentified field
+      ParsedTemporalDates parsedDates = TemporalParser.parseRawDate(map.get(DwcTerm.dateIdentified.qualifiedName()));
+      // convert temporal to millis to compare them
+      return parsedDates.getFrom().map((temporal) -> Instant.from(temporal).toEpochMilli()).orElse(0L);
     }).reversed());
     for (Map<String, String> record : identifications) {
       response = tryNameMatch(record);
