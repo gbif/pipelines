@@ -28,6 +28,10 @@ public class TemporalParser {
     // Can't have an instance
   }
 
+  public static ParsedTemporalDates parseRawDate(String rawDate) {
+    return parse(null, null, null, rawDate);
+  }
+
   public static ParsedTemporalDates parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
     // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
     if (isEmpty(rawYear) && isEmpty(rawDate)) {

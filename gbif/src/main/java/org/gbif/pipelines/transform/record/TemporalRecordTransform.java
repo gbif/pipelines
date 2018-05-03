@@ -51,7 +51,6 @@ public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, Tem
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // Additional output
-        //additional outputs
         if (!validations.isEmpty()) {
           OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
           context.output(getIssueTag(), KV.of(id, issue));

@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.interpretation;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
 import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
@@ -15,6 +14,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueType;
 import org.gbif.pipelines.io.avro.Location;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
@@ -54,13 +54,16 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
 
       // set the issues to the interpretation
       parsedResult.getIssues().forEach(issue -> {
-        Term term = null;
-        if (issue.getTerms() != null && !issue.getTerms().isEmpty()) {
+        Trace<IssueType> trace;
+        if (Objects.nonNull(issue.getTerms()) && !issue.getTerms().isEmpty() && Objects.nonNull(issue.getTerms()
+                                                                                                  .get(0))) {
           // FIXME: now we take the first term. Should Trace accept a list of terms??
-          term = issue.getTerms().get(0);
+          trace = Trace.of(issue.getTerms().get(0).simpleName(), issue.getIssueType());
+        } else {
+          trace = Trace.of(issue.getIssueType());
         }
 
-        interpretation.withValidation(Trace.of(term.simpleName(), issue.getIssueType()));
+        interpretation.withValidation(trace);
       });
 
       return interpretation;
@@ -91,6 +94,20 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       String value = extendedRecord.getCoreTerms().get(DwcTerm.waterBody.qualifiedName());
       if (!StringUtils.isEmpty(value)) {
         locationRecord.setWaterBody(StringUtil.cleanName(value));
+      }
+      return interpretation;
+    };
+  }
+
+  /**
+   * {@link DwcTerm#stateProvince} interpretation.
+   */
+  static LocationInterpreter interpretStateProvince(Location locationRecord) {
+    return (ExtendedRecord extendedRecord) -> {
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+      String value = extendedRecord.getCoreTerms().get(DwcTerm.stateProvince.qualifiedName());
+      if (!StringUtils.isEmpty(value)) {
+        locationRecord.setStateProvince(StringUtil.cleanName(value));
       }
       return interpretation;
     };

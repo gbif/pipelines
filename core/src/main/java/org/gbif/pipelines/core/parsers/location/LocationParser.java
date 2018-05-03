@@ -109,7 +109,7 @@ public class LocationParser {
   ) {
     if (!countryName.equals(countryCode)) {
       LOG.info("country mismatch found");
-      issues.add(new InterpretationIssue(IssueType.COUNTRY_MISMATCH, DwcTerm.country, DwcTerm.countryCode));
+      issues.add(InterpretationIssue.newIssue(IssueType.COUNTRY_MISMATCH, DwcTerm.country, DwcTerm.countryCode));
     }
   }
 
@@ -119,7 +119,7 @@ public class LocationParser {
 
     if (!parseResultOpt.isPresent()) {
       // case when the country is null in the extended record. We return an issue not to break the whole interpretation
-      return ParsedField.<Country>newBuilder().withIssue(new InterpretationIssue(IssueType.COUNTRY_INVALID,
+      return ParsedField.<Country>newBuilder().withIssue(InterpretationIssue.newIssue(IssueType.COUNTRY_INVALID,
                                                                                  DwcTerm.country)).build();
     }
 
@@ -129,7 +129,7 @@ public class LocationParser {
       builder.successful(true);
       builder.result(parseResult.getPayload());
     } else {
-      builder.withIssue(new InterpretationIssue(IssueType.COUNTRY_INVALID, DwcTerm.country));
+      builder.withIssue(InterpretationIssue.newIssue(IssueType.COUNTRY_INVALID, DwcTerm.country));
     }
     return builder.build();
   }
@@ -140,7 +140,7 @@ public class LocationParser {
 
     if (!parseResultOpt.isPresent()) {
       // case when the country is null in the extended record. We return an issue not to break the whole interpretation
-      return ParsedField.<Country>newBuilder().withIssue(new InterpretationIssue(IssueType.COUNTRY_CODE_INVALID,
+      return ParsedField.<Country>newBuilder().withIssue(InterpretationIssue.newIssue(IssueType.COUNTRY_CODE_INVALID,
                                                                                  DwcTerm.countryCode)).build();
     }
 
@@ -150,7 +150,7 @@ public class LocationParser {
       builder.successful(true);
       builder.result(parseResult.getPayload());
     } else {
-      builder.withIssue(new InterpretationIssue(IssueType.COUNTRY_CODE_INVALID, DwcTerm.countryCode));
+      builder.withIssue(InterpretationIssue.newIssue(IssueType.COUNTRY_CODE_INVALID, DwcTerm.countryCode));
     }
     return builder.build();
   }
