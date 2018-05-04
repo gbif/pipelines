@@ -27,14 +27,14 @@ import static org.gbif.pipelines.core.parsers.location.CoordinatesValidator.isAn
 /**
  * Matches the location fields related to Country and Coordinates to find possible mismatches.
  */
-public class LocationMatcher {
+class LocationMatcher {
 
   private static final Logger LOG = LoggerFactory.getLogger(LocationMatcher.class);
 
   private final LatLng latLng;
   private final Country country;
   private final GeocodeServiceClient geocodeServiceClient;
-  private List<CoordinatesFunction> alternativeTransformations = new ArrayList<>();
+  private final List<CoordinatesFunction> alternativeTransformations = new ArrayList<>();
 
   private LocationMatcher(LatLng latLng, Country country) {
     this.latLng = latLng;
@@ -48,24 +48,24 @@ public class LocationMatcher {
     this.geocodeServiceClient = GeocodeServiceClient.newInstance(wsPropertiesPath);
   }
 
-  public static LocationMatcher newMatcher(LatLng latLng, Country country) {
+  static LocationMatcher newMatcher(LatLng latLng, Country country) {
     return new LocationMatcher(latLng, country);
   }
 
-  public static LocationMatcher newMatcher(LatLng latLng, Country country, String wsPropertiesPath) {
+  static LocationMatcher newMatcher(LatLng latLng, Country country, String wsPropertiesPath) {
     return new LocationMatcher(latLng, country, wsPropertiesPath);
   }
 
-  public static LocationMatcher newMatcher(LatLng latLng) {
+  static LocationMatcher newMatcher(LatLng latLng) {
     return new LocationMatcher(latLng, null);
   }
 
-  public LocationMatcher addAdditionalTransform(CoordinatesFunction transformType) {
+  LocationMatcher addAdditionalTransform(CoordinatesFunction transformType) {
     alternativeTransformations.add(transformType);
     return this;
   }
 
-  public ParsedField<ParsedLocation> applyMatch() {
+  ParsedField<ParsedLocation> applyMatch() {
     Objects.requireNonNull(latLng);
     CoordinatesValidator.checkEmptyCoordinates(latLng);
     return country != null ? applyMatchWithCountry() : applyMatchWithoutCountry();

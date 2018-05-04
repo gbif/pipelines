@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transform.record;
 
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -74,8 +75,7 @@ public class TemporalRecordTransformTest {
 
     PCollectionTuple tuple = inputStream.apply(temporalRecord);
 
-    PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTag())
-      .apply(Kv2Value.create());
+    PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTag()).apply(Kv2Value.create());
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);
@@ -89,6 +89,8 @@ public class TemporalRecordTransformTest {
       record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "10");
       record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "1");
       record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), x);
+      record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), x);
+      record.getCoreTerms().put(DcTerm.modified.qualifiedName(), x);
       return record;
     }).collect(Collectors.toList());
   }
@@ -103,6 +105,8 @@ public class TemporalRecordTransformTest {
         .setMonth(x.getMonth().map(Month::getValue).orElse(null))
         .setDay(x.getDay().orElse(null))
         .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
+        .setDateIdentified(x.getFrom().map(Temporal::toString).orElse(null))
+        .setModified(x.getFrom().map(Temporal::toString).orElse(null))
         .build();
     }).collect(Collectors.toList());
   }

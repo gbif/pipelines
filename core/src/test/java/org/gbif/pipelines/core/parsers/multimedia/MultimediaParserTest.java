@@ -134,7 +134,7 @@ public class MultimediaParserTest {
   }
 
   @Test
-  public void testInterpretMediaCore() throws Exception {
+  public void testInterpretMediaCore() {
     ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id("123")
       .associatedMedia(
         "http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg, http://www.flickr.com/photos/70939559@N02/7039524065.png")
@@ -151,7 +151,7 @@ public class MultimediaParserTest {
   }
 
   @Test
-  public void testInterpretMediaExtension() throws Exception {
+  public void testInterpretMediaExtension() {
 
     Map<String, String> imageExtension = new ExtendedRecordCustomBuilder.MultimediaExtensionBuilder().identifier(
       "http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg")
@@ -192,7 +192,7 @@ public class MultimediaParserTest {
   }
 
   @Test
-  public void testInterpretAudubonExtension() throws Exception {
+  public void testInterpretAudubonExtension() {
 
     Map<String, String> audubonExtension = new ExtendedRecordCustomBuilder.MultimediaExtensionBuilder().accessURI(
       "http://specify-attachments-saiab.saiab.ac.za/originals/sp6-3853933608872243693.att.JPG")
@@ -238,7 +238,7 @@ public class MultimediaParserTest {
    * from the extension (richer data).
    */
   @Test
-  public void testExtensionsPriority() throws Exception {
+  public void testExtensionsPriority() {
     Map<String, String> audubonExtension = new ExtendedRecordCustomBuilder.MultimediaExtensionBuilder().accessURI(
       "http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg")
       .format("jpg")

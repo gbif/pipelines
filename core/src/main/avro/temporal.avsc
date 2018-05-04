@@ -23,8 +23,8 @@
     {"name": "day", "type": ["null", "int"], "default" : null },
     {"name": "startDayOfYear", "type": ["null", "int"], "default" : null },
     {"name": "endDayOfYear", "type": ["null", "int"], "default" : null },
-    {"name": "modified", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null },
-    {"name": "dateIdentified", "type": ["null", "long"], "logicalType":"timestamp-millis", "default" : null },
+    {"name": "modified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null },
+    {"name": "dateIdentified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null },
     {"name": "eventTime", "type": ["null", "long"], "logicalType":"time-millis", "default" : null },
     {"name": "eventDate", "type": ["null", "EventDate"], "default" : null }
   ]

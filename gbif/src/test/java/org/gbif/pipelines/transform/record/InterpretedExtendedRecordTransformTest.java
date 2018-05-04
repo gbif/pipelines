@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transform.record;
 
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
@@ -32,22 +33,24 @@ public class InterpretedExtendedRecordTransformTest {
   public void testTransformation() {
 
     // State
-    final String[] one = {"0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2"};
-    final String[] two = {"1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1"};
+    final String[] one = {"0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", "http://refs.com"};
+    final String[] two =
+      {"1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", "http://refs.com"};
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
 
     // Expected
     final List<InterpretedExtendedRecord> interpretedRecords = createInterpretedExtendedRecordList(one, two);
 
     // When
-    InterpretedExtendedRecordTransform interpretedTransform = InterpretedExtendedRecordTransform.create().withAvroCoders(p);
+    InterpretedExtendedRecordTransform interpretedTransform =
+      InterpretedExtendedRecordTransform.create().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(records));
 
     PCollectionTuple tuple = inputStream.apply(interpretedTransform);
 
-    PCollection<InterpretedExtendedRecord> recordCollection = tuple.get(interpretedTransform.getDataTag())
-      .apply(Kv2Value.create());
+    PCollection<InterpretedExtendedRecord> recordCollection =
+      tuple.get(interpretedTransform.getDataTag()).apply(Kv2Value.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(interpretedRecords);
@@ -64,6 +67,7 @@ public class InterpretedExtendedRecordTransformTest {
       record.getCoreTerms().put(DwcTerm.lifeStage.qualifiedName(), x[4]);
       record.getCoreTerms().put(DwcTerm.typeStatus.qualifiedName(), x[5]);
       record.getCoreTerms().put(DwcTerm.individualCount.qualifiedName(), x[6]);
+      record.getCoreTerms().put(DcTerm.references.qualifiedName(), x[7]);
       return record;
     }).collect(Collectors.toList());
   }
@@ -78,6 +82,7 @@ public class InterpretedExtendedRecordTransformTest {
         .setLifeStage(x[4])
         .setTypeStatus(x[5])
         .setIndividualCount(Integer.valueOf(x[6]))
+        .setReferences(x[7])
         .build())
       .collect(Collectors.toList());
   }

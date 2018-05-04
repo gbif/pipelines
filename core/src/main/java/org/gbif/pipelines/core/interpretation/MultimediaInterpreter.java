@@ -33,7 +33,7 @@ public interface MultimediaInterpreter extends Function<ExtendedRecord, Interpre
         List<Multimedia> multimediaList = new ArrayList<>();
         // convert the parsed results to the record
 
-        // iterate thru all the multimedias and set it to the multimediaRecord
+        // iterate through all the multimedias and set it to the multimediaRecord
         parsedResult.getResult().forEach(parsedMultimedia -> {
 
           Multimedia multimedia = Multimedia.newBuilder()

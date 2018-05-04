@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 
@@ -191,8 +190,7 @@ public class CoordinateParseUtils {
    *
    * @return the converted decimal up to 6 decimals accuracy
    */
-  @VisibleForTesting
-  protected static double parseDMS(String coord, boolean lat) {
+  private static double parseDMS(String coord, boolean lat) {
     final String DIRS = lat ? "NS" : "EOW";
     coord = coord.trim().toUpperCase();
 

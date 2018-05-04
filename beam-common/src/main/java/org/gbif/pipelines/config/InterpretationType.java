@@ -5,6 +5,6 @@ package org.gbif.pipelines.config;
  */
 public enum InterpretationType {
 
-  ALL, LOCATION, TEMPORAL, TAXONOMY, COMMON
+  ALL, LOCATION, TEMPORAL, TAXONOMY, COMMON, MULTIMEDIA
 
 }

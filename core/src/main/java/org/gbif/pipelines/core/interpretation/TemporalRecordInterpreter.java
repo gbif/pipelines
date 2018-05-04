@@ -10,7 +10,6 @@ import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
-import java.time.Instant;
 import java.time.Month;
 import java.time.Year;
 import java.time.temporal.Temporal;
@@ -46,22 +45,27 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
 
       temporalRecord.setEventDate(eventDate);
 
-      // Interpretation of the modified date
-      TemporalParser.parseRawDate(getValueFunc.apply(extendedRecord, DcTerm.modified))
-        .getFrom()
-        .map((temporal) -> Instant.from(temporal).toEpochMilli())
-        .ifPresent(temporalRecord::setModified);
-
-      // Interpretation of the dateIdentified
-      TemporalParser.parseRawDate(getValueFunc.apply(extendedRecord, DwcTerm.dateIdentified))
-        .getFrom()
-        .map((temporal) -> Instant.from(temporal).toEpochMilli())
-        .ifPresent(temporalRecord::setDateIdentified);
-
-      // Map to Interpretation
+      // create interpretation
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+
+      // Map issues to Interpretation
       temporalDates.getIssueList()
         .forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.eventDate.name(), issue)));
+
+      // Interpretation of the modified date
+      ParsedTemporalDates temporalModifiedDate =
+        TemporalParser.parseRawDate(getValueFunc.apply(extendedRecord, DcTerm.modified));
+      temporalModifiedDate.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setModified);
+      temporalModifiedDate.getIssueList()
+        .forEach(issue -> interpretation.withValidation(Trace.of(DcTerm.modified.name(), issue)));
+
+      // Interpretation of the dateIdentified
+      ParsedTemporalDates temporalDateIdentified =
+        TemporalParser.parseRawDate(getValueFunc.apply(extendedRecord, DwcTerm.dateIdentified));
+      temporalDateIdentified.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setDateIdentified);
+      temporalDateIdentified.getIssueList()
+        .forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.dateIdentified.name(), issue)));
+
       return interpretation;
     };
   }

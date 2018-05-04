@@ -154,9 +154,6 @@ public class MultimediaParser {
     AtomicFields atomicFields = new AtomicFields();
     if (HTML_TYPE.equalsIgnoreCase(format) && Objects.nonNull(identifier)) {
       atomicFields.references = identifier;
-      atomicFields.identifier = null;
-      atomicFields.format = null;
-
       return atomicFields;
     }
 
@@ -229,8 +226,8 @@ public class MultimediaParser {
    */
   private static class TermWithValue {
 
-    Term term;
-    String value;
+    final Term term;
+    final String value;
 
     TermWithValue(Term term, String value) {
       this.term = term;
@@ -246,6 +243,5 @@ public class MultimediaParser {
     String format;
     URI identifier;
     URI references;
-
   }
 }

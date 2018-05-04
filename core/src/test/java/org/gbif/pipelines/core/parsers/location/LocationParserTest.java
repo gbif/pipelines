@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.parsers.location;
 
 import org.gbif.api.vocabulary.Country;
+import org.gbif.pipelines.core.parsers.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.core.ws.MockServer;
@@ -37,7 +38,7 @@ public class LocationParserTest extends MockServer {
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
                         .stream()
-                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .contains(IssueType.COORDINATE_INVALID));
   }
@@ -51,7 +52,7 @@ public class LocationParserTest extends MockServer {
     Assert.assertNull(result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
                         .stream()
-                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .contains(IssueType.COUNTRY_INVALID));
   }
@@ -65,7 +66,7 @@ public class LocationParserTest extends MockServer {
     Assert.assertNull(result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
                         .stream()
-                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .contains(IssueType.COUNTRY_CODE_INVALID));
   }
@@ -84,7 +85,7 @@ public class LocationParserTest extends MockServer {
     Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
     Assert.assertTrue(result.getIssues()
                         .stream()
-                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .containsAll(Arrays.asList(IssueType.COUNTRY_CODE_INVALID,
                                                    IssueType.COUNTRY_INVALID,
@@ -108,7 +109,7 @@ public class LocationParserTest extends MockServer {
     Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
     Assert.assertTrue(result.getIssues()
                         .stream()
-                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .containsAll(Arrays.asList(IssueType.COUNTRY_CODE_INVALID,
                                                    IssueType.COUNTRY_INVALID,
@@ -125,7 +126,7 @@ public class LocationParserTest extends MockServer {
     Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
     Assert.assertTrue(result.getIssues()
                         .stream()
-                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .containsAll(Arrays.asList(IssueType.COUNTRY_CODE_INVALID,
                                                    IssueType.COUNTRY_INVALID,
@@ -148,12 +149,12 @@ public class LocationParserTest extends MockServer {
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertTrue(result.isSuccessful());
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
-    Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLat().doubleValue(), 0);
-    Assert.assertEquals(LONGITUDE_CANADA, result.getResult().getLatLng().getLng().doubleValue(), 0);
+    Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLat(), 0);
+    Assert.assertEquals(LONGITUDE_CANADA, result.getResult().getLatLng().getLng(), 0);
     Assert.assertEquals(1, result.getIssues().size());
     Assert.assertTrue(result.getIssues()
                         .stream()
-                        .map(interpretationIssue -> interpretationIssue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .contains(IssueType.GEODETIC_DATUM_ASSUMED_WGS84));
   }

@@ -32,14 +32,14 @@ public class NameUsageMatchQueryConverter {
     private final String specificEpithet;
     private final String infraspecificEpithet;
 
-    private static Builder newBuilder() {
-      return new Builder();
-    }
-
     private AtomizedFields(Builder builder) {
       genus = builder.genus;
       specificEpithet = builder.specificEpithet;
       infraspecificEpithet = builder.infraspecificEpithet;
+    }
+
+    private static Builder newBuilder() {
+      return new Builder();
     }
 
     public String getGenus() {
