@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.ws.client.match2;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
+import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.TemporalParser;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
@@ -13,7 +14,6 @@ import org.gbif.pipelines.core.ws.config.Service;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -77,15 +77,14 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     // get identifications
     List<Map<String, String>> identifications =
       extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
-
-    // FIXME: use new generic functions to parse the date??
+    
     // sort them by date identified
     // Ask Markus D if this can be moved to the API?
     identifications.sort(Comparator.comparing((Map<String, String> map) -> {
       // parse dateIdentified field
       ParsedTemporalDates parsedDates = TemporalParser.parseRawDate(map.get(DwcTerm.dateIdentified.qualifiedName()));
-      // convert temporal to millis to compare them
-      return parsedDates.getFrom().map((temporal) -> Instant.from(temporal).toEpochMilli()).orElse(0L);
+      // TODO: I convert it to date just to compare the Temporal objects. Should we change it??
+      return TemporalAccessorUtils.toDate(parsedDates.getFrom().orElse(null));
     }).reversed());
     for (Map<String, String> record : identifications) {
       response = tryNameMatch(record);
