@@ -11,6 +11,7 @@ import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueType;
 
 import java.net.URI;
+import java.util.Objects;
 import java.util.function.Function;
 
 import com.google.common.base.Strings;
@@ -130,7 +131,7 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
       String value = extendedRecord.getCoreTerms().get(DcTerm.references.qualifiedName());
       if (!Strings.isNullOrEmpty(value)) {
         URI parseResult = UrlParser.parse(value);
-        if (parseResult == null) {
+        if (Objects.isNull(parseResult)) {
           interpretation.withValidation(Trace.of(DcTerm.references.name(), IssueType.REFERENCES_URI_INVALID));
         } else {
           interpretedExtendedRecord.setReferences(parseResult.toString());
