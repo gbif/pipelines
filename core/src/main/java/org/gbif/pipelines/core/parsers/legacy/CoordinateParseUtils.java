@@ -129,7 +129,9 @@ public class CoordinateParseUtils {
         int cnt = StringUtils.countMatches(coordinates, String.valueOf(delim));
         if (cnt == 1) {
           String[] latlon = StringUtils.split(coordinates, delim);
-          return parseLatLng(latlon[0], latlon[1]);
+          if (latlon.length > 1) {
+            return parseLatLng(latlon[0], latlon[1]);
+          }
         }
       }
     }
