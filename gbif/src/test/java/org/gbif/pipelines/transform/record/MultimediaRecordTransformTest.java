@@ -63,7 +63,8 @@ public class MultimediaRecordTransformTest {
   }
 
   private ExtendedRecord createExtendedRecord() {
-    Map<String, String> audubonExtension = new ExtendedRecordCustomBuilder.MultimediaExtensionBuilder().accessURI(URI)
+    Map<String, String> audubonExtension = ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+      .accessURI(URI)
       .identifier("d79633d3-0967-40fa-9557-d6915e4d1353")
       .format("jpg")
       .title(TITLE)
@@ -74,7 +75,8 @@ public class MultimediaRecordTransformTest {
       .created(CREATED)
       .build();
 
-    return new ExtendedRecordCustomBuilder().id(RECORD_ID)
+    return ExtendedRecordCustomBuilder.create()
+      .id(RECORD_ID)
       .addExtensionRecord(Extension.AUDUBON, audubonExtension)
       .build();
   }

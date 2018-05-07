@@ -23,17 +23,17 @@ public class LocationParserTest extends MockServer {
   @Test
   public void givenCountryWhenParsedThenReturnCountry() {
     // only with country
-    ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).country("Spain").build();
+    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").build();
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
 
     // only with country code
-    extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).countryCode("ES").build();
+    extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("ES").build();
     result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
 
     // with country and country code
-    extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).country("Spain").countryCode("ES").build();
+    extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
     result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
@@ -46,7 +46,7 @@ public class LocationParserTest extends MockServer {
   @Test
   public void givenInvalidCountryWhenParsedThenReturnIssue() {
     // only with country
-    ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).country("foo").build();
+    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("foo").build();
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertNull(result.getResult().getCountry());
@@ -60,7 +60,7 @@ public class LocationParserTest extends MockServer {
   @Test
   public void givenInvalidCountryCodeWhenParsedThenReturnIssue() {
     // only with country code
-    ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).countryCode("foo").build();
+    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("foo").build();
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertNull(result.getResult().getCountry());
@@ -77,7 +77,7 @@ public class LocationParserTest extends MockServer {
 
     // only with coords
     ExtendedRecord extendedRecord =
-      new ExtendedRecordCustomBuilder().id(TEST_ID).decimalLatitude("30.2").decimalLongitude("100.2344349").build();
+      ExtendedRecordCustomBuilder.create().id(TEST_ID).decimalLatitude("30.2").decimalLongitude("100.2344349").build();
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
@@ -100,8 +100,11 @@ public class LocationParserTest extends MockServer {
     enqueueResponse(CHINA_REVERSE_RESPONSE);
 
     // only with verbatim latitude and longitude
-    ExtendedRecord extendedRecord =
-      new ExtendedRecordCustomBuilder().id(TEST_ID).verbatimLatitude("30.2").verbatimLongitude("100.2344349").build();
+    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create()
+      .id(TEST_ID)
+      .verbatimLatitude("30.2")
+      .verbatimLongitude("100.2344349")
+      .build();
     ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
@@ -118,7 +121,7 @@ public class LocationParserTest extends MockServer {
                                                    IssueType.GEODETIC_DATUM_ASSUMED_WGS84)));
 
     // only with verbatim latitude and longitude
-    extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).verbatimCoords("30.2, 100.2344349").build();
+    extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).verbatimCoords("30.2, 100.2344349").build();
     result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
@@ -140,7 +143,8 @@ public class LocationParserTest extends MockServer {
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
     // only with coords
-    ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID)
+    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create()
+      .id(TEST_ID)
       .country(Country.CANADA.getTitle())
       .countryCode(Country.CANADA.getIso2LetterCode())
       .decimalLatitude(String.valueOf(LATITUDE_CANADA))

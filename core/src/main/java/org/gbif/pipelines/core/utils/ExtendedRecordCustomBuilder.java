@@ -43,6 +43,16 @@ public class ExtendedRecordCustomBuilder {
   private String associatedMedia;
   private Map<String, List<Map<String, String>>> extensions;
 
+  private ExtendedRecordCustomBuilder() {}
+
+  public static ExtendedRecordCustomBuilder create() {
+    return new ExtendedRecordCustomBuilder();
+  }
+
+  public static MultimediaExtensionBuilder createMultimediaExtensionBuilder() {
+    return new MultimediaExtensionBuilder();
+  }
+
   public ExtendedRecordCustomBuilder country(String country) {
     this.country = country;
     return this;
@@ -149,7 +159,7 @@ public class ExtendedRecordCustomBuilder {
   }
 
   public ExtendedRecordCustomBuilder addExtensionRecord(Extension extension, Map<String, String> record) {
-    if (extension != null) {
+    if (Objects.nonNull(extension)) {
       if (Objects.isNull(extensions)) {
         extensions = new HashMap<>();
       }
@@ -198,7 +208,7 @@ public class ExtendedRecordCustomBuilder {
   }
 
   private static void addToMap(Map<String, String> map, Term term, String value) {
-    if (value != null) {
+    if (Objects.nonNull(value)) {
       map.put(term.qualifiedName(), value);
     }
   }
@@ -225,6 +235,8 @@ public class ExtendedRecordCustomBuilder {
     private String rightsHolder;
     private String creator;
     private String created;
+
+    private MultimediaExtensionBuilder() {}
 
     public MultimediaExtensionBuilder format(String format) {
       this.format = format;

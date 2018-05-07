@@ -62,9 +62,7 @@ public class CountryMaps {
   private static void addConfusedCountry(Country countryA, Country countryB, boolean withIssue) {
     Map<Country, Set<Country>> map = withIssue ? CONFUSED_COUNTRIES : EQUIVALENT_COUNTRIES;
 
-    if (!map.containsKey(countryA)) {
-      map.put(countryA, Sets.newHashSet());
-    }
+    map.putIfAbsent(countryA, Sets.newHashSet());
 
     Set<Country> confused = map.get(countryA);
     confused.add(countryA);

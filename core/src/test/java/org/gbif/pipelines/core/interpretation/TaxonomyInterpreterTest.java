@@ -29,7 +29,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor")
       .authorship("")
@@ -52,7 +52,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: http://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor%20(Linnaeus,%201771)&strict=false&verbose=false
     // @formatter:on
-    record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+    record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor (Linnaeus, 1771)")
       .rank(Rank.SPECIES.name())
@@ -72,7 +72,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: http://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor%20(Linnaeus,%201771)&strict=false&verbose=false
     // @formatter:on
-    record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+    record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor")
       .authorship("(Linnaeus, 1771)")
@@ -96,7 +96,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Plantae&rank=GENUS&name=Oenanthe&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Plantae")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Plantae")
       .name("Oenanthe")
       .authorship("")
       .rank(Rank.GENUS.name())
@@ -118,7 +118,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Plantae&rank=GENUS&name=Oenanthe%20L.&strict=false&verbose=false
     // @formatter:on
-    record = new ExtendedRecordCustomBuilder().kingdom("Plantae")
+    record = ExtendedRecordCustomBuilder.create().kingdom("Plantae")
       .name("Oenanthe")
       .authorship("L.")
       .rank(Rank.GENUS.name())
@@ -138,7 +138,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&rank=GENUS&name=Oenanthe%20Vieillot,%201816&strict=false&verbose=false
     // @formatter:on
-    record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+    record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
       .name("Oenanthe")
       .authorship("Vieillot, 1816")
       .rank(Rank.GENUS.name())
@@ -161,7 +161,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&phylum=Annelida&family=Lumbricidae&rank=SPECIES&name=Bold:acv7160&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
       .phylum("Annelida")
       .family("Lumbricidae")
       .name("BOLD:ACV7160")
@@ -184,7 +184,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Chromista&phylum=Dinophyta&class=Dinophyceae&order=Peridiniales&family=Ceratiaceae&genus=Ceratium&rank=SPECIES&name=Ceratium%20hirundinella&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Chromista")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Chromista")
       .phylum("Dinophyta")
       .clazz("Dinophyceae")
       .order("Peridiniales")
@@ -216,7 +216,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = new ExtendedRecordCustomBuilder().kingdom("Animalia")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor")
       .rank(Rank.SPECIES.name())
@@ -240,7 +240,7 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?rank=GENUS&name=Agallisus%20lepturoides&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = new ExtendedRecordCustomBuilder().name("Agallisus lepturoides").id(TEST_RECORD_ID).build();
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create().name("Agallisus lepturoides").id(TEST_RECORD_ID).build();
 
     enqueueResponse(AGALLISUS_LEPTUROIDES_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
