@@ -108,8 +108,10 @@
   </properties>
 
   <build>
+    <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven-compiler-plugin.version}</version>
           <configuration>
@@ -131,7 +133,7 @@
               <arg>-Xlint:-varargs</arg>
             </compilerArgs>
             <showWarnings>true</showWarnings>
-            <showDeprecation>true</showDeprecation>
+            <showDeprecation>false</showDeprecation>
           </configuration>
           <executions>
             <execution>
@@ -185,7 +187,7 @@
             <configLocation>build-tools/src/main/resources/pipelines/checkstyle.xml</configLocation>
             <suppressionsLocation>build-tools/src/main/resources/pipelines/suppressions.xml</suppressionsLocation>
             <consoleOutput>true</consoleOutput>
-            <failsOnError>true</failsOnError>
+            <failOnViolation>true</failOnViolation>
             <includeResources>false</includeResources>
             <includeTestResources>false</includeTestResources>
             <includeTestSourceDirectory>true</includeTestSourceDirectory>
@@ -220,6 +222,7 @@
           <version>${maven-clean-plugin.version}</version>
         </plugin>
       </plugins>
+    </pluginManagement>
   </build>
 
   <!--
