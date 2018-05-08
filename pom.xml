@@ -37,6 +37,7 @@
     <module>hadoop</module>
     <module>gbif</module>
     <module>xml-occurrence-parsers</module>
+    <module>build-tools</module>
   </modules>
 
   <repositories>
@@ -98,11 +99,106 @@
     <build-helper-maven.version>1.9.1</build-helper-maven.version>
     <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
     <maven-clean-plugin.version>3.0.0</maven-clean-plugin.version>
+    <maven-checkstyle-plugin.version>3.0.0</maven-checkstyle-plugin.version>
+    <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+
+    <compiler.error.flag>-Werror</compiler.error.flag>
+    <compiler.default.pkginfo.flag>-Xpkginfo:always</compiler.default.pkginfo.flag>
+    <compiler.default.exclude>nothing</compiler.default.exclude>
   </properties>
 
   <build>
-    <pluginManagement>
       <plugins>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <source>${jdkLevel}</source>
+            <target>${jdkLevel}</target>
+            <compilerArgs>
+              <arg>-Xlint:all</arg>
+              <arg>${compiler.error.flag}</arg>
+              <!-- Override options warnings to support cross-compilation -->
+              <arg>-Xlint:-options</arg>
+              <!-- Temporary lint overrides, to be removed over time. -->
+              <arg>-Xlint:-cast</arg>
+              <arg>-Xlint:-deprecation</arg>
+              <arg>-Xlint:-processing</arg>
+              <arg>-Xlint:-rawtypes</arg>
+              <arg>-Xlint:-serial</arg>
+              <arg>-Xlint:-try</arg>
+              <arg>-Xlint:-unchecked</arg>
+              <arg>-Xlint:-varargs</arg>
+            </compilerArgs>
+            <showWarnings>true</showWarnings>
+            <showDeprecation>true</showDeprecation>
+          </configuration>
+          <executions>
+            <execution>
+              <id>default-compile</id>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+              <phase>compile</phase>
+              <configuration>
+                <compilerArgs>
+                  <arg>${compiler.default.pkginfo.flag}</arg>
+                  <arg>-parameters</arg>
+                </compilerArgs>
+                <excludes>
+                  <exclude>${compiler.default.exclude}</exclude>
+                </excludes>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${maven-checkstyle-plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>8.7</version>
+            </dependency>
+            <dependency>
+              <groupId>org.gbif.pipelines</groupId>
+              <artifactId>build-tools</artifactId>
+              <version>${project.version}</version>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>checkstyle</id>
+              <!--
+             Execute checkstyle after compilation but before tests.
+              -->
+              <phase>test-compile</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <configLocation>build-tools/src/main/resources/pipelines/checkstyle.xml</configLocation>
+            <suppressionsLocation>build-tools/src/main/resources/pipelines/suppressions.xml</suppressionsLocation>
+            <consoleOutput>true</consoleOutput>
+            <failsOnError>true</failsOnError>
+            <includeResources>false</includeResources>
+            <includeTestResources>false</includeTestResources>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            <!-- only check the actual source directories in src, not anything generated in target -->
+            <sourceDirectories>
+              <sourceDirectory>src/main/java</sourceDirectory>
+            </sourceDirectories>
+            <testSourceDirectories>
+              <testSourceDirectory>src/test/java</testSourceDirectory>
+            </testSourceDirectories>
+          </configuration>
+        </plugin>
+
         <plugin>
           <groupId>org.apache.avro</groupId>
           <artifactId>avro-maven-plugin</artifactId>
@@ -124,7 +220,6 @@
           <version>${maven-clean-plugin.version}</version>
         </plugin>
       </plugins>
-    </pluginManagement>
   </build>
 
   <!--
