@@ -88,6 +88,7 @@
     <geotools.version>12.1</geotools.version>
     <commons-digester.version>2.1</commons-digester.version>
     <mapdb.version>3.0.5</mapdb.version>
+    <logstash-encoder.version>4.11</logstash-encoder.version>
 
     <!-- Test libraries -->
     <mockwebserver.version>3.10.0</mockwebserver.version>
@@ -290,6 +291,12 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${logstash-encoder.version}</version>
+        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>com.squareup.retrofit2</groupId>

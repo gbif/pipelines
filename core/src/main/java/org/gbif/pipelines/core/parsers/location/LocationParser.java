@@ -56,7 +56,7 @@ public class LocationParser {
 
     // return if coordinates parsing failed
     if (!coordsParsed.isSuccessful()) {
-      LOG.info("coordinates parsing failed");
+      LOG.debug("Parsing failed for coordinates {}", coordsParsed.getResult());
       ParsedLocation parsedLocation = ParsedLocation.newBuilder().country(countryMatched).build();
       return ParsedField.fail(parsedLocation, issues);
     }
@@ -93,7 +93,7 @@ public class LocationParser {
     ParsedField<Country> countryParsed, List<InterpretationIssue> issues
   ) {
     if (!countryParsed.isSuccessful()) {
-      LOG.info("country parsing failed");
+      LOG.debug("Parsing failed for country {}", countryParsed.getResult());
       issues.addAll(countryParsed.getIssues());
     }
 
@@ -108,7 +108,9 @@ public class LocationParser {
     List<InterpretationIssue> issues, Optional<Country> countryName, Optional<Country> countryCode
   ) {
     if (!countryName.equals(countryCode)) {
-      LOG.info("country mismatch found");
+      LOG.debug("country mismatch found for country name {} and country code {}",
+                countryName.toString(),
+                countryCode.toString());
       issues.add(new InterpretationIssue(IssueType.COUNTRY_MISMATCH, DwcTerm.country, DwcTerm.countryCode));
     }
   }
