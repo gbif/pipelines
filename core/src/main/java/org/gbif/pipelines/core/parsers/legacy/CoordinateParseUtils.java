@@ -59,7 +59,7 @@ public class CoordinateParseUtils {
    */
   public static ParsedField<LatLng> parseLatLng(final String latitude, final String longitude) {
     if (Strings.isNullOrEmpty(latitude) || Strings.isNullOrEmpty(longitude)) {
-      return ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID,
+      return ParsedField.fail(InterpretationIssue.newIssue(IssueType.COORDINATE_INVALID,
                                                       DwcTerm.decimalLatitude,
                                                       DwcTerm.decimalLongitude));
     }
@@ -70,13 +70,13 @@ public class CoordinateParseUtils {
       try {
         lat = parseDMS(latitude, true);
       } catch (IllegalArgumentException e) {
-        return ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID, DwcTerm.decimalLatitude));
+        return ParsedField.fail(InterpretationIssue.newIssue(IssueType.COORDINATE_INVALID, DwcTerm.decimalLatitude));
       }
 
       try {
         lng = parseDMS(longitude, false);
       } catch (IllegalArgumentException e) {
-        return ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID, DwcTerm.decimalLongitude));
+        return ParsedField.fail(InterpretationIssue.newIssue(IssueType.COORDINATE_INVALID, DwcTerm.decimalLongitude));
       }
     }
 
@@ -101,7 +101,7 @@ public class CoordinateParseUtils {
   // 02° 49' 52" N	131° 47' 03" E
   public static ParsedField<LatLng> parseVerbatimCoordinates(final String coordinates) {
     if (Strings.isNullOrEmpty(coordinates)) {
-      return ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID, DwcTerm.verbatimCoordinates));
+      return ParsedField.fail(InterpretationIssue.newIssue(IssueType.COORDINATE_INVALID, DwcTerm.verbatimCoordinates));
     }
     Matcher m = DMS_COORD.matcher(coordinates);
     if (m.find()) {
@@ -118,7 +118,7 @@ public class CoordinateParseUtils {
         return validateAndRound(c2, c1);
 
       } else {
-        return ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID,
+        return ParsedField.fail(InterpretationIssue.newIssue(IssueType.COORDINATE_INVALID,
                                                         DwcTerm.decimalLatitude,
                                                         DwcTerm.decimalLongitude));
       }
@@ -136,7 +136,7 @@ public class CoordinateParseUtils {
       }
     }
 
-    return ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID,
+    return ParsedField.fail(InterpretationIssue.newIssue(IssueType.COORDINATE_INVALID,
                                                     DwcTerm.decimalLatitude,
                                                     DwcTerm.decimalLongitude));
   }
@@ -151,15 +151,15 @@ public class CoordinateParseUtils {
     lat = roundTo6decimals(lat);
     lon = roundTo6decimals(lon);
     if (Double.compare(lat, latOrig) != 0) {
-      issues.add(new InterpretationIssue(IssueType.COORDINATE_ROUNDED, DwcTerm.decimalLatitude));
+      issues.add(InterpretationIssue.newIssue(IssueType.COORDINATE_ROUNDED, DwcTerm.decimalLatitude));
     }
     if (Double.compare(lon, lngOrig) != 0) {
-      issues.add(new InterpretationIssue(IssueType.COORDINATE_ROUNDED, DwcTerm.decimalLongitude));
+      issues.add(InterpretationIssue.newIssue(IssueType.COORDINATE_ROUNDED, DwcTerm.decimalLongitude));
     }
 
     // 0,0 is too suspicious
     if (Double.compare(lat, 0) == 0 && Double.compare(lon, 0) == 0) {
-      issues.add(new InterpretationIssue(IssueType.ZERO_COORDINATE, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude));
+      issues.add(InterpretationIssue.newIssue(IssueType.ZERO_COORDINATE, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude));
       return ParsedField.success(new LatLng(0, 0), issues);
     }
 
@@ -174,14 +174,14 @@ public class CoordinateParseUtils {
     // appear in
     // search results and maps etc. however, this is logic decision, that goes above the capabilities of this method
     if ((Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) && inRange(lon, lat)) {
-      issues.add(new InterpretationIssue(IssueType.PRESUMED_SWAPPED_COORDINATE,
+      issues.add(InterpretationIssue.newIssue(IssueType.PRESUMED_SWAPPED_COORDINATE,
                                          DwcTerm.decimalLatitude,
                                          DwcTerm.decimalLongitude));
       return ParsedField.fail(new LatLng(lat, lon), issues);
     }
 
     // then something is out of range
-    issues.add(new InterpretationIssue(IssueType.COORDINATE_OUT_OF_RANGE,
+    issues.add(InterpretationIssue.newIssue(IssueType.COORDINATE_OUT_OF_RANGE,
                                        DwcTerm.decimalLatitude,
                                        DwcTerm.decimalLongitude));
     return ParsedField.fail(issues);

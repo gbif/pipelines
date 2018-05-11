@@ -46,7 +46,7 @@ public class SpeciesMatchv2RestServiceTest extends MockServer {
   public void shouldReturn500error() {
     mockServer.enqueue(new MockResponse().setResponseCode(HttpURLConnection.HTTP_INTERNAL_ERROR));
 
-    ExtendedRecord record = new ExtendedRecordCustomBuilder().name("Puma concolor").id("1").build();
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create().name("Puma concolor").id("1").build();
 
     HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance().getMatch(record);
 

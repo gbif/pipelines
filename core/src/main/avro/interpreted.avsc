@@ -13,6 +13,7 @@
     {"name": "lifeStage", "type": ["null", "string"], "default" : null },
     {"name": "establishmentMeans", "type": ["null", "string"], "default" : null },
     {"name": "individualCount", "type": ["null", "int"], "default" : null },
-    {"name": "typeStatus", "type": ["null", "string"], "default" : null }
+    {"name": "typeStatus", "type": ["null", "string"], "default" : null },
+    {"name": "references", "type": ["null", "string"], "default" : null }
   ]
 }
