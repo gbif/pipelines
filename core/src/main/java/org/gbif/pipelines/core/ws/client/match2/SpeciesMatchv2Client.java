@@ -77,7 +77,7 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     // get identifications
     List<Map<String, String>> identifications =
       extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
-    
+
     // sort them by date identified
     // Ask Markus D if this can be moved to the API?
     identifications.sort(Comparator.comparing((Map<String, String> map) -> {
@@ -125,7 +125,8 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
   }
 
   private static boolean hasIdentifications(ExtendedRecord extendedRecord) {
-    return extendedRecord.getExtensions().containsKey(DwcTerm.Identification.qualifiedName());
+    return extendedRecord.getExtensions() != null && extendedRecord.getExtensions()
+      .containsKey(DwcTerm.Identification.qualifiedName());
   }
 
 }

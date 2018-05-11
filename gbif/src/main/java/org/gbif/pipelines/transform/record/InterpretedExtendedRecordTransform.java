@@ -54,6 +54,7 @@ public class InterpretedExtendedRecordTransform extends RecordTransform<Extended
           .using(ExtendedRecordInterpreter.interpretLifeStage(interpretedRecord))
           .using(ExtendedRecordInterpreter.interpretTypeStatus(interpretedRecord))
           .using(ExtendedRecordInterpreter.interpretIndividualCount(interpretedRecord))
+          .using(ExtendedRecordInterpreter.interpretReferences(interpretedRecord))
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         //additional outputs

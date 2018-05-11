@@ -23,8 +23,6 @@ public class CountryMaps {
 
   private static final String CONFUSED_COUNTRY_FILE = "confused-country-pairs.txt";
 
-  private CountryMaps() {}
-
   /*
    Some countries are commonly mislabeled and are close to correct, so we want to accommodate them, e.g. Northern
    Ireland mislabeled as Ireland (should be GB). Add comma separated pairs of acceptable country swaps in the
@@ -35,6 +33,8 @@ public class CountryMaps {
   private static final Map<Country, Set<Country>> CONFUSED_COUNTRIES = Maps.newHashMap();
   // And this is the same, but without the issue — we aren't exactly following ISO, but we accept it.
   private static final Map<Country, Set<Country>> EQUIVALENT_COUNTRIES = Maps.newHashMap();
+
+  private CountryMaps() {}
 
   static {
     try (InputStream in = CountryMaps.class.getClassLoader().getResourceAsStream(CONFUSED_COUNTRY_FILE);
@@ -62,9 +62,7 @@ public class CountryMaps {
   private static void addConfusedCountry(Country countryA, Country countryB, boolean withIssue) {
     Map<Country, Set<Country>> map = withIssue ? CONFUSED_COUNTRIES : EQUIVALENT_COUNTRIES;
 
-    if (!map.containsKey(countryA)) {
-      map.put(countryA, Sets.<Country>newHashSet());
-    }
+    map.putIfAbsent(countryA, Sets.newHashSet());
 
     Set<Country> confused = map.get(countryA);
     confused.add(countryA);

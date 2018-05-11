@@ -37,7 +37,7 @@ class InterpretationPipelineAssembler
 
   private PipelineOptions options;
   private String input;
-  private Set<InterpretationType> interpretationTypes;
+  private final Set<InterpretationType> interpretationTypes;
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler;
   private BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler;
   private Map<InterpretationType, InterpretationStepSupplier> interpretationSteps;

@@ -21,10 +21,12 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 
 import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.commonGbif;
 import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.locationGbif;
+import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.multimediaGbif;
 import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.taxonomyGbif;
 import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.temporalGbif;
 import static org.gbif.pipelines.config.InterpretationType.COMMON;
 import static org.gbif.pipelines.config.InterpretationType.LOCATION;
+import static org.gbif.pipelines.config.InterpretationType.MULTIMEDIA;
 import static org.gbif.pipelines.config.InterpretationType.TAXONOMY;
 import static org.gbif.pipelines.config.InterpretationType.TEMPORAL;
 
@@ -51,8 +53,9 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
 
   private GbifInterpretationPipeline(DataProcessingPipelineOptions options) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),"defaultTargetDirectory is required");
-    Preconditions.checkArgument(Objects.nonNull(options.getAttempt()),"attempt is required");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),
+                                "defaultTargetDirectory is required");
+    Preconditions.checkArgument(Objects.nonNull(options.getAttempt()), "attempt is required");
     this.options = options;
     avroCodec = parseAvroCodec(options.getAvroCompressionType());
     initStepsMap();
@@ -70,6 +73,7 @@ public class GbifInterpretationPipeline implements InterpretationPipeline {
     stepsMap.put(TEMPORAL, temporalGbif(createPaths(options, InterpretationType.TEMPORAL), avroCodec));
     stepsMap.put(TAXONOMY, taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY), avroCodec));
     stepsMap.put(COMMON, commonGbif(createPaths(options, InterpretationType.COMMON), avroCodec));
+    stepsMap.put(MULTIMEDIA, multimediaGbif(createPaths(options, InterpretationType.MULTIMEDIA), avroCodec));
   }
 
   @Override

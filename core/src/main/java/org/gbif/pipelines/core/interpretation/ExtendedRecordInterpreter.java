@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpretation;
 
+import org.gbif.common.parsers.UrlParser;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
@@ -8,7 +10,11 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueType;
 
+import java.net.URI;
+import java.util.Objects;
 import java.util.function.Function;
+
+import com.google.common.base.Strings;
 
 /**
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to it.
@@ -113,5 +119,25 @@ public interface ExtendedRecordInterpreter extends Function<ExtendedRecord, Inte
           }
           return interpretation;
         }).orElse(Interpretation.of(extendedRecord));
+  }
+
+  /**
+   * {@link DcTerm#references} interpretation.
+   */
+  static ExtendedRecordInterpreter interpretReferences(InterpretedExtendedRecord interpretedExtendedRecord) {
+    return (ExtendedRecord extendedRecord) ->
+    {
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+      String value = extendedRecord.getCoreTerms().get(DcTerm.references.qualifiedName());
+      if (!Strings.isNullOrEmpty(value)) {
+        URI parseResult = UrlParser.parse(value);
+        if (Objects.isNull(parseResult)) {
+          interpretation.withValidation(Trace.of(DcTerm.references.name(), IssueType.REFERENCES_URI_INVALID));
+        } else {
+          interpretedExtendedRecord.setReferences(parseResult.toString());
+        }
+      }
+      return interpretation;
+    };
   }
 }

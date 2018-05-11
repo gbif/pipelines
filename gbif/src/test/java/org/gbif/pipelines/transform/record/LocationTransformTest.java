@@ -63,10 +63,10 @@ public class LocationTransformTest {
     // State
     final String[] denmark =
       {"0", Country.DENMARK.getTitle(), Country.DENMARK.getIso2LetterCode(), "EUROPE", "100.0", "110.0", "111.0",
-        "200.0", "Ocean", "220.0", "222.0", "30.0", "0.00001", "56.26", "9.51"};
+        "200.0", "Ocean", "220.0", "222.0", "30.0", "0.00001", "56.26", "9.51", "Copenhagen"};
     final String[] japan =
       {"1", Country.JAPAN.getTitle(), Country.JAPAN.getIso2LetterCode(), "ASIA", "100.0", "110.0", "111.0", "200.0",
-        "Ocean", "220.0", "222.0", "30.0", "0.00001", "36.21", "138.25"};
+        "Ocean", "220.0", "222.0", "30.0", "0.00001", "36.21", "138.25", "Tokyo"};
 
     final List<ExtendedRecord> records = createExtendedRecordList(denmark, japan);
     enqueueGeocodeResponses();
@@ -109,6 +109,7 @@ public class LocationTransformTest {
       record.getCoreTerms().put(DwcTerm.coordinatePrecision.qualifiedName(), x[12]);
       record.getCoreTerms().put(DwcTerm.decimalLatitude.qualifiedName(), x[13]);
       record.getCoreTerms().put(DwcTerm.decimalLongitude.qualifiedName(), x[14]);
+      record.getCoreTerms().put(DwcTerm.stateProvince.qualifiedName(), x[15]);
       return record;
     }).collect(Collectors.toList());
   }
@@ -131,6 +132,7 @@ public class LocationTransformTest {
         .setCoordinatePrecision(Double.valueOf(x[12]))
         .setDecimalLatitude(Double.valueOf(x[13]))
         .setDecimalLongitude(Double.valueOf(x[14]))
+        .setStateProvince(x[15])
         .build())
       .collect(Collectors.toList());
   }

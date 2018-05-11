@@ -68,7 +68,7 @@ public class TaxonRecordTransformTest {
     enqueueDummyResponse();
 
     // State
-    ExtendedRecord extendedRecord = new ExtendedRecordCustomBuilder().id(TEST_ID).name("foo").build();
+    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).name("foo").build();
 
     // When
     TaxonRecordTransform taxonRecordTransform = TaxonRecordTransform.create().withAvroCoders(p);

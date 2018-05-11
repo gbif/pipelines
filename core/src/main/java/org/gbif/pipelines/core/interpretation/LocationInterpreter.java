@@ -3,7 +3,6 @@ package org.gbif.pipelines.core.interpretation;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
 import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
@@ -15,9 +14,10 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueType;
 import org.gbif.pipelines.io.avro.Location;
 
+import java.util.Objects;
 import java.util.function.Function;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Strings;
 
 import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINATE_PRECISION_LOWER_BOUND;
 import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINATE_PRECISION_UPPER_BOUND;
@@ -54,13 +54,16 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
 
       // set the issues to the interpretation
       parsedResult.getIssues().forEach(issue -> {
-        Term term = null;
-        if (issue.getTerms() != null && !issue.getTerms().isEmpty()) {
+        Trace<IssueType> trace;
+        if (Objects.nonNull(issue.getTerms()) && !issue.getTerms().isEmpty() && Objects.nonNull(issue.getTerms()
+                                                                                                  .get(0))) {
           // FIXME: now we take the first term. Should Trace accept a list of terms??
-          term = issue.getTerms().get(0);
+          trace = Trace.of(issue.getTerms().get(0).simpleName(), issue.getIssueType());
+        } else {
+          trace = Trace.of(issue.getIssueType());
         }
 
-        interpretation.withValidation(Trace.of(term.simpleName(), issue.getIssueType()));
+        interpretation.withValidation(trace);
       });
 
       return interpretation;
@@ -89,8 +92,22 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.waterBody.qualifiedName());
-      if (!StringUtils.isEmpty(value)) {
+      if (!Strings.isNullOrEmpty(value)) {
         locationRecord.setWaterBody(StringUtil.cleanName(value));
+      }
+      return interpretation;
+    };
+  }
+
+  /**
+   * {@link DwcTerm#stateProvince} interpretation.
+   */
+  static LocationInterpreter interpretStateProvince(Location locationRecord) {
+    return (ExtendedRecord extendedRecord) -> {
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+      String value = extendedRecord.getCoreTerms().get(DwcTerm.stateProvince.qualifiedName());
+      if (!Strings.isNullOrEmpty(value)) {
+        locationRecord.setStateProvince(StringUtil.cleanName(value));
       }
       return interpretation;
     };
@@ -211,7 +228,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       String value = extendedRecord.getCoreTerms().get(DwcTerm.coordinateUncertaintyInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
-      if (result != null
+      if (Objects.nonNull(result)
           && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
           && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
         locationRecord.setCoordinateUncertaintyInMeters(result);
@@ -231,7 +248,8 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       SimpleTypeParser.parseDouble(extendedRecord, DwcTerm.coordinatePrecision, parseResult -> {
         Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
         Double result = parseResult.orElse(null);
-        if (result != null && result >= COORDINATE_PRECISION_LOWER_BOUND && result <= COORDINATE_PRECISION_UPPER_BOUND) {
+        if (Objects.nonNull(result) && result >= COORDINATE_PRECISION_LOWER_BOUND && result <=
+                                                                            COORDINATE_PRECISION_UPPER_BOUND) {
           locationRecord.setCoordinatePrecision(result);
         } else {
           interpretation.withValidation(Trace.of(DwcTerm.coordinatePrecision.name(), IssueType.COORDINATE_PRECISION_INVALID));
