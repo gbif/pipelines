@@ -35,9 +35,9 @@ public class LocationParser {
   private static final Logger LOG = LoggerFactory.getLogger(LocationParser.class);
 
   // Issues
-  private static final InterpretationIssue COUNTRY_ISSUE = new InterpretationIssue(COUNTRY_INVALID, country);
-  private static final InterpretationIssue COUNTRY_CODE_ISSUE = new InterpretationIssue(COUNTRY_CODE_INVALID, countryCode);
-  private static final InterpretationIssue MISMATCH_ISSUE = new InterpretationIssue(COUNTRY_MISMATCH, country, countryCode);
+  private static final InterpretationIssue COUNTRY_ISSUE = InterpretationIssue.newIssue(COUNTRY_INVALID, country);
+  private static final InterpretationIssue COUNTRY_CODE_ISSUE = InterpretationIssue.newIssue(COUNTRY_CODE_INVALID, countryCode);
+  private static final InterpretationIssue MISMATCH_ISSUE = InterpretationIssue.newIssue(COUNTRY_MISMATCH, country, countryCode);
 
   private LocationParser() {}
 
