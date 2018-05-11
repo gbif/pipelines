@@ -46,7 +46,7 @@ public class CountryMaps {
           Country countryA = Country.fromIsoCode(countries[0].trim().toUpperCase());
           Country countryB = Country.fromIsoCode(countries[1].trim().toUpperCase());
           boolean addIssue = Boolean.parseBoolean(countries[2].trim());
-          LOG.info("Adding [{}][{}] ({}) pair to confused country matches.",
+          LOG.debug("Adding [{}][{}] ({}) pair to confused country matches.",
                    countryA,
                    countryB,
                    addIssue ? "with issue" : "without issue");

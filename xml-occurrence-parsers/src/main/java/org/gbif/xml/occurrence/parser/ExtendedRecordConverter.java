@@ -62,6 +62,7 @@ public class ExtendedRecordConverter {
 
       // Wait all threads
       CompletableFuture.allOf(futures).get();
+      dataFileWriter.flush();
 
     } catch (Exception ex) {
       LOG.error(ex.getMessage(), ex);
