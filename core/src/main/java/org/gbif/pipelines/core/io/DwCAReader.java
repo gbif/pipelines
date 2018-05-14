@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.io;
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.StarRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.functions.FunctionFactory;
 
 import java.io.IOException;
