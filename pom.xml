@@ -89,7 +89,7 @@
     <commons-digester.version>2.1</commons-digester.version>
     <mapdb.version>3.0.5</mapdb.version>
     <logstash-encoder.version>4.11</logstash-encoder.version>
-
+    <netty.version>4.1.25.Final</netty.version>
     <!-- Test libraries -->
     <mockwebserver.version>3.10.0</mockwebserver.version>
     <junit.version>4.12</junit.version>
@@ -134,6 +134,11 @@
   -->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-all</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>
