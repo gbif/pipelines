@@ -19,7 +19,7 @@ enum SpeciesMatchServiceRest {
 
   //TODO: Move to properties
   private static final String CACHE_NAME = "speciesMatchWS-cache";
-  private static final long CACHE_SIZE = 100 * 1024 * 1024; //100Mb
+  private static final long CACHE_SIZE = 100L * 1024L * 1024L; //100Mb
   private static final long TIMEOUT = 60;
   private static final String WS_PATH = "https://api.gbif.org/";
 

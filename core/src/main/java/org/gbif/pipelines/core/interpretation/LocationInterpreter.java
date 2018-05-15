@@ -39,12 +39,12 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();
-      if (parsedLocation.getCountry() != null) {
+      if (Objects.nonNull(parsedLocation.getCountry())) {
         locationRecord.setCountry(parsedLocation.getCountry().getTitle());
         locationRecord.setCountryCode(parsedLocation.getCountry().getIso2LetterCode());
       }
 
-      if (parsedLocation.getLatLng() != null) {
+      if (Objects.nonNull(parsedLocation.getLatLng())) {
         locationRecord.setDecimalLatitude(parsedLocation.getLatLng().getLat());
         locationRecord.setDecimalLongitude(parsedLocation.getLatLng().getLng());
       }
@@ -55,8 +55,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       // set the issues to the interpretation
       parsedResult.getIssues().forEach(issue -> {
         Trace<IssueType> trace;
-        if (Objects.nonNull(issue.getTerms()) && !issue.getTerms().isEmpty() && Objects.nonNull(issue.getTerms()
-                                                                                                  .get(0))) {
+        if (Objects.nonNull(issue.getTerms()) && !issue.getTerms().isEmpty() && Objects.nonNull(issue.getTerms().get(0))) {
           // FIXME: now we take the first term. Should Trace accept a list of terms??
           trace = Trace.of(issue.getTerms().get(0).simpleName(), issue.getIssueType());
         } else {

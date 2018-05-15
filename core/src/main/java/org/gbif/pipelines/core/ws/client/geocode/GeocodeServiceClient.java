@@ -5,6 +5,7 @@ import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.BaseServiceClient;
+import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.core.ws.config.Service;
 
 import java.nio.file.Paths;
@@ -13,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -30,8 +32,8 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
   }
 
   private GeocodeServiceClient(String wsPropertiesPath) {
-    geocodeServiceRest =
-      GeocodeServiceRest.getInstance(HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get(wsPropertiesPath)));
+    Config config = HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get(wsPropertiesPath));
+    geocodeServiceRest = GeocodeServiceRest.getInstance(config);
   }
 
   /**
@@ -61,7 +63,7 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
   private static Map<String, String> createParamsMap(LatLng latLng) {
     Map<String, String> params = new HashMap<>();
     params.put("lat", String.valueOf(latLng.getLat()));
-    params.put("lng", String.valueOf(latLng.getLat()));
+    params.put("lng", String.valueOf(latLng.getLng()));
 
     return params;
   }
@@ -78,9 +80,9 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
 
   @Override
   protected List<Country> parseResponse(Collection<GeocodeResponse> response) {
-    if (response != null && !response.isEmpty()) {
+    if (Objects.nonNull(response) && !response.isEmpty()) {
       return response.stream()
-        .filter(resp -> resp.getIsoCountryCode2Digit() != null)
+        .filter(resp -> Objects.nonNull(resp.getIsoCountryCode2Digit()))
         .map(resp -> Country.fromIsoCode(resp.getIsoCountryCode2Digit()))
         .collect(Collectors.toList());
     }

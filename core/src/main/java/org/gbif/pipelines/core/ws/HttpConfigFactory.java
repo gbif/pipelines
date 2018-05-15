@@ -68,15 +68,13 @@ public class HttpConfigFactory {
     // set config properties
     Config config = new Config();
     config.setBasePath(basePath);
-    config.setTimeout(Long.parseLong(props.getProperty(generatePropertyName(service, WS_TIMEOUT_PROP),
-                                                       DEFAULT_TIMEOUT)));
+    config.setTimeout(Long.parseLong(props.getProperty(generatePropertyName(service, WS_TIMEOUT_PROP), DEFAULT_TIMEOUT)));
 
     // cache properties
     String cacheName = service.name().toLowerCase().concat(DEFAULT_CACHE_NAME_SUFFIX);
-    Long cacheSize =
-      Long.parseLong(props.getProperty(generatePropertyName(service, CACHE_SIZE_PROP), DEFAULT_CACHE_SIZE))
-      * 1024
-      * 1024;
+
+    long configSize = Long.parseLong(props.getProperty(generatePropertyName(service, CACHE_SIZE_PROP), DEFAULT_CACHE_SIZE));
+    Long cacheSize = configSize * 1024L * 1024L; // Cache in megabytes
 
     Config.CacheConfig cacheConfig = new Config.CacheConfig();
     cacheConfig.setName(cacheName);
