@@ -46,6 +46,12 @@
 
   <build>
     <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+
       <!--  Generate source from Avro definitions -->
       <plugin>
         <groupId>org.apache.avro</groupId>
