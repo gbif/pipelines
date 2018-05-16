@@ -10,4 +10,4 @@ Need to copy the labs shaded jar manually first time to standalone spark cluster
 ```mvn exec:java  -Dexec.mainClass=org.gbif.pipelines.labs.spark2.WordCount -Dexec.args="--inputFile=/Users/clf358/gbif/pipelines/pom.xml --outputFile=finalresult --sparkMaster=spark://YN13797:7077"```
 
 ####Running on yarn cluster
-```mvn exec:java  -Dexec.mainClass=org.gbif.pipelines.labs.spark2.WordCount -Dexec.args="--inputFile=/Users/clf358/gbif/pipelines/pom.xml --outputFile=finalresult --sparkMaster=yarn"```
+```java -cp labs-1.1-SNAPSHOT-shaded.jar org.gbif.pipelines.labs.spark2.WordCount --inputFile=query-hive-688.csv --outputFile=result --sparkMaster=yarn```
