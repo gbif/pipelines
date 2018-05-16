@@ -136,6 +136,10 @@
             <forceJavacCompilerUse>true</forceJavacCompilerUse>
             <source>8</source>
             <target>8</target>
+            <compilerArgs>
+              <arg>-XepExcludedPaths:.*/src/main/java-generated/.*</arg>
+              <arg>-XepDisableWarningsInGeneratedCode</arg>
+            </compilerArgs>
           </configuration>
           <dependencies>
             <dependency>
