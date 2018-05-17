@@ -139,6 +139,7 @@
             <compilerArgs>
               <arg>-XepExcludedPaths:.*/src/main/java-generated/.*</arg>
               <arg>-XepDisableWarningsInGeneratedCode</arg>
+              <arg>-Xep:MissingOverride:ERROR</arg>
             </compilerArgs>
           </configuration>
           <dependencies>
