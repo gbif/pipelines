@@ -30,9 +30,9 @@ public final class CoordinatesValidator {
    * but not less than -90°.
    */
   public static boolean isAntarctica(Double latitude, Country country) {
-    return latitude != null && (country == null || country == Country.ANTARCTICA) && (latitude >= -90
-                                                                                      && latitude
-                                                                                         < ANTARCTICA_LATITUDE);
+    return latitude != null
+           && (country == null || country == Country.ANTARCTICA)
+           && (latitude >= -90 && latitude < ANTARCTICA_LATITUDE);
   }
 
 }

@@ -4,9 +4,9 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
-import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.LocationParser;
 import org.gbif.pipelines.core.parsers.location.ParsedLocation;
 import org.gbif.pipelines.core.utils.StringUtil;
@@ -34,8 +34,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
     return (ExtendedRecord extendedRecord) -> {
 
       // parse the terms
-      ParsedField<ParsedLocation> parsedResult =
-        LocationParser.parseCountryAndCoordinates(extendedRecord, wsPropertiesPath);
+      ParsedField<ParsedLocation> parsedResult = LocationParser.parse(extendedRecord, wsPropertiesPath);
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();

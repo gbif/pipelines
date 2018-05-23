@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.interpretation;
 
-import org.gbif.pipelines.core.parsers.ParsedField;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.multimedia.MultimediaParser;
 import org.gbif.pipelines.core.parsers.multimedia.ParsedMultimedia;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

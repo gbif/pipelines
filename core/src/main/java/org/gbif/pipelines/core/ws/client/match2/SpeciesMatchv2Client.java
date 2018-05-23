@@ -4,9 +4,9 @@ import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.parsers.TemporalParser;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
+import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.BaseServiceClient;
@@ -82,10 +82,11 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     // Ask Markus D if this can be moved to the API?
     identifications.sort(Comparator.comparing((Map<String, String> map) -> {
       // parse dateIdentified field
-      ParsedTemporalDates parsedDates = TemporalParser.parseRawDate(map.get(DwcTerm.dateIdentified.qualifiedName()));
+      ParsedTemporalDates parsedDates = TemporalParser.parse(map.get(DwcTerm.dateIdentified.qualifiedName()));
       // TODO: I convert it to date just to compare the Temporal objects. Should we change it??
       return TemporalAccessorUtils.toDate(parsedDates.getFrom().orElse(null));
     }).reversed());
+
     for (Map<String, String> record : identifications) {
       response = tryNameMatch(record);
       if (isSuccessfulMatch(response)) {

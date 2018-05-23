@@ -1,6 +1,5 @@
-package org.gbif.pipelines.core.parsers;
+package org.gbif.pipelines.core.parsers.temporal;
 
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
 import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulatorConverter;
 import org.gbif.pipelines.core.parsers.temporal.parser.ParserRawDateTime;
@@ -28,8 +27,8 @@ public class TemporalParser {
     // Can't have an instance
   }
 
-  public static ParsedTemporalDates parseRawDate(String rawDate) {
-    return parse(null, null, null, rawDate);
+  public static ParsedTemporalDates parse(String rawDate) {
+    return parse("", "", "", rawDate);
   }
 
   public static ParsedTemporalDates parse(String rawYear, String rawMonth, String rawDay, String rawDate) {

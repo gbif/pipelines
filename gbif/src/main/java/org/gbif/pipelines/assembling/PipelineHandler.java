@@ -25,7 +25,7 @@ public class PipelineHandler {
 
   private static void createAndRunPipeline(String[] args) {
     LOG.info("Creating pipeline from args: {}", Arrays.asList(args));
-    Pipeline pipeline = InterpretationPipelineFactory.from(args).createPipeline();
+    Pipeline pipeline = InterpretationPipelineFactory.from(args).get();
 
     LOG.info("Running pipeline", Arrays.asList(args));
     PipelineResult.State state = pipeline.run().waitUntilFinish();

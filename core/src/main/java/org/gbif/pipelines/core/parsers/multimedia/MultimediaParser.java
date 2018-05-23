@@ -8,10 +8,10 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.Terms;
-import org.gbif.pipelines.core.parsers.InterpretationIssue;
-import org.gbif.pipelines.core.parsers.ParsedField;
-import org.gbif.pipelines.core.parsers.TemporalParser;
+import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
+import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueType;
 import org.gbif.pipelines.io.avro.MediaType;
@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -49,7 +48,7 @@ public class MultimediaParser {
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
 
   // Order is important in case more than one extension is provided. The order will define the precedence.
-  private static final Set<Extension> SUPPORTED_MEDIA_EXTENSIONS =
+  private static final ImmutableSet<Extension> SUPPORTED_MEDIA_EXTENSIONS =
     ImmutableSet.of(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE);
 
   private MultimediaParser() {}
@@ -90,7 +89,7 @@ public class MultimediaParser {
             List<Term> termsUsed = new ArrayList<>(2);
             uriTermOpt.ifPresent(termWithValue -> termsUsed.add(termWithValue.term));
             linkTermOpt.ifPresent(termWithValue -> termsUsed.add(termWithValue.term));
-            issues.add(InterpretationIssue.newIssue(IssueType.MULTIMEDIA_URI_INVALID, termsUsed));
+            issues.add(InterpretationIssue.of(IssueType.MULTIMEDIA_URI_INVALID, termsUsed));
             return;
           }
 
@@ -123,7 +122,7 @@ public class MultimediaParser {
     if (!Strings.isNullOrEmpty(associatedMedia)) {
       UrlParser.parseUriList(associatedMedia).forEach(uri -> {
         if (Objects.isNull(uri)) {
-          issues.add(InterpretationIssue.newIssue(IssueType.MULTIMEDIA_URI_INVALID, DwcTerm.associatedMedia));
+          issues.add(InterpretationIssue.of(IssueType.MULTIMEDIA_URI_INVALID, DwcTerm.associatedMedia));
           return;
         }
 
@@ -165,11 +164,10 @@ public class MultimediaParser {
   }
 
   private static Temporal parseCreatedDate(Map<String, String> recordsMap, List<InterpretationIssue> issues) {
-    ParsedTemporalDates temporalDate = TemporalParser.parseRawDate(getTermValue(recordsMap, DcTerm.created));
+    ParsedTemporalDates temporalDate = TemporalParser.parse(getTermValue(recordsMap, DcTerm.created));
 
     if (Objects.nonNull(temporalDate.getIssueList())) {
-      temporalDate.getIssueList()
-        .forEach(issueType -> issues.add(InterpretationIssue.newIssue(issueType, DcTerm.created)));
+      temporalDate.getIssueList().forEach(issueType -> issues.add(InterpretationIssue.of(issueType, DcTerm.created)));
     }
 
     return temporalDate.getFrom().orElse(null);

@@ -4,9 +4,9 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.parsers.InterpretationIssue;
-import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
+import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.legacy.Wgs84Projection;
 import org.gbif.pipelines.core.utils.AvroDataValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -35,13 +35,13 @@ public class LocationParser {
   private static final Logger LOG = LoggerFactory.getLogger(LocationParser.class);
 
   // Issues
-  private static final InterpretationIssue COUNTRY_ISSUE = InterpretationIssue.newIssue(COUNTRY_INVALID, country);
-  private static final InterpretationIssue COUNTRY_CODE_ISSUE = InterpretationIssue.newIssue(COUNTRY_CODE_INVALID, countryCode);
-  private static final InterpretationIssue MISMATCH_ISSUE = InterpretationIssue.newIssue(COUNTRY_MISMATCH, country, countryCode);
+  private static final InterpretationIssue COUNTRY_ISSUE = InterpretationIssue.of(COUNTRY_INVALID, country);
+  private static final InterpretationIssue COUNTRY_CODE_ISSUE = InterpretationIssue.of(COUNTRY_CODE_INVALID, countryCode);
+  private static final InterpretationIssue MISMATCH_ISSUE = InterpretationIssue.of(COUNTRY_MISMATCH, country, countryCode);
 
   private LocationParser() {}
 
-  public static ParsedField<ParsedLocation> parseCountryAndCoordinates(ExtendedRecord extendedRecord, String wsPropertiesPath) {
+  public static ParsedField<ParsedLocation> parse(ExtendedRecord extendedRecord, String wsPropertiesPath) {
     AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
     List<InterpretationIssue> issues = new ArrayList<>();

@@ -7,7 +7,7 @@ public enum Service {
   SPECIES_MATCH2("match"), GEO_CODE("geocode");
 
   // path to use in the properties file
-  private String path;
+  private final String path;
 
   Service(String path) {
     this.path = path;
