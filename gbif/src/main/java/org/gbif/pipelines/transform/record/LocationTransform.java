@@ -48,6 +48,7 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
           .using(LocationInterpreter.interpretCountryAndCoordinates(location, wsPropertiesPath))
           .using(LocationInterpreter.interpretContinent(location))
           .using(LocationInterpreter.interpretWaterBody(location))
+          .using(LocationInterpreter.interpretStateProvince(location))
           .using(LocationInterpreter.interpretMinimumElevationInMeters(location))
           .using(LocationInterpreter.interpretMaximumElevationInMeters(location))
           .using(LocationInterpreter.interpretMinimumDepthInMeters(location))

@@ -64,13 +64,13 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.32</gbif-parsers.version>
-    <dwca-io.version>1.32</dwca-io.version>
+    <dwca-io.version>2.0-RC1</dwca-io.version>
     <gbif-api.version>0.61</gbif-api.version>
-    <gbif-common.version>0.36</gbif-common.version>
-    <dwc-api.version>1.17</dwc-api.version>
+    <gbif-common.version>0.38</gbif-common.version>
+    <dwc-api.version>1.18</dwc-api.version>
 
-    <apache.beam.version>2.2.0</apache.beam.version>
-    <avro.version>1.7.7</avro.version>
+    <apache.beam.version>2.4.0</apache.beam.version>
+    <avro.version>1.8.2</avro.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
     <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
     <commons-lang3.version>3.4</commons-lang3.version>
@@ -78,16 +78,17 @@
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <solr.version>5.5.4</solr.version>
     <protobuf.version>3.5.1</protobuf.version>
-    <retrofit.version>2.3.0</retrofit.version>
-    <gson.version>2.7</gson.version>
+    <retrofit.version>2.4.0</retrofit.version>
+    <gson.version>2.8.4</gson.version>
     <guava.version>18.0</guava.version>
-    <okhttp.version>3.9.0</okhttp.version>
+    <okhttp.version>3.10.0</okhttp.version>
     <slf4j.version>1.7.24</slf4j.version>
     <logback.version>1.1.5</logback.version>
     <commons-compress.version>1.16.1</commons-compress.version>
     <geotools.version>12.1</geotools.version>
     <commons-digester.version>2.1</commons-digester.version>
     <mapdb.version>3.0.5</mapdb.version>
+    <logstash-encoder.version>4.11</logstash-encoder.version>
 
     <!-- Test libraries -->
     <mockwebserver.version>3.10.0</mockwebserver.version>
@@ -98,6 +99,9 @@
     <build-helper-maven.version>1.9.1</build-helper-maven.version>
     <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
     <maven-clean-plugin.version>3.0.0</maven-clean-plugin.version>
+    <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
+    <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
+    <error_prone_core.version>2.3.1</error_prone_core.version>
   </properties>
 
   <build>
@@ -122,6 +126,36 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>
           <version>${maven-clean-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <compilerId>javac-with-errorprone</compilerId>
+            <forceJavacCompilerUse>true</forceJavacCompilerUse>
+            <source>8</source>
+            <target>8</target>
+            <compilerArgs>
+              <arg>-XepExcludedPaths:.*/src/main/java-generated/.*</arg>
+              <arg>-XepDisableWarningsInGeneratedCode</arg>
+              <arg>-Xep:MissingOverride:ERROR</arg>
+            </compilerArgs>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.codehaus.plexus</groupId>
+              <artifactId>plexus-compiler-javac-errorprone</artifactId>
+              <version>${plexus-compiler-javac-errorprone.version}</version>
+            </dependency>
+            <!-- override plexus-compiler-javac-errorprone's dependency on
+                 Error Prone with the latest version -->
+            <dependency>
+              <groupId>com.google.errorprone</groupId>
+              <artifactId>error_prone_core</artifactId>
+              <version>${error_prone_core.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -290,6 +324,12 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>${logstash-encoder.version}</version>
+        <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>com.squareup.retrofit2</groupId>

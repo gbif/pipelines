@@ -17,14 +17,17 @@ public class InterpretationIssue {
   private final List<Term> terms;
   private final IssueType issueType;
 
-  public InterpretationIssue(IssueType issueType, List<Term> terms) {
+  private InterpretationIssue(IssueType issueType, List<Term> terms) {
     this.terms = terms;
     this.issueType = issueType;
   }
 
-  public InterpretationIssue(IssueType issueType, Term... terms) {
-    this.terms = Arrays.asList(terms);
-    this.issueType = issueType;
+  public static InterpretationIssue of(IssueType issueType, List<Term> terms) {
+    return new InterpretationIssue(issueType, terms);
+  }
+
+  public static InterpretationIssue of(IssueType issueType, Term... terms) {
+    return new InterpretationIssue(issueType, Arrays.asList(terms));
   }
 
   public List<Term> getTerms() {

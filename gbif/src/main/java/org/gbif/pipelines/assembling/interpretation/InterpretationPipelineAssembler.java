@@ -5,7 +5,11 @@ import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupp
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -33,7 +37,7 @@ class InterpretationPipelineAssembler
 
   private PipelineOptions options;
   private String input;
-  private EnumSet<InterpretationType> interpretationTypes;
+  private final Set<InterpretationType> interpretationTypes;
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler;
   private BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler;
   private Map<InterpretationType, InterpretationStepSupplier> interpretationSteps;
@@ -56,7 +60,7 @@ class InterpretationPipelineAssembler
    * {@link InterpretationType}.
    */
   private static EnumSet<InterpretationType> filterInterpretations(List<InterpretationType> types) {
-    return types == null || types.isEmpty() || types.contains(InterpretationType.ALL) ?
+    return Objects.isNull(types) || types.isEmpty() || types.contains(InterpretationType.ALL) ?
       EnumSet.complementOf(EnumSet.of(InterpretationType.ALL)) : EnumSet.copyOf(types);
   }
 
@@ -108,7 +112,7 @@ class InterpretationPipelineAssembler
     Pipeline pipeline = Pipeline.create(options);
 
     // STEP 1: Read Avro files
-    LOG.info("Reading Avro records");
+    LOG.info("Reading Avro records from {}", input);
     PCollection<ExtendedRecord> verbatimRecords =
       pipeline.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(input));
 
@@ -135,9 +139,9 @@ class InterpretationPipelineAssembler
   }
 
   private Predicate<InterpretationType> stepSupplierFilter() {
-    return (type) -> {
+    return type -> {
       if (Objects.isNull(interpretationSteps.get(type))) {
-        LOG.debug("No interpretation step found for type {}", type);
+        LOG.warn("No interpretation step supplier found for interpretation type {}", type);
         return false;
       }
       return true;
@@ -145,10 +149,10 @@ class InterpretationPipelineAssembler
   }
 
   private Function<InterpretationType, InterpretationStep> interpretationStepMapper() {
-    return (type) -> {
+    return type -> {
       InterpretationStep step = interpretationSteps.get(type).get();
       if (step == null) {
-        LOG.debug("Interpretation step not found for interpretation type {}", type);
+        LOG.warn("No interpretation step found for interpretation type {}", type);
       }
       return step;
     };

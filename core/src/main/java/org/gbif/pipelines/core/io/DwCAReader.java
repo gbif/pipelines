@@ -1,18 +1,17 @@
 package org.gbif.pipelines.core.io;
 
+import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
-import org.gbif.dwc.NormalizedDwcArchive;
-import org.gbif.dwca.io.Archive;
-import org.gbif.dwca.record.StarRecord;
+import org.gbif.dwc.record.StarRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.functions.FunctionFactory;
-import org.gbif.utils.file.ClosableIterator;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.NoSuchElementException;
 
+import org.gbif.utils.file.ClosableIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +49,7 @@ public class DwCAReader {
       dwcArchive = DwcFiles.fromCompressed(Paths.get(source), extractToFolder);
     }
 
-    NormalizedDwcArchive nda = DwcFiles.prepareArchive(dwcArchive, false, false);
-    starRecordsIt = nda.iterator();
+    starRecordsIt = dwcArchive.iterator();
     return advance();
   }
 

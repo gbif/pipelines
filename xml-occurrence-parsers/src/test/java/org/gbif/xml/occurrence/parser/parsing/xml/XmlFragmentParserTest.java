@@ -76,6 +76,7 @@ public class XmlFragmentParserTest {
       this.raws = raws;
     }
 
+    @Override
     public List<RawOccurrenceRecord> call() {
       List<RawOccurrenceRecord> rors = new ArrayList<>();
       for (RawXmlOccurrence raw : raws) {

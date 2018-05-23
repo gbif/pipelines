@@ -9,6 +9,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.EnumMap;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -21,15 +22,17 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 
 import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.commonGbif;
 import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.locationGbif;
+import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.multimediaGbif;
 import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.taxonomyGbif;
 import static org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier.temporalGbif;
 import static org.gbif.pipelines.config.InterpretationType.COMMON;
 import static org.gbif.pipelines.config.InterpretationType.LOCATION;
+import static org.gbif.pipelines.config.InterpretationType.MULTIMEDIA;
 import static org.gbif.pipelines.config.InterpretationType.TAXONOMY;
 import static org.gbif.pipelines.config.InterpretationType.TEMPORAL;
 
 /**
- * Gbif implementation for a {@link InterpretationPipeline}.
+ * Gbif implementation for a pipeline.
  */
 public class GbifInterpretationPipeline implements Supplier<Pipeline> {
 
@@ -51,7 +54,9 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
 
   private GbifInterpretationPipeline(DataProcessingPipelineOptions options) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),"defaultTargetDirectory is required");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),
+                                "defaultTargetDirectory is required");
+    Preconditions.checkArgument(Objects.nonNull(options.getAttempt()), "attempt is required");
     this.options = options;
     avroCodec = parseAvroCodec(options.getAvroCompressionType());
     initStepsMap();
@@ -60,7 +65,7 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
   /**
    * Creates a new {@link GbifInterpretationPipeline} instance from the {@link DataProcessingPipelineOptions} received.
    */
-  public static GbifInterpretationPipeline newInstance(DataProcessingPipelineOptions options) {
+  public static GbifInterpretationPipeline of(DataProcessingPipelineOptions options) {
     return new GbifInterpretationPipeline(options);
   }
 
@@ -69,6 +74,7 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     stepsMap.put(TEMPORAL, temporalGbif(createPaths(options, InterpretationType.TEMPORAL), avroCodec));
     stepsMap.put(TAXONOMY, taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY), avroCodec));
     stepsMap.put(COMMON, commonGbif(createPaths(options, InterpretationType.COMMON), avroCodec));
+    stepsMap.put(MULTIMEDIA, multimediaGbif(createPaths(options, InterpretationType.MULTIMEDIA), avroCodec));
   }
 
   @Override
@@ -94,13 +100,16 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     DataProcessingPipelineOptions options, InterpretationType interpretationType
   ) {
     PipelineTargetPaths paths = new PipelineTargetPaths();
+
     paths.setDataTargetPath(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                 options.getDatasetId(),
+                                                options.getAttempt().toString(),
                                                 interpretationType.name().toLowerCase(),
                                                 DATA_FILENAME).toString());
 
     paths.setIssuesTargetPath(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
                                                   options.getDatasetId(),
+                                                  options.getAttempt().toString(),
                                                   interpretationType.name().toLowerCase(),
                                                   ISSUES_FOLDER,
                                                   ISSUES_FILENAME).toString());

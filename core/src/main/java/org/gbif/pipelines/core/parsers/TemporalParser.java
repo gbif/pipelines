@@ -138,8 +138,15 @@ public class TemporalParser {
 
   /**
    * Performs the parser of raw elements.
-  */
+   */
   public static ParsedTemporalDates parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
-     return MEMOIZER.parse(RawDateFields.of(rawYear, rawMonth, rawDay, rawDate));
+    return MEMOIZER.parse(RawDateFields.of(rawYear, rawMonth, rawDay, rawDate));
+  }
+
+  /**
+   * Performs the parser of raw elements.
+   */
+  public static ParsedTemporalDates parse(String rawDate) {
+    return MEMOIZER.parse(RawDateFields.of("", "", "", rawDate));
   }
 }

@@ -34,11 +34,7 @@ public class ExtendedRecordConverterTest {
   @Test(expected = ParsingException.class)
   public void testInputPathIsAbsent() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-           .schema(ExtendedRecord.getClassSchema())
-           .codec(codec)
-           .outputStream(output)
-           .build()) {
+         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("", dataFileWrite);
     }
   }
@@ -46,11 +42,7 @@ public class ExtendedRecordConverterTest {
   @Test(expected = ParsingException.class)
   public void testOutputPathIsAbsent() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-           .schema(ExtendedRecord.getClassSchema())
-           .codec(codec)
-           .outputStream(output)
-           .build()) {
+         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
     }
   }
@@ -58,22 +50,14 @@ public class ExtendedRecordConverterTest {
   @Test(expected = ParsingException.class)
   public void testInputPathIsNull() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-           .schema(ExtendedRecord.getClassSchema())
-           .codec(codec)
-           .outputStream(output)
-           .build()) {
+         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(null, dataFileWrite);
     }
   }
 
   @Test(expected = NullPointerException.class)
   public void testOutputPathIsNull() throws IOException {
-    try (DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-      .schema(ExtendedRecord.getClassSchema())
-      .codec(codec)
-      .outputStream(null)
-      .build()) {
+    try (DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(null)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
     }
   }
@@ -81,11 +65,7 @@ public class ExtendedRecordConverterTest {
   @Test(expected = ParsingException.class)
   public void testInputPathNotValid() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-           .schema(ExtendedRecord.getClassSchema())
-           .codec(codec)
-           .outputStream(output)
-           .build()) {
+         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
     }
   }
@@ -97,11 +77,7 @@ public class ExtendedRecordConverterTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-           .schema(ExtendedRecord.getClassSchema())
-           .codec(codec)
-           .outputStream(output)
-           .build()) {
+         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
   }
@@ -113,11 +89,7 @@ public class ExtendedRecordConverterTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-           .schema(ExtendedRecord.getClassSchema())
-           .codec(codec)
-           .outputStream(output)
-           .build()) {
+         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
@@ -134,11 +106,7 @@ public class ExtendedRecordConverterTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-           .schema(ExtendedRecord.getClassSchema())
-           .codec(codec)
-           .outputStream(output)
-           .build()) {
+         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
@@ -155,11 +123,7 @@ public class ExtendedRecordConverterTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = DataFileWriteBuilder.create()
-           .schema(ExtendedRecord.getClassSchema())
-           .codec(codec)
-           .outputStream(output)
-           .build()) {
+         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
@@ -180,4 +144,11 @@ public class ExtendedRecordConverterTest {
     Files.deleteIfExists(verbatim.toPath());
   }
 
+  private DataFileWriter<ExtendedRecord> createWriter(OutputStream output) throws IOException {
+    return DataFileWriteBuilder.create()
+        .schema(ExtendedRecord.getClassSchema())
+        .codec(codec)
+        .outputStream(output)
+        .build();
+  }
 }

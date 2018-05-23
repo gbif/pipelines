@@ -1,11 +1,14 @@
 package org.gbif.pipelines.config;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.EnumMap;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 public final class DataPipelineOptionsFactory {
 
@@ -32,7 +35,11 @@ public final class DataPipelineOptionsFactory {
 
   public static DataProcessingPipelineOptions create(String[] args) {
     PipelineOptionsFactory.register(DataProcessingPipelineOptions.class);
-    return PipelineOptionsFactory.fromArgs(args).withValidation().as(DataProcessingPipelineOptions.class);
+    DataProcessingPipelineOptions options =
+      PipelineOptionsFactory.fromArgs(args).withValidation().as(DataProcessingPipelineOptions.class);
+    loadHadoopConfigFromPath(options);
+
+    return options;
   }
 
   public static DataProcessingPipelineOptions create(Configuration config) {
@@ -73,6 +80,19 @@ public final class DataPipelineOptionsFactory {
     options.setTargetPaths(targetPaths);
 
     return options;
+  }
+
+  private static void loadHadoopConfigFromPath(DataProcessingPipelineOptions options) {
+    String hdfsPath = options.getHdfsSiteConfig();
+    String corePath = options.getCoreSiteConfig();
+    boolean isHdfsExist = !Strings.isNullOrEmpty(hdfsPath) && new File(hdfsPath).exists();
+    boolean isCoreExist = !Strings.isNullOrEmpty(corePath) && new File(corePath).exists();
+    if (isHdfsExist && isCoreExist) {
+      Configuration conf = new Configuration(false);
+      conf.addResource(new Path(hdfsPath));
+      conf.addResource(new Path(corePath));
+      options.setHdfsConfiguration(Collections.singletonList(conf));
+    }
   }
 
 }

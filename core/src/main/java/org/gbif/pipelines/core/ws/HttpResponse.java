@@ -33,7 +33,7 @@ public class HttpResponse<T> {
    */
   public static <S> HttpResponse<S> fail(int responseCode, String errorMessage, ErrorCode errorCode) {
     return Builder.<S>newBuilder().httpResponseCode(responseCode)
-      .error(true)
+      .fail()
       .errorCode(errorCode)
       .errorMessage(errorMessage)
       .build();
@@ -43,7 +43,7 @@ public class HttpResponse<T> {
    * Creates a {@link HttpResponse} for a failed call.
    */
   public static <S> HttpResponse<S> fail(String errorMessage, ErrorCode errorCode) {
-    return Builder.<S>newBuilder().error(true).errorCode(errorCode).errorMessage(errorMessage).build();
+    return Builder.<S>newBuilder().fail().errorCode(errorCode).errorMessage(errorMessage).build();
   }
 
   public T getBody() {
@@ -88,8 +88,8 @@ public class HttpResponse<T> {
       return this;
     }
 
-    Builder<T> error(boolean error) {
-      this.error = error;
+    Builder<T> fail() {
+      this.error = true;
       return this;
     }
 
@@ -113,7 +113,7 @@ public class HttpResponse<T> {
    * Enum with the possible errors.
    */
   public enum ErrorCode {
-    CALL_FAILED, UNEXPECTED_ERROR, ABORTED;
+    CALL_FAILED, UNEXPECTED_ERROR, ABORTED
   }
 
 }

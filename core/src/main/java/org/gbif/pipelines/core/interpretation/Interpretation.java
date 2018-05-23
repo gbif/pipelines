@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpretation;
 
-
 import org.gbif.pipelines.io.avro.Issue;
 import org.gbif.pipelines.io.avro.IssueType;
 import org.gbif.pipelines.io.avro.Lineage;
@@ -8,8 +7,8 @@ import org.gbif.pipelines.io.avro.LineageType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -81,10 +80,14 @@ public class Interpretation<T> implements Serializable {
     Interpretation<U> interpretation = mapper.apply(value);
 
     List<Trace<LineageType>> newLineage = new ArrayList<>(lineage);
-    newLineage.addAll(interpretation.lineage);
+    if (Objects.nonNull(interpretation.lineage)) {
+        newLineage.addAll(interpretation.lineage);
+    }
 
     List<Trace<IssueType>> newValidations = new ArrayList<>(validations);
-    newValidations.addAll(interpretation.validations);
+    if (Objects.nonNull(interpretation.validations)) {
+       newValidations.addAll(interpretation.validations);
+    }
 
     return new Interpretation<>(interpretation.value, newValidations, newLineage);
   }
@@ -103,6 +106,8 @@ public class Interpretation<T> implements Serializable {
     lineage.forEach(traceConsumer);
   }
 
+
+
   /**
    * Container class for an element that needs to be tracked during an interpretation.
    *
@@ -112,7 +117,7 @@ public class Interpretation<T> implements Serializable {
 
     private static final long serialVersionUID = -2440861649944996782L;
 
-    private final List<String> fieldName;
+    private final String fieldName;
     //What this class is tracing
     private final T context;
 
@@ -129,8 +134,8 @@ public class Interpretation<T> implements Serializable {
     /**
      * Factory method to create a instance of trace object using a context element.
      */
-    public static <U> Trace<U> of(U context, String remark) {
-      return of(null, context, remark);
+    public static <U> Trace<U> of( U context, String remark) {
+      return of(null, context, null);
     }
 
     /**
@@ -151,7 +156,7 @@ public class Interpretation<T> implements Serializable {
      * Creates an instance of traceable element.
      */
     private Trace(String fieldName, T context, String remark) {
-      this.fieldName = Collections.singletonList(fieldName);
+      this.fieldName = fieldName;
       this.context = context;
       this.remark = remark;
     }
@@ -159,7 +164,7 @@ public class Interpretation<T> implements Serializable {
     /**
      * field name of element being traced
      */
-    public List<String> getFieldName() {
+    public String getFieldName() {
       return fieldName;
     }
 

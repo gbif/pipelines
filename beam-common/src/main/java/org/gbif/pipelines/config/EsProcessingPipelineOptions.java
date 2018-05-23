@@ -2,9 +2,7 @@ package org.gbif.pipelines.config;
 
 import org.apache.beam.sdk.annotations.Experimental;
 import org.apache.beam.sdk.options.Default;
-import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 
 @Experimental(Experimental.Kind.FILESYSTEM)
 public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptions {

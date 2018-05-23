@@ -1,7 +1,5 @@
 package org.gbif.pipelines.core.parsers;
 
-
-import com.google.common.base.Function;
 import org.gbif.common.parsers.BooleanParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
@@ -10,12 +8,12 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Utility class that parses basic data types.
  */
 public class SimpleTypeParser {
-
 
   //Caching instance of BooleanParser since it is a file based parser
   private static final ParserMemoizer<String,ParseResult<Boolean>> BOOLEAN_PARSER = ParserMemoizer.memoize(BooleanParser.getInstance());
@@ -43,11 +41,10 @@ public class SimpleTypeParser {
   /**
    * Parses an integer value and applies a mapping function to its response (if any).
    */
-  public static <U> U parseInt(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Integer>, U> mapper) {
+  public static <U> Optional<U> parseInt(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Integer>, U> mapper) {
     return Optional
             .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(termValue -> mapper.apply(Optional.ofNullable(INTEGER_PARSER.parse(termValue))))
-            .get();
+            .map(termValue -> mapper.apply(Optional.ofNullable(INTEGER_PARSER.parse(termValue))));
   }
 
   /**
@@ -62,11 +59,10 @@ public class SimpleTypeParser {
   /**
    * Parses a double value and applies a mapping function to its response (if any).
    */
-  public static <U> U parseDouble(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Double>, U> mapper) {
+  public static <U> Optional<U> parseDouble(ExtendedRecord extendedRecord, DwcTerm term, Function<Optional<Double>, U> mapper) {
     return Optional
             .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(termValue -> mapper.apply(Optional.ofNullable(DOUBLE_PARSER.parse(termValue))))
-            .get();
+            .map(termValue -> mapper.apply(Optional.ofNullable(DOUBLE_PARSER.parse(termValue))));
   }
 
 
@@ -82,11 +78,9 @@ public class SimpleTypeParser {
   /**
    * Parses a boolean value and applies mapping functions to its response (if any).
    */
-  public static <U> U parseBoolean(ExtendedRecord extendedRecord, DwcTerm term, Function<ParseResult<Boolean>,U> mapper) {
+  public static <U> Optional<U> parseBoolean(ExtendedRecord extendedRecord, DwcTerm term, Function<ParseResult<Boolean>,U> mapper) {
     return Optional
             .ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-            .map(termValue -> mapper.apply(BOOLEAN_PARSER.parse(termValue)))
-            .get();
+            .map(termValue -> mapper.apply(BOOLEAN_PARSER.parse(termValue)));
   }
-
 }

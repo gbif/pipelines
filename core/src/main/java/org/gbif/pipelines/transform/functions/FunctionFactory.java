@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transform.functions;
 
-import org.gbif.dwca.record.StarRecord;
+
+import org.gbif.dwc.record.StarRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.function.Function;

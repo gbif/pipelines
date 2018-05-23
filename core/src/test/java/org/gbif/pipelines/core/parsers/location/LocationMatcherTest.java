@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.parsers.location;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.pipelines.core.parsers.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.ws.MockServer;
 import org.gbif.pipelines.io.avro.IssueType;
@@ -60,7 +61,7 @@ public class LocationMatcherTest extends MockServer {
   }
 
   @Test
-  public void givenWrongCoordsWhenMatchWithAlternativesThenCountryNotFound() throws IOException {
+  public void givenWrongCoordsWhenMatchWithAlternativesThenCountryNotFound() {
     enqueueEmptyResponse();
 
     LatLng wrongCoords = new LatLng(-50, 100);
@@ -129,7 +130,7 @@ public class LocationMatcherTest extends MockServer {
     Assert.assertTrue(match.isSuccessful());
     Assert.assertTrue(match.getIssues()
                         .stream()
-                        .map(issue -> issue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .containsAll(CoordinatesFunction.getIssueTypes(CoordinatesFunction.PRESUMED_NEGATED_LAT)));
   }
@@ -152,7 +153,7 @@ public class LocationMatcherTest extends MockServer {
     Assert.assertTrue(match.isSuccessful());
     Assert.assertTrue(match.getIssues()
                         .stream()
-                        .map(issue -> issue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .containsAll(CoordinatesFunction.getIssueTypes(CoordinatesFunction.PRESUMED_NEGATED_LNG)));
   }
@@ -175,7 +176,7 @@ public class LocationMatcherTest extends MockServer {
     Assert.assertTrue(match.isSuccessful());
     Assert.assertTrue(match.getIssues()
                         .stream()
-                        .map(issue -> issue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .containsAll(CoordinatesFunction.getIssueTypes(CoordinatesFunction.PRESUMED_NEGATED_COORDS)));
   }
@@ -198,7 +199,7 @@ public class LocationMatcherTest extends MockServer {
     Assert.assertTrue(match.isSuccessful());
     Assert.assertTrue(match.getIssues()
                         .stream()
-                        .map(issue -> issue.getIssueType())
+                        .map(InterpretationIssue::getIssueType)
                         .collect(Collectors.toList())
                         .containsAll(CoordinatesFunction.getIssueTypes(CoordinatesFunction.PRESUMED_SWAPPED_COORDS)));
   }

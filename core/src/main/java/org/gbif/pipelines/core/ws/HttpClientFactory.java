@@ -10,11 +10,15 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Utility class for the creation of WS.
+ * Factory class for http client.
  */
 public final class HttpClientFactory {
+
+  private static final Logger LOG = LoggerFactory.getLogger(HttpClientFactory.class);
 
   private HttpClientFactory() {}
 
@@ -35,6 +39,7 @@ public final class HttpClientFactory {
     try {
       // use a new file cache for the current session
       httpCacheDirectory = Files.createTempDirectory(config.getCacheConfig().getName()).toFile();
+      LOG.info("Cache file created - {}", httpCacheDirectory.getAbsolutePath());
     } catch (IOException e) {
       throw new IllegalStateException("Cannot run without the ability to create temporary cache directory", e);
     }
@@ -43,7 +48,8 @@ public final class HttpClientFactory {
     Cache cache = new Cache(httpCacheDirectory, config.getCacheConfig().getSize());
 
     // create the client and return it
-    return new OkHttpClient.Builder().connectTimeout(config.getTimeout(), TimeUnit.SECONDS)
+    return new OkHttpClient.Builder()
+      .connectTimeout(config.getTimeout(), TimeUnit.SECONDS)
       .readTimeout(config.getTimeout(), TimeUnit.SECONDS)
       .cache(cache)
       .build();
@@ -54,7 +60,8 @@ public final class HttpClientFactory {
    */
   private static OkHttpClient createClientWithoutCache(Config config) {
     // create the client and return it
-    return new OkHttpClient.Builder().connectTimeout(config.getTimeout(), TimeUnit.SECONDS)
+    return new OkHttpClient.Builder()
+      .connectTimeout(config.getTimeout(), TimeUnit.SECONDS)
       .readTimeout(config.getTimeout(), TimeUnit.SECONDS)
       .build();
   }

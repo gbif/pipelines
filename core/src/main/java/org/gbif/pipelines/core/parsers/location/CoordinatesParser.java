@@ -7,39 +7,35 @@ import org.gbif.pipelines.core.parsers.ParsedField;
 import org.gbif.pipelines.core.parsers.legacy.CoordinateParseUtils;
 import org.gbif.pipelines.core.parsers.memoize.ParserMemoizer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IssueType;
 
 import java.util.List;
 import java.util.function.Function;
 
 import com.google.common.collect.Lists;
-import org.gbif.pipelines.io.avro.IssueType;
 
 /**
  * Parser for the Dwc Terms related with the coordinates.
  */
 public class CoordinatesParser {
 
-  private static final ParserMemoizer<RawLatLng,ParsedField<LatLng>> LAT_LNG_PARSER = ParserMemoizer.<RawLatLng,ParsedField<LatLng>>memoize(rawLatLng ->
-    CoordinateParseUtils.parseLatLng(rawLatLng.getLat(), rawLatLng.getLng()));
+  private static final ParserMemoizer<RawLatLng,ParsedField<LatLng>> LAT_LNG_PARSER =
+    ParserMemoizer.memoize(((RawLatLng rawLatLng) -> CoordinateParseUtils.parseLatLng(rawLatLng.getLat(), rawLatLng.getLng())));
 
-  private static final ParserMemoizer<String,ParsedField<LatLng>> VERTBATIM_COORD_PARSER = ParserMemoizer.memoize(CoordinateParseUtils::parseVerbatimCoordinates, ParsedField.fail(new InterpretationIssue(IssueType.COORDINATE_INVALID, DwcTerm.verbatimCoordinates)));
+  private static final ParserMemoizer<String,ParsedField<LatLng>> VERTBATIM_COORD_PARSER =
+    ParserMemoizer.memoize(CoordinateParseUtils::parseVerbatimCoordinates, ParsedField.fail(InterpretationIssue.of(IssueType.COORDINATE_INVALID, DwcTerm.verbatimCoordinates)));
 
   // parses decimal latitude and longitude fields
   private static final Function<ExtendedRecord, ParsedField<LatLng>> DECIMAL_LAT_LNG_FN =
-    (extendedRecord -> LAT_LNG_PARSER.parse(RawLatLng.of(extendedRecord.getCoreTerms()
-                                                          .get(DwcTerm.decimalLatitude.qualifiedName()),
-                                                        extendedRecord.getCoreTerms()
-                                                          .get(DwcTerm.decimalLongitude.qualifiedName()))));
+    (extendedRecord -> LAT_LNG_PARSER.parse(RawLatLng.of(extendedRecord.getCoreTerms().get(DwcTerm.decimalLatitude.qualifiedName()),
+                                                        extendedRecord.getCoreTerms().get(DwcTerm.decimalLongitude.qualifiedName()))));
   // parses verbatim latitude and longitude fields
   private static final Function<ExtendedRecord, ParsedField<LatLng>> VERBATIM_LAT_LNG_FN =
-    (extendedRecord -> LAT_LNG_PARSER.parse(RawLatLng.of(extendedRecord.getCoreTerms()
-                                                          .get(DwcTerm.verbatimLatitude.qualifiedName()),
-                                                        extendedRecord.getCoreTerms()
-                                                          .get(DwcTerm.verbatimLongitude.qualifiedName()))));
+    (extendedRecord -> LAT_LNG_PARSER.parse(RawLatLng.of(extendedRecord.getCoreTerms().get(DwcTerm.verbatimLatitude.qualifiedName()),
+                                                        extendedRecord.getCoreTerms().get(DwcTerm.verbatimLongitude.qualifiedName()))));
   // parses verbatim coordinates fields
   private static final Function<ExtendedRecord, ParsedField<LatLng>> VERBATIM_COORDS_FN =
-    (extendedRecord -> VERTBATIM_COORD_PARSER.parse(extendedRecord.getCoreTerms()
-                                                                       .get(DwcTerm.verbatimCoordinates.qualifiedName())));
+    (extendedRecord -> VERTBATIM_COORD_PARSER.parse(extendedRecord.getCoreTerms().get(DwcTerm.verbatimCoordinates.qualifiedName())));
 
   // list with all the parsing functions
   private static final List<Function<ExtendedRecord, ParsedField<LatLng>>> PARSING_FUNCTIONS =
