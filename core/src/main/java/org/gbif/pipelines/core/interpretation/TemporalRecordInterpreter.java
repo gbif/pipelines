@@ -45,7 +45,7 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
 
       temporalRecord.setEventDate(eventDate);
 
-      // create interpretation
+      // Create interpretation
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       // Map issues to Interpretation
@@ -54,14 +54,14 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
 
       // Interpretation of the modified date
       ParsedTemporalDates temporalModifiedDate =
-        TemporalParser.parseRawDate(getValueFunc.apply(extendedRecord, DcTerm.modified));
+        TemporalParser.parse(getValueFunc.apply(extendedRecord, DcTerm.modified));
       temporalModifiedDate.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setModified);
       temporalModifiedDate.getIssueList()
         .forEach(issue -> interpretation.withValidation(Trace.of(DcTerm.modified.name(), issue)));
 
       // Interpretation of the dateIdentified
       ParsedTemporalDates temporalDateIdentified =
-        TemporalParser.parseRawDate(getValueFunc.apply(extendedRecord, DwcTerm.dateIdentified));
+        TemporalParser.parse(getValueFunc.apply(extendedRecord, DwcTerm.dateIdentified));
       temporalDateIdentified.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setDateIdentified);
       temporalDateIdentified.getIssueList()
         .forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.dateIdentified.name(), issue)));

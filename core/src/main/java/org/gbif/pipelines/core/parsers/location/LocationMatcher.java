@@ -94,8 +94,8 @@ class LocationMatcher {
       if (confusedMatch.isPresent()) {
         // country found
         return ParsedField.success(ParsedLocation.newBuilder().country(confusedMatch.get()).latLng(latLng).build(),
-                                   Collections.singletonList(InterpretationIssue.newIssue(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
-                                                                                          DwcTerm.country)));
+                                   Collections.singletonList(InterpretationIssue.of(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
+                                                                                    DwcTerm.country)));
       }
     }
 
@@ -116,7 +116,7 @@ class LocationMatcher {
         // Add issues from the transformation
         List<InterpretationIssue> issues = new ArrayList<>();
         CoordinatesFunction.getIssueTypes(transformation)
-          .forEach(issueType -> issues.add(InterpretationIssue.newIssue(issueType, getCountryAndCoordinatesTerms())));
+          .forEach(issueType -> issues.add(InterpretationIssue.of(issueType, getCountryAndCoordinatesTerms())));
         // return success with the issues
         return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLngTransformed).build(),
                                    issues);
@@ -138,8 +138,8 @@ class LocationMatcher {
 
     // country found
     return ParsedField.success(ParsedLocation.newBuilder().country(countries.get(0)).latLng(latLng).build(),
-                               Collections.singletonList(InterpretationIssue.newIssue(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
-                                                                                      DwcTerm.country)));
+                               Collections.singletonList(InterpretationIssue.of(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
+                                                                                DwcTerm.country)));
   }
 
   private List<Country> getCountriesFromCoordinates(LatLng latLng) {
@@ -164,8 +164,8 @@ class LocationMatcher {
   }
 
   private static ParsedField<ParsedLocation> getFailResponse() {
-    return ParsedField.fail(Collections.singletonList(InterpretationIssue.newIssue(IssueType.COUNTRY_COORDINATE_MISMATCH,
-                                                                                   getCountryAndCoordinatesTerms())));
+    return ParsedField.fail(Collections.singletonList(InterpretationIssue.of(IssueType.COUNTRY_COORDINATE_MISMATCH,
+                                                                             getCountryAndCoordinatesTerms())));
   }
 
   private static List<Term> getCountryAndCoordinatesTerms() {

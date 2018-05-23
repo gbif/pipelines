@@ -90,7 +90,7 @@ public class MultimediaParser {
             List<Term> termsUsed = new ArrayList<>(2);
             uriTermOpt.ifPresent(termWithValue -> termsUsed.add(termWithValue.term));
             linkTermOpt.ifPresent(termWithValue -> termsUsed.add(termWithValue.term));
-            issues.add(InterpretationIssue.newIssue(IssueType.MULTIMEDIA_URI_INVALID, termsUsed));
+            issues.add(InterpretationIssue.of(IssueType.MULTIMEDIA_URI_INVALID, termsUsed));
             return;
           }
 
@@ -123,7 +123,7 @@ public class MultimediaParser {
     if (!Strings.isNullOrEmpty(associatedMedia)) {
       UrlParser.parseUriList(associatedMedia).forEach(uri -> {
         if (Objects.isNull(uri)) {
-          issues.add(InterpretationIssue.newIssue(IssueType.MULTIMEDIA_URI_INVALID, DwcTerm.associatedMedia));
+          issues.add(InterpretationIssue.of(IssueType.MULTIMEDIA_URI_INVALID, DwcTerm.associatedMedia));
           return;
         }
 
@@ -165,11 +165,11 @@ public class MultimediaParser {
   }
 
   private static Temporal parseCreatedDate(Map<String, String> recordsMap, List<InterpretationIssue> issues) {
-    ParsedTemporalDates temporalDate = TemporalParser.parseRawDate(getTermValue(recordsMap, DcTerm.created));
+    ParsedTemporalDates temporalDate = TemporalParser.parse(getTermValue(recordsMap, DcTerm.created));
 
     if (Objects.nonNull(temporalDate.getIssueList())) {
       temporalDate.getIssueList()
-        .forEach(issueType -> issues.add(InterpretationIssue.newIssue(issueType, DcTerm.created)));
+        .forEach(issueType -> issues.add(InterpretationIssue.of(issueType, DcTerm.created)));
     }
 
     return temporalDate.getFrom().orElse(null);

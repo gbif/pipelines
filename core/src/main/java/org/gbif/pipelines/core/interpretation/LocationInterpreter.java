@@ -53,7 +53,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       // set the issues to the interpretation
-      parsedResult.getIssues().forEach(issue -> {
+      parsedResult.getIssues().stream().filter(Objects::nonNull).forEach(issue -> {
         Trace<IssueType> trace;
         if (Objects.nonNull(issue.getTerms()) && !issue.getTerms().isEmpty() && Objects.nonNull(issue.getTerms().get(0))) {
           // FIXME: now we take the first term. Should Trace accept a list of terms??
@@ -247,8 +247,8 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       SimpleTypeParser.parseDouble(extendedRecord, DwcTerm.coordinatePrecision, parseResult -> {
         Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
         Double result = parseResult.orElse(null);
-        if (Objects.nonNull(result) && result >= COORDINATE_PRECISION_LOWER_BOUND && result <=
-                                                                            COORDINATE_PRECISION_UPPER_BOUND) {
+        if (Objects.nonNull(result) && result >= COORDINATE_PRECISION_LOWER_BOUND
+            && result <= COORDINATE_PRECISION_UPPER_BOUND) {
           locationRecord.setCoordinatePrecision(result);
         } else {
           interpretation.withValidation(Trace.of(DwcTerm.coordinatePrecision.name(), IssueType.COORDINATE_PRECISION_INVALID));

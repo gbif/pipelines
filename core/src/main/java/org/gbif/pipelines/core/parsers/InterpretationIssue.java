@@ -22,11 +22,11 @@ public class InterpretationIssue {
     this.issueType = issueType;
   }
 
-  public static InterpretationIssue newIssue(IssueType issueType, List<Term> terms) {
+  public static InterpretationIssue of(IssueType issueType, List<Term> terms) {
     return new InterpretationIssue(issueType, terms);
   }
 
-  public static InterpretationIssue newIssue(IssueType issueType, Term... terms) {
+  public static InterpretationIssue of(IssueType issueType, Term... terms) {
     return new InterpretationIssue(issueType, Arrays.asList(terms));
   }
 

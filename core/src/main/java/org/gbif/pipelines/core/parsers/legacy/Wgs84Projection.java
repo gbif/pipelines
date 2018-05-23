@@ -35,13 +35,13 @@ public class Wgs84Projection {
   private static final Logger LOG = LoggerFactory.getLogger(Wgs84Projection.class);
   private static final DatumParser PARSER = DatumParser.getInstance();
   private static final double SUSPICIOUS_SHIFT = 0.1d;
-  private static DatumAuthorityFactory DATUM_FACTORY;
+  private static DatumAuthorityFactory datumFactory;
 
   private Wgs84Projection() {}
 
   static {
     try {
-      DATUM_FACTORY = BasicFactories.getDefault().getDatumAuthorityFactory();
+      datumFactory = BasicFactories.getDefault().getDatumAuthorityFactory();
       LOG.debug("Wgs84Projection utils created");
     } catch (FactoryRegistryException e) {
       LOG.error("Failed to create geotools datum factory", e);
@@ -67,15 +67,15 @@ public class Wgs84Projection {
     List<InterpretationIssue> issues = new ArrayList<>();
 
     if (Strings.isNullOrEmpty(datum)) {
-      issues.add(InterpretationIssue.newIssue(IssueType.GEODETIC_DATUM_ASSUMED_WGS84, DwcTerm.geodeticDatum));
+      issues.add(InterpretationIssue.of(IssueType.GEODETIC_DATUM_ASSUMED_WGS84, DwcTerm.geodeticDatum));
       return ParsedField.success(new LatLng(lat, lon), issues);
     }
 
     try {
       CoordinateReferenceSystem crs = parseCRS(datum);
       if (crs == null) {
-        issues.add(InterpretationIssue.newIssue(IssueType.GEODETIC_DATUM_INVALID, DwcTerm.geodeticDatum));
-        issues.add(InterpretationIssue.newIssue(IssueType.GEODETIC_DATUM_ASSUMED_WGS84, DwcTerm.geodeticDatum));
+        issues.add(InterpretationIssue.of(IssueType.GEODETIC_DATUM_INVALID, DwcTerm.geodeticDatum));
+        issues.add(InterpretationIssue.of(IssueType.GEODETIC_DATUM_ASSUMED_WGS84, DwcTerm.geodeticDatum));
 
       } else {
         MathTransform transform = CRS.findMathTransform(crs, DefaultGeographicCRS.WGS84, true);
@@ -97,19 +97,19 @@ public class Wgs84Projection {
         double lon2 = dstPt[0];
         // verify the datum shift is reasonable
         if (Math.abs(lat - lat2) > SUSPICIOUS_SHIFT || Math.abs(lon - lon2) > SUSPICIOUS_SHIFT) {
-          issues.add(InterpretationIssue.newIssue(IssueType.COORDINATE_REPROJECTION_SUSPICIOUS, DwcTerm.geodeticDatum));
+          issues.add(InterpretationIssue.of(IssueType.COORDINATE_REPROJECTION_SUSPICIOUS, DwcTerm.geodeticDatum));
           LOG.debug("Found suspicious shift for datum={} and lat/lon={}/{} so returning failure and keeping orig coord",
             datum, lat, lon);
           return ParsedField.fail(new LatLng(lat, lon), issues);
         }
         // flag the record if coords actually changed
         if (Double.compare(lat, lat2) + Double.compare(lon, lon2) != 0 ) {
-          issues.add(InterpretationIssue.newIssue(IssueType.COORDINATE_REPROJECTED, DwcTerm.geodeticDatum));
+          issues.add(InterpretationIssue.of(IssueType.COORDINATE_REPROJECTED, DwcTerm.geodeticDatum));
         }
         return ParsedField.success(new LatLng(lat2, lon2), issues);
       }
     } catch (Exception e) {
-      issues.add(InterpretationIssue.newIssue(IssueType.COORDINATE_REPROJECTION_FAILED, DwcTerm.geodeticDatum));
+      issues.add(InterpretationIssue.of(IssueType.COORDINATE_REPROJECTION_FAILED, DwcTerm.geodeticDatum));
       LOG.debug("Coordinate reprojection failed with datum={} and lat/lon={}/{}: {}", datum, lat, lon, e.getMessage());
     }
 
@@ -135,7 +135,7 @@ public class Wgs84Projection {
       } catch (FactoryException e) {
         // that didn't work, maybe it is *just* a datum
         try {
-          GeodeticDatum dat = DATUM_FACTORY.createGeodeticDatum(code);
+          GeodeticDatum dat = datumFactory.createGeodeticDatum(code);
           crs = new DefaultGeographicCRS(dat, DefaultEllipsoidalCS.GEODETIC_2D);
 
         } catch (FactoryException e1) {
