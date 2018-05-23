@@ -19,6 +19,7 @@ import org.gbif.common.parsers.TypeStatusParser;
 import org.gbif.common.parsers.core.EnumParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.parsers.memoize.ParserMemoizer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Map;
@@ -46,12 +47,16 @@ public class VocabularyParsers<T extends Enum<T>> {
   //Term ot be parsed
   private final DwcTerm term;
 
+  //Parser memoizer
+  private final ParserMemoizer<String,ParseResult<T>> memo;
+
   /**
    * Private constructor that keeps the basic info to run a parser.
    */
   private VocabularyParsers(EnumParser<T> parser, DwcTerm term) {
     this.parser = parser;
     this.term = term;
+    memo = ParserMemoizer.memoize(parser);
   }
 
   /**
@@ -152,7 +157,7 @@ public class VocabularyParsers<T extends Enum<T>> {
    * @param mapper function mapper
    */
   public <U> Optional<U> map(Map<String, String> terms, Function<ParseResult<T>, U> mapper) {
-    return Optional.ofNullable(terms.get(term.qualifiedName())).map(value -> mapper.apply(parser.parse(value)));
+    return Optional.ofNullable(terms.get(term.qualifiedName())).map(value -> mapper.apply(memo.parse(value)));
   }
 
 }

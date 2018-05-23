@@ -80,7 +80,7 @@ public class GbifInterpretationPipelineTest {
     options.setAttempt(1);
     options.setInterpretationTypes(Collections.singletonList(InterpretationType.TEMPORAL));
 
-    Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
+    Pipeline pipeline = GbifInterpretationPipeline.of(options).get();
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();
 
@@ -114,7 +114,7 @@ public class GbifInterpretationPipelineTest {
     options.setAttempt(1);
     options.setInterpretationTypes(interpretations);
 
-    Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
+    Pipeline pipeline = GbifInterpretationPipeline.of(options).get();
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();
 
@@ -144,7 +144,7 @@ public class GbifInterpretationPipelineTest {
     options.setDatasetId("123");
     options.setAttempt(1);
 
-    Pipeline pipeline = GbifInterpretationPipeline.newInstance(options).createPipeline();
+    Pipeline pipeline = GbifInterpretationPipeline.of(options).get();
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();
 
@@ -168,7 +168,7 @@ public class GbifInterpretationPipelineTest {
     options.setDatasetId("123");
     options.setAttempt(1);
 
-    GbifInterpretationPipeline.newInstance(options).createPipeline();
+    GbifInterpretationPipeline.of(options).get();
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -177,7 +177,7 @@ public class GbifInterpretationPipelineTest {
 
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
 
-    GbifInterpretationPipeline.newInstance(options).createPipeline();
+    GbifInterpretationPipeline.of(options).get();
   }
 
   /**

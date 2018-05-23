@@ -21,6 +21,7 @@ public class LocationMapper {
       .setHigherGeography(getValue.apply(DwcTerm.higherGeography))
       .setIslandGroup(getValue.apply(DwcTerm.islandGroup))
       .setIsland(getValue.apply(DwcTerm.island))
+      .setStateProvince(getValue.apply(DwcTerm.stateProvince))
       .setCounty(getValue.apply(DwcTerm.county))
       .setMunicipality(getValue.apply(DwcTerm.municipality))
       .setLocality(getValue.apply(DwcTerm.locality))

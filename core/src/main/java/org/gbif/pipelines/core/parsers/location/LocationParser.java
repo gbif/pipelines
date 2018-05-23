@@ -35,9 +35,9 @@ public class LocationParser {
   private static final Logger LOG = LoggerFactory.getLogger(LocationParser.class);
 
   // Issues
-  private static final InterpretationIssue COUNTRY_ISSUE = InterpretationIssue.newIssue(COUNTRY_INVALID, country);
-  private static final InterpretationIssue COUNTRY_CODE_ISSUE = InterpretationIssue.newIssue(COUNTRY_CODE_INVALID, countryCode);
-  private static final InterpretationIssue MISMATCH_ISSUE = InterpretationIssue.newIssue(COUNTRY_MISMATCH, country, countryCode);
+  private static final InterpretationIssue COUNTRY_ISSUE = InterpretationIssue.of(COUNTRY_INVALID, country);
+  private static final InterpretationIssue COUNTRY_CODE_ISSUE = InterpretationIssue.of(COUNTRY_CODE_INVALID, countryCode);
+  private static final InterpretationIssue MISMATCH_ISSUE = InterpretationIssue.of(COUNTRY_MISMATCH, country, countryCode);
 
   private LocationParser() {}
 
@@ -135,12 +135,12 @@ public class LocationParser {
   }
 
   private static ParsedField<LatLng> parseLatLng(ExtendedRecord extendedRecord) {
-    ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(extendedRecord);
+    ParsedField<LatLng> parsedLatLng = CoordinatesParser.parseCoords(extendedRecord);
 
     // collect issues form the coords parsing
-    List<InterpretationIssue> issues = parsedLatLon.getIssues();
+    List<InterpretationIssue> issues = parsedLatLng.getIssues();
 
-    if (!parsedLatLon.isSuccessful()) {
+    if (!parsedLatLng.isSuccessful()) {
       // coords parsing failed
       return ParsedField.<LatLng>newBuilder().issues(issues).build();
     }
@@ -148,8 +148,8 @@ public class LocationParser {
     // interpret geodetic datum and reproject if needed
     // the reprojection will keep the original values even if it failed with issues
     String datumVerbatim = extendedRecord.getCoreTerms().get(DwcTerm.geodeticDatum.qualifiedName());
-    Double lat = parsedLatLon.getResult().getLat();
-    Double lng = parsedLatLon.getResult().getLng();
+    Double lat = parsedLatLng.getResult().getLat();
+    Double lng = parsedLatLng.getResult().getLng();
 
     ParsedField<LatLng> projectedLatLng = Wgs84Projection.reproject(lat, lng, datumVerbatim);
 
