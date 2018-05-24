@@ -69,7 +69,7 @@
     <gbif-common.version>0.38</gbif-common.version>
     <dwc-api.version>1.18</dwc-api.version>
 
-    <apache.beam.version>2.2.0</apache.beam.version>
+    <apache.beam.version>2.4.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
     <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
@@ -89,7 +89,7 @@
     <commons-digester.version>2.1</commons-digester.version>
     <mapdb.version>3.0.5</mapdb.version>
     <logstash-encoder.version>4.11</logstash-encoder.version>
-
+    <netty.version>4.1.25.Final</netty.version>
     <!-- Test libraries -->
     <mockwebserver.version>3.10.0</mockwebserver.version>
     <junit.version>4.12</junit.version>
@@ -167,6 +167,11 @@
   -->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-all</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>

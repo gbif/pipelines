@@ -40,6 +40,7 @@
 
   </profiles>
   <properties>
+    <spark.version>2.3.0</spark.version>
     <protobuf.version>3.5.1</protobuf.version>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
   </properties>
@@ -163,6 +164,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
     </dependency>
@@ -259,5 +264,21 @@
       <artifactId>mapdb</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-core_2.11</artifactId>
+    <version>${spark.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-streaming_2.11</artifactId>
+      <version>${spark.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-yarn_2.11</artifactId>
+      <version>${spark.version}</version>
+    </dependency>
+
   </dependencies>
 </project>
