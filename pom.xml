@@ -53,6 +53,17 @@
       <id>cloudera-release</id>
       <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
     </repository>
+    <repository>
+      <id>apache.snapshots</id>
+      <name>Apache Development Snapshot Repository</name>
+      <url>https://repository.apache.org/content/repositories/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
   </repositories>
 
   <!--
@@ -69,7 +80,7 @@
     <gbif-common.version>0.38</gbif-common.version>
     <dwc-api.version>1.18</dwc-api.version>
 
-    <apache.beam.version>2.2.0</apache.beam.version>
+    <apache.beam.version>2.4.0</apache.beam.version>
     <avro.version>1.7.7</avro.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
     <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
