@@ -82,6 +82,15 @@ public final class DataPipelineOptionsFactory {
     return options;
   }
 
+  public static EsProcessingPipelineOptions createForEs(String[] args) {
+    PipelineOptionsFactory.register(EsProcessingPipelineOptions.class);
+    EsProcessingPipelineOptions options =
+      PipelineOptionsFactory.fromArgs(args).withValidation().as(EsProcessingPipelineOptions.class);
+    loadHadoopConfigFromPath(options);
+
+    return options;
+  }
+
   private static void loadHadoopConfigFromPath(DataProcessingPipelineOptions options) {
     String hdfsPath = options.getHdfsSiteConfig();
     String corePath = options.getCoreSiteConfig();
