@@ -10,9 +10,11 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
 
+import java.util.Arrays;
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -23,8 +25,12 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ElasticCoGroupByKeyPipeline {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ElasticCoGroupByKeyPipeline.class);
 
   public static void main(String... args) {
     avrosToEs(args);
@@ -32,7 +38,9 @@ public class ElasticCoGroupByKeyPipeline {
 
   public static void avrosToEs(String... args) {
 
-    // Step 0: Options
+    LOG.info("Starting indexing pipeline with options - {}", Arrays.toString(args));
+
+    LOG.info("Added step 0: Creating pipeline options");
     final TupleTag<InterpretedExtendedRecord> extendedRecordTag = new TupleTag<InterpretedExtendedRecord>() {};
     final TupleTag<TemporalRecord> temporalTag = new TupleTag<TemporalRecord>() {};
     final TupleTag<Location> locationTag = new TupleTag<Location>() {};
@@ -43,17 +51,17 @@ public class ElasticCoGroupByKeyPipeline {
 
     final String pathIn = options.getInputFile();
 
-    final String pathCommon = pathIn + "common/*.avro";
-    final String pathTemporal = pathIn + "temporal/*.avro";
-    final String pathLocation = pathIn + "location/*.avro";
-    final String pathTaxonomy = pathIn + "taxonomy/*.avro";
-    final String pathMultimedia = pathIn + "multimedia/*.avro";
+    final String pathCommon = pathIn + "common/interpreted*.avro";
+    final String pathTemporal = pathIn + "temporal/interpreted*.avro";
+    final String pathLocation = pathIn + "location/interpreted*.avro";
+    final String pathTaxonomy = pathIn + "taxonomy/interpreted*.avro";
+    final String pathMultimedia = pathIn + "multimedia/interpreted*.avro";
 
     Pipeline p = Pipeline.create(options);
     Coders.registerAvroCoders(p, InterpretedExtendedRecord.class, Location.class, TemporalRecord.class);
     Coders.registerAvroCoders(p, TaxonRecord.class, MultimediaRecord.class);
 
-    // Step 1:
+    LOG.info("Adding step 1: Reading interpreted avro files");
     PCollection<KV<String, InterpretedExtendedRecord>> extendedRecordCollection =
       p.apply("Read COMMON", AvroIO.read(InterpretedExtendedRecord.class).from(pathCommon))
         .apply("Map COMMON", MapElements.into(new TypeDescriptor<KV<String, InterpretedExtendedRecord>>() {})
@@ -79,7 +87,7 @@ public class ElasticCoGroupByKeyPipeline {
         .apply("Map MULTIMEDIA", MapElements.into(new TypeDescriptor<KV<String, MultimediaRecord>>() {})
                  .via((MultimediaRecord m) -> KV.of(m.getId(), m)));
 
-    // Step 2:
+    LOG.info("Adding step 2: Grouping by occurrenceID key");
     PCollection<KV<String, CoGbkResult>> groupedCollection =
       KeyedPCollectionTuple.of(extendedRecordTag, extendedRecordCollection)
         .and(temporalTag, temporalCollection)
@@ -88,7 +96,7 @@ public class ElasticCoGroupByKeyPipeline {
         .and(multimediaTag, multimediaCollection)
         .apply(CoGroupByKey.create());
 
-    // Step 3:
+    LOG.info("Adding step 3: Converting to a flat object");
     PCollection<String> resultCollection = groupedCollection.apply("Merge objects", ParDo.of(
       new DoFn<KV<String, CoGbkResult>, String>() {
         @ProcessElement
@@ -104,18 +112,17 @@ public class ElasticCoGroupByKeyPipeline {
       }
     ));
 
-    // Step 4:
-    resultCollection.apply(TextIO.write().to(pathIn + "index/index").withoutSharding().withSuffix(".txt"));
 
-//    final String[] esHost = options.getESHosts();
-//    final String esIndex = options.getESIndex();
-//    final String esType = options.getESType();
-//    final Integer batchSize = options.getESMaxBatchSize();
-//
-//    ConnectionConfiguration esConfig = ConnectionConfiguration.create(esHost, esIndex, esType);
-//    resultCollection.apply(ElasticsearchIO.write().withConnectionConfiguration(esConfig).withMaxBatchSize(batchSize));
+    LOG.info("Adding step 4: Elasticsearch configuration");
+    final String[] esHost = options.getESHosts();
+    final String esIndex = options.getESIndex();
+    final String esType = options.getESType();
+    final Integer batchSize = options.getESMaxBatchSize();
 
-    // Run
+    ElasticsearchIO.ConnectionConfiguration esConfig = ElasticsearchIO.ConnectionConfiguration.create(esHost, esIndex, esType);
+    resultCollection.apply(ElasticsearchIO.write().withConnectionConfiguration(esConfig).withMaxBatchSize(batchSize));
+
+    LOG.info("Run the pipeline");
     p.run().waitUntilFinish();
 
   }
