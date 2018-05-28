@@ -81,7 +81,7 @@
     <dwc-api.version>1.18</dwc-api.version>
 
     <apache.beam.version>2.4.0</apache.beam.version>
-    <avro.version>1.7.7</avro.version>
+    <avro.version>1.8.2</avro.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
     <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
     <commons-lang3.version>3.4</commons-lang3.version>

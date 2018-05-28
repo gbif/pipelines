@@ -926,7 +926,9 @@ public class PatchedElasticsearchIO {
 
         // index is an insert/upsert and update is a partial update
         if (spec.getUsePartialUpdate()) {
-          batch.add(String.format("{ \"update\" : %s }%n{ \"doc\" : %s}%n", documentMetadata, document));
+          batch.add(String.format(
+            "{ \"update\" : %s }%n{ \"doc\" : %s, \"doc_as_upsert\" : true }%n",
+            documentMetadata, document));
         } else {
           batch.add(String.format("{ \"index\" : %s }%n%s%n", documentMetadata, document));
         }
@@ -1031,14 +1033,15 @@ public class PatchedElasticsearchIO {
           this.retryOnConflict = retryOnConflict;
         }
       }
-    }    @Override
+    }
+
+    @Override
     public PDone expand(PCollection<String> input) {
       ConnectionConfiguration connectionConfiguration = getConnectionConfiguration();
       checkState(connectionConfiguration != null, "withConnectionConfiguration() is required");
       input.apply(ParDo.of(new WriteFn(this)));
       return PDone.in(input.getPipeline());
     }
-
 
   }
 }
