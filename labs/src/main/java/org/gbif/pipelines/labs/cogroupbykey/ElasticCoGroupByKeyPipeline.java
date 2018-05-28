@@ -10,8 +10,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
 
-import java.util.Arrays;
-
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
@@ -28,6 +26,20 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * How to run example:
+ * sudo -u hdfs spark2-submit --properties-file /home/crap/config/ws.properties --conf
+ * spark.default.parallelism=100 --conf spark.executor.memoryOverhead=2048 --class
+ * org.gbif.pipelines.labs.cogroupbykey.ElasticCoGroupByKeyPipeline --master yarn --deploy-mode
+ * cluster --executor-memory 12G --executor-cores 8 --num-executors 16 --driver-memory 1G
+ * /home/crap/lib/labs-1.1-SNAPSHOT-shaded.jar --wsProperties=ws.properties
+ * --datasetId=0645ccdb-e001-4ab0-9729-51f1755e007e --attempt=1 --runner=SparkRunner
+ * --defaultTargetDirectory=hdfs://ha-nn/data/ingest/0645ccdb-e001-4ab0-9729-51f1755e007e/1/
+ * --inputFile=hdfs://ha-nn/data/ingest/0645ccdb-e001-4ab0-9729-51f1755e007e/1/
+ * --hdfsSiteConfig=/home/crap/config/hdfs-site.xml --coreSiteConfig=/home/crap/config/core-site.xml
+ * --ESHosts=c3master1-vh.gbif.org:2181,c3master2-vh.gbif.org:2181,c3master3-vh.gbif.org:2181/solr5c2
+ * --ESIndex=co-group-idx --ESType=co-group-idx --ESMaxBatchSize=1000
+ */
 public class ElasticCoGroupByKeyPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(ElasticCoGroupByKeyPipeline.class);
@@ -37,8 +49,13 @@ public class ElasticCoGroupByKeyPipeline {
   }
 
   public static void avrosToEs(String... args) {
+    EsProcessingPipelineOptions options = DataPipelineOptionsFactory.createForEs(args);
+    avrosToEs(options);
+  }
 
-    LOG.info("Starting indexing pipeline with options - {}", Arrays.toString(args));
+  public static void avrosToEs(EsProcessingPipelineOptions options) {
+
+    LOG.info("Starting indexing pipeline with options - {}", options.toString());
 
     LOG.info("Added step 0: Creating pipeline options");
     final TupleTag<InterpretedExtendedRecord> extendedRecordTag = new TupleTag<InterpretedExtendedRecord>() {};
@@ -46,8 +63,6 @@ public class ElasticCoGroupByKeyPipeline {
     final TupleTag<Location> locationTag = new TupleTag<Location>() {};
     final TupleTag<TaxonRecord> taxonomyTag = new TupleTag<TaxonRecord>() {};
     final TupleTag<MultimediaRecord> multimediaTag = new TupleTag<MultimediaRecord>() {};
-
-    EsProcessingPipelineOptions options = DataPipelineOptionsFactory.createForEs(args);
 
     final String pathIn = options.getInputFile();
 
