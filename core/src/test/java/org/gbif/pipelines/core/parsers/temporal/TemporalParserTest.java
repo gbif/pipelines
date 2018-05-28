@@ -1,7 +1,4 @@
-package org.gbif.pipelines.core.parsers;
-
-import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
-import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
+package org.gbif.pipelines.core.parsers.temporal;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
