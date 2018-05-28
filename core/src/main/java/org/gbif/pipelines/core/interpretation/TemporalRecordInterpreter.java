@@ -10,9 +10,11 @@ import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -60,6 +62,11 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
       ParsedTemporalDates identifiedDate = TemporalParser.parse(getValueFunc.apply(extendedRecord, DwcTerm.dateIdentified));
       identifiedDate.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setDateIdentified);
       identifiedDate.getIssueList().forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.dateIdentified.name(), issue)));
+
+      // Interpretation of endDayOfYear and startDayOfYear
+      Optional<LocalDate> year = Optional.ofNullable(temporalRecord.getYear()).map(y -> LocalDate.of(y, 1, 1));
+      year.map(x -> x.with(TemporalAdjusters.lastDayOfYear())).ifPresent(x->temporalRecord.setEndDayOfYear(x.getDayOfYear()));
+      year.map(x -> x.with(TemporalAdjusters.firstDayOfYear())).ifPresent(x->temporalRecord.setStartDayOfYear(x.getDayOfYear()));
 
       return interpretation;
     };

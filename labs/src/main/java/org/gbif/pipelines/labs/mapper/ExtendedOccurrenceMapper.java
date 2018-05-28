@@ -8,8 +8,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
-import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 
 public class ExtendedOccurrenceMapper {
@@ -41,13 +39,6 @@ public class ExtendedOccurrenceMapper {
       .setDateIdentified(temporal.getDateIdentified());
 
     Optional.ofNullable(temporal.getEventTime()).ifPresent(x->builder.setEventTime(x.toString()));
-
-    // TODO: Move to temporal interpretation
-    Optional<LocalDate> year = Optional.ofNullable(temporal.getYear()).map(y -> LocalDate.of(y, 1, 1));
-    year.map(x -> x.with(TemporalAdjusters.lastDayOfYear()))
-      .ifPresent(x->builder.setEndDayOfYear(String.valueOf(x.getDayOfYear())));
-    year.map(x -> x.with(TemporalAdjusters.firstDayOfYear()))
-      .ifPresent(x->builder.setStartDayOfYear(String.valueOf(x.getDayOfYear())));
   }
 
   private static void fillLocation(Builder builder, Location location){
