@@ -29,12 +29,12 @@ import org.slf4j.LoggerFactory;
 /**
  * How to run example:
  *
- * sudo -u hdfs spark2-submit --properties-file /home/crap/config/ws.properties
- * --conf spark.default.parallelism=100 --conf spark.executor.memoryOverhead=2048 --class
+ * sudo -u hdfs spark2-submit --conf spark.default.parallelism=100 --conf
+ * spark.executor.memoryOverhead=2048 --class
  * org.gbif.pipelines.labs.cogroupbykey.ElasticCoGroupByKeyPipeline --master yarn --deploy-mode
  * cluster --executor-memory 12G --executor-cores 8 --num-executors 16 --driver-memory 1G
- * /home/crap/lib/labs-1.1-SNAPSHOT-shaded.jar --wsProperties=ws.properties
- * --datasetId=0645ccdb-e001-4ab0-9729-51f1755e007e --attempt=1 --runner=SparkRunner
+ * /home/crap/lib/labs-1.1-SNAPSHOT-shaded.jar --datasetId=0645ccdb-e001-4ab0-9729-51f1755e007e
+ * --attempt=1 --runner=SparkRunner
  * --defaultTargetDirectory=hdfs://ha-nn/data/ingest/0645ccdb-e001-4ab0-9729-51f1755e007e/1/
  * --inputFile=hdfs://ha-nn/data/ingest/0645ccdb-e001-4ab0-9729-51f1755e007e/1/
  * --hdfsSiteConfig=/home/crap/config/hdfs-site.xml --coreSiteConfig=/home/crap/config/core-site.xml

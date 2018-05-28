@@ -47,7 +47,10 @@ public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, Tem
         TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(id).build();
 
         Interpretation.of(extendedRecord)
-          .using(TemporalRecordInterpreter.interpretTemporal(temporalRecord))
+          .using(TemporalRecordInterpreter.interpretEventDate(temporalRecord))
+          .using(TemporalRecordInterpreter.interpretDateIdentified(temporalRecord))
+          .using(TemporalRecordInterpreter.interpretModifiedDate(temporalRecord))
+          .using(TemporalRecordInterpreter.interpretDayOfYear(temporalRecord))
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // Additional output
