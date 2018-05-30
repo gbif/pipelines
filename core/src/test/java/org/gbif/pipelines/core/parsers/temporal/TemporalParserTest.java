@@ -901,4 +901,24 @@ public class TemporalParserTest {
     assertEquals(expectedFirst, result.getFrom().get());
   }
 
+  @Test
+  public void testInvalidPeriod() {
+
+    //State
+    Temporal expectedFirst = Year.of(2011);
+    Temporal expectedSecond = Year.of(2013);
+
+    String eventDate = "2013/2011";
+    String year = "2013";
+    String month = null;
+    String day = null;
+
+    //When
+    ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
+
+    //Should
+    assertEquals(expectedFirst, result.getFrom().get());
+    assertEquals(expectedSecond, result.getTo().get());
+  }
+
 }

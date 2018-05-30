@@ -118,11 +118,11 @@ public class ElasticCoGroupByKeyPipeline {
         @ProcessElement
         public void processElement(ProcessContext c) {
           CoGbkResult value = c.element().getValue();
-          InterpretedExtendedRecord extendedRecord = value.getOnly(extendedRecordTag);
-          TemporalRecord temporal = value.getOnly(temporalTag);
-          Location location = value.getOnly(locationTag);
-          TaxonRecord taxon = value.getOnly(taxonomyTag);
-          MultimediaRecord multimedia = value.getOnly(multimediaTag);
+          InterpretedExtendedRecord extendedRecord = value.getOnly(extendedRecordTag, InterpretedExtendedRecord.newBuilder().setId("").build());
+          TemporalRecord temporal = value.getOnly(temporalTag, TemporalRecord.newBuilder().setId("").build());
+          Location location = value.getOnly(locationTag, Location.newBuilder().setOccurrenceID("").build());
+          TaxonRecord taxon = value.getOnly(taxonomyTag, TaxonRecord.newBuilder().setId("").build());
+          MultimediaRecord multimedia = value.getOnly(multimediaTag, MultimediaRecord.newBuilder().setId("").build());
           c.output(ExtendedOccurrenceMapper.map(extendedRecord, location, temporal, taxon, multimedia).toString());
         }
       }
@@ -133,10 +133,12 @@ public class ElasticCoGroupByKeyPipeline {
     final String[] esHost = options.getESHosts();
     final String esIndex = options.getESIndex();
     final String esType = options.getESType();
-    final Integer batchSize = options.getESMaxBatchSize();
+    final Long batchSize = options.getESMaxBatchSize();
+    final Long batchSizeBytes = options.getESMaxBatchSizeBytes();
 
     ElasticsearchIO.ConnectionConfiguration esConfig = ElasticsearchIO.ConnectionConfiguration.create(esHost, esIndex, esType);
-    resultCollection.apply(ElasticsearchIO.write().withConnectionConfiguration(esConfig).withMaxBatchSize(batchSize));
+    resultCollection.apply(ElasticsearchIO.write().withConnectionConfiguration(esConfig).withMaxBatchSizeBytes(batchSizeBytes)
+                             .withMaxBatchSize(batchSize));
 
     LOG.info("Run the pipeline");
     p.run().waitUntilFinish();

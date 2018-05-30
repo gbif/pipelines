@@ -7,7 +7,8 @@ import org.apache.beam.sdk.options.Description;
 @Experimental(Experimental.Kind.FILESYSTEM)
 public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptions {
 
-  int DEFAULT_ES_BATCH_SIZE = 1_000;
+  long DEFAULT_ES_BATCH_SIZE = 1_000L;
+  long DEFAULT_ES_BATCH_SIZE_BYTES = 5_242_880L;
 
   @Description("Target ES Hosts")
   String[] getESHosts();
@@ -25,8 +26,14 @@ public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptio
   void setESType(String esType);
 
   @Description("Target ES Max Batch Size")
-  @Default.Integer(DEFAULT_ES_BATCH_SIZE)
-  Integer getESMaxBatchSize();
+  @Default.Long(DEFAULT_ES_BATCH_SIZE)
+  Long getESMaxBatchSize();
 
-  void setESMaxBatchSize(Integer batchSize);
+  void setESMaxBatchSize(Long batchSize);
+
+  @Description("Target ES Max Batch Size bytes")
+  @Default.Long(DEFAULT_ES_BATCH_SIZE_BYTES)
+  Long getESMaxBatchSizeBytes();
+
+  void setESMaxBatchSizeBytes(Long batchSize);
 }
