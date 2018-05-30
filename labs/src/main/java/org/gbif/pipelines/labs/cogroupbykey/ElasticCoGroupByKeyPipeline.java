@@ -27,6 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ *
+ * PLEASE READ ES-CO-GROUP-BY-KEY.MD FILE
+ *
  * How to run example:
  *
  * sudo -u hdfs spark2-submit --conf spark.default.parallelism=100 --conf
@@ -56,7 +59,7 @@ public class ElasticCoGroupByKeyPipeline {
 
   public static void avrosToEs(EsProcessingPipelineOptions options) {
 
-    LOG.info("Starting indexing pipeline with options - {}", options.toString());
+    LOG.info("Starting indexing pipeline");
 
     LOG.info("Added step 0: Creating pipeline options");
     final TupleTag<InterpretedExtendedRecord> extendedRecordTag = new TupleTag<InterpretedExtendedRecord>() {};
@@ -103,7 +106,7 @@ public class ElasticCoGroupByKeyPipeline {
         .apply("Map MULTIMEDIA", MapElements.into(new TypeDescriptor<KV<String, MultimediaRecord>>() {})
                  .via((MultimediaRecord m) -> KV.of(m.getId(), m)));
 
-    LOG.info("Adding step 2: Grouping by occurrenceID key");
+    LOG.info("Adding step 2: Grouping by id/occurrenceID key");
     PCollection<KV<String, CoGbkResult>> groupedCollection =
       KeyedPCollectionTuple.of(extendedRecordTag, extendedRecordCollection)
         .and(temporalTag, temporalCollection)
