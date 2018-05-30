@@ -130,15 +130,14 @@ public class ElasticCoGroupByKeyPipeline {
 
 
     LOG.info("Adding step 4: Elasticsearch configuration");
-    final String[] esHost = options.getESHosts();
-    final String esIndex = options.getESIndex();
-    final String esType = options.getESType();
-    final Long batchSize = options.getESMaxBatchSize();
-    final Long batchSizeBytes = options.getESMaxBatchSizeBytes();
+    ElasticsearchIO.ConnectionConfiguration esConfig = ElasticsearchIO.ConnectionConfiguration.create(
+            options.getESHosts(), options.getESIndex(), options.getESType());
 
-    ElasticsearchIO.ConnectionConfiguration esConfig = ElasticsearchIO.ConnectionConfiguration.create(esHost, esIndex, esType);
-    resultCollection.apply(ElasticsearchIO.write().withConnectionConfiguration(esConfig).withMaxBatchSizeBytes(batchSizeBytes)
-                             .withMaxBatchSize(batchSize));
+    resultCollection.apply(
+        ElasticsearchIO.write()
+            .withConnectionConfiguration(esConfig)
+            .withMaxBatchSizeBytes(options.getESMaxBatchSize())
+            .withMaxBatchSize(options.getESMaxBatchSizeBytes()));
 
     LOG.info("Run the pipeline");
     p.run().waitUntilFinish();
