@@ -6,11 +6,17 @@ import org.gbif.pipelines.core.parsers.temporal.parser.ParserRawDateTime;
 import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
 import org.gbif.pipelines.io.avro.IssueType;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -78,10 +84,36 @@ public class TemporalParser {
     Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccumulator, issueList);
     Temporal toTemporal = TEMPORAL_FUNC.apply(toAccumulator, issueList);
 
+    if (isValidRange(fromTemporal, toTemporal)) {
+      Temporal tmp = fromTemporal;
+      fromTemporal = toTemporal;
+      toTemporal = tmp;
+      issueList.add(IssueType.DAY_OUT_OF_RANGE);
+    }
+
     temporalDates.setFromDate(fromTemporal);
     temporalDates.setToDate(toTemporal);
     temporalDates.setIssueList(issueList);
     return temporalDates;
   }
 
+  /**
+   * Compare dates, FROM cannot be greater than TO
+   */
+  private static boolean isValidRange(Temporal from, Temporal to) {
+    if (Objects.isNull(from) || Objects.isNull(to)) {
+      return false;
+    }
+    TemporalUnit unit = null;
+    if (from instanceof Year) {
+      unit = ChronoUnit.YEARS;
+    } else if (from instanceof YearMonth) {
+      unit = ChronoUnit.MONTHS;
+    } else if (from instanceof LocalDate) {
+      unit = ChronoUnit.DAYS;
+    } else if (from instanceof LocalDateTime) {
+      unit = ChronoUnit.SECONDS;
+    }
+    return from.until(to, unit) < 0;
+  }
 }
