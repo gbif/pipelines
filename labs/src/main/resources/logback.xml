@@ -20,4 +20,16 @@
     <appender-ref ref="CONSOLE"/>
   </root>
 
+  <root level="DEBUG">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+  <root level="WARNING">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+  <root level="ERROR">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
 </configuration>

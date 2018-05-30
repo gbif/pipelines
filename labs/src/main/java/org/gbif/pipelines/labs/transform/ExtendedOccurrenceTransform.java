@@ -6,7 +6,9 @@ import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.Validation;
 import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
@@ -118,8 +120,10 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
     InterpretedExtendedRecord record = value.getOnly(recordDataTag);
     Location location = value.getOnly(locationDataTag);
     TemporalRecord temporal = value.getOnly(temporalDataTag);
+    TaxonRecord taxon = TaxonRecord.newBuilder().setId(record.getId()).build();
+    MultimediaRecord multimedia = MultimediaRecord.newBuilder().setId(record.getId()).build();
 
-    return ExtendedOccurrenceMapper.map(record, location, temporal);
+    return ExtendedOccurrenceMapper.map(record, location, temporal, taxon, multimedia);
   }
 
   /**

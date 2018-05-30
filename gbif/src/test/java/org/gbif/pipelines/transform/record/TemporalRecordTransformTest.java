@@ -88,6 +88,8 @@ public class TemporalRecordTransformTest {
       record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
       record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "10");
       record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "1");
+      record.getCoreTerms().put(DwcTerm.endDayOfYear.qualifiedName(), "365");
+      record.getCoreTerms().put(DwcTerm.startDayOfYear.qualifiedName(), "1");
       record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), x);
       record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), x);
       record.getCoreTerms().put(DcTerm.modified.qualifiedName(), x);
@@ -107,6 +109,8 @@ public class TemporalRecordTransformTest {
         .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
         .setDateIdentified(x.getFrom().map(Temporal::toString).orElse(null))
         .setModified(x.getFrom().map(Temporal::toString).orElse(null))
+        .setStartDayOfYear(1)
+        .setEndDayOfYear(365)
         .build();
     }).collect(Collectors.toList());
   }
