@@ -11,7 +11,7 @@
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.1</version>
 
   <name>Pipelines :: Mother POM</name>
   <url>http://github.com/gbif/pipelines</url>
@@ -20,7 +20,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>dwca-io-v2</tag>
+    <tag>pipelines-parent-1.0.1</tag>
   </scm>
 
   <distributionManagement>
