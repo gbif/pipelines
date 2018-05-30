@@ -133,11 +133,6 @@
               <relocations>
                 <!-- Transient from core: conflicts with Beam on Spark -->
                 <relocation>
-                  <pattern>com.google.gson</pattern>
-                  <shadedPattern>g282.com.google.gson</shadedPattern>
-                </relocation>
-                <!-- Transient from core: conflicts with Beam on Spark -->
-                <relocation>
                   <pattern>okio</pattern>
                   <shadedPattern>o113.okio</shadedPattern>
                 </relocation>

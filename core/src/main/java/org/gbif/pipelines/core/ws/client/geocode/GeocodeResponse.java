@@ -2,7 +2,7 @@ package org.gbif.pipelines.core.ws.client.geocode;
 
 import java.io.Serializable;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Models the response of the {@link GeocodeService}.
@@ -14,7 +14,7 @@ public class GeocodeResponse implements Serializable {
   private String id;
   private String type;
   private String source;
-  @SerializedName("title")
+  @JsonProperty("title")
   private String countryName;
   private String isoCountryCode2Digit;
 

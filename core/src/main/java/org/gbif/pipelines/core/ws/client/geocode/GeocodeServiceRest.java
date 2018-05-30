@@ -9,7 +9,7 @@ import java.util.Objects;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /*
  * Singleton to create the species match 2 service.
@@ -28,7 +28,7 @@ public class GeocodeServiceRest {
     // create service
     Retrofit retrofit = new Retrofit.Builder().client(client)
       .baseUrl(wsConfig.getBasePath())
-      .addConverterFactory(GsonConverterFactory.create())
+      .addConverterFactory(JacksonConverterFactory.create())
       .validateEagerly(true)
       .build();
 

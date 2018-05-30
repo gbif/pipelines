@@ -2,7 +2,7 @@ package org.gbif.pipelines.labs.functions.ws.gbif.species;
 
 import java.io.Serializable;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /*
  * Response model for the WS call
@@ -32,7 +32,7 @@ class SpeciesMatchResponseModel implements Serializable {
   private int familyKey;
   private int genusKey;
   private boolean synonym;
-  @SerializedName("class")
+  @JsonProperty("class")
   private String clazz;
 
   int getUsageKey() {

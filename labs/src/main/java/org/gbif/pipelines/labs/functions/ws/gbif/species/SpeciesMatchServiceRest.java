@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /*
  * Singleton realisation
@@ -52,7 +52,7 @@ enum SpeciesMatchServiceRest {
     Retrofit retrofit = new Retrofit.Builder()
         .client(client)
         .baseUrl(WS_PATH)
-        .addConverterFactory(GsonConverterFactory.create())
+        .addConverterFactory(JacksonConverterFactory.create())
         .build();
 
     service = retrofit.create(SpeciesMatchService.class);
