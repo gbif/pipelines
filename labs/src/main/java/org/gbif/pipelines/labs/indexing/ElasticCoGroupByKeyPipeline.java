@@ -1,4 +1,4 @@
-package org.gbif.pipelines.labs.cogroupbykey;
+package org.gbif.pipelines.labs.indexing;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  *
  * sudo -u hdfs spark2-submit --conf spark.default.parallelism=100 --conf
  * spark.executor.memoryOverhead=2048 --class
- * org.gbif.pipelines.labs.cogroupbykey.ElasticCoGroupByKeyPipeline --master yarn --deploy-mode
+ * org.gbif.pipelines.labs.indexing.ElasticCoGroupByKeyPipeline --master yarn --deploy-mode
  * cluster --executor-memory 12G --executor-cores 8 --num-executors 16 --driver-memory 1G
  * /home/crap/lib/labs-1.1-SNAPSHOT-shaded.jar --datasetId=0645ccdb-e001-4ab0-9729-51f1755e007e
  * --attempt=1 --runner=SparkRunner

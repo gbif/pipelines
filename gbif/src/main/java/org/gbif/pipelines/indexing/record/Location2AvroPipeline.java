@@ -5,7 +5,7 @@ import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transform.Kv2Value;
-import org.gbif.pipelines.transform.record.LocationTransform;
+import org.gbif.pipelines.transform.record.LocationRecordTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import org.apache.beam.sdk.Pipeline;
@@ -34,7 +34,7 @@ public class Location2AvroPipeline {
 
     // Transforms to use
     UniqueOccurrenceIdTransform uniquenessTransform = UniqueOccurrenceIdTransform.create().withAvroCoders(p);
-    LocationTransform locationTransform = LocationTransform.create().withAvroCoders(p);
+    LocationRecordTransform locationTransform = LocationRecordTransform.create().withAvroCoders(p);
 
     // STEP 1: Read Avro files
     PCollection<ExtendedRecord> verbatimRecords = p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));

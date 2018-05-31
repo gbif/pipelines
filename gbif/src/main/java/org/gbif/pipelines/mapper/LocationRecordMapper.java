@@ -6,12 +6,15 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 
 import java.util.function.Function;
 
-public class LocationMapper {
+public class LocationRecordMapper {
 
-  private LocationMapper() {
+  private LocationRecordMapper() {
     //Can't have an instance
   }
 
+  /**
+   * Base fields mapping
+   */
   public static LocationRecord map(ExtendedRecord record) {
     Function<DwcTerm, String> getValue = dwcterm -> record.getCoreTerms().get(dwcterm.qualifiedName());
     return LocationRecord.newBuilder()
@@ -42,18 +45,13 @@ public class LocationMapper {
       .setGeoreferenceProtocol(getValue.apply(DwcTerm.georeferenceProtocol))
       .setGeoreferenceSources(getValue.apply(DwcTerm.georeferenceSources))
       .setGeoreferenceVerificationStatus(getValue.apply(DwcTerm.georeferenceVerificationStatus))
-      .setGeoreferenceRemarks(getValue.apply(DwcTerm.georeferenceRemarks))
-      .setInstitutionID(getValue.apply(DwcTerm.institutionID))
-      .setCollectionID(getValue.apply(DwcTerm.collectionID))
-      .setDatasetID(getValue.apply(DwcTerm.datasetID))
-      .setInstitutionCode(getValue.apply(DwcTerm.institutionCode))
-      .setCollectionCode(getValue.apply(DwcTerm.collectionCode))
-      .setDatasetName(getValue.apply(DwcTerm.datasetName))
-      .setOwnerInstitutionCode(getValue.apply(DwcTerm.ownerInstitutionCode))
-      .setDynamicProperties(getValue.apply(DwcTerm.dynamicProperties))
-      .setInformationWithheld(getValue.apply(DwcTerm.informationWithheld))
-      .setDataGeneralizations(getValue.apply(DwcTerm.dataGeneralizations))
       .setPointRadiusSpatialFit(getValue.apply(DwcTerm.pointRadiusSpatialFit))
+      .setContinent(getValue.apply(DwcTerm.continent))
+      .setWaterBody(getValue.apply(DwcTerm.waterBody))
+      .setCountry(getValue.apply(DwcTerm.country))
+      .setCountryCode(getValue.apply(DwcTerm.countryCode))
+      .setStateProvince(getValue.apply(DwcTerm.stateProvince))
+      .setVerbatimDepth(getValue.apply(DwcTerm.verbatimDepth))
       .build();
   }
 

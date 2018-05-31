@@ -8,7 +8,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.Validation;
-import org.gbif.pipelines.mapper.LocationMapper;
+import org.gbif.pipelines.mapper.LocationRecordMapper;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;
@@ -18,14 +18,14 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
-public class LocationTransform extends RecordTransform<ExtendedRecord, LocationRecord> {
+public class LocationRecordTransform extends RecordTransform<ExtendedRecord, LocationRecord> {
 
-  private LocationTransform() {
+  private LocationRecordTransform() {
     super("Interpret location record");
   }
 
-  public static LocationTransform create() {
-    return new LocationTransform();
+  public static LocationRecordTransform create() {
+    return new LocationRecordTransform();
   }
 
   @Override
@@ -35,17 +35,16 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, LocationR
       public void processElement(ProcessContext context) {
 
         ExtendedRecord extendedRecord = context.element();
-        LocationRecord location = LocationMapper.map(extendedRecord);
+        LocationRecord location = LocationRecordMapper.map(extendedRecord);
         String id = extendedRecord.getId();
         List<Validation> validations = new ArrayList<>();
 
         // read the ws properties path from the PipelineOptions
-        String wsPropertiesPath =
-          context.getPipelineOptions().as(DataProcessingPipelineOptions.class).getWsProperties();
+        String wsProperties = context.getPipelineOptions().as(DataProcessingPipelineOptions.class).getWsProperties();
 
         // Interpreting Country and Country code
         Interpretation.of(extendedRecord)
-          .using(LocationInterpreter.interpretCountryAndCoordinates(location, wsPropertiesPath))
+          .using(LocationInterpreter.interpretCountryAndCoordinates(location, wsProperties))
           .using(LocationInterpreter.interpretContinent(location))
           .using(LocationInterpreter.interpretWaterBody(location))
           .using(LocationInterpreter.interpretStateProvince(location))
@@ -72,7 +71,7 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, LocationR
   }
 
   @Override
-  public LocationTransform withAvroCoders(Pipeline pipeline) {
+  public LocationRecordTransform withAvroCoders(Pipeline pipeline) {
     Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, LocationRecord.class, ExtendedRecord.class);
     return this;
   }

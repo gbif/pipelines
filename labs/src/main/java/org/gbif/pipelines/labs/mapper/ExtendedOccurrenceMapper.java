@@ -22,16 +22,16 @@ public class ExtendedOccurrenceMapper {
 
     ExtendedOccurrence.Builder builder = ExtendedOccurrence.newBuilder();
 
-    fillCommon(builder, record);
-    fillLocation(builder, location);
-    fillMultimedia(builder, multimedia);
-    fillTaxon(builder, taxon);
-    fillTemporal(builder, temporal);
+    mapCommon(builder, record);
+    mapLocation(builder, location);
+    mapMultimedia(builder, multimedia);
+    mapTaxon(builder, taxon);
+    mapTemporal(builder, temporal);
 
     return builder.build();
   }
 
-  private static void fillTemporal(Builder builder, TemporalRecord temporal){
+  private static void mapTemporal(Builder builder, TemporalRecord temporal){
     builder.setDay(temporal.getDay())
       .setMonth(temporal.getMonth())
       .setYear(temporal.getYear())
@@ -41,40 +41,33 @@ public class ExtendedOccurrenceMapper {
     Optional.ofNullable(temporal.getEventTime()).ifPresent(x->builder.setEventTime(x.toString()));
   }
 
-  private static void fillLocation(Builder builder, LocationRecord location){
+  private static void mapLocation(Builder builder, LocationRecord location){
     builder.setDecimalLatitude(location.getDecimalLatitude())
       .setDecimalLongitude(location.getDecimalLongitude())
-      .setCountry(location.getCountry())
-      .setCountryCode(location.getCountryCode())
-      .setContinent(location.getContinent())
-      .setWaterBody(location.getWaterBody())
       .setMinimumElevationInMeters(location.getMinimumElevationInMeters())
       .setMaximumElevationInMeters(location.getMaximumElevationInMeters())
       .setMinimumDepthInMeters(location.getMinimumDepthInMeters())
       .setMaximumDepthInMeters(location.getMaximumDepthInMeters())
       .setMinimumDistanceAboveSurfaceInMeters(location.getMinimumDistanceAboveSurfaceInMeters())
       .setMaximumDistanceAboveSurfaceInMeters(location.getMaximumDistanceAboveSurfaceInMeters())
-      .setCoordinatePrecision(location.getCoordinatePrecision())
       .setCoordinateUncertaintyInMeters(location.getCoordinateUncertaintyInMeters())
-      .setVerbatimCoordinates(location.getVerbatimCoordinates())
-      .setVerbatimLocality(location.getVerbatimLocality())
+      .setCoordinatePrecision(location.getCoordinatePrecision())
       .setLocationID(location.getLocationID())
-      .setHigherGeography(location.getHigherGeography())
       .setHigherGeographyID(location.getHigherGeographyID())
-      .setIsland(location.getIsland())
+      .setHigherGeography(location.getHigherGeography())
       .setIslandGroup(location.getIslandGroup())
-      .setStateProvince(location.getStateProvince())
+      .setIsland(location.getIsland())
       .setCounty(location.getCounty())
       .setMunicipality(location.getMunicipality())
       .setLocality(location.getLocality())
+      .setVerbatimLocality(location.getVerbatimLocality())
       .setVerbatimElevation(location.getVerbatimElevation())
-      .setVerbatimDepth(location.getVerbatimDepth())
       .setLocationAccordingTo(location.getLocationAccordingTo())
       .setLocationRemarks(location.getLocationRemarks())
       .setGeodeticDatum(location.getGeodeticDatum())
+      .setVerbatimCoordinates(location.getVerbatimCoordinates())
       .setVerbatimLatitude(location.getVerbatimLatitude())
       .setVerbatimLongitude(location.getVerbatimLongitude())
-      .setPointRadiusSpatialFit(location.getPointRadiusSpatialFit())
       .setVerbatimCoordinateSystem(location.getVerbatimCoordinateSystem())
       .setVerbatimSRS(location.getVerbatimSRS())
       .setFootprintWKT(location.getFootprintWKT())
@@ -85,27 +78,16 @@ public class ExtendedOccurrenceMapper {
       .setGeoreferenceProtocol(location.getGeoreferenceProtocol())
       .setGeoreferenceSources(location.getGeoreferenceSources())
       .setGeoreferenceVerificationStatus(location.getGeoreferenceVerificationStatus())
-      .setGeoreferenceRemarks(location.getGeoreferenceRemarks())
-      .setDctermsType(location.getDctermsType())
-      .setDctermsModified(location.getDctermsModified())
-      .setDctermsLanguage(location.getDctermsLanguage())
-      .setDctermsLicense(location.getDctermsLicense())
-      .setDctermsRightsHolder(location.getDctermsRightsHolder())
-      .setDctermsAccessRights(location.getDctermsAccessRights())
-      .setDctermsBibliographicCitation(location.getDctermsBibliographicCitation())
-      .setInstitutionCode(location.getInstitutionCode())
-      .setInstitutionID(location.getInstitutionID())
-      .setCollectionID(location.getCollectionID())
-      .setDatasetID(location.getDatasetID())
-      .setCollectionCode(location.getCollectionCode())
-      .setDatasetName(location.getDatasetName())
-      .setOwnerInstitutionCode(location.getOwnerInstitutionCode())
-      .setInformationWithheld(location.getInformationWithheld())
-      .setDataGeneralizations(location.getDataGeneralizations())
-      .setDynamicProperties(location.getDynamicProperties());
+      .setPointRadiusSpatialFit(location.getPointRadiusSpatialFit())
+      .setContinent(location.getContinent())
+      .setWaterBody(location.getWaterBody())
+      .setCountry(location.getCountry())
+      .setCountryCode(location.getCountryCode())
+      .setStateProvince(location.getStateProvince())
+      .setVerbatimDepth(location.getVerbatimDepth());
   }
 
-  private static void fillCommon(Builder builder, InterpretedExtendedRecord record){
+  private static void mapCommon(Builder builder, InterpretedExtendedRecord record){
     builder.setOccurrenceID(record.getId())
       .setTypeStatus(record.getTypeStatus())
       .setEstablishmentMeans(record.getEstablishmentMeans())
@@ -118,11 +100,11 @@ public class ExtendedOccurrenceMapper {
 
   }
 
-  private static void fillTaxon(Builder builder, TaxonRecord taxon){
+  private static void mapTaxon(Builder builder, TaxonRecord taxon){
     // TODO: PARSE FIELDS
   }
 
-  private static void fillMultimedia(Builder builder, MultimediaRecord multimedia){
+  private static void mapMultimedia(Builder builder, MultimediaRecord multimedia){
     // TODO: NO FIELDS
   }
 

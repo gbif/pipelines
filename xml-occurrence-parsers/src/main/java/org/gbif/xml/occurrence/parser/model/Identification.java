@@ -102,6 +102,10 @@ public class Identification extends PropertyPrioritizer {
         case FAMILY:
           record.setFamily(taxon.getName());
           break;
+        case SUBSPECIES:
+        case SPECIES:
+        case GENUS:
+          break;
       }
     }
   }

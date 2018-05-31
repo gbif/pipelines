@@ -14,7 +14,7 @@ import org.gbif.pipelines.io.avro.Validation;
 import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
 import org.gbif.pipelines.transform.RecordTransform;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
-import org.gbif.pipelines.transform.record.LocationTransform;
+import org.gbif.pipelines.transform.record.LocationRecordTransform;
 import org.gbif.pipelines.transform.record.TemporalRecordTransform;
 
 import java.util.ArrayList;
@@ -69,7 +69,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
     PCollectionTuple recordTupple = input.apply(recordTransform);
 
     // Collect Location
-    LocationTransform locationTransform = LocationTransform.create();
+    LocationRecordTransform locationTransform = LocationRecordTransform.create();
     PCollectionTuple locationTuple = input.apply(locationTransform);
 
     // Collect TemporalRecord
