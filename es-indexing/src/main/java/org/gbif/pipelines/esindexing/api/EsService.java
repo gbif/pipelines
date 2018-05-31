@@ -83,8 +83,9 @@ class EsService {
 
   static void swapIndexes(EsClient esClient, String idxToAdd, String alias, Set<String> idxToRemove) {
     Objects.requireNonNull(esClient);
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxToAdd));
 
-    HttpEntity entity = EntityBuilder.entityReplaceIndexAlias(alias, idxToAdd, idxToRemove);
+    HttpEntity entity = EntityBuilder.entityReplaceIndexAlias(alias, Collections.singleton(idxToAdd), idxToRemove);
     try {
       esClient.performPostRequest(ALIASES_ENDPOINT, Collections.emptyMap(), entity);
     } catch (ResponseException exc) {

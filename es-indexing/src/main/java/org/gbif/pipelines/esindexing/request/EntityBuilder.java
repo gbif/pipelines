@@ -48,10 +48,6 @@ public class EntityBuilder {
 
   private EntityBuilder() {}
 
-  public static EntityBuilder newInstance() {
-    return new EntityBuilder();
-  }
-
   // TODO: add mappings
 
   public static HttpEntity entityWithSettings(SettingsType settingsType) {
@@ -63,9 +59,8 @@ public class EntityBuilder {
     return createEntity(entity);
   }
 
-  public static HttpEntity entityReplaceIndexAlias(String alias, String idxToAdd, Set<String> idxToRemove) {
+  public static HttpEntity entityReplaceIndexAlias(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxToAdd));
 
     ObjectNode entity = createObjectNode();
     ArrayNode actions = createArrayNode();
@@ -76,7 +71,9 @@ public class EntityBuilder {
       idxToRemove.forEach(idx -> removeIndexFromAliasAction(alias, idx, actions));
     }
     // add index action
-    addIndexToAliasAction(alias, idxToAdd, actions);
+    if (idxToAdd != null) {
+      idxToAdd.forEach(idx -> addIndexToAliasAction(alias, idx, actions));
+    }
 
     return createEntity(entity);
   }

@@ -2,7 +2,7 @@ package org.gbif.pipelines.esindexing.api;
 
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
-import org.gbif.pipelines.esindexing.request.EntityBuilder;
+import org.gbif.pipelines.esindexing.common.SettingsType;
 
 import java.util.Objects;
 import java.util.Set;
@@ -29,7 +29,7 @@ public class EsHandler {
 
     Response response = null;
     try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndexWithSettings(esClient, idxName, EntityBuilder.SettingsType.INDEXING);
+      return EsService.createIndexWithSettings(esClient, idxName, SettingsType.INDEXING);
     }
   }
 
@@ -43,7 +43,7 @@ public class EsHandler {
 
     try (EsClient esClient = EsClient.from(config)) {
       // change index settings to search settings
-      updateIndexSettings(esClient, index, EntityBuilder.SettingsType.SEARCH);
+      updateIndexSettings(esClient, index, SettingsType.SEARCH);
 
       // check if there are indexes to remove
       Set<String> idxToRemove = getIndexesByAlias(esClient, getDatasetIndexesPattern(datasetId), alias);

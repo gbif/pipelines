@@ -30,6 +30,8 @@ import static org.gbif.pipelines.esindexing.common.SettingsType.SEARCH;
 
 public class EsServiceIT extends EsIntegrationTest {
 
+  // TODO: run IT only for some phases/profiles??
+
   // TODO: add some methods from here to public api?? like getIndex or parseSettings from response
 
   @Test
