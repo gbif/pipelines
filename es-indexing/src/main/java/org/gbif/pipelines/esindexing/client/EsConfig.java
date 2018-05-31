@@ -27,10 +27,9 @@ public class EsConfig {
     });
   }
 
-  public static EsConfig from(String[] hostsAddresses) {
+  public static EsConfig from(String... hostsAddresses) {
     return new EsConfig(hostsAddresses);
   }
-
 
   public List<URL> getHosts() {
     return hosts;
