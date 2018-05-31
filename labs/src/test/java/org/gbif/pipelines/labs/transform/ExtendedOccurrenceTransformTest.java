@@ -65,12 +65,12 @@ public class ExtendedOccurrenceTransformTest {
     final String[] one =
       {"0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", Country.DENMARK.getTitle(),
         Country.DENMARK.getIso2LetterCode(), "EUROPE", "1", "1", "2018", "2018-01-01", "100.0", "110.0", "111.0",
-        "200.0", "Ocean", "220.0", "222.0", "30.0", "0.00001", "56.26", "9.51"};
+        "200.0", "Ocean", "220.0", "222.0", "30.0", "0.00001", "56.26", "9.51", "1", "365"};
 
     final String[] two =
       {"1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", Country.JAPAN.getTitle(),
         Country.JAPAN.getIso2LetterCode(), "ASIA", "1", "1", "2018", "2018-01-01", "100.0", "110.0", "111.0", "200.0",
-        "Ocean", "220.0", "222.0", "30.0", "0.00001", "36.21", "138.25"};
+        "Ocean", "220.0", "222.0", "30.0", "0.00001", "36.21", "138.25", "1", "365"};
     enqueueGeocodeResponses();
 
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
@@ -157,6 +157,8 @@ public class ExtendedOccurrenceTransformTest {
         .setCoordinatePrecision(Double.valueOf(x[22]))
         .setDecimalLatitude(Double.valueOf(x[23]))
         .setDecimalLongitude(Double.valueOf(x[24]))
+        .setStartDayOfYear(Integer.valueOf(x[25]))
+        .setEndDayOfYear(Integer.valueOf(x[26]))
         .build())
       .collect(Collectors.toList());
   }

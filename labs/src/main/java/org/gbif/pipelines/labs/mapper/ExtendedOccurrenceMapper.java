@@ -32,13 +32,26 @@ public class ExtendedOccurrenceMapper {
   }
 
   private static void mapTemporal(Builder builder, TemporalRecord temporal){
-    builder.setDay(temporal.getDay())
-      .setMonth(temporal.getMonth())
+    builder.setEventID(temporal.getEventID())
+      .setParentEventID(temporal.getParentEventID())
+      .setFieldNumber(temporal.getFieldNumber())
+      .setVerbatimEventDate(temporal.getVerbatimEventDate())
       .setYear(temporal.getYear())
+      .setMonth(temporal.getMonth())
+      .setDay(temporal.getDay())
+      .setStartDayOfYear(temporal.getStartDayOfYear())
+      .setEndDayOfYear(temporal.getEndDayOfYear())
       .setEventDate(temporal.getEventDate())
+      .setEventTime(temporal.getEventTime())
+      .setFieldNotes(temporal.getFieldNotes())
+      .setEventRemarks(temporal.getEventRemarks())
+      .setHabitat(temporal.getHabitat())
+      .setSamplingProtocol(temporal.getSamplingProtocol())
+      .setSampleSizeValue(temporal.getSampleSizeValue())
+      .setSampleSizeUnit(temporal.getSampleSizeUnit())
+      .setSamplingEffort(temporal.getSamplingEffort())
+      .setModified(temporal.getModified())
       .setDateIdentified(temporal.getDateIdentified());
-
-    Optional.ofNullable(temporal.getEventTime()).ifPresent(x->builder.setEventTime(x.toString()));
   }
 
   private static void mapLocation(Builder builder, LocationRecord location){
@@ -93,8 +106,7 @@ public class ExtendedOccurrenceMapper {
       .setEstablishmentMeans(record.getEstablishmentMeans())
       .setLifeStage(record.getLifeStage())
       .setSex(record.getSex())
-      .setBasisOfRecord(record.getBasisOfRecord())
-      .setDctermsReferences(record.getReferences());
+      .setBasisOfRecord(record.getBasisOfRecord());
 
       Optional.ofNullable(record.getIndividualCount()).ifPresent(x->builder.setIndividualCount(x.toString()));
 

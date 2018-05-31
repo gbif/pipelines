@@ -1,3 +1,7 @@
+/**
+ * Represents the interpreted fields of terms related to location.
+ */
+
 {
   "name":"LocationRecord",
   "namespace":"org.gbif.pipelines.io.avro",

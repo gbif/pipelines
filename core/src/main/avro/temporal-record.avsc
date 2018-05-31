@@ -1,11 +1,12 @@
 /**
- * Represents the interpreted fields of terms related to temporal.
+ * Represents the interpreted fields of terms related to event/temporal.
  */
 
 [{
-  "type":"record",
-  "namespace":"org.gbif.pipelines.io.avro",
   "name":"EventDate",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc": "http://rs.tdwg.org/dwc/terms/eventDate",
   "fields":[
     {"name":"gte","type":["null","string"],"default":null},
     {"name":"lte","type":["null","string"],"default":null}
@@ -14,18 +15,29 @@
 {
   "name": "TemporalRecord",
   "namespace": "org.gbif.pipelines.io.avro",
-  "doc": "A container for temporal fields of DarwinCore that have been interpreted.",
   "type": "record",
+  "doc": "A container for temporal fields of DarwinCore that have been interpreted.",
   "fields": [
-    {"name": "id", "type": "string", "doc": "The record id"},
-    {"name": "year", "type": ["null", "int"], "default" : null },
-    {"name": "month", "type": ["null", "int"], "default" : null },
-    {"name": "day", "type": ["null", "int"], "default" : null },
-    {"name": "startDayOfYear", "type": ["null", "int"], "default" : null },
-    {"name": "endDayOfYear", "type": ["null", "int"], "default" : null },
-    {"name": "modified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null },
-    {"name": "dateIdentified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null },
-    {"name": "eventTime", "type": ["null", "long"], "logicalType":"time-millis", "default" : null },
-    {"name": "eventDate", "type": ["null", "EventDate"], "default" : null }
+    {"name": "id", "type": "string", "doc":"http://rs.tdwg.org/dwc/terms/occurrenceID"},
+    {"name": "eventID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/eventID"},
+    {"name": "parentEventID", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/parentEventID"},
+    {"name": "fieldNumber", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/fieldNumber"},
+    {"name": "verbatimEventDate", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/verbatimEventDate"},
+    {"name": "year", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/year"},
+    {"name": "month", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/month"},
+    {"name": "day", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/day"},
+    {"name": "startDayOfYear", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/startDayOfYear"},
+    {"name": "endDayOfYear", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/endDayOfYear"},
+    {"name": "eventDate", "type": ["null", "EventDate"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/eventDate"},
+    {"name": "eventTime", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/eventTime"},
+    {"name": "fieldNotes", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/fieldNotes"},
+    {"name": "eventRemarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/eventRemarks"},
+    {"name": "habitat", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/habitat"},
+    {"name": "samplingProtocol", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/samplingProtocol"},
+    {"name": "sampleSizeValue", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeValue"},
+    {"name": "sampleSizeUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeUnit"},
+    {"name": "samplingEffort", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/samplingEffort"},
+    {"name": "modified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://purl.org/dc/terms/modified"},
+    {"name": "dateIdentified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/dateIdentified"}
   ]
 }]
