@@ -5,7 +5,7 @@ import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -42,7 +42,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
 
   // Data tupple tags for internal usage only
   private final TupleTag<InterpretedExtendedRecord> recordDataTag = new TupleTag<InterpretedExtendedRecord>() {};
-  private final TupleTag<Location> locationDataTag = new TupleTag<Location>() {};
+  private final TupleTag<LocationRecord> locationDataTag = new TupleTag<LocationRecord>() {};
   private final TupleTag<TemporalRecord> temporalDataTag = new TupleTag<TemporalRecord>() {};
   // Issue tupple tags for internal usage only
   private final TupleTag<OccurrenceIssue> recordIssueTag = new TupleTag<OccurrenceIssue>() {};
@@ -118,7 +118,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
     CoGbkResult value = element.getValue();
 
     InterpretedExtendedRecord record = value.getOnly(recordDataTag);
-    Location location = value.getOnly(locationDataTag);
+    LocationRecord location = value.getOnly(locationDataTag);
     TemporalRecord temporal = value.getOnly(temporalDataTag);
     TaxonRecord taxon = TaxonRecord.newBuilder().setId(record.getId()).build();
     MultimediaRecord multimedia = MultimediaRecord.newBuilder().setId(record.getId()).build();
@@ -170,7 +170,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
   @Override
   public ExtendedOccurrenceTransform withAvroCoders(Pipeline pipeline) {
     Coders.registerAvroCoders(pipeline, ExtendedRecord.class, ExtendedOccurrence.class, OccurrenceIssue.class);
-    Coders.registerAvroCoders(pipeline, InterpretedExtendedRecord.class, TemporalRecord.class, Location.class);
+    Coders.registerAvroCoders(pipeline, InterpretedExtendedRecord.class, TemporalRecord.class, LocationRecord.class);
     return this;
   }
 

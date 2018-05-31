@@ -2,7 +2,7 @@ package org.gbif.pipelines.mapper;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 
 import java.util.function.Function;
 
@@ -12,10 +12,10 @@ public class LocationMapper {
     //Can't have an instance
   }
 
-  public static Location map(ExtendedRecord record) {
+  public static LocationRecord map(ExtendedRecord record) {
     Function<DwcTerm, String> getValue = dwcterm -> record.getCoreTerms().get(dwcterm.qualifiedName());
-    return Location.newBuilder()
-      .setOccurrenceID(record.getId())
+    return LocationRecord.newBuilder()
+      .setId(record.getId())
       .setLocationID(getValue.apply(DwcTerm.locationID))
       .setHigherGeographyID(getValue.apply(DwcTerm.higherGeographyID))
       .setHigherGeography(getValue.apply(DwcTerm.higherGeography))

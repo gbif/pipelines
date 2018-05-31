@@ -12,7 +12,7 @@ import org.gbif.pipelines.core.parsers.location.ParsedLocation;
 import org.gbif.pipelines.core.utils.StringUtil;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueType;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -30,7 +30,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link DwcTerm#decimalLatitude} and the
    * {@link DwcTerm#decimalLongitude} terms.
    */
-  static LocationInterpreter interpretCountryAndCoordinates(Location locationRecord, String wsPropertiesPath) {
+  static LocationInterpreter interpretCountryAndCoordinates(LocationRecord locationRecord, String wsPropertiesPath) {
     return (ExtendedRecord extendedRecord) -> {
 
       // parse the terms
@@ -71,7 +71,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#continent} interpretation.
    */
-  static LocationInterpreter interpretContinent(Location locationRecord) {
+  static LocationInterpreter interpretContinent(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> VocabularyParsers.continentParser().map(extendedRecord, parseResult -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       if (parseResult.isSuccessful()) {
@@ -86,7 +86,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#waterBody} interpretation.
    */
-  static LocationInterpreter interpretWaterBody(Location locationRecord) {
+  static LocationInterpreter interpretWaterBody(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.waterBody.qualifiedName());
@@ -100,7 +100,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#stateProvince} interpretation.
    */
-  static LocationInterpreter interpretStateProvince(Location locationRecord) {
+  static LocationInterpreter interpretStateProvince(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.stateProvince.qualifiedName());
@@ -114,7 +114,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#minimumElevationInMeters} interpretation.
    */
-  static LocationInterpreter interpretMinimumElevationInMeters(Location locationRecord) {
+  static LocationInterpreter interpretMinimumElevationInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.minimumElevationInMeters.qualifiedName());
@@ -132,7 +132,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#maximumElevationInMeters} interpretation.
    */
-  static LocationInterpreter interpretMaximumElevationInMeters(Location locationRecord) {
+  static LocationInterpreter interpretMaximumElevationInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.maximumElevationInMeters.qualifiedName());
@@ -150,7 +150,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#minimumDepthInMeters} interpretation.
    */
-  static LocationInterpreter interpretMinimumDepthInMeters(Location locationRecord) {
+  static LocationInterpreter interpretMinimumDepthInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.minimumDepthInMeters.qualifiedName());
@@ -167,7 +167,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#maximumDepthInMeters} interpretation.
    */
-  static LocationInterpreter interpretMaximumDepthInMeters(Location locationRecord) {
+  static LocationInterpreter interpretMaximumDepthInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.maximumDepthInMeters.qualifiedName());
@@ -184,7 +184,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#maximumDepthInMeters} interpretation.
    */
-  static LocationInterpreter interpretMinimumDistanceAboveSurfaceInMeters(Location locationRecord) {
+  static LocationInterpreter interpretMinimumDistanceAboveSurfaceInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.minimumDistanceAboveSurfaceInMeters.qualifiedName());
@@ -202,7 +202,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#maximumDepthInMeters} interpretation.
    */
-  static LocationInterpreter interpretMaximumDistanceAboveSurfaceInMeters(Location locationRecord) {
+  static LocationInterpreter interpretMaximumDistanceAboveSurfaceInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName());
@@ -220,7 +220,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#coordinateUncertaintyInMeters} interpretation.
    */
-  static LocationInterpreter interpretCoordinateUncertaintyInMeters(Location locationRecord) {
+  static LocationInterpreter interpretCoordinateUncertaintyInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
       String value = extendedRecord.getCoreTerms().get(DwcTerm.coordinateUncertaintyInMeters.qualifiedName());
@@ -241,7 +241,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * {@link DwcTerm#coordinatePrecision} interpretation.
    */
-  static LocationInterpreter interpretCoordinatePrecision(Location locationRecord) {
+  static LocationInterpreter interpretCoordinatePrecision(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) ->
       SimpleTypeParser.parseDouble(extendedRecord, DwcTerm.coordinatePrecision, parseResult -> {
         Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);

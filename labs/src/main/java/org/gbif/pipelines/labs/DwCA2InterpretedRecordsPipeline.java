@@ -13,7 +13,7 @@ import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.Issue;
 import org.gbif.pipelines.io.avro.IssueLineageRecord;
 import org.gbif.pipelines.io.avro.Lineage;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
@@ -51,7 +51,7 @@ public class DwCA2InterpretedRecordsPipeline {
 
     Pipeline p = Pipeline.create(options);
 
-    Coders.registerAvroCoders(p, ExtendedRecord.class, Event.class, Location.class, ExtendedOccurrence.class);
+    Coders.registerAvroCoders(p, ExtendedRecord.class, Event.class, LocationRecord.class, ExtendedOccurrence.class);
     Coders.registerAvroCoders(p, Issue.class, Lineage.class, IssueLineageRecord.class);
 
     // STEP 1: Read the DwC-A using our custom reader

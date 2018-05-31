@@ -3,7 +3,7 @@ package org.gbif.pipelines.indexing.record;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.record.LocationTransform;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
@@ -45,11 +45,11 @@ public class Location2AvroPipeline {
 
     // STEP 3: Run the main transform
     PCollectionTuple locationRecordTuple = extendedRecords.apply(locationTransform);
-    PCollection<Location> locationRecords = locationRecordTuple.get(locationTransform.getDataTag())
+    PCollection<LocationRecord> locationRecords = locationRecordTuple.get(locationTransform.getDataTag())
       .apply(Kv2Value.create());
 
     // STEP 4: Save to an avro file
-    locationRecords.apply(WRITE_STEP, AvroIO.write(Location.class).to(targetDirectory));
+    locationRecords.apply(WRITE_STEP, AvroIO.write(LocationRecord.class).to(targetDirectory));
 
     // Run
     LOG.info("Starting the pipeline");

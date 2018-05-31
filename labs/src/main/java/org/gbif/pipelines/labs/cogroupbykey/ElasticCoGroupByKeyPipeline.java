@@ -4,7 +4,7 @@ import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.EsProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -64,7 +64,7 @@ public class ElasticCoGroupByKeyPipeline {
     LOG.info("Added step 0: Creating pipeline options");
     final TupleTag<InterpretedExtendedRecord> extendedRecordTag = new TupleTag<InterpretedExtendedRecord>() {};
     final TupleTag<TemporalRecord> temporalTag = new TupleTag<TemporalRecord>() {};
-    final TupleTag<Location> locationTag = new TupleTag<Location>() {};
+    final TupleTag<LocationRecord> locationTag = new TupleTag<LocationRecord>() {};
     final TupleTag<TaxonRecord> taxonomyTag = new TupleTag<TaxonRecord>() {};
     final TupleTag<MultimediaRecord> multimediaTag = new TupleTag<MultimediaRecord>() {};
 
@@ -77,7 +77,7 @@ public class ElasticCoGroupByKeyPipeline {
     final String pathMultimedia = pathIn + "multimedia/interpreted*.avro";
 
     Pipeline p = Pipeline.create(options);
-    Coders.registerAvroCoders(p, InterpretedExtendedRecord.class, Location.class, TemporalRecord.class);
+    Coders.registerAvroCoders(p, InterpretedExtendedRecord.class, LocationRecord.class, TemporalRecord.class);
     Coders.registerAvroCoders(p, TaxonRecord.class, MultimediaRecord.class);
 
     LOG.info("Adding step 1: Reading interpreted avro files");
@@ -91,10 +91,10 @@ public class ElasticCoGroupByKeyPipeline {
         .apply("Map TEMPORAL", MapElements.into(new TypeDescriptor<KV<String, TemporalRecord>>() {})
                  .via((TemporalRecord t) -> KV.of(t.getId(), t)));
 
-    PCollection<KV<String, Location>> locationCollection =
-      p.apply("Read LOCATION", AvroIO.read(Location.class).from(pathLocation))
-        .apply("Map LOCATION", MapElements.into(new TypeDescriptor<KV<String, Location>>() {})
-                 .via((Location l) -> KV.of(l.getOccurrenceID(), l)));
+    PCollection<KV<String, LocationRecord>> locationCollection =
+      p.apply("Read LOCATION", AvroIO.read(LocationRecord.class).from(pathLocation))
+        .apply("Map LOCATION", MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
+                 .via((LocationRecord l) -> KV.of(l.getId(), l)));
 
     PCollection<KV<String, TaxonRecord>> taxonomyCollection =
       p.apply("Read TAXONOMY", AvroIO.read(TaxonRecord.class).from(pathTaxonomy))
@@ -123,7 +123,7 @@ public class ElasticCoGroupByKeyPipeline {
           CoGbkResult value = c.element().getValue();
           InterpretedExtendedRecord extendedRecord = value.getOnly(extendedRecordTag, InterpretedExtendedRecord.newBuilder().setId("").build());
           TemporalRecord temporal = value.getOnly(temporalTag, TemporalRecord.newBuilder().setId("").build());
-          Location location = value.getOnly(locationTag, Location.newBuilder().setOccurrenceID("").build());
+          LocationRecord location = value.getOnly(locationTag, LocationRecord.newBuilder().setId("").build());
           TaxonRecord taxon = value.getOnly(taxonomyTag, TaxonRecord.newBuilder().setId("").build());
           MultimediaRecord multimedia = value.getOnly(multimediaTag, MultimediaRecord.newBuilder().setId("").build());
           c.output(ExtendedOccurrenceMapper.map(extendedRecord, location, temporal, taxon, multimedia).toString());

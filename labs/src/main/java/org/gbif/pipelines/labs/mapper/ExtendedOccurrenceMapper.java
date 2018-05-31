@@ -3,7 +3,7 @@ package org.gbif.pipelines.labs.mapper;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence.Builder;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -17,7 +17,7 @@ public class ExtendedOccurrenceMapper {
   }
 
   // TODO: Fill all fields
-  public static ExtendedOccurrence map(InterpretedExtendedRecord record, Location location, TemporalRecord temporal,
+  public static ExtendedOccurrence map(InterpretedExtendedRecord record, LocationRecord location, TemporalRecord temporal,
       TaxonRecord taxon, MultimediaRecord multimedia) {
 
     ExtendedOccurrence.Builder builder = ExtendedOccurrence.newBuilder();
@@ -41,7 +41,7 @@ public class ExtendedOccurrenceMapper {
     Optional.ofNullable(temporal.getEventTime()).ifPresent(x->builder.setEventTime(x.toString()));
   }
 
-  private static void fillLocation(Builder builder, Location location){
+  private static void fillLocation(Builder builder, LocationRecord location){
     builder.setDecimalLatitude(location.getDecimalLatitude())
       .setDecimalLongitude(location.getDecimalLongitude())
       .setCountry(location.getCountry())

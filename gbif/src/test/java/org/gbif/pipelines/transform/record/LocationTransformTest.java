@@ -4,7 +4,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transform.Kv2Value;
 
 import java.io.IOException;
@@ -74,7 +74,7 @@ public class LocationTransformTest {
     enqueueGeocodeResponses();
 
     // Expected
-    final List<Location> locations = createLocationList(denmark, japan);
+    final List<LocationRecord> locations = createLocationList(denmark, japan);
 
     // When
     LocationTransform locationTransform = LocationTransform.create().withAvroCoders(p);
@@ -83,7 +83,7 @@ public class LocationTransformTest {
 
     PCollectionTuple tuple = inputStream.apply(locationTransform);
 
-    PCollection<Location> recordCollection = tuple.get(locationTransform.getDataTag()).apply(Kv2Value.create());
+    PCollection<LocationRecord> recordCollection = tuple.get(locationTransform.getDataTag()).apply(Kv2Value.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(locations);
@@ -116,10 +116,10 @@ public class LocationTransformTest {
     }).collect(Collectors.toList());
   }
 
-  private List<Location> createLocationList(String[]... locations) {
+  private List<LocationRecord> createLocationList(String[]... locations) {
     return Arrays.stream(locations)
-      .map(x -> Location.newBuilder()
-        .setOccurrenceID(x[0])
+      .map(x -> LocationRecord.newBuilder()
+        .setId(x[0])
         .setCountry(x[1])
         .setCountryCode(x[2])
         .setContinent(x[3])

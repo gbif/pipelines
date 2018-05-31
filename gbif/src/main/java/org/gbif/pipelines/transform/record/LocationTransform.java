@@ -5,7 +5,7 @@ import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.Validation;
 import org.gbif.pipelines.mapper.LocationMapper;
@@ -18,7 +18,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
-public class LocationTransform extends RecordTransform<ExtendedRecord, Location> {
+public class LocationTransform extends RecordTransform<ExtendedRecord, LocationRecord> {
 
   private LocationTransform() {
     super("Interpret location record");
@@ -29,13 +29,13 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
   }
 
   @Override
-  public DoFn<ExtendedRecord, KV<String, Location>> interpret() {
-    return new DoFn<ExtendedRecord, KV<String, Location>>() {
+  public DoFn<ExtendedRecord, KV<String, LocationRecord>> interpret() {
+    return new DoFn<ExtendedRecord, KV<String, LocationRecord>>() {
       @ProcessElement
       public void processElement(ProcessContext context) {
 
         ExtendedRecord extendedRecord = context.element();
-        Location location = LocationMapper.map(extendedRecord);
+        LocationRecord location = LocationMapper.map(extendedRecord);
         String id = extendedRecord.getId();
         List<Validation> validations = new ArrayList<>();
 
@@ -73,7 +73,7 @@ public class LocationTransform extends RecordTransform<ExtendedRecord, Location>
 
   @Override
   public LocationTransform withAvroCoders(Pipeline pipeline) {
-    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, Location.class, ExtendedRecord.class);
+    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, LocationRecord.class, ExtendedRecord.class);
     return this;
   }
 

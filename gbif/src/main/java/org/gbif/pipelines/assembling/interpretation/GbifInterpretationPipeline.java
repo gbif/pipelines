@@ -9,11 +9,13 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
@@ -125,10 +127,10 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     }
 
     if (codec.toLowerCase().startsWith(DEFLATE)) {
-      String[] pieces = codec.split(CODEC_SEPARATOR);
+      List<String> pieces = Splitter.on(CODEC_SEPARATOR).splitToList(codec);
       int compressionLevel = CodecFactory.DEFAULT_DEFLATE_LEVEL;
-      if (pieces.length > 1) {
-        compressionLevel = Integer.parseInt(pieces[1]);
+      if (!pieces.isEmpty()) {
+        compressionLevel = Integer.parseInt(pieces.get(1));
       }
       return CodecFactory.deflateCodec(compressionLevel);
     }
@@ -142,10 +144,10 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     }
 
     if (codec.toLowerCase().startsWith(XZ)) {
-      String[] pieces = codec.split(CODEC_SEPARATOR);
+      List<String> pieces = Splitter.on(CODEC_SEPARATOR).splitToList(codec);
       int compressionLevel = CodecFactory.DEFAULT_XZ_LEVEL;
-      if (pieces.length > 1) {
-        compressionLevel = Integer.parseInt(pieces[1]);
+      if (!pieces.isEmpty()) {
+        compressionLevel = Integer.parseInt(pieces.get(1));
       }
       return CodecFactory.xzCodec(compressionLevel);
     }
