@@ -22,7 +22,7 @@ class EsService {
 
   // endpoints
   private static final String ALIASES_ENDPOINT = "/_aliases";
-  private static final String INDEXES_BY_ALIAS_ENDPOINT = "/%s*/_alias/%s";
+  private static final String INDEXES_BY_ALIAS_ENDPOINT = "/%s/_alias/%s";
   private static final String INDEX_ENDPOINT_PATTERN = "/%s";
   private static final String INDEX_SETTINGS_ENDPOINT_PATTERN = "/%s/_settings";
 
@@ -66,33 +66,21 @@ class EsService {
     return esClient.performPutRequest(endpoint, Collections.emptyMap(), entity);
   }
 
-  static Set<String> getIndexesToRemove(EsClient esClient, String idxPrefix, String alias) {
+  static Set<String> getIndexesByAlias(EsClient esClient, String index, String alias) {
     Objects.requireNonNull(esClient);
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxPrefix));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(index));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias));
 
     try {
-      Response response = esClient.performGetRequest(String.format(INDEXES_BY_ALIAS_ENDPOINT, idxPrefix, alias));
+      Response response = esClient.performGetRequest(String.format(INDEXES_BY_ALIAS_ENDPOINT, index, alias));
       return ResponseParser.parseIndexes(response);
     } catch (ResponseException e) {
-      LOG.debug("No indexes with prefix {} to remove from alias {}", idxPrefix, alias);
-      return null;
+      LOG.debug("No indexes with prefix {} to remove from alias {}", index, alias);
+      return Collections.emptySet();
     }
   }
 
-  static void addIndexToAlias(EsClient esClient, String idxToAdd, String alias) {
-    Objects.requireNonNull(esClient);
-
-    HttpEntity entity = EntityBuilder.entityIndexToAlias(alias, idxToAdd);
-    try {
-      esClient.performPostRequest(ALIASES_ENDPOINT, Collections.emptyMap(), entity);
-    } catch (ResponseException exc) {
-      LOG.error("Error when adding index {} to alias {}", idxToAdd, alias, exc);
-      throw new IllegalStateException(exc.getMessage(), exc);
-    }
-  }
-
-  static void replaceIndexInAlias(EsClient esClient, String idxToAdd, String alias, Set<String> idxToRemove) {
+  static void swapIndexes(EsClient esClient, String idxToAdd, String alias, Set<String> idxToRemove) {
     Objects.requireNonNull(esClient);
 
     HttpEntity entity = EntityBuilder.entityReplaceIndexAlias(alias, idxToAdd, idxToRemove);

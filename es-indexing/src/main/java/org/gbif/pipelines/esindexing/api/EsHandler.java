@@ -11,9 +11,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.elasticsearch.client.Response;
 
-import static org.gbif.pipelines.esindexing.api.EsService.addIndexToAlias;
-import static org.gbif.pipelines.esindexing.api.EsService.getIndexesToRemove;
-import static org.gbif.pipelines.esindexing.api.EsService.replaceIndexInAlias;
+import static org.gbif.pipelines.esindexing.api.EsService.getIndexesByAlias;
+import static org.gbif.pipelines.esindexing.api.EsService.swapIndexes;
 import static org.gbif.pipelines.esindexing.api.EsService.updateIndexSettings;
 
 public class EsHandler {
@@ -34,7 +33,7 @@ public class EsHandler {
     }
   }
 
-  public static void addAlias(EsConfig config, String alias, String index) {
+  public static void swapIndexInAlias(EsConfig config, String alias, String index) {
     Objects.requireNonNull(config, "ES configuration is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
@@ -47,14 +46,15 @@ public class EsHandler {
       updateIndexSettings(esClient, index, EntityBuilder.SettingsType.SEARCH);
 
       // check if there are indexes to remove
-      Set<String> idxToRemove = getIndexesToRemove(esClient, datasetId, alias);
+      Set<String> idxToRemove = getIndexesByAlias(esClient, getDatasetIndexesPattern(datasetId), alias);
 
-      if (Objects.isNull(idxToRemove)) {
-        addIndexToAlias(esClient, index, alias);
-      } else {
-        replaceIndexInAlias(esClient, index, alias, idxToRemove);
-      }
+      // swap the indexes
+      swapIndexes(esClient, index, alias, idxToRemove);
     }
+  }
+
+  private static String getDatasetIndexesPattern(String datasetId) {
+    return datasetId + INDEX_SEPARATOR + "*";
   }
 
   private static String getDatasetIdFromIndex(String index) {

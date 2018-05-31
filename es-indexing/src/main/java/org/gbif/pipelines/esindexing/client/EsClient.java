@@ -1,6 +1,7 @@
 package org.gbif.pipelines.esindexing.client;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -34,8 +35,8 @@ public class EsClient implements AutoCloseable {
 
     HttpHost[] hosts = new HttpHost[config.getHosts().size()];
     for (int i = 0; i < config.getHosts().size(); i++) {
-      EsConfig.EsHost esHost = config.getHosts().get(i);
-      hosts[i] = new HttpHost(esHost.getHostname(), esHost.getPort(), esHost.getProtocol());
+      URL urlHost = config.getHosts().get(i);
+      hosts[i] = new HttpHost(urlHost.getHost(), urlHost.getPort(), urlHost.getProtocol());
     }
 
     restClient = RestClient.builder(hosts).build();
@@ -46,12 +47,7 @@ public class EsClient implements AutoCloseable {
   }
 
   public Response performGetRequest(String endpoint) throws ResponseException {
-    return performGetRequest(endpoint, Collections.EMPTY_MAP, null);
-  }
-
-  public Response performGetRequest(String endpoint, Map<String, String> params, HttpEntity body)
-    throws ResponseException {
-    return performRequest(HttpGet.METHOD_NAME, endpoint, params, body);
+    return performRequest(HttpGet.METHOD_NAME, endpoint, Collections.emptyMap(), null);
   }
 
   public Response performPutRequest(String endpoint, Map<String, String> params, HttpEntity body)

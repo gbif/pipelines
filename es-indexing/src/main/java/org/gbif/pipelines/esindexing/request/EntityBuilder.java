@@ -47,31 +47,18 @@ public class EntityBuilder {
     return createEntity(entity);
   }
 
-  public static HttpEntity entityIndexToAlias(String alias, String idxToAdd) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(alias));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxToAdd));
-
-    ObjectNode entity = createObjectNode();
-    ArrayNode actions = createArrayNode();
-    entity.set("actions", actions);
-
-    // add index action
-    addIndexToAliasAction(alias, idxToAdd, actions);
-
-    return createEntity(entity);
-  }
-
   public static HttpEntity entityReplaceIndexAlias(String alias, String idxToAdd, Set<String> idxToRemove) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(idxToAdd));
-    Preconditions.checkArgument(idxToRemove != null && !idxToRemove.isEmpty());
 
     ObjectNode entity = createObjectNode();
     ArrayNode actions = createArrayNode();
     entity.set("actions", actions);
 
     // remove all indixes from alias action
-    idxToRemove.forEach(idx -> removeIndexFromAliasAction(alias, idx, actions));
+    if (idxToRemove != null) {
+      idxToRemove.forEach(idx -> removeIndexFromAliasAction(alias, idx, actions));
+    }
     // add index action
     addIndexToAliasAction(alias, idxToAdd, actions);
 
