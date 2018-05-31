@@ -89,6 +89,7 @@
     <commons-digester.version>2.1</commons-digester.version>
     <mapdb.version>3.0.5</mapdb.version>
     <logstash-encoder.version>4.11</logstash-encoder.version>
+
     <!-- use the same version as beam -->
     <elasticsearch.version>5.6.3</elasticsearch.version>
     <jackson.version>2.9.5</jackson.version>
@@ -395,6 +396,11 @@
       <!-- Jackson -->
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
         <version>${jackson.version}</version>
       </dependency>
@@ -476,6 +482,13 @@
         <artifactId>hadoop-hdfs</artifactId>
         <classifier>tests</classifier>
         <version>${hadoop-common.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <!-- added to resolve conflict with spark runner-->
+      <dependency>
+        <groupId>com.fasterxml.jackson.module</groupId>
+        <artifactId>jackson-module-scala_2.11</artifactId>
+        <version>${jackson.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
