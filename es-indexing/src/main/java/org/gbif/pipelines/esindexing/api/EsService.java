@@ -1,6 +1,7 @@
 package org.gbif.pipelines.esindexing.api;
 
 import org.gbif.pipelines.esindexing.client.EsClient;
+import org.gbif.pipelines.esindexing.common.SettingsType;
 import org.gbif.pipelines.esindexing.request.EntityBuilder;
 import org.gbif.pipelines.esindexing.response.ResponseParser;
 
@@ -28,7 +29,7 @@ class EsService {
 
   private EsService() {}
 
-  static String createIndex(EsClient esClient, String idxName, EntityBuilder.SettingsType settingsType) {
+  static String createIndexWithSettings(EsClient esClient, String idxName, SettingsType settingsType) {
     Objects.requireNonNull(esClient);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
@@ -43,7 +44,7 @@ class EsService {
     }
   }
 
-  static void updateIndexSettings(EsClient esClient, String idxName, EntityBuilder.SettingsType settingsType) {
+  static void updateIndexSettings(EsClient esClient, String idxName, SettingsType settingsType) {
     Objects.requireNonNull(esClient);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
@@ -58,7 +59,7 @@ class EsService {
   }
 
   private static Response executeIndexOperationWithSettings(
-    EsClient esClient, String endpoint, EntityBuilder.SettingsType settingsType
+    EsClient esClient, String endpoint, SettingsType settingsType
   ) throws ResponseException {
     // create request body
     HttpEntity entity = EntityBuilder.entityWithSettings(settingsType);

@@ -1,6 +1,6 @@
 package org.gbif.pipelines.esindexing.response;
 
-import org.gbif.pipelines.esindexing.utils.JsonUtils;
+import org.gbif.pipelines.esindexing.common.JsonUtils;
 
 import java.util.Objects;
 import java.util.Set;
@@ -12,13 +12,13 @@ public class ResponseParser {
   public static String parseIndexName(Response response) {
     Objects.requireNonNull(response);
 
-    return JsonUtils.readEntity(response.getEntity()).get("index");
+    return JsonUtils.readValueFromEntity(response.getEntity()).get("index");
   }
 
   public static Set<String> parseIndexes(Response response) {
     Objects.requireNonNull(response);
 
-    return JsonUtils.readEntity(response.getEntity()).keySet();
+    return JsonUtils.readValueFromEntity(response.getEntity()).keySet();
   }
 
 }

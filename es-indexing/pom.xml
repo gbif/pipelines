@@ -3,15 +3,20 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
-    <artifactId>pipelines-parent</artifactId>
     <groupId>org.gbif.pipelines</groupId>
+    <artifactId>pipelines-parent</artifactId>
     <version>1.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>es-indexing</artifactId>
 
   <name>Pipelines :: ES indexing</name>
+
+  <properties>
+    <embedded.elasticsearch.version>2.5.1</embedded.elasticsearch.version>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -34,6 +39,20 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+
+    <!-- TEST -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>pl.allegro.tech</groupId>
+      <artifactId>embedded-elasticsearch</artifactId>
+      <version>${embedded.elasticsearch.version}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
 

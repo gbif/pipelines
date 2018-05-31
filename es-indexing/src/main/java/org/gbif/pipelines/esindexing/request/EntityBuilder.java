@@ -1,5 +1,7 @@
 package org.gbif.pipelines.esindexing.request;
 
+import org.gbif.pipelines.esindexing.common.SettingsType;
+
 import java.io.UnsupportedEncodingException;
 import java.util.Objects;
 import java.util.Set;
@@ -11,9 +13,22 @@ import com.google.common.base.Strings;
 import org.apache.http.HttpEntity;
 import org.apache.http.nio.entity.NStringEntity;
 
-import static org.gbif.pipelines.esindexing.utils.JsonUtils.createArrayNode;
-import static org.gbif.pipelines.esindexing.utils.JsonUtils.createObjectNode;
-import static org.gbif.pipelines.esindexing.utils.JsonUtils.writeJsonToString;
+import static org.gbif.pipelines.esindexing.common.EsConstants.DURABILITY_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_NUMBER_REPLICAS;
+import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_REFRESH_INTERVAL;
+import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.JSON_CONCATENATOR;
+import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_REPLICAS_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS;
+import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.REFRESH_INTERVAL_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_NUMBER_REPLICAS;
+import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_REFRESH_INTERVAL;
+import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_DURABILITY;
+import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_FIELD;
+import static org.gbif.pipelines.esindexing.common.JsonUtils.createArrayNode;
+import static org.gbif.pipelines.esindexing.common.JsonUtils.createObjectNode;
+import static org.gbif.pipelines.esindexing.common.JsonUtils.writeJsonToString;
 
 public class EntityBuilder {
 
@@ -21,13 +36,14 @@ public class EntityBuilder {
   private static final ObjectNode searchSettings = createObjectNode();
 
   static {
-    indexingSettings.put("index.refresh_interval", "-1");
-    indexingSettings.put("index.number_of_shards", "3");
-    indexingSettings.put("index.number_of_replicas", "0");
-    indexingSettings.put("index.translog.durability", "async");
+    indexingSettings.put(INDEX_FIELD + JSON_CONCATENATOR + REFRESH_INTERVAL_FIELD, INDEXING_REFRESH_INTERVAL);
+    indexingSettings.put(INDEX_FIELD + JSON_CONCATENATOR + NUMBER_SHARDS_FIELD, NUMBER_SHARDS);
+    indexingSettings.put(INDEX_FIELD + JSON_CONCATENATOR + NUMBER_REPLICAS_FIELD, INDEXING_NUMBER_REPLICAS);
+    indexingSettings.put(INDEX_FIELD + JSON_CONCATENATOR + TRANSLOG_FIELD + "." + DURABILITY_FIELD,
+                         TRANSLOG_DURABILITY);
 
-    searchSettings.put("index.refresh_interval", "1s");
-    searchSettings.put("index.number_of_replicas", "1");
+    searchSettings.put(INDEX_FIELD + JSON_CONCATENATOR + REFRESH_INTERVAL_FIELD, SEARCHING_REFRESH_INTERVAL);
+    searchSettings.put(INDEX_FIELD + JSON_CONCATENATOR + NUMBER_REPLICAS_FIELD, SEARCHING_NUMBER_REPLICAS);
   }
 
   private EntityBuilder() {}
@@ -89,10 +105,6 @@ public class EntityBuilder {
     } catch (UnsupportedEncodingException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }
-  }
-
-  public enum SettingsType {
-    INDEXING, SEARCH
   }
 
 }

@@ -1,9 +1,10 @@
-package org.gbif.pipelines.esindexing.utils;
+package org.gbif.pipelines.esindexing.common;
 
 import java.io.IOException;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -33,9 +34,17 @@ public class JsonUtils {
     }
   }
 
-  public static Map<String, String> readEntity(HttpEntity entity) {
+  public static Map<String, String> readValueFromEntity(HttpEntity entity) {
     try {
       return reader.readValue(entity.getContent());
+    } catch (IOException exc) {
+      throw new IllegalStateException(exc.getMessage(), exc);
+    }
+  }
+
+  public static JsonNode readTreeFromEntity(HttpEntity entity) {
+    try {
+      return mapper.readTree(entity.getContent());
     } catch (IOException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }

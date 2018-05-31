@@ -484,7 +484,7 @@
         <version>${hadoop-common.version}</version>
         <scope>test</scope>
       </dependency>
-      <!-- added to resolve conflict with spark runner-->
+      <!-- added to resolve conflicts with spark runner-->
       <dependency>
         <groupId>com.fasterxml.jackson.module</groupId>
         <artifactId>jackson-module-scala_2.11</artifactId>

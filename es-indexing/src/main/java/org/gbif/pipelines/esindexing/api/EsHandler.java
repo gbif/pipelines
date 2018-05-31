@@ -29,7 +29,7 @@ public class EsHandler {
 
     Response response = null;
     try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, EntityBuilder.SettingsType.INDEXING);
+      return EsService.createIndexWithSettings(esClient, idxName, EntityBuilder.SettingsType.INDEXING);
     }
   }
 
