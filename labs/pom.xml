@@ -42,6 +42,7 @@
   <properties>
     <protobuf.version>3.5.1</protobuf.version>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>
+    <es.version>5.6.3</es.version>
   </properties>
 
   <build>
@@ -277,5 +278,13 @@
       <artifactId>mapdb</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch -->
+    <dependency>
+      <groupId>org.elasticsearch.test</groupId>
+      <artifactId>framework</artifactId>
+      <version>${es.version}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 </project>
