@@ -53,8 +53,7 @@ public class ElasticCoGroupByKeyPipeline {
   }
 
   public static void avrosToEs(String... args) {
-    EsProcessingPipelineOptions options = DataPipelineOptionsFactory.createForEs(args);
-    avrosToEs(options);
+    avrosToEs(DataPipelineOptionsFactory.createForEs(args));
   }
 
   public static void avrosToEs(EsProcessingPipelineOptions options) {

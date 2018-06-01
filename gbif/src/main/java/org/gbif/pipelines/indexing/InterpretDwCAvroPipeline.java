@@ -3,7 +3,6 @@ package org.gbif.pipelines.indexing;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.config.OptionsKeyEnum;
 import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 import org.gbif.pipelines.io.avro.record.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.record.issue.OccurrenceIssue;
@@ -29,6 +28,10 @@ public class InterpretDwCAvroPipeline {
 
   public static void main(String[] args) {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
+
+    String targetDirectory = options.getDefaultTargetDirectory() + "common/interpreted";
+    String issueDirectory = options.getDefaultTargetDirectory() + "common/issue/issue";
+
     Pipeline p = Pipeline.create(options);
     Coders.registerAvroCoders(p, ExtendedRecord.class, InterpretedExtendedRecord.class);
 
@@ -45,17 +48,13 @@ public class InterpretDwCAvroPipeline {
     interpreted.get(transform.getDataTag())
       .apply(Kv2Value.create())
       .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
-      .apply("Write Interpreted Avro files",
-             AvroIO.write(InterpretedExtendedRecord.class)
-               .to(options.getTargetPaths().get(OptionsKeyEnum.RECORD_LEVEL).filePath()));
+      .apply("Write Interpreted Avro files", AvroIO.write(InterpretedExtendedRecord.class).to(targetDirectory));
 
     // STEP 4: Exporting issues
     interpreted.get(transform.getIssueTag())
       .apply(Kv2Value.create())
       .setCoder(AvroCoder.of(OccurrenceIssue.class))
-      .apply("Write Interpretation Issues Avro files",
-             AvroIO.write(OccurrenceIssue.class).to(options.getTargetPaths().get(OptionsKeyEnum.ISSUES)
-                                                      .filePath()));
+      .apply("Write Interpretation Issues Avro files", AvroIO.write(OccurrenceIssue.class).to(issueDirectory));
 
     // Instruct the writer to use a provided document ID
     LOG.info("Starting interpretation the pipeline");

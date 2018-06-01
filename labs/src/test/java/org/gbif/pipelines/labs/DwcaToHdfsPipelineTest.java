@@ -4,7 +4,6 @@ import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.config.OptionsKeyEnum;
 import org.gbif.pipelines.config.TargetPath;
 import org.gbif.pipelines.io.avro.occurrence.UntypedOccurrence;
 import org.gbif.pipelines.io.avro.record.ExtendedRecord;
@@ -14,7 +13,6 @@ import org.gbif.pipelines.labs.util.HdfsTestUtils;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Map;
 import java.util.Objects;
 
 import org.apache.beam.runners.direct.DirectRunner;
@@ -97,26 +95,6 @@ public class DwcaToHdfsPipelineTest {
 
     // create and run pipeline
     createAndRunPipeline(options);
-  }
-
-  @Test
-  public void defaultTargetPathsTest() {
-    // create options
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
-
-    Map<OptionsKeyEnum, TargetPath> targetPaths = options.getTargetPaths();
-
-    Assert.assertNotNull(targetPaths);
-    Assert.assertEquals(OptionsKeyEnum.values().length, targetPaths.size());
-
-    for (OptionsKeyEnum interpretation : OptionsKeyEnum.values()) {
-      TargetPath tp = targetPaths.get(interpretation);
-
-      Assert.assertNotNull(tp);
-      Assert.assertEquals(tp.getDirectory(), options.getDefaultTargetDirectory());
-      Assert.assertEquals(tp.getFileName(), interpretation.getDefaultFileName());
-    }
-
   }
 
   private void createAndRunPipeline(DataProcessingPipelineOptions options) {

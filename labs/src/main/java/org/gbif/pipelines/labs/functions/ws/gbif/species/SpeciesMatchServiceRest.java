@@ -10,12 +10,7 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/*
- * Singleton realisation
- * */
-enum SpeciesMatchServiceRest {
-
-  SINGLE;
+class SpeciesMatchServiceRest {
 
   //TODO: Move to properties
   private static final String CACHE_NAME = "speciesMatchWS-cache";
@@ -23,17 +18,24 @@ enum SpeciesMatchServiceRest {
   private static final long TIMEOUT = 60;
   private static final String WS_PATH = "https://api.gbif.org/";
 
-  private SpeciesMatchService service;
+  private static volatile SpeciesMatchService instance;
+  private static final Object MUTEX = new Object();
 
-  SpeciesMatchServiceRest() {
-    init();
+  private SpeciesMatchServiceRest() {
   }
 
-  SpeciesMatchService getService() {
-    return service;
+  public static SpeciesMatchService getInstance() {
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = init();
+        }
+      }
+    }
+    return instance;
   }
 
-  void init() {
+  private static SpeciesMatchService init() {
     File httpCacheDirectory;
     try {
       // use a new file cache for the current session
@@ -55,8 +57,7 @@ enum SpeciesMatchServiceRest {
         .addConverterFactory(GsonConverterFactory.create())
         .build();
 
-    service = retrofit.create(SpeciesMatchService.class);
-
+    return retrofit.create(SpeciesMatchService.class);
   }
 
 }

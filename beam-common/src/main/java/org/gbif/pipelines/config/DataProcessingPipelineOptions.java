@@ -1,12 +1,8 @@
 package org.gbif.pipelines.config;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.beam.runners.direct.DirectOptions;
 import org.apache.beam.sdk.annotations.Experimental;
@@ -55,17 +51,6 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   @Default.InstanceFactory(TempDirectoryFactory.class)
   String getHdfsTempLocation();
   void setHdfsTempLocation(String value);
-
-  @Description("Target paths for the different data interpretations. If they are not specified, it uses the "
-               + "\"DefaultTargetDirectory\" option as directory and the name of the interpretation as file name. "
-               + "Interpretations currently supported are verbatim, temporal, location and gbif-backbone.")
-  @Default.InstanceFactory(TargetPathFactory.class)
-  // TODO: remove or move to subclass
-  @Deprecated
-  Map<OptionsKeyEnum, TargetPath> getTargetPaths();
-
-  @Deprecated
-  void setTargetPaths(Map<OptionsKeyEnum, TargetPath> targetPaths);
 
   @Default.InstanceFactory(DirectOptions.AvailableParallelismFactory.class)
   @Description("Controls the amount of target parallelism the DirectRunner will use. Defaults to"
@@ -129,20 +114,6 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
       return DefaultDirectoryFactory.getHadoopDefaultFs(options)
         .map(hadoopFs -> hadoopFs + File.separator + "tmp")
         .orElse("hdfs://tmp"); // in case no configurations are provided
-    }
-  }
-
-  /**
-   * A {@link DefaultValueFactory} which locates a default directory.
-   */
-  class TargetPathFactory implements DefaultValueFactory<Map<OptionsKeyEnum, TargetPath>> {
-    @Override
-    public Map<OptionsKeyEnum, TargetPath> create(PipelineOptions options) {
-      String defaultDir = options.as(DataProcessingPipelineOptions.class).getDefaultTargetDirectory();
-
-      return Arrays.stream(OptionsKeyEnum.values())
-        .collect(Collectors.toMap(Function.identity(), i -> new TargetPath(defaultDir, i.getDefaultFileName())));
-
     }
   }
 
