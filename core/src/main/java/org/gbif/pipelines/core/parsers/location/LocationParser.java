@@ -9,7 +9,7 @@ import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.legacy.Wgs84Projection;
 import org.gbif.pipelines.core.utils.AvroDataValidator;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import static org.gbif.dwc.terms.DwcTerm.country;
 import static org.gbif.dwc.terms.DwcTerm.countryCode;
-import static org.gbif.pipelines.io.avro.IssueType.COUNTRY_CODE_INVALID;
-import static org.gbif.pipelines.io.avro.IssueType.COUNTRY_INVALID;
-import static org.gbif.pipelines.io.avro.IssueType.COUNTRY_MISMATCH;
+import static org.gbif.pipelines.io.avro.record.issue.IssueType.COUNTRY_CODE_INVALID;
+import static org.gbif.pipelines.io.avro.record.issue.IssueType.COUNTRY_INVALID;
+import static org.gbif.pipelines.io.avro.record.issue.IssueType.COUNTRY_MISMATCH;
 
 /**
  * Parses the location fields.

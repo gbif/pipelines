@@ -3,9 +3,9 @@ package org.gbif.pipelines.labs.transform;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedOccurrence;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.EventDate;
+import org.gbif.pipelines.io.avro.record.ExtendedOccurrence;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 import org.gbif.pipelines.transform.Kv2Value;
 
 import java.io.IOException;

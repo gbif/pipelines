@@ -3,7 +3,7 @@ package org.gbif.pipelines.assembling.interpretation;
 import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStep;
 import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier;
 import org.gbif.pipelines.config.InterpretationType;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.util.EnumSet;
 import java.util.List;

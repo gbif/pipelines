@@ -3,9 +3,9 @@
  */
 {
   "name": "InterpretedExtendedRecord",
-  "namespace": "org.gbif.pipelines.io.avro",
-  "doc": "Interpreted values at the occurrence record level",
+  "namespace": "org.gbif.pipelines.io.avro.record",
   "type": "record",
+  "doc": "Interpreted values at the occurrence record level",
   "fields": [
     {"name": "id", "type": "string", "doc": "The record id"},
     {"name": "basisOfRecord", "type": ["null", "string"], "default" : null },

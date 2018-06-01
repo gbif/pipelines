@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.parsers.multimedia;
 
-import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.record.multimedia.MediaType;
 
 import java.net.URI;
 import java.time.temporal.Temporal;

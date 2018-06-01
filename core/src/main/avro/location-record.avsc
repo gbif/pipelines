@@ -1,10 +1,9 @@
 /**
  * Represents the interpreted fields of terms related to location.
  */
-
 {
   "name":"LocationRecord",
-  "namespace":"org.gbif.pipelines.io.avro",
+  "namespace":"org.gbif.pipelines.io.avro.record.location",
   "type":"record",
   "doc":"A spatial region or named place.",
   "fields":[

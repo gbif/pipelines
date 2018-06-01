@@ -5,7 +5,7 @@ import org.gbif.common.parsers.BooleanParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.util.Optional;
 import java.util.function.Consumer;

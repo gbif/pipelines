@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs.indexing;
 
 import org.gbif.pipelines.config.EsProcessingPipelineOptions;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.util.HashMap;
 import java.util.Map;

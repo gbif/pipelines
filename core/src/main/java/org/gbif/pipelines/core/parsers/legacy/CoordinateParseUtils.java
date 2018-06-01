@@ -5,7 +5,7 @@ import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.io.avro.IssueType;
+import org.gbif.pipelines.io.avro.record.issue.IssueType;
 
 import java.util.ArrayList;
 import java.util.List;

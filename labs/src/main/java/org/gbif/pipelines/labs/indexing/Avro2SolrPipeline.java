@@ -4,8 +4,8 @@ import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.indexing.builder.SolrDocBuilder;
-import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
+import org.gbif.pipelines.io.avro.occurrence.TypedOccurrence;
+import org.gbif.pipelines.io.avro.occurrence.UntypedOccurrenceLowerCase;
 import org.gbif.pipelines.labs.functions.FunctionFactory;
 import org.gbif.pipelines.labs.transform.TypeDescriptors;
 

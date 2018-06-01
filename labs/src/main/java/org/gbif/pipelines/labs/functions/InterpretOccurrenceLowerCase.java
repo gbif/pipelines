@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs.functions;
 
-import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrenceLowerCase;
+import org.gbif.pipelines.io.avro.occurrence.TypedOccurrence;
+import org.gbif.pipelines.io.avro.occurrence.UntypedOccurrenceLowerCase;
 
 import org.apache.beam.sdk.transforms.SerializableFunction;
 

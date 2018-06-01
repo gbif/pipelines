@@ -1,26 +1,24 @@
 /**
  * Represents the interpreted fields of terms related to temporal.
  */
-{
-  "name": "OccurrenceIssue",
-  "namespace": "org.gbif.pipelines.io.avro",
-  "doc": "Interpretation occurrence issues ",
-  "type": "record",
-  "fields": [
-    {"name": "id", "type": "string", "doc": "The record id"},
-    { "name": "issues",
-      "type":[{
-        "type": "array",
-        "items": {
-          "name":"Validation",
-          "type": "record",
-          "namespace": "org.gbif.pipelines.io.avro",
-          "fields":[
-            {"name":"name", "type":"string"},
-            {"name":"severity", "type":"string"}
-          ]
-        }
-      }]
-    }
-  ]
-}
+[
+  {
+    "name": "Validation",
+    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "type": "record",
+    "fields":[
+      {"name":"name", "type":"string"},
+      {"name":"severity", "type":"string"}
+    ]
+  },
+  {
+    "name": "OccurrenceIssue",
+    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "doc": "Interpretation occurrence issues ",
+    "type": "record",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "The record id"},
+      { "name": "issues", "type":[{"type": "array", "items": "Validation"}]}
+    ]
+  }
+]

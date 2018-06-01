@@ -1,7 +1,7 @@
 package org.gbif.xml.occurrence.parser;
 
 import org.gbif.pipelines.core.utils.DataFileWriteBuilder;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.io.File;
 import java.io.FileOutputStream;

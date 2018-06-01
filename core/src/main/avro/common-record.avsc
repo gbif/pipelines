@@ -1,0 +1,32 @@
+/**
+ * Represents the interpreted fields of terms related to common.
+ */
+{
+  "name": "CommonRecord",
+  "namespace": "org.gbif.pipelines.io.avro.record.common",
+  "doc": "Interpreted values at the occurrence record level",
+  "type": "record",
+  "fields": [
+    {"name": "id", "type": "string", "doc": "http://rs.tdwg.org/dwc/terms/occurrenceID"},
+    {"name": "catalogNumber", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/catalogNumber"},
+    {"name": "recordNumber", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/recordNumber"},
+    {"name": "recordedBy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/recordedBy"},
+    {"name": "individualCount", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/individualCount"},
+    {"name": "organismQuantity", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/organismQuantity"},
+    {"name": "organismQuantityType", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/organismQuantityType"},
+    {"name": "sex", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
+    {"name": "lifeStage", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/lifeStage"},
+    {"name": "reproductiveCondition", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/reproductiveCondition"},
+    {"name": "behavior", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/behavior"},
+    {"name": "establishmentMeans", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/establishmentMeans"},
+    {"name": "occurrenceStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/occurrenceStatus"},
+    {"name": "preparations", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/preparations"},
+    {"name": "disposition", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/disposition"},
+    {"name": "associatedMedia", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/associatedMedia"},
+    {"name": "associatedReferences", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/associatedReferences"},
+    {"name": "associatedSequences", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/associatedSequences"},
+    {"name": "associatedTaxa", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/associatedTaxa"},
+    {"name": "otherCatalogNumbers", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/otherCatalogNumbers"},
+    {"name": "occurrenceRemarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/occurrenceRemarks"}
+  ]
+}

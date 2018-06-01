@@ -5,7 +5,7 @@
  */
 [{
   "name": "UntypedOccurrence",
-  "namespace": "org.gbif.pipelines.io.avro",
+  "namespace": "org.gbif.pipelines.io.avro.occurrence",
   "type": "record",
   "fields": [
   {"name": "occurrenceId", "type": ["null", "string"], "default" : null },
@@ -38,7 +38,7 @@
 },
 {
   "name": "TypedOccurrence",
-  "namespace": "org.gbif.pipelines.io.avro",
+  "namespace": "org.gbif.pipelines.io.avro.occurrence",
   "type": "record",
   "fields": [
     {"name": "occurrenceId", "type": ["null", "string"], "default" : null },
@@ -82,7 +82,7 @@
 },
 {
     "name": "UntypedOccurrenceLowerCase",
-    "namespace": "org.gbif.pipelines.io.avro",
+    "namespace": "org.gbif.pipelines.io.avro.occurrence",
     "type": "record",
     "fields": [
     {"name": "occurrenceid", "type": ["null", "string"], "default" : null },

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transform.validator;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.util.stream.StreamSupport;
 

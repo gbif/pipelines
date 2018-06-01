@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
 
-import org.gbif.pipelines.io.avro.IssueType;
+import org.gbif.pipelines.io.avro.record.issue.IssueType;
 
 import java.time.Month;
 import java.time.Year;

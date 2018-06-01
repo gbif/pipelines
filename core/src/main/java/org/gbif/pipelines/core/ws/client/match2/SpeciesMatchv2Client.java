@@ -11,7 +11,7 @@ import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.BaseServiceClient;
 import org.gbif.pipelines.core.ws.config.Service;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.nio.file.Paths;
 import java.util.Comparator;

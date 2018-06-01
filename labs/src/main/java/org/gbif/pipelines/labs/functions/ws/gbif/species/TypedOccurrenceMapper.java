@@ -1,6 +1,6 @@
 package org.gbif.pipelines.labs.functions.ws.gbif.species;
 
-import org.gbif.pipelines.io.avro.TypedOccurrence;
+import org.gbif.pipelines.io.avro.occurrence.TypedOccurrence;
 
 class TypedOccurrenceMapper {
 

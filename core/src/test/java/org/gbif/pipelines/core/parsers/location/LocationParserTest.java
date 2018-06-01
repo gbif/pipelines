@@ -5,8 +5,8 @@ import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.core.ws.MockServer;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueType;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.issue.IssueType;
 
 import java.io.IOException;
 import java.util.Arrays;

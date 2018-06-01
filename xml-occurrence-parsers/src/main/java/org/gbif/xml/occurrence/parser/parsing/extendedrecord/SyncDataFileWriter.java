@@ -1,6 +1,6 @@
 package org.gbif.xml.occurrence.parser.parsing.extendedrecord;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.io.IOException;
 

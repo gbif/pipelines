@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs.transform;
 
-import org.gbif.pipelines.io.avro.TypedOccurrence;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
+import org.gbif.pipelines.io.avro.occurrence.TypedOccurrence;
+import org.gbif.pipelines.io.avro.occurrence.UntypedOccurrence;
 
 import org.apache.beam.sdk.values.TypeDescriptor;
 

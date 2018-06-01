@@ -3,9 +3,9 @@ package org.gbif.pipelines.core.parsers.multimedia;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueType;
-import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.issue.IssueType;
+import org.gbif.pipelines.io.avro.record.multimedia.MediaType;
 
 import java.util.List;
 import java.util.Map;

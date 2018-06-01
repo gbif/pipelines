@@ -1,6 +1,6 @@
 package org.gbif.xml.occurrence.parser;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ConverterTask;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ExecutorPool;
 import org.gbif.xml.occurrence.parser.parsing.extendedrecord.ParserFileUtils;

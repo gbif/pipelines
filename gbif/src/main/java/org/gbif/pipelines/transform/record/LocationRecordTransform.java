@@ -4,10 +4,10 @@ import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.LocationInterpreter;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.record.issue.Validation;
+import org.gbif.pipelines.io.avro.record.location.LocationRecord;
 import org.gbif.pipelines.mapper.LocationRecordMapper;
 import org.gbif.pipelines.transform.RecordTransform;
 

@@ -6,9 +6,9 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueType;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.record.issue.IssueType;
 
 import java.net.URI;
 import java.util.Objects;

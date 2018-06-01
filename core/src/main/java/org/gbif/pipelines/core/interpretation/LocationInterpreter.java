@@ -10,9 +10,9 @@ import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.LocationParser;
 import org.gbif.pipelines.core.parsers.location.ParsedLocation;
 import org.gbif.pipelines.core.utils.StringUtil;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueType;
-import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.issue.IssueType;
+import org.gbif.pipelines.io.avro.record.location.LocationRecord;
 
 import java.util.Objects;
 import java.util.function.Function;

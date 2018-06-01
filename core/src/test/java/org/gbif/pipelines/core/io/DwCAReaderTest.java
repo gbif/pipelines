@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.io;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.io.File;
 import java.io.IOException;

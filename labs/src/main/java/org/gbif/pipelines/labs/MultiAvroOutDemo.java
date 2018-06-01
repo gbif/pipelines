@@ -1,8 +1,8 @@
 package org.gbif.pipelines.labs;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
+import org.gbif.pipelines.io.avro.occurrence.UntypedOccurrence;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import org.apache.avro.Schema;
 import org.apache.beam.sdk.Pipeline;

@@ -1,11 +1,11 @@
 package org.gbif.pipelines.assembling.interpretation.steps;
 
 import org.gbif.pipelines.config.InterpretationType;
-import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.record.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.record.location.LocationRecord;
+import org.gbif.pipelines.io.avro.record.multimedia.MultimediaRecord;
+import org.gbif.pipelines.io.avro.record.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.record.temporal.TemporalRecord;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
 import org.gbif.pipelines.transform.record.LocationRecordTransform;
 import org.gbif.pipelines.transform.record.MultimediaRecordTransform;

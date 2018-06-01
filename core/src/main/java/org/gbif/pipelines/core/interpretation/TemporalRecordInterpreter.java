@@ -6,9 +6,9 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.record.temporal.EventDate;
+import org.gbif.pipelines.io.avro.record.temporal.TemporalRecord;
 
 import java.time.LocalDate;
 import java.time.Month;

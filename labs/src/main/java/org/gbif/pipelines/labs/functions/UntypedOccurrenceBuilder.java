@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs.functions;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UntypedOccurrence;
+import org.gbif.pipelines.io.avro.occurrence.UntypedOccurrence;
+import org.gbif.pipelines.io.avro.record.ExtendedRecord;
 
 import java.beans.BeanInfo;
 import java.beans.Introspector;
