@@ -2,8 +2,8 @@ package org.gbif.pipelines.core.parsers.location;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.geospatial.LatLng;
-import org.gbif.pipelines.core.parsers.InterpretationIssue;
-import org.gbif.pipelines.core.parsers.ParsedField;
+import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.ws.MockServer;
 import org.gbif.pipelines.io.avro.IssueType;
 

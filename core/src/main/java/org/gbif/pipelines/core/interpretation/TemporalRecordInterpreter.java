@@ -4,32 +4,34 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.interpretation.Interpretation.Trace;
-import org.gbif.pipelines.core.parsers.TemporalParser;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
+import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
-  static TemporalRecordInterpreter interpretTemporal(TemporalRecord temporalRecord) {
+  BiFunction<ExtendedRecord, Term, String> GET_VALUE_FUNC =
+    (record, dwcTerm) -> Optional.ofNullable(record.getCoreTerms().get(dwcTerm.qualifiedName())).orElse("");
+
+  static TemporalRecordInterpreter interpretEventDate(TemporalRecord temporalRecord) {
     return (ExtendedRecord extendedRecord) -> {
 
-      BiFunction<ExtendedRecord, Term, String> getValueFunc =
-        (record, dwcTerm) -> Optional.ofNullable(record.getCoreTerms().get(dwcTerm.qualifiedName())).orElse("");
-
       // Interpretation of the main dates
-      String rawYear = getValueFunc.apply(extendedRecord, DwcTerm.year);
-      String rawMonth = getValueFunc.apply(extendedRecord, DwcTerm.month);
-      String rawDay = getValueFunc.apply(extendedRecord, DwcTerm.day);
-      String rawEventDate = getValueFunc.apply(extendedRecord, DwcTerm.eventDate);
+      String rawYear = GET_VALUE_FUNC.apply(extendedRecord, DwcTerm.year);
+      String rawMonth = GET_VALUE_FUNC.apply(extendedRecord, DwcTerm.month);
+      String rawDay = GET_VALUE_FUNC.apply(extendedRecord, DwcTerm.day);
+      String rawEventDate = GET_VALUE_FUNC.apply(extendedRecord, DwcTerm.eventDate);
 
       // Call temporal parser
       ParsedTemporalDates temporalDates = TemporalParser.parse(rawYear, rawMonth, rawDay, rawEventDate);
@@ -45,26 +47,56 @@ public interface TemporalRecordInterpreter extends Function<ExtendedRecord, Inte
 
       temporalRecord.setEventDate(eventDate);
 
-      // create interpretation
+      // Create interpretation
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       // Map issues to Interpretation
-      temporalDates.getIssueList()
-        .forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.eventDate.name(), issue)));
+      temporalDates.getIssueList().forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.eventDate.name(), issue)));
+
+      return interpretation;
+    };
+  }
+
+  static TemporalRecordInterpreter interpretModifiedDate(TemporalRecord temporalRecord) {
+    return (ExtendedRecord extendedRecord) -> {
+
+      // Create interpretation
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       // Interpretation of the modified date
-      ParsedTemporalDates temporalModifiedDate =
-        TemporalParser.parseRawDate(getValueFunc.apply(extendedRecord, DcTerm.modified));
-      temporalModifiedDate.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setModified);
-      temporalModifiedDate.getIssueList()
-        .forEach(issue -> interpretation.withValidation(Trace.of(DcTerm.modified.name(), issue)));
+      ParsedTemporalDates modifiedDate = TemporalParser.parse(GET_VALUE_FUNC.apply(extendedRecord, DcTerm.modified));
+      modifiedDate.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setModified);
+      modifiedDate.getIssueList().forEach(issue -> interpretation.withValidation(Trace.of(DcTerm.modified.name(), issue)));
+
+      return interpretation;
+    };
+  }
+
+  static TemporalRecordInterpreter interpretDateIdentified(TemporalRecord temporalRecord) {
+    return (ExtendedRecord extendedRecord) -> {
+
+      // Create interpretation
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       // Interpretation of the dateIdentified
-      ParsedTemporalDates temporalDateIdentified =
-        TemporalParser.parseRawDate(getValueFunc.apply(extendedRecord, DwcTerm.dateIdentified));
-      temporalDateIdentified.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setDateIdentified);
-      temporalDateIdentified.getIssueList()
-        .forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.dateIdentified.name(), issue)));
+      ParsedTemporalDates identifiedDate = TemporalParser.parse(GET_VALUE_FUNC.apply(extendedRecord, DwcTerm.dateIdentified));
+      identifiedDate.getFrom().map(Temporal::toString).ifPresent(temporalRecord::setDateIdentified);
+      identifiedDate.getIssueList().forEach(issue -> interpretation.withValidation(Trace.of(DwcTerm.dateIdentified.name(), issue)));
+
+      return interpretation;
+    };
+  }
+
+  static TemporalRecordInterpreter interpretDayOfYear(TemporalRecord temporalRecord) {
+    return (ExtendedRecord extendedRecord) -> {
+
+      // Create interpretation
+      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+
+      // Interpretation of endDayOfYear and startDayOfYear
+      Optional<LocalDate> year = Optional.ofNullable(temporalRecord.getYear()).map(y -> LocalDate.of(y, 1, 1));
+      year.map(x -> x.with(TemporalAdjusters.lastDayOfYear())).ifPresent(x->temporalRecord.setEndDayOfYear(x.getDayOfYear()));
+      year.map(x -> x.with(TemporalAdjusters.firstDayOfYear())).ifPresent(x->temporalRecord.setStartDayOfYear(x.getDayOfYear()));
 
       return interpretation;
     };

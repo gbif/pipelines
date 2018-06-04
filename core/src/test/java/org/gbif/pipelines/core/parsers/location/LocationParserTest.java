@@ -1,8 +1,8 @@
 package org.gbif.pipelines.core.parsers.location;
 
 import org.gbif.api.vocabulary.Country;
-import org.gbif.pipelines.core.parsers.InterpretationIssue;
-import org.gbif.pipelines.core.parsers.ParsedField;
+import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
+import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.core.ws.MockServer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -24,17 +24,17 @@ public class LocationParserTest extends MockServer {
   public void givenCountryWhenParsedThenReturnCountry() {
     // only with country
     ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").build();
-    ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
 
     // only with country code
     extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("ES").build();
-    result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
 
     // with country and country code
     extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
-    result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
                         .stream()
@@ -47,7 +47,7 @@ public class LocationParserTest extends MockServer {
   public void givenInvalidCountryWhenParsedThenReturnIssue() {
     // only with country
     ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("foo").build();
-    ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertNull(result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
@@ -61,7 +61,7 @@ public class LocationParserTest extends MockServer {
   public void givenInvalidCountryCodeWhenParsedThenReturnIssue() {
     // only with country code
     ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("foo").build();
-    ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertNull(result.getResult().getCountry());
     Assert.assertTrue(result.getIssues()
@@ -78,7 +78,7 @@ public class LocationParserTest extends MockServer {
     // only with coords
     ExtendedRecord extendedRecord =
       ExtendedRecordCustomBuilder.create().id(TEST_ID).decimalLatitude("30.2").decimalLongitude("100.2344349").build();
-    ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
     Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
@@ -105,7 +105,7 @@ public class LocationParserTest extends MockServer {
       .verbatimLatitude("30.2")
       .verbatimLongitude("100.2344349")
       .build();
-    ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
     Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
@@ -122,7 +122,7 @@ public class LocationParserTest extends MockServer {
 
     // only with verbatim latitude and longitude
     extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).verbatimCoords("30.2, 100.2344349").build();
-    result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
     Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
@@ -150,7 +150,7 @@ public class LocationParserTest extends MockServer {
       .decimalLatitude(String.valueOf(LATITUDE_CANADA))
       .decimalLongitude(String.valueOf(LONGITUDE_CANADA))
       .build();
-    ParsedField<ParsedLocation> result = LocationParser.parseCountryAndCoordinates(extendedRecord, WS_PROPERTIES_PATH);
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, WS_PROPERTIES_PATH);
     Assert.assertTrue(result.isSuccessful());
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
     Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLat(), 0);
@@ -165,12 +165,12 @@ public class LocationParserTest extends MockServer {
 
   @Test(expected = NullPointerException.class)
   public void nullArgs() {
-    LocationParser.parseCountryAndCoordinates(null, null);
+    LocationParser.parse(null, null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void invalidArgs() {
-    LocationParser.parseCountryAndCoordinates(new ExtendedRecord(), null);
+    LocationParser.parse(new ExtendedRecord(), null);
   }
 
 }

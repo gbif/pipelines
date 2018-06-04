@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.parsers;
+package org.gbif.pipelines.core.parsers.common;
 
 import java.util.ArrayList;
 import java.util.List;

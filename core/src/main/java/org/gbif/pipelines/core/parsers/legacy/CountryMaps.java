@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,7 +39,7 @@ public class CountryMaps {
 
   static {
     try (InputStream in = CountryMaps.class.getClassLoader().getResourceAsStream(CONFUSED_COUNTRY_FILE);
-         BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+         BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
       String nextLine;
       while ((nextLine = reader.readLine()) != null) {
         if (!nextLine.isEmpty() && !nextLine.startsWith("#")) {
@@ -46,10 +47,8 @@ public class CountryMaps {
           Country countryA = Country.fromIsoCode(countries[0].trim().toUpperCase());
           Country countryB = Country.fromIsoCode(countries[1].trim().toUpperCase());
           boolean addIssue = Boolean.parseBoolean(countries[2].trim());
-          LOG.debug("Adding [{}][{}] ({}) pair to confused country matches.",
-                   countryA,
-                   countryB,
-                   addIssue ? "with issue" : "without issue");
+          LOG.debug("Adding [{}][{}] ({}) pair to confused country matches.", countryA, countryB,
+                    addIssue ? "with issue" : "without issue");
           addConfusedCountry(countryA, countryB, addIssue);
           addConfusedCountry(countryB, countryA, addIssue);
         }
