@@ -2,7 +2,7 @@ package org.gbif.pipelines.assembling.interpretation;
 
 import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier;
 import org.gbif.pipelines.assembling.interpretation.steps.PipelineTargetPaths;
-import org.gbif.pipelines.assembling.utils.HdfsUtils;
+import org.gbif.pipelines.assembling.utils.FsUtils;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -47,6 +47,7 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
   private static final String SNAPPY = "snappy";
   private static final String BZIP2 = "bzip2";
   private static final String XZ = "xz";
+  private static final String NULL = "null";
   private static final String CODEC_SEPARATOR = "_";
 
   private final EnumMap<InterpretationType, InterpretationStepSupplier> stepsMap =
@@ -95,26 +96,20 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
       PCollectionTuple uniqueTuple = verbatimRecords.apply(uniquenessTransform);
       return uniqueTuple.get(uniquenessTransform.getDataTag());
     };
-
   }
 
-  private static PipelineTargetPaths createPaths(
-    DataProcessingPipelineOptions options, InterpretationType interpretationType
-  ) {
+  private static PipelineTargetPaths createPaths(DataProcessingPipelineOptions options, InterpretationType interType) {
     PipelineTargetPaths paths = new PipelineTargetPaths();
 
-    paths.setDataTargetPath(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
-                                                options.getDatasetId(),
-                                                options.getAttempt().toString(),
-                                                interpretationType.name().toLowerCase(),
-                                                DATA_FILENAME).toString());
+    String targetDirectory = options.getDefaultTargetDirectory();
+    String datasetId = options.getDatasetId();
+    String attempt = options.getAttempt().toString();
+    String type = interType.name().toLowerCase();
 
-    paths.setIssuesTargetPath(HdfsUtils.buildPath(options.getDefaultTargetDirectory(),
-                                                  options.getDatasetId(),
-                                                  options.getAttempt().toString(),
-                                                  interpretationType.name().toLowerCase(),
-                                                  ISSUES_FOLDER,
-                                                  ISSUES_FILENAME).toString());
+    String path = FsUtils.buildPathString(targetDirectory, datasetId, attempt, type);
+
+    paths.setDataTargetPath(FsUtils.buildPathString(path, DATA_FILENAME));
+    paths.setIssuesTargetPath(FsUtils.buildPathString(path, ISSUES_FOLDER, ISSUES_FILENAME));
 
     paths.setTempDir(options.getHdfsTempLocation());
 
@@ -122,17 +117,8 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
   }
 
   private static CodecFactory parseAvroCodec(String codec) {
-    if (Strings.isNullOrEmpty(codec)) {
-      return null;
-    }
-
-    if (codec.toLowerCase().startsWith(DEFLATE)) {
-      List<String> pieces = Splitter.on(CODEC_SEPARATOR).splitToList(codec);
-      int compressionLevel = CodecFactory.DEFAULT_DEFLATE_LEVEL;
-      if (!pieces.isEmpty()) {
-        compressionLevel = Integer.parseInt(pieces.get(1));
-      }
-      return CodecFactory.deflateCodec(compressionLevel);
+    if (Strings.isNullOrEmpty(codec) || NULL.equalsIgnoreCase(codec)) {
+      return CodecFactory.nullCodec();
     }
 
     if (SNAPPY.equalsIgnoreCase(codec)) {
@@ -143,10 +129,19 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
       return CodecFactory.bzip2Codec();
     }
 
+    if (codec.toLowerCase().startsWith(DEFLATE)) {
+      List<String> pieces = Splitter.on(CODEC_SEPARATOR).splitToList(codec);
+      int compressionLevel = CodecFactory.DEFAULT_DEFLATE_LEVEL;
+      if (pieces.size() > 1) {
+        compressionLevel = Integer.parseInt(pieces.get(1));
+      }
+      return CodecFactory.deflateCodec(compressionLevel);
+    }
+
     if (codec.toLowerCase().startsWith(XZ)) {
       List<String> pieces = Splitter.on(CODEC_SEPARATOR).splitToList(codec);
       int compressionLevel = CodecFactory.DEFAULT_XZ_LEVEL;
-      if (!pieces.isEmpty()) {
+      if (pieces.size() > 1) {
         compressionLevel = Integer.parseInt(pieces.get(1));
       }
       return CodecFactory.xzCodec(compressionLevel);
