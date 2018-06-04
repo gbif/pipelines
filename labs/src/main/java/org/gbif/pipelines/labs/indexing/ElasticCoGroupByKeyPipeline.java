@@ -3,11 +3,11 @@ package org.gbif.pipelines.labs.indexing;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.EsProcessingPipelineOptions;
-import org.gbif.pipelines.io.avro.record.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.record.location.LocationRecord;
-import org.gbif.pipelines.io.avro.record.multimedia.MultimediaRecord;
-import org.gbif.pipelines.io.avro.record.taxon.TaxonRecord;
-import org.gbif.pipelines.io.avro.record.temporal.TemporalRecord;
+import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.location.LocationRecord;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
 
 import org.apache.beam.sdk.Pipeline;

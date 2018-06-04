@@ -1,8 +1,8 @@
 package org.gbif.pipelines.mapper;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
-import org.gbif.pipelines.io.avro.record.temporal.TemporalRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 
 import java.util.function.Function;
 

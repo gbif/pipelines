@@ -2,8 +2,8 @@ package org.gbif.pipelines.transform.record;
 
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
-import org.gbif.pipelines.io.avro.record.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.transform.Kv2Value;
 
 import java.util.Arrays;

@@ -4,7 +4,7 @@
  */
 {
   "name": "ExtendedRecord",
-  "namespace": "org.gbif.pipelines.io.avro.record",
+  "namespace": "org.gbif.pipelines.io.avro",
   "type": "record",
   "doc": "A container for an extended DwC record (core plus extension data for a single record)",
   "fields": [

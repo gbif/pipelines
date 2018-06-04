@@ -1,7 +1,7 @@
 [
   {
     "name" : "Rank",
-    "namespace" : "org.gbif.pipelines.io.avro.record.taxon",
+    "namespace" : "org.gbif.pipelines.io.avro.taxon",
     "type" : "enum",
     "symbols" : [
       "DOMAIN", "SUPERKINGDOM", "KINGDOM", "SUBKINGDOM", "INFRAKINGDOM", "SUPERPHYLUM", "PHYLUM", "SUBPHYLUM", "INFRAPHYLUM",
@@ -17,7 +17,7 @@
   },
   {
     "name" : "Status",
-    "namespace" : "org.gbif.pipelines.io.avro.record.taxon",
+    "namespace" : "org.gbif.pipelines.io.avro.taxon",
     "type" : "enum",
     "symbols" : [
       "ACCEPTED", "DOUBTFUL", "SYNONYM", "HETEROTYPIC_SYNONYM", "HOMOTYPIC_SYNONYM", "PROPARTE_SYNONYM", "MISAPPLIED",
@@ -26,7 +26,7 @@
   },
   {
     "name" : "MatchType",
-    "namespace" : "org.gbif.pipelines.io.avro.record.taxon",
+    "namespace" : "org.gbif.pipelines.io.avro.taxon",
     "type" : "enum",
     "symbols" : [
       "EXACT", "FUZZY", "HIGHERRANK", "NONE"
@@ -34,7 +34,7 @@
   },
   {
     "name" : "Nomenclature",
-    "namespace" : "org.gbif.pipelines.io.avro.record.taxon",
+    "namespace" : "org.gbif.pipelines.io.avro.taxon",
     "type" : "record",
     "fields" : [
       {"name" : "id", "type" : ["null", "string"], "default" : null},
@@ -43,7 +43,7 @@
   },
   {
     "name" : "RankedName",
-    "namespace" : "org.gbif.pipelines.io.avro.record.taxon",
+    "namespace" : "org.gbif.pipelines.io.avro.taxon",
     "type" : "record",
     "fields" : [
       {"name" : "key", "type" : ["null", "int"], "default" : null},
@@ -53,7 +53,7 @@
   },
   {
     "name" : "TaxonRecord",
-    "namespace" : "org.gbif.pipelines.io.avro.record.taxon",
+    "namespace" : "org.gbif.pipelines.io.avro.taxon",
     "type" : "record",
     "doc" : "A taxonomic record",
     "fields" : [

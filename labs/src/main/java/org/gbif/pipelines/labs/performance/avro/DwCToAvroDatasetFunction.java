@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs.performance.avro;
 
 import org.gbif.pipelines.core.io.DwCAReader;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.labs.performance.CompressionRequest;
 import org.gbif.pipelines.labs.performance.CompressionResult;
 

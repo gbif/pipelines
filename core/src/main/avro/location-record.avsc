@@ -3,7 +3,7 @@
  */
 {
   "name":"LocationRecord",
-  "namespace":"org.gbif.pipelines.io.avro.record.location",
+  "namespace":"org.gbif.pipelines.io.avro.location",
   "type":"record",
   "doc":"A spatial region or named place.",
   "fields":[

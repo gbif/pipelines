@@ -4,7 +4,7 @@ import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulator;
 import org.gbif.pipelines.core.parsers.temporal.accumulator.ChronoAccumulatorConverter;
 import org.gbif.pipelines.core.parsers.temporal.parser.ParserRawDateTime;
 import org.gbif.pipelines.core.parsers.temporal.utils.DelimiterUtils;
-import org.gbif.pipelines.io.avro.record.issue.IssueType;
+import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

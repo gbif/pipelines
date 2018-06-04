@@ -1,7 +1,7 @@
 package org.gbif.xml.occurrence.parser.parsing.extendedrecord;
 
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.xml.occurrence.parser.model.RawOccurrenceRecord;
 
 import java.util.Optional;

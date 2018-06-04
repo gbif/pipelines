@@ -1,13 +1,13 @@
 package org.gbif.pipelines.labs.mapper;
 
-import org.gbif.pipelines.io.avro.record.EventDate;
-import org.gbif.pipelines.io.avro.record.ExtendedOccurrence;
-import org.gbif.pipelines.io.avro.record.ExtendedOccurrence.Builder;
-import org.gbif.pipelines.io.avro.record.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.record.location.LocationRecord;
-import org.gbif.pipelines.io.avro.record.multimedia.MultimediaRecord;
-import org.gbif.pipelines.io.avro.record.taxon.TaxonRecord;
-import org.gbif.pipelines.io.avro.record.temporal.TemporalRecord;
+import org.gbif.pipelines.io.avro.EventDate;
+import org.gbif.pipelines.io.avro.ExtendedOccurrence;
+import org.gbif.pipelines.io.avro.ExtendedOccurrence.Builder;
+import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.location.LocationRecord;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 
 import java.util.Optional;
 
@@ -121,7 +121,7 @@ public class ExtendedOccurrenceMapper {
     // TODO: NO FIELDS
   }
 
-  private static EventDate mapEventDate(org.gbif.pipelines.io.avro.record.temporal.EventDate eventDate){
+  private static EventDate mapEventDate(org.gbif.pipelines.io.avro.temporal.EventDate eventDate){
     return EventDate.newBuilder()
       .setGte(eventDate.getGte())
       .setLte(eventDate.getLte())

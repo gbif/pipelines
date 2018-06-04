@@ -3,10 +3,10 @@ package org.gbif.pipelines.transform.record;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.MultimediaInterpreter;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
-import org.gbif.pipelines.io.avro.record.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.record.issue.Validation;
-import org.gbif.pipelines.io.avro.record.multimedia.MultimediaRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.issue.Validation;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;

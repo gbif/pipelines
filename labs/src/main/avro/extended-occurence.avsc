@@ -1,7 +1,7 @@
 [
   {
     "name":"EventDate",
-    "namespace":"org.gbif.pipelines.io.avro.record",
+    "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "doc": "http://rs.tdwg.org/dwc/terms/eventDate",
     "fields":[
@@ -11,7 +11,7 @@
   },
   {
     "name":"ExtendedOccurrence",
-    "namespace":"org.gbif.pipelines.io.avro.record",
+    "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
       {"name":"verbatimLocality","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/verbatimLocality"},

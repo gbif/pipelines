@@ -1,6 +1,6 @@
 package org.gbif.pipelines.labs.functions.ws.gbif.species;
 
-import org.gbif.pipelines.io.avro.occurrence.TypedOccurrence;
+import org.gbif.pipelines.io.avro.TypedOccurrence;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

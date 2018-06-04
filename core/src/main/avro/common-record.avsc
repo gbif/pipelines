@@ -3,7 +3,7 @@
  */
 {
   "name": "CommonRecord",
-  "namespace": "org.gbif.pipelines.io.avro.record.common",
+  "namespace": "org.gbif.pipelines.io.avro.common",
   "doc": "Interpreted values at the occurrence record level",
   "type": "record",
   "fields": [

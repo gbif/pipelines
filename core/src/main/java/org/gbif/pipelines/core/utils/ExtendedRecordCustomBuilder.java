@@ -5,7 +5,7 @@ import org.gbif.dwc.terms.AcTerm;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.ArrayList;
 import java.util.HashMap;

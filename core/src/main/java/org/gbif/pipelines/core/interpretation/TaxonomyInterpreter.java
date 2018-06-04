@@ -8,9 +8,9 @@ import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.core.utils.AvroDataValidator;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.match2.SpeciesMatchv2Client;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
-import org.gbif.pipelines.io.avro.record.issue.IssueType;
-import org.gbif.pipelines.io.avro.record.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.issue.IssueType;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
 import java.util.function.Function;
 

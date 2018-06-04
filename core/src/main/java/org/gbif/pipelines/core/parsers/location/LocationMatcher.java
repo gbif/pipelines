@@ -9,7 +9,7 @@ import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.legacy.CountryMaps;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.geocode.GeocodeServiceClient;
-import org.gbif.pipelines.io.avro.record.issue.IssueType;
+import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.util.ArrayList;
 import java.util.Arrays;

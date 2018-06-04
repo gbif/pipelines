@@ -1,7 +1,7 @@
 [
   {
     "name": "LineageType",
-    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "namespace": "org.gbif.pipelines.io.avro.issue",
     "type": "enum",
     "symbols": [
       "OTHERS", "SET_TO_NULL", "SET_COUNTRYCODE_FROM_COUNTRY"
@@ -9,7 +9,7 @@
   },
   {
     "name": "IssueType",
-    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "namespace": "org.gbif.pipelines.io.avro.issue",
     "type": "enum",
     "symbols": [
       "DAY_OUT_OF_RANGE", "PARSE_ERROR", "ZERO_COORDINATE", "COORDINATE_OUT_OF_RANGE", "COORDINATE_INVALID",
@@ -31,7 +31,7 @@
   },
   {
     "name": "Issue",
-    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "namespace": "org.gbif.pipelines.io.avro.issue",
     "type": "record",
     "fields": [
       {"name": "remark", "type": "string", "default" : "null"},
@@ -40,7 +40,7 @@
   },
   {
     "name": "Lineage",
-    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "namespace": "org.gbif.pipelines.io.avro.issue",
     "type": "record",
     "fields": [
       {"name": "remark", "type": "string"},
@@ -49,7 +49,7 @@
   },
   {
     "name": "IssueLineageRecord",
-    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "namespace": "org.gbif.pipelines.io.avro.issue",
     "type": "record",
     "fields": [
       {"name": "id", "type": "string"},

@@ -3,7 +3,7 @@
  */
 {
   "name": "InterpretedExtendedRecord",
-  "namespace": "org.gbif.pipelines.io.avro.record",
+  "namespace": "org.gbif.pipelines.io.avro",
   "type": "record",
   "doc": "Interpreted values at the occurrence record level",
   "fields": [

@@ -5,7 +5,7 @@
 [
   {
     "name":"EventDate",
-    "namespace":"org.gbif.pipelines.io.avro.record.temporal",
+    "namespace":"org.gbif.pipelines.io.avro.temporal",
     "type":"record",
     "doc": "http://rs.tdwg.org/dwc/terms/eventDate",
     "fields":[
@@ -15,7 +15,7 @@
   },
   {
     "name": "TemporalRecord",
-    "namespace": "org.gbif.pipelines.io.avro.record.temporal",
+    "namespace": "org.gbif.pipelines.io.avro.temporal",
     "type": "record",
     "doc": "A container for temporal fields of DarwinCore that have been interpreted.",
     "fields": [

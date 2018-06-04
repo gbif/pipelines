@@ -3,8 +3,8 @@ package org.gbif.pipelines.transform.record;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
-import org.gbif.pipelines.io.avro.record.location.LocationRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.location.LocationRecord;
 import org.gbif.pipelines.transform.Kv2Value;
 
 import java.io.IOException;

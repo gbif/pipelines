@@ -2,15 +2,15 @@
 package org.gbif.pipelines.labs.transform;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.io.avro.record.ExtendedOccurrence;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
-import org.gbif.pipelines.io.avro.record.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.record.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.record.issue.Validation;
-import org.gbif.pipelines.io.avro.record.location.LocationRecord;
-import org.gbif.pipelines.io.avro.record.multimedia.MultimediaRecord;
-import org.gbif.pipelines.io.avro.record.taxon.TaxonRecord;
-import org.gbif.pipelines.io.avro.record.temporal.TemporalRecord;
+import org.gbif.pipelines.io.avro.ExtendedOccurrence;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.issue.Validation;
+import org.gbif.pipelines.io.avro.location.LocationRecord;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
 import org.gbif.pipelines.transform.RecordTransform;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.parsers.temporal.accumulator;
 
 import org.gbif.pipelines.core.parsers.temporal.utils.ParsedUnitUtils;
-import org.gbif.pipelines.io.avro.record.issue.IssueType;
+import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

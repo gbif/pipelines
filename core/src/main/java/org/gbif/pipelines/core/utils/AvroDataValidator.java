@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.utils;
 
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Objects;
 

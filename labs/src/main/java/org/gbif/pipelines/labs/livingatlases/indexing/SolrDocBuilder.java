@@ -1,6 +1,6 @@
 package org.gbif.pipelines.labs.livingatlases.indexing;
 
-import org.gbif.pipelines.io.avro.occurrence.UntypedOccurrence;
+import org.gbif.pipelines.io.avro.UntypedOccurrence;
 
 import org.apache.avro.Schema;
 import org.apache.beam.sdk.transforms.DoFn;

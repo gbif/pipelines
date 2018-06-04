@@ -3,9 +3,9 @@ package org.gbif.pipelines.labs;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
-import org.gbif.pipelines.io.avro.record.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.record.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.record.TaxonRecordTransform;
 

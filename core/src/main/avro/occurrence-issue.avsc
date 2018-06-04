@@ -4,7 +4,7 @@
 [
   {
     "name": "Validation",
-    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "namespace": "org.gbif.pipelines.io.avro.issue",
     "type": "record",
     "fields":[
       {"name":"name", "type":"string"},
@@ -13,7 +13,7 @@
   },
   {
     "name": "OccurrenceIssue",
-    "namespace": "org.gbif.pipelines.io.avro.record.issue",
+    "namespace": "org.gbif.pipelines.io.avro.issue",
     "doc": "Interpretation occurrence issues ",
     "type": "record",
     "fields": [

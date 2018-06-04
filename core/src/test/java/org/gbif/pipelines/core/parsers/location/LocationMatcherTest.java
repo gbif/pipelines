@@ -5,7 +5,7 @@ import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.ws.MockServer;
-import org.gbif.pipelines.io.avro.record.issue.IssueType;
+import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.io.IOException;
 import java.util.stream.Collectors;

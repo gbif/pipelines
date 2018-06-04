@@ -19,7 +19,7 @@ import org.gbif.common.parsers.TypeStatusParser;
 import org.gbif.common.parsers.core.EnumParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Map;
 import java.util.Optional;

@@ -4,7 +4,7 @@ import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.legacy.CoordinateParseUtils;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.List;
 import java.util.function.Function;

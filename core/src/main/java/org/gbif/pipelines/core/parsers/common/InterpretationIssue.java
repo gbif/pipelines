@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.parsers.common;
 
 import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.io.avro.record.issue.IssueType;
+import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.util.Arrays;
 import java.util.List;

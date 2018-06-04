@@ -4,10 +4,10 @@ import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.TaxonomyInterpreter;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
-import org.gbif.pipelines.io.avro.record.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.record.issue.Validation;
-import org.gbif.pipelines.io.avro.record.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.issue.Validation;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;

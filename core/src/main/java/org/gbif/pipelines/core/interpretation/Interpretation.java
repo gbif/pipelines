@@ -1,9 +1,9 @@
 package org.gbif.pipelines.core.interpretation;
 
-import org.gbif.pipelines.io.avro.record.issue.Issue;
-import org.gbif.pipelines.io.avro.record.issue.IssueType;
-import org.gbif.pipelines.io.avro.record.issue.Lineage;
-import org.gbif.pipelines.io.avro.record.issue.LineageType;
+import org.gbif.pipelines.io.avro.issue.Issue;
+import org.gbif.pipelines.io.avro.issue.IssueType;
+import org.gbif.pipelines.io.avro.issue.Lineage;
+import org.gbif.pipelines.io.avro.issue.LineageType;
 
 import java.io.Serializable;
 import java.util.ArrayList;

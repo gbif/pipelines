@@ -5,7 +5,7 @@ import org.gbif.pipelines.assembling.interpretation.steps.PipelineTargetPaths;
 import org.gbif.pipelines.assembling.utils.HdfsUtils;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.config.InterpretationType;
-import org.gbif.pipelines.io.avro.record.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 
 import java.util.EnumMap;
