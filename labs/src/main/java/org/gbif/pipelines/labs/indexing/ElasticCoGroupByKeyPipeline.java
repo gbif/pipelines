@@ -3,12 +3,14 @@ package org.gbif.pipelines.labs.indexing;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.EsProcessingPipelineOptions;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.location.LocationRecord;
 import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
-import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
+
+import java.util.function.BiConsumer;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
@@ -61,11 +63,12 @@ public class ElasticCoGroupByKeyPipeline {
     LOG.info("Starting indexing pipeline");
 
     LOG.info("Added step 0: Creating pipeline options");
-    final TupleTag<InterpretedExtendedRecord> extendedRecordTag = new TupleTag<InterpretedExtendedRecord>() {};
+    final TupleTag<InterpretedExtendedRecord> interRecordTag = new TupleTag<InterpretedExtendedRecord>() {};
     final TupleTag<TemporalRecord> temporalTag = new TupleTag<TemporalRecord>() {};
     final TupleTag<LocationRecord> locationTag = new TupleTag<LocationRecord>() {};
     final TupleTag<TaxonRecord> taxonomyTag = new TupleTag<TaxonRecord>() {};
     final TupleTag<MultimediaRecord> multimediaTag = new TupleTag<MultimediaRecord>() {};
+    final TupleTag<ExtendedRecord> extendedRecordTag = new TupleTag<ExtendedRecord>() {};
 
     final String pathIn = options.getInputFile();
 
@@ -74,44 +77,51 @@ public class ElasticCoGroupByKeyPipeline {
     final String pathLocation = pathIn + "location/interpreted*.avro";
     final String pathTaxonomy = pathIn + "taxonomy/interpreted*.avro";
     final String pathMultimedia = pathIn + "multimedia/interpreted*.avro";
+    final String pathExtended = pathIn + "verbatim*.avro";
 
     Pipeline p = Pipeline.create(options);
     Coders.registerAvroCoders(p, InterpretedExtendedRecord.class, LocationRecord.class, TemporalRecord.class);
-    Coders.registerAvroCoders(p, TaxonRecord.class, MultimediaRecord.class);
+    Coders.registerAvroCoders(p, TaxonRecord.class, MultimediaRecord.class, ExtendedRecord.class);
 
     LOG.info("Adding step 1: Reading interpreted avro files");
-    PCollection<KV<String, InterpretedExtendedRecord>> extendedRecordCollection =
+    PCollection<KV<String, ExtendedRecord>> extendedRecordCollection =
+      p.apply("Read RAW", AvroIO.read(ExtendedRecord.class).from(pathExtended))
+        .apply("Map RAW", MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
+          .via((ExtendedRecord ex) -> KV.of(ex.getId(), ex)));
+
+    PCollection<KV<String, InterpretedExtendedRecord>> interpretedRecordCollection =
       p.apply("Read COMMON", AvroIO.read(InterpretedExtendedRecord.class).from(pathCommon))
         .apply("Map COMMON", MapElements.into(new TypeDescriptor<KV<String, InterpretedExtendedRecord>>() {})
-                 .via((InterpretedExtendedRecord ex) -> KV.of(ex.getId(), ex)));
+          .via((InterpretedExtendedRecord ex) -> KV.of(ex.getId(), ex)));
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
       p.apply("Read TEMPORAL", AvroIO.read(TemporalRecord.class).from(pathTemporal))
         .apply("Map TEMPORAL", MapElements.into(new TypeDescriptor<KV<String, TemporalRecord>>() {})
-                 .via((TemporalRecord t) -> KV.of(t.getId(), t)));
+          .via((TemporalRecord t) -> KV.of(t.getId(), t)));
 
     PCollection<KV<String, LocationRecord>> locationCollection =
       p.apply("Read LOCATION", AvroIO.read(LocationRecord.class).from(pathLocation))
         .apply("Map LOCATION", MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
-                 .via((LocationRecord l) -> KV.of(l.getId(), l)));
+          .via((LocationRecord l) -> KV.of(l.getId(), l)));
 
     PCollection<KV<String, TaxonRecord>> taxonomyCollection =
       p.apply("Read TAXONOMY", AvroIO.read(TaxonRecord.class).from(pathTaxonomy))
         .apply("Map TAXONOMY", MapElements.into(new TypeDescriptor<KV<String, TaxonRecord>>() {})
-                 .via((TaxonRecord t) -> KV.of(t.getId(), t)));
+          .via((TaxonRecord t) -> KV.of(t.getId(), t)));
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
       p.apply("Read MULTIMEDIA", AvroIO.read(MultimediaRecord.class).from(pathMultimedia))
         .apply("Map MULTIMEDIA", MapElements.into(new TypeDescriptor<KV<String, MultimediaRecord>>() {})
-                 .via((MultimediaRecord m) -> KV.of(m.getId(), m)));
+          .via((MultimediaRecord m) -> KV.of(m.getId(), m)));
 
     LOG.info("Adding step 2: Grouping by id/occurrenceID key");
     PCollection<KV<String, CoGbkResult>> groupedCollection =
-      KeyedPCollectionTuple.of(extendedRecordTag, extendedRecordCollection)
+      KeyedPCollectionTuple.of(interRecordTag, interpretedRecordCollection)
         .and(temporalTag, temporalCollection)
         .and(locationTag, locationCollection)
         .and(taxonomyTag, taxonomyCollection)
         .and(multimediaTag, multimediaCollection)
+        .and(extendedRecordTag, extendedRecordCollection)
         .apply(CoGroupByKey.create());
 
     LOG.info("Adding step 3: Converting to a flat object");
@@ -120,31 +130,54 @@ public class ElasticCoGroupByKeyPipeline {
         @ProcessElement
         public void processElement(ProcessContext c) {
           CoGbkResult value = c.element().getValue();
-          InterpretedExtendedRecord extendedRecord = value.getOnly(extendedRecordTag, InterpretedExtendedRecord.newBuilder().setId("").build());
-          TemporalRecord temporal = value.getOnly(temporalTag, TemporalRecord.newBuilder().setId("").build());
-          LocationRecord location = value.getOnly(locationTag, LocationRecord.newBuilder().setId("").build());
-          TaxonRecord taxon = value.getOnly(taxonomyTag, TaxonRecord.newBuilder().setId("").build());
-          MultimediaRecord multimedia = value.getOnly(multimediaTag, MultimediaRecord.newBuilder().setId("").build());
-          c.output(ExtendedOccurrenceMapper.map(extendedRecord, location, temporal, taxon, multimedia).toString());
+          String key = c.element().getKey();
+          InterpretedExtendedRecord interRecord = value.getOnly(interRecordTag, InterpretedExtendedRecord.newBuilder().setId(key).build());
+          TemporalRecord temporal = value.getOnly(temporalTag, TemporalRecord.newBuilder().setId(key).build());
+          LocationRecord location = value.getOnly(locationTag, LocationRecord.newBuilder().setId(key).build());
+          TaxonRecord taxon = value.getOnly(taxonomyTag, TaxonRecord.newBuilder().setId(key).build());
+          MultimediaRecord multimedia = value.getOnly(multimediaTag, MultimediaRecord.newBuilder().setId(key).build());
+          ExtendedRecord extendedRecord = value.getOnly(extendedRecordTag, ExtendedRecord.newBuilder().setId(key).build());
+          c.output(toIndex(interRecord, temporal, location, taxon, multimedia, extendedRecord));
         }
       }
     ));
 
-
     LOG.info("Adding step 4: Elasticsearch configuration");
     ElasticsearchIO.ConnectionConfiguration esConfig = ElasticsearchIO.ConnectionConfiguration.create(
-            options.getESHosts(), options.getESIndex(), options.getESType());
+      options.getESHosts(), options.getESIndex(), options.getESType());
 
     resultCollection.apply(
-        ElasticsearchIO.write()
-            .withConnectionConfiguration(esConfig)
-            .withMaxBatchSizeBytes(options.getESMaxBatchSize())
-            .withMaxBatchSize(options.getESMaxBatchSizeBytes()));
+      ElasticsearchIO.write()
+        .withConnectionConfiguration(esConfig)
+        .withMaxBatchSizeBytes(options.getESMaxBatchSize())
+        .withMaxBatchSize(options.getESMaxBatchSizeBytes()));
 
     LOG.info("Run the pipeline");
     p.run().waitUntilFinish();
 
   }
 
-}
+  private static String toIndex(InterpretedExtendedRecord interRecord, TemporalRecord temporal, LocationRecord location,
+                                TaxonRecord taxon, MultimediaRecord multimedia, ExtendedRecord extendedRecord) {
 
+    StringBuilder builder = new StringBuilder();
+    BiConsumer<String, String> f = (k, v) -> builder.append("\"").append(k).append("\":").append(v);
+
+    builder.append("{\"id\":\"").append(extendedRecord.getId()).append("\"").append(",");
+
+    f.accept("raw", extendedRecord.toString());
+    builder.append(",");
+    f.accept("common", interRecord.toString());
+    builder.append(",");
+    f.accept("temporal", temporal.toString());
+    builder.append(",");
+    f.accept("location", location.toString());
+    builder.append(",");
+    f.accept("taxon", taxon.toString());
+    builder.append(",");
+    f.accept("multimedia", multimedia.toString());
+    builder.append("}");
+
+    return builder.toString();
+  }
+}
