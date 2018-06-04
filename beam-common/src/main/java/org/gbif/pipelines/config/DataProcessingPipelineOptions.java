@@ -86,11 +86,6 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   int getAvroSyncInterval();
   void setAvroSyncInterval(int syncInterval);
 
-  @Default.InstanceFactory(DefaultESMaxBatchSize.class)
-  @Description("ES max batch size")
-  int getESBatchSize();
-  void setESBatchSize(int esBatchSize);
-
   @Description("WS properties for interpretations that require the use of external web services")
   String getWsProperties();
   void setWsProperties(String path);
@@ -102,46 +97,6 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   @Description("Path to core-site-config.xml")
   String getCoreSiteConfig();
   void setCoreSiteConfig(String path);
-
-  @Default.InstanceFactory(DefaultESAddressFactory.class)
-  @Description("List of ES addresses eg. \"http://c3n1.gbif.org:9200\", \"http://c3n2.gbif.org:9200\", \"http://c3n3.gbif.org:9200\"")
-  String[] getESAddresses();
-  void setESAddresses(String[] esAddresses);
-
-  @Default.InstanceFactory(DefaultESIndexPrefix.class)
-  @Description("ES Index Prefix is a prefix used while creating final index of format <esindexprefix>_datasetid_attempt.")
-  String getESIndexPrefix();
-  void setESIndexPrefix(String esIndexPrefix);
-
-  /**
-   * A {@link DefaultValueFactory} which identifies ES max batch size
-   */
-  class DefaultESMaxBatchSize implements DefaultValueFactory<Integer>{
-    @Override
-    public Integer create(PipelineOptions options) {
-      return 1000;
-    }
-  }
-
-  /**
-   * A {@link DefaultValueFactory} which identifies ES indexPrefix
-   */
-  class DefaultESIndexPrefix implements DefaultValueFactory<String>{
-    @Override
-    public String create(PipelineOptions options) {
-      return "interpreted-dataset";
-    }
-  }
-
-  /**
-   * A {@link DefaultValueFactory} which locates ES IPAddresses port
-   */
-  class DefaultESAddressFactory implements DefaultValueFactory<String[]>{
-    @Override
-    public String[] create(PipelineOptions options) {
-      return new String[]{"http://c3n1.gbif.org:9200", "http://c3n2.gbif.org:9200", "http://c3n3.gbif.org:9200"};
-    }
-  }
 
   /**
    * A {@link DefaultValueFactory} which locates a default directory.

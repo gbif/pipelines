@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs;
 
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
-import org.gbif.pipelines.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.config.EsProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -44,7 +44,7 @@ public class AvroToESJoinPipeline2 {
 
   public static void main(String[] args) {
 
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
+    EsProcessingPipelineOptions options = DataPipelineOptionsFactory.createForEs(args);
     Pipeline pipeline = Pipeline.create(options);
 
     String defTargetDir = options.getDefaultTargetDirectory().endsWith(Path.SEPARATOR)
@@ -74,7 +74,7 @@ public class AvroToESJoinPipeline2 {
     PCollectionList.of(apply1).and(apply2).and(apply3).and(apply4).and(apply5).apply(Flatten.pCollections()).apply(ElasticsearchIO.write().withConnectionConfiguration(connectionConfiguration)
                                                                                                                      .withIdFn((node) -> node.get(ID_KEY).textValue())
                                                                                                                      .withUsePartialUpdate(true)
-                                                                                                                     .withMaxBatchSize(options.getESBatchSize()));
+                                                                                                                     .withMaxBatchSize(options.getESMaxBatchSize()));
 
     pipeline.run().waitUntilFinish();
 

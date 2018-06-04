@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs;
 
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
-import org.gbif.pipelines.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.config.EsProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.Location;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -26,7 +26,7 @@ import org.codehaus.jackson.node.ObjectNode;
  * This pipeline reads from interpreted avro records from different categories(location,temporal,common,taxonomy and common) and index them on an Elastic search index.
  * <p>
  * This pipeline is demonstration of using partial updates of Elastic Search to join the different categories of data to one index. It is done based on id key which is common in all categories.
- *
+ * <p>
  * Each category generates a flat structure of json which is written in ES in parallel.
  */
 public class AvroToESJoinPipeline {
@@ -35,7 +35,7 @@ public class AvroToESJoinPipeline {
 
   public static void main(String[] args) {
 
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
+    EsProcessingPipelineOptions options = DataPipelineOptionsFactory.createForEs(args);
     Pipeline pipeline = Pipeline.create(options);
 
     String defTargetDir = options.getDefaultTargetDirectory().endsWith(Path.SEPARATOR)
@@ -79,7 +79,7 @@ public class AvroToESJoinPipeline {
                .withConnectionConfiguration(connectionConfiguration)
                .withIdFn((node) -> node.get(ID_KEY).textValue())
                .withUsePartialUpdate(true)
-               .withMaxBatchSize(options.getESBatchSize()));
+               .withMaxBatchSize(options.getESMaxBatchSize()));
 
     pipeline.run().waitUntilFinish();
 

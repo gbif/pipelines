@@ -134,7 +134,7 @@ public class ElasticCoGroupByKeyPipeline {
 
     LOG.info("Adding step 4: Elasticsearch configuration");
     ElasticsearchIO.ConnectionConfiguration esConfig = ElasticsearchIO.ConnectionConfiguration.create(
-            options.getESHosts(), options.getESIndex(), options.getESType());
+            options.getESAddresses(), options.getESIndexPrefix(), options.getESIndexPrefix());
 
     resultCollection.apply(
         ElasticsearchIO.write()
