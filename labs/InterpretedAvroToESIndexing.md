@@ -1,4 +1,4 @@
-#Introduction
+# Introduction
 
 This note shows the performance of doing join in Elastic search using partial updates. 
 
@@ -6,7 +6,7 @@ Two approaches were considered:
 1. Partial Updates with flat json structures.
 2. Partial Updates with nested json structures.
 
-##Experiment setup
+## Experiment setup
 The experiment was run on development cluster (3 nodes 24 cores each and 62.71 GB RAM each)
 1. Elastic Search 5.6.2 
 2. Spark 2
@@ -64,7 +64,7 @@ PUT /interpreted-dataset_0645ccdb-e001-4ab0-9729-51f1755e007e_1/_mapping/interpr
 }
 ```
 
-##Results
+## Results
 Approaches |  shards | time | shards | time
 -----------|---------|------|--------|------
 Flat json structures|       9 shards|    21 mins|      72 shards|   17 mins 
