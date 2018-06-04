@@ -17,7 +17,6 @@ public class ExtendedOccurrenceMapper {
     // Can't have an instance
   }
 
-  // TODO: Fill all fields
   public static ExtendedOccurrence map(InterpretedExtendedRecord record, LocationRecord location, TemporalRecord temporal,
       TaxonRecord taxon, MultimediaRecord multimedia) {
 
@@ -33,24 +32,12 @@ public class ExtendedOccurrenceMapper {
   }
 
   private static void mapTemporal(Builder builder, TemporalRecord temporal){
-    builder.setEventID(temporal.getEventID())
-      .setParentEventID(temporal.getParentEventID())
-      .setFieldNumber(temporal.getFieldNumber())
-      .setVerbatimEventDate(temporal.getVerbatimEventDate())
-      .setYear(temporal.getYear())
+    builder.setYear(temporal.getYear())
       .setMonth(temporal.getMonth())
       .setDay(temporal.getDay())
       .setStartDayOfYear(temporal.getStartDayOfYear())
       .setEndDayOfYear(temporal.getEndDayOfYear())
       .setEventDate(mapEventDate(temporal.getEventDate()))
-      .setEventTime(temporal.getEventTime())
-      .setFieldNotes(temporal.getFieldNotes())
-      .setEventRemarks(temporal.getEventRemarks())
-      .setHabitat(temporal.getHabitat())
-      .setSamplingProtocol(temporal.getSamplingProtocol())
-      .setSampleSizeValue(temporal.getSampleSizeValue())
-      .setSampleSizeUnit(temporal.getSampleSizeUnit())
-      .setSamplingEffort(temporal.getSamplingEffort())
       .setModified(temporal.getModified())
       .setDateIdentified(temporal.getDateIdentified());
   }
@@ -66,39 +53,11 @@ public class ExtendedOccurrenceMapper {
       .setMaximumDistanceAboveSurfaceInMeters(location.getMaximumDistanceAboveSurfaceInMeters())
       .setCoordinateUncertaintyInMeters(location.getCoordinateUncertaintyInMeters())
       .setCoordinatePrecision(location.getCoordinatePrecision())
-      .setLocationID(location.getLocationID())
-      .setHigherGeographyID(location.getHigherGeographyID())
-      .setHigherGeography(location.getHigherGeography())
-      .setIslandGroup(location.getIslandGroup())
-      .setIsland(location.getIsland())
-      .setCounty(location.getCounty())
-      .setMunicipality(location.getMunicipality())
-      .setLocality(location.getLocality())
-      .setVerbatimLocality(location.getVerbatimLocality())
-      .setVerbatimElevation(location.getVerbatimElevation())
-      .setLocationAccordingTo(location.getLocationAccordingTo())
-      .setLocationRemarks(location.getLocationRemarks())
-      .setGeodeticDatum(location.getGeodeticDatum())
-      .setVerbatimCoordinates(location.getVerbatimCoordinates())
-      .setVerbatimLatitude(location.getVerbatimLatitude())
-      .setVerbatimLongitude(location.getVerbatimLongitude())
-      .setVerbatimCoordinateSystem(location.getVerbatimCoordinateSystem())
-      .setVerbatimSRS(location.getVerbatimSRS())
-      .setFootprintWKT(location.getFootprintWKT())
-      .setFootprintSRS(location.getFootprintSRS())
-      .setFootprintSpatialFit(location.getFootprintSpatialFit())
-      .setGeoreferencedBy(location.getGeoreferencedBy())
-      .setGeoreferencedDate(location.getGeoreferencedDate())
-      .setGeoreferenceProtocol(location.getGeoreferenceProtocol())
-      .setGeoreferenceSources(location.getGeoreferenceSources())
-      .setGeoreferenceVerificationStatus(location.getGeoreferenceVerificationStatus())
-      .setPointRadiusSpatialFit(location.getPointRadiusSpatialFit())
       .setContinent(location.getContinent())
       .setWaterBody(location.getWaterBody())
       .setCountry(location.getCountry())
       .setCountryCode(location.getCountryCode())
-      .setStateProvince(location.getStateProvince())
-      .setVerbatimDepth(location.getVerbatimDepth());
+      .setStateProvince(location.getStateProvince());
   }
 
   private static void mapCommon(Builder builder, InterpretedExtendedRecord record){
@@ -114,11 +73,11 @@ public class ExtendedOccurrenceMapper {
   }
 
   private static void mapTaxon(Builder builder, TaxonRecord taxon){
-    // TODO: PARSE FIELDS
+    // PARSE FIELDS
   }
 
   private static void mapMultimedia(Builder builder, MultimediaRecord multimedia){
-    // TODO: NO FIELDS
+    // PARSE FIELDS
   }
 
   private static EventDate mapEventDate(org.gbif.pipelines.io.avro.temporal.EventDate eventDate){

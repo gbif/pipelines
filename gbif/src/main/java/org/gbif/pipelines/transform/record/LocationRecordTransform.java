@@ -8,7 +8,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.issue.Validation;
 import org.gbif.pipelines.io.avro.location.LocationRecord;
-import org.gbif.pipelines.mapper.LocationRecordMapper;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;
@@ -35,9 +34,11 @@ public class LocationRecordTransform extends RecordTransform<ExtendedRecord, Loc
       public void processElement(ProcessContext context) {
 
         ExtendedRecord extendedRecord = context.element();
-        LocationRecord location = LocationRecordMapper.map(extendedRecord);
         String id = extendedRecord.getId();
         List<Validation> validations = new ArrayList<>();
+
+        // Transformation main output
+        LocationRecord location = LocationRecord.newBuilder().setId(id).build();
 
         // read the ws properties path from the PipelineOptions
         String wsProperties = context.getPipelineOptions().as(DataProcessingPipelineOptions.class).getWsProperties();

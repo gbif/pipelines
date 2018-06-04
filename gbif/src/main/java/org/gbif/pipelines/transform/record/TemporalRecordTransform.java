@@ -7,7 +7,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.issue.Validation;
 import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
-import org.gbif.pipelines.mapper.TemporalRecordMapper;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, Tem
         List<Validation> validations = new ArrayList<>();
 
         // Transformation main output
-        TemporalRecord temporalRecord = TemporalRecordMapper.map(extendedRecord);
+        TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(id).build();
 
         Interpretation.of(extendedRecord)
           .using(TemporalRecordInterpreter.interpretEventDate(temporalRecord))
