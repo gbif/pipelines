@@ -32,11 +32,13 @@ import org.slf4j.LoggerFactory;
  *
  * PLEASE READ ES-CO-GROUP-BY-KEY.MD FILE
  *
+ * CoGrouping and indexing object with nested objects
+ *
  * How to run example:
  *
  * sudo -u hdfs spark2-submit --conf spark.default.parallelism=100 --conf
- * spark.executor.memoryOverhead=2048 --class
- * org.gbif.pipelines.labs.indexing.ElasticCoGroupByKeyPipeline --master yarn --deploy-mode
+ * spark.executor.memoryOverhead=4000 --class
+ * org.gbif.pipelines.labs.indexing.EsCoGroupNestedPipeline --master yarn --deploy-mode
  * cluster --executor-memory 12G --executor-cores 8 --num-executors 16 --driver-memory 1G
  * /home/crap/lib/labs-1.1-SNAPSHOT-shaded.jar --datasetId=0645ccdb-e001-4ab0-9729-51f1755e007e
  * --attempt=1 --runner=SparkRunner
@@ -46,9 +48,9 @@ import org.slf4j.LoggerFactory;
  * --ESHosts=http://c3n1.gbif.org:9200,http://c3n2.gbif.org:9200,http://c3n3.gbif.org:9200
  * --ESIndex=co-group-idx --ESType=co-group-idx --ESMaxBatchSize=1000
  */
-public class ElasticCoGroupByKeyPipeline {
+public class EsCoGroupNestedPipeline {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ElasticCoGroupByKeyPipeline.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EsCoGroupNestedPipeline.class);
 
   public static void main(String... args) {
     avrosToEs(args);
@@ -157,6 +159,9 @@ public class ElasticCoGroupByKeyPipeline {
 
   }
 
+  /**
+   * Assemble main object json with nested structure
+   */
   private static String toIndex(InterpretedExtendedRecord interRecord, TemporalRecord temporal, LocationRecord location,
                                 TaxonRecord taxon, MultimediaRecord multimedia, ExtendedRecord extendedRecord) {
 
@@ -178,6 +183,6 @@ public class ElasticCoGroupByKeyPipeline {
     f.accept("multimedia", multimedia.toString());
     builder.append("}");
 
-    return builder.toString();
+    return builder.toString().replaceAll("http://rs.tdwg.org/dwc/terms/", "");
   }
 }
