@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * PLEASE READ ES-CO-GROUP-BY-KEY.MD FILE
+ * PLEASE READ DOCS/ES-CO-GROUP-BY-KEY.MD FILE
  *
  * CoGrouping and indexing flat object
  *
@@ -44,8 +44,8 @@ import org.slf4j.LoggerFactory;
  * --defaultTargetDirectory=hdfs://ha-nn/data/ingest/0645ccdb-e001-4ab0-9729-51f1755e007e/1/
  * --inputFile=hdfs://ha-nn/data/ingest/0645ccdb-e001-4ab0-9729-51f1755e007e/1/
  * --hdfsSiteConfig=/home/crap/config/hdfs-site.xml --coreSiteConfig=/home/crap/config/core-site.xml
- * --ESHosts=http://c3n1.gbif.org:9200,http://c3n2.gbif.org:9200,http://c3n3.gbif.org:9200
- * --ESIndex=co-group-idx --ESType=co-group-idx --ESMaxBatchSize=1000
+ * --ESAddresses=http://c3n1.gbif.org:9200,http://c3n2.gbif.org:9200,http://c3n3.gbif.org:9200
+ * --ESIndexPrefix=co-group-idx --ESMaxBatchSize=1000
  */
 public class EsCoGroupFlatPipeline {
 
@@ -135,7 +135,7 @@ public class EsCoGroupFlatPipeline {
 
     LOG.info("Adding step 4: Elasticsearch configuration");
     ElasticsearchIO.ConnectionConfiguration esConfig = ElasticsearchIO.ConnectionConfiguration.create(
-      options.getESHosts(), options.getESIndex(), options.getESType());
+      options.getESAddresses(), options.getESIndexPrefix(), options.getESIndexPrefix());
 
     resultCollection.apply(
       ElasticsearchIO.write()

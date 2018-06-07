@@ -55,4 +55,4 @@ The test could be reproduced on different dataset using the provided utility.
 Following is the step to run the AvroCompressionTestUtility.
 java -cp labs-1.0-SNAPSHOT-shaded.jar org.gbif.pipelines.labs.performance.AvroCompressionTestUtility <path/to/dataset> </path/to/result.csv> <repetition eg.2>
 
-> Note: Entire test result with different datasets are available as AvroCompressionTest.csv
+> Note: Entire test result with different datasets are available as avro-compression-test.csv
