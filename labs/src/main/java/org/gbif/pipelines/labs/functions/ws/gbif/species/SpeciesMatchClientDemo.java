@@ -15,7 +15,7 @@ public class SpeciesMatchClientDemo {
     //interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
     // use a new file cache for the current session
-    SpeciesMatchService service = SpeciesMatchServiceRest.SINGLE.getService();
+    SpeciesMatchService service = SpeciesMatchServiceRest.getInstance();
 
     // call a ton of times, verifying on Varnish only 1 request will be seen(!)
     for (int i = 0; i < 100000; i++) {

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.parsers.location;
 
 import org.gbif.common.parsers.geospatial.LatLng;
-import org.gbif.pipelines.io.avro.IssueType;
+import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.util.Arrays;
 import java.util.Collections;

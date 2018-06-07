@@ -2,7 +2,7 @@ package org.gbif.pipelines.assembling.interpretation.steps;
 
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
 import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.RecordTransform;
 

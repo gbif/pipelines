@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import static org.gbif.dwc.terms.DwcTerm.country;
 import static org.gbif.dwc.terms.DwcTerm.countryCode;
-import static org.gbif.pipelines.io.avro.IssueType.COUNTRY_CODE_INVALID;
-import static org.gbif.pipelines.io.avro.IssueType.COUNTRY_INVALID;
-import static org.gbif.pipelines.io.avro.IssueType.COUNTRY_MISMATCH;
+import static org.gbif.pipelines.io.avro.issue.IssueType.COUNTRY_CODE_INVALID;
+import static org.gbif.pipelines.io.avro.issue.IssueType.COUNTRY_INVALID;
+import static org.gbif.pipelines.io.avro.issue.IssueType.COUNTRY_MISMATCH;
 
 /**
  * Parses the location fields.

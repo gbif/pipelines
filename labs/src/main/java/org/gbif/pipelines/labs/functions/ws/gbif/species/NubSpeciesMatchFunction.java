@@ -23,9 +23,7 @@ public class NubSpeciesMatchFunction implements SerializableFunction<TypedOccurr
   @Override
   public TypedOccurrence apply(TypedOccurrence s) {
 
-    Call<SpeciesMatchResponseModel> call = SpeciesMatchServiceRest.SINGLE
-        .getService()
-        .match(s); // i.e. not strict
+    Call<SpeciesMatchResponseModel> call = SpeciesMatchServiceRest.getInstance().match(s); // i.e. not strict
 
     Response<SpeciesMatchResponseModel> r;
     try {

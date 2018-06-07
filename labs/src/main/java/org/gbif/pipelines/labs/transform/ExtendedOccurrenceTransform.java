@@ -5,16 +5,16 @@ import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.io.avro.ExtendedOccurrence;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.issue.Validation;
+import org.gbif.pipelines.io.avro.location.LocationRecord;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 import org.gbif.pipelines.labs.mapper.ExtendedOccurrenceMapper;
 import org.gbif.pipelines.transform.RecordTransform;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
-import org.gbif.pipelines.transform.record.LocationTransform;
+import org.gbif.pipelines.transform.record.LocationRecordTransform;
 import org.gbif.pipelines.transform.record.TemporalRecordTransform;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
 
   // Data tupple tags for internal usage only
   private final TupleTag<InterpretedExtendedRecord> recordDataTag = new TupleTag<InterpretedExtendedRecord>() {};
-  private final TupleTag<Location> locationDataTag = new TupleTag<Location>() {};
+  private final TupleTag<LocationRecord> locationDataTag = new TupleTag<LocationRecord>() {};
   private final TupleTag<TemporalRecord> temporalDataTag = new TupleTag<TemporalRecord>() {};
   // Issue tupple tags for internal usage only
   private final TupleTag<OccurrenceIssue> recordIssueTag = new TupleTag<OccurrenceIssue>() {};
@@ -69,7 +69,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
     PCollectionTuple recordTupple = input.apply(recordTransform);
 
     // Collect Location
-    LocationTransform locationTransform = LocationTransform.create();
+    LocationRecordTransform locationTransform = LocationRecordTransform.create();
     PCollectionTuple locationTuple = input.apply(locationTransform);
 
     // Collect TemporalRecord
@@ -118,7 +118,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
     CoGbkResult value = element.getValue();
 
     InterpretedExtendedRecord record = value.getOnly(recordDataTag);
-    Location location = value.getOnly(locationDataTag);
+    LocationRecord location = value.getOnly(locationDataTag);
     TemporalRecord temporal = value.getOnly(temporalDataTag);
     TaxonRecord taxon = TaxonRecord.newBuilder().setId(record.getId()).build();
     MultimediaRecord multimedia = MultimediaRecord.newBuilder().setId(record.getId()).build();
@@ -170,7 +170,7 @@ public class ExtendedOccurrenceTransform extends RecordTransform<ExtendedRecord,
   @Override
   public ExtendedOccurrenceTransform withAvroCoders(Pipeline pipeline) {
     Coders.registerAvroCoders(pipeline, ExtendedRecord.class, ExtendedOccurrence.class, OccurrenceIssue.class);
-    Coders.registerAvroCoders(pipeline, InterpretedExtendedRecord.class, TemporalRecord.class, Location.class);
+    Coders.registerAvroCoders(pipeline, InterpretedExtendedRecord.class, TemporalRecord.class, LocationRecord.class);
     return this;
   }
 

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.labs;
 
+import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.config.OptionsKeyEnum;
 import org.gbif.pipelines.labs.util.HdfsTestUtils;
 
 import java.net.URI;
@@ -14,8 +14,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.gbif.pipelines.config.DataPipelineOptionsFactory.createDefaultTaxonOptions;
 
 /**
  * Tests the {@link TaxonomyInterpretationPipeline}.
@@ -43,19 +41,13 @@ public class TaxonomyInterpretationPipelineTest {
     final String taxonOutPath = clusterConfig.hdfsClusterBaseUri + "taxon";
     final String issuesOutPath = clusterConfig.hdfsClusterBaseUri + "taxonIssues";
 
-    DataProcessingPipelineOptions options = createDefaultTaxonOptions(configuration,
-                                                                                    sourcePath,
-                                                                                    taxonOutPath,
-                                                                                    issuesOutPath,
-                                                                                    new String[] {
-                                                                                      "--runner=DirectRunner"});
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
+    options.setInputFile(sourcePath);
 
-    TaxonomyInterpretationPipeline.runPipelineProgrammatically(options);
+    TaxonomyInterpretationPipeline.runPipeline(options);
 
     // test taxon results
-    URI uriTargetPath = clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths()
-                                                                   .get(OptionsKeyEnum.GBIF_BACKBONE)
-                                                                   .filePath() + "*");
+    URI uriTargetPath = clusterConfig.hdfsClusterBaseUri.resolve(taxonOutPath + "*");
     FileStatus[] fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);
@@ -69,8 +61,7 @@ public class TaxonomyInterpretationPipelineTest {
 
     // test issues results
     uriTargetPath =
-      clusterConfig.hdfsClusterBaseUri.resolve(options.getTargetPaths().get(OptionsKeyEnum.ISSUES).filePath()
-                                               + "*");
+      clusterConfig.hdfsClusterBaseUri.resolve(issuesOutPath+ "*");
     fileStatuses = clusterConfig.fs.globStatus(new Path(uriTargetPath.toString()));
 
     Assert.assertNotNull(fileStatuses);

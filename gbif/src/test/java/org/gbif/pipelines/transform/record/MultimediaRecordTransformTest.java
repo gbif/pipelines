@@ -3,9 +3,9 @@ package org.gbif.pipelines.transform.record;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MediaType;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.multimedia.MediaType;
+import org.gbif.pipelines.io.avro.multimedia.Multimedia;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
 import org.gbif.pipelines.transform.Kv2Value;
 
 import java.util.Collections;

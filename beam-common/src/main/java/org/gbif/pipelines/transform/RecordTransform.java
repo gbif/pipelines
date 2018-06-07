@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.pipelines.io.avro.IssueType;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.io.avro.issue.IssueType;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.issue.Validation;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;

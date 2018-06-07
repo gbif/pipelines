@@ -5,8 +5,6 @@ import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.core.ws.config.Service;
 
-import java.util.Objects;
-
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -17,8 +15,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class GeocodeServiceRest {
 
   private final GeocodeService service;
-
-  private static GeocodeServiceRest instance;
+  private static volatile GeocodeServiceRest instance;
+  private static final Object MUTEX = new Object();
 
   private GeocodeServiceRest(Config wsConfig) {
 
@@ -40,12 +38,14 @@ public class GeocodeServiceRest {
   }
 
   public static GeocodeServiceRest getInstance(Config config) {
-    synchronized (GeocodeServiceRest.class) {
-      if (Objects.isNull(instance)) {
-        instance = new GeocodeServiceRest(config);
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new GeocodeServiceRest(config);
+        }
       }
-      return instance;
     }
+    return instance;
   }
 
   public GeocodeService getService() {

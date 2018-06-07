@@ -68,7 +68,7 @@ public class XmlFragmentParserTest {
     assertEquals(5000, rors.size());
   }
 
-  private class BatchRecordParser implements Callable<List<RawOccurrenceRecord>> {
+  private static class BatchRecordParser implements Callable<List<RawOccurrenceRecord>> {
 
     private List<RawXmlOccurrence> raws;
 

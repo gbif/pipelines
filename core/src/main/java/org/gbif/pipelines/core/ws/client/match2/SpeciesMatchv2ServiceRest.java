@@ -5,8 +5,6 @@ import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.core.ws.config.Service;
 
-import java.util.Objects;
-
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -17,8 +15,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class SpeciesMatchv2ServiceRest {
 
   private final SpeciesMatchv2Service service;
-
-  private static SpeciesMatchv2ServiceRest instance;
+  private static volatile SpeciesMatchv2ServiceRest instance;
+  private static final Object MUTEX = new Object();
 
   private SpeciesMatchv2ServiceRest(Config wsConfig) {
 
@@ -40,12 +38,14 @@ public class SpeciesMatchv2ServiceRest {
   }
 
   public static SpeciesMatchv2ServiceRest getInstance(Config config) {
-    synchronized (SpeciesMatchv2ServiceRest.class) {
-      if (Objects.isNull(instance)) {
-        instance = new SpeciesMatchv2ServiceRest(config);
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new SpeciesMatchv2ServiceRest(config);
+        }
       }
-      return instance;
     }
+    return instance;
   }
 
   public SpeciesMatchv2Service getService() {

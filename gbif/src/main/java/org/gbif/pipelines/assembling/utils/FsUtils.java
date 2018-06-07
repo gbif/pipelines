@@ -7,11 +7,11 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
 
 /**
- * Utility class to work with HDFS.
+ * Utility class to work with FS.
  */
-public final class HdfsUtils {
+public final class FsUtils {
 
-  private HdfsUtils() {}
+  private FsUtils() {}
 
   /**
    * Build a {@link Path} from an array of string values.
@@ -21,6 +21,10 @@ public final class HdfsUtils {
     StringJoiner joiner = new StringJoiner(Path.SEPARATOR);
     Arrays.stream(values).forEach(joiner::add);
     return new Path(joiner.toString());
+  }
+
+  public static String buildPathString(String... values) {
+    return buildPath(values).toString();
   }
 
 }

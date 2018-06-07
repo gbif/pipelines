@@ -1,4 +1,4 @@
-package org.gbif.pipelines.labs;
+package org.gbif.pipelines.labs.indexing;
 
 import java.util.regex.Pattern;
 

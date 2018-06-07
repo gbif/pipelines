@@ -4,9 +4,9 @@ import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.multimedia.MultimediaParser;
 import org.gbif.pipelines.core.parsers.multimedia.ParsedMultimedia;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueType;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.issue.IssueType;
+import org.gbif.pipelines.io.avro.multimedia.Multimedia;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
 
 import java.util.ArrayList;
 import java.util.List;

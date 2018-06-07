@@ -2,12 +2,12 @@ package org.gbif.pipelines.assembling.interpretation.steps;
 
 import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.Location;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.location.LocationRecord;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
-import org.gbif.pipelines.transform.record.LocationTransform;
+import org.gbif.pipelines.transform.record.LocationRecordTransform;
 import org.gbif.pipelines.transform.record.MultimediaRecordTransform;
 import org.gbif.pipelines.transform.record.TaxonRecordTransform;
 import org.gbif.pipelines.transform.record.TemporalRecordTransform;
@@ -25,9 +25,9 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
    * Gbif location interpretation.
    */
   static InterpretationStepSupplier locationGbif(PipelineTargetPaths paths, CodecFactory avroCodec) {
-    return () -> InterpretationStep.<Location>newBuilder().interpretationType(InterpretationType.LOCATION)
-      .avroClass(Location.class)
-      .transform(LocationTransform.create())
+    return () -> InterpretationStep.<LocationRecord>newBuilder().interpretationType(InterpretationType.LOCATION)
+      .avroClass(LocationRecord.class)
+      .transform(LocationRecordTransform.create())
       .dataTargetPath(paths.getDataTargetPath())
       .issuesTargetPath(paths.getIssuesTargetPath())
       .tempDirectory(paths.getTempDir())
