@@ -55,9 +55,9 @@ public class Avro2ElasticSearchPipeline {
 
     // Index in ES
     jsonInputStream.apply(ElasticsearchIO.write()
-                            .withConnectionConfiguration(ElasticsearchIO.ConnectionConfiguration.create(options.getESHosts(),
-                                                                                                        options.getESIndex(),
-                                                                                                        options.getESType()))
+                            .withConnectionConfiguration(ElasticsearchIO.ConnectionConfiguration.create(options.getESAddresses(),
+                                                                                                        options.getESIndexPrefix(),
+                                                                                                        options.getESIndexPrefix()))
                             .withMaxBatchSize(options.getESMaxBatchSize()));
 
     // instruct the writer to use a provided document ID

@@ -87,9 +87,8 @@ sudo -u hdfs spark2-submit
 --inputFile=hdfs://ha-nn/data/ingest/38b4c89f-584c-41bb-bd8f-cd1def33e92f/149/
 --hdfsSiteConfig=/home/crap/config/hdfs-site.xml
 --coreSiteConfig=/home/crap/config/core-site.xml
---ESHosts=http://c3n1.gbif.org:9200,http://c3n2.gbif.org:9200,http://c3n3.gbif.org:9200
---ESIndex=co-group-idx
---ESType=co-group-idx
+--ESAddresses=http://c3n1.gbif.org:9200,http://c3n2.gbif.org:9200,http://c3n3.gbif.org:9200
+--ESIndexPrefix=co-group-idx
 --ESMaxBatchSize=1000
 ```
 
@@ -103,19 +102,12 @@ GET co-group-idx/_search
 DELETE co-group-idx
 ```
 
-#### 5) Performance throughput results:
+#### 5) Performance throughput results (records per second):
 
-EsCoGroupFlatPipeline:
-* YARN C3 cluster, ES C3 cluster - 9236944 records for 1103 seconds
-* YARN C3 cluster, ES C4 cluster -
-* YARN C4 cluster, ES C4 cluster -
-* YARN C4 cluster, ES C3 cluster -
-
-EsCoGroupNestedPipeline:
-* YARN C3 cluster, ES C3 cluster - 9236356 records for 896 seconds
-* YARN C3 cluster, ES C4 cluster -
-* YARN C4 cluster, ES C4 cluster -
-* YARN C4 cluster, ES C3 cluster -
+|           | YARN C3, ES C3 |YARN C3, ES C4|YARN C4, ES C4|YARN C4, ES C3|
+|-----------|----------------|--------------|--------------|--------------|
+|Flat       |10300           |              |              |              |
+|Nested     |8400            |              |              |              |
 
 #### 6) Notes:
 * If the YARN and indexing cluster are the same, you can get a lot of network timeout failures, especially when you using many shards for an index
