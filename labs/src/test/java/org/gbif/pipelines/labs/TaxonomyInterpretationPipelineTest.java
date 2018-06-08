@@ -18,6 +18,7 @@ import org.junit.Test;
 /**
  * Tests the {@link TaxonomyInterpretationPipeline}.
  */
+@Ignore("Must not be a part of main build")
 public class TaxonomyInterpretationPipelineTest {
 
   private static HdfsTestUtils.MiniClusterConfig clusterConfig;

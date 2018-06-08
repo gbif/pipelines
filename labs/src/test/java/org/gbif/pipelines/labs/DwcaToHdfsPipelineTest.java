@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Tests the class {@link DwcaToHdfsPipelineTest}.
  */
+@Ignore("Must not be a part of main build")
 public class DwcaToHdfsPipelineTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaToHdfsPipelineTest.class);

@@ -7,10 +7,11 @@ import org.gbif.pipelines.labs.interpretation.parsers.ParserFlows;
 import java.util.Optional;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("Must not be a part of main build")
 public class ParserFlowTest {
-
 
   @Test
   public void intParseTest(){

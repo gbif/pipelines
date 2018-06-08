@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Tests different configurations to use mapdb.
  */
-@Ignore("Tests to see how mapdb works")
+@Ignore("Must not be a part of main build")
 public class MapDbTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(MapDbTest.class);
