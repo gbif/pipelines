@@ -33,7 +33,6 @@
   <modules>
     <module>core</module>
     <module>beam-common</module>
-    <module>labs</module>
     <module>hadoop</module>
     <module>gbif</module>
     <module>xml-occurrence-parsers</module>
