@@ -5,9 +5,9 @@ import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.issue.Validation;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;
@@ -48,15 +48,14 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
         Collection<Validation> validations = new ArrayList<>();
 
         // read the ws properties path from the PipelineOptions
-        String wsPropertiesPath =
-          context.getPipelineOptions().as(DataProcessingPipelineOptions.class).getWsProperties();
+        String wsProperties = context.getPipelineOptions().as(DataProcessingPipelineOptions.class).getWsProperties();
 
         // creates avro target file
         TaxonRecord taxonRecord = new TaxonRecord();
 
         // interpretation
         Interpretation.of(extendedRecord)
-          .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, wsPropertiesPath))
+          .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, wsProperties))
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // taxon record result

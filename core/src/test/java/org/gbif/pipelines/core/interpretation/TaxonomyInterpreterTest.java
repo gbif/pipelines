@@ -3,9 +3,9 @@ package org.gbif.pipelines.core.interpretation;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.core.ws.MockServer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.taxon.Rank;
+import org.gbif.pipelines.io.avro.taxon.RankedName;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
 import java.io.IOException;
 import java.util.HashMap;

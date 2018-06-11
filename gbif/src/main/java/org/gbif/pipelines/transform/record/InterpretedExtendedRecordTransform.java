@@ -5,8 +5,8 @@ import org.gbif.pipelines.core.interpretation.ExtendedRecordInterpreter;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.Validation;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.issue.Validation;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.ArrayList;

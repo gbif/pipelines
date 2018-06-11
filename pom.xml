@@ -33,7 +33,6 @@
   <modules>
     <module>core</module>
     <module>beam-common</module>
-    <module>labs</module>
     <module>hadoop</module>
     <module>gbif</module>
     <module>xml-occurrence-parsers</module>
@@ -53,6 +52,17 @@
     <repository>
       <id>cloudera-release</id>
       <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+    <repository>
+      <id>apache.snapshots</id>
+      <name>Apache Development Snapshot Repository</name>
+      <url>https://repository.apache.org/content/repositories/snapshots/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
     </repository>
   </repositories>
 

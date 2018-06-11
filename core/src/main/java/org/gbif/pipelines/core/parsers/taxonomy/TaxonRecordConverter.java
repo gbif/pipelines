@@ -2,13 +2,13 @@ package org.gbif.pipelines.core.parsers.taxonomy;
 
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.interpretation.TaxonomyInterpreter;
-import org.gbif.pipelines.io.avro.Diagnostics;
-import org.gbif.pipelines.io.avro.MatchType;
-import org.gbif.pipelines.io.avro.Nomenclature;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.Status;
-import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.taxon.Diagnostic;
+import org.gbif.pipelines.io.avro.taxon.MatchType;
+import org.gbif.pipelines.io.avro.taxon.Nomenclature;
+import org.gbif.pipelines.io.avro.taxon.Rank;
+import org.gbif.pipelines.io.avro.taxon.RankedName;
+import org.gbif.pipelines.io.avro.taxon.Status;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
 import java.util.List;
 import java.util.Objects;
@@ -64,7 +64,7 @@ public class TaxonRecordConverter {
     return Nomenclature.newBuilder().setId(nomenclatureApi.getId()).setSource(nomenclatureApi.getSource()).build();
   }
 
-  private static Diagnostics convertDiagnostics(NameUsageMatch2.Diagnostics diagnosticsApi) {
+  private static Diagnostic convertDiagnostics(NameUsageMatch2.Diagnostics diagnosticsApi) {
     if (diagnosticsApi == null) {
       return null;
     }
@@ -75,7 +75,7 @@ public class TaxonRecordConverter {
       .map(nameUsageMatch -> convertInternal(nameUsageMatch, new TaxonRecord()))
       .collect(Collectors.toList());
 
-    Diagnostics.Builder builder = Diagnostics.newBuilder()
+    Diagnostic.Builder builder = Diagnostic.newBuilder()
       .setAlternatives(alternatives)
       .setConfidence(diagnosticsApi.getConfidence())
       .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
