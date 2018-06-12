@@ -18,6 +18,15 @@
     <embedded.elasticsearch.version>2.5.1</embedded.elasticsearch.version>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>org.elasticsearch.client</groupId>

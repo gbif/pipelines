@@ -2,73 +2,55 @@ package org.gbif.pipelines.esindexing.api;
 
 import org.gbif.pipelines.esindexing.EsIntegrationTest;
 
-import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpGet;
 import org.elasticsearch.client.Response;
-import org.junit.Assert;
+import org.junit.After;
 import org.junit.Test;
 
-import static org.gbif.pipelines.esindexing.common.EsConstants.DURABILITY_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_NUMBER_REPLICAS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_REPLICAS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.REFRESH_INTERVAL_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_NUMBER_REPLICAS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SETTINGS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_DURABILITY;
-import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_FIELD;
-import static org.gbif.pipelines.esindexing.common.JsonUtils.readTreeFromEntity;
 import static org.gbif.pipelines.esindexing.common.SettingsType.INDEXING;
 import static org.gbif.pipelines.esindexing.common.SettingsType.SEARCH;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+/**
+ * Tests the {@link EsService}.
+ */
 public class EsServiceIT extends EsIntegrationTest {
 
-  // TODO: run IT only for some phases/profiles??
+  private static final String ALIAS_TEST = "alias";
 
-  // TODO: add some methods from here to public api?? like getIndex or parseSettings from response
+  @After
+  public void cleanIndexes() {
+    deleteAllIndexes();
+  }
 
   @Test
   public void createAndUpdateIndexWithSettingsTest() {
     String idx = EsService.createIndexWithSettings(getEsClient(), "idx-settings", INDEXING);
 
-    Response response = null;
-    try {
-      response = getRestClient().performRequest(HttpGet.METHOD_NAME, "/" + idx);
-      Assert.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-    } catch (IOException e) {
-      Assert.fail("idx not created");
-    }
+    // check that the index was created as expected
+    Response response = assertCreatedIndex(idx);
 
     // check settings
-    JsonNode indexSettings = readTreeFromEntity(response.getEntity()).path(idx).path(SETTINGS_FIELD).path(INDEX_FIELD);
-    Assert.assertEquals(INDEXING_REFRESH_INTERVAL, indexSettings.path(REFRESH_INTERVAL_FIELD).asText());
-    Assert.assertEquals(NUMBER_SHARDS, indexSettings.path(NUMBER_SHARDS_FIELD).asText());
-    Assert.assertEquals(INDEXING_NUMBER_REPLICAS, indexSettings.path(NUMBER_REPLICAS_FIELD).asText());
-    Assert.assertEquals(TRANSLOG_DURABILITY, indexSettings.path(TRANSLOG_FIELD).path(DURABILITY_FIELD).asText());
+    assertIndexingSettings(response, idx);
 
     EsService.updateIndexSettings(getEsClient(), idx, SEARCH);
 
-    response = null;
-    try {
-      response = getRestClient().performRequest(HttpGet.METHOD_NAME, "/" + idx);
-      Assert.assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
-    } catch (IOException e) {
-      Assert.fail("idx not updated");
-    }
+    // check that the index was updated as expected
+    response = assertCreatedIndex(idx);
 
     // check settings
-    indexSettings = readTreeFromEntity(response.getEntity()).path(idx).path(SETTINGS_FIELD).path(INDEX_FIELD);
-    Assert.assertEquals(SEARCHING_REFRESH_INTERVAL, indexSettings.path(REFRESH_INTERVAL_FIELD).asText());
-    Assert.assertEquals(NUMBER_SHARDS, indexSettings.path(NUMBER_SHARDS_FIELD).asText());
-    Assert.assertEquals(SEARCHING_NUMBER_REPLICAS, indexSettings.path(NUMBER_REPLICAS_FIELD).asText());
-    Assert.assertEquals(TRANSLOG_DURABILITY, indexSettings.path(TRANSLOG_FIELD).path(DURABILITY_FIELD).asText());
+    assertSearchSettings(response, idx);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void updateMissingIndex() {
+    EsService.updateIndexSettings(getEsClient(), "fake-index", INDEXING);
   }
 
   @Test(expected = IllegalStateException.class)
@@ -77,8 +59,53 @@ public class EsServiceIT extends EsIntegrationTest {
   }
 
   @Test
-  public void getIndexesByAliasTest() {
+  public void getIndexesByAliasAndSwapIndexTest() {
+    // create some indexes to test
+    String idx1 = EsService.createIndexWithSettings(getEsClient(), "idx1", INDEXING);
+    String idx2 = EsService.createIndexWithSettings(getEsClient(), "idx2", INDEXING);
+    String idx3 = EsService.createIndexWithSettings(getEsClient(), "idx3", INDEXING);
+    Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
 
+    // there shouldn't be indexes before we start
+    Set<String> indexes = EsService.getIndexesByAliasAndIndexPattern(getEsClient(), "idx*", ALIAS_TEST);
+    assertEquals(0, indexes.size());
+
+    // add them to the same alias
+    addIndexToAlias(ALIAS_TEST, initialIndexes);
+
+    // get the indexes of the alias
+    indexes = EsService.getIndexesByAliasAndIndexPattern(getEsClient(), "idx*", ALIAS_TEST);
+
+    // assert conditions
+    assertEquals(3, indexes.size());
+    assertTrue(indexes.containsAll(initialIndexes));
+
+    // create a new index and swap it to the alias
+    String idx4 = EsService.createIndexWithSettings(getEsClient(), "idx4", INDEXING);
+    EsService.swapIndexes(getEsClient(), ALIAS_TEST, Collections.singleton(idx4), initialIndexes);
+    assertSwapResults(idx4, "idx*", ALIAS_TEST, initialIndexes);
+
+    // repeat previous step with a new index
+    String idx5 = EsService.createIndexWithSettings(getEsClient(), "idx5", INDEXING);
+    EsService.swapIndexes(getEsClient(), ALIAS_TEST, Collections.singleton(idx5), Collections.singleton(idx4));
+    assertSwapResults(idx5, "idx*", ALIAS_TEST, initialIndexes);
   }
 
+  @Test
+  public void getIndexesFromMissingAlias() {
+    Set<String> idx = EsService.getIndexesByAliasAndIndexPattern(getEsClient(), "idx*", "fake-alias");
+    assertTrue(idx.isEmpty());
+  }
+
+  @Test
+  public void swapEmptyAliasTest() {
+    String idx1 = EsService.createIndexWithSettings(getEsClient(), "idx1", INDEXING);
+    EsService.swapIndexes(getEsClient(), ALIAS_TEST, Collections.singleton(idx1), Collections.emptySet());
+    assertSwapResults(idx1, "idx*", ALIAS_TEST, Collections.EMPTY_SET);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void swapMissingIndexTest() {
+    EsService.swapIndexes(getEsClient(), "fake-alias", Collections.singleton("fake-index"), Collections.emptySet());
+  }
 }

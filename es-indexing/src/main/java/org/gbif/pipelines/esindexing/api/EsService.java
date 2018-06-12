@@ -17,77 +17,119 @@ import org.elasticsearch.client.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getAliasIndexexEndpoint;
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getAliasesEndpoint;
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getIndexEndpoint;
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getIndexSettingsEndpoint;
+
+/**
+ * Service to perform ES operations.
+ * <p>
+ * The {@link EsClient} is always received as a parameter and this class has no responsibility on handling the
+ * connection with the ES server.
+ * <p>
+ * <p>
+ * This class is intended to be used internally within the same package, and <strong>never as a public API</strong>.
+ * Therefore, the access modifiers should never be changed.
+ */
 class EsService {
 
   private static final Logger LOG = LoggerFactory.getLogger(EsService.class);
 
-  // endpoints
-  private static final String ALIASES_ENDPOINT = "/_aliases";
-  private static final String INDEXES_BY_ALIAS_ENDPOINT = "/%s/_alias/%s";
-  private static final String INDEX_ENDPOINT_PATTERN = "/%s";
-  private static final String INDEX_SETTINGS_ENDPOINT_PATTERN = "/%s/_settings";
-
   private EsService() {}
 
+  /**
+   * Creates a ES index with the specified {@link SettingsType}.
+   *
+   * @param esClient     client to call ES. It is required.
+   * @param idxName      name of the index to create.
+   * @param settingsType settings to use in the call.
+   *
+   * @return name of the index created.
+   */
   static String createIndexWithSettings(EsClient esClient, String idxName, SettingsType settingsType) {
     Objects.requireNonNull(esClient);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
-    try {
-      Response response =
-        executeIndexOperationWithSettings(esClient, String.format(INDEX_ENDPOINT_PATTERN, idxName), settingsType);
+    // create entity body with settings
+    HttpEntity entity = EntityBuilder.entityWithSettings(settingsType);
 
-      return ResponseParser.parseIndexName(response);
+    try {
+      Response response = esClient.performPutRequest(getIndexEndpoint(idxName), Collections.emptyMap(), entity);
+      // parse response and return
+      return ResponseParser.parseCreatedIndexResponse(response.getEntity());
     } catch (ResponseException exc) {
       LOG.error("Error when creating index {} with settings {}", idxName, settingsType, exc);
       throw new IllegalStateException(exc.getMessage(), exc);
     }
   }
 
+  /**
+   * Updates the settings of an index.
+   *
+   * @param esClient     client to call ES. It is required.
+   * @param idxName      name of the index to update.
+   * @param settingsType settings that will be set to the index.
+   */
   static void updateIndexSettings(EsClient esClient, String idxName, SettingsType settingsType) {
     Objects.requireNonNull(esClient);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
+    // create entity body with settings
+    HttpEntity entity = EntityBuilder.entityWithSettings(settingsType);
+
     try {
-      executeIndexOperationWithSettings(esClient,
-                                        String.format(INDEX_SETTINGS_ENDPOINT_PATTERN, idxName),
-                                        settingsType);
+      // perform the call
+      esClient.performPutRequest(getIndexSettingsEndpoint(idxName), Collections.emptyMap(), entity);
     } catch (ResponseException exc) {
       LOG.error("Error when updating index {} to settings {}", idxName, settingsType, exc);
       throw new IllegalStateException(exc.getMessage(), exc);
     }
   }
 
-  private static Response executeIndexOperationWithSettings(
-    EsClient esClient, String endpoint, SettingsType settingsType
-  ) throws ResponseException {
-    // create request body
-    HttpEntity entity = EntityBuilder.entityWithSettings(settingsType);
-    // perform the call
-    return esClient.performPutRequest(endpoint, Collections.emptyMap(), entity);
-  }
-
-  static Set<String> getIndexesByAlias(EsClient esClient, String index, String alias) {
+  /**
+   * Gets all the indexes associated to a specific alias and whose names match with a specified pattern. Both alias
+   * and the pattern are required.
+   *
+   * @param esClient   client to call ES. It is required.
+   * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a single index, or a
+   *                   pattern using wildcards. For example, "idx*" matches with all the indexes whose name starts
+   *                   with "idx".
+   * @param alias      alias that has to be associated to the indexes retrieved.
+   *
+   * @return {@link Set} with all the indexes that are in the alias specified and match with the pattern received.
+   */
+  static Set<String> getIndexesByAliasAndIndexPattern(EsClient esClient, String idxPattern, String alias) {
     Objects.requireNonNull(esClient);
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(index));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxPattern));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias));
 
     try {
-      Response response = esClient.performGetRequest(String.format(INDEXES_BY_ALIAS_ENDPOINT, index, alias));
-      return ResponseParser.parseIndexes(response);
+      Response response = esClient.performGetRequest(getAliasIndexexEndpoint(idxPattern, alias));
+      return ResponseParser.parseIndexesInAliasResponse(response.getEntity());
     } catch (ResponseException e) {
-      LOG.debug("No indexes with prefix {} to remove from alias {}", index, alias);
+      LOG.debug("No indexes with pattern {} to remove from alias {}", idxPattern, alias);
       return Collections.emptySet();
     }
   }
 
-  static void swapIndexes(EsClient esClient, String idxToAdd, String alias, Set<String> idxToRemove) {
+  /**
+   * Swaps indexes in an alias.
+   * <p>
+   * In this method we can add or remove indexes in an alias. Also note that in the case of removing indixes, they
+   * are <strong>completely removed</strong> from the ES instance, and not only from the alias.
+   *
+   * @param esClient    client to call ES. It is required.
+   * @param alias       alias that will be modified
+   * @param idxToAdd    indexes to add to the alias.
+   * @param idxToRemove indexes to remove from the alias.
+   */
+  static void swapIndexes(EsClient esClient, String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
     Objects.requireNonNull(esClient);
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxToAdd));
 
-    HttpEntity entity = EntityBuilder.entityReplaceIndexAlias(alias, Collections.singleton(idxToAdd), idxToRemove);
+    HttpEntity entity = EntityBuilder.entityIndexAliasActions(alias, idxToAdd, idxToRemove);
     try {
-      esClient.performPostRequest(ALIASES_ENDPOINT, Collections.emptyMap(), entity);
+      esClient.performPostRequest(getAliasesEndpoint(), Collections.emptyMap(), entity);
     } catch (ResponseException exc) {
       LOG.error("Error when replacing index {} in alias {}", idxToAdd, alias, exc);
       throw new IllegalStateException(exc.getMessage(), exc);

@@ -13,62 +13,77 @@ import com.google.common.base.Strings;
 import org.apache.http.HttpEntity;
 import org.apache.http.nio.entity.NStringEntity;
 
-import static org.gbif.pipelines.esindexing.common.EsConstants.DURABILITY_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.ACTIONS_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.ADD_ACTION;
+import static org.gbif.pipelines.esindexing.common.EsConstants.ALIAS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_NUMBER_REPLICAS;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_REFRESH_INTERVAL;
+import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_DURABILITY_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.JSON_CONCATENATOR;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_REPLICAS_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_REPLICAS_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_SHARDS_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_REFRESH_INTERVAL_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.REFRESH_INTERVAL_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.REMOVE_INDEX_ACTION;
 import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_NUMBER_REPLICAS;
 import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_REFRESH_INTERVAL;
+import static org.gbif.pipelines.esindexing.common.EsConstants.SETTINGS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_DURABILITY;
-import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_FIELD;
-import static org.gbif.pipelines.esindexing.common.JsonUtils.createArrayNode;
-import static org.gbif.pipelines.esindexing.common.JsonUtils.createObjectNode;
-import static org.gbif.pipelines.esindexing.common.JsonUtils.writeJsonToString;
+import static org.gbif.pipelines.esindexing.common.JsonHandler.createArrayNode;
+import static org.gbif.pipelines.esindexing.common.JsonHandler.createObjectNode;
+import static org.gbif.pipelines.esindexing.common.JsonHandler.writeToString;
 
+/**
+ * Class that builds {@link HttpEntity} instances with JSON content.
+ */
 public class EntityBuilder {
 
   private static final ObjectNode indexingSettings = createObjectNode();
   private static final ObjectNode searchSettings = createObjectNode();
 
   static {
-    indexingSettings.put(INDEX_FIELD + JSON_CONCATENATOR + REFRESH_INTERVAL_FIELD, INDEXING_REFRESH_INTERVAL);
-    indexingSettings.put(INDEX_FIELD + JSON_CONCATENATOR + NUMBER_SHARDS_FIELD, NUMBER_SHARDS);
-    indexingSettings.put(INDEX_FIELD + JSON_CONCATENATOR + NUMBER_REPLICAS_FIELD, INDEXING_NUMBER_REPLICAS);
-    indexingSettings.put(INDEX_FIELD + JSON_CONCATENATOR + TRANSLOG_FIELD + "." + DURABILITY_FIELD,
-                         TRANSLOG_DURABILITY);
+    indexingSettings.put(INDEX_REFRESH_INTERVAL_FIELD, INDEXING_REFRESH_INTERVAL);
+    indexingSettings.put(INDEX_NUMBER_SHARDS_FIELD, NUMBER_SHARDS);
+    indexingSettings.put(INDEX_NUMBER_REPLICAS_FIELD, INDEXING_NUMBER_REPLICAS);
+    indexingSettings.put(INDEX_DURABILITY_FIELD, TRANSLOG_DURABILITY);
 
-    searchSettings.put(INDEX_FIELD + JSON_CONCATENATOR + REFRESH_INTERVAL_FIELD, SEARCHING_REFRESH_INTERVAL);
-    searchSettings.put(INDEX_FIELD + JSON_CONCATENATOR + NUMBER_REPLICAS_FIELD, SEARCHING_NUMBER_REPLICAS);
+    searchSettings.put(INDEX_REFRESH_INTERVAL_FIELD, SEARCHING_REFRESH_INTERVAL);
+    searchSettings.put(INDEX_NUMBER_REPLICAS_FIELD, SEARCHING_NUMBER_REPLICAS);
   }
 
   private EntityBuilder() {}
 
   // TODO: add mappings
 
+  /**
+   * Builds a {@link HttpEntity} with the specified ES {@link SettingsType} in the content as JSON.
+   */
   public static HttpEntity entityWithSettings(SettingsType settingsType) {
     Objects.requireNonNull(settingsType);
 
     ObjectNode entity = createObjectNode();
-    entity.set("settings", settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings);
+    entity.set(SETTINGS_FIELD, settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings);
 
     return createEntity(entity);
   }
 
-  public static HttpEntity entityReplaceIndexAlias(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
+  /**
+   * Builds a {@link HttpEntity} with the specified JSON content to add and remove indexes from an alias.
+   *
+   * @param alias       alias
+   * @param idxToAdd    indexes to add to the alias
+   * @param idxToRemove indexes to remove from alias. Note that these indexes will be also removed from the ES instance.
+   */
+  public static HttpEntity entityIndexAliasActions(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias));
 
     ObjectNode entity = createObjectNode();
     ArrayNode actions = createArrayNode();
-    entity.set("actions", actions);
+    entity.set(ACTIONS_FIELD, actions);
 
     // remove all indixes from alias action
     if (idxToRemove != null) {
-      idxToRemove.forEach(idx -> removeIndexFromAliasAction(alias, idx, actions));
+      idxToRemove.forEach(idx -> removeIndexFromAliasAction(idx, actions));
     }
     // add index action
     if (idxToAdd != null) {
@@ -78,26 +93,32 @@ public class EntityBuilder {
     return createEntity(entity);
   }
 
-  private static void removeIndexFromAliasAction(String alias, String idxToRemove, ArrayNode actions) {
-    ObjectNode action = createObjectNode();
+  private static void removeIndexFromAliasAction(String idxToRemove, ArrayNode actions) {
+    // create swap node
     ObjectNode swapNode = createObjectNode();
-    swapNode.put("index", idxToRemove);
-    action.set("remove_index", swapNode);
+    swapNode.put(INDEX_FIELD, idxToRemove);
+
+    // add the node to the action
+    ObjectNode action = createObjectNode();
+    action.set(REMOVE_INDEX_ACTION, swapNode);
     actions.add(action);
   }
 
   private static void addIndexToAliasAction(String alias, String idx, ArrayNode actions) {
-    ObjectNode action = createObjectNode();
+    // create swap node
     ObjectNode swapNode = createObjectNode();
-    swapNode.put("index", idx);
-    swapNode.put("alias", alias);
-    action.set("add", swapNode);
+    swapNode.put(INDEX_FIELD, idx);
+    swapNode.put(ALIAS_FIELD, alias);
+
+    // add the node to the action
+    ObjectNode action = createObjectNode();
+    action.set(ADD_ACTION, swapNode);
     actions.add(action);
   }
 
   private static HttpEntity createEntity(ObjectNode entityNode) {
     try {
-      String body = writeJsonToString(entityNode);
+      String body = writeToString(entityNode);
       return new NStringEntity(body);
     } catch (UnsupportedEncodingException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);

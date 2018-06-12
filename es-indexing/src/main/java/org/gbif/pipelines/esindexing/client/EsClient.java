@@ -22,6 +22,11 @@ import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Client to communicate with the ES server.
+ * <p>
+ * It should be closed after using it. It implements {@link AutoCloseable}.
+ */
 public class EsClient implements AutoCloseable {
 
   private static final Logger LOG = LoggerFactory.getLogger(EsClient.class);
@@ -42,19 +47,55 @@ public class EsClient implements AutoCloseable {
     restClient = RestClient.builder(hosts).build();
   }
 
+  /**
+   * Creates a {@link EsClient} from a {@link EsConfig}
+   *
+   * @param config configuration with the ES hosts. It is required to specify at least 1 host.
+   */
   public static EsClient from(EsConfig config) {
     return new EsClient(config);
   }
 
+  /**
+   * Performs a GET request.
+   *
+   * @param endpoint request's endpoint.
+   *
+   * @return {@link Response}.
+   *
+   * @throws ResponseException in case ES returns an error.
+   */
   public Response performGetRequest(String endpoint) throws ResponseException {
     return performRequest(HttpGet.METHOD_NAME, endpoint, Collections.emptyMap(), null);
   }
 
+  /**
+   * Performs a PUT request.
+   *
+   * @param endpoint request's endpoint.
+   * @param params   query string parameters.
+   * @param body     request's body in JSON format.
+   *
+   * @return {@link Response}.
+   *
+   * @throws ResponseException in case ES returns an error.
+   */
   public Response performPutRequest(String endpoint, Map<String, String> params, HttpEntity body)
     throws ResponseException {
     return performRequest(HttpPut.METHOD_NAME, endpoint, params, body);
   }
 
+  /**
+   * Performs a POST request.
+   *
+   * @param endpoint request's endpoint.
+   * @param params   query string parameters.
+   * @param body     request's body in JSON format.
+   *
+   * @return {@link Response}.
+   *
+   * @throws ResponseException in case ES returns an error.
+   */
   public Response performPostRequest(String endpoint, Map<String, String> params, HttpEntity body)
     throws ResponseException {
     return performRequest(HttpPost.METHOD_NAME, endpoint, params, body);

@@ -7,10 +7,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * ES configuration.
+ */
 public class EsConfig {
-
-  private static final int DEFAULT_PORT = 9200;
-  private static final String DEFAULT_PROTOCOL = "http";
 
   private final List<URL> hosts;
 
@@ -27,6 +27,13 @@ public class EsConfig {
     });
   }
 
+  /**
+   * Creates a {@link EsConfig} from the addresses received.
+   *
+   * @param hostsAddresses they should be valid URLs.
+   *
+   * @return {@link EsConfig}.
+   */
   public static EsConfig from(String... hostsAddresses) {
     return new EsConfig(hostsAddresses);
   }
