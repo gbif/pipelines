@@ -192,7 +192,7 @@ public class EsIntegrationTest {
       } catch (ResponseException e) {
         assertEquals(HttpStatus.SC_NOT_FOUND, e.getResponse().getStatusLine().getStatusCode());
       } catch (IOException e) {
-        Assert.fail(e.getMessage());
+        throw new AssertionError(e);
       }
     }
   }
@@ -207,7 +207,7 @@ public class EsIntegrationTest {
     try {
       restClient.performRequest(HttpPost.METHOD_NAME, "/_aliases", Collections.emptyMap(), entityBody);
     } catch (IOException e) {
-      Assert.fail("Could not add indexes to alias");
+      throw new AssertionError("Could not add indexes to alias", e);
     }
   }
 

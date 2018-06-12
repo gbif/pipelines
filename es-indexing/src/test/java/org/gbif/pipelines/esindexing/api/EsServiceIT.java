@@ -101,7 +101,7 @@ public class EsServiceIT extends EsIntegrationTest {
   public void swapEmptyAliasTest() {
     String idx1 = EsService.createIndexWithSettings(getEsClient(), "idx1", INDEXING);
     EsService.swapIndexes(getEsClient(), ALIAS_TEST, Collections.singleton(idx1), Collections.emptySet());
-    assertSwapResults(idx1, "idx*", ALIAS_TEST, Collections.EMPTY_SET);
+    assertSwapResults(idx1, "idx*", ALIAS_TEST, Collections.emptySet());
   }
 
   @Test(expected = IllegalStateException.class)
