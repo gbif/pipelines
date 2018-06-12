@@ -23,8 +23,6 @@ import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.BooleanNode;
-import org.codehaus.jackson.node.NullNode;
 
 /**
  * Utility class to generate Avro Schemas programmatically.
@@ -39,6 +37,8 @@ public final class AvroSchemaGenerator {
   private static final String DEFAULT_TAXON_SCHEMA_DOC = "A taxonomic record";
   private static final String DEFAULT_TAXON_SCHEMA_NAMESPACE = "org.gbif.pipelines.io.avro";
 
+  static final Object NULL_DEFAULT = null;
+
   /**
    * key -> class name , value -> {@link Schema} with schema and default value.
    */
@@ -47,7 +47,7 @@ public final class AvroSchemaGenerator {
   /**
    * key -> {@link org.apache.avro.Schema.Type} , value -> {@link JsonNode} with the default value.
    */
-  private static final EnumMap<Schema.Type, JsonNode> COMMON_SCHEMAS_DEFAULTS = new EnumMap<>(Schema.Type.class);
+  private static final EnumMap<Schema.Type, Object> COMMON_SCHEMAS_DEFAULTS = new EnumMap<>(Schema.Type.class);
 
   static {
     // initialize schemas of common types
@@ -66,7 +66,7 @@ public final class AvroSchemaGenerator {
                              COMMON_TYPES_SCHEMAS.get(Character.class.getSimpleName().toLowerCase()));
 
     // initialize defaults of common schemas
-    COMMON_SCHEMAS_DEFAULTS.put(Schema.Type.BOOLEAN, BooleanNode.getFalse());
+    COMMON_SCHEMAS_DEFAULTS.put(Schema.Type.BOOLEAN, false);
     // TODO: add more
   }
 
@@ -103,7 +103,7 @@ public final class AvroSchemaGenerator {
     return schemaData.addFieldAsFirstElement(new Schema.Field("id",
                                                               SchemaBuilder.builder().stringType(),
                                                               "The record id",
-                                                              null)).buildSchema();
+                                                              NULL_DEFAULT)).buildSchema();
   }
 
   /**
@@ -138,9 +138,9 @@ public final class AvroSchemaGenerator {
     return new SchemaData(schemaGenerated, createFields(clazz, customTypes, namespace));
   }
 
-
-  private static List<Schema.Field> createFields(Class<?> clazz, Map<String, Schema> customSchemas,
-                                   String namespace) {
+  private static List<Schema.Field> createFields(
+    Class<?> clazz, Map<String, Schema> customSchemas, String namespace
+  ) {
     List<Schema.Field> schemaFields = new ArrayList<>();
 
     // get all the fields that will be added to the schema
@@ -148,8 +148,9 @@ public final class AvroSchemaGenerator {
     return schemaFields;
   }
 
-  private static void createFieldsRecursive(List<Schema.Field> avroFields, Field[] fields,
-                                            Map<String, Schema> customSchemas, String namespace) {
+  private static void createFieldsRecursive(
+    List<Schema.Field> avroFields, Field[] fields, Map<String, Schema> customSchemas, String namespace
+  ) {
     for (Field field : fields) {
       // create schema depending on the file type TODO: handle more types (arrays, maps...)
       Schema schema;
@@ -226,12 +227,12 @@ public final class AvroSchemaGenerator {
    * Currently we generate all the fields nullable so the default will be always null, but we leave this method for
    * the future.
    */
-  private static JsonNode defaultValueOf(Schema schema) {
+  private static Object defaultValueOf(Schema schema) {
     // according to the avro specification, in union schemas the default value corresponds to the first schema
     Schema.Type schemaType =
-      Schema.Type.UNION == schema.getType()? schema.getTypes().get(0).getType() : schema.getType();
+      Schema.Type.UNION == schema.getType() ? schema.getTypes().get(0).getType() : schema.getType();
 
-    return COMMON_SCHEMAS_DEFAULTS.getOrDefault(schemaType, NullNode.getInstance());
+    return COMMON_SCHEMAS_DEFAULTS.getOrDefault(schemaType, NULL_DEFAULT);
   }
 
   /**
