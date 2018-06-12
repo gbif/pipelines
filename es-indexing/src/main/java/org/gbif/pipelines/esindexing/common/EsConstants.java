@@ -5,8 +5,6 @@ package org.gbif.pipelines.esindexing.common;
  */
 public final class EsConstants {
 
-  private EsConstants() {}
-
   // Fields
   public static final String INDEX_FIELD = "index";
   public static final String SETTINGS_FIELD = "settings";
@@ -44,5 +42,7 @@ public final class EsConstants {
   // constant values
   public static final String NUMBER_SHARDS = "3";
   public static final String TRANSLOG_DURABILITY = "async";
+
+  private EsConstants() {}
 
 }

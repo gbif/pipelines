@@ -1,5 +1,6 @@
 package org.gbif.pipelines.esindexing;
 
+import org.gbif.pipelines.esindexing.api.EndpointHelper;
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
 import org.gbif.pipelines.esindexing.request.EntityBuilder;
@@ -64,7 +65,7 @@ public class EsIntegrationTest {
   public static void esSetup() throws IOException, InterruptedException {
     embeddedElastic = EmbeddedElastic.builder()
       // TODO: get version from pom??
-      .withElasticVersion("5.6.0")
+      .withElasticVersion("5.6.3")
       .withEsJavaOpts("-Xms128m -Xmx512m")
       .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
       .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
@@ -134,7 +135,7 @@ public class EsIntegrationTest {
   protected static Response assertCreatedIndex(String idx) {
     Response response = null;
     try {
-      response = restClient.performRequest(HttpGet.METHOD_NAME, "/" + idx);
+      response = restClient.performRequest(HttpGet.METHOD_NAME, EndpointHelper.getIndexEndpoint(idx));
       assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     } catch (IOException e) {
       Assert.fail(e.getMessage());
@@ -174,7 +175,8 @@ public class EsIntegrationTest {
     // get indexes of the alias again. Only the last index should be returned.
     Response response = null;
     try {
-      response = restClient.performRequest(HttpGet.METHOD_NAME, "/" + idxPattern + "/_alias/" + alias);
+      response =
+        restClient.performRequest(HttpGet.METHOD_NAME, EndpointHelper.getAliasIndexexEndpoint(idxPattern, alias));
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }
@@ -188,7 +190,7 @@ public class EsIntegrationTest {
     // the other indexes shoudn't exist
     for (String removed : idxRemoved) {
       try {
-        response = restClient.performRequest(HttpGet.METHOD_NAME, "/" + removed);
+        response = restClient.performRequest(HttpGet.METHOD_NAME, EndpointHelper.getIndexEndpoint(removed));
       } catch (ResponseException e) {
         assertEquals(HttpStatus.SC_NOT_FOUND, e.getResponse().getStatusLine().getStatusCode());
       } catch (IOException e) {
@@ -205,7 +207,10 @@ public class EsIntegrationTest {
     HttpEntity entityBody = EntityBuilder.entityIndexAliasActions(alias, idxToAdd, Collections.emptySet());
 
     try {
-      restClient.performRequest(HttpPost.METHOD_NAME, "/_aliases", Collections.emptyMap(), entityBody);
+      restClient.performRequest(HttpPost.METHOD_NAME,
+                                EndpointHelper.getAliasesEndpoint(),
+                                Collections.emptyMap(),
+                                entityBody);
     } catch (IOException e) {
       throw new AssertionError("Could not add indexes to alias", e);
     }

@@ -74,6 +74,7 @@ public class EntityBuilderTest {
     Set<String> indexesAdded = new HashSet<>();
     addActions.forEach(jsonNode -> indexesAdded.add(jsonNode.get(INDEX_FIELD).asText()));
     assertTrue(indexesAdded.containsAll(idxToAdd));
+    assertEquals(idxToAdd.size(), indexesAdded.size());
     assertEquals(alias, addActions.get(0).get(ALIAS_FIELD).asText());
     assertEquals(alias, addActions.get(1).get(ALIAS_FIELD).asText());
 
@@ -84,6 +85,7 @@ public class EntityBuilderTest {
     Set<String> indexesRemoved = new HashSet<>();
     removeActions.forEach(jsonNode -> indexesRemoved.add(jsonNode.get(INDEX_FIELD).asText()));
     assertTrue(indexesRemoved.containsAll(idxToRemove));
+    assertEquals(idxToRemove.size(), indexesRemoved.size());
   }
 
 }
