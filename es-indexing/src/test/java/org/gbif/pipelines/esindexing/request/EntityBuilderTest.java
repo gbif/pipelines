@@ -54,7 +54,7 @@ public class EntityBuilderTest {
   }
 
   @Test
-  public void entityReplaceIndexAliasTest() {
+  public void entityIndexAliasActionsTest() {
     final String alias = "alias";
     Set<String> idxToAdd = new HashSet<>(Arrays.asList("add1", "add2"));
     Set<String> idxToRemove = new HashSet<>(Arrays.asList("remove1", "remove2"));
