@@ -53,7 +53,8 @@ public class EntityBuilder {
 
   private EntityBuilder() {}
 
-  // TODO: add mappings
+  // TODO: add mappings. If we use dynamic add new method entityWithSettingsAndMappings, because entityWithSettings
+  // is also used to update settings
 
   /**
    * Builds a {@link HttpEntity} with the specified ES {@link SettingsType} in the content as JSON.
