@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Collection;
 
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
 import org.junit.Assert;
@@ -45,7 +44,7 @@ public class GeocodeServiceRestTest extends MockServer {
       Assert.assertEquals(Country.CANADA.getIso2LetterCode(), geocodeResponse.getIsoCountryCode2Digit());
 
       ObjectMapper mapper = new ObjectMapper();
-      System.out.println(mapper.writer(new DefaultPrettyPrinter()).writeValueAsString(geocodeResponse));
+      System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(geocodeResponse));
 
     } catch (IOException e) {
       Assert.fail(e.getMessage());

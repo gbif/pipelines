@@ -5,7 +5,5 @@
 High Level Rest Client.
 
 ## Embedded ES
-
 For testing we are using this library due to its flexibility to configure an available port in Java:
-
 https://github.com/allegro/embedded-elasticsearch

@@ -9,7 +9,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
 import org.junit.Assert;
@@ -35,7 +34,7 @@ public class SpeciesMatchv2RestServiceTest extends MockServer {
       Assert.assertNotNull(response);
 
       ObjectMapper mapper = new ObjectMapper();
-      System.out.println(mapper.writer(new DefaultPrettyPrinter()).writeValueAsString(response.body()));
+      System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response.body()));
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }
