@@ -14,6 +14,7 @@ public final class EsConstants {
   public static final String TRANSLOG_FIELD = "translog";
   public static final String DURABILITY_FIELD = "durability";
   public static final String ACTIONS_FIELD = "actions";
+  public static final String MAPPINGS_FIELD = "mappings";
   public static final String ALIAS_FIELD = "alias";
 
   // actions

@@ -2,17 +2,22 @@ package org.gbif.pipelines.esindexing.api;
 
 import org.gbif.pipelines.esindexing.EsIntegrationTest;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.elasticsearch.client.Response;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.gbif.pipelines.esindexing.api.EsHandler.INDEX_SEPARATOR;
+import static org.gbif.pipelines.esindexing.common.EsConstants.MAPPINGS_FIELD;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the {@link EsHandler}.
@@ -37,7 +42,23 @@ public class EsHandlerIT extends EsIntegrationTest {
     // assert index settings
     assertIndexingSettings(response, idxCreated);
     // assert idx name
-    Assert.assertEquals(DATASET_TEST + INDEX_SEPARATOR + 1, idxCreated);
+    assertEquals(DATASET_TEST + INDEX_SEPARATOR + 1, idxCreated);
+  }
+
+  @Test
+  public void createIndexWithMappingsTest() {
+    // create index
+    String idxCreated = EsHandler.createIndex(getEsConfig(), DATASET_TEST, 1, Paths.get(TEST_MAPPINGS_PATH));
+
+    // assert index created
+    Response response = assertCreatedIndex(idxCreated);
+    // assert index settings
+    assertIndexingSettings(response, idxCreated);
+    // assert idx name
+    assertEquals(DATASET_TEST + INDEX_SEPARATOR + 1, idxCreated);
+    // assert mappings
+    JsonNode mappings = getMappingsFromIndex(idxCreated).path(idxCreated).path(MAPPINGS_FIELD);
+    assertTrue(mappings.has("doc"));
   }
 
   @Test

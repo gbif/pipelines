@@ -1,7 +1,10 @@
 package org.gbif.pipelines.esindexing.request;
 
+import org.gbif.pipelines.esindexing.common.FileUtils;
+import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.common.SettingsType;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +22,7 @@ import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_REPLICAS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_SHARDS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_REFRESH_INTERVAL_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.MAPPINGS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.REMOVE_INDEX_ACTION;
 import static org.gbif.pipelines.esindexing.common.EsConstants.SETTINGS_FIELD;
 import static org.gbif.pipelines.esindexing.common.JsonHandler.readTree;
@@ -27,14 +31,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests the {@link EntityBuilder}.
+ * Tests the {@link BodyBuilder}.
  */
-public class EntityBuilderTest {
+public class BodyBuilderTest {
+
+  private static final String TEST_MAPPINGS_PATH = "mappings/simple-mapping.json";
 
   @Test
-  public void entityWithSettingsTest() {
+  public void bodyWithSettingsTest() {
     // index settings
-    HttpEntity entity = EntityBuilder.entityWithSettings(SettingsType.INDEXING);
+    HttpEntity entity = BodyBuilder.newInstance().withSettings(SettingsType.INDEXING).build();
+
+    // assert entity
     JsonNode node = readTree(entity);
     assertTrue(node.has(SETTINGS_FIELD));
 
@@ -45,7 +53,7 @@ public class EntityBuilderTest {
     assertTrue(node.path(SETTINGS_FIELD).has(INDEX_DURABILITY_FIELD));
 
     // search settings
-    entity = EntityBuilder.entityWithSettings(SettingsType.SEARCH);
+    entity = BodyBuilder.newInstance().withSettings(SettingsType.SEARCH).build();
     node = readTree(entity);
     assertEquals(2, node.path(SETTINGS_FIELD).size());
     assertTrue(node.has(SETTINGS_FIELD));
@@ -54,12 +62,14 @@ public class EntityBuilderTest {
   }
 
   @Test
-  public void entityIndexAliasActionsTest() {
+  public void bodyIndexAliasActionsTest() {
     final String alias = "alias";
     Set<String> idxToAdd = new HashSet<>(Arrays.asList("add1", "add2"));
     Set<String> idxToRemove = new HashSet<>(Arrays.asList("remove1", "remove2"));
 
-    HttpEntity entity = EntityBuilder.entityIndexAliasActions(alias, idxToAdd, idxToRemove);
+    HttpEntity entity = BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
+
+    // assert entity
     JsonNode node = readTree(entity);
     assertTrue(node.has(ACTIONS_FIELD));
 
@@ -86,6 +96,48 @@ public class EntityBuilderTest {
     removeActions.forEach(jsonNode -> indexesRemoved.add(jsonNode.get(INDEX_FIELD).asText()));
     assertTrue(indexesRemoved.containsAll(idxToRemove));
     assertEquals(idxToRemove.size(), indexesRemoved.size());
+  }
+
+  @Test
+  public void bodyWithMappingsAsPath() {
+    HttpEntity entity = BodyBuilder.newInstance().withMappings(Paths.get(TEST_MAPPINGS_PATH)).build();
+
+    // assert entity
+    JsonNode node = readTree(entity);
+    assertMappings(node);
+  }
+
+  @Test
+  public void bodyWithMappingsAsString() {
+    String jsonMappings = JsonHandler.writeToString(FileUtils.loadFile(Paths.get(TEST_MAPPINGS_PATH)));
+
+    HttpEntity entity = BodyBuilder.newInstance().withMappings(jsonMappings).build();
+
+    // assert entity
+    JsonNode node = readTree(entity);
+    assertMappings(node);
+  }
+
+  @Test
+  public void bodyWithSettingsAndMappings() {
+    HttpEntity entity =
+      BodyBuilder.newInstance().withSettings(SettingsType.INDEXING).withMappings(Paths.get(TEST_MAPPINGS_PATH)).build();
+
+    // assert entity
+    JsonNode node = readTree(entity);
+    assertEquals(2, node.size());
+    assertTrue(node.has(SETTINGS_FIELD));
+    assertTrue(node.has(MAPPINGS_FIELD));
+  }
+
+  private void assertMappings(JsonNode mappingsNode) {
+    assertTrue(mappingsNode.has(MAPPINGS_FIELD));
+
+    JsonNode mappings = mappingsNode.path(MAPPINGS_FIELD);
+    assertTrue(mappings.has("doc"));
+    assertTrue(mappings.path("doc").has("properties"));
+    assertTrue(mappings.path("doc").path("properties").has("test"));
+    assertEquals("text", mappings.path("doc").path("properties").path("test").get("type").asText());
   }
 
 }

@@ -87,4 +87,26 @@ public final class JsonHandler {
     }
   }
 
+  /**
+   * Reads a {@link InputStream} with JSON content and returns it as a {@link JsonNode}.
+   */
+  public static JsonNode readTree(InputStream inputStream) {
+    try {
+      return reader.readTree(inputStream);
+    } catch (IOException exc) {
+      throw new IllegalStateException(exc.getMessage(), exc);
+    }
+  }
+
+  /**
+   * Reads a {@link String} with JSON content and returns it as a {@link JsonNode}.
+   */
+  public static JsonNode readTree(String jsonString) {
+    try {
+      return reader.readTree(jsonString);
+    } catch (IOException exc) {
+      throw new IllegalStateException(exc.getMessage(), exc);
+    }
+  }
+
 }

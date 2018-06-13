@@ -2,9 +2,10 @@ package org.gbif.pipelines.esindexing.api;
 
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.common.SettingsType;
-import org.gbif.pipelines.esindexing.request.EntityBuilder;
+import org.gbif.pipelines.esindexing.request.BodyBuilder;
 import org.gbif.pipelines.esindexing.response.ResponseParser;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
@@ -39,7 +40,7 @@ class EsService {
   private EsService() {}
 
   /**
-   * Creates a ES index with the specified {@link SettingsType}.
+   * Creates a ES index.
    *
    * @param esClient     client to call ES. It is required.
    * @param idxName      name of the index to create.
@@ -47,19 +48,63 @@ class EsService {
    *
    * @return name of the index created.
    */
-  static String createIndexWithSettings(EsClient esClient, String idxName, SettingsType settingsType) {
+  static String createIndex(EsClient esClient, String idxName, SettingsType settingsType) {
     Objects.requireNonNull(esClient);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
-    // create entity body with settings
-    HttpEntity entity = EntityBuilder.entityWithSettings(settingsType);
+    // create entity body
+    HttpEntity body = BodyBuilder.newInstance().withSettings(settingsType).build();
 
+    return createIndexInternal(esClient, idxName, body);
+  }
+
+  /**
+   * Creates a ES index.
+   *
+   * @param esClient     client to call ES. It is required.
+   * @param idxName      name of the index to create.
+   * @param settingsType settings to use in the call.
+   * @param mappings     path of the file with the mappings.
+   *
+   * @return name of the index created.
+   */
+  static String createIndex(EsClient esClient, String idxName, SettingsType settingsType, Path mappings) {
+    Objects.requireNonNull(esClient);
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
+
+    // create entity body
+    HttpEntity body = BodyBuilder.newInstance().withSettings(settingsType).withMappings(mappings).build();
+
+    return createIndexInternal(esClient, idxName, body);
+  }
+
+  /**
+   * Creates a ES index.
+   *
+   * @param esClient     client to call ES. It is required.
+   * @param idxName      name of the index to create.
+   * @param settingsType settings to use in the call.
+   * @param mappings     mappings as json.
+   *
+   * @return name of the index created.
+   */
+  static String createIndex(EsClient esClient, String idxName, SettingsType settingsType, String mappings) {
+    Objects.requireNonNull(esClient);
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
+
+    // create entity body
+    HttpEntity body = BodyBuilder.newInstance().withSettings(settingsType).withMappings(mappings).build();
+
+    return createIndexInternal(esClient, idxName, body);
+  }
+
+  private static String createIndexInternal(EsClient esClient, String idxName, HttpEntity body) {
     try {
-      Response response = esClient.performPutRequest(getIndexEndpoint(idxName), Collections.emptyMap(), entity);
+      Response response = esClient.performPutRequest(getIndexEndpoint(idxName), Collections.emptyMap(), body);
       // parse response and return
       return ResponseParser.parseCreatedIndexResponse(response.getEntity());
     } catch (ResponseException exc) {
-      LOG.error("Error when creating index {} with settings {}", idxName, settingsType, exc);
+      LOG.error("Error when creating index {} with body {}", idxName, body.toString(), exc);
       throw new IllegalStateException(exc.getMessage(), exc);
     }
   }
@@ -76,11 +121,11 @@ class EsService {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
     // create entity body with settings
-    HttpEntity entity = EntityBuilder.entityWithSettings(settingsType);
+    HttpEntity body = BodyBuilder.newInstance().withSettings(settingsType).build();
 
     try {
       // perform the call
-      esClient.performPutRequest(getIndexSettingsEndpoint(idxName), Collections.emptyMap(), entity);
+      esClient.performPutRequest(getIndexSettingsEndpoint(idxName), Collections.emptyMap(), body);
     } catch (ResponseException exc) {
       LOG.error("Error when updating index {} to settings {}", idxName, settingsType, exc);
       throw new IllegalStateException(exc.getMessage(), exc);
@@ -127,9 +172,9 @@ class EsService {
   static void swapIndexes(EsClient esClient, String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
     Objects.requireNonNull(esClient);
 
-    HttpEntity entity = EntityBuilder.entityIndexAliasActions(alias, idxToAdd, idxToRemove);
+    HttpEntity body = BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
     try {
-      esClient.performPostRequest(getAliasesEndpoint(), Collections.emptyMap(), entity);
+      esClient.performPostRequest(getAliasesEndpoint(), Collections.emptyMap(), body);
     } catch (ResponseException exc) {
       LOG.error("Error when replacing index {} in alias {}", idxToAdd, alias, exc);
       throw new IllegalStateException(exc.getMessage(), exc);

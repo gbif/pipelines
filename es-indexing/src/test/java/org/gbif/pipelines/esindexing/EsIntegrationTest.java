@@ -3,7 +3,8 @@ package org.gbif.pipelines.esindexing;
 import org.gbif.pipelines.esindexing.api.EndpointHelper;
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
-import org.gbif.pipelines.esindexing.request.EntityBuilder;
+import org.gbif.pipelines.esindexing.common.JsonHandler;
+import org.gbif.pipelines.esindexing.request.BodyBuilder;
 import org.gbif.pipelines.esindexing.response.ResponseParser;
 
 import java.io.IOException;
@@ -57,6 +58,9 @@ public class EsIntegrationTest {
   private static RestClient restClient;
   // I create both clients not to expose the restClient in EsClient
   private static EsClient esClient;
+
+  // files for testing
+  protected static final String TEST_MAPPINGS_PATH = "mappings/simple-mapping.json";
 
   /**
    * Starts the embedded ES instance and creates all the necessary clients and configuration to be reused in the tests.
@@ -204,7 +208,8 @@ public class EsIntegrationTest {
    */
   protected static void addIndexToAlias(String alias, Set<String> idxToAdd) {
     // add them to the same alias
-    HttpEntity entityBody = EntityBuilder.entityIndexAliasActions(alias, idxToAdd, Collections.emptySet());
+    HttpEntity entityBody =
+      BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, Collections.emptySet()).build();
 
     try {
       restClient.performRequest(HttpPost.METHOD_NAME,
@@ -213,6 +218,22 @@ public class EsIntegrationTest {
                                 entityBody);
     } catch (IOException e) {
       throw new AssertionError("Could not add indexes to alias", e);
+    }
+  }
+
+  /**
+   * Utility method to get the mappings of an index.
+   */
+  protected static JsonNode getMappingsFromIndex(String idx) {
+    try {
+      Response response = restClient.performRequest(HttpGet.METHOD_NAME,
+                                                    EndpointHelper.getIndexMappingsEndpoint(idx),
+                                                    Collections.emptyMap());
+
+      // parse response and return
+      return JsonHandler.readTree(response.getEntity());
+    } catch (IOException e) {
+      throw new AssertionError("Could not get the index mappings", e);
     }
   }
 

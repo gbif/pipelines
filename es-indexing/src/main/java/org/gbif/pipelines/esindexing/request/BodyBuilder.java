@@ -1,11 +1,15 @@
 package org.gbif.pipelines.esindexing.request;
 
+import org.gbif.pipelines.esindexing.common.FileUtils;
+import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.common.SettingsType;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
@@ -23,6 +27,7 @@ import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_REPLICAS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_SHARDS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_REFRESH_INTERVAL_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.MAPPINGS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS;
 import static org.gbif.pipelines.esindexing.common.EsConstants.REMOVE_INDEX_ACTION;
 import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_NUMBER_REPLICAS;
@@ -36,10 +41,15 @@ import static org.gbif.pipelines.esindexing.common.JsonHandler.writeToString;
 /**
  * Class that builds {@link HttpEntity} instances with JSON content.
  */
-public class EntityBuilder {
+public class BodyBuilder {
 
+  // settings
   private static final ObjectNode indexingSettings = createObjectNode();
   private static final ObjectNode searchSettings = createObjectNode();
+
+  private SettingsType settingsType;
+  private JsonNode mappings;
+  private IndexAliasAction indexAliasAction;
 
   static {
     indexingSettings.put(INDEX_REFRESH_INTERVAL_FIELD, INDEXING_REFRESH_INTERVAL);
@@ -51,47 +61,90 @@ public class EntityBuilder {
     searchSettings.put(INDEX_NUMBER_REPLICAS_FIELD, SEARCHING_NUMBER_REPLICAS);
   }
 
-  private EntityBuilder() {}
-
-  // TODO: add mappings. If we use dynamic add new method entityWithSettingsAndMappings, because entityWithSettings
-  // is also used to update settings
+  private BodyBuilder() {}
 
   /**
-   * Builds a {@link HttpEntity} with the specified ES {@link SettingsType} in the content as JSON.
+   * Creates a new {@link BodyBuilder}.
    */
-  public static HttpEntity entityWithSettings(SettingsType settingsType) {
-    Objects.requireNonNull(settingsType);
+  public static BodyBuilder newInstance() {
+    return new BodyBuilder();
+  }
 
+  /**
+   * Adds a {@link SettingsType} to the body.
+   */
+  public BodyBuilder withSettings(SettingsType settingsType) {
+    this.settingsType = settingsType;
+    return this;
+  }
+
+  /**
+   * Adds ES mappings in JSON format to the body.
+   */
+  public BodyBuilder withMappings(String mappings) {
+    Objects.requireNonNull(mappings);
+    this.mappings = JsonHandler.readTree(mappings);
+    return this;
+  }
+
+  /**
+   * Adds ES mappings from a file in JSON format to the body.
+   */
+  public BodyBuilder withMappings(Path mappingsPath) {
+    Objects.requireNonNull(mappingsPath);
+    this.mappings = JsonHandler.readTree(FileUtils.loadFile(mappingsPath));
+    return this;
+  }
+
+  /**
+   * Adds actions to add and remove index from an alias. Note that the indexes to be removed will be removed
+   * completely from the ES instance.
+   *
+   * @param alias       alias that wil be modify. This parameter is required.
+   * @param idxToAdd    indexes to add to the alias.
+   * @param idxToRemove indexes to remove from the alias. These indexes will be completely removed form the ES instance.
+   */
+  public BodyBuilder withIndexAliasAction(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
+    this.indexAliasAction = new IndexAliasAction(alias, idxToAdd, idxToRemove);
+    return this;
+  }
+
+  public HttpEntity build() {
     ObjectNode entity = createObjectNode();
-    entity.set(SETTINGS_FIELD, settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings);
+
+    if (Objects.nonNull(settingsType)) {
+      entity.set(SETTINGS_FIELD, settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings);
+    }
+
+    if (Objects.nonNull(mappings)) {
+      entity.set(MAPPINGS_FIELD, mappings);
+    }
+
+    if (Objects.nonNull(indexAliasAction)) {
+      entity.set(ACTIONS_FIELD, createIndexAliasActions(indexAliasAction));
+    }
 
     return createEntity(entity);
   }
 
   /**
-   * Builds a {@link HttpEntity} with the specified JSON content to add and remove indexes from an alias.
-   *
-   * @param alias       alias
-   * @param idxToAdd    indexes to add to the alias
-   * @param idxToRemove indexes to remove from alias. Note that these indexes will be also removed from the ES instance.
+   * Builds a {@link ArrayNode} with the specified JSON content to add and remove indexes from an alias.
    */
-  public static HttpEntity entityIndexAliasActions(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(alias));
+  private ArrayNode createIndexAliasActions(IndexAliasAction indexAliasAction) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(indexAliasAction.alias));
 
-    ObjectNode entity = createObjectNode();
     ArrayNode actions = createArrayNode();
-    entity.set(ACTIONS_FIELD, actions);
 
     // remove all indixes from alias action
-    if (idxToRemove != null) {
-      idxToRemove.forEach(idx -> removeIndexFromAliasAction(idx, actions));
+    if (indexAliasAction.idxToRemove != null) {
+      indexAliasAction.idxToRemove.forEach(idx -> removeIndexFromAliasAction(idx, actions));
     }
     // add index action
-    if (idxToAdd != null) {
-      idxToAdd.forEach(idx -> addIndexToAliasAction(alias, idx, actions));
+    if (indexAliasAction.idxToAdd != null) {
+      indexAliasAction.idxToAdd.forEach(idx -> addIndexToAliasAction(indexAliasAction.alias, idx, actions));
     }
 
-    return createEntity(entity);
+    return actions;
   }
 
   private static void removeIndexFromAliasAction(String idxToRemove, ArrayNode actions) {
@@ -124,6 +177,20 @@ public class EntityBuilder {
     } catch (UnsupportedEncodingException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }
+  }
+
+  private static class IndexAliasAction {
+
+    String alias;
+    Set<String> idxToAdd;
+    Set<String> idxToRemove;
+
+    IndexAliasAction(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
+      this.alias = alias;
+      this.idxToAdd = idxToAdd;
+      this.idxToRemove = idxToRemove;
+    }
+
   }
 
 }

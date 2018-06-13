@@ -32,10 +32,15 @@ public class EndpointHelper {
   }
 
   /**
-   * Return the index settings endpoint for an index (/{idx}/_settings).
+   * Returns the index settings endpoint for an index (/{idx}/_settings).
    */
   public static String getIndexSettingsEndpoint(String index) {
     return ROOT + index + "/_settings";
   }
+
+  /**
+   * Returns the index mappings endpoint (/{idx}/_mapping).
+   */
+  public static String getIndexMappingsEndpoint(String index) { return ROOT + index + "/_mapping"; }
 
 }

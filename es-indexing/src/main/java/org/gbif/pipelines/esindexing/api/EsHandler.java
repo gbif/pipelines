@@ -4,6 +4,7 @@ import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
 import org.gbif.pipelines.esindexing.common.SettingsType;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -43,14 +44,55 @@ public class EsHandler {
    * @return name of the index created.
    */
   public static String createIndex(EsConfig config, String datasetId, int attempt) {
-    Objects.requireNonNull(config, "ES configuration is required");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(datasetId), "dataset id is required");
-
-    final String idxName = datasetId + INDEX_SEPARATOR + attempt;
+    final String idxName = createIndexName(datasetId, attempt);
     LOG.info("Creating index {}", idxName);
 
     try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndexWithSettings(esClient, idxName, SettingsType.INDEXING);
+      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING);
+    }
+  }
+
+  /**
+   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
+   * <p>
+   * Both datasetId and attempt parameters are required. The index created will follow the pattern
+   * "{datasetId}_{attempt}".
+   *
+   * @param config    configuration of the ES instance.
+   * @param datasetId dataset id.
+   * @param attempt   attempt of the dataset crawling.
+   * @param mappings  path of the file with the mappings.
+   *
+   * @return name of the index created.
+   */
+  public static String createIndex(EsConfig config, String datasetId, int attempt, Path mappings) {
+    final String idxName = createIndexName(datasetId, attempt);
+    LOG.info("Creating index {}", idxName);
+
+    try (EsClient esClient = EsClient.from(config)) {
+      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
+    }
+  }
+
+  /**
+   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
+   * <p>
+   * Both datasetId and attempt parameters are required. The index created will follow the pattern
+   * "{datasetId}_{attempt}".
+   *
+   * @param config    configuration of the ES instance.
+   * @param datasetId dataset id.
+   * @param attempt   attempt of the dataset crawling.
+   * @param mappings  mappings as json string.
+   *
+   * @return name of the index created.
+   */
+  public static String createIndex(EsConfig config, String datasetId, int attempt, String mappings) {
+    final String idxName = createIndexName(datasetId, attempt);
+    LOG.info("Creating index {}", idxName);
+
+    try (EsClient esClient = EsClient.from(config)) {
+      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
     }
   }
 
@@ -99,6 +141,11 @@ public class EsHandler {
     }
 
     return pieces.get(0);
+  }
+
+  private static String createIndexName(String datasetId, int attempt) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(datasetId), "dataset id is required");
+    return datasetId + INDEX_SEPARATOR + attempt;
   }
 
 }
