@@ -110,21 +110,21 @@ public class BodyBuilder {
   }
 
   public HttpEntity build() {
-    ObjectNode entity = createObjectNode();
+    ObjectNode body = createObjectNode();
 
     if (Objects.nonNull(settingsType)) {
-      entity.set(SETTINGS_FIELD, settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings);
+      body.set(SETTINGS_FIELD, settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings);
     }
 
     if (Objects.nonNull(mappings)) {
-      entity.set(MAPPINGS_FIELD, mappings);
+      body.set(MAPPINGS_FIELD, mappings);
     }
 
     if (Objects.nonNull(indexAliasAction)) {
-      entity.set(ACTIONS_FIELD, createIndexAliasActions(indexAliasAction));
+      body.set(ACTIONS_FIELD, createIndexAliasActions(indexAliasAction));
     }
 
-    return createEntity(entity);
+    return createEntity(body);
   }
 
   /**
