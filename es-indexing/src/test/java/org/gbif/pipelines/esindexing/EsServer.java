@@ -9,6 +9,8 @@ import java.net.ServerSocket;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.rules.ExternalResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
@@ -18,6 +20,8 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
  * This class is intended to be used as a {@link org.junit.ClassRule}.
  */
 public class EsServer extends ExternalResource {
+
+  private static final Logger LOG = LoggerFactory.getLogger(EsServer.class);
 
   private static EmbeddedElastic embeddedElastic;
   private final static String CLUSTER_NAME = "test_EScluster";
@@ -52,7 +56,7 @@ public class EsServer extends ExternalResource {
     try {
       restClient.close();
     } catch (IOException e) {
-      throw new IllegalStateException(e.getMessage(), e);
+      LOG.error("Could not close rest client for testing", e);
     }
   }
 
