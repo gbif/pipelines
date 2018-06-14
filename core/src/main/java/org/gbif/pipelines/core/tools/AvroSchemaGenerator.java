@@ -35,7 +35,7 @@ public final class AvroSchemaGenerator {
   // default taxonomic schema
   private static final String DEFAULT_TAXON_SCHEMA_NAME = "TaxonRecord";
   private static final String DEFAULT_TAXON_SCHEMA_DOC = "A taxonomic record";
-  private static final String DEFAULT_TAXON_SCHEMA_NAMESPACE = "org.gbif.pipelines.io.avro";
+  private static final String DEFAULT_TAXON_SCHEMA_NAMESPACE = "org.gbif.pipelines.io.avro.taxon";
 
   static final Object NULL_DEFAULT = null;
 
