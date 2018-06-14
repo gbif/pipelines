@@ -26,6 +26,7 @@ public class EsHandlerIT extends EsIntegrationTest {
 
   private static final String DATASET_TEST = "abc";
   private static final String ALIAS_TEST = "alias";
+  private static final int DEFAULT_ATTEMPT = 1;
 
   @After
   public void cleanIndexes() {
@@ -35,27 +36,20 @@ public class EsHandlerIT extends EsIntegrationTest {
   @Test
   public void createIndexTest() {
     // create index
-    String idxCreated = EsHandler.createIndex(getEsConfig(), DATASET_TEST, 1);
+    String idxCreated = EsHandler.createIndex(getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT);
 
     // assert index created
-    Response response = assertCreatedIndex(idxCreated);
-    // assert index settings
-    assertIndexingSettings(response, idxCreated);
-    // assert idx name
-    assertEquals(DATASET_TEST + INDEX_SEPARATOR + 1, idxCreated);
+    assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
   }
 
   @Test
   public void createIndexWithMappingsTest() {
     // create index
-    String idxCreated = EsHandler.createIndex(getEsConfig(), DATASET_TEST, 1, Paths.get(TEST_MAPPINGS_PATH));
+    String idxCreated = EsHandler.createIndex(getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, Paths.get(TEST_MAPPINGS_PATH));
 
     // assert index created
-    Response response = assertCreatedIndex(idxCreated);
-    // assert index settings
-    assertIndexingSettings(response, idxCreated);
-    // assert idx name
-    assertEquals(DATASET_TEST + INDEX_SEPARATOR + 1, idxCreated);
+    assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
+
     // assert mappings
     JsonNode mappings = getMappingsFromIndex(idxCreated).path(idxCreated).path(MAPPINGS_FIELD);
     assertTrue(mappings.has("doc"));
@@ -118,6 +112,18 @@ public class EsHandlerIT extends EsIntegrationTest {
   @Test(expected = IllegalStateException.class)
   public void swapMissingIndexTest() {
     EsHandler.swapIndexInAlias(getEsConfig(), ALIAS_TEST, "dummy_1");
+  }
+
+  /**
+   * Utility mehtod to assert a newly created index.
+   */
+  private static void assertIndexWithSettingsAndIndexName(String idxCreated, String datasetId, int attempt) {
+    // assert index created
+    Response response = assertCreatedIndex(idxCreated);
+    // assert index settings
+    assertIndexingSettings(response, idxCreated);
+    // assert idx name
+    assertEquals(datasetId + INDEX_SEPARATOR + attempt, idxCreated);
   }
 
 }

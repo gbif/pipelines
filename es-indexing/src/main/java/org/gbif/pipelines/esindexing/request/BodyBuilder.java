@@ -82,7 +82,7 @@ public class BodyBuilder {
    * Adds ES mappings in JSON format to the body.
    */
   public BodyBuilder withMappings(String mappings) {
-    Objects.requireNonNull(mappings);
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(mappings), "Mappings cannot be null or empty");
     this.mappings = JsonHandler.readTree(mappings);
     return this;
   }
@@ -91,7 +91,7 @@ public class BodyBuilder {
    * Adds ES mappings from a file in JSON format to the body.
    */
   public BodyBuilder withMappings(Path mappingsPath) {
-    Objects.requireNonNull(mappingsPath);
+    Objects.requireNonNull(mappingsPath, "The path of the mappings cannot be null");
     this.mappings = JsonHandler.readTree(FileUtils.loadFile(mappingsPath));
     return this;
   }

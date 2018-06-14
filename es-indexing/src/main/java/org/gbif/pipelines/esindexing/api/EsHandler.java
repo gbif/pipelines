@@ -7,7 +7,6 @@ import org.gbif.pipelines.esindexing.common.SettingsType;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
@@ -107,7 +106,6 @@ public class EsHandler {
    * @param index  index to add to the alias that will become the only index of the alias.
    */
   public static void swapIndexInAlias(EsConfig config, String alias, String index) {
-    Objects.requireNonNull(config, "ES configuration is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
