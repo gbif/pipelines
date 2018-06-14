@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Base class to write JUnit integration tests with an embedded ES instance.
  */
-public class EsIntegrationTest {
+public abstract class EsIntegrationTest {
 
   @ClassRule
   public static EsServer esServer = new EsServer();
