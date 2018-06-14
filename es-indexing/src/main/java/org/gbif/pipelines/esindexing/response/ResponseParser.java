@@ -21,7 +21,7 @@ public class ResponseParser {
    * Parses the response from an index creation request.
    * <p>
    * Specifically designed to use with a request similar to the one used in
-   * {@link org.gbif.pipelines.esindexing.api.EsService#createIndexWithSettings(EsClient, String, SettingsType)}.
+   * {@link org.gbif.pipelines.esindexing.api.EsService#createIndex(EsClient, String, SettingsType)}.
    *
    * @param entity {@link HttpEntity} from the response.
    *
