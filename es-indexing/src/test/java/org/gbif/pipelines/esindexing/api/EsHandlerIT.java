@@ -36,7 +36,7 @@ public class EsHandlerIT extends EsIntegrationTest {
   @Test
   public void createIndexTest() {
     // create index
-    String idxCreated = EsHandler.createIndex(getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT);
+    String idxCreated = EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT);
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -45,7 +45,8 @@ public class EsHandlerIT extends EsIntegrationTest {
   @Test
   public void createIndexWithMappingsTest() {
     // create index
-    String idxCreated = EsHandler.createIndex(getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, Paths.get(TEST_MAPPINGS_PATH));
+    String idxCreated =
+      EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, Paths.get(TEST_MAPPINGS_PATH));
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -58,10 +59,10 @@ public class EsHandlerIT extends EsIntegrationTest {
   @Test
   public void swpaIndexInEmptyAliasTest() {
     // create index
-    String idxCreated = EsHandler.createIndex(getEsConfig(), DATASET_TEST, 1);
+    String idxCreated = EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, 1);
 
     // swap index
-    EsHandler.swapIndexInAlias(getEsConfig(), ALIAS_TEST, idxCreated);
+    EsHandler.swapIndexInAlias(esServer.getEsConfig(), ALIAS_TEST, idxCreated);
 
     // assert result
     assertSwapResults(idxCreated, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, Collections.emptySet());
@@ -74,16 +75,16 @@ public class EsHandlerIT extends EsIntegrationTest {
   @Test
   public void swpaIndexInAliasTest() {
     // create index
-    String idx1 = EsHandler.createIndex(getEsConfig(), DATASET_TEST, 1);
-    String idx2 = EsHandler.createIndex(getEsConfig(), DATASET_TEST, 2);
+    String idx1 = EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, 1);
+    String idx2 = EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, 2);
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2));
 
     // add the indexes to the alias
     addIndexToAlias(ALIAS_TEST, initialIndexes);
 
     // create another index and swap it in the alias
-    String idx3 = EsHandler.createIndex(getEsConfig(), DATASET_TEST, 3);
-    EsHandler.swapIndexInAlias(getEsConfig(), ALIAS_TEST, idx3);
+    String idx3 = EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, 3);
+    EsHandler.swapIndexInAlias(esServer.getEsConfig(), ALIAS_TEST, idx3);
 
     // alias should have only the last index created
     assertSwapResults(idx3, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, initialIndexes);
@@ -93,8 +94,8 @@ public class EsHandlerIT extends EsIntegrationTest {
     assertSearchSettings(response, idx3);
 
     // create another index and swap it again
-    String idx4 = EsHandler.createIndex(getEsConfig(), DATASET_TEST, 4);
-    EsHandler.swapIndexInAlias(getEsConfig(), ALIAS_TEST, idx4);
+    String idx4 = EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, 4);
+    EsHandler.swapIndexInAlias(esServer.getEsConfig(), ALIAS_TEST, idx4);
 
     // alias should have only the last index created
     assertSwapResults(idx4, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, Collections.singleton(idx3));
@@ -106,7 +107,7 @@ public class EsHandlerIT extends EsIntegrationTest {
 
   @Test(expected = IllegalStateException.class)
   public void swapMissingIndexTest() {
-    EsHandler.swapIndexInAlias(getEsConfig(), ALIAS_TEST, "dummy_1");
+    EsHandler.swapIndexInAlias(esServer.getEsConfig(), ALIAS_TEST, "dummy_1");
   }
 
   /**

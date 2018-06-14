@@ -1,32 +1,24 @@
 package org.gbif.pipelines.esindexing;
 
 import org.gbif.pipelines.esindexing.api.EndpointHelper;
-import org.gbif.pipelines.esindexing.client.EsClient;
-import org.gbif.pipelines.esindexing.client.EsConfig;
 import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.request.BodyBuilder;
 import org.gbif.pipelines.esindexing.response.ResponseParser;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.Collections;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
-import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
-import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
+import org.junit.ClassRule;
 
 import static org.gbif.pipelines.esindexing.common.EsConstants.DURABILITY_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_NUMBER_REPLICAS;
@@ -51,83 +43,18 @@ import static org.junit.Assert.assertTrue;
  */
 public class EsIntegrationTest {
 
-  private static EmbeddedElastic embeddedElastic;
-  private final static String CLUSTER_NAME = "test_EScluster";
-  private static EsConfig esConfig;
-  // needed to assert results against ES server directly
-  private static RestClient restClient;
-  // I create both clients not to expose the restClient in EsClient
-  private static EsClient esClient;
+  @ClassRule
+  public static EsServer esServer = new EsServer();
 
   // files for testing
   protected static final String TEST_MAPPINGS_PATH = "mappings/simple-mapping.json";
-
-  /**
-   * Starts the embedded ES instance and creates all the necessary clients and configuration to be reused in the tests.
-   */
-  @BeforeClass
-  public static void esSetup() throws IOException, InterruptedException {
-    embeddedElastic = EmbeddedElastic.builder()
-      // TODO: get version from pom??
-      .withElasticVersion("5.6.3")
-      .withEsJavaOpts("-Xms128m -Xmx512m")
-      .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
-      .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
-      .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
-      .build();
-
-    embeddedElastic.start();
-
-    esConfig = EsConfig.from(getServerAddress());
-    restClient = buildRestClient();
-    esClient = EsClient.from(esConfig);
-  }
-
-  /**
-   * Stops the ES instance and closes the clients.
-   */
-  @AfterClass
-  public static void esTearDown() throws IOException {
-    embeddedElastic.stop();
-    restClient.close();
-    esClient.close();
-  }
-
-  private static int getAvailablePort() throws IOException {
-    ServerSocket serverSocket = new ServerSocket(0);
-    int port = serverSocket.getLocalPort();
-    serverSocket.close();
-
-    return port;
-  }
-
-  private static String getServerAddress() {
-    return "http://localhost:" + embeddedElastic.getHttpPort();
-  }
-
-  private static RestClient buildRestClient() {
-    HttpHost host = new HttpHost("localhost", embeddedElastic.getHttpPort());
-    return RestClient.builder(host).build();
-  }
-
-  protected EsConfig getEsConfig() {
-    return esConfig;
-  }
-
-  protected RestClient getRestClient() {
-    return restClient;
-  }
-
-  protected EsClient getEsClient() {
-    return esClient;
-  }
 
   /**
    * Deletes all the indexes of the embedded ES instance.
    */
   protected static void deleteAllIndexes() {
     try {
-      restClient.performRequest(HttpDelete.METHOD_NAME, "_all");
+      esServer.getRestClient().performRequest(HttpDelete.METHOD_NAME, "_all");
     } catch (IOException e) {
       throw new IllegalStateException(e.getMessage(), e);
     }
@@ -139,7 +66,7 @@ public class EsIntegrationTest {
   protected static Response assertCreatedIndex(String idx) {
     Response response = null;
     try {
-      response = restClient.performRequest(HttpGet.METHOD_NAME, EndpointHelper.getIndexEndpoint(idx));
+      response = esServer.getRestClient().performRequest(HttpGet.METHOD_NAME, EndpointHelper.getIndexEndpoint(idx));
       assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
     } catch (IOException e) {
       Assert.fail(e.getMessage());
@@ -180,7 +107,7 @@ public class EsIntegrationTest {
     Response response = null;
     try {
       response =
-        restClient.performRequest(HttpGet.METHOD_NAME, EndpointHelper.getAliasIndexexEndpoint(idxPattern, alias));
+        esServer.getRestClient().performRequest(HttpGet.METHOD_NAME, EndpointHelper.getAliasIndexexEndpoint(idxPattern, alias));
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }
@@ -194,7 +121,7 @@ public class EsIntegrationTest {
     // the other indexes shoudn't exist
     for (String removed : idxRemoved) {
       try {
-        response = restClient.performRequest(HttpGet.METHOD_NAME, EndpointHelper.getIndexEndpoint(removed));
+        response = esServer.getRestClient().performRequest(HttpGet.METHOD_NAME, EndpointHelper.getIndexEndpoint(removed));
       } catch (ResponseException e) {
         assertEquals(HttpStatus.SC_NOT_FOUND, e.getResponse().getStatusLine().getStatusCode());
       } catch (IOException e) {
@@ -212,7 +139,7 @@ public class EsIntegrationTest {
       BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, Collections.emptySet()).build();
 
     try {
-      restClient.performRequest(HttpPost.METHOD_NAME,
+      esServer.getRestClient().performRequest(HttpPost.METHOD_NAME,
                                 EndpointHelper.getAliasesEndpoint(),
                                 Collections.emptyMap(),
                                 entityBody);
@@ -226,7 +153,7 @@ public class EsIntegrationTest {
    */
   protected static JsonNode getMappingsFromIndex(String idx) {
     try {
-      Response response = restClient.performRequest(HttpGet.METHOD_NAME,
+      Response response = esServer.getRestClient().performRequest(HttpGet.METHOD_NAME,
                                                     EndpointHelper.getIndexMappingsEndpoint(idx),
                                                     Collections.emptyMap());
 
