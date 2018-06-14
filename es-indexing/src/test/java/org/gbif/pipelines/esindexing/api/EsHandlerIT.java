@@ -104,11 +104,6 @@ public class EsHandlerIT extends EsIntegrationTest {
     assertSearchSettings(response, idx4);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void swapWrongFormatIndexTest() {
-    EsHandler.swapIndexInAlias(getEsConfig(), ALIAS_TEST, "dummy");
-  }
-
   @Test(expected = IllegalStateException.class)
   public void swapMissingIndexTest() {
     EsHandler.swapIndexInAlias(getEsConfig(), ALIAS_TEST, "dummy_1");

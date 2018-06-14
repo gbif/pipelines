@@ -80,7 +80,7 @@ public class EsHandlerTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void swapIndexInAliasWrongIndexTest() {
+  public void swapIndexInAliasWrongFormatIndexTest() {
     EsHandler.swapIndexInAlias(EsConfig.from(), "alias", "index");
   }
 
