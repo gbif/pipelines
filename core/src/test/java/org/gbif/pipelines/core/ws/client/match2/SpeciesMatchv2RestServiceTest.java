@@ -9,8 +9,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,11 +31,10 @@ public class SpeciesMatchv2RestServiceTest extends MockServer {
     try {
       Response<NameUsageMatch2> response = call.execute();
 
-      Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
       Assert.assertNotNull(response);
 
-      System.out.println(gson.toJson(response.body()));
+      ObjectMapper mapper = new ObjectMapper();
+      System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response.body()));
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }

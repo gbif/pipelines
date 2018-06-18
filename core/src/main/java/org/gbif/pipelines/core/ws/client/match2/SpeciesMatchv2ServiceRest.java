@@ -7,7 +7,7 @@ import org.gbif.pipelines.core.ws.config.Service;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /*
  * Singleton to create the species match service v2.
@@ -26,7 +26,7 @@ public class SpeciesMatchv2ServiceRest {
     // create service
     Retrofit retrofit = new Retrofit.Builder().client(client)
       .baseUrl(wsConfig.getBasePath())
-      .addConverterFactory(GsonConverterFactory.create())
+      .addConverterFactory(JacksonConverterFactory.create())
       .validateEagerly(true)
       .build();
 

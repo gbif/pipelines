@@ -51,6 +51,10 @@ public abstract class MockServer {
 
   protected static MockWebServer mockServer;
 
+  // TODO: this class can be improved to use a random port (implies modifying interpretations to receive the config
+  // as a parameter instead of the path of the file). Also, MockWebServer is already a ExternalResource, so it can be
+  // used as a ClassRule directly and remove this serverResource.
+
   @ClassRule
   public static ExternalResource serverResource = new ExternalResource() {
     @Override

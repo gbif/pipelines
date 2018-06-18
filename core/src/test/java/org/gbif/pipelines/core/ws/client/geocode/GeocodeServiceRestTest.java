@@ -7,9 +7,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Collection;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 import retrofit2.Call;
@@ -44,8 +43,8 @@ public class GeocodeServiceRestTest extends MockServer {
       Assert.assertEquals(Country.CANADA.getTitle(), geocodeResponse.getCountryName());
       Assert.assertEquals(Country.CANADA.getIso2LetterCode(), geocodeResponse.getIsoCountryCode2Digit());
 
-      Gson gson = new GsonBuilder().setPrettyPrinting().create();
-      System.out.println(gson.toJson(geocodeResponse));
+      ObjectMapper mapper = new ObjectMapper();
+      System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(geocodeResponse));
 
     } catch (IOException e) {
       Assert.fail(e.getMessage());
