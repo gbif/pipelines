@@ -2,86 +2,89 @@ package org.gbif.pipelines.esindexing.api;
 
 import org.gbif.pipelines.esindexing.client.EsConfig;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import org.hamcrest.CoreMatchers;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
+/**
+ * Unit tests for {@link EsHandler}.
+ */
 public class EsHandlerTest {
 
   private static final String DUMMY_HOST = "http://dummy.com";
 
-  @Test(expected = NullPointerException.class)
-  public void createIndexNullConfigTest() {
-    EsHandler.createIndex(null, "id", 1);
-  }
+  /**
+   * {@link Rule} requires this field to be public.
+   */
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
-  @Test(expected = IllegalArgumentException.class)
-  public void createIndexIncompleteConfigTest() {
-    EsHandler.createIndex(EsConfig.from(), "id", 1);
-  }
-
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void createIndexNullDatasetIdTest() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("dataset id is required");
     EsHandler.createIndex(EsConfig.from(DUMMY_HOST), null, 1);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void createIndexEmptyDatasetIdTest() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("dataset id is required");
     EsHandler.createIndex(EsConfig.from(DUMMY_HOST), "", 1);
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void createIndexNullMappingsTest() {
-    String mappings = null;
-    EsHandler.createIndex(EsConfig.from(DUMMY_HOST), "id", 1, mappings);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void createIndexNullMappingsPathTest() {
-    Path mappings = null;
-    EsHandler.createIndex(EsConfig.from(DUMMY_HOST), "id", 1, mappings);
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void createIndexWrongMappingsPathTest() {
-    Path mappings = Paths.get("fake-path");
-    EsHandler.createIndex(EsConfig.from(DUMMY_HOST), "id", 1, mappings);
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void swapIndexInAliasNullConfigTest() {
-    EsHandler.swapIndexInAlias(null, "alias", "index_1");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void swapIndexInAliasIncompleteConfigTest() {
-    EsHandler.swapIndexInAlias(EsConfig.from(), "alias", "index_1");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void swapIndexInAliasNullAliasTest() {
-    EsHandler.swapIndexInAlias(EsConfig.from(), null, "index_1");
+    // null alias
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("alias is required");
+    EsHandler.swapIndexInAlias(EsConfig.from(DUMMY_HOST), null, "index_1");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void swapIndexInAliasEmptyAliasTest() {
-    EsHandler.swapIndexInAlias(EsConfig.from(), "", "index_1");
+    // null alias
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("alias is required");
+    EsHandler.swapIndexInAlias(EsConfig.from(DUMMY_HOST), "", "index_1");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void swapIndexInAliasNullIndexTest() {
-    EsHandler.swapIndexInAlias(EsConfig.from(), "alias", null);
+    // null alias
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("index is required");
+    EsHandler.swapIndexInAlias(EsConfig.from(DUMMY_HOST), "alias", null);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void swapIndexInAliasEmptyIndexTest() {
-    EsHandler.swapIndexInAlias(EsConfig.from(), "alias", "");
+    // null alias
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("index is required");
+    EsHandler.swapIndexInAlias(EsConfig.from(DUMMY_HOST), "alias", "");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void swapIndexInAliasWrongFormatIndexTest() {
-    EsHandler.swapIndexInAlias(EsConfig.from(), "alias", "index");
+    // wrong format index
+    thrown.expectMessage(CoreMatchers.containsString("index has to follow the pattern"));
+    EsHandler.swapIndexInAlias(EsConfig.from(DUMMY_HOST), "alias", "index");
+  }
+
+  @Test
+  public void countIndexDocumentsNullIndexTest() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("index is required");
+    EsHandler.countIndexDocuments(EsConfig.from(DUMMY_HOST), null);
+  }
+
+  @Test
+  public void countIndexDocumentsEmptyIndexTest() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("index is required");
+    EsHandler.countIndexDocuments(EsConfig.from(DUMMY_HOST), "");
   }
 
 }

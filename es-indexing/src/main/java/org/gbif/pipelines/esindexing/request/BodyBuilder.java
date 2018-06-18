@@ -6,6 +6,7 @@ import org.gbif.pipelines.esindexing.common.SettingsType;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -22,11 +23,11 @@ import static org.gbif.pipelines.esindexing.common.EsConstants.ADD_ACTION;
 import static org.gbif.pipelines.esindexing.common.EsConstants.ALIAS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_NUMBER_REPLICAS;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_DURABILITY_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_REPLICAS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_SHARDS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_REFRESH_INTERVAL_FIELD;
+import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_TRANSLOG_DURABILITY_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.MAPPINGS_FIELD;
 import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS;
 import static org.gbif.pipelines.esindexing.common.EsConstants.REMOVE_INDEX_ACTION;
@@ -43,11 +44,11 @@ import static org.gbif.pipelines.esindexing.common.JsonHandler.writeToString;
  */
 public class BodyBuilder {
 
-  // settings
+  // pre-defined settings
   private static final ObjectNode indexingSettings = createObjectNode();
   private static final ObjectNode searchSettings = createObjectNode();
 
-  private SettingsType settingsType;
+  private JsonNode settings;
   private JsonNode mappings;
   private IndexAliasAction indexAliasAction;
 
@@ -55,7 +56,7 @@ public class BodyBuilder {
     indexingSettings.put(INDEX_REFRESH_INTERVAL_FIELD, INDEXING_REFRESH_INTERVAL);
     indexingSettings.put(INDEX_NUMBER_SHARDS_FIELD, NUMBER_SHARDS);
     indexingSettings.put(INDEX_NUMBER_REPLICAS_FIELD, INDEXING_NUMBER_REPLICAS);
-    indexingSettings.put(INDEX_DURABILITY_FIELD, TRANSLOG_DURABILITY);
+    indexingSettings.put(INDEX_TRANSLOG_DURABILITY_FIELD, TRANSLOG_DURABILITY);
 
     searchSettings.put(INDEX_REFRESH_INTERVAL_FIELD, SEARCHING_REFRESH_INTERVAL);
     searchSettings.put(INDEX_NUMBER_REPLICAS_FIELD, SEARCHING_NUMBER_REPLICAS);
@@ -71,10 +72,26 @@ public class BodyBuilder {
   }
 
   /**
+   * Creates a {@link HttpEntity} from a {@link String} that will become the body of the entity.
+   */
+  public static HttpEntity createBodyFromString(String body) {
+    return createEntity(body);
+  }
+
+  /**
    * Adds a {@link SettingsType} to the body.
    */
-  public BodyBuilder withSettings(SettingsType settingsType) {
-    this.settingsType = settingsType;
+  public BodyBuilder withSettingsType(SettingsType settingsType) {
+    Objects.requireNonNull(settingsType);
+    this.settings = settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings;
+    return this;
+  }
+
+  /**
+   * Adds a {@link java.util.Map} of settings to the body.
+   */
+  public BodyBuilder withSettingsMap(Map<String, String> settingsMap) {
+    this.settings = JsonHandler.convertToJsonNode(settingsMap);
     return this;
   }
 
@@ -112,18 +129,22 @@ public class BodyBuilder {
   public HttpEntity build() {
     ObjectNode body = createObjectNode();
 
-    if (Objects.nonNull(settingsType)) {
-      body.set(SETTINGS_FIELD, settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings);
+    // add settings
+    if (Objects.nonNull(settings)) {
+      body.set(SETTINGS_FIELD, settings);
     }
 
+    // add mappings
     if (Objects.nonNull(mappings)) {
       body.set(MAPPINGS_FIELD, mappings);
     }
 
+    // add alias actions
     if (Objects.nonNull(indexAliasAction)) {
       body.set(ACTIONS_FIELD, createIndexAliasActions(indexAliasAction));
     }
 
+    // create entity and return
     return createEntity(body);
   }
 
@@ -171,8 +192,11 @@ public class BodyBuilder {
   }
 
   private static HttpEntity createEntity(ObjectNode entityNode) {
+    return createEntity(writeToString(entityNode));
+  }
+
+  private static HttpEntity createEntity(String body) {
     try {
-      String body = writeToString(entityNode);
       return new NStringEntity(body);
     } catch (UnsupportedEncodingException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);

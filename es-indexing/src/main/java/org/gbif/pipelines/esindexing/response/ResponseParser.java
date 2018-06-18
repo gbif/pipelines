@@ -6,6 +6,7 @@ import org.gbif.pipelines.esindexing.common.SettingsType;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.http.HttpEntity;
 
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
@@ -43,6 +44,18 @@ public class ResponseParser {
    */
   public static Set<String> parseIndexesInAliasResponse(HttpEntity entity) {
     return JsonHandler.readValue(entity).keySet();
+  }
+
+  /**
+   * Parses the response from a request that gets the number of documents of an index.
+   *
+   * @param entity {@link HttpEntity} from the response.
+   *
+   * @return number of documents of the index.
+   */
+  public static long parseIndexCountResponse(HttpEntity entity) {
+    JsonNode node = JsonHandler.readTree(entity);
+    return node.has("count") ? node.path("count").asLong() : 0L;
   }
 
 }

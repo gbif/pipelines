@@ -109,4 +109,11 @@ public final class JsonHandler {
     }
   }
 
+  /**
+   * Converts a {@link Map} into a {@link JsonNode}.
+   */
+  public static JsonNode convertToJsonNode(Map<String, String> map) {
+    return mapper.valueToTree(map);
+  }
+
 }

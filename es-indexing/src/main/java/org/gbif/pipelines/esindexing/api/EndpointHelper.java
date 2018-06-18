@@ -43,4 +43,18 @@ public class EndpointHelper {
    */
   public static String getIndexMappingsEndpoint(String index) { return ROOT + index + "/_mapping"; }
 
+  /**
+   * Returns the index count enpoint (/{idx}/_count).
+   */
+  public static String getIndexCountEndpoint(String index) {
+    return ROOT + index + "/_count/";
+  }
+
+  /**
+   * Returns the index refresh endpoint (/{index}/_refresh).
+   */
+  public static String getRefreshIndexEndpoint(String index) {
+    return EndpointHelper.getIndexEndpoint(index) + "/_refresh";
+  }
+
 }

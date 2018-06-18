@@ -29,7 +29,7 @@ public final class EsConstants {
   public static final String INDEX_REFRESH_INTERVAL_FIELD = INDEX_PREFIX + REFRESH_INTERVAL_FIELD;
   public static final String INDEX_NUMBER_SHARDS_FIELD = INDEX_PREFIX + NUMBER_SHARDS_FIELD;
   public static final String INDEX_NUMBER_REPLICAS_FIELD = INDEX_PREFIX + NUMBER_REPLICAS_FIELD;
-  public static final String INDEX_DURABILITY_FIELD =
+  public static final String INDEX_TRANSLOG_DURABILITY_FIELD =
     INDEX_PREFIX + TRANSLOG_FIELD + JSON_CONCATENATOR + DURABILITY_FIELD;
 
   // indexing values

@@ -5,14 +5,15 @@ import org.gbif.pipelines.esindexing.common.SettingsType;
 import org.gbif.pipelines.esindexing.request.BodyBuilder;
 import org.gbif.pipelines.esindexing.response.ResponseParser;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 import org.slf4j.Logger;
@@ -20,8 +21,10 @@ import org.slf4j.LoggerFactory;
 
 import static org.gbif.pipelines.esindexing.api.EndpointHelper.getAliasIndexexEndpoint;
 import static org.gbif.pipelines.esindexing.api.EndpointHelper.getAliasesEndpoint;
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getIndexCountEndpoint;
 import static org.gbif.pipelines.esindexing.api.EndpointHelper.getIndexEndpoint;
 import static org.gbif.pipelines.esindexing.api.EndpointHelper.getIndexSettingsEndpoint;
+import static org.gbif.pipelines.esindexing.request.BodyBuilder.createBodyFromString;
 
 /**
  * Service to perform ES operations.
@@ -50,10 +53,9 @@ class EsService {
    */
   static String createIndex(EsClient esClient, String idxName, SettingsType settingsType) {
     Objects.requireNonNull(esClient);
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
     // create entity body
-    HttpEntity body = BodyBuilder.newInstance().withSettings(settingsType).build();
+    HttpEntity body = BodyBuilder.newInstance().withSettingsType(settingsType).build();
 
     return createIndexInternal(esClient, idxName, body);
   }
@@ -70,10 +72,9 @@ class EsService {
    */
   static String createIndex(EsClient esClient, String idxName, SettingsType settingsType, Path mappings) {
     Objects.requireNonNull(esClient);
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
     // create entity body
-    HttpEntity body = BodyBuilder.newInstance().withSettings(settingsType).withMappings(mappings).build();
+    HttpEntity body = BodyBuilder.newInstance().withSettingsType(settingsType).withMappings(mappings).build();
 
     return createIndexInternal(esClient, idxName, body);
   }
@@ -90,10 +91,28 @@ class EsService {
    */
   static String createIndex(EsClient esClient, String idxName, SettingsType settingsType, String mappings) {
     Objects.requireNonNull(esClient);
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
     // create entity body
-    HttpEntity body = BodyBuilder.newInstance().withSettings(settingsType).withMappings(mappings).build();
+    HttpEntity body = BodyBuilder.newInstance().withSettingsType(settingsType).withMappings(mappings).build();
+
+    return createIndexInternal(esClient, idxName, body);
+  }
+
+  /**
+   * Creates a ES index.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxName  name of the index to create.
+   * @param settings {@link Map} with thesettings to use in the call.
+   * @param mappings path of the file with the mappings.
+   *
+   * @return name of the index created.
+   */
+  static String createIndex(EsClient esClient, String idxName, Map<String, String> settings, Path mappings) {
+    Objects.requireNonNull(esClient);
+
+    // create entity body
+    HttpEntity body = BodyBuilder.newInstance().withSettingsMap(settings).withMappings(mappings).build();
 
     return createIndexInternal(esClient, idxName, body);
   }
@@ -104,8 +123,8 @@ class EsService {
       // parse response and return
       return ResponseParser.parseCreatedIndexResponse(response.getEntity());
     } catch (ResponseException exc) {
-      LOG.error("Error when creating index {} with body {}", idxName, body.toString(), exc);
-      throw new IllegalStateException(exc.getMessage(), exc);
+      LOG.error("Error creating index {} with body {}", idxName, body.toString(), exc);
+      throw new IllegalStateException("Error creating index", exc);
     }
   }
 
@@ -118,23 +137,21 @@ class EsService {
    */
   static void updateIndexSettings(EsClient esClient, String idxName, SettingsType settingsType) {
     Objects.requireNonNull(esClient);
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxName));
 
     // create entity body with settings
-    HttpEntity body = BodyBuilder.newInstance().withSettings(settingsType).build();
+    HttpEntity body = BodyBuilder.newInstance().withSettingsType(settingsType).build();
 
     try {
       // perform the call
       esClient.performPutRequest(getIndexSettingsEndpoint(idxName), Collections.emptyMap(), body);
     } catch (ResponseException exc) {
-      LOG.error("Error when updating index {} to settings {}", idxName, settingsType, exc);
-      throw new IllegalStateException(exc.getMessage(), exc);
+      LOG.error("Error updating index {} to settings {}", idxName, settingsType, exc);
+      throw new IllegalStateException("Error updating index", exc);
     }
   }
 
   /**
-   * Gets all the indexes associated to a specific alias and whose names match with a specified pattern. Both alias
-   * and the pattern are required.
+   * Gets all the indexes associated to a specific alias and whose names match with a specified pattern.
    *
    * @param esClient   client to call ES. It is required.
    * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a single index, or a
@@ -146,8 +163,6 @@ class EsService {
    */
   static Set<String> getIndexesByAliasAndIndexPattern(EsClient esClient, String idxPattern, String alias) {
     Objects.requireNonNull(esClient);
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(idxPattern));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(alias));
 
     try {
       Response response = esClient.performGetRequest(getAliasIndexexEndpoint(idxPattern, alias));
@@ -176,9 +191,128 @@ class EsService {
     try {
       esClient.performPostRequest(getAliasesEndpoint(), Collections.emptyMap(), body);
     } catch (ResponseException exc) {
-      LOG.error("Error when replacing index {} in alias {}", idxToAdd, alias, exc);
-      throw new IllegalStateException(exc.getMessage(), exc);
+      LOG.error("Error swapping index {} in alias {}", idxToAdd, alias, exc);
+      throw new IllegalStateException("Error swapping indexes", exc);
     }
+  }
+
+  /**
+   * Counts the number of documents of an index.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxName  index to get the count from.
+   *
+   * @return number of documents of the index.
+   */
+  static long countIndexDocuments(EsClient esClient, String idxName) {
+    Objects.requireNonNull(esClient);
+
+    try {
+      Response response = esClient.performGetRequest(getIndexCountEndpoint(idxName));
+      return ResponseParser.parseIndexCountResponse(response.getEntity());
+    } catch (ResponseException exc) {
+      LOG.error("Could not get count from index {}", idxName);
+      throw new IllegalStateException("Could not get count from index", exc);
+    }
+  }
+
+  /**
+   * Indexes a document in an index.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idx      index where the document has to be indexed to.
+   * @param type     type of the document.
+   * @param id       id of the doucment.
+   * @param document document to index.
+   */
+  static void indexDocument(EsClient esClient, String idx, String type, long id, String document) {
+    Objects.requireNonNull(esClient);
+
+    final String endpoint = EndpointHelper.getIndexEndpoint(idx) + "/" + type + "/" + id;
+
+    HttpEntity body = createBodyFromString(document);
+
+    try {
+      esClient.performPutRequest(endpoint, Collections.emptyMap(), body);
+    } catch (IOException exc) {
+      LOG.error("Could not index document with id {} and body {} in index {}", id, body.toString(), idx);
+      throw new IllegalStateException("Could not index document", exc);
+    }
+  }
+
+  /**
+   * Deletes a document from an index.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idx      index to remove the document from.
+   * @param type     type of the document.
+   * @param id       id of the document to be removed.
+   */
+  static void deleteDocument(EsClient esClient, String idx, String type, long id) {
+    Objects.requireNonNull(esClient);
+
+    final String endpoint = EndpointHelper.getIndexEndpoint(idx) + "/" + type + "/" + id;
+    try {
+      esClient.performDeleteRequest(endpoint);
+    } catch (IOException exc) {
+      LOG.error("Could not delete document with id {} in index {}", id, idx);
+      throw new IllegalStateException("Could not delete document", exc);
+    }
+  }
+
+  /**
+   * Refreshes an index.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idx      index to be refreshed.
+   */
+  static void refreshIndex(EsClient esClient, String idx) {
+    Objects.requireNonNull(esClient);
+
+    try {
+      esClient.performPostRequest(EndpointHelper.getRefreshIndexEndpoint(idx), Collections.emptyMap(), null);
+    } catch (IOException exc) {
+      LOG.error("Could not refresh index {}", idx);
+      throw new IllegalStateException("Could not refresh index", exc);
+    }
+  }
+
+  /**
+   * Deletes all the indexes of the ES instance.
+   *
+   * @param esClient client to call ES. It is required.
+   */
+  static void deleteAllIndexes(EsClient esClient) {
+    Objects.requireNonNull(esClient);
+
+    try {
+      esClient.performDeleteRequest("_all");
+    } catch (ResponseException exc) {
+      LOG.error("Could not delete all indexes");
+      throw new IllegalStateException("Could not delete all indexes", exc);
+    }
+  }
+
+  /**
+   * Checks if an index exists in the ES instance.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idx      index to check.
+   *
+   * @return true if the index exists, false otherwise.
+   */
+  static boolean existsIndex(EsClient esClient, String idx) {
+    Objects.requireNonNull(esClient);
+
+    try {
+      esClient.performGetRequest(EndpointHelper.getIndexEndpoint(idx));
+    } catch (ResponseException e) {
+      if (HttpStatus.SC_NOT_FOUND == e.getResponse().getStatusLine().getStatusCode()) {
+        return false;
+      }
+      throw new IllegalStateException("Error retreiving index", e);
+    }
+    return true;
   }
 
 }

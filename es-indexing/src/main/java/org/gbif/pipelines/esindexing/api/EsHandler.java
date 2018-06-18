@@ -126,6 +126,24 @@ public class EsHandler {
     }
   }
 
+  /**
+   * Counts the number of documents of an index.
+   *
+   * @param config configuration of the ES instance.
+   * @param index  index to count the elements from.
+   *
+   * @return number of documents of the index.
+   */
+  public static long countIndexDocuments(EsConfig config, String index) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
+
+    LOG.info("Counting documents from index {}", index);
+
+    try (EsClient esClient = EsClient.from(config)) {
+      return EsService.countIndexDocuments(esClient, index);
+    }
+  }
+
   private static String getDatasetIndexesPattern(String datasetId) {
     return datasetId + INDEX_SEPARATOR + "*";
   }

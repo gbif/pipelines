@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -99,6 +100,19 @@ public class EsClient implements AutoCloseable {
   public Response performPostRequest(String endpoint, Map<String, String> params, HttpEntity body)
     throws ResponseException {
     return performRequest(HttpPost.METHOD_NAME, endpoint, params, body);
+  }
+
+  /**
+   * Performs a DELETE request.
+   *
+   * @param endpoint request's endpoint.
+   *
+   * @return {@link Response}.
+   *
+   * @throws ResponseException in case ES returns an error.
+   */
+  public Response performDeleteRequest(String endpoint) throws ResponseException {
+    return performRequest(HttpDelete.METHOD_NAME, endpoint, Collections.emptyMap(), null);
   }
 
   private Response performRequest(String method, String endpoint, Map<String, String> params, HttpEntity body)
