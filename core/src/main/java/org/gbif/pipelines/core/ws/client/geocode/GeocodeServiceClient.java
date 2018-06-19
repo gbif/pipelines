@@ -2,13 +2,10 @@ package org.gbif.pipelines.core.ws.client.geocode;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.geospatial.LatLng;
-import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.BaseServiceClient;
 import org.gbif.pipelines.core.ws.config.Config;
-import org.gbif.pipelines.core.ws.config.Service;
 
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,8 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import retrofit2.Call;
 
 import static org.gbif.pipelines.core.parsers.location.CoordinatesValidator.isInRange;
@@ -27,29 +22,16 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
 
   private final GeocodeServiceRest geocodeServiceRest;
 
-  private GeocodeServiceClient() {
-    geocodeServiceRest = GeocodeServiceRest.getInstance();
-  }
-
-  private GeocodeServiceClient(String wsPropertiesPath) {
-    Config config = HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get(wsPropertiesPath));
-    geocodeServiceRest = GeocodeServiceRest.getInstance(config);
-  }
-
-  /**
-   * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from a 'ws.properties' file
-   * present in the classpath.
-   */
-  public static GeocodeServiceClient newInstance() {
-    return new GeocodeServiceClient();
+  private GeocodeServiceClient(Config wsConfig) {
+    geocodeServiceRest = GeocodeServiceRest.getInstance(wsConfig);
   }
 
   /**
    * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from the path received.
    */
-  public static GeocodeServiceClient newInstance(String wsPropertiesPath) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(wsPropertiesPath), "ws properties path is required");
-    return new GeocodeServiceClient(wsPropertiesPath);
+  public static GeocodeServiceClient newInstance(Config wsConfig) {
+    Objects.requireNonNull(wsConfig, "WS config is required");
+    return new GeocodeServiceClient(wsConfig);
   }
 
   public HttpResponse<List<Country>> getCountriesFromLatLng(LatLng latLng) {

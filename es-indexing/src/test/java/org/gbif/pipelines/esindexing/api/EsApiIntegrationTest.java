@@ -46,7 +46,7 @@ public abstract class EsApiIntegrationTest {
    * {@link ClassRule} requires this field to be public.
    */
   @ClassRule
-  public static EsServer esServer = new EsServer();
+  public static final EsServer esServer = new EsServer();
 
   // files for testing
   static final Path TEST_MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");

@@ -1,9 +1,7 @@
 package org.gbif.pipelines.core.ws.client.geocode;
 
 import org.gbif.pipelines.core.ws.HttpClientFactory;
-import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.config.Config;
-import org.gbif.pipelines.core.ws.config.Service;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -31,10 +29,6 @@ public class GeocodeServiceRest {
       .build();
 
     service = retrofit.create(GeocodeService.class);
-  }
-
-  public static GeocodeServiceRest getInstance() {
-    return getInstance(HttpConfigFactory.createConfig(Service.GEO_CODE));
   }
 
   public static GeocodeServiceRest getInstance(Config config) {

@@ -9,6 +9,7 @@ import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.legacy.CountryMaps;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.geocode.GeocodeServiceClient;
+import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.util.ArrayList;
@@ -36,28 +37,14 @@ class LocationMatcher {
   private final GeocodeServiceClient geocodeServiceClient;
   private final List<CoordinatesFunction> alternativeTransformations = new ArrayList<>();
 
-  private LocationMatcher(LatLng latLng, Country country) {
+  private LocationMatcher(LatLng latLng, Country country, Config wsConfig) {
     this.latLng = latLng;
     this.country = country;
-    this.geocodeServiceClient = GeocodeServiceClient.newInstance();
+    this.geocodeServiceClient = GeocodeServiceClient.newInstance(wsConfig);
   }
 
-  private LocationMatcher(LatLng latLng, Country country, String wsPropertiesPath) {
-    this.latLng = latLng;
-    this.country = country;
-    this.geocodeServiceClient = GeocodeServiceClient.newInstance(wsPropertiesPath);
-  }
-
-  static LocationMatcher newMatcher(LatLng latLng, Country country) {
-    return new LocationMatcher(latLng, country);
-  }
-
-  static LocationMatcher newMatcher(LatLng latLng, Country country, String wsPropertiesPath) {
-    return new LocationMatcher(latLng, country, wsPropertiesPath);
-  }
-
-  static LocationMatcher newMatcher(LatLng latLng) {
-    return new LocationMatcher(latLng, null);
+  static LocationMatcher newMatcher(LatLng latLng, Country country, Config wsConfig) {
+    return new LocationMatcher(latLng, country, wsConfig);
   }
 
   LocationMatcher addAdditionalTransform(CoordinatesFunction transformType) {

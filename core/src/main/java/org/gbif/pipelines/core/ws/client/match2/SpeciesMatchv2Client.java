@@ -7,19 +7,16 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
-import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.BaseServiceClient;
-import org.gbif.pipelines.core.ws.config.Service;
+import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -33,30 +30,16 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
 
   private final SpeciesMatchv2ServiceRest speciesMatchv2ServiceRest;
 
-  private SpeciesMatchv2Client() {
-    speciesMatchv2ServiceRest = SpeciesMatchv2ServiceRest.getInstance();
-  }
-
-  private SpeciesMatchv2Client(String wsPropertiesPath) {
-    speciesMatchv2ServiceRest =
-      SpeciesMatchv2ServiceRest.getInstance(HttpConfigFactory.createConfig(Service.SPECIES_MATCH2,
-                                                                           Paths.get(wsPropertiesPath)));
-  }
-
-  /**
-   * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from a 'ws.properties' file
-   * present in the classpath.
-   */
-  public static SpeciesMatchv2Client newInstance() {
-    return new SpeciesMatchv2Client();
+  private SpeciesMatchv2Client(Config wsConfig) {
+    speciesMatchv2ServiceRest = SpeciesMatchv2ServiceRest.getInstance(wsConfig);
   }
 
   /**
    * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from the path received.
    */
-  public static SpeciesMatchv2Client newInstance(String wsPropertiesPath) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(wsPropertiesPath), "ws properties path is required");
-    return new SpeciesMatchv2Client(wsPropertiesPath);
+  public static SpeciesMatchv2Client newInstance(Config wsConfig) {
+    Objects.requireNonNull(wsConfig, "WS config is required");
+    return new SpeciesMatchv2Client(wsConfig);
   }
 
   /**
