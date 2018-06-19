@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.ws.client.geocode;
 
 import org.gbif.api.vocabulary.Country;
-import org.gbif.pipelines.core.ws.MockServer;
+import org.gbif.pipelines.core.ws.BaseMockServerTest;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -17,7 +17,7 @@ import retrofit2.Response;
 /**
  * Tests the {@link GeocodeServiceRestTest} and {@link GeocodeService}.
  */
-public class GeocodeServiceRestTest extends MockServer {
+public class GeocodeServiceRestTest extends BaseMockServerTest {
 
   @Test
   public void simpleCallTest() throws IOException {

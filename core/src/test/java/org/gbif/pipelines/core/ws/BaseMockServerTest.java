@@ -17,7 +17,7 @@ import org.junit.rules.ExternalResource;
 /**
  * Base class for tests that need a {@link MockWebServer}.
  */
-public abstract class MockServer {
+public abstract class BaseMockServerTest {
 
   // mock match responses
   protected static final String MATCH_RESPONSES_FOLDER = "match-responses/";
