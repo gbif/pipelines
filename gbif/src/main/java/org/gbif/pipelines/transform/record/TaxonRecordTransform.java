@@ -1,9 +1,9 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.TaxonomyInterpreter;
+import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.issue.Validation;
@@ -28,12 +28,16 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
 
   private static final Logger LOG = LoggerFactory.getLogger(TaxonRecordTransform.class);
 
-  private TaxonRecordTransform() {
+  private final Config wsConfig;
+
+  private TaxonRecordTransform(Config wsConfig) {
     super("Interpret taxonomic record");
+    this.wsConfig = wsConfig;
   }
 
-  public static TaxonRecordTransform create() {
-    return new TaxonRecordTransform();
+  public static TaxonRecordTransform create(Config wsConfig) {
+    Objects.requireNonNull(wsConfig);
+    return new TaxonRecordTransform(wsConfig);
   }
 
   @Override
@@ -47,15 +51,12 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
         String id = extendedRecord.getId();
         Collection<Validation> validations = new ArrayList<>();
 
-        // read the ws properties path from the PipelineOptions
-        String wsProperties = context.getPipelineOptions().as(DataProcessingPipelineOptions.class).getWsProperties();
-
         // creates avro target file
         TaxonRecord taxonRecord = new TaxonRecord();
 
         // interpretation
         Interpretation.of(extendedRecord)
-          .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, wsProperties))
+          .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, wsConfig))
           .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // taxon record result

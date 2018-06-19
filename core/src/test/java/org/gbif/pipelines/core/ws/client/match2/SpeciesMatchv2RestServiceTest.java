@@ -20,7 +20,7 @@ public class SpeciesMatchv2RestServiceTest extends MockServer {
 
   @Test
   public void simpleCallTest() throws IOException {
-    SpeciesMatchv2Service service = SpeciesMatchv2ServiceRest.getInstance().getService();
+    SpeciesMatchv2Service service = SpeciesMatchv2ServiceRest.getInstance(getWsConfig()).getService();
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
 
@@ -46,7 +46,7 @@ public class SpeciesMatchv2RestServiceTest extends MockServer {
 
     ExtendedRecord record = ExtendedRecordCustomBuilder.create().name("Puma concolor").id("1").build();
 
-    HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance().getMatch(record);
+    HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance(getWsConfig()).getMatch(record);
 
     Assert.assertEquals(HttpURLConnection.HTTP_INTERNAL_ERROR, response.getHttpResponseCode().intValue());
     Assert.assertEquals(HttpResponse.ErrorCode.CALL_FAILED, response.getErrorCode());

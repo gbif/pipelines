@@ -8,6 +8,7 @@ import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.core.utils.AvroDataValidator;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.core.ws.client.match2.SpeciesMatchv2Client;
+import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.IssueType;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
@@ -27,14 +28,13 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
-  static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, String wsPropertiesPath) {
+  static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, Config wsConfig) {
     return (ExtendedRecord extendedRecord) -> {
 
       AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
       // get match from WS
-      HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance(wsPropertiesPath).getMatch
-        (extendedRecord);
+      HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance(wsConfig).getMatch(extendedRecord);
 
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 

@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -54,6 +55,7 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     new EnumMap<>(InterpretationType.class);
   private final DataProcessingPipelineOptions options;
   private final CodecFactory avroCodec;
+  private final String wsProperties;
 
   private GbifInterpretationPipeline(DataProcessingPipelineOptions options) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
@@ -62,6 +64,7 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     Preconditions.checkArgument(Objects.nonNull(options.getAttempt()), "attempt is required");
     this.options = options;
     avroCodec = parseAvroCodec(options.getAvroCompressionType());
+    wsProperties = options.getWsProperties();
     initStepsMap();
   }
 
@@ -83,12 +86,13 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
   }
 
   private void initStepsMap() {
-    stepsMap.put(LOCATION, locationGbif(createPaths(options, InterpretationType.LOCATION), avroCodec));
+    stepsMap.put(LOCATION, locationGbif(createPaths(options, InterpretationType.LOCATION), avroCodec, wsProperties));
     stepsMap.put(TEMPORAL, temporalGbif(createPaths(options, InterpretationType.TEMPORAL), avroCodec));
-    stepsMap.put(TAXONOMY, taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY), avroCodec));
+    stepsMap.put(TAXONOMY, taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY), avroCodec, wsProperties));
     stepsMap.put(COMMON, commonGbif(createPaths(options, InterpretationType.COMMON), avroCodec));
     stepsMap.put(MULTIMEDIA, multimediaGbif(createPaths(options, InterpretationType.MULTIMEDIA), avroCodec));
   }
+
 
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> createBeforeStep() {
     return (PCollection<ExtendedRecord> verbatimRecords, Pipeline pipeline) -> {
@@ -98,7 +102,8 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     };
   }
 
-  private static PipelineTargetPaths createPaths(DataProcessingPipelineOptions options, InterpretationType interType) {
+  @VisibleForTesting
+  static PipelineTargetPaths createPaths(DataProcessingPipelineOptions options, InterpretationType interType) {
     PipelineTargetPaths paths = new PipelineTargetPaths();
 
     String targetDirectory = options.getDefaultTargetDirectory();

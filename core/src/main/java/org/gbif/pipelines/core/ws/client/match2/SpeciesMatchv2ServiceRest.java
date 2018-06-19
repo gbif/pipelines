@@ -1,9 +1,7 @@
 package org.gbif.pipelines.core.ws.client.match2;
 
 import org.gbif.pipelines.core.ws.HttpClientFactory;
-import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.config.Config;
-import org.gbif.pipelines.core.ws.config.Service;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -31,10 +29,6 @@ public class SpeciesMatchv2ServiceRest {
       .build();
 
     service = retrofit.create(SpeciesMatchv2Service.class);
-  }
-
-  public static SpeciesMatchv2ServiceRest getInstance() {
-    return getInstance(HttpConfigFactory.createConfig(Service.SPECIES_MATCH2));
   }
 
   public static SpeciesMatchv2ServiceRest getInstance(Config config) {

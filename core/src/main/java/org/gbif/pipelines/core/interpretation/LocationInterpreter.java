@@ -10,6 +10,7 @@ import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.LocationParser;
 import org.gbif.pipelines.core.parsers.location.ParsedLocation;
 import org.gbif.pipelines.core.utils.StringUtil;
+import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.IssueType;
 import org.gbif.pipelines.io.avro.location.LocationRecord;
@@ -30,11 +31,11 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link DwcTerm#decimalLatitude} and the
    * {@link DwcTerm#decimalLongitude} terms.
    */
-  static LocationInterpreter interpretCountryAndCoordinates(LocationRecord locationRecord, String wsPropertiesPath) {
+  static LocationInterpreter interpretCountryAndCoordinates(LocationRecord locationRecord, Config wsConfig) {
     return (ExtendedRecord extendedRecord) -> {
 
       // parse the terms
-      ParsedField<ParsedLocation> parsedResult = LocationParser.parse(extendedRecord, wsPropertiesPath);
+      ParsedField<ParsedLocation> parsedResult = LocationParser.parse(extendedRecord, wsConfig);
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();
