@@ -16,8 +16,9 @@ import org.apache.http.HttpEntity;
 
 /**
  * Handler to work with JSON.
- * <p>
- * This class handles all the exceptions thrown when working with JSON and rethrows the checked exceptions as unchecked.
+ *
+ * <p>This class handles all the exceptions thrown when working with JSON and rethrows the checked
+ * exceptions as unchecked.
  */
 public final class JsonHandler {
 
@@ -27,23 +28,17 @@ public final class JsonHandler {
 
   private JsonHandler() {}
 
-  /**
-   * Creates a {@link ObjectNode}.
-   */
+  /** Creates a {@link ObjectNode}. */
   public static ObjectNode createObjectNode() {
     return mapper.createObjectNode();
   }
 
-  /**
-   * Creates a {@link ArrayNode}.
-   */
+  /** Creates a {@link ArrayNode}. */
   public static ArrayNode createArrayNode() {
     return mapper.createArrayNode();
   }
 
-  /**
-   * Writes a {@link Object} to String.
-   */
+  /** Writes a {@link Object} to String. */
   public static String writeToString(Object obj) {
     try {
       return writer.writeValueAsString(obj);
@@ -52,9 +47,7 @@ public final class JsonHandler {
     }
   }
 
-  /**
-   * Writes a {@link InputStream} to String .
-   */
+  /** Writes a {@link InputStream} to String . */
   public static String writeToString(InputStream inputStream) {
     try {
       return writeToString(reader.readTree(inputStream));
@@ -63,9 +56,7 @@ public final class JsonHandler {
     }
   }
 
-  /**
-   * Reads a {@link HttpEntity} with JSON content and returns it as a {@link Map}.
-   */
+  /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link Map}. */
   public static Map<String, String> readValue(HttpEntity entity) {
     Objects.requireNonNull(entity);
     try {
@@ -75,9 +66,7 @@ public final class JsonHandler {
     }
   }
 
-  /**
-   * Reads a {@link HttpEntity} with JSON content and returns it as a {@link JsonNode}.
-   */
+  /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link JsonNode}. */
   public static JsonNode readTree(HttpEntity entity) {
     Objects.requireNonNull(entity);
     try {
@@ -87,9 +76,7 @@ public final class JsonHandler {
     }
   }
 
-  /**
-   * Reads a {@link InputStream} with JSON content and returns it as a {@link JsonNode}.
-   */
+  /** Reads a {@link InputStream} with JSON content and returns it as a {@link JsonNode}. */
   public static JsonNode readTree(InputStream inputStream) {
     try {
       return reader.readTree(inputStream);
@@ -98,9 +85,7 @@ public final class JsonHandler {
     }
   }
 
-  /**
-   * Reads a {@link String} with JSON content and returns it as a {@link JsonNode}.
-   */
+  /** Reads a {@link String} with JSON content and returns it as a {@link JsonNode}. */
   public static JsonNode readTree(String jsonString) {
     try {
       return reader.readTree(jsonString);
@@ -109,11 +94,8 @@ public final class JsonHandler {
     }
   }
 
-  /**
-   * Converts a {@link Map} into a {@link JsonNode}.
-   */
+  /** Converts a {@link Map} into a {@link JsonNode}. */
   public static JsonNode convertToJsonNode(Map<String, String> map) {
     return mapper.valueToTree(map);
   }
-
 }

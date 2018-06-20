@@ -19,8 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Reads an DwC-A Avro file containing ExtendedRecords element and performs an interpretation of basis fields.
- * The result is stored in a set of Avro files that follows the schema {@link InterpretedExtendedRecord}.
+ * Reads an DwC-A Avro file containing ExtendedRecords element and performs an interpretation of
+ * basis fields. The result is stored in a set of Avro files that follows the schema {@link
+ * InterpretedExtendedRecord}.
  */
 public class InterpretDwCAvroPipeline {
 
@@ -37,24 +38,30 @@ public class InterpretDwCAvroPipeline {
 
     // STEP 1: Read Avro files
     PCollection<ExtendedRecord> verbatimRecords =
-      p.apply("Read Avro files", AvroIO.read(ExtendedRecord.class).from(options.getInputFile()))
-        .setCoder(AvroCoder.of(ExtendedRecord.class));
+        p.apply("Read Avro files", AvroIO.read(ExtendedRecord.class).from(options.getInputFile()))
+            .setCoder(AvroCoder.of(ExtendedRecord.class));
 
     // STEP 2: Convert the objects (interpretation)
     InterpretedExtendedRecordTransform transform = InterpretedExtendedRecordTransform.create();
     PCollectionTuple interpreted = verbatimRecords.apply(transform);
 
     // STEP 3: Record level interpretations
-    interpreted.get(transform.getDataTag())
-      .apply(Kv2Value.create())
-      .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
-      .apply("Write Interpreted Avro files", AvroIO.write(InterpretedExtendedRecord.class).to(targetDirectory));
+    interpreted
+        .get(transform.getDataTag())
+        .apply(Kv2Value.create())
+        .setCoder(AvroCoder.of(InterpretedExtendedRecord.class))
+        .apply(
+            "Write Interpreted Avro files",
+            AvroIO.write(InterpretedExtendedRecord.class).to(targetDirectory));
 
     // STEP 4: Exporting issues
-    interpreted.get(transform.getIssueTag())
-      .apply(Kv2Value.create())
-      .setCoder(AvroCoder.of(OccurrenceIssue.class))
-      .apply("Write Interpretation Issues Avro files", AvroIO.write(OccurrenceIssue.class).to(issueDirectory));
+    interpreted
+        .get(transform.getIssueTag())
+        .apply(Kv2Value.create())
+        .setCoder(AvroCoder.of(OccurrenceIssue.class))
+        .apply(
+            "Write Interpretation Issues Avro files",
+            AvroIO.write(OccurrenceIssue.class).to(issueDirectory));
 
     // Instruct the writer to use a provided document ID
     LOG.info("Starting interpretation the pipeline");
@@ -62,5 +69,4 @@ public class InterpretDwCAvroPipeline {
     result.waitUntilFinish();
     LOG.info("Pipeline finished with state: {} ", result.getState());
   }
-
 }

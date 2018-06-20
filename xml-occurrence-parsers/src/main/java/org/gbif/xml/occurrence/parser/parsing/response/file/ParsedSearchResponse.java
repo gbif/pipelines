@@ -105,11 +105,11 @@ public class ParsedSearchResponse {
   /**
    * Recursively traverse the node, returning the text value of the first node that has a name
    * matching targetElement. If node isn't found, returns null. Saves constructing elaborate,
-   * namespace aware machinery for quick traverse of typically small data (a single occurrence record).
+   * namespace aware machinery for quick traverse of typically small data (a single occurrence
+   * record).
    *
-   * @param node          the parsed xml to traverse
+   * @param node the parsed xml to traverse
    * @param targetElement the name of the node to find
-   *
    * @return the text value of the target node
    */
   private String fakeXPath(Node node, String targetElement) {
@@ -166,7 +166,8 @@ public class ParsedSearchResponse {
       record.setInstitutionCode(instCode);
     }
 
-    String collectionCode = fakeXPath(node, responseElements.get(ResponseElementEnum.COLLECTION_CODE));
+    String collectionCode =
+        fakeXPath(node, responseElements.get(ResponseElementEnum.COLLECTION_CODE));
     if (collectionCode != null) {
       record.setCollectionCode(collectionCode);
     }
@@ -188,5 +189,4 @@ public class ParsedSearchResponse {
   public void setSchemaType(OccurrenceSchemaType schemaType) {
     this.schemaType = schemaType;
   }
-
 }

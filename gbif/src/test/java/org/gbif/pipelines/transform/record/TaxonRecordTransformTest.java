@@ -44,25 +44,22 @@ public class TaxonRecordTransformTest {
 
   private static final String TEST_ID = "1";
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
-  /**
-   * Public field because {@link ClassRule} requires it.
-   */
-  @ClassRule
-  public static final MockWebServer mockServer = new MockWebServer();
+  /** Public field because {@link ClassRule} requires it. */
+  @ClassRule public static final MockWebServer mockServer = new MockWebServer();
 
   private static Config wsConfig;
 
   @ClassRule
-  public static final ExternalResource configResource = new ExternalResource() {
+  public static final ExternalResource configResource =
+      new ExternalResource() {
 
-    @Override
-    protected void before() {
-      wsConfig = HttpConfigFactory.createConfigFromUrl(mockServer.url("/").toString());
-    }
-  };
+        @Override
+        protected void before() {
+          wsConfig = HttpConfigFactory.createConfigFromUrl(mockServer.url("/").toString());
+        }
+      };
 
   @Test
   @Category(NeedsRunner.class)
@@ -71,22 +68,26 @@ public class TaxonRecordTransformTest {
     enqueueDummyResponse();
 
     // State
-    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).name("foo").build();
+    ExtendedRecord extendedRecord =
+        ExtendedRecordCustomBuilder.create().id(TEST_ID).name("foo").build();
 
     // When
-    TaxonRecordTransform taxonRecordTransform = TaxonRecordTransform.create(wsConfig).withAvroCoders(p);
+    TaxonRecordTransform taxonRecordTransform =
+        TaxonRecordTransform.create(wsConfig).withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(extendedRecord));
 
     PCollectionTuple tuple = inputStream.apply(taxonRecordTransform);
 
-    PCollection<TaxonRecord> recordCollection = tuple.get(taxonRecordTransform.getDataTag()).apply(Kv2Value.create());
+    PCollection<TaxonRecord> recordCollection =
+        tuple.get(taxonRecordTransform.getDataTag()).apply(Kv2Value.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());
 
     // run pipeline with the options required
-    DataProcessingPipelineOptions options = PipelineOptionsFactory.create().as(DataProcessingPipelineOptions.class);
+    DataProcessingPipelineOptions options =
+        PipelineOptionsFactory.create().as(DataProcessingPipelineOptions.class);
     p.run(options);
   }
 
@@ -97,9 +98,7 @@ public class TaxonRecordTransformTest {
     return taxonRecord;
   }
 
-  /**
-   * Sets the same values as in DUMMY_RESPONSE (dummy-response.json)
-   */
+  /** Sets the same values as in DUMMY_RESPONSE (dummy-response.json) */
   private NameUsageMatch2 createDummyNameUsageMatch() {
     NameUsageMatch2 nameUsageMatch2 = new NameUsageMatch2();
 
@@ -125,10 +124,11 @@ public class TaxonRecordTransformTest {
 
   private static void enqueueDummyResponse() throws IOException {
     InputStream inputStream =
-      Thread.currentThread().getContextClassLoader().getResourceAsStream("dummy-match-response.json");
+        Thread.currentThread()
+            .getContextClassLoader()
+            .getResourceAsStream("dummy-match-response.json");
     BufferedSource source = Okio.buffer(Okio.source(inputStream));
     MockResponse mockResponse = new MockResponse();
     mockServer.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
   }
-
 }

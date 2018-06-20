@@ -25,13 +25,15 @@ import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINAT
 import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND;
 import static org.gbif.pipelines.core.interpretation.Constant.Location.COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND;
 
-public interface LocationInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
+public interface LocationInterpreter
+    extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
   /**
-   * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link DwcTerm#decimalLatitude} and the
-   * {@link DwcTerm#decimalLongitude} terms.
+   * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
+   * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
-  static LocationInterpreter interpretCountryAndCoordinates(LocationRecord locationRecord, Config wsConfig) {
+  static LocationInterpreter interpretCountryAndCoordinates(
+      LocationRecord locationRecord, Config wsConfig) {
     return (ExtendedRecord extendedRecord) -> {
 
       // parse the terms
@@ -53,40 +55,47 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       // set the issues to the interpretation
-      parsedResult.getIssues().forEach(issue -> {
-        Trace<IssueType> trace;
-        if (Objects.nonNull(issue.getTerms()) && !issue.getTerms().isEmpty() && Objects.nonNull(issue.getTerms().get(0))) {
-          // FIXME: now we take the first term. Should Trace accept a list of terms??
-          trace = Trace.of(issue.getTerms().get(0).simpleName(), issue.getIssueType());
-        } else {
-          trace = Trace.of(issue.getIssueType());
-        }
+      parsedResult
+          .getIssues()
+          .forEach(
+              issue -> {
+                Trace<IssueType> trace;
+                if (Objects.nonNull(issue.getTerms())
+                    && !issue.getTerms().isEmpty()
+                    && Objects.nonNull(issue.getTerms().get(0))) {
+                  // FIXME: now we take the first term. Should Trace accept a list of terms??
+                  trace = Trace.of(issue.getTerms().get(0).simpleName(), issue.getIssueType());
+                } else {
+                  trace = Trace.of(issue.getIssueType());
+                }
 
-        interpretation.withValidation(trace);
-      });
+                interpretation.withValidation(trace);
+              });
 
       return interpretation;
     };
   }
 
-  /**
-   * {@link DwcTerm#continent} interpretation.
-   */
+  /** {@link DwcTerm#continent} interpretation. */
   static LocationInterpreter interpretContinent(LocationRecord locationRecord) {
-    return (ExtendedRecord extendedRecord) -> VocabularyParsers.continentParser().map(extendedRecord, parseResult -> {
-      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      if (parseResult.isSuccessful()) {
-        locationRecord.setContinent(parseResult.getPayload().name());
-      } else {
-        interpretation.withValidation(Trace.of(DwcTerm.continent.name(), IssueType.CONTINENT_INVALID));
-      }
-      return interpretation;
-    }).orElse(Interpretation.of(extendedRecord));
+    return (ExtendedRecord extendedRecord) ->
+        VocabularyParsers.continentParser()
+            .map(
+                extendedRecord,
+                parseResult -> {
+                  Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+                  if (parseResult.isSuccessful()) {
+                    locationRecord.setContinent(parseResult.getPayload().name());
+                  } else {
+                    interpretation.withValidation(
+                        Trace.of(DwcTerm.continent.name(), IssueType.CONTINENT_INVALID));
+                  }
+                  return interpretation;
+                })
+            .orElse(Interpretation.of(extendedRecord));
   }
 
-  /**
-   * {@link DwcTerm#waterBody} interpretation.
-   */
+  /** {@link DwcTerm#waterBody} interpretation. */
   static LocationInterpreter interpretWaterBody(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
@@ -98,9 +107,7 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
     };
   }
 
-  /**
-   * {@link DwcTerm#stateProvince} interpretation.
-   */
+  /** {@link DwcTerm#stateProvince} interpretation. */
   static LocationInterpreter interpretStateProvince(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
@@ -112,119 +119,124 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
     };
   }
 
-  /**
-   * {@link DwcTerm#minimumElevationInMeters} interpretation.
-   */
+  /** {@link DwcTerm#minimumElevationInMeters} interpretation. */
   static LocationInterpreter interpretMinimumElevationInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      String value = extendedRecord.getCoreTerms().get(DwcTerm.minimumElevationInMeters.qualifiedName());
+      String value =
+          extendedRecord.getCoreTerms().get(DwcTerm.minimumElevationInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         locationRecord.setMinimumElevationInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(Trace.of(DwcTerm.minimumElevationInMeters.name(),
-                                               IssueType.MIN_ELEVATION_INVALID));
+        interpretation.withValidation(
+            Trace.of(DwcTerm.minimumElevationInMeters.name(), IssueType.MIN_ELEVATION_INVALID));
       }
       return interpretation;
     };
   }
 
-  /**
-   * {@link DwcTerm#maximumElevationInMeters} interpretation.
-   */
+  /** {@link DwcTerm#maximumElevationInMeters} interpretation. */
   static LocationInterpreter interpretMaximumElevationInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      String value = extendedRecord.getCoreTerms().get(DwcTerm.maximumElevationInMeters.qualifiedName());
+      String value =
+          extendedRecord.getCoreTerms().get(DwcTerm.maximumElevationInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         locationRecord.setMaximumElevationInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(Trace.of(DwcTerm.maximumElevationInMeters.name(),
-                                               IssueType.MAX_ELEVATION_INVALID));
+        interpretation.withValidation(
+            Trace.of(DwcTerm.maximumElevationInMeters.name(), IssueType.MAX_ELEVATION_INVALID));
       }
       return interpretation;
     };
   }
 
-  /**
-   * {@link DwcTerm#minimumDepthInMeters} interpretation.
-   */
+  /** {@link DwcTerm#minimumDepthInMeters} interpretation. */
   static LocationInterpreter interpretMinimumDepthInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      String value = extendedRecord.getCoreTerms().get(DwcTerm.minimumDepthInMeters.qualifiedName());
+      String value =
+          extendedRecord.getCoreTerms().get(DwcTerm.minimumDepthInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         locationRecord.setMinimumDepthInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(Trace.of(DwcTerm.minimumDepthInMeters.name(), IssueType.MIN_DEPTH_INVALID));
+        interpretation.withValidation(
+            Trace.of(DwcTerm.minimumDepthInMeters.name(), IssueType.MIN_DEPTH_INVALID));
       }
       return interpretation;
     };
   }
 
-  /**
-   * {@link DwcTerm#maximumDepthInMeters} interpretation.
-   */
+  /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
   static LocationInterpreter interpretMaximumDepthInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      String value = extendedRecord.getCoreTerms().get(DwcTerm.maximumDepthInMeters.qualifiedName());
+      String value =
+          extendedRecord.getCoreTerms().get(DwcTerm.maximumDepthInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         locationRecord.setMaximumDepthInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(Trace.of(DwcTerm.maximumDepthInMeters.name(), IssueType.MAX_DEPTH_INVALID));
+        interpretation.withValidation(
+            Trace.of(DwcTerm.maximumDepthInMeters.name(), IssueType.MAX_DEPTH_INVALID));
       }
       return interpretation;
     };
   }
 
-  /**
-   * {@link DwcTerm#maximumDepthInMeters} interpretation.
-   */
-  static LocationInterpreter interpretMinimumDistanceAboveSurfaceInMeters(LocationRecord locationRecord) {
+  /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
+  static LocationInterpreter interpretMinimumDistanceAboveSurfaceInMeters(
+      LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      String value = extendedRecord.getCoreTerms().get(DwcTerm.minimumDistanceAboveSurfaceInMeters.qualifiedName());
+      String value =
+          extendedRecord
+              .getCoreTerms()
+              .get(DwcTerm.minimumDistanceAboveSurfaceInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         locationRecord.setMinimumDistanceAboveSurfaceInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(Trace.of(DwcTerm.minimumDistanceAboveSurfaceInMeters.name(),
-                                               IssueType.MIN_DISTANCE_ABOVE_SURFACE_INVALID));
+        interpretation.withValidation(
+            Trace.of(
+                DwcTerm.minimumDistanceAboveSurfaceInMeters.name(),
+                IssueType.MIN_DISTANCE_ABOVE_SURFACE_INVALID));
       }
       return interpretation;
     };
   }
 
-  /**
-   * {@link DwcTerm#maximumDepthInMeters} interpretation.
-   */
-  static LocationInterpreter interpretMaximumDistanceAboveSurfaceInMeters(LocationRecord locationRecord) {
+  /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
+  static LocationInterpreter interpretMaximumDistanceAboveSurfaceInMeters(
+      LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      String value = extendedRecord.getCoreTerms().get(DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName());
+      String value =
+          extendedRecord
+              .getCoreTerms()
+              .get(DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         locationRecord.setMaximumDistanceAboveSurfaceInMeters(parseResult.getPayload());
       } else {
-        interpretation.withValidation(Trace.of(DwcTerm.maximumDistanceAboveSurfaceInMeters.name(),
-                                               IssueType.MAX_DISTANCE_ABOVE_SURFACE_INVALID));
+        interpretation.withValidation(
+            Trace.of(
+                DwcTerm.maximumDistanceAboveSurfaceInMeters.name(),
+                IssueType.MAX_DISTANCE_ABOVE_SURFACE_INVALID));
       }
       return interpretation;
     };
   }
 
-  /**
-   * {@link DwcTerm#coordinateUncertaintyInMeters} interpretation.
-   */
+  /** {@link DwcTerm#coordinateUncertaintyInMeters} interpretation. */
   static LocationInterpreter interpretCoordinateUncertaintyInMeters(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) -> {
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-      String value = extendedRecord.getCoreTerms().get(DwcTerm.coordinateUncertaintyInMeters.qualifiedName());
+      String value =
+          extendedRecord.getCoreTerms().get(DwcTerm.coordinateUncertaintyInMeters.qualifiedName());
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
       if (Objects.nonNull(result)
@@ -232,29 +244,36 @@ public interface LocationInterpreter extends Function<ExtendedRecord, Interpreta
           && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
         locationRecord.setCoordinateUncertaintyInMeters(result);
       } else {
-        interpretation.withValidation(Trace.of(DwcTerm.coordinateUncertaintyInMeters.name(),
-                                               IssueType.COORDINATE_UNCERTAINTY_METERS_INVALID));
+        interpretation.withValidation(
+            Trace.of(
+                DwcTerm.coordinateUncertaintyInMeters.name(),
+                IssueType.COORDINATE_UNCERTAINTY_METERS_INVALID));
       }
       return interpretation;
     };
   }
 
-  /**
-   * {@link DwcTerm#coordinatePrecision} interpretation.
-   */
+  /** {@link DwcTerm#coordinatePrecision} interpretation. */
   static LocationInterpreter interpretCoordinatePrecision(LocationRecord locationRecord) {
     return (ExtendedRecord extendedRecord) ->
-      SimpleTypeParser.parseDouble(extendedRecord, DwcTerm.coordinatePrecision, parseResult -> {
-        Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-        Double result = parseResult.orElse(null);
-        if (Objects.nonNull(result) && result >= COORDINATE_PRECISION_LOWER_BOUND && result <=
-                                                                            COORDINATE_PRECISION_UPPER_BOUND) {
-          locationRecord.setCoordinatePrecision(result);
-        } else {
-          interpretation.withValidation(Trace.of(DwcTerm.coordinatePrecision.name(), IssueType.COORDINATE_PRECISION_INVALID));
-        }
-        return interpretation;
-      }).orElse(Interpretation.of(extendedRecord));
+        SimpleTypeParser.parseDouble(
+                extendedRecord,
+                DwcTerm.coordinatePrecision,
+                parseResult -> {
+                  Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+                  Double result = parseResult.orElse(null);
+                  if (Objects.nonNull(result)
+                      && result >= COORDINATE_PRECISION_LOWER_BOUND
+                      && result <= COORDINATE_PRECISION_UPPER_BOUND) {
+                    locationRecord.setCoordinatePrecision(result);
+                  } else {
+                    interpretation.withValidation(
+                        Trace.of(
+                            DwcTerm.coordinatePrecision.name(),
+                            IssueType.COORDINATE_PRECISION_INVALID));
+                  }
+                  return interpretation;
+                })
+            .orElse(Interpretation.of(extendedRecord));
   }
-
 }

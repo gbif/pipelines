@@ -11,20 +11,18 @@ import org.junit.rules.ExpectedException;
 import static org.gbif.pipelines.core.ws.config.HttpConfigFactory.DEFAULT_CACHE_SIZE;
 import static org.gbif.pipelines.core.ws.config.HttpConfigFactory.DEFAULT_TIMEOUT;
 
-/**
- * Tests the {@link HttpConfigFactory}.
- */
+/** Tests the {@link HttpConfigFactory}. */
 public class HttpConfigFactoryTest {
 
   // this file has the geocode properties wrong on purpose
   private static final String TEST_PROPERTIES_FILE = "ws-test.properties";
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void speciesMatch2ConfiguratorTest() {
-    Config config = HttpConfigFactory.createConfig(Service.SPECIES_MATCH2, Paths.get(TEST_PROPERTIES_FILE));
+    Config config =
+        HttpConfigFactory.createConfig(Service.SPECIES_MATCH2, Paths.get(TEST_PROPERTIES_FILE));
 
     Assert.assertNotNull(config);
     // defaults apply
@@ -66,5 +64,4 @@ public class HttpConfigFactoryTest {
 
     HttpConfigFactory.createConfig(null, Paths.get("unknown"));
   }
-
 }

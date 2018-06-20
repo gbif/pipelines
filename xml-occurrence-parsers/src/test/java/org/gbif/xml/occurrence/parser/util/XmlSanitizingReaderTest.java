@@ -119,9 +119,16 @@ public class XmlSanitizingReaderTest {
     char bad2 = 0x7;
     char goodWeird = 0xa;
     String test =
-      "Some bad chars " + bad1 + goodWeird + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية " + bad2 +
-      "end";
-    String goal = "Some bad chars " + goodWeird + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
+        "Some bad chars "
+            + bad1
+            + goodWeird
+            + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية "
+            + bad2
+            + "end";
+    String goal =
+        "Some bad chars "
+            + goodWeird
+            + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
     String result = doSingleReads(test);
     assertTrue(result.equals(goal));
   }
@@ -132,9 +139,16 @@ public class XmlSanitizingReaderTest {
     char bad2 = 0x7;
     char goodWeird = 0xa;
     String test =
-      "Some bad chars " + bad1 + goodWeird + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية " + bad2 +
-      "end";
-    String goal = "Some bad chars " + goodWeird + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
+        "Some bad chars "
+            + bad1
+            + goodWeird
+            + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية "
+            + bad2
+            + "end";
+    String goal =
+        "Some bad chars "
+            + goodWeird
+            + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
     String result = doSimpleBufferRead(test);
     assertTrue(result.equals(goal));
   }
@@ -145,9 +159,16 @@ public class XmlSanitizingReaderTest {
     char bad2 = 0x7;
     char goodWeird = 0xa;
     String test =
-      "Some bad chars " + bad1 + goodWeird + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية " + bad2 +
-      "end";
-    String goal = "Some bad chars " + goodWeird + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
+        "Some bad chars "
+            + bad1
+            + goodWeird
+            + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية "
+            + bad2
+            + "end";
+    String goal =
+        "Some bad chars "
+            + goodWeird
+            + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
     String result = doOffsetBufferRead(test);
     assertTrue(result.equals(goal));
   }
@@ -160,7 +181,8 @@ public class XmlSanitizingReaderTest {
     GZIPInputStream inputStream = new GZIPInputStream(fis);
 
     StringBuilder sb = new StringBuilder();
-    try (XmlSanitizingReader xmlReader = new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8"))) {
+    try (XmlSanitizingReader xmlReader =
+        new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8"))) {
       while (xmlReader.ready()) {
         char[] buff = new char[8192];
         xmlReader.read(buff, 0, 8192);
@@ -178,7 +200,8 @@ public class XmlSanitizingReaderTest {
     GZIPInputStream inputStream = new GZIPInputStream(fis);
 
     StringBuilder sb = new StringBuilder();
-    try (BufferedReader xmlReader = new BufferedReader(new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8")))) {
+    try (BufferedReader xmlReader =
+        new BufferedReader(new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8")))) {
       while (xmlReader.ready()) {
         char[] buff = new char[8192];
         xmlReader.read(buff, 0, 8192);
@@ -196,7 +219,8 @@ public class XmlSanitizingReaderTest {
     GZIPInputStream inputStream = new GZIPInputStream(fis);
 
     StringBuilder sb = new StringBuilder();
-    try (BufferedReader buffReader = new BufferedReader(new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8")))) {
+    try (BufferedReader buffReader =
+        new BufferedReader(new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8")))) {
       while (buffReader.ready()) {
         String line = buffReader.readLine();
         sb.append(line);

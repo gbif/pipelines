@@ -39,9 +39,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-/**
- * Tests the {@link GbifInterpretationPipeline}.
- */
+/** Tests the {@link GbifInterpretationPipeline}. */
 public class GbifInterpretationPipelineTest {
 
   private static final String INPUT = "avro/extendedRecords*";
@@ -53,11 +51,9 @@ public class GbifInterpretationPipelineTest {
   private static URI hdfsClusterBaseUri;
   private static Config wsConfig;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
-  @ClassRule
-  public static final MockWebServer mockServer = new MockWebServer();
+  @ClassRule public static final MockWebServer mockServer = new MockWebServer();
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -68,7 +64,8 @@ public class GbifInterpretationPipelineTest {
     configuration.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, baseDir.getAbsolutePath());
     hdfsCluster = new MiniDFSCluster.Builder(configuration).build();
     fs = FileSystem.newInstance(configuration);
-    hdfsClusterBaseUri = new URI(configuration.get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY) + "/");
+    hdfsClusterBaseUri =
+        new URI(configuration.get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY) + "/");
     wsConfig = HttpConfigFactory.createConfigFromUrl(mockServer.url("/").toString());
   }
 
@@ -78,8 +75,9 @@ public class GbifInterpretationPipelineTest {
   }
 
   /**
-   * This test doesn't use any interpretation that requires a WS call. Therefore, neither the ws properties path or
-   * the mock pipeline with the mock server config are provided and the pipeline is expected to work.
+   * This test doesn't use any interpretation that requires a WS call. Therefore, neither the ws
+   * properties path or the mock pipeline with the mock server config are provided and the pipeline
+   * is expected to work.
    */
   @Test
   public void temporalInterpretationTest() throws IOException {
@@ -97,9 +95,13 @@ public class GbifInterpretationPipelineTest {
     Assert.assertEquals(PipelineResult.State.DONE, state);
 
     // check dataset dir
-    checkDirCreated(hdfsClusterBaseUri.resolve(FsUtils.buildPathString(options.getDefaultTargetDirectory(),
-                                                                       options.getDatasetId(),
-                                                                       options.getAttempt().toString())), 1);
+    checkDirCreated(
+        hdfsClusterBaseUri.resolve(
+            FsUtils.buildPathString(
+                options.getDefaultTargetDirectory(),
+                options.getDatasetId(),
+                options.getAttempt().toString())),
+        1);
 
     // check interpretation dir
     checkInterpretationFiles(options, InterpretationType.TEMPORAL);
@@ -115,7 +117,8 @@ public class GbifInterpretationPipelineTest {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
     List<InterpretationType> interpretations =
-      Arrays.asList(InterpretationType.COMMON, InterpretationType.TEMPORAL, InterpretationType.LOCATION);
+        Arrays.asList(
+            InterpretationType.COMMON, InterpretationType.TEMPORAL, InterpretationType.LOCATION);
 
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
@@ -124,17 +127,21 @@ public class GbifInterpretationPipelineTest {
     options.setInterpretationTypes(interpretations);
 
     // we use a mock pipeline to use it with the interpretations that require a mock server
-    Pipeline pipeline = MockGbifInterpretationPipeline.mockInterpretationPipeline(options, wsConfig);
+    Pipeline pipeline =
+        MockGbifInterpretationPipeline.mockInterpretationPipeline(options, wsConfig);
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();
 
     Assert.assertEquals(PipelineResult.State.DONE, state);
 
     // check dataset dir
-    checkDirCreated(hdfsClusterBaseUri.resolve(FsUtils.buildPathString(options.getDefaultTargetDirectory(),
-                                                                       options.getDatasetId(),
-                                                                       options.getAttempt().toString())),
-                    interpretations.size());
+    checkDirCreated(
+        hdfsClusterBaseUri.resolve(
+            FsUtils.buildPathString(
+                options.getDefaultTargetDirectory(),
+                options.getDatasetId(),
+                options.getAttempt().toString())),
+        interpretations.size());
 
     // check interpretation dirs
     for (InterpretationType interpretationType : interpretations) {
@@ -155,17 +162,21 @@ public class GbifInterpretationPipelineTest {
     options.setAttempt(1);
 
     // we use a mock pipeline to use it with the interpretations that require a mock server
-    Pipeline pipeline = MockGbifInterpretationPipeline.mockInterpretationPipeline(options, wsConfig);
+    Pipeline pipeline =
+        MockGbifInterpretationPipeline.mockInterpretationPipeline(options, wsConfig);
 
     PipelineResult.State state = pipeline.run().waitUntilFinish();
 
     Assert.assertEquals(PipelineResult.State.DONE, state);
 
     // check dataset dir
-    checkDirCreated(hdfsClusterBaseUri.resolve(FsUtils.buildPathString(options.getDefaultTargetDirectory(),
-                                                                       options.getDatasetId(),
-                                                                       options.getAttempt().toString())),
-                    InterpretationType.values().length - 1);
+    checkDirCreated(
+        hdfsClusterBaseUri.resolve(
+            FsUtils.buildPathString(
+                options.getDefaultTargetDirectory(),
+                options.getDatasetId(),
+                options.getAttempt().toString())),
+        InterpretationType.values().length - 1);
 
     // delete files created to leave the FS clean for other tests
     fs.delete(FsUtils.buildPath(options.getDefaultTargetDirectory()), true);
@@ -200,27 +211,29 @@ public class GbifInterpretationPipelineTest {
   /**
    * Checks that the creation of expected directories and files for an interpretation was correct.
    */
-  private void checkInterpretationFiles(DataProcessingPipelineOptions options, InterpretationType type)
-    throws IOException {
+  private void checkInterpretationFiles(
+      DataProcessingPipelineOptions options, InterpretationType type) throws IOException {
 
-    String pathString = FsUtils.buildPathString(options.getDefaultTargetDirectory(),
-                                                options.getDatasetId(),
-                                                options.getAttempt().toString(),
-                                                type.name().toLowerCase());
+    String pathString =
+        FsUtils.buildPathString(
+            options.getDefaultTargetDirectory(),
+            options.getDatasetId(),
+            options.getAttempt().toString(),
+            type.name().toLowerCase());
 
     // check interpretation DIR
     checkDirCreated(hdfsClusterBaseUri.resolve(pathString), 2);
     // check interpretation AVRO FILE
-    checkAvroFileCreated(hdfsClusterBaseUri.resolve(FsUtils.buildPathString(pathString, "interpreted*")));
+    checkAvroFileCreated(
+        hdfsClusterBaseUri.resolve(FsUtils.buildPathString(pathString, "interpreted*")));
     // check ISSUES DIR
     checkDirCreated(hdfsClusterBaseUri.resolve(FsUtils.buildPathString(pathString, "issues")), 1);
     // check ISSUES AVRO FILE
-    checkAvroFileCreated(hdfsClusterBaseUri.resolve(FsUtils.buildPathString(pathString, "issues", "issues*")));
+    checkAvroFileCreated(
+        hdfsClusterBaseUri.resolve(FsUtils.buildPathString(pathString, "issues", "issues*")));
   }
 
-  /**
-   * Checks that the creation of an expected directory was correct.
-   */
+  /** Checks that the creation of an expected directory was correct. */
   private void checkDirCreated(URI uri, int expectedFilesInDir) throws IOException {
     FileStatus[] fileStatusesDir = fs.globStatus(new Path(uri.toString()));
     Assert.assertNotNull(fileStatusesDir);
@@ -234,9 +247,7 @@ public class GbifInterpretationPipelineTest {
     Assert.assertEquals(expectedFilesInDir, fs.listStatus(dirStatus.getPath()).length);
   }
 
-  /**
-   * Checks that the creation of an expected avro file was correct.
-   */
+  /** Checks that the creation of an expected avro file was correct. */
   private void checkAvroFileCreated(URI uri) throws IOException {
     FileStatus[] fileStatusesAvro = fs.globStatus(new Path(uri.toString()));
     Assert.assertNotNull(fileStatusesAvro);
@@ -248,12 +259,10 @@ public class GbifInterpretationPipelineTest {
     }
   }
 
-  /**
-   * Enqueus a geocode response in the mock server.
-   */
+  /** Enqueus a geocode response in the mock server. */
   private static void enqueueGeocodeResponse() {
     InputStream inputStream =
-      Thread.currentThread().getContextClassLoader().getResourceAsStream("denmark-reverse.json");
+        Thread.currentThread().getContextClassLoader().getResourceAsStream("denmark-reverse.json");
     BufferedSource source = Okio.buffer(Okio.source(inputStream));
     MockResponse mockResponse = new MockResponse();
     try {
@@ -262,5 +271,4 @@ public class GbifInterpretationPipelineTest {
       Assert.fail(e.getMessage());
     }
   }
-
 }

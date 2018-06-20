@@ -34,12 +34,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This object is the one that gets populated by Digester when parsing raw xml records into RawOccurrenceRecords.
- * Because some of the xml schemas allow multiple identification records, and we interpret each one as its own
- * RawOccurrenceRecord, this class needs to generate the correct number of RawOccurrenceRecords based on the input
- * xml.  In some schemas there are also different ways of representing the same data (eg decimal latitude vs text
- * latitude) and we prefer the more accurate version when we can get it.  If more than one representation for a given
- * property is populated we have to take the one with highest priority - a mechanism that is inherited from
+ * This object is the one that gets populated by Digester when parsing raw xml records into
+ * RawOccurrenceRecords. Because some of the xml schemas allow multiple identification records, and
+ * we interpret each one as its own RawOccurrenceRecord, this class needs to generate the correct
+ * number of RawOccurrenceRecords based on the input xml. In some schemas there are also different
+ * ways of representing the same data (eg decimal latitude vs text latitude) and we prefer the more
+ * accurate version when we can get it. If more than one representation for a given property is
+ * populated we have to take the one with highest priority - a mechanism that is inherited from
  * PropertyPrioritizer.
  */
 public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
@@ -84,8 +85,10 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   private String identifierName;
   private String unitQualifier;
 
-  // year month and day may be set during parsing, but they will be reconciled into an occurrenceDate
-  // during generateRawOccurrenceRecords and that date string will be set on the resulting RawOccurrenceRecord(s).
+  // year month and day may be set during parsing, but they will be reconciled into an
+  // occurrenceDate
+  // during generateRawOccurrenceRecords and that date string will be set on the resulting
+  // RawOccurrenceRecord(s).
   private String year;
   private String month;
   private String day;
@@ -110,7 +113,8 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     occurrenceDate = reconcileDate(occurrenceDate, year, month, day);
     dateIdentified = reconcileDate(dateIdentified, yearIdentified, monthIdentified, dayIdentified);
 
-    // if multiple valid identifications, generate multiple RoRs and set UnitQualifier to Identification's SciName
+    // if multiple valid identifications, generate multiple RoRs and set UnitQualifier to
+    // Identification's SciName
     if (!identifications.isEmpty()) {
       if (identifications.size() == 1) {
         RawOccurrenceRecord bareBones = generateBareRor();
@@ -155,7 +159,8 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     return records;
   }
 
-  private static String reconcileDate(String reconciledDate, String year, String month, String day) {
+  private static String reconcileDate(
+      String reconciledDate, String year, String month, String day) {
     if (Strings.isNullOrEmpty(reconciledDate) && !Strings.isNullOrEmpty(year)) {
       reconciledDate = year;
       if (!Strings.isNullOrEmpty(month)) {
@@ -226,15 +231,17 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     this.identifications.add(ident);
   }
 
-  public void addTypification(String scientificName, String publication, String typeStatus, String notes) {
+  public void addTypification(
+      String scientificName, String publication, String typeStatus, String notes) {
     LOG.debug(">> addTypification");
 
-    TypificationRecord typRec = new TypificationRecord(scientificName, publication, typeStatus, notes);
+    TypificationRecord typRec =
+        new TypificationRecord(scientificName, publication, typeStatus, notes);
 
     if (typRec.isEmpty()) {
       LOG.debug("Got all nulls for new type - ignoring");
     } else {
-      LOG.debug("Got new typRec:\n {}",typRec.debugDump());
+      LOG.debug("Got new typRec:\n {}", typRec.debugDump());
       typificationRecords.add(typRec);
     }
 
@@ -242,7 +249,10 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   }
 
   private void addIdentifier(Integer identifierType, String identifier) {
-    LOG.debug("Attempting add of Identifier record with type [{}] and body [{}]", identifierType, identifier);
+    LOG.debug(
+        "Attempting add of Identifier record with type [{}] and body [{}]",
+        identifierType,
+        identifier);
     if (!identifier.trim().isEmpty()) {
       IdentifierRecord idRec = new IdentifierRecord();
       idRec.setIdentifier(identifier);
@@ -264,12 +274,14 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
   }
 
   /**
-   * Once this object has been populated by a Digester, there may be several PrioritizedProperties that
-   * need to be resolved, and thereby set the final value of the corresponding field on this object.
+   * Once this object has been populated by a Digester, there may be several PrioritizedProperties
+   * that need to be resolved, and thereby set the final value of the corresponding field on this
+   * object.
    */
   @Override
   public void resolvePriorities() {
-    for (Map.Entry<PrioritizedPropertyNameEnum,Set<PrioritizedProperty>> property : prioritizedProps.entrySet()) {
+    for (Map.Entry<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> property :
+        prioritizedProps.entrySet()) {
       String result = findHighestPriority(property.getValue());
       switch (property.getKey()) {
         case CATALOGUE_NUMBER:

@@ -12,9 +12,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Tests the {@link ResponseParser}.
- */
+/** Tests the {@link ResponseParser}. */
 public class ResponseParserTest {
 
   private static final String CREATE_INDEX_RESPONSE_PATH = "/responses/create-index.json";
@@ -22,14 +20,16 @@ public class ResponseParserTest {
 
   @Test
   public void parseCreatedIndexResponseTest() {
-    String index = ResponseParser.parseCreatedIndexResponse(getEntityFromResponse(CREATE_INDEX_RESPONSE_PATH));
+    String index =
+        ResponseParser.parseCreatedIndexResponse(getEntityFromResponse(CREATE_INDEX_RESPONSE_PATH));
     assertEquals("idxtest", index);
   }
 
   @Test
   public void parseIndexesTest() {
     Set<String> indexes =
-      ResponseParser.parseIndexesInAliasResponse(getEntityFromResponse(ALIAS_INDEXES_RESPONSE_PATH));
+        ResponseParser.parseIndexesInAliasResponse(
+            getEntityFromResponse(ALIAS_INDEXES_RESPONSE_PATH));
 
     assertEquals(2, indexes.size());
     assertTrue(indexes.contains("idx1"));
@@ -44,5 +44,4 @@ public class ResponseParserTest {
       throw new IllegalStateException(e.getMessage(), e);
     }
   }
-
 }

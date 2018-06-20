@@ -18,8 +18,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class Kv2ValueTest {
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   @Category(NeedsRunner.class)
@@ -38,7 +37,5 @@ public class Kv2ValueTest {
     // Should
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();
-
   }
-
 }

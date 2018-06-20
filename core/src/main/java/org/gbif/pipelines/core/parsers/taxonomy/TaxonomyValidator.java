@@ -5,9 +5,7 @@ import org.gbif.api.v2.NameUsageMatch2;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-/**
- * Utility class for the taxonomic interpretation.
- */
+/** Utility class for the taxonomic interpretation. */
 public final class TaxonomyValidator {
 
   private TaxonomyValidator() {}
@@ -19,9 +17,8 @@ public final class TaxonomyValidator {
    */
   public static boolean isEmpty(NameUsageMatch2 response) {
     return Objects.isNull(response)
-           || Objects.isNull(response.getUsage())
-           || Objects.isNull(response.getClassification())
-           || Objects.isNull(response.getDiagnostics());
+        || Objects.isNull(response.getUsage())
+        || Objects.isNull(response.getClassification())
+        || Objects.isNull(response.getDiagnostics());
   }
-
 }

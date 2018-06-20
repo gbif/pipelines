@@ -18,23 +18,23 @@ public class TemporalParserTest {
 
   @Test
   public void testAllNull() {
-    //State
+    // State
     String eventDate = null;
     String year = null;
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertFalse(result.getFrom().isPresent());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testYearOnly() {
-    //State
+    // State
     Temporal expectedFirst = Year.of(1999);
 
     String eventDate = null;
@@ -42,31 +42,31 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testYearAndEventDateNull() {
-    //State
+    // State
     String eventDate = null;
     String year = null;
     String month = "04";
     String day = "01";
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertFalse(result.getFrom().isPresent());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testEventDateNull() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = null;
@@ -74,96 +74,96 @@ public class TemporalParserTest {
     String month = "4";
     String day = "1";
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testEventDateEmpty() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testEventDateYearOnly() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "1999";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testEventDateYearMonthOnly() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "1999-04";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateIso() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 5);
 
     String eventDate = "1999-04-05";
     String year = "1999";
     String month = "04";
     String day = "05";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTimeIso() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 1, 9, 26, 0);
 
     String eventDate = "1999-04-01T09:26Z";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testYearPeriodOnly() {
-    //State
+    // State
     Temporal expectedFirst = Year.of(1999);
     Temporal expectedSecond = Year.of(2010);
 
@@ -171,16 +171,16 @@ public class TemporalParserTest {
     String year = "1999";
     String month = "01";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testFullYearMonthPeriod() {
-    //State
+    // State
     Temporal expectedFirst = YearMonth.of(1999, 4);
     Temporal expectedSecond = YearMonth.of(2010, 1);
 
@@ -188,16 +188,16 @@ public class TemporalParserTest {
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testFullLocalDatePeriod() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 12);
     Temporal expectedSecond = LocalDate.of(2009, 10, 8);
 
@@ -205,16 +205,16 @@ public class TemporalParserTest {
     String year = "1999";
     String month = "04";
     String day = "12";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testFullLocalDateTimePeriod() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 17, 12, 26, 0);
     Temporal expectedSecond = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
 
@@ -222,16 +222,16 @@ public class TemporalParserTest {
     String year = "1999";
     String month = "04";
     String day = "17";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testFullLocalDateTimePeriodSkipZone() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 8, 14, 7, 0);
     Temporal expectedSecond = LocalDateTime.of(2010, 8, 3, 6, 0, 0);
 
@@ -239,128 +239,128 @@ public class TemporalParserTest {
     String year = "1999";
     String month = "04";
     String day = "08";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testLocalDateShortTextMonth() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "01 Apr. 1999";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateShortTextMistakeMonth() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "01 apr. 1999";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateFullTextMonth() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "01 April 1999";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateShortTextMonthDash() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "01-Apr-1999";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateShortTextMonthDateMistake() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "ß1. Apr. 1999";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testEventDateWrongYear() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "apr-99";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testEventDateWrongYearMonthMistake() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "abr-99";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTextMonthFirstComma() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "April 01, 1999";
@@ -368,113 +368,113 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateShortTextMonthFirst() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "Apr. 1, 1999";
     String year = "1999";
     String month = "4";
     String day = "1";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateShortTextMonthFirstDot() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "Apr. 01 1999";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateSlashYearLast() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "01/04/1999";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateSlashYearFirst() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "1999/04/01";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateSlashShortDate() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "1999/04/1";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateSlashShortMonthDate() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "1999/4/1";
     String year = "1999";
     String month = "04";
     String day = "01";
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTextMonthFirst() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
     String eventDate = "April 01 1999";
@@ -482,17 +482,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTimeSkipZone() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 1, 9, 33, 59);
 
     String eventDate = "1999-04-01T09:33:59-0300";
@@ -500,17 +500,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testYearPeriod() {
-    //State
+    // State
     Temporal expectedFirst = Year.of(1999);
     Temporal expectedSecond = Year.of(2010);
 
@@ -519,18 +519,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testShortYearMonthPeriod() {
-    //State
+    // State
     Temporal expectedFirst = YearMonth.of(1999, 4);
     Temporal expectedSecond = YearMonth.of(1999, 10);
 
@@ -539,17 +538,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testLocalDatePeriod() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 12);
     Temporal expectedSecond = LocalDate.of(2009, 10, 8);
 
@@ -558,17 +557,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testLocalDateTimePeriodToTimeOnly() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 17, 12, 26, 0);
     Temporal expectedSecond = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
 
@@ -577,10 +576,10 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
@@ -592,17 +591,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertFalse(result.getFrom().isPresent());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testYearMonthSlashMontFirst() {
-    //State
+    // State
     Temporal expectedFirst = YearMonth.of(2000, 12);
 
     String eventDate = "12/2000";
@@ -610,17 +609,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testYearMonthSlash() {
-    //State
+    // State
     Temporal expectedFirst = YearMonth.of(2000, 12);
 
     String eventDate = "2000/12";
@@ -628,17 +627,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testYearMonthPeriod() {
-    //State
+    // State
     Temporal expectedFirst = YearMonth.of(1999, 4);
     Temporal expectedSecond = YearMonth.of(2010, 1);
 
@@ -647,17 +646,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testLocalDatePeriodToMonthOnly() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
     Temporal expectedSecond = LocalDate.of(1999, 4, 11);
 
@@ -666,17 +665,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testYearMonthShortMonthSlash() {
-    //State
+    // State
     Temporal expectedFirst = YearMonth.of(2000, 2);
 
     String eventDate = "2000/2";
@@ -684,35 +683,36 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTimeSkipLongZone() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(2016, 9, 15, 0, 5, 0);
 
-    String eventDate = "2016-09-15T00:05:00+1400 (LINT, Kiritimati, Kiribati - Christmas Island, UTC+14)";
+    String eventDate =
+        "2016-09-15T00:05:00+1400 (LINT, Kiritimati, Kiribati - Christmas Island, UTC+14)";
     String year = null;
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTimeSpace() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(2009, 2, 13, 15, 20, 0);
 
     String eventDate = "2009-02-13 15:20";
@@ -720,17 +720,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTimeDoubleSpace() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(1987, 4, 11, 9, 30, 0);
 
     String eventDate = "1987-04-11  9:30";
@@ -738,17 +738,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTimeSpaceShortHour() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(1958, 5, 5, 9, 0, 0);
 
     String eventDate = "1958-05-05 9:00";
@@ -756,17 +756,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDateTimeMilliseconds() {
-    //State
+    // State
     Temporal expectedFirst = LocalDateTime.of(1997, 12, 15, 0, 0, 0);
 
     String eventDate = "1997-12-15 00:00:00.0000000";
@@ -774,48 +774,49 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testTextEventDateOnly() {
-    //State
-    String eventDate = "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
+    // State
+    String eventDate =
+        "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
     String year = null;
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertFalse(result.getFrom().isPresent());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testWrongYearOnly() {
-    //State
+    // State
     String eventDate = null;
     String year = "0";
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
-    //Should
+    // Should
     assertFalse(result.getFrom().isPresent());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testLocalDatePeriodToMonthDay() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(2011, 9, 21);
     Temporal expectedSecond = LocalDate.of(2011, 10, 5);
 
@@ -824,17 +825,17 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
 
   @Test
   public void testLocalDateNumbersOnly() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(2012, 5, 6);
 
     String eventDate = "20120506";
@@ -842,34 +843,35 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
   }
 
   @Test
   public void testLocalDateTextEventDate() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(1999, 1, 1);
 
-    String eventDate = "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
+    String eventDate =
+        "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
     String year = "1999";
     String month = "1";
     String day = "1";
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertFalse(result.getTo().isPresent());
   }
 
   @Test
   public void testWrongLeapDay() {
-    //State
+    // State
     Temporal expectedFirst = YearMonth.of(2013, 2);
 
     String eventDate = "2013/2/29";
@@ -877,16 +879,16 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
   }
 
   @Test
   public void testWrongLeapDayWithBase() {
-    //State
+    // State
     Temporal expectedFirst = LocalDate.of(2013, 2, 28);
 
     String eventDate = "2013/2/29";
@@ -894,17 +896,17 @@ public class TemporalParserTest {
     String month = "2";
     String day = "28";
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
   }
 
   @Test
   public void testInvalidPeriod() {
 
-    //State
+    // State
     Temporal expectedFirst = Year.of(2011);
     Temporal expectedSecond = Year.of(2013);
 
@@ -913,12 +915,11 @@ public class TemporalParserTest {
     String month = null;
     String day = null;
 
-    //When
+    // When
     ParsedTemporalDates result = TemporalParser.parse(year, month, day, eventDate);
 
-    //Should
+    // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
   }
-
 }

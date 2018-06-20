@@ -60,8 +60,7 @@ public class XmlFragmentParser {
   private static final Map<OccurrenceSchemaType, RuleSet> RULE_SETS = Maps.newHashMap();
 
   // static class, should never be instantiated
-  private XmlFragmentParser() {
-  }
+  private XmlFragmentParser() {}
 
   static {
     try {
@@ -107,8 +106,8 @@ public class XmlFragmentParser {
     return records;
   }
 
-  private static List<RawOccurrenceRecord> parseRecord(InputSource inputSource, OccurrenceSchemaType schemaType)
-    throws IOException, SAXException {
+  private static List<RawOccurrenceRecord> parseRecord(
+      InputSource inputSource, OccurrenceSchemaType schemaType) throws IOException, SAXException {
     RawOccurrenceRecordBuilder builder = new RawOccurrenceRecordBuilder();
     Digester digester = new Digester();
     digester.setNamespaceAware(true);
@@ -122,12 +121,14 @@ public class XmlFragmentParser {
   }
 
   /**
-   * This method is a hack to return a single result where ScientificName matches the given unitQualifier. This
-   * behaviour is only relevant for ABCD 2.06 - the others all produce a single record anyway.
-   * TODO: refactor the parse/builder to return what we want, rather than hacking around
-   * FIXME: never used, can it be deleted?? if it is gonna be used we will have to set the missing ids
+   * This method is a hack to return a single result where ScientificName matches the given
+   * unitQualifier. This behaviour is only relevant for ABCD 2.06 - the others all produce a single
+   * record anyway. TODO: refactor the parse/builder to return what we want, rather than hacking
+   * around FIXME: never used, can it be deleted?? if it is gonna be used we will have to set the
+   * missing ids
    */
-  public static RawOccurrenceRecord parseRecord(byte[] xml, OccurrenceSchemaType schemaType, String unitQualifier) {
+  public static RawOccurrenceRecord parseRecord(
+      byte[] xml, OccurrenceSchemaType schemaType, String unitQualifier) {
     RawOccurrenceRecord result = null;
     List<RawOccurrenceRecord> records = parseRecord(xml, schemaType);
     if (records.isEmpty()) {
@@ -135,7 +136,8 @@ public class XmlFragmentParser {
     } else if (records.size() == 1) {
       result = records.get(0);
     } else if (unitQualifier == null) {
-      LOG.warn("Got multiple records from given xml, but no unitQualifier set - returning first record as a guess.");
+      LOG.warn(
+          "Got multiple records from given xml, but no unitQualifier set - returning first record as a guess.");
       result = records.get(0);
     } else {
       for (RawOccurrenceRecord record : records) {
@@ -153,28 +155,32 @@ public class XmlFragmentParser {
   }
 
   /**
-   * Extract sets of UniqueIdentifiers from the xml snippet. In the usual case the set will contain a single
-   * result, which will in turn contain 1 or more UniqueIdentifiers for the given xml. In the ABCD 2 case there
-   * may be more than one occurrence represented by the given xml, in which case there will be an
-   * IdentifierExtractionResult (with UniqueIdentifiers) returned for each of the represented occurrences (e.g. if 3
-   * occurrences are in the xml snippet and each have one UniqueIdentifier the result will be a set of 3
-   * IdentifierExtractionResults, where each result contains a single UniqueIdentifier). If the passed in xml is
-   * somehow malformed there may be 0 UniqueIdentifiers found, in which case an empty set is returned.
+   * Extract sets of UniqueIdentifiers from the xml snippet. In the usual case the set will contain
+   * a single result, which will in turn contain 1 or more UniqueIdentifiers for the given xml. In
+   * the ABCD 2 case there may be more than one occurrence represented by the given xml, in which
+   * case there will be an IdentifierExtractionResult (with UniqueIdentifiers) returned for each of
+   * the represented occurrences (e.g. if 3 occurrences are in the xml snippet and each have one
+   * UniqueIdentifier the result will be a set of 3 IdentifierExtractionResults, where each result
+   * contains a single UniqueIdentifier). If the passed in xml is somehow malformed there may be 0
+   * UniqueIdentifiers found, in which case an empty set is returned.
    *
-   * @param datasetKey      UUID for this dataset
-   * @param xml             snippet of xml representing one (or more, in ABCD) occurrence
-   * @param schemaType      the protocol that produced this xml (e.g. DWC, ABCD)
-   * @param useOccurrenceId @return a set of 0 or more IdentifierExtractionResults containing UniqueIdentifiers as found
-   *                        in the xml
-   *
+   * @param datasetKey UUID for this dataset
+   * @param xml snippet of xml representing one (or more, in ABCD) occurrence
+   * @param schemaType the protocol that produced this xml (e.g. DWC, ABCD)
+   * @param useOccurrenceId @return a set of 0 or more IdentifierExtractionResults containing
+   *     UniqueIdentifiers as found in the xml
    * @see UniqueIdentifier
    */
   public static Set<IdentifierExtractionResult> extractIdentifiers(
-    UUID datasetKey, byte[] xml, OccurrenceSchemaType schemaType, boolean useTriplet, boolean useOccurrenceId
-  ) {
+      UUID datasetKey,
+      byte[] xml,
+      OccurrenceSchemaType schemaType,
+      boolean useTriplet,
+      boolean useOccurrenceId) {
     Set<IdentifierExtractionResult> results = Sets.newHashSet();
 
-    // this is somewhat wasteful, but a whole separate stack of parsing to extract triplet seems excessive
+    // this is somewhat wasteful, but a whole separate stack of parsing to extract triplet seems
+    // excessive
     List<RawOccurrenceRecord> records = parseRecord(xml, schemaType);
     if (records != null && !records.isEmpty()) {
       for (RawOccurrenceRecord record : records) {
@@ -183,24 +189,37 @@ public class XmlFragmentParser {
         if (useTriplet) {
           Triplet triplet = null;
           try {
-            triplet = new Triplet(datasetKey, record.getInstitutionCode(), record.getCollectionCode(),
-                                  record.getCatalogueNumber(), record.getUnitQualifier());
+            triplet =
+                new Triplet(
+                    datasetKey,
+                    record.getInstitutionCode(),
+                    record.getCollectionCode(),
+                    record.getCatalogueNumber(),
+                    record.getUnitQualifier());
           } catch (IllegalArgumentException e) {
-            // some of the triplet was null or empty, so it's not valid - that's highly suspicious, but could be ok...
-            LOG.info("No holy triplet for an xml snippet in dataset [{}] and schema [{}], got error [{}]",
-              datasetKey.toString(), schemaType.toString(), e.getMessage());
+            // some of the triplet was null or empty, so it's not valid - that's highly suspicious,
+            // but could be ok...
+            LOG.info(
+                "No holy triplet for an xml snippet in dataset [{}] and schema [{}], got error [{}]",
+                datasetKey.toString(),
+                schemaType.toString(),
+                e.getMessage());
           }
           if (triplet != null) {
             ids.add(triplet);
           }
         }
 
-        if (useOccurrenceId && record.getIdentifierRecords() != null && !record.getIdentifierRecords().isEmpty()) {
+        if (useOccurrenceId
+            && record.getIdentifierRecords() != null
+            && !record.getIdentifierRecords().isEmpty()) {
           for (IdentifierRecord idRecord : record.getIdentifierRecords()) {
-            // TODO: this needs much better checking (ie can we trust that guid (type 1) and sourceid (type 7) are
+            // TODO: this needs much better checking (ie can we trust that guid (type 1) and
+            // sourceid (type 7) are
             // getting set and parsed properly?)
             // TODO: identifier types need to be enums
-            if ((idRecord.getIdentifierType() == 1 || idRecord.getIdentifierType() == 7) && idRecord.getIdentifier() != null) {
+            if ((idRecord.getIdentifierType() == 1 || idRecord.getIdentifierType() == 7)
+                && idRecord.getIdentifier() != null) {
               ids.add(new PublisherProvidedUniqueIdentifier(datasetKey, idRecord.getIdentifier()));
             }
           }
@@ -215,9 +234,7 @@ public class XmlFragmentParser {
     return results;
   }
 
-  /**
-   * Filters the records by discarding the ones without ID.
-   */
+  /** Filters the records by discarding the ones without ID. */
   private static List<RawOccurrenceRecord> forceIdentifiers(List<RawOccurrenceRecord> records) {
     if (records == null) {
       return Collections.emptyList();
@@ -229,16 +246,20 @@ public class XmlFragmentParser {
       if (Strings.isNullOrEmpty(record.getId())) {
         // try to create a triplet
         try {
-          record.setId(OccurrenceKeyHelper.toKey(new Triplet(record.getInstitutionCode(),
-                                                             record.getCollectionCode(),
-                                                             record.getCatalogueNumber())));
+          record.setId(
+              OccurrenceKeyHelper.toKey(
+                  new Triplet(
+                      record.getInstitutionCode(),
+                      record.getCollectionCode(),
+                      record.getCatalogueNumber())));
         } catch (Exception e) {
-          LOG.info("Could not create a triplet for record with institution code {}, collection code {} and catalogue "
-                   + "number {}",
-                   record.getInstitutionCode(),
-                   record.getCollectionCode(),
-                   record.getCatalogueNumber(),
-                   e);
+          LOG.info(
+              "Could not create a triplet for record with institution code {}, collection code {} and catalogue "
+                  + "number {}",
+              record.getInstitutionCode(),
+              record.getCollectionCode(),
+              record.getCatalogueNumber(),
+              e);
           // record discarded
           continue;
         }
@@ -247,5 +268,4 @@ public class XmlFragmentParser {
     }
     return result;
   }
-
 }

@@ -47,7 +47,12 @@ public abstract class ParserTestCase {
   protected void showIdentifiers(RawOccurrenceRecord ror) {
     System.out.println("got [" + ror.getIdentifierRecords().size() + "] identifier records");
     for (IdentifierRecord idRec : ror.getIdentifierRecords()) {
-      System.out.println("IdRec type [" + idRec.getIdentifierType() + "] identifier [" + idRec.getIdentifier() + "]");
+      System.out.println(
+          "IdRec type ["
+              + idRec.getIdentifierType()
+              + "] identifier ["
+              + idRec.getIdentifier()
+              + "]");
     }
   }
 
@@ -83,5 +88,4 @@ public abstract class ParserTestCase {
       System.out.println(link.debugDump());
     }
   }
-
 }

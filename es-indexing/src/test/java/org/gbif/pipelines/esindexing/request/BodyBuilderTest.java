@@ -41,18 +41,13 @@ import static org.gbif.pipelines.esindexing.common.JsonHandler.readTree;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Tests the {@link BodyBuilder}.
- */
+/** Tests the {@link BodyBuilder}. */
 public class BodyBuilderTest {
 
   private static final String TEST_MAPPINGS_PATH = "mappings/simple-mapping.json";
 
-  /**
-   * {@link Rule} requires this field to be public.
-   */
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  /** {@link Rule} requires this field to be public. */
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void bodyWithSettingsTest() {
@@ -64,18 +59,28 @@ public class BodyBuilderTest {
     assertTrue(node.has(SETTINGS_FIELD));
 
     assertEquals(4, node.path(SETTINGS_FIELD).size());
-    assertEquals(INDEXING_REFRESH_INTERVAL, node.path(SETTINGS_FIELD).path(INDEX_REFRESH_INTERVAL_FIELD).asText());
-    assertEquals(INDEXING_NUMBER_REPLICAS, node.path(SETTINGS_FIELD).path(INDEX_NUMBER_REPLICAS_FIELD).asText());
+    assertEquals(
+        INDEXING_REFRESH_INTERVAL,
+        node.path(SETTINGS_FIELD).path(INDEX_REFRESH_INTERVAL_FIELD).asText());
+    assertEquals(
+        INDEXING_NUMBER_REPLICAS,
+        node.path(SETTINGS_FIELD).path(INDEX_NUMBER_REPLICAS_FIELD).asText());
     assertEquals(NUMBER_SHARDS, node.path(SETTINGS_FIELD).path(INDEX_NUMBER_SHARDS_FIELD).asText());
-    assertEquals(TRANSLOG_DURABILITY, node.path(SETTINGS_FIELD).path(INDEX_TRANSLOG_DURABILITY_FIELD).asText());
+    assertEquals(
+        TRANSLOG_DURABILITY,
+        node.path(SETTINGS_FIELD).path(INDEX_TRANSLOG_DURABILITY_FIELD).asText());
 
     // search settings
     entity = BodyBuilder.newInstance().withSettingsType(SettingsType.SEARCH).build();
     node = readTree(entity);
     assertEquals(2, node.path(SETTINGS_FIELD).size());
     assertTrue(node.has(SETTINGS_FIELD));
-    assertEquals(SEARCHING_REFRESH_INTERVAL, node.path(SETTINGS_FIELD).path(INDEX_REFRESH_INTERVAL_FIELD).asText());
-    assertEquals(SEARCHING_NUMBER_REPLICAS, node.path(SETTINGS_FIELD).path(INDEX_NUMBER_REPLICAS_FIELD).asText());
+    assertEquals(
+        SEARCHING_REFRESH_INTERVAL,
+        node.path(SETTINGS_FIELD).path(INDEX_REFRESH_INTERVAL_FIELD).asText());
+    assertEquals(
+        SEARCHING_NUMBER_REPLICAS,
+        node.path(SETTINGS_FIELD).path(INDEX_NUMBER_REPLICAS_FIELD).asText());
   }
 
   @Test
@@ -102,7 +107,8 @@ public class BodyBuilderTest {
     Set<String> idxToAdd = new HashSet<>(Arrays.asList("add1", "add2"));
     Set<String> idxToRemove = new HashSet<>(Arrays.asList("remove1", "remove2"));
 
-    HttpEntity entity = BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
+    HttpEntity entity =
+        BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
 
     // assert entity
     JsonNode node = readTree(entity);
@@ -135,7 +141,8 @@ public class BodyBuilderTest {
 
   @Test
   public void bodyWithMappingsAsPath() {
-    HttpEntity entity = BodyBuilder.newInstance().withMappings(Paths.get(TEST_MAPPINGS_PATH)).build();
+    HttpEntity entity =
+        BodyBuilder.newInstance().withMappings(Paths.get(TEST_MAPPINGS_PATH)).build();
 
     // assert entity
     JsonNode node = readTree(entity);
@@ -144,7 +151,8 @@ public class BodyBuilderTest {
 
   @Test
   public void bodyWithMappingsAsString() {
-    String jsonMappings = JsonHandler.writeToString(FileUtils.loadFile(Paths.get(TEST_MAPPINGS_PATH)));
+    String jsonMappings =
+        JsonHandler.writeToString(FileUtils.loadFile(Paths.get(TEST_MAPPINGS_PATH)));
 
     HttpEntity entity = BodyBuilder.newInstance().withMappings(jsonMappings).build();
 
@@ -155,10 +163,11 @@ public class BodyBuilderTest {
 
   @Test
   public void bodyWithSettingsAndMappings() {
-    HttpEntity entity = BodyBuilder.newInstance()
-      .withSettingsType(SettingsType.INDEXING)
-      .withMappings(Paths.get(TEST_MAPPINGS_PATH))
-      .build();
+    HttpEntity entity =
+        BodyBuilder.newInstance()
+            .withSettingsType(SettingsType.INDEXING)
+            .withMappings(Paths.get(TEST_MAPPINGS_PATH))
+            .build();
 
     // assert entity
     JsonNode node = readTree(entity);

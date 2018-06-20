@@ -15,9 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Creates the configuration to use a specific WS. The supported web services are defined in {@link Service}.
- * <p>
- * By default it reads the configurarion from the "http.properties" file.
+ * Creates the configuration to use a specific WS. The supported web services are defined in {@link
+ * Service}.
+ *
+ * <p>By default it reads the configurarion from the "http.properties" file.
  */
 public class HttpConfigFactory {
 
@@ -34,40 +35,52 @@ public class HttpConfigFactory {
 
   // long defaults
   static final long DEFAULT_TIMEOUT = Long.parseLong(DEFAULT_TIMEOUT_PROP);
-  static final long DEFAULT_CACHE_SIZE = Long.parseLong(DEFAULT_CACHE_SIZE_IN_MB_PROP) * 1024L * 1024L;
+  static final long DEFAULT_CACHE_SIZE =
+      Long.parseLong(DEFAULT_CACHE_SIZE_IN_MB_PROP) * 1024L * 1024L;
 
   private HttpConfigFactory() {}
 
   public static Config createConfig(Service service, Path propertiesPath) {
-    return createConfigInternal(Objects.requireNonNull(service), Objects.requireNonNull(propertiesPath));
+    return createConfigInternal(
+        Objects.requireNonNull(service), Objects.requireNonNull(propertiesPath));
   }
 
-  /**
-   * Creates a {@link Config} from a url and uses default timeout and cache size.
-   */
+  /** Creates a {@link Config} from a url and uses default timeout and cache size. */
   public static Config createConfigFromUrl(String url) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
-    return new Config.Builder().basePath(url).timeout(DEFAULT_TIMEOUT).cacheSize(DEFAULT_CACHE_SIZE).build();
+    return new Config.Builder()
+        .basePath(url)
+        .timeout(DEFAULT_TIMEOUT)
+        .cacheSize(DEFAULT_CACHE_SIZE)
+        .build();
   }
 
   private static Config createConfigInternal(Service service, Path propertiesPath) {
     // load properties or throw exception if cannot be loaded
     Properties props =
-      loadProperties(propertiesPath).orElseThrow(() -> new IllegalArgumentException("Could not load properties file "
-                                                                                    + propertiesPath));
+        loadProperties(propertiesPath)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Could not load properties file " + propertiesPath));
     // get the base path or throw exception if not present
-    String basePath = Optional.ofNullable(props.getProperty(generatePropertyName(service, WS_BASE_PATH_PROP)))
-      .filter(prop -> !prop.isEmpty())
-      .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
+    String basePath =
+        Optional.ofNullable(props.getProperty(generatePropertyName(service, WS_BASE_PATH_PROP)))
+            .filter(prop -> !prop.isEmpty())
+            .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
 
     // set config properties
     Config.Builder builder = new Config.Builder();
     builder.basePath(basePath);
-    builder.timeout(Long.parseLong(props.getProperty(generatePropertyName(service, WS_TIMEOUT_PROP),
-                                                     DEFAULT_TIMEOUT_PROP)));
+    builder.timeout(
+        Long.parseLong(
+            props.getProperty(
+                generatePropertyName(service, WS_TIMEOUT_PROP), DEFAULT_TIMEOUT_PROP)));
 
     long configSize =
-      Long.parseLong(props.getProperty(generatePropertyName(service, CACHE_SIZE_PROP), DEFAULT_CACHE_SIZE_IN_MB_PROP));
+        Long.parseLong(
+            props.getProperty(
+                generatePropertyName(service, CACHE_SIZE_PROP), DEFAULT_CACHE_SIZE_IN_MB_PROP));
     Long cacheSize = configSize * 1024L * 1024L; // Cache in megabytes
     builder.cacheSize(cacheSize);
 
@@ -75,17 +88,21 @@ public class HttpConfigFactory {
   }
 
   private static Optional<Properties> loadProperties(Path propertiesPath) {
-    Function<Path, InputStream> absolute = path -> {
-      try {
-        return new FileInputStream(path.toFile());
-      } catch (FileNotFoundException ex) {
-        LOG.error("Properties with absolute path could not be read from {}", propertiesPath.toString(), ex);
-        throw new IllegalArgumentException(ex.getMessage(), ex);
-      }
-    };
+    Function<Path, InputStream> absolute =
+        path -> {
+          try {
+            return new FileInputStream(path.toFile());
+          } catch (FileNotFoundException ex) {
+            LOG.error(
+                "Properties with absolute path could not be read from {}",
+                propertiesPath.toString(),
+                ex);
+            throw new IllegalArgumentException(ex.getMessage(), ex);
+          }
+        };
 
     Function<Path, InputStream> resource =
-      path -> Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
+        path -> Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
 
     Function<Path, InputStream> function = propertiesPath.isAbsolute() ? absolute : resource;
 
@@ -104,5 +121,4 @@ public class HttpConfigFactory {
   private static String generatePropertyName(Service service, String property) {
     return service.getPath() + property;
   }
-
 }

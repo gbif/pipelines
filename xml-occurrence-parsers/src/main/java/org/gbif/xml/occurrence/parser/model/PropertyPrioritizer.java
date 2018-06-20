@@ -27,15 +27,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * In schemas that have multiple representations of the same field (eg decimal latitude vs text latitude) this class
- * gives a framework for setting the order of preference of fields for resolving cases where more than one of them
- * is populated.
+ * In schemas that have multiple representations of the same field (eg decimal latitude vs text
+ * latitude) this class gives a framework for setting the order of preference of fields for
+ * resolving cases where more than one of them is populated.
  */
 public abstract class PropertyPrioritizer {
 
   private static final Logger LOG = LoggerFactory.getLogger(PropertyPrioritizer.class);
 
-  protected Map<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> prioritizedProps = new EnumMap<>(PrioritizedPropertyNameEnum.class);
+  protected Map<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> prioritizedProps =
+      new EnumMap<>(PrioritizedPropertyNameEnum.class);
 
   public abstract void resolvePriorities();
 
@@ -58,9 +59,7 @@ public abstract class PropertyPrioritizer {
     LOG.debug("<< addPrioritizedProperty");
   }
 
-  /**
-   * Highest priority is 1.
-   */
+  /** Highest priority is 1. */
   protected static String findHighestPriority(Set<PrioritizedProperty> props) {
     String result = null;
     int highestPriority = Integer.MAX_VALUE;

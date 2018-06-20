@@ -8,11 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Extends FilterReader to clean character streams of invalid xml characters while streaming. The set of valid
- * chars are defined by the w3c here: http://www.w3.org/TR/2000/REC-xml-20001006#NT-Char.
- * Note that this sanitizing is for the entire xml stream - the problem of illegal characters within elements/CDATA
- * sections (e.g. < > & ) is not handled by this reader.
- * TODO: move to gbif-common project
+ * Extends FilterReader to clean character streams of invalid xml characters while streaming. The
+ * set of valid chars are defined by the w3c here:
+ * http://www.w3.org/TR/2000/REC-xml-20001006#NT-Char. Note that this sanitizing is for the entire
+ * xml stream - the problem of illegal characters within elements/CDATA sections (e.g. < > & ) is
+ * not handled by this reader. TODO: move to gbif-common project
  */
 public class XmlSanitizingReader extends FilterReader {
 
@@ -35,18 +35,17 @@ public class XmlSanitizingReader extends FilterReader {
   }
 
   /**
-   * This violates the read contract slightly - the returned value is number
-   * of chars read in all cases except where end of stream is the first char read.
-   * This is something that BufferedReader expects for its readLine() calls (and
-   * how it behaves for its implementation of this method).
+   * This violates the read contract slightly - the returned value is number of chars read in all
+   * cases except where end of stream is the first char read. This is something that BufferedReader
+   * expects for its readLine() calls (and how it behaves for its implementation of this method).
    */
   @Override
   public int read(char[] buffer, int offset, int length) throws IOException {
     synchronized (lock) {
       LOG.debug("call to read(b, o, l) with l [{}]", length);
       /**
-       * TODO: careful here - I think char can only represent basic multilingual plane
-       * while int can represent anything, so the cast to char could fail
+       * TODO: careful here - I think char can only represent basic multilingual plane while int can
+       * represent anything, so the cast to char could fail
        */
       int charsRead = 0;
       for (int i = offset; i < (offset + length); i++) {
@@ -110,11 +109,10 @@ public class XmlSanitizingReader extends FilterReader {
 
   private boolean isValidXml(int charVal) {
     return charVal == 0x9
-           || charVal == 0xA
-           || charVal == 0xD
-           || (charVal >= 0x20 && charVal <= 0xD7FF)
-           || (charVal >= 0xE000  && charVal <= 0xFFFD)
-           || (charVal >= 0x10000 && charVal <= 0x10FFFF);
+        || charVal == 0xA
+        || charVal == 0xD
+        || (charVal >= 0x20 && charVal <= 0xD7FF)
+        || (charVal >= 0xE000 && charVal <= 0xFFFD)
+        || (charVal >= 0x10000 && charVal <= 0x10FFFF);
   }
-
 }

@@ -108,7 +108,8 @@ public class ResponseSchemaDetector {
     elements = new EnumMap<>(ResponseElementEnum.class);
     elements.put(ResponseElementEnum.CATALOG_NUMBER, ExtractionSimpleXPaths.DWC_MANIS_CATALOG);
     elements.put(ResponseElementEnum.COLLECTION_CODE, ExtractionSimpleXPaths.DWC_MANIS_COLLECTION);
-    elements.put(ResponseElementEnum.INSTITUTION_CODE, ExtractionSimpleXPaths.DWC_MANIS_INSTITUTION);
+    elements.put(
+        ResponseElementEnum.INSTITUTION_CODE, ExtractionSimpleXPaths.DWC_MANIS_INSTITUTION);
     elements.put(ResponseElementEnum.RECORD, ExtractionSimpleXPaths.DWC_MANIS_RECORD);
     distinctiveElements.put(OccurrenceSchemaType.DWC_MANIS, elements);
 
@@ -129,7 +130,8 @@ public class ResponseSchemaDetector {
     elements = new EnumMap<>(ResponseElementEnum.class);
     elements.put(ResponseElementEnum.CATALOG_NUMBER, ExtractionSimpleXPaths.ABCD_2_0_6_CATALOG);
     elements.put(ResponseElementEnum.COLLECTION_CODE, ExtractionSimpleXPaths.ABCD_2_0_6_COLLECTION);
-    elements.put(ResponseElementEnum.INSTITUTION_CODE, ExtractionSimpleXPaths.ABCD_2_0_6_INSTITUTION);
+    elements.put(
+        ResponseElementEnum.INSTITUTION_CODE, ExtractionSimpleXPaths.ABCD_2_0_6_INSTITUTION);
     elements.put(ResponseElementEnum.RECORD, ExtractionSimpleXPaths.ABCD_2_0_6_RECORD);
     distinctiveElements.put(OccurrenceSchemaType.ABCD_2_0_6, elements);
   }

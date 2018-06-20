@@ -16,5 +16,12 @@
 package org.gbif.xml.occurrence.parser.constants;
 
 public enum TaxonRankEnum {
-  KINGDOM, PHYLUM, CLASS, ORDER, FAMILY, GENUS, SPECIES, SUBSPECIES
+  KINGDOM,
+  PHYLUM,
+  CLASS,
+  ORDER,
+  FAMILY,
+  GENUS,
+  SPECIES,
+  SUBSPECIES
 }

@@ -17,15 +17,16 @@ public final class DataPipelineOptionsFactory {
   /**
    * Creates a {@link DataProcessingPipelineOptions} from the arguments and configuration passed.
    *
-   * @param args   cli args
+   * @param args cli args
    * @param config hadoop config
-   *
    * @return {@link DataProcessingPipelineOptions}
    */
   public static DataProcessingPipelineOptions create(Configuration config, String[] args) {
     PipelineOptionsFactory.register(DataProcessingPipelineOptions.class);
     DataProcessingPipelineOptions options =
-      PipelineOptionsFactory.fromArgs(args).withValidation().as(DataProcessingPipelineOptions.class);
+        PipelineOptionsFactory.fromArgs(args)
+            .withValidation()
+            .as(DataProcessingPipelineOptions.class);
     options.setHdfsConfiguration(Collections.singletonList(config));
 
     return options;
@@ -34,7 +35,9 @@ public final class DataPipelineOptionsFactory {
   public static DataProcessingPipelineOptions create(String[] args) {
     PipelineOptionsFactory.register(DataProcessingPipelineOptions.class);
     DataProcessingPipelineOptions options =
-      PipelineOptionsFactory.fromArgs(args).withValidation().as(DataProcessingPipelineOptions.class);
+        PipelineOptionsFactory.fromArgs(args)
+            .withValidation()
+            .as(DataProcessingPipelineOptions.class);
     loadHadoopConfigFromPath(options);
 
     return options;
@@ -42,7 +45,8 @@ public final class DataPipelineOptionsFactory {
 
   public static DataProcessingPipelineOptions create(Configuration config) {
     PipelineOptionsFactory.register(DataProcessingPipelineOptions.class);
-    DataProcessingPipelineOptions options = PipelineOptionsFactory.as(DataProcessingPipelineOptions.class);
+    DataProcessingPipelineOptions options =
+        PipelineOptionsFactory.as(DataProcessingPipelineOptions.class);
     options.setHdfsConfiguration(Collections.singletonList(config));
 
     return options;
@@ -51,7 +55,9 @@ public final class DataPipelineOptionsFactory {
   public static EsProcessingPipelineOptions createForEs(String[] args) {
     PipelineOptionsFactory.register(EsProcessingPipelineOptions.class);
     EsProcessingPipelineOptions options =
-      PipelineOptionsFactory.fromArgs(args).withValidation().as(EsProcessingPipelineOptions.class);
+        PipelineOptionsFactory.fromArgs(args)
+            .withValidation()
+            .as(EsProcessingPipelineOptions.class);
     loadHadoopConfigFromPath(options);
 
     return options;
@@ -69,5 +75,4 @@ public final class DataPipelineOptionsFactory {
       options.setHdfsConfiguration(Collections.singletonList(conf));
     }
   }
-
 }

@@ -32,15 +32,14 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class TemporalRecordTransformTest {
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   @Category(NeedsRunner.class)
   public void testTransformation() {
     // State
     final List<ExtendedRecord> input =
-      createExtendedRecordList("1999-04-17T12:26Z/12:52:17Z", "1999-04/2010-05", "2010/2011");
+        createExtendedRecordList("1999-04-17T12:26Z/12:52:17Z", "1999-04/2010-05", "2010/2011");
 
     // Expected
     // First
@@ -65,17 +64,20 @@ public class TemporalRecordTransformTest {
     periodThree.setMonth(Month.of(10));
     periodThree.setDay(1);
 
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, periodTwo, periodThree);
+    final List<TemporalRecord> dataExpected =
+        createTemporalRecordList(periodOne, periodTwo, periodThree);
 
     // When
-    //Coders.registerAvroCoders(p, ExtendedRecord.class, TemporalRecord.class, OccurrenceIssue.class);
+    // Coders.registerAvroCoders(p, ExtendedRecord.class, TemporalRecord.class,
+    // OccurrenceIssue.class);
 
     TemporalRecordTransform temporalRecord = TemporalRecordTransform.create().withAvroCoders(p);
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 
     PCollectionTuple tuple = inputStream.apply(temporalRecord);
 
-    PCollection<TemporalRecord> dataStream = tuple.get(temporalRecord.getDataTag()).apply(Kv2Value.create());
+    PCollection<TemporalRecord> dataStream =
+        tuple.get(temporalRecord.getDataTag()).apply(Kv2Value.create());
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);
@@ -83,36 +85,41 @@ public class TemporalRecordTransformTest {
   }
 
   private List<ExtendedRecord> createExtendedRecordList(String... events) {
-    return Arrays.stream(events).map(x -> {
-      ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
-      record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
-      record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "10");
-      record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "1");
-      record.getCoreTerms().put(DwcTerm.endDayOfYear.qualifiedName(), "365");
-      record.getCoreTerms().put(DwcTerm.startDayOfYear.qualifiedName(), "1");
-      record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), x);
-      record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), x);
-      record.getCoreTerms().put(DcTerm.modified.qualifiedName(), x);
-      return record;
-    }).collect(Collectors.toList());
+    return Arrays.stream(events)
+        .map(
+            x -> {
+              ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+              record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
+              record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "10");
+              record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "1");
+              record.getCoreTerms().put(DwcTerm.endDayOfYear.qualifiedName(), "365");
+              record.getCoreTerms().put(DwcTerm.startDayOfYear.qualifiedName(), "1");
+              record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), x);
+              record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), x);
+              record.getCoreTerms().put(DcTerm.modified.qualifiedName(), x);
+              return record;
+            })
+        .collect(Collectors.toList());
   }
 
   private List<TemporalRecord> createTemporalRecordList(ParsedTemporalDates... dates) {
-    return Arrays.stream(dates).map(x -> {
-      String from = x.getFrom().map(Temporal::toString).orElse(null);
-      String to = x.getTo().map(Temporal::toString).orElse(null);
-      return TemporalRecord.newBuilder()
-        .setId("0")
-        .setYear(x.getYear().map(Year::getValue).orElse(null))
-        .setMonth(x.getMonth().map(Month::getValue).orElse(null))
-        .setDay(x.getDay().orElse(null))
-        .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
-        .setDateIdentified(x.getFrom().map(Temporal::toString).orElse(null))
-        .setModified(x.getFrom().map(Temporal::toString).orElse(null))
-        .setStartDayOfYear(1)
-        .setEndDayOfYear(365)
-        .build();
-    }).collect(Collectors.toList());
+    return Arrays.stream(dates)
+        .map(
+            x -> {
+              String from = x.getFrom().map(Temporal::toString).orElse(null);
+              String to = x.getTo().map(Temporal::toString).orElse(null);
+              return TemporalRecord.newBuilder()
+                  .setId("0")
+                  .setYear(x.getYear().map(Year::getValue).orElse(null))
+                  .setMonth(x.getMonth().map(Month::getValue).orElse(null))
+                  .setDay(x.getDay().orElse(null))
+                  .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
+                  .setDateIdentified(x.getFrom().map(Temporal::toString).orElse(null))
+                  .setModified(x.getFrom().map(Temporal::toString).orElse(null))
+                  .setStartDayOfYear(1)
+                  .setEndDayOfYear(365)
+                  .build();
+            })
+        .collect(Collectors.toList());
   }
-
 }

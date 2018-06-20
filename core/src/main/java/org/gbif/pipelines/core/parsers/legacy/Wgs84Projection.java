@@ -27,9 +27,7 @@ import org.opengis.referencing.operation.MathTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Utils class that reprojects to WGS84 based on geotools transformations and SRS databases.
- */
+/** Utils class that reprojects to WGS84 based on geotools transformations and SRS databases. */
 public class Wgs84Projection {
 
   private static final Logger LOG = LoggerFactory.getLogger(Wgs84Projection.class);
@@ -49,15 +47,14 @@ public class Wgs84Projection {
   }
 
   /**
-   * Reproject the given location into WGS84 location based on a known source datum or SRS.
-   * Darwin Core allows not only geodetic datums but also full spatial reference systems as values for "datum".
-   * The method will always return lat lons even if the processing failed. In that case only issues are set and the
-   * parsing result set to fail - but with a valid payload.
+   * Reproject the given location into WGS84 location based on a known source datum or SRS. Darwin
+   * Core allows not only geodetic datums but also full spatial reference systems as values for
+   * "datum". The method will always return lat lons even if the processing failed. In that case
+   * only issues are set and the parsing result set to fail - but with a valid payload.
    *
-   * @param lat   the original latitude
-   * @param lon   the original longitude
+   * @param lat the original latitude
+   * @param lon the original longitude
    * @param datum the original geodetic datum the location are in
-   *
    * @return the reprojected location or the original ones in case transformation failed
    */
   public static ParsedField<LatLng> reproject(double lat, double lon, String datum) {
@@ -67,7 +64,8 @@ public class Wgs84Projection {
     List<InterpretationIssue> issues = new ArrayList<>();
 
     if (Strings.isNullOrEmpty(datum)) {
-      issues.add(InterpretationIssue.of(IssueType.GEODETIC_DATUM_ASSUMED_WGS84, DwcTerm.geodeticDatum));
+      issues.add(
+          InterpretationIssue.of(IssueType.GEODETIC_DATUM_ASSUMED_WGS84, DwcTerm.geodeticDatum));
       return ParsedField.success(new LatLng(lat, lon), issues);
     }
 
@@ -75,7 +73,8 @@ public class Wgs84Projection {
       CoordinateReferenceSystem crs = parseCRS(datum);
       if (crs == null) {
         issues.add(InterpretationIssue.of(IssueType.GEODETIC_DATUM_INVALID, DwcTerm.geodeticDatum));
-        issues.add(InterpretationIssue.of(IssueType.GEODETIC_DATUM_ASSUMED_WGS84, DwcTerm.geodeticDatum));
+        issues.add(
+            InterpretationIssue.of(IssueType.GEODETIC_DATUM_ASSUMED_WGS84, DwcTerm.geodeticDatum));
 
       } else {
         MathTransform transform = CRS.findMathTransform(crs, DefaultGeographicCRS.WGS84, true);
@@ -87,7 +86,11 @@ public class Wgs84Projection {
           srcPt = new double[] {lat, lon, 0};
         } else {
           // lon lat
-          LOG.debug("Use lon/lat ordering for reprojection with datum={} and lat/lon={}/{}", datum, lat, lon);
+          LOG.debug(
+              "Use lon/lat ordering for reprojection with datum={} and lat/lon={}/{}",
+              datum,
+              lat,
+              lon);
           srcPt = new double[] {lon, lat, 0};
         }
 
@@ -97,20 +100,32 @@ public class Wgs84Projection {
         double lon2 = dstPt[0];
         // verify the datum shift is reasonable
         if (Math.abs(lat - lat2) > SUSPICIOUS_SHIFT || Math.abs(lon - lon2) > SUSPICIOUS_SHIFT) {
-          issues.add(InterpretationIssue.of(IssueType.COORDINATE_REPROJECTION_SUSPICIOUS, DwcTerm.geodeticDatum));
-          LOG.debug("Found suspicious shift for datum={} and lat/lon={}/{} so returning failure and keeping orig coord",
-            datum, lat, lon);
+          issues.add(
+              InterpretationIssue.of(
+                  IssueType.COORDINATE_REPROJECTION_SUSPICIOUS, DwcTerm.geodeticDatum));
+          LOG.debug(
+              "Found suspicious shift for datum={} and lat/lon={}/{} so returning failure and keeping orig coord",
+              datum,
+              lat,
+              lon);
           return ParsedField.fail(new LatLng(lat, lon), issues);
         }
         // flag the record if coords actually changed
-        if (Double.compare(lat, lat2) + Double.compare(lon, lon2) != 0 ) {
-          issues.add(InterpretationIssue.of(IssueType.COORDINATE_REPROJECTED, DwcTerm.geodeticDatum));
+        if (Double.compare(lat, lat2) + Double.compare(lon, lon2) != 0) {
+          issues.add(
+              InterpretationIssue.of(IssueType.COORDINATE_REPROJECTED, DwcTerm.geodeticDatum));
         }
         return ParsedField.success(new LatLng(lat2, lon2), issues);
       }
     } catch (Exception e) {
-      issues.add(InterpretationIssue.of(IssueType.COORDINATE_REPROJECTION_FAILED, DwcTerm.geodeticDatum));
-      LOG.debug("Coordinate reprojection failed with datum={} and lat/lon={}/{}: {}", datum, lat, lon, e.getMessage());
+      issues.add(
+          InterpretationIssue.of(IssueType.COORDINATE_REPROJECTION_FAILED, DwcTerm.geodeticDatum));
+      LOG.debug(
+          "Coordinate reprojection failed with datum={} and lat/lon={}/{}: {}",
+          datum,
+          lat,
+          lon,
+          e.getMessage());
     }
 
     return ParsedField.fail(new LatLng(lat, lon), issues);

@@ -16,22 +16,18 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
-/**
- * This transform provides interpretation for the fields: year, month, day and eventDate
- */
+/** This transform provides interpretation for the fields: year, month, day and eventDate */
 public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, TemporalRecord> {
 
   private TemporalRecordTransform() {
     super("Interpret temporal record");
   }
 
-  public static TemporalRecordTransform create(){
+  public static TemporalRecordTransform create() {
     return new TemporalRecordTransform();
   }
 
-  /**
-   * Transforms a ExtendedRecord into a TemporalRecord.
-   */
+  /** Transforms a ExtendedRecord into a TemporalRecord. */
   @Override
   public DoFn<ExtendedRecord, KV<String, TemporalRecord>> interpret() {
     return new DoFn<ExtendedRecord, KV<String, TemporalRecord>>() {
@@ -47,15 +43,16 @@ public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, Tem
         TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(id).build();
 
         Interpretation.of(extendedRecord)
-          .using(TemporalRecordInterpreter.interpretEventDate(temporalRecord))
-          .using(TemporalRecordInterpreter.interpretDateIdentified(temporalRecord))
-          .using(TemporalRecordInterpreter.interpretModifiedDate(temporalRecord))
-          .using(TemporalRecordInterpreter.interpretDayOfYear(temporalRecord))
-          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
+            .using(TemporalRecordInterpreter.interpretEventDate(temporalRecord))
+            .using(TemporalRecordInterpreter.interpretDateIdentified(temporalRecord))
+            .using(TemporalRecordInterpreter.interpretModifiedDate(temporalRecord))
+            .using(TemporalRecordInterpreter.interpretDayOfYear(temporalRecord))
+            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // Additional output
         if (!validations.isEmpty()) {
-          OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
+          OccurrenceIssue issue =
+              OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
           context.output(getIssueTag(), KV.of(id, issue));
         }
 
@@ -67,10 +64,8 @@ public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, Tem
 
   @Override
   public TemporalRecordTransform withAvroCoders(Pipeline pipeline) {
-    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, TemporalRecord.class, ExtendedRecord.class);
+    Coders.registerAvroCoders(
+        pipeline, OccurrenceIssue.class, TemporalRecord.class, ExtendedRecord.class);
     return this;
   }
-
 }
-
-

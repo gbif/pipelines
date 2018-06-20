@@ -22,22 +22,20 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.apache.avro.file.CodecFactory;
 
-/**
- * {@link Supplier} that supplies a {@link InterpretationStep}.
- */
+/** {@link Supplier} that supplies a {@link InterpretationStep}. */
 public interface InterpretationStepSupplier extends Supplier<InterpretationStep> {
 
   /**
    * Gbif location interpretation.
-   * <p>
-   * It creates the ws config inside the supplier in order to postpone it as much as possible, since this step is not
-   * required and may never be used.
+   *
+   * <p>It creates the ws config inside the supplier in order to postpone it as much as possible,
+   * since this step is not required and may never be used.
    */
   static InterpretationStepSupplier locationGbif(
-    PipelineTargetPaths paths, CodecFactory avroCodec, String wsProperties
-  ) {
+      PipelineTargetPaths paths, CodecFactory avroCodec, String wsProperties) {
     return () -> {
-      Preconditions.checkArgument(!Strings.isNullOrEmpty(wsProperties), "ws properties are required");
+      Preconditions.checkArgument(
+          !Strings.isNullOrEmpty(wsProperties), "ws properties are required");
 
       // create ws config
       Config wsConfig = HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get(wsProperties));
@@ -46,94 +44,97 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
     };
   }
 
-  /**
-   * Gbif location interpretation from {@link Config}.
-   */
+  /** Gbif location interpretation from {@link Config}. */
   static InterpretationStepSupplier locationGbif(
-    PipelineTargetPaths paths, CodecFactory avroCodec, Config wsConfig
-  ) {
-    return () -> InterpretationStep.<LocationRecord>newBuilder().interpretationType(InterpretationType.LOCATION)
-      .avroClass(LocationRecord.class)
-      .transform(LocationRecordTransform.create(wsConfig))
-      .dataTargetPath(paths.getDataTargetPath())
-      .issuesTargetPath(paths.getIssuesTargetPath())
-      .tempDirectory(paths.getTempDir())
-      .avroCodec(avroCodec)
-      .build();
+      PipelineTargetPaths paths, CodecFactory avroCodec, Config wsConfig) {
+    return () ->
+        InterpretationStep.<LocationRecord>newBuilder()
+            .interpretationType(InterpretationType.LOCATION)
+            .avroClass(LocationRecord.class)
+            .transform(LocationRecordTransform.create(wsConfig))
+            .dataTargetPath(paths.getDataTargetPath())
+            .issuesTargetPath(paths.getIssuesTargetPath())
+            .tempDirectory(paths.getTempDir())
+            .avroCodec(avroCodec)
+            .build();
   }
 
-  /**
-   * Gbif temporal interpretation.
-   */
-  static InterpretationStepSupplier temporalGbif(PipelineTargetPaths paths, CodecFactory avroCodec) {
-    return () -> InterpretationStep.<TemporalRecord>newBuilder().interpretationType(InterpretationType.TEMPORAL)
-      .avroClass(TemporalRecord.class)
-      .transform(TemporalRecordTransform.create())
-      .dataTargetPath(paths.getDataTargetPath())
-      .issuesTargetPath(paths.getIssuesTargetPath())
-      .tempDirectory(paths.getTempDir())
-      .avroCodec(avroCodec)
-      .build();
+  /** Gbif temporal interpretation. */
+  static InterpretationStepSupplier temporalGbif(
+      PipelineTargetPaths paths, CodecFactory avroCodec) {
+    return () ->
+        InterpretationStep.<TemporalRecord>newBuilder()
+            .interpretationType(InterpretationType.TEMPORAL)
+            .avroClass(TemporalRecord.class)
+            .transform(TemporalRecordTransform.create())
+            .dataTargetPath(paths.getDataTargetPath())
+            .issuesTargetPath(paths.getIssuesTargetPath())
+            .tempDirectory(paths.getTempDir())
+            .avroCodec(avroCodec)
+            .build();
   }
 
   /**
    * Gbif taxonomy interpretation.
-   * <p>
-   * It creates the ws config inside the supplier in order to postpone it as much as possible, since this step is not
-   * required and may never be used.
+   *
+   * <p>It creates the ws config inside the supplier in order to postpone it as much as possible,
+   * since this step is not required and may never be used.
    */
   static InterpretationStepSupplier taxonomyGbif(
-    PipelineTargetPaths paths, CodecFactory avroCodec, String wsProperties
-  ) {
+      PipelineTargetPaths paths, CodecFactory avroCodec, String wsProperties) {
     return () -> {
-      Preconditions.checkArgument(!Strings.isNullOrEmpty(wsProperties), "ws properties are required");
+      Preconditions.checkArgument(
+          !Strings.isNullOrEmpty(wsProperties), "ws properties are required");
 
       // create ws config
-      Config wsConfig = HttpConfigFactory.createConfig(Service.SPECIES_MATCH2, Paths.get(wsProperties));
+      Config wsConfig =
+          HttpConfigFactory.createConfig(Service.SPECIES_MATCH2, Paths.get(wsProperties));
 
       return taxonomyGbif(paths, avroCodec, wsConfig).get();
     };
   }
 
-  /**
-   * Gbif taxonomy interpretation from {@link Config}.
-   */
-  static InterpretationStepSupplier taxonomyGbif(PipelineTargetPaths paths, CodecFactory avroCodec, Config wsConfig) {
-    return () -> InterpretationStep.<TaxonRecord>newBuilder().interpretationType(InterpretationType.TAXONOMY)
-      .avroClass(TaxonRecord.class)
-      .transform(TaxonRecordTransform.create(wsConfig))
-      .dataTargetPath(paths.getDataTargetPath())
-      .issuesTargetPath(paths.getIssuesTargetPath())
-      .tempDirectory(paths.getTempDir())
-      .avroCodec(avroCodec)
-      .build();
+  /** Gbif taxonomy interpretation from {@link Config}. */
+  static InterpretationStepSupplier taxonomyGbif(
+      PipelineTargetPaths paths, CodecFactory avroCodec, Config wsConfig) {
+    return () ->
+        InterpretationStep.<TaxonRecord>newBuilder()
+            .interpretationType(InterpretationType.TAXONOMY)
+            .avroClass(TaxonRecord.class)
+            .transform(TaxonRecordTransform.create(wsConfig))
+            .dataTargetPath(paths.getDataTargetPath())
+            .issuesTargetPath(paths.getIssuesTargetPath())
+            .tempDirectory(paths.getTempDir())
+            .avroCodec(avroCodec)
+            .build();
   }
 
-  /**
-   * Gbif common interpretations.
-   */
+  /** Gbif common interpretations. */
   static InterpretationStepSupplier commonGbif(PipelineTargetPaths paths, CodecFactory avroCodec) {
-    return () -> InterpretationStep.<InterpretedExtendedRecord>newBuilder().interpretationType(InterpretationType.COMMON)
-      .avroClass(InterpretedExtendedRecord.class)
-      .transform(InterpretedExtendedRecordTransform.create())
-      .dataTargetPath(paths.getDataTargetPath())
-      .issuesTargetPath(paths.getIssuesTargetPath())
-      .tempDirectory(paths.getTempDir())
-      .avroCodec(avroCodec)
-      .build();
+    return () ->
+        InterpretationStep.<InterpretedExtendedRecord>newBuilder()
+            .interpretationType(InterpretationType.COMMON)
+            .avroClass(InterpretedExtendedRecord.class)
+            .transform(InterpretedExtendedRecordTransform.create())
+            .dataTargetPath(paths.getDataTargetPath())
+            .issuesTargetPath(paths.getIssuesTargetPath())
+            .tempDirectory(paths.getTempDir())
+            .avroCodec(avroCodec)
+            .build();
   }
 
-  /**
-   * Gbif multimedia interpretations.
-   */
-  static InterpretationStepSupplier multimediaGbif(PipelineTargetPaths paths, CodecFactory avroCodec) {
-    return () -> InterpretationStep.<MultimediaRecord>newBuilder().interpretationType(InterpretationType.MULTIMEDIA)
-      .avroClass(MultimediaRecord.class)
-      .transform(MultimediaRecordTransform.create())
-      .dataTargetPath(paths.getDataTargetPath())
-      .issuesTargetPath(paths.getIssuesTargetPath())
-      .tempDirectory(paths.getTempDir())
-      .avroCodec(avroCodec)
-      .build();
+  /** Gbif multimedia interpretations. */
+  static InterpretationStepSupplier multimediaGbif(
+      PipelineTargetPaths paths, CodecFactory avroCodec) {
+    return () ->
+        InterpretationStep.<MultimediaRecord>newBuilder()
+            .interpretationType(InterpretationType.MULTIMEDIA)
+            .avroClass(MultimediaRecord.class)
+            .transform(MultimediaRecordTransform.create())
+            .dataTargetPath(paths.getDataTargetPath())
+            .issuesTargetPath(paths.getIssuesTargetPath())
+            .tempDirectory(paths.getTempDir())
+            .avroCodec(avroCodec)
+            .build();
   }
 }

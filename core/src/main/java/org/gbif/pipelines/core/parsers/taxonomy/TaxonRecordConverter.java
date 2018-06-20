@@ -14,16 +14,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-/**
- * Adapts a {@link NameUsageMatch2} into a {@link TaxonRecord}
- */
+/** Adapts a {@link NameUsageMatch2} into a {@link TaxonRecord} */
 public class TaxonRecordConverter {
 
   private TaxonRecordConverter() {}
 
   /**
-   * I modify the parameter instead of creating a new one and returning it because the lambda parameters are final
-   * (used in {@link TaxonomyInterpreter}.
+   * I modify the parameter instead of creating a new one and returning it because the lambda
+   * parameters are final (used in {@link TaxonomyInterpreter}.
    */
   public static void convert(NameUsageMatch2 nameUsageMatch2, TaxonRecord taxonRecord) {
     Objects.requireNonNull(nameUsageMatch2);
@@ -35,10 +33,12 @@ public class TaxonRecordConverter {
     taxonRecord.setUsage(convertRankedName(source.getUsage()));
     taxonRecord.setAcceptedUsage(convertRankedName(source.getAcceptedUsage()));
     taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
-    taxonRecord.setClassification(source.getClassification()
-                                    .stream()
-                                    .map(TaxonRecordConverter::convertRankedName)
-                                    .collect(Collectors.toList()));
+    taxonRecord.setClassification(
+        source
+            .getClassification()
+            .stream()
+            .map(TaxonRecordConverter::convertRankedName)
+            .collect(Collectors.toList()));
     taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
     return taxonRecord;
@@ -50,10 +50,10 @@ public class TaxonRecordConverter {
     }
 
     return RankedName.newBuilder()
-      .setKey(rankedNameApi.getKey())
-      .setName(rankedNameApi.getName())
-      .setRank(Rank.valueOf(rankedNameApi.getRank().name()))
-      .build();
+        .setKey(rankedNameApi.getKey())
+        .setName(rankedNameApi.getName())
+        .setRank(Rank.valueOf(rankedNameApi.getRank().name()))
+        .build();
   }
 
   private static Nomenclature convertNomenclature(NameUsageMatch2.Nomenclature nomenclatureApi) {
@@ -61,7 +61,10 @@ public class TaxonRecordConverter {
       return null;
     }
 
-    return Nomenclature.newBuilder().setId(nomenclatureApi.getId()).setSource(nomenclatureApi.getSource()).build();
+    return Nomenclature.newBuilder()
+        .setId(nomenclatureApi.getId())
+        .setSource(nomenclatureApi.getSource())
+        .build();
   }
 
   private static Diagnostic convertDiagnostics(NameUsageMatch2.Diagnostics diagnosticsApi) {
@@ -70,17 +73,20 @@ public class TaxonRecordConverter {
     }
 
     // alternatives
-    List<TaxonRecord> alternatives = diagnosticsApi.getAlternatives()
-      .stream()
-      .map(nameUsageMatch -> convertInternal(nameUsageMatch, new TaxonRecord()))
-      .collect(Collectors.toList());
+    List<TaxonRecord> alternatives =
+        diagnosticsApi
+            .getAlternatives()
+            .stream()
+            .map(nameUsageMatch -> convertInternal(nameUsageMatch, new TaxonRecord()))
+            .collect(Collectors.toList());
 
-    Diagnostic.Builder builder = Diagnostic.newBuilder()
-      .setAlternatives(alternatives)
-      .setConfidence(diagnosticsApi.getConfidence())
-      .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
-      .setNote(diagnosticsApi.getNote())
-      .setLineage(diagnosticsApi.getLineage());
+    Diagnostic.Builder builder =
+        Diagnostic.newBuilder()
+            .setAlternatives(alternatives)
+            .setConfidence(diagnosticsApi.getConfidence())
+            .setMatchType(MatchType.valueOf(diagnosticsApi.getMatchType().name()))
+            .setNote(diagnosticsApi.getNote())
+            .setLineage(diagnosticsApi.getLineage());
 
     // status. A bit of deffensive programming...
     if (diagnosticsApi.getStatus() != null) {
@@ -89,5 +95,4 @@ public class TaxonRecordConverter {
 
     return builder.build();
   }
-
 }

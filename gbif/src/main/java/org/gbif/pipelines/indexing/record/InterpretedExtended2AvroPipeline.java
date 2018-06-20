@@ -32,11 +32,14 @@ public class InterpretedExtended2AvroPipeline {
     String targetDirectory = options.getDefaultTargetDirectory();
 
     // Transforms to use
-    UniqueOccurrenceIdTransform uniquenessTransform = UniqueOccurrenceIdTransform.create().withAvroCoders(p);
-    InterpretedExtendedRecordTransform interpretedTransform = InterpretedExtendedRecordTransform.create().withAvroCoders(p);
+    UniqueOccurrenceIdTransform uniquenessTransform =
+        UniqueOccurrenceIdTransform.create().withAvroCoders(p);
+    InterpretedExtendedRecordTransform interpretedTransform =
+        InterpretedExtendedRecordTransform.create().withAvroCoders(p);
 
     // STEP 1: Read Avro files
-    PCollection<ExtendedRecord> verbatimRecords = p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));
+    PCollection<ExtendedRecord> verbatimRecords =
+        p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));
 
     // STEP 2: Validate ids uniqueness
     PCollectionTuple uniqueTuple = verbatimRecords.apply(uniquenessTransform);
@@ -44,11 +47,12 @@ public class InterpretedExtended2AvroPipeline {
 
     // STEP 3: Run the main transform
     PCollectionTuple interpretedTuple = extendedRecords.apply(interpretedTransform);
-    PCollection<InterpretedExtendedRecord> interpretedRecords = interpretedTuple.get(interpretedTransform.getDataTag())
-      .apply(Kv2Value.create());
+    PCollection<InterpretedExtendedRecord> interpretedRecords =
+        interpretedTuple.get(interpretedTransform.getDataTag()).apply(Kv2Value.create());
 
     // STEP 4: Save to an avro file
-    interpretedRecords.apply(WRITE_STEP, AvroIO.write(InterpretedExtendedRecord.class).to(targetDirectory));
+    interpretedRecords.apply(
+        WRITE_STEP, AvroIO.write(InterpretedExtendedRecord.class).to(targetDirectory));
 
     // Run
     LOG.info("Starting the pipeline");
@@ -56,5 +60,4 @@ public class InterpretedExtended2AvroPipeline {
     result.waitUntilFinish();
     LOG.info("Pipeline finished with state: {} ", result.getState());
   }
-
 }

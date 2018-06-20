@@ -32,10 +32,13 @@ public class LocationRecordTransform extends RecordTransform<ExtendedRecord, Loc
     this.wsConfig = wsConfig;
 
     // add hook to delete ws cache at shutdown
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      LOG.info("Executing location shutdown hook");
-      GeocodeServiceRest.clearCache();
-    }));
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  LOG.info("Executing location shutdown hook");
+                  GeocodeServiceRest.clearCache();
+                }));
   }
 
   public static LocationRecordTransform create(Config wsConfig) {
@@ -58,23 +61,24 @@ public class LocationRecordTransform extends RecordTransform<ExtendedRecord, Loc
 
         // Interpreting Country and Country code
         Interpretation.of(extendedRecord)
-          .using(LocationInterpreter.interpretCountryAndCoordinates(location, wsConfig))
-          .using(LocationInterpreter.interpretContinent(location))
-          .using(LocationInterpreter.interpretWaterBody(location))
-          .using(LocationInterpreter.interpretStateProvince(location))
-          .using(LocationInterpreter.interpretMinimumElevationInMeters(location))
-          .using(LocationInterpreter.interpretMaximumElevationInMeters(location))
-          .using(LocationInterpreter.interpretMinimumDepthInMeters(location))
-          .using(LocationInterpreter.interpretMaximumDepthInMeters(location))
-          .using(LocationInterpreter.interpretMinimumDistanceAboveSurfaceInMeters(location))
-          .using(LocationInterpreter.interpretMaximumDistanceAboveSurfaceInMeters(location))
-          .using(LocationInterpreter.interpretCoordinatePrecision(location))
-          .using(LocationInterpreter.interpretCoordinateUncertaintyInMeters(location))
-          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
+            .using(LocationInterpreter.interpretCountryAndCoordinates(location, wsConfig))
+            .using(LocationInterpreter.interpretContinent(location))
+            .using(LocationInterpreter.interpretWaterBody(location))
+            .using(LocationInterpreter.interpretStateProvince(location))
+            .using(LocationInterpreter.interpretMinimumElevationInMeters(location))
+            .using(LocationInterpreter.interpretMaximumElevationInMeters(location))
+            .using(LocationInterpreter.interpretMinimumDepthInMeters(location))
+            .using(LocationInterpreter.interpretMaximumDepthInMeters(location))
+            .using(LocationInterpreter.interpretMinimumDistanceAboveSurfaceInMeters(location))
+            .using(LocationInterpreter.interpretMaximumDistanceAboveSurfaceInMeters(location))
+            .using(LocationInterpreter.interpretCoordinatePrecision(location))
+            .using(LocationInterpreter.interpretCoordinateUncertaintyInMeters(location))
+            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
-        //additional outputs
+        // additional outputs
         if (!validations.isEmpty()) {
-          OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
+          OccurrenceIssue issue =
+              OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
           context.output(getIssueTag(), KV.of(id, issue));
         }
 
@@ -86,8 +90,8 @@ public class LocationRecordTransform extends RecordTransform<ExtendedRecord, Loc
 
   @Override
   public LocationRecordTransform withAvroCoders(Pipeline pipeline) {
-    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, LocationRecord.class, ExtendedRecord.class);
+    Coders.registerAvroCoders(
+        pipeline, OccurrenceIssue.class, LocationRecord.class, ExtendedRecord.class);
     return this;
   }
-
 }

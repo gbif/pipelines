@@ -5,9 +5,7 @@ import org.gbif.pipelines.io.avro.multimedia.MediaType;
 import java.net.URI;
 import java.time.temporal.Temporal;
 
-/**
- * Models a parsed multimedia record.
- */
+/** Models a parsed multimedia record. */
 public class ParsedMultimedia {
 
   private final MediaType type;
@@ -98,7 +96,9 @@ public class ParsedMultimedia {
     return rightsHolder;
   }
 
-  public static Builder newBuilder() { return new Builder(); }
+  public static Builder newBuilder() {
+    return new Builder();
+  }
 
   public static final class Builder {
 

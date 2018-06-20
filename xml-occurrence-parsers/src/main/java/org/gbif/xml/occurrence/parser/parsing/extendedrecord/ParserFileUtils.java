@@ -14,7 +14,8 @@ public class ParserFileUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(ParserFileUtils.class);
 
-  private static final BiFunction<String, String, String> UNCOMPRESS = (inPath, outPath) -> String.format("tar -xf %s -C %s", inPath, outPath);
+  private static final BiFunction<String, String, String> UNCOMPRESS =
+      (inPath, outPath) -> String.format("tar -xf %s -C %s", inPath, outPath);
   private static final String ARCHIVE_PREFIX = ".tar.xz";
   private static final String TMP_PATH = "/tmp/";
 
@@ -30,12 +31,13 @@ public class ParserFileUtils {
     // Check directory
     File inputFile = new File(inputPath);
     if (!inputFile.exists()) {
-      throw new ParsingException("Directory or file " + inputFile.getAbsolutePath() + " does not exist");
+      throw new ParsingException(
+          "Directory or file " + inputFile.getAbsolutePath() + " does not exist");
     }
 
     // Uncompress if it is a tar.xz
     if (inputFile.isFile()) {
-      if(!inputFile.getPath().endsWith(ARCHIVE_PREFIX)){
+      if (!inputFile.getPath().endsWith(ARCHIVE_PREFIX)) {
         throw new ParsingException("Wrong archive extension -" + inputFile.getAbsolutePath());
       }
       return uncompress(inputFile);
@@ -46,6 +48,7 @@ public class ParserFileUtils {
 
   /**
    * Uncompress a tar.xz archive
+   *
    * @param inputFile - *.tar.xz file
    * @return the new File object, path to uncompressed files folder
    */
@@ -65,5 +68,4 @@ public class ParserFileUtils {
       throw new ParsingException(ex);
     }
   }
-
 }

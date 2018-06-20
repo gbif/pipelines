@@ -7,9 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * ES configuration.
- */
+/** ES configuration. */
 public class EsConfig {
 
   private final List<URL> hosts;
@@ -18,20 +16,21 @@ public class EsConfig {
     Objects.requireNonNull(hostsAddresses);
 
     hosts = new ArrayList<>();
-    Arrays.stream(hostsAddresses).forEach(address -> {
-      try {
-        hosts.add(new URL(address));
-      } catch (MalformedURLException e) {
-        throw new IllegalArgumentException(address + " is not a valid url", e);
-      }
-    });
+    Arrays.stream(hostsAddresses)
+        .forEach(
+            address -> {
+              try {
+                hosts.add(new URL(address));
+              } catch (MalformedURLException e) {
+                throw new IllegalArgumentException(address + " is not a valid url", e);
+              }
+            });
   }
 
   /**
    * Creates a {@link EsConfig} from the addresses received.
    *
    * @param hostsAddresses they should be valid URLs.
-   *
    * @return {@link EsConfig}.
    */
   public static EsConfig from(String... hostsAddresses) {
@@ -41,5 +40,4 @@ public class EsConfig {
   public List<URL> getHosts() {
     return hosts;
   }
-
 }

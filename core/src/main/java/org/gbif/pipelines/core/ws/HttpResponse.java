@@ -21,27 +21,23 @@ public class HttpResponse<T> {
     this.errorCode = builder.errorCode;
   }
 
-  /**
-   * Creates a {@link HttpResponse} for a successful call.
-   */
+  /** Creates a {@link HttpResponse} for a successful call. */
   public static <S> HttpResponse<S> success(S body) {
     return Builder.<S>newBuilder().body(body).build();
   }
 
-  /**
-   * Creates a {@link HttpResponse} for a failed call.
-   */
-  public static <S> HttpResponse<S> fail(int responseCode, String errorMessage, ErrorCode errorCode) {
-    return Builder.<S>newBuilder().httpResponseCode(responseCode)
-      .fail()
-      .errorCode(errorCode)
-      .errorMessage(errorMessage)
-      .build();
+  /** Creates a {@link HttpResponse} for a failed call. */
+  public static <S> HttpResponse<S> fail(
+      int responseCode, String errorMessage, ErrorCode errorCode) {
+    return Builder.<S>newBuilder()
+        .httpResponseCode(responseCode)
+        .fail()
+        .errorCode(errorCode)
+        .errorMessage(errorMessage)
+        .build();
   }
 
-  /**
-   * Creates a {@link HttpResponse} for a failed call.
-   */
+  /** Creates a {@link HttpResponse} for a failed call. */
   public static <S> HttpResponse<S> fail(String errorMessage, ErrorCode errorCode) {
     return Builder.<S>newBuilder().fail().errorCode(errorCode).errorMessage(errorMessage).build();
   }
@@ -106,14 +102,12 @@ public class HttpResponse<T> {
     HttpResponse<T> build() {
       return new HttpResponse<>(this);
     }
-
   }
 
-  /**
-   * Enum with the possible errors.
-   */
+  /** Enum with the possible errors. */
   public enum ErrorCode {
-    CALL_FAILED, UNEXPECTED_ERROR, ABORTED
+    CALL_FAILED,
+    UNEXPECTED_ERROR,
+    ABORTED
   }
-
 }

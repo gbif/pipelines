@@ -8,18 +8,13 @@ import org.junit.rules.ExpectedException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Tests the {@link EsConfig}.
- */
+/** Tests the {@link EsConfig}. */
 public class EsConfigTest {
 
   private static final String DUMMY_HOST = "http://dummy.com";
 
-  /**
-   * {@link Rule} requires this field to be public.
-   */
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  /** {@link Rule} requires this field to be public. */
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void createConfigTest() {
@@ -31,7 +26,7 @@ public class EsConfigTest {
   @Test
   public void createConfigNullHostsTest() {
     thrown.expect(NullPointerException.class);
-    EsConfig.from((String[])null);
+    EsConfig.from((String[]) null);
   }
 
   @Test
@@ -46,6 +41,4 @@ public class EsConfigTest {
     thrown.expectMessage(CoreMatchers.containsString("is not a valid url"));
     EsConfig.from("wrong url");
   }
-
-
 }

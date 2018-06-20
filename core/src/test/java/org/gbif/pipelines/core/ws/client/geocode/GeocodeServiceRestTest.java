@@ -14,9 +14,7 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 
-/**
- * Tests the {@link GeocodeServiceRestTest} and {@link GeocodeService}.
- */
+/** Tests the {@link GeocodeServiceRestTest} and {@link GeocodeService}. */
 public class GeocodeServiceRestTest extends BaseMockServerTest {
 
   @Test
@@ -41,15 +39,16 @@ public class GeocodeServiceRestTest extends BaseMockServerTest {
       GeocodeResponse geocodeResponse = Iterables.get(geocodeResponseCol, 0);
 
       Assert.assertEquals(Country.CANADA.getTitle(), geocodeResponse.getCountryName());
-      Assert.assertEquals(Country.CANADA.getIso2LetterCode(), geocodeResponse.getIsoCountryCode2Digit());
+      Assert.assertEquals(
+          Country.CANADA.getIso2LetterCode(), geocodeResponse.getIsoCountryCode2Digit());
 
       ObjectMapper mapper = new ObjectMapper();
-      System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(geocodeResponse));
+      System.out.println(
+          mapper.writerWithDefaultPrettyPrinter().writeValueAsString(geocodeResponse));
 
     } catch (IOException e) {
       Assert.fail(e.getMessage());
     }
-
   }
 
   @Test
@@ -85,5 +84,4 @@ public class GeocodeServiceRestTest extends BaseMockServerTest {
       Assert.fail(e.getMessage());
     }
   }
-
 }

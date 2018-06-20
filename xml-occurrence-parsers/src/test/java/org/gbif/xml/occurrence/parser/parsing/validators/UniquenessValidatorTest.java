@@ -13,15 +13,12 @@ import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Tests the {@link UniquenessValidator}.
- */
+/** Tests the {@link UniquenessValidator}. */
 public class UniquenessValidatorTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(UniquenessValidatorTest.class);
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void givenUniqueIdsWhenMappedThenNoDuplicates() {
@@ -60,7 +57,10 @@ public class UniquenessValidatorTest {
       Assert.assertEquals(0, duplicatesFound);
 
       // add more duplicates
-      duplicates = Arrays.asList("12.1", "1234.1", "11.1", "12.1", "1234.1", "11.1", "12.12", "12.1", "1234.1", "11.1");
+      duplicates =
+          Arrays.asList(
+              "12.1", "1234.1", "11.1", "12.1", "1234.1", "11.1", "12.12", "12.1", "1234.1",
+              "11.1");
 
       duplicatesFound = duplicates.stream().filter(id -> !validator.isUnique(id)).count();
 
@@ -77,5 +77,4 @@ public class UniquenessValidatorTest {
       validator.isUnique(null);
     }
   }
-
 }

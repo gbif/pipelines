@@ -18,24 +18,22 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * TODO: More tests to cover positive and negative cases
- */
+/** TODO: More tests to cover positive and negative cases */
 @RunWith(JUnit4.class)
 public class UniqueOccurrenceIdTransformTest {
 
-  @Rule
-  public final transient TestPipeline p = TestPipeline.create();
+  @Rule public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   @Category(NeedsRunner.class)
   public void testFilterDuplicateObjectsByOccurrenceId() {
-    //State
+    // State
     final List<ExtendedRecord> input = createCollection("0001", "0001", "0002", "0003", "0004");
     final List<ExtendedRecord> expected = createCollection("0002", "0003", "0004");
 
-    //When
-    UniqueOccurrenceIdTransform transformationStream = UniqueOccurrenceIdTransform.create().withAvroCoders(p);
+    // When
+    UniqueOccurrenceIdTransform transformationStream =
+        UniqueOccurrenceIdTransform.create().withAvroCoders(p);
 
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 
@@ -43,15 +41,14 @@ public class UniqueOccurrenceIdTransformTest {
 
     PCollection<ExtendedRecord> collectionStream = tuple.get(transformationStream.getDataTag());
 
-    //Should
+    // Should
     PAssert.that(collectionStream).containsInAnyOrder(expected);
     p.run();
   }
 
   private List<ExtendedRecord> createCollection(String... occurrenceIds) {
     return Arrays.stream(occurrenceIds)
-      .map(x -> ExtendedRecord.newBuilder().setId(x).build())
-      .collect(Collectors.toList());
+        .map(x -> ExtendedRecord.newBuilder().setId(x).build())
+        .collect(Collectors.toList());
   }
-
 }

@@ -21,36 +21,38 @@ public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptio
   @Description("ES max batch size")
   @Default.Long(DEFAULT_ES_BATCH_SIZE)
   long getESMaxBatchSize();
+
   void setESMaxBatchSize(long esBatchSize);
 
-
   @Default.InstanceFactory(DefaultESAddressFactory.class)
-  @Description("List of ES addresses eg. \"http://c3n1.gbif.org:9200\", \"http://c3n2.gbif.org:9200\", \"http://c3n3.gbif.org:9200\"")
+  @Description(
+      "List of ES addresses eg. \"http://c3n1.gbif.org:9200\", \"http://c3n2.gbif.org:9200\", \"http://c3n3.gbif.org:9200\"")
   String[] getESAddresses();
+
   void setESAddresses(String[] esAddresses);
 
   @Default.InstanceFactory(DefaultESIndexPrefix.class)
-  @Description("ES Index Prefix is a prefix used while creating final index of format <esindexprefix>_datasetid_attempt.")
+  @Description(
+      "ES Index Prefix is a prefix used while creating final index of format <esindexprefix>_datasetid_attempt.")
   String getESIndexPrefix();
+
   void setESIndexPrefix(String esIndexPrefix);
 
-  /**
-   * A {@link DefaultValueFactory} which identifies ES indexPrefix
-   */
-  class DefaultESIndexPrefix implements DefaultValueFactory<String>{
+  /** A {@link DefaultValueFactory} which identifies ES indexPrefix */
+  class DefaultESIndexPrefix implements DefaultValueFactory<String> {
     @Override
     public String create(PipelineOptions options) {
       return "interpreted-dataset";
     }
   }
 
-  /**
-   * A {@link DefaultValueFactory} which locates ES IPAddresses port
-   */
-  class DefaultESAddressFactory implements DefaultValueFactory<String[]>{
+  /** A {@link DefaultValueFactory} which locates ES IPAddresses port */
+  class DefaultESAddressFactory implements DefaultValueFactory<String[]> {
     @Override
     public String[] create(PipelineOptions options) {
-      return new String[]{"http://c3n1.gbif.org:9200", "http://c3n2.gbif.org:9200", "http://c3n3.gbif.org:9200"};
+      return new String[] {
+        "http://c3n1.gbif.org:9200", "http://c3n2.gbif.org:9200", "http://c3n3.gbif.org:9200"
+      };
     }
   }
 }

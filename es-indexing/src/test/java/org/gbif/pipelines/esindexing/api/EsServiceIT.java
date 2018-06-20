@@ -25,18 +25,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Tests the {@link EsService}.
- */
+/** Tests the {@link EsService}. */
 public class EsServiceIT extends EsApiIntegrationTest {
 
   private static final String ALIAS_TEST = "alias";
 
-  /**
-   * {@link Rule} requires this field to be public.
-   */
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  /** {@link Rule} requires this field to be public. */
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void cleanIndexes() {
@@ -58,7 +53,8 @@ public class EsServiceIT extends EsApiIntegrationTest {
 
   @Test
   public void createIndexWithSettingsAndMappingsTest() {
-    String idx = EsService.createIndex(esServer.getEsClient(), "idx-settings", INDEXING, TEST_MAPPINGS_PATH);
+    String idx =
+        EsService.createIndex(esServer.getEsClient(), "idx-settings", INDEXING, TEST_MAPPINGS_PATH);
 
     // check that the index was created as expected
     assertTrue(EsService.existsIndex(esServer.getEsClient(), idx));
@@ -123,14 +119,16 @@ public class EsServiceIT extends EsApiIntegrationTest {
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
 
     // there shouldn't be indexes before we start
-    Set<String> indexes = EsService.getIndexesByAliasAndIndexPattern(esServer.getEsClient(), "idx*", ALIAS_TEST);
+    Set<String> indexes =
+        EsService.getIndexesByAliasAndIndexPattern(esServer.getEsClient(), "idx*", ALIAS_TEST);
     assertEquals(0, indexes.size());
 
     // add them to the same alias
     addIndexesToAlias(ALIAS_TEST, initialIndexes);
 
     // get the indexes of the alias
-    indexes = EsService.getIndexesByAliasAndIndexPattern(esServer.getEsClient(), "idx*", ALIAS_TEST);
+    indexes =
+        EsService.getIndexesByAliasAndIndexPattern(esServer.getEsClient(), "idx*", ALIAS_TEST);
 
     // assert conditions
     assertEquals(3, indexes.size());
@@ -138,25 +136,32 @@ public class EsServiceIT extends EsApiIntegrationTest {
 
     // create a new index and swap it to the alias
     String idx4 = EsService.createIndex(esServer.getEsClient(), "idx4", INDEXING);
-    EsService.swapIndexes(esServer.getEsClient(), ALIAS_TEST, Collections.singleton(idx4), initialIndexes);
+    EsService.swapIndexes(
+        esServer.getEsClient(), ALIAS_TEST, Collections.singleton(idx4), initialIndexes);
     assertSwapResults(idx4, "idx*", ALIAS_TEST, initialIndexes);
 
     // repeat previous step with a new index
     String idx5 = EsService.createIndex(esServer.getEsClient(), "idx5", INDEXING);
-    EsService.swapIndexes(esServer.getEsClient(), ALIAS_TEST, Collections.singleton(idx5), Collections.singleton(idx4));
+    EsService.swapIndexes(
+        esServer.getEsClient(),
+        ALIAS_TEST,
+        Collections.singleton(idx5),
+        Collections.singleton(idx4));
     assertSwapResults(idx5, "idx*", ALIAS_TEST, Collections.singleton(idx4));
   }
 
   @Test
   public void getIndexesFromMissingAliasTest() {
-    Set<String> idx = EsService.getIndexesByAliasAndIndexPattern(esServer.getEsClient(), "idx*", "fake-alias");
+    Set<String> idx =
+        EsService.getIndexesByAliasAndIndexPattern(esServer.getEsClient(), "idx*", "fake-alias");
     assertTrue(idx.isEmpty());
   }
 
   @Test
   public void swapEmptyAliasTest() {
     String idx1 = EsService.createIndex(esServer.getEsClient(), "idx1", INDEXING);
-    EsService.swapIndexes(esServer.getEsClient(), ALIAS_TEST, Collections.singleton(idx1), Collections.emptySet());
+    EsService.swapIndexes(
+        esServer.getEsClient(), ALIAS_TEST, Collections.singleton(idx1), Collections.emptySet());
     assertSwapResults(idx1, "idx*", ALIAS_TEST, Collections.emptySet());
   }
 
@@ -165,10 +170,11 @@ public class EsServiceIT extends EsApiIntegrationTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage(CoreMatchers.containsString("Error swapping index"));
 
-    EsService.swapIndexes(esServer.getEsClient(),
-                          "fake-alias",
-                          Collections.singleton("fake-index"),
-                          Collections.emptySet());
+    EsService.swapIndexes(
+        esServer.getEsClient(),
+        "fake-alias",
+        Collections.singleton("fake-index"),
+        Collections.emptySet());
   }
 
   @Test
@@ -181,13 +187,15 @@ public class EsServiceIT extends EsApiIntegrationTest {
   }
 
   /**
-   * It also tests indirectly the methods {@link EsService#indexDocument}, {@link EsService#deleteDocument} and
-   * {@link EsService#refreshIndex}
+   * It also tests indirectly the methods {@link EsService#indexDocument}, {@link
+   * EsService#deleteDocument} and {@link EsService#refreshIndex}
    */
   @Test
   public void countIndexDocumentsTest() {
     // create the index using default settings
-    String idx = EsService.createIndex(esServer.getEsClient(), "idx_1", Collections.emptyMap(), TEST_MAPPINGS_PATH);
+    String idx =
+        EsService.createIndex(
+            esServer.getEsClient(), "idx_1", Collections.emptyMap(), TEST_MAPPINGS_PATH);
 
     // index some documents
     long n = 3;
@@ -249,5 +257,4 @@ public class EsServiceIT extends EsApiIntegrationTest {
     assertFalse(EsService.existsIndex(esServer.getEsClient(), idx1));
     assertFalse(EsService.existsIndex(esServer.getEsClient(), idx2));
   }
-
 }

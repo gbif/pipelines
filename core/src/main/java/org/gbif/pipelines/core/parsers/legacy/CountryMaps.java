@@ -15,9 +15,7 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Maps of countries that are commonly confused, or are considered equivalent.
- */
+/** Maps of countries that are commonly confused, or are considered equivalent. */
 public class CountryMaps {
 
   private static final Logger LOG = LoggerFactory.getLogger(CountryMaps.class);
@@ -32,14 +30,17 @@ public class CountryMaps {
    This *overrides* the provided country, and includes an issue.
   */
   private static final Map<Country, Set<Country>> CONFUSED_COUNTRIES = Maps.newHashMap();
-  // And this is the same, but without the issue — we aren't exactly following ISO, but we accept it.
+  // And this is the same, but without the issue — we aren't exactly following ISO, but we accept
+  // it.
   private static final Map<Country, Set<Country>> EQUIVALENT_COUNTRIES = Maps.newHashMap();
 
   private CountryMaps() {}
 
   static {
-    try (InputStream in = CountryMaps.class.getClassLoader().getResourceAsStream(CONFUSED_COUNTRY_FILE);
-         BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+    try (InputStream in =
+            CountryMaps.class.getClassLoader().getResourceAsStream(CONFUSED_COUNTRY_FILE);
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
       String nextLine;
       while ((nextLine = reader.readLine()) != null) {
         if (!nextLine.isEmpty() && !nextLine.startsWith("#")) {
@@ -47,8 +48,11 @@ public class CountryMaps {
           Country countryA = Country.fromIsoCode(countries[0].trim().toUpperCase());
           Country countryB = Country.fromIsoCode(countries[1].trim().toUpperCase());
           boolean addIssue = Boolean.parseBoolean(countries[2].trim());
-          LOG.debug("Adding [{}][{}] ({}) pair to confused country matches.", countryA, countryB,
-                    addIssue ? "with issue" : "without issue");
+          LOG.debug(
+              "Adding [{}][{}] ({}) pair to confused country matches.",
+              countryA,
+              countryB,
+              addIssue ? "with issue" : "without issue");
           addConfusedCountry(countryA, countryB, addIssue);
           addConfusedCountry(countryB, countryA, addIssue);
         }

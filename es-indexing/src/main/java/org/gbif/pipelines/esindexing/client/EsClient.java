@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Client to communicate with the ES server.
- * <p>
- * It should be closed after using it. It implements {@link AutoCloseable}.
+ *
+ * <p>It should be closed after using it. It implements {@link AutoCloseable}.
  */
 public class EsClient implements AutoCloseable {
 
@@ -61,9 +61,7 @@ public class EsClient implements AutoCloseable {
    * Performs a GET request.
    *
    * @param endpoint request's endpoint.
-   *
    * @return {@link Response}.
-   *
    * @throws ResponseException in case ES returns an error.
    */
   public Response performGetRequest(String endpoint) throws ResponseException {
@@ -74,15 +72,13 @@ public class EsClient implements AutoCloseable {
    * Performs a PUT request.
    *
    * @param endpoint request's endpoint.
-   * @param params   query string parameters.
-   * @param body     request's body in JSON format.
-   *
+   * @param params query string parameters.
+   * @param body request's body in JSON format.
    * @return {@link Response}.
-   *
    * @throws ResponseException in case ES returns an error.
    */
   public Response performPutRequest(String endpoint, Map<String, String> params, HttpEntity body)
-    throws ResponseException {
+      throws ResponseException {
     return performRequest(HttpPut.METHOD_NAME, endpoint, params, body);
   }
 
@@ -90,15 +86,13 @@ public class EsClient implements AutoCloseable {
    * Performs a POST request.
    *
    * @param endpoint request's endpoint.
-   * @param params   query string parameters.
-   * @param body     request's body in JSON format.
-   *
+   * @param params query string parameters.
+   * @param body request's body in JSON format.
    * @return {@link Response}.
-   *
    * @throws ResponseException in case ES returns an error.
    */
   public Response performPostRequest(String endpoint, Map<String, String> params, HttpEntity body)
-    throws ResponseException {
+      throws ResponseException {
     return performRequest(HttpPost.METHOD_NAME, endpoint, params, body);
   }
 
@@ -106,19 +100,19 @@ public class EsClient implements AutoCloseable {
    * Performs a DELETE request.
    *
    * @param endpoint request's endpoint.
-   *
    * @return {@link Response}.
-   *
    * @throws ResponseException in case ES returns an error.
    */
   public Response performDeleteRequest(String endpoint) throws ResponseException {
     return performRequest(HttpDelete.METHOD_NAME, endpoint, Collections.emptyMap(), null);
   }
 
-  private Response performRequest(String method, String endpoint, Map<String, String> params, HttpEntity body)
-    throws ResponseException {
+  private Response performRequest(
+      String method, String endpoint, Map<String, String> params, HttpEntity body)
+      throws ResponseException {
     try {
-      return restClient.performRequest(method, endpoint, params, body, createJsonContentTypeHeader());
+      return restClient.performRequest(
+          method, endpoint, params, body, createJsonContentTypeHeader());
     } catch (ResponseException exc) {
       throw exc;
     } catch (IOException exc) {
@@ -128,7 +122,9 @@ public class EsClient implements AutoCloseable {
   }
 
   private Header[] createJsonContentTypeHeader() {
-    return new Header[] {new BasicHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())};
+    return new Header[] {
+      new BasicHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+    };
   }
 
   @Override

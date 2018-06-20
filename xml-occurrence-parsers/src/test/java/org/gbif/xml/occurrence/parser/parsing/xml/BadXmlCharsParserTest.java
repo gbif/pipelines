@@ -32,5 +32,4 @@ public class BadXmlCharsParserTest extends ParserTestCase {
     List<RawXmlOccurrence> records = occurrenceParser.parseResponseFileToRawXml(new File(fileName));
     assertEquals(2, records.size());
   }
-
 }

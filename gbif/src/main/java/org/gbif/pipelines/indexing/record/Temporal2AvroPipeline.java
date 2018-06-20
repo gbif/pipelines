@@ -32,11 +32,14 @@ public class Temporal2AvroPipeline {
     String targetDirectory = options.getDefaultTargetDirectory();
 
     // Transforms to use
-    UniqueOccurrenceIdTransform uniquenessTransform = UniqueOccurrenceIdTransform.create().withAvroCoders(p);
-    TemporalRecordTransform temporalRecordTransform = TemporalRecordTransform.create().withAvroCoders(p);
+    UniqueOccurrenceIdTransform uniquenessTransform =
+        UniqueOccurrenceIdTransform.create().withAvroCoders(p);
+    TemporalRecordTransform temporalRecordTransform =
+        TemporalRecordTransform.create().withAvroCoders(p);
 
     // STEP 1: Read Avro files
-    PCollection<ExtendedRecord> verbatimRecords = p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));
+    PCollection<ExtendedRecord> verbatimRecords =
+        p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));
 
     // STEP 2: Validate ids uniqueness
     PCollectionTuple uniqueTuple = verbatimRecords.apply(uniquenessTransform);
@@ -45,7 +48,7 @@ public class Temporal2AvroPipeline {
     // STEP 3: Run main transform
     PCollectionTuple temporalRecordTuple = extendedRecords.apply(temporalRecordTransform);
     PCollection<TemporalRecord> temporalRecords =
-      temporalRecordTuple.get(temporalRecordTransform.getDataTag()).apply(Kv2Value.create());
+        temporalRecordTuple.get(temporalRecordTransform.getDataTag()).apply(Kv2Value.create());
 
     // STEP 4: Save to an avro file
     temporalRecords.apply(WRITE_STEP, AvroIO.write(TemporalRecord.class).to(targetDirectory));
@@ -56,5 +59,4 @@ public class Temporal2AvroPipeline {
     result.waitUntilFinish();
     LOG.info("Pipeline finished with state: {} ", result.getState());
   }
-
 }

@@ -39,11 +39,14 @@ public class Location2AvroPipeline {
     Config wsConfig = HttpConfigFactory.createConfigFromUrl(WS_DEV);
 
     // Transforms to use
-    UniqueOccurrenceIdTransform uniquenessTransform = UniqueOccurrenceIdTransform.create().withAvroCoders(p);
-    LocationRecordTransform locationTransform = LocationRecordTransform.create(wsConfig).withAvroCoders(p);
+    UniqueOccurrenceIdTransform uniquenessTransform =
+        UniqueOccurrenceIdTransform.create().withAvroCoders(p);
+    LocationRecordTransform locationTransform =
+        LocationRecordTransform.create(wsConfig).withAvroCoders(p);
 
     // STEP 1: Read Avro files
-    PCollection<ExtendedRecord> verbatimRecords = p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));
+    PCollection<ExtendedRecord> verbatimRecords =
+        p.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(inputFile));
 
     // STEP 2: Validate ids uniqueness
     PCollectionTuple uniqueTuple = verbatimRecords.apply(uniquenessTransform);
@@ -51,8 +54,8 @@ public class Location2AvroPipeline {
 
     // STEP 3: Run the main transform
     PCollectionTuple locationRecordTuple = extendedRecords.apply(locationTransform);
-    PCollection<LocationRecord> locationRecords = locationRecordTuple.get(locationTransform.getDataTag())
-      .apply(Kv2Value.create());
+    PCollection<LocationRecord> locationRecords =
+        locationRecordTuple.get(locationTransform.getDataTag()).apply(Kv2Value.create());
 
     // STEP 4: Save to an avro file
     locationRecords.apply(WRITE_STEP, AvroIO.write(LocationRecord.class).to(targetDirectory));
@@ -63,5 +66,4 @@ public class Location2AvroPipeline {
     result.waitUntilFinish();
     LOG.info("Pipeline finished with state: {} ", result.getState());
   }
-
 }

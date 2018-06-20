@@ -5,8 +5,9 @@ import java.util.List;
 
 /**
  * Models a parsed field.
- * <p>
- * A field can be as simple as a single {@link org.gbif.dwc.terms.DwcTerm} or a wrapper with several fields inside.
+ *
+ * <p>A field can be as simple as a single {@link org.gbif.dwc.terms.DwcTerm} or a wrapper with
+ * several fields inside.
  */
 public class ParsedField<T> {
 
@@ -91,7 +92,5 @@ public class ParsedField<T> {
     public ParsedField<T> build() {
       return new ParsedField<>(this);
     }
-
   }
-
 }

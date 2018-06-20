@@ -49,58 +49,73 @@ public class ResponseSchemaDetectorTest {
 
   @Test
   public void testAbcd1() throws IOException {
-    String xml = Resources.toString(Resources.getResource("response_schema/abcd1.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("response_schema/abcd1.xml"), StandardCharsets.UTF_8);
     OccurrenceSchemaType result = detector.detectSchema(xml);
     assertEquals(OccurrenceSchemaType.ABCD_1_2, result);
   }
 
   @Test
   public void testAbcd2() throws IOException {
-    String xml = Resources.toString(Resources.getResource("response_schema/abcd2.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("response_schema/abcd2.xml"), StandardCharsets.UTF_8);
     OccurrenceSchemaType result = detector.detectSchema(xml);
     assertEquals(OccurrenceSchemaType.ABCD_2_0_6, result);
   }
 
   @Test
   public void testDwc1_0() throws IOException {
-    String xml = Resources.toString(Resources.getResource("response_schema/dwc_1_0.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("response_schema/dwc_1_0.xml"), StandardCharsets.UTF_8);
     OccurrenceSchemaType result = detector.detectSchema(xml);
     assertEquals(OccurrenceSchemaType.DWC_1_0, result);
   }
 
   @Test
   public void testDwc1_4() throws IOException {
-    String xml = Resources.toString(Resources.getResource("response_schema/dwc_1_4.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("response_schema/dwc_1_4.xml"), StandardCharsets.UTF_8);
     OccurrenceSchemaType result = detector.detectSchema(xml);
     assertEquals(OccurrenceSchemaType.DWC_1_4, result);
   }
 
   @Test
   public void testTapirDwc1_4() throws IOException {
-    String xml = Resources
-      .toString(Resources.getResource("response_schema/tapir_dwc_1_4_contains_unrecorded.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("response_schema/tapir_dwc_1_4_contains_unrecorded.xml"),
+            StandardCharsets.UTF_8);
     OccurrenceSchemaType result = detector.detectSchema(xml);
     assertEquals(OccurrenceSchemaType.DWC_1_4, result);
   }
 
   @Test
   public void testTapirDwc1_4_2() throws IOException {
-    String xml = Resources
-      .toString(Resources.getResource("response_schema/tapir_dwc_1_4_s2.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("response_schema/tapir_dwc_1_4_s2.xml"), StandardCharsets.UTF_8);
     OccurrenceSchemaType result = detector.detectSchema(xml);
     assertEquals(OccurrenceSchemaType.DWC_1_4, result);
   }
 
   @Test
   public void testDwcManis() throws IOException {
-    String xml = Resources.toString(Resources.getResource("response_schema/dwc_manis.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("response_schema/dwc_manis.xml"), StandardCharsets.UTF_8);
     OccurrenceSchemaType result = detector.detectSchema(xml);
     assertEquals(OccurrenceSchemaType.DWC_MANIS, result);
   }
 
   @Test
   public void testDwc2009() throws IOException {
-    String xml = Resources.toString(Resources.getResource("response_schema/dwc_2009.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("response_schema/dwc_2009.xml"), StandardCharsets.UTF_8);
     OccurrenceSchemaType result = detector.detectSchema(xml);
     assertEquals(OccurrenceSchemaType.DWC_2009, result);
   }

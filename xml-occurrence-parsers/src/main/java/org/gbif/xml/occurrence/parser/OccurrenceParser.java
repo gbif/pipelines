@@ -48,9 +48,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * Entry point into the parsing of raw occurrence records as retrieved from publishers.  Will attempt to determine
- * both XML encodings and schema type.  Parse happens in two steps - first extracts each record element into a
- * RawXmlOccurrence, and then parses each of those into RawOccurrenceRecords.
+ * Entry point into the parsing of raw occurrence records as retrieved from publishers. Will attempt
+ * to determine both XML encodings and schema type. Parse happens in two steps - first extracts each
+ * record element into a RawXmlOccurrence, and then parses each of those into RawOccurrenceRecords.
  */
 public class OccurrenceParser {
 
@@ -68,13 +68,12 @@ public class OccurrenceParser {
   }
 
   /**
-   * This parses a stream of uncompressed ABCD or DwC Occurrences into {@link RawXmlOccurrence}s.
-   * No care is taken to handle wrong encodings or character sets in general. This might be changed later on.
+   * This parses a stream of uncompressed ABCD or DwC Occurrences into {@link RawXmlOccurrence}s. No
+   * care is taken to handle wrong encodings or character sets in general. This might be changed
+   * later on.
    *
    * @param is stream to parse
-   *
    * @return list of parsed occurrences
-   *
    * @throws ParsingException if there were any problems during parsing the stream
    */
   // TODO: Optionally handle compressed streams
@@ -95,12 +94,11 @@ public class OccurrenceParser {
 
   /**
    * This parses a xml file of uncompressed ABCD or DwC Occurrences into {@link RawXmlOccurrence}s.
-   * No care is taken to handle wrong encodings or character sets in general. This might be changed later on.
+   * No care is taken to handle wrong encodings or character sets in general. This might be changed
+   * later on.
    *
    * @param file xml response file
-   *
    * @return list of parsed occurrences
-   *
    * @throws ParsingException if there were any problems during parsing the stream
    */
   public List<RawXmlOccurrence> parseFile(File file) {
@@ -111,10 +109,7 @@ public class OccurrenceParser {
     }
   }
 
-
-  /**
-   * Parses a single response gzipFile and returns a List of the contained RawXmlOccurrences.
-   */
+  /** Parses a single response gzipFile and returns a List of the contained RawXmlOccurrences. */
   public List<RawXmlOccurrence> parseResponseFileToRawXml(File gzipFile) {
     if (LOG.isDebugEnabled()) {
       LOG.debug(">> parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
@@ -128,9 +123,10 @@ public class OccurrenceParser {
       for (String charsetName : charsets) {
         LOG.debug("Trying charset [{}]", charsetName);
         try (FileInputStream fis = new FileInputStream(gzipFile);
-             GZIPInputStream inputStream = new GZIPInputStream(fis);
-             BufferedReader inputReader =
-               new BufferedReader(new XmlSanitizingReader(new InputStreamReader(inputStream, charsetName)))) {
+            GZIPInputStream inputStream = new GZIPInputStream(fis);
+            BufferedReader inputReader =
+                new BufferedReader(
+                    new XmlSanitizingReader(new InputStreamReader(inputStream, charsetName)))) {
 
           parse(new InputSource(inputReader), responseBody);
 
@@ -138,14 +134,20 @@ public class OccurrenceParser {
           goodCharset = charsetName;
           break;
         } catch (SAXException e) {
-          String msg = "SAX exception when parsing parsing from response gzipFile [" + gzipFile.getAbsolutePath()
-              + "] using encoding [" + charsetName + "] - trying another charset";
+          String msg =
+              "SAX exception when parsing parsing from response gzipFile ["
+                  + gzipFile.getAbsolutePath()
+                  + "] using encoding ["
+                  + charsetName
+                  + "] - trying another charset";
           LOG.debug(msg, e);
         } catch (MalformedByteSequenceException e) {
-          LOG.debug("Malformed utf-8 byte when parsing with encoding [{}] - trying another charset", charsetName);
+          LOG.debug(
+              "Malformed utf-8 byte when parsing with encoding [{}] - trying another charset",
+              charsetName);
           encodingError = true;
         } catch (IOException ex) {
-          LOG.warn("Error reading input files",ex);
+          LOG.warn("Error reading input files", ex);
         }
       }
 
@@ -155,17 +157,27 @@ public class OccurrenceParser {
               "Could not parse gzipFile - all encoding attempts failed  with malformed utf8 - skipping gzipFile [{}]",
               gzipFile.getAbsolutePath());
         } else {
-          LOG.warn("Could not parse gzipFile (malformed parsing) - skipping gzipFile [{}]", gzipFile.getAbsolutePath());
+          LOG.warn(
+              "Could not parse gzipFile (malformed parsing) - skipping gzipFile [{}]",
+              gzipFile.getAbsolutePath());
         }
       }
 
     } catch (IOException e) {
-      LOG.warn("Could not find response gzipFile [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
+      LOG.warn(
+          "Could not find response gzipFile [{}] - skipping gzipFile",
+          gzipFile.getAbsolutePath(),
+          e);
     } catch (TransformerException e) {
-      LOG.warn("Could not create parsing transformer for [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
+      LOG.warn(
+          "Could not create parsing transformer for [{}] - skipping gzipFile",
+          gzipFile.getAbsolutePath(),
+          e);
     } catch (ParserConfigurationException e) {
-      LOG.warn("Failed to pull raw parsing from response gzipFile [{}] - skipping gzipFile",
-               gzipFile.getAbsolutePath(), e);
+      LOG.warn(
+          "Failed to pull raw parsing from response gzipFile [{}] - skipping gzipFile",
+          gzipFile.getAbsolutePath(),
+          e);
     }
 
     if (LOG.isDebugEnabled()) {
@@ -175,14 +187,11 @@ public class OccurrenceParser {
   }
 
   /**
-   * Utility method to extract character encondings from a gzip file.
-   * Charsets are a nightmare and users can't be trusted, so strategy
-   * is try these encodings in order until one of them (hopefully) works
-   * (note the last two could be repeats of the first two):
-   *  - utf-8
-   *  - latin1 (iso-8859-1)
-   *  - the declared encoding from the parsing itself
-   *  - a guess at detecting the charset from the raw gzipFile bytes
+   * Utility method to extract character encondings from a gzip file. Charsets are a nightmare and
+   * users can't be trusted, so strategy is try these encodings in order until one of them
+   * (hopefully) works (note the last two could be repeats of the first two): - utf-8 - latin1
+   * (iso-8859-1) - the declared encoding from the parsing itself - a guess at detecting the charset
+   * from the raw gzipFile bytes
    */
   private static List<String> getCharsets(File gzipFile) throws IOException {
     List<String> charsets = new ArrayList<>();
@@ -192,9 +201,9 @@ public class OccurrenceParser {
     // read parsing declaration
 
     try (FileInputStream fis = new FileInputStream(gzipFile);
-         GZIPInputStream inputStream = new GZIPInputStream(fis);
-         InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-         BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+        GZIPInputStream inputStream = new GZIPInputStream(fis);
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
       boolean gotEncoding = false;
       String encoding;
       int lineCount = 0;
@@ -202,7 +211,7 @@ public class OccurrenceParser {
         String line = bufferedReader.readLine();
         lineCount++;
         if (line != null && line.contains(ENCONDING_EQ)) {
-          encoding = ENCODING_PATTERN.split(line,0)[1];
+          encoding = ENCODING_PATTERN.split(line, 0)[1];
           // drop trailing ?>
           encoding = encoding.substring(0, encoding.length() - 2);
           // drop quotes
@@ -213,8 +222,8 @@ public class OccurrenceParser {
             charsets.add(encoding);
           } catch (Exception e) {
             LOG.debug(
-              "Could not find supported charset matching detected encoding of [{}] - trying other guesses instead",
-              encoding);
+                "Could not find supported charset matching detected encoding of [{}] - trying other guesses instead",
+                encoding);
           }
           gotEncoding = true;
         }
@@ -227,11 +236,12 @@ public class OccurrenceParser {
 
   /**
    * A Digester parser, uses ABCD and DwC rules to parse XML input source
+   *
    * @param inputSource xml response
    * @param responseBody storage for Digester
    */
   private void parse(InputSource inputSource, ParsedSearchResponse responseBody)
-    throws ParserConfigurationException, SAXException, IOException {
+      throws ParserConfigurationException, SAXException, IOException {
 
     Digester digester = new Digester();
     digester.setNamespaceAware(true);
@@ -271,6 +281,4 @@ public class OccurrenceParser {
     }
     return rors;
   }
-
 }
-

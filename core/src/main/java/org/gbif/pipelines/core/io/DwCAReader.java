@@ -16,7 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in Avro.
+ * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in
+ * Avro.
  */
 public class DwCAReader {
 
@@ -68,7 +69,8 @@ public class DwCAReader {
 
   public ExtendedRecord getCurrent() {
     if (current == null) {
-      throw new NoSuchElementException("No current record found (Hint: did you init() the reader?)");
+      throw new NoSuchElementException(
+          "No current record found (Hint: did you init() the reader?)");
     }
     return current;
   }

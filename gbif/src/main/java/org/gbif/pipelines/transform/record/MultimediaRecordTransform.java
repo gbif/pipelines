@@ -44,12 +44,13 @@ public class MultimediaRecordTransform extends RecordTransform<ExtendedRecord, M
 
         // Interpret multimedia terms and add validations
         Interpretation.of(extendedRecord)
-          .using(MultimediaInterpreter.interpretMultimedia(multimediaRecord))
-          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
+            .using(MultimediaInterpreter.interpretMultimedia(multimediaRecord))
+            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // Add validations to the additional output
         if (!validations.isEmpty()) {
-          OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
+          OccurrenceIssue issue =
+              OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
           context.output(getIssueTag(), KV.of(id, issue));
         }
 
@@ -61,7 +62,8 @@ public class MultimediaRecordTransform extends RecordTransform<ExtendedRecord, M
 
   @Override
   public MultimediaRecordTransform withAvroCoders(Pipeline pipeline) {
-    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, MultimediaRecord.class, ExtendedRecord.class);
+    Coders.registerAvroCoders(
+        pipeline, OccurrenceIssue.class, MultimediaRecord.class, ExtendedRecord.class);
     return this;
   }
 }

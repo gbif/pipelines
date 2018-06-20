@@ -15,20 +15,21 @@ import java.util.regex.Pattern;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * Utilities for assisting in the parsing of latitude and longitude strings into Decimals.
- */
+/** Utilities for assisting in the parsing of latitude and longitude strings into Decimals. */
 public class CoordinateParseUtils {
 
-  private static final String DMS = "\\s*(\\d{1,3})\\s*[°d ]"
-                                    + "\\s*([0-6]?\\d)\\s*['m ]"
-                                    + "\\s*(?:"
-                                    + "([0-6]?\\d(?:[,.]\\d+)?)"
-                                    + "\\s*(?:\"|''|s)?"
-                                    + ")?\\s*";
-  private static final Pattern DMS_SINGLE = Pattern.compile("^" + DMS + "$", Pattern.CASE_INSENSITIVE);
+  private static final String DMS =
+      "\\s*(\\d{1,3})\\s*[°d ]"
+          + "\\s*([0-6]?\\d)\\s*['m ]"
+          + "\\s*(?:"
+          + "([0-6]?\\d(?:[,.]\\d+)?)"
+          + "\\s*(?:\"|''|s)?"
+          + ")?\\s*";
+  private static final Pattern DMS_SINGLE =
+      Pattern.compile("^" + DMS + "$", Pattern.CASE_INSENSITIVE);
   private static final Pattern DMS_COORD =
-    Pattern.compile("^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
+      Pattern.compile(
+          "^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
   private static final String POSITIVE = "NEO";
 
   private CoordinateParseUtils() {
@@ -36,32 +37,33 @@ public class CoordinateParseUtils {
   }
 
   /**
-   * This parses string representations of latitude and longitude values. It tries its best to interpret the values and
-   * indicates any problems in its result as {@link InterpretationIssue}.
-   * When the {@link ParsedField} is not successful the payload will be null and one or more issues should be set
-   * in {@link ParsedField#getIssues()}.
-   * <p>
-   * Coordinate precision will be 6 decimals at most, any more precise values will be rounded.
-   * <p>
-   * Supported standard formats are the following, with dots or optionally a comma as the decimal marker:
+   * This parses string representations of latitude and longitude values. It tries its best to
+   * interpret the values and indicates any problems in its result as {@link InterpretationIssue}.
+   * When the {@link ParsedField} is not successful the payload will be null and one or more issues
+   * should be set in {@link ParsedField#getIssues()}.
+   *
+   * <p>Coordinate precision will be 6 decimals at most, any more precise values will be rounded.
+   *
+   * <p>Supported standard formats are the following, with dots or optionally a comma as the decimal
+   * marker:
+   *
    * <ul>
-   * <li>43.63871944444445</li>
-   * <li>N43°38'19.39"</li>
-   * <li>43°38'19.39"N</li>
-   * <li>43d 38m 19.39s N</li>
-   * <li>43 38 19.39</li>
+   *   <li>43.63871944444445
+   *   <li>N43°38'19.39"
+   *   <li>43°38'19.39"N
+   *   <li>43d 38m 19.39s N
+   *   <li>43 38 19.39
    * </ul>
    *
-   * @param latitude  The decimal latitude
+   * @param latitude The decimal latitude
    * @param longitude The decimal longitude
-   *
    * @return The parse result
    */
   public static ParsedField<LatLng> parseLatLng(final String latitude, final String longitude) {
     if (Strings.isNullOrEmpty(latitude) || Strings.isNullOrEmpty(longitude)) {
-      return ParsedField.fail(InterpretationIssue.of(IssueType.COORDINATE_INVALID,
-                                                     DwcTerm.decimalLatitude,
-                                                     DwcTerm.decimalLongitude));
+      return ParsedField.fail(
+          InterpretationIssue.of(
+              IssueType.COORDINATE_INVALID, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude));
     }
     Double lat = NumberParser.parseDouble(latitude);
     Double lng = NumberParser.parseDouble(longitude);
@@ -70,13 +72,15 @@ public class CoordinateParseUtils {
       try {
         lat = parseDMS(latitude, true);
       } catch (IllegalArgumentException e) {
-        return ParsedField.fail(InterpretationIssue.of(IssueType.COORDINATE_INVALID, DwcTerm.decimalLatitude));
+        return ParsedField.fail(
+            InterpretationIssue.of(IssueType.COORDINATE_INVALID, DwcTerm.decimalLatitude));
       }
 
       try {
         lng = parseDMS(longitude, false);
       } catch (IllegalArgumentException e) {
-        return ParsedField.fail(InterpretationIssue.of(IssueType.COORDINATE_INVALID, DwcTerm.decimalLongitude));
+        return ParsedField.fail(
+            InterpretationIssue.of(IssueType.COORDINATE_INVALID, DwcTerm.decimalLongitude));
       }
     }
 
@@ -85,9 +89,9 @@ public class CoordinateParseUtils {
 
   private static boolean inRange(double lat, double lon) {
     return Double.compare(lat, 90) <= 0
-           && Double.compare(lat, -90) >= 0
-           && Double.compare(lon, 180) <= 0
-           && Double.compare(lon, -180) >= 0;
+        && Double.compare(lat, -90) >= 0
+        && Double.compare(lon, 180) <= 0
+        && Double.compare(lon, -180) >= 0;
   }
 
   private static boolean isLat(String direction) {
@@ -101,7 +105,8 @@ public class CoordinateParseUtils {
   // 02° 49' 52" N	131° 47' 03" E
   public static ParsedField<LatLng> parseVerbatimCoordinates(final String coordinates) {
     if (Strings.isNullOrEmpty(coordinates)) {
-      return ParsedField.fail(InterpretationIssue.of(IssueType.COORDINATE_INVALID, DwcTerm.verbatimCoordinates));
+      return ParsedField.fail(
+          InterpretationIssue.of(IssueType.COORDINATE_INVALID, DwcTerm.verbatimCoordinates));
     }
     Matcher m = DMS_COORD.matcher(coordinates);
     if (m.find()) {
@@ -118,9 +123,9 @@ public class CoordinateParseUtils {
         return validateAndRound(c2, c1);
 
       } else {
-        return ParsedField.fail(InterpretationIssue.of(IssueType.COORDINATE_INVALID,
-                                                       DwcTerm.decimalLatitude,
-                                                       DwcTerm.decimalLongitude));
+        return ParsedField.fail(
+            InterpretationIssue.of(
+                IssueType.COORDINATE_INVALID, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude));
       }
 
     } else if (coordinates.length() > 4) {
@@ -136,9 +141,9 @@ public class CoordinateParseUtils {
       }
     }
 
-    return ParsedField.fail(InterpretationIssue.of(IssueType.COORDINATE_INVALID,
-                                                   DwcTerm.decimalLatitude,
-                                                   DwcTerm.decimalLongitude));
+    return ParsedField.fail(
+        InterpretationIssue.of(
+            IssueType.COORDINATE_INVALID, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude));
   }
 
   private static ParsedField<LatLng> validateAndRound(double lat, double lon) {
@@ -159,7 +164,9 @@ public class CoordinateParseUtils {
 
     // 0,0 is too suspicious
     if (Double.compare(lat, 0) == 0 && Double.compare(lon, 0) == 0) {
-      issues.add(InterpretationIssue.of(IssueType.ZERO_COORDINATE, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude));
+      issues.add(
+          InterpretationIssue.of(
+              IssueType.ZERO_COORDINATE, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude));
       return ParsedField.success(new LatLng(0, 0), issues);
     }
 
@@ -170,20 +177,24 @@ public class CoordinateParseUtils {
 
     // if lat is out of range, but in range of the lng,
     // assume swapped coordinates.
-    // note that should we desire to trust the following records, we would need to clear the flag for the records to
+    // note that should we desire to trust the following records, we would need to clear the flag
+    // for the records to
     // appear in
-    // search results and maps etc. however, this is logic decision, that goes above the capabilities of this method
+    // search results and maps etc. however, this is logic decision, that goes above the
+    // capabilities of this method
     if ((Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) && inRange(lon, lat)) {
-      issues.add(InterpretationIssue.of(IssueType.PRESUMED_SWAPPED_COORDINATE,
-                                        DwcTerm.decimalLatitude,
-                                        DwcTerm.decimalLongitude));
+      issues.add(
+          InterpretationIssue.of(
+              IssueType.PRESUMED_SWAPPED_COORDINATE,
+              DwcTerm.decimalLatitude,
+              DwcTerm.decimalLongitude));
       return ParsedField.fail(new LatLng(lat, lon), issues);
     }
 
     // then something is out of range
-    issues.add(InterpretationIssue.of(IssueType.COORDINATE_OUT_OF_RANGE,
-                                      DwcTerm.decimalLatitude,
-                                      DwcTerm.decimalLongitude));
+    issues.add(
+        InterpretationIssue.of(
+            IssueType.COORDINATE_OUT_OF_RANGE, DwcTerm.decimalLatitude, DwcTerm.decimalLongitude));
     return ParsedField.fail(issues);
   }
 
@@ -216,9 +227,12 @@ public class CoordinateParseUtils {
   }
 
   private static double coordFromMatcher(Matcher m, int idx1, int idx2, int idx3, String sign) {
-    return roundTo6decimals(coordSign(sign) * dmsToDecimal(NumberParser.parseDouble(m.group(idx1)),
-                                                           NumberParser.parseDouble(m.group(idx2)),
-                                                           NumberParser.parseDouble(m.group(idx3))));
+    return roundTo6decimals(
+        coordSign(sign)
+            * dmsToDecimal(
+                NumberParser.parseDouble(m.group(idx1)),
+                NumberParser.parseDouble(m.group(idx2)),
+                NumberParser.parseDouble(m.group(idx3))));
   }
 
   private static double dmsToDecimal(double degree, Double minutes, Double seconds) {
@@ -227,7 +241,8 @@ public class CoordinateParseUtils {
     return degree + (minutes / 60) + (seconds / 3600);
   }
 
-  // round to 6 decimals (~1m precision) since no way we're getting anything legitimately more precise
+  // round to 6 decimals (~1m precision) since no way we're getting anything legitimately more
+  // precise
   private static Double roundTo6decimals(Double x) {
     return x == null ? null : Math.round(x * Math.pow(10, 6)) / Math.pow(10, 6);
   }

@@ -19,9 +19,7 @@ import static org.gbif.pipelines.esindexing.api.EsService.getIndexesByAliasAndIn
 import static org.gbif.pipelines.esindexing.api.EsService.swapIndexes;
 import static org.gbif.pipelines.esindexing.api.EsService.updateIndexSettings;
 
-/**
- * Exposes a public API to perform operations in a ES instance.
- */
+/** Exposes a public API to perform operations in a ES instance. */
 public class EsHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(EsHandler.class);
@@ -32,14 +30,13 @@ public class EsHandler {
 
   /**
    * Creates an Index in the ES instance specified in the {@link EsConfig} received.
-   * <p>
-   * Both datasetId and attempt parameters are required. The index created will follow the pattern
-   * "{datasetId}_{attempt}".
    *
-   * @param config    configuration of the ES instance.
+   * <p>Both datasetId and attempt parameters are required. The index created will follow the
+   * pattern "{datasetId}_{attempt}".
+   *
+   * @param config configuration of the ES instance.
    * @param datasetId dataset id.
-   * @param attempt   attempt of the dataset crawling.
-   *
+   * @param attempt attempt of the dataset crawling.
    * @return name of the index created.
    */
   public static String createIndex(EsConfig config, String datasetId, int attempt) {
@@ -53,15 +50,14 @@ public class EsHandler {
 
   /**
    * Creates an Index in the ES instance specified in the {@link EsConfig} received.
-   * <p>
-   * Both datasetId and attempt parameters are required. The index created will follow the pattern
-   * "{datasetId}_{attempt}".
    *
-   * @param config    configuration of the ES instance.
+   * <p>Both datasetId and attempt parameters are required. The index created will follow the
+   * pattern "{datasetId}_{attempt}".
+   *
+   * @param config configuration of the ES instance.
    * @param datasetId dataset id.
-   * @param attempt   attempt of the dataset crawling.
-   * @param mappings  path of the file with the mappings.
-   *
+   * @param attempt attempt of the dataset crawling.
+   * @param mappings path of the file with the mappings.
    * @return name of the index created.
    */
   public static String createIndex(EsConfig config, String datasetId, int attempt, Path mappings) {
@@ -75,18 +71,18 @@ public class EsHandler {
 
   /**
    * Creates an Index in the ES instance specified in the {@link EsConfig} received.
-   * <p>
-   * Both datasetId and attempt parameters are required. The index created will follow the pattern
-   * "{datasetId}_{attempt}".
    *
-   * @param config    configuration of the ES instance.
+   * <p>Both datasetId and attempt parameters are required. The index created will follow the
+   * pattern "{datasetId}_{attempt}".
+   *
+   * @param config configuration of the ES instance.
    * @param datasetId dataset id.
-   * @param attempt   attempt of the dataset crawling.
-   * @param mappings  mappings as json string.
-   *
+   * @param attempt attempt of the dataset crawling.
+   * @param mappings mappings as json string.
    * @return name of the index created.
    */
-  public static String createIndex(EsConfig config, String datasetId, int attempt, String mappings) {
+  public static String createIndex(
+      EsConfig config, String datasetId, int attempt, String mappings) {
     final String idxName = createIndexName(datasetId, attempt);
     LOG.info("Creating index {}", idxName);
 
@@ -97,13 +93,14 @@ public class EsHandler {
 
   /**
    * Swaps an index in a alias.
-   * <p>
-   * The index received will be the only index associated to the alias after performing this call. All the indexes
-   * that were associated to this alias before will be removed from the ES instance.
+   *
+   * <p>The index received will be the only index associated to the alias after performing this
+   * call. All the indexes that were associated to this alias before will be removed from the ES
+   * instance.
    *
    * @param config configuration of the ES instance.
-   * @param alias  alias that will be modified.
-   * @param index  index to add to the alias that will become the only index of the alias.
+   * @param alias alias that will be modified.
+   * @param index index to add to the alias that will become the only index of the alias.
    */
   public static void swapIndexInAlias(EsConfig config, String alias, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
@@ -116,7 +113,8 @@ public class EsHandler {
 
     try (EsClient esClient = EsClient.from(config)) {
       // check if there are indexes to remove
-      Set<String> idxToRemove = getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
+      Set<String> idxToRemove =
+          getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
 
       // swap the indexes
       swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
@@ -130,8 +128,7 @@ public class EsHandler {
    * Counts the number of documents of an index.
    *
    * @param config configuration of the ES instance.
-   * @param index  index to count the elements from.
-   *
+   * @param index index to count the elements from.
    * @return number of documents of the index.
    */
   public static long countIndexDocuments(EsConfig config, String index) {
@@ -153,7 +150,8 @@ public class EsHandler {
 
     if (pieces.size() != 2) {
       LOG.error("Index {} doesn't follow the pattern \"{datasetId}_{attempt}\"", index);
-      throw new IllegalArgumentException("index has to follow the pattern \"{datasetId}_{attempt}\"");
+      throw new IllegalArgumentException(
+          "index has to follow the pattern \"{datasetId}_{attempt}\"");
     }
 
     return pieces.get(0);
@@ -163,5 +161,4 @@ public class EsHandler {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(datasetId), "dataset id is required");
     return datasetId + INDEX_SEPARATOR + attempt;
   }
-
 }

@@ -55,6 +55,5 @@ public abstract class AbstractDwcRuleSet extends AbstractRuleSet {
 
     addNonNullMethod(digester, "identifierName", "setIdentifierName", 1);
     addNonNullParam(digester, "identifierName", 0);
-
   }
 }

@@ -17,9 +17,7 @@ import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
-/**
- * Defines an interpretation step create a {@link Pipeline}.
- */
+/** Defines an interpretation step create a {@link Pipeline}. */
 public class InterpretationStep<T> {
 
   private static final String WRITE_DATA_MSG_PATTERN = "Write %s data to avro";
@@ -57,7 +55,8 @@ public class InterpretationStep<T> {
   /**
    * Appends the current create this interpretation step to the desired {@link Pipeline}.
    *
-   * @param extendedRecords {@link PCollection} with the records that are gonna be interpreted by this step.
+   * @param extendedRecords {@link PCollection} with the records that are gonna be interpreted by
+   *     this step.
    */
   public void appendToPipeline(PCollection<ExtendedRecord> extendedRecords, Pipeline pipeline) {
     // add coders
@@ -67,17 +66,21 @@ public class InterpretationStep<T> {
     PCollectionTuple interpretedRecordTuple = extendedRecords.apply(transform);
 
     // Get data and save it to an avro file
-    PCollection<T> interpretedRecords = interpretedRecordTuple.get(transform.getDataTag()).apply(Kv2Value.create());
+    PCollection<T> interpretedRecords =
+        interpretedRecordTuple.get(transform.getDataTag()).apply(Kv2Value.create());
     if (interpretedRecords != null) {
-      interpretedRecords.apply(String.format(WRITE_DATA_MSG_PATTERN, interpretationType.name()),
-                               createAvroWriter(avroClass, dataTargetPath));
+      interpretedRecords.apply(
+          String.format(WRITE_DATA_MSG_PATTERN, interpretationType.name()),
+          createAvroWriter(avroClass, dataTargetPath));
     }
 
     // Get issues and save them to an avro file
-    PCollection<OccurrenceIssue> issues = interpretedRecordTuple.get(transform.getIssueTag()).apply(Kv2Value.create());
+    PCollection<OccurrenceIssue> issues =
+        interpretedRecordTuple.get(transform.getIssueTag()).apply(Kv2Value.create());
     if (issues != null) {
-      issues.apply(String.format(WRITE_ISSUES_MSG_PATTERN, interpretationType.name()),
-                   createAvroWriter(OccurrenceIssue.class, issuesTargetPath));
+      issues.apply(
+          String.format(WRITE_ISSUES_MSG_PATTERN, interpretationType.name()),
+          createAvroWriter(OccurrenceIssue.class, issuesTargetPath));
     }
   }
 
@@ -96,8 +99,12 @@ public class InterpretationStep<T> {
   }
 
   private static class Builder<T>
-    implements Build<T>, InterpretationTypeStep<T>, AvroClassStep<T>, TransformStep<T>, DataTargetPathStep<T>,
-    IssuesTargetPathStep<T> {
+      implements Build<T>,
+          InterpretationTypeStep<T>,
+          AvroClassStep<T>,
+          TransformStep<T>,
+          DataTargetPathStep<T>,
+          IssuesTargetPathStep<T> {
 
     private InterpretationType interpretationType;
     private Class<T> avroClass;
@@ -130,14 +137,16 @@ public class InterpretationStep<T> {
 
     @Override
     public IssuesTargetPathStep<T> dataTargetPath(String dataTargetPath) {
-      Preconditions.checkArgument(!Strings.isNullOrEmpty(dataTargetPath), "DataTargetPath is required");
+      Preconditions.checkArgument(
+          !Strings.isNullOrEmpty(dataTargetPath), "DataTargetPath is required");
       this.dataTargetPath = dataTargetPath;
       return this;
     }
 
     @Override
     public Build<T> issuesTargetPath(String issuesTargetPath) {
-      Preconditions.checkArgument(!Strings.isNullOrEmpty(issuesTargetPath), "IssuesTargetPath is required");
+      Preconditions.checkArgument(
+          !Strings.isNullOrEmpty(issuesTargetPath), "IssuesTargetPath is required");
       this.issuesTargetPath = issuesTargetPath;
       return this;
     }
@@ -193,5 +202,4 @@ public class InterpretationStep<T> {
 
     Build<T> avroCodec(CodecFactory codecFactory);
   }
-
 }

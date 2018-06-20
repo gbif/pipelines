@@ -34,9 +34,7 @@ import static org.gbif.pipelines.config.InterpretationType.MULTIMEDIA;
 import static org.gbif.pipelines.config.InterpretationType.TAXONOMY;
 import static org.gbif.pipelines.config.InterpretationType.TEMPORAL;
 
-/**
- * Gbif implementation for a pipeline.
- */
+/** Gbif implementation for a pipeline. */
 public class GbifInterpretationPipeline implements Supplier<Pipeline> {
 
   private static final String DATA_FILENAME = "interpreted";
@@ -52,26 +50,30 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
   private static final String CODEC_SEPARATOR = "_";
 
   private final EnumMap<InterpretationType, InterpretationStepSupplier> stepsMap =
-    new EnumMap<>(InterpretationType.class);
+      new EnumMap<>(InterpretationType.class);
   private final DataProcessingPipelineOptions options;
   private final CodecFactory avroCodec;
   private final String wsProperties;
 
   private GbifInterpretationPipeline(DataProcessingPipelineOptions options) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),
-                                "defaultTargetDirectory is required");
+    Preconditions.checkArgument(
+        !Strings.isNullOrEmpty(options.getDatasetId()), "datasetId is required");
+    Preconditions.checkArgument(
+        !Strings.isNullOrEmpty(options.getDefaultTargetDirectory()),
+        "defaultTargetDirectory is required");
     Preconditions.checkArgument(Objects.nonNull(options.getAttempt()), "attempt is required");
     this.options = options;
     avroCodec = parseAvroCodec(options.getAvroCompressionType());
-    // we don't create the Config here because it's only required for taxon and location interpretations. For the
+    // we don't create the Config here because it's only required for taxon and location
+    // interpretations. For the
     // rest, it's not even required to set the ws properties in the PipelineOptions.
     wsProperties = options.getWsProperties();
     initStepsMap();
   }
 
   /**
-   * Creates a new {@link GbifInterpretationPipeline} instance from the {@link DataProcessingPipelineOptions} received.
+   * Creates a new {@link GbifInterpretationPipeline} instance from the {@link
+   * DataProcessingPipelineOptions} received.
    */
   public static GbifInterpretationPipeline create(DataProcessingPipelineOptions options) {
     return new GbifInterpretationPipeline(options);
@@ -80,31 +82,40 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
   @Override
   public Pipeline get() {
     return InterpretationPipelineAssembler.of(options.getInterpretationTypes())
-      .withOptions(options)
-      .withInput(options.getInputFile())
-      .using(stepsMap)
-      .onBeforeInterpretations(createBeforeStep())
-      .assemble();
+        .withOptions(options)
+        .withInput(options.getInputFile())
+        .using(stepsMap)
+        .onBeforeInterpretations(createBeforeStep())
+        .assemble();
   }
 
   private void initStepsMap() {
-    stepsMap.put(LOCATION, locationGbif(createPaths(options, InterpretationType.LOCATION), avroCodec, wsProperties));
-    stepsMap.put(TEMPORAL, temporalGbif(createPaths(options, InterpretationType.TEMPORAL), avroCodec));
-    stepsMap.put(TAXONOMY, taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY), avroCodec, wsProperties));
+    stepsMap.put(
+        LOCATION,
+        locationGbif(createPaths(options, InterpretationType.LOCATION), avroCodec, wsProperties));
+    stepsMap.put(
+        TEMPORAL, temporalGbif(createPaths(options, InterpretationType.TEMPORAL), avroCodec));
+    stepsMap.put(
+        TAXONOMY,
+        taxonomyGbif(createPaths(options, InterpretationType.TAXONOMY), avroCodec, wsProperties));
     stepsMap.put(COMMON, commonGbif(createPaths(options, InterpretationType.COMMON), avroCodec));
-    stepsMap.put(MULTIMEDIA, multimediaGbif(createPaths(options, InterpretationType.MULTIMEDIA), avroCodec));
+    stepsMap.put(
+        MULTIMEDIA, multimediaGbif(createPaths(options, InterpretationType.MULTIMEDIA), avroCodec));
   }
 
-  private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> createBeforeStep() {
+  private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>>
+      createBeforeStep() {
     return (PCollection<ExtendedRecord> verbatimRecords, Pipeline pipeline) -> {
-      UniqueOccurrenceIdTransform uniquenessTransform = UniqueOccurrenceIdTransform.create().withAvroCoders(pipeline);
+      UniqueOccurrenceIdTransform uniquenessTransform =
+          UniqueOccurrenceIdTransform.create().withAvroCoders(pipeline);
       PCollectionTuple uniqueTuple = verbatimRecords.apply(uniquenessTransform);
       return uniqueTuple.get(uniquenessTransform.getDataTag());
     };
   }
 
   @VisibleForTesting
-  static PipelineTargetPaths createPaths(DataProcessingPipelineOptions options, InterpretationType interType) {
+  static PipelineTargetPaths createPaths(
+      DataProcessingPipelineOptions options, InterpretationType interType) {
     PipelineTargetPaths paths = new PipelineTargetPaths();
 
     String targetDirectory = options.getDefaultTargetDirectory();
@@ -155,5 +166,4 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
 
     throw new IllegalArgumentException("CodecFactory not found for codec " + codec);
   }
-
 }

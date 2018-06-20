@@ -29,11 +29,13 @@ public class GeocodeServiceRest {
     client = HttpClientFactory.createClient(wsConfig);
 
     // create service
-    Retrofit retrofit = new Retrofit.Builder().client(client)
-      .baseUrl(wsConfig.getBasePath())
-      .addConverterFactory(JacksonConverterFactory.create())
-      .validateEagerly(true)
-      .build();
+    Retrofit retrofit =
+        new Retrofit.Builder()
+            .client(client)
+            .baseUrl(wsConfig.getBasePath())
+            .addConverterFactory(JacksonConverterFactory.create())
+            .validateEagerly(true)
+            .build();
 
     service = retrofit.create(GeocodeService.class);
   }
@@ -56,7 +58,7 @@ public class GeocodeServiceRest {
   /**
    * It deletes the ws cache.
    *
-   * <strong>Keep in mind that this method is not thread-safe, so use it carefully.</strong>
+   * <p><strong>Keep in mind that this method is not thread-safe, so use it carefully.</strong>
    */
   public static void clearCache() {
     if (instance != null && instance.client != null && instance.client.cache() != null) {
@@ -68,5 +70,4 @@ public class GeocodeServiceRest {
       }
     }
   }
-
 }

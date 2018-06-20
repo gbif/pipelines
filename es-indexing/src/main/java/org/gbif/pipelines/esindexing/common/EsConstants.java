@@ -1,8 +1,6 @@
 package org.gbif.pipelines.esindexing.common;
 
-/**
- * Utility class to store ES-related constants.
- */
+/** Utility class to store ES-related constants. */
 public final class EsConstants {
 
   // Fields
@@ -30,7 +28,7 @@ public final class EsConstants {
   public static final String INDEX_NUMBER_SHARDS_FIELD = INDEX_PREFIX + NUMBER_SHARDS_FIELD;
   public static final String INDEX_NUMBER_REPLICAS_FIELD = INDEX_PREFIX + NUMBER_REPLICAS_FIELD;
   public static final String INDEX_TRANSLOG_DURABILITY_FIELD =
-    INDEX_PREFIX + TRANSLOG_FIELD + JSON_CONCATENATOR + DURABILITY_FIELD;
+      INDEX_PREFIX + TRANSLOG_FIELD + JSON_CONCATENATOR + DURABILITY_FIELD;
 
   // indexing values
   public static final String INDEXING_REFRESH_INTERVAL = "-1";
@@ -45,5 +43,4 @@ public final class EsConstants {
   public static final String TRANSLOG_DURABILITY = "async";
 
   private EsConstants() {}
-
 }

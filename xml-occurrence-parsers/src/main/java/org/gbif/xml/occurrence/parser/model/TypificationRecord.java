@@ -28,10 +28,10 @@ public class TypificationRecord implements Serializable {
   private String typeStatus;
   private String notes;
 
-  public TypificationRecord() {
-  }
+  public TypificationRecord() {}
 
-  public TypificationRecord(String scientificName, String publication, String typeStatus, String notes) {
+  public TypificationRecord(
+      String scientificName, String publication, String typeStatus, String notes) {
     if (!Strings.isNullOrEmpty(scientificName)) {
       this.scientificName = scientificName;
     }
@@ -48,24 +48,24 @@ public class TypificationRecord implements Serializable {
 
   public boolean isEmpty() {
     return Strings.isNullOrEmpty(notes)
-           && Strings.isNullOrEmpty(typeStatus)
-           && Strings.isNullOrEmpty(publication)
-           && Strings.isNullOrEmpty(scientificName);
+        && Strings.isNullOrEmpty(typeStatus)
+        && Strings.isNullOrEmpty(publication)
+        && Strings.isNullOrEmpty(scientificName);
   }
 
   public String debugDump() {
     return "ScientificName ["
-           + scientificName
-           + "]\n"
-           + "Publication ["
-           + publication
-           + "]\n"
-           + "TypeStatus ["
-           + typeStatus
-           + "]\n"
-           + "Notes ["
-           + notes
-           + "]\n";
+        + scientificName
+        + "]\n"
+        + "Publication ["
+        + publication
+        + "]\n"
+        + "TypeStatus ["
+        + typeStatus
+        + "]\n"
+        + "Notes ["
+        + notes
+        + "]\n";
   }
 
   public String getScientificName() {
@@ -99,6 +99,4 @@ public class TypificationRecord implements Serializable {
   public void setNotes(String notes) {
     this.notes = notes;
   }
-
-
 }

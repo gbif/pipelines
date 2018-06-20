@@ -13,9 +13,7 @@ import static java.time.temporal.ChronoField.YEAR;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
-/**
- * The accumulator class for storing all parsed chrono fields
- */
+/** The accumulator class for storing all parsed chrono fields */
 public class ChronoAccumulator {
 
   private final Map<ChronoField, String> valueMap = new EnumMap<>(ChronoField.class);
@@ -33,8 +31,9 @@ public class ChronoAccumulator {
   /**
    * Set raw value
    *
-   * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
-   * @param rawValue    raw value for parsing
+   * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
+   *     MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   * @param rawValue raw value for parsing
    */
   public void setChronoField(ChronoField chronoField, String rawValue) {
     if (!StringUtils.isEmpty(rawValue)) {
@@ -52,16 +51,14 @@ public class ChronoAccumulator {
     return Optional.ofNullable(valueMap.get(chronoField));
   }
 
-  /**
-   * @return last parsed chrono field
-   */
+  /** @return last parsed chrono field */
   public Optional<ChronoField> getLastParsed() {
     return Optional.ofNullable(lastParsed);
   }
 
   /**
-   * Copies ALL of the values from the specified accumulator to this accumulator.
-   * If a chrono filed is present, the field will be replaced by the value from accumulator param
+   * Copies ALL of the values from the specified accumulator to this accumulator. If a chrono filed
+   * is present, the field will be replaced by the value from accumulator param
    */
   public ChronoAccumulator mergeReplace(ChronoAccumulator accumulator) {
     valueMap.putAll(accumulator.valueMap);
@@ -70,19 +67,19 @@ public class ChronoAccumulator {
   }
 
   /**
-   * Copies CHRONO FILED values from the specified accumulator to this accumulator.
-   * If a chrono filed is present, the field will NOT be replaced by the value from accumulator param
+   * Copies CHRONO FILED values from the specified accumulator to this accumulator. If a chrono
+   * filed is present, the field will NOT be replaced by the value from accumulator param
    */
   public ChronoAccumulator mergeAbsent(ChronoAccumulator accumulator) {
     accumulator.valueMap.forEach(valueMap::putIfAbsent);
     return this;
   }
 
-  /**
-   * Checks all value in the folder are numeric, except month
-   */
+  /** Checks all value in the folder are numeric, except month */
   public boolean areAllNumeric() {
-    return valueMap.entrySet().stream().anyMatch(x -> MONTH_OF_YEAR != x.getKey() && !isNumeric(x.getValue()));
+    return valueMap
+        .entrySet()
+        .stream()
+        .anyMatch(x -> MONTH_OF_YEAR != x.getKey() && !isNumeric(x.getValue()));
   }
-
 }

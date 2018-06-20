@@ -12,7 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The task for CompletableFuture which reads a xml response file, parses and converts to ExtendedRecord avro file
+ * The task for CompletableFuture which reads a xml response file, parses and converts to
+ * ExtendedRecord avro file
  */
 public class ConverterTask implements Runnable {
 
@@ -22,7 +23,8 @@ public class ConverterTask implements Runnable {
   private final SyncDataFileWriter dataFileWriter;
   private final UniquenessValidator validator;
 
-  public ConverterTask(File inputFile, SyncDataFileWriter dataFileWriter, UniquenessValidator validator) {
+  public ConverterTask(
+      File inputFile, SyncDataFileWriter dataFileWriter, UniquenessValidator validator) {
     this.inputFile = inputFile;
     this.dataFileWriter = dataFileWriter;
     this.validator = validator;
@@ -30,20 +32,24 @@ public class ConverterTask implements Runnable {
 
   @Override
   public void run() {
-    new OccurrenceParser().parseFile(inputFile).stream()
-      .map(XmlFragmentParser::parseRecord)
-      .forEach(rawRecords -> rawRecords.stream()
-        .map(ExtendedRecordConverter::from)
-        .filter(extendedRecord -> validator.isUnique(extendedRecord.getId()))
-        .forEach(extendedRecord -> {
-          try {
-            dataFileWriter.append(extendedRecord);
-          } catch (IOException ex) {
-            LOG.error(ex.getMessage(), ex);
-            throw new ParsingException("Parsing failed", ex);
-          }
-        })
-      );
+    new OccurrenceParser()
+        .parseFile(inputFile)
+        .stream()
+        .map(XmlFragmentParser::parseRecord)
+        .forEach(
+            rawRecords ->
+                rawRecords
+                    .stream()
+                    .map(ExtendedRecordConverter::from)
+                    .filter(extendedRecord -> validator.isUnique(extendedRecord.getId()))
+                    .forEach(
+                        extendedRecord -> {
+                          try {
+                            dataFileWriter.append(extendedRecord);
+                          } catch (IOException ex) {
+                            LOG.error(ex.getMessage(), ex);
+                            throw new ParsingException("Parsing failed", ex);
+                          }
+                        }));
   }
-
 }

@@ -26,9 +26,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * Utility class that parses Enum based terms.
- */
+/** Utility class that parses Enum based terms. */
 public class VocabularyParsers<T extends Enum<T>> {
 
   private static final TypeStatusParser TYPE_PARSER = TypeStatusParser.getInstance();
@@ -40,72 +38,54 @@ public class VocabularyParsers<T extends Enum<T>> {
   private static final ContinentParser CONTINENT_PARSER = ContinentParser.getInstance();
   private static final RankParser RANK_PARSER = RankParser.getInstance();
 
-  //Parser to be used
+  // Parser to be used
   private final EnumParser<T> parser;
 
-  //Term ot be parsed
+  // Term ot be parsed
   private final DwcTerm term;
 
-  /**
-   * Private constructor that keeps the basic info to run a parser.
-   */
+  /** Private constructor that keeps the basic info to run a parser. */
   private VocabularyParsers(EnumParser<T> parser, DwcTerm term) {
     this.parser = parser;
     this.term = term;
   }
 
-  /**
-   * @return a basis of record parser.
-   */
+  /** @return a basis of record parser. */
   public static VocabularyParsers<BasisOfRecord> basisOfRecordParser() {
     return new VocabularyParsers<>(BOR_PARSER, DwcTerm.basisOfRecord);
   }
 
-  /**
-   * @return a sex parser.
-   */
+  /** @return a sex parser. */
   public static VocabularyParsers<Sex> sexParser() {
     return new VocabularyParsers<>(SEX_PARSER, DwcTerm.sex);
   }
 
-  /**
-   * @return a life stage parser.
-   */
+  /** @return a life stage parser. */
   public static VocabularyParsers<LifeStage> lifeStageParser() {
     return new VocabularyParsers<>(LST_PARSER, DwcTerm.lifeStage);
   }
 
-  /**
-   * @return a establishmentMeans parser.
-   */
+  /** @return a establishmentMeans parser. */
   public static VocabularyParsers<EstablishmentMeans> establishmentMeansParser() {
     return new VocabularyParsers<>(EST_PARSER, DwcTerm.establishmentMeans);
   }
 
-  /**
-   * @return a type status parser.
-   */
+  /** @return a type status parser. */
   public static VocabularyParsers<TypeStatus> typeStatusParser() {
     return new VocabularyParsers<>(TYPE_PARSER, DwcTerm.typeStatus);
   }
 
-  /**
-   * @return a country parser.
-   */
+  /** @return a country parser. */
   public static VocabularyParsers<Country> countryParser() {
     return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.country);
   }
 
-  /**
-   * @return a country parser.
-   */
+  /** @return a country parser. */
   public static VocabularyParsers<Country> countryCodeParser() {
     return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.countryCode);
   }
 
-  /**
-   * @return a continent parser.
-   */
+  /** @return a continent parser. */
   public static VocabularyParsers<Continent> continentParser() {
     return new VocabularyParsers<>(CONTINENT_PARSER, DwcTerm.continent);
   }
@@ -114,23 +94,19 @@ public class VocabularyParsers<T extends Enum<T>> {
    * Runs a parsing method on a extended record.
    *
    * @param extendedRecord to be used as input
-   * @param onParse        consumer called during parsing
+   * @param onParse consumer called during parsing
    */
   public void parse(ExtendedRecord extendedRecord, Consumer<ParseResult<T>> onParse) {
     Optional.ofNullable(extendedRecord.getCoreTerms().get(term.qualifiedName()))
-      .ifPresent(value -> onParse.accept(parser.parse(value)));
+        .ifPresent(value -> onParse.accept(parser.parse(value)));
   }
 
-  /**
-   * @return a type status parser.
-   */
+  /** @return a type status parser. */
   public static VocabularyParsers<Rank> rankParser() {
     return new VocabularyParsers<>(RANK_PARSER, DwcTerm.taxonRank);
   }
 
-  /**
-   * @return a type status parser.
-   */
+  /** @return a type status parser. */
   public static VocabularyParsers<Rank> verbatimTaxonRankParser() {
     return new VocabularyParsers<>(RANK_PARSER, DwcTerm.verbatimTaxonRank);
   }
@@ -139,7 +115,7 @@ public class VocabularyParsers<T extends Enum<T>> {
    * Runs a parsing method on a extended record and applies a mapping function to the result.
    *
    * @param extendedRecord to be used as input
-   * @param mapper         function mapper
+   * @param mapper function mapper
    */
   public <U> Optional<U> map(ExtendedRecord extendedRecord, Function<ParseResult<T>, U> mapper) {
     return map(extendedRecord.getCoreTerms(), mapper);
@@ -148,11 +124,11 @@ public class VocabularyParsers<T extends Enum<T>> {
   /**
    * Runs a parsing method on a map of terms and applies a mapping function to the result.
    *
-   * @param terms  to be used as input
+   * @param terms to be used as input
    * @param mapper function mapper
    */
   public <U> Optional<U> map(Map<String, String> terms, Function<ParseResult<T>, U> mapper) {
-    return Optional.ofNullable(terms.get(term.qualifiedName())).map(value -> mapper.apply(parser.parse(value)));
+    return Optional.ofNullable(terms.get(term.qualifiedName()))
+        .map(value -> mapper.apply(parser.parse(value)));
   }
-
 }

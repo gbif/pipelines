@@ -10,7 +10,8 @@ public class Dwc14RecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseBasicFields() {
-    String fileName = getClass().getResource("/responses/dwc14/dwc14_all_simple_fields.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/dwc14/dwc14_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
     // System.out.println(ror.debugDump());

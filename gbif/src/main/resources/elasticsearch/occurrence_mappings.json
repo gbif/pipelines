@@ -6,7 +6,7 @@
       },
       "dynamic_templates": [
         {
-         "default_string" : {
+          "default_string": {
             "match_mapping_type": "string",
             "mapping": {
               "type": "keyword"
@@ -14,77 +14,77 @@
           }
         }
       ],
-      "properties" : {
+      "properties": {
         "coordinate": {
           "type": "geo_point"
         },
-        "lastparsed" : {
+        "lastparsed": {
           "type": "date",
           "format": "yyyy-MM-dd'T'HH:mm'Z'"
         },
-        "lastcrawled" : {
+        "lastcrawled": {
           "type": "date",
           "format": "yyyy-MM-dd'T'HH:mm'Z'"
         },
-        "lastinterpreted" : {
+        "lastinterpreted": {
           "type": "date",
           "format": "yyyy-MM-dd'T'HH:mm'Z'"
         },
-        "dateidentified" : {
+        "dateidentified": {
           "type": "date",
           "format": "yyyy-MM-dd'T'HH:mm'Z'"
         },
-        "eventdate" : {
+        "eventdate": {
           "type": "date",
           "format": "yyyy-MM-dd'T'HH:mm'Z'"
         },
-        "modified" : {
+        "modified": {
           "type": "date",
           "format": "yyyy-MM-dd'T'HH:mm'Z'"
         },
-        "decimallatitude" : {
-          "type":   "double"
-        },
-        "decimallongitude" : {
+        "decimallatitude": {
           "type": "double"
         },
-        "coordinateprecision" : {
+        "decimallongitude": {
           "type": "double"
         },
-        "elevation" : {
+        "coordinateprecision": {
           "type": "double"
         },
-        "depth" : {
+        "elevation": {
           "type": "double"
         },
-        "individualcount" : {
+        "depth": {
+          "type": "double"
+        },
+        "individualcount": {
           "type": "integer"
         },
-        "coordinateuncertaintyinmeters" : {
+        "coordinateuncertaintyinmeters": {
           "type": "double"
         },
-        "coordinateaccuracy" : {
+        "coordinateaccuracy": {
           "type": "double"
         },
-        "elevationaccuracy" : {
+        "elevationaccuracy": {
           "type": "double"
         },
-        "depthaccuracy" : {
+        "depthaccuracy": {
           "type": "double"
         },
-        "year" : {
+        "year": {
           "type": "integer"
         },
-        "month" : {
+        "month": {
           "type": "integer"
         },
-        "day" : {
+        "day": {
           "type": "integer"
         }
       }
     }
   },
-  "index" : {
+  "index": {
     "index.refresh_interval": "-1",
     "index.number_of_replicas": "0",
     "index.translog.durability": "async"
