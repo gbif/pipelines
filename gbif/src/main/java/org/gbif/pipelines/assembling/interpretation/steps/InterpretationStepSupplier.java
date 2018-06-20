@@ -30,7 +30,7 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
   /**
    * Gbif location interpretation.
    * <p>
-   * It creates the ws config inside the supplier in order to postpone as much as possible, since this step is not
+   * It creates the ws config inside the supplier in order to postpone it as much as possible, since this step is not
    * required and may never be used.
    */
   static InterpretationStepSupplier locationGbif(
@@ -79,7 +79,7 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
   /**
    * Gbif taxonomy interpretation.
    * <p>
-   * It creates the ws config inside the supplier in order to postpone as much as possible, since this step is not
+   * It creates the ws config inside the supplier in order to postpone it as much as possible, since this step is not
    * required and may never be used.
    */
   static InterpretationStepSupplier taxonomyGbif(

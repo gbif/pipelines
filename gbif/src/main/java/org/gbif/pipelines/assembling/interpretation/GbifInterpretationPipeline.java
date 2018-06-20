@@ -64,6 +64,8 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     Preconditions.checkArgument(Objects.nonNull(options.getAttempt()), "attempt is required");
     this.options = options;
     avroCodec = parseAvroCodec(options.getAvroCompressionType());
+    // we don't create the Config here because it's only required for taxon and location interpretations. For the
+    // rest, it's not even required to set the ws properties in the PipelineOptions.
     wsProperties = options.getWsProperties();
     initStepsMap();
   }
@@ -92,7 +94,6 @@ public class GbifInterpretationPipeline implements Supplier<Pipeline> {
     stepsMap.put(COMMON, commonGbif(createPaths(options, InterpretationType.COMMON), avroCodec));
     stepsMap.put(MULTIMEDIA, multimediaGbif(createPaths(options, InterpretationType.MULTIMEDIA), avroCodec));
   }
-
 
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> createBeforeStep() {
     return (PCollection<ExtendedRecord> verbatimRecords, Pipeline pipeline) -> {
