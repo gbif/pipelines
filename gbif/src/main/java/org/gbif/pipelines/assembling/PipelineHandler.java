@@ -1,8 +1,5 @@
 package org.gbif.pipelines.assembling;
 
-import org.gbif.pipelines.core.ws.client.geocode.GeocodeServiceRest;
-import org.gbif.pipelines.core.ws.client.match2.SpeciesMatchv2ServiceRest;
-
 import java.util.Arrays;
 
 import org.apache.beam.sdk.Pipeline;
@@ -33,14 +30,6 @@ public class PipelineHandler {
     LOG.info("Running pipeline", Arrays.asList(args));
     PipelineResult.State state = pipeline.run().waitUntilFinish();
     LOG.info("Pipeline finished with state {} from args: {}", state, args);
-
-    // FIXME: Hack to delete the ws cache. Maybe find a better way??
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      LOG.info("Cleaning ws cache at shutdown");
-      SpeciesMatchv2ServiceRest.clearCache();
-      GeocodeServiceRest.clearCache();
-    }));
-
   }
 
 }

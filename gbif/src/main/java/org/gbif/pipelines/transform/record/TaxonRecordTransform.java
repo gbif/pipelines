@@ -3,6 +3,7 @@ package org.gbif.pipelines.transform.record;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.TaxonomyInterpreter;
+import org.gbif.pipelines.core.ws.client.match2.SpeciesMatchv2ServiceRest;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
@@ -33,6 +34,12 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
   private TaxonRecordTransform(Config wsConfig) {
     super("Interpret taxonomic record");
     this.wsConfig = wsConfig;
+
+    // add hook to delete ws cache at shutdown
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      LOG.info("Executing taxonomy shutdown hook");
+      SpeciesMatchv2ServiceRest.clearCache();
+    }));
   }
 
   public static TaxonRecordTransform create(Config wsConfig) {
