@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.beam.runners.direct.DirectOptions;
 import org.apache.beam.sdk.annotations.Experimental;
 import org.apache.beam.sdk.annotations.Experimental.Kind;
@@ -72,6 +73,7 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   void setAvroSyncInterval(int syncInterval);
 
   @Description("WS properties for interpretations that require the use of external web services")
+  @JsonIgnore
   String getWsProperties();
   void setWsProperties(String path);
 

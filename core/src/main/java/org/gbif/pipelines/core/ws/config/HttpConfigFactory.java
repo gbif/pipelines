@@ -79,7 +79,7 @@ public class HttpConfigFactory {
       try {
         return new FileInputStream(path.toFile());
       } catch (FileNotFoundException ex) {
-        LOG.error("Properties could not be read from {}", propertiesPath.toString(), ex);
+        LOG.error("Properties with absolute path could not be read from {}", propertiesPath.toString(), ex);
         throw new IllegalArgumentException(ex.getMessage(), ex);
       }
     };
@@ -94,7 +94,7 @@ public class HttpConfigFactory {
       // read properties from input stream
       props.load(in);
     } catch (Exception e) {
-      LOG.error("Properties could not be read from {}", propertiesPath.toString(), e);
+      LOG.error("Properties could not be load from {}", propertiesPath.toString(), e);
       return Optional.empty();
     }
 
