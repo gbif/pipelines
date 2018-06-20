@@ -52,6 +52,8 @@ public abstract class BaseMockServerTest {
 
   /**
    * Public field because {@link ClassRule} requires it.
+   * <p>
+   * It uses a random port.
    */
   @ClassRule
   public static final MockWebServer mockServer = new MockWebServer();
