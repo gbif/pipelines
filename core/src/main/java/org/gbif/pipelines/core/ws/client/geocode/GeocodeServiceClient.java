@@ -18,7 +18,8 @@ import retrofit2.Call;
 
 import static org.gbif.pipelines.core.parsers.location.CoordinatesValidator.isInRange;
 
-public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeResponse>, List<Country>> {
+public class GeocodeServiceClient
+    extends BaseServiceClient<Collection<GeocodeResponse>, List<Country>> {
 
   private final GeocodeServiceRest geocodeServiceRest;
 
@@ -27,7 +28,8 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
   }
 
   /**
-   * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from the path received.
+   * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from the
+   * path received.
    */
   public static GeocodeServiceClient newInstance(Config wsConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
@@ -63,13 +65,13 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
   @Override
   protected List<Country> parseResponse(Collection<GeocodeResponse> response) {
     if (Objects.nonNull(response) && !response.isEmpty()) {
-      return response.stream()
-        .filter(resp -> Objects.nonNull(resp.getIsoCountryCode2Digit()))
-        .map(resp -> Country.fromIsoCode(resp.getIsoCountryCode2Digit()))
-        .collect(Collectors.toList());
+      return response
+          .stream()
+          .filter(resp -> Objects.nonNull(resp.getIsoCountryCode2Digit()))
+          .map(resp -> Country.fromIsoCode(resp.getIsoCountryCode2Digit()))
+          .collect(Collectors.toList());
     }
 
     return Collections.emptyList();
   }
-
 }

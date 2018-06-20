@@ -24,7 +24,6 @@ import java.security.NoSuchAlgorithmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class RawXmlOccurrence {
 
   private static final Logger LOG = LoggerFactory.getLogger(RawXmlOccurrence.class);
@@ -97,6 +96,4 @@ public class RawXmlOccurrence {
   public void setSchemaType(OccurrenceSchemaType schemaType) {
     this.schemaType = schemaType;
   }
-
-
 }

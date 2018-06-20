@@ -1,6 +1,5 @@
 package org.gbif.xml.occurrence.parser.parsing.xml;
 
-
 import org.gbif.xml.occurrence.parser.identifier.UniqueIdentifier;
 
 import java.util.Set;
@@ -11,17 +10,17 @@ import com.google.common.base.Objects;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Contains the set of {@link UniqueIdentifier} that were extracted from a raw fragment that each uniquely identify
- * that fragment. May also contain a unitQualifier for cases of multiple occurrences within a single fragment
- * (e.g. ABCD 2.06).
+ * Contains the set of {@link UniqueIdentifier} that were extracted from a raw fragment that each
+ * uniquely identify that fragment. May also contain a unitQualifier for cases of multiple
+ * occurrences within a single fragment (e.g. ABCD 2.06).
  */
 public class IdentifierExtractionResult {
 
   private final Set<UniqueIdentifier> uniqueIdentifiers;
-  @Nullable
-  private final String unitQualifier;
+  @Nullable private final String unitQualifier;
 
-  public IdentifierExtractionResult(Set<UniqueIdentifier> uniqueIdentifiers, @Nullable String unitQualifier) {
+  public IdentifierExtractionResult(
+      Set<UniqueIdentifier> uniqueIdentifiers, @Nullable String unitQualifier) {
     this.uniqueIdentifiers = checkNotNull(uniqueIdentifiers, "uniqueIdentifiers can't be null");
     this.unitQualifier = unitQualifier;
   }
@@ -48,7 +47,7 @@ public class IdentifierExtractionResult {
       return false;
     }
     final IdentifierExtractionResult other = (IdentifierExtractionResult) obj;
-    return Objects.equal(this.uniqueIdentifiers, other.uniqueIdentifiers) && Objects
-      .equal(this.unitQualifier, other.unitQualifier);
+    return Objects.equal(this.uniqueIdentifiers, other.uniqueIdentifiers)
+        && Objects.equal(this.unitQualifier, other.unitQualifier);
   }
 }

@@ -1,10 +1,7 @@
 package org.gbif.pipelines.config;
 
-/***
- * Definition of recognized outputs of the data pipeline.
- */
+/** * Definition of recognized outputs of the data pipeline. */
 public enum OptionsKeyEnum {
-
   RAW_OCCURRENCE("raw-data"),
   INTERPRETED_OCURENCE("interpreted-data"),
   VERBATIM("verbatim"),
@@ -29,11 +26,8 @@ public enum OptionsKeyEnum {
     this.defaultFileName = defaultFileName;
   }
 
-  /**
-   * @return default file name
-   */
+  /** @return default file name */
   public String getDefaultFileName() {
     return defaultFileName;
   }
-
 }

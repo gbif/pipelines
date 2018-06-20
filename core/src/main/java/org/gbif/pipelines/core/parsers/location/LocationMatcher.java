@@ -25,9 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.gbif.pipelines.core.parsers.location.CoordinatesValidator.isAntarctica;
 
-/**
- * Matches the location fields related to Country and Coordinates to find possible mismatches.
- */
+/** Matches the location fields related to Country and Coordinates to find possible mismatches. */
 class LocationMatcher {
 
   private static final Logger LOG = LoggerFactory.getLogger(LocationMatcher.class);
@@ -66,23 +64,29 @@ class LocationMatcher {
     if (countries != null && !countries.isEmpty()) {
       if (countries.contains(country)) {
         // country found
-        return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLng).build());
+        return ParsedField.success(
+            ParsedLocation.newBuilder().country(country).latLng(latLng).build());
       }
 
       // if not found, try with equivalent countries
-      Optional<Country> equivalentMatch = containsAnyCountry(CountryMaps.equivalent(country), countries);
+      Optional<Country> equivalentMatch =
+          containsAnyCountry(CountryMaps.equivalent(country), countries);
       if (equivalentMatch.isPresent()) {
         // country found
-        return ParsedField.success(ParsedLocation.newBuilder().country(equivalentMatch.get()).latLng(latLng).build());
+        return ParsedField.success(
+            ParsedLocation.newBuilder().country(equivalentMatch.get()).latLng(latLng).build());
       }
 
       // if not found, try with confused countries
-      Optional<Country> confusedMatch = containsAnyCountry(CountryMaps.confused(country), countries);
+      Optional<Country> confusedMatch =
+          containsAnyCountry(CountryMaps.confused(country), countries);
       if (confusedMatch.isPresent()) {
         // country found
-        return ParsedField.success(ParsedLocation.newBuilder().country(confusedMatch.get()).latLng(latLng).build(),
-                                   Collections.singletonList(InterpretationIssue.of(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
-                                                                                    DwcTerm.country)));
+        return ParsedField.success(
+            ParsedLocation.newBuilder().country(confusedMatch.get()).latLng(latLng).build(),
+            Collections.singletonList(
+                InterpretationIssue.of(
+                    IssueType.COUNTRY_DERIVED_FROM_COORDINATES, DwcTerm.country)));
       }
     }
 
@@ -103,10 +107,12 @@ class LocationMatcher {
         // Add issues from the transformation
         List<InterpretationIssue> issues = new ArrayList<>();
         CoordinatesFunction.getIssueTypes(transformation)
-          .forEach(issueType -> issues.add(InterpretationIssue.of(issueType, getCountryAndCoordinatesTerms())));
+            .forEach(
+                issueType ->
+                    issues.add(InterpretationIssue.of(issueType, getCountryAndCoordinatesTerms())));
         // return success with the issues
-        return ParsedField.success(ParsedLocation.newBuilder().country(country).latLng(latLngTransformed).build(),
-                                   issues);
+        return ParsedField.success(
+            ParsedLocation.newBuilder().country(country).latLng(latLngTransformed).build(), issues);
       }
     }
 
@@ -124,9 +130,10 @@ class LocationMatcher {
     }
 
     // country found
-    return ParsedField.success(ParsedLocation.newBuilder().country(countries.get(0)).latLng(latLng).build(),
-                               Collections.singletonList(InterpretationIssue.of(IssueType.COUNTRY_DERIVED_FROM_COORDINATES,
-                                                                                DwcTerm.country)));
+    return ParsedField.success(
+        ParsedLocation.newBuilder().country(countries.get(0)).latLng(latLng).build(),
+        Collections.singletonList(
+            InterpretationIssue.of(IssueType.COUNTRY_DERIVED_FROM_COORDINATES, DwcTerm.country)));
   }
 
   private List<Country> getCountriesFromCoordinates(LatLng latLng) {
@@ -137,7 +144,8 @@ class LocationMatcher {
       return Collections.emptyList();
     }
 
-    if ((response.getBody() == null || response.getBody().isEmpty()) && isAntarctica(latLng.getLat(), country)) {
+    if ((response.getBody() == null || response.getBody().isEmpty())
+        && isAntarctica(latLng.getLat(), country)) {
       return Collections.singletonList(Country.ANTARCTICA);
     }
 
@@ -145,14 +153,17 @@ class LocationMatcher {
   }
 
   private static Optional<Country> containsAnyCountry(
-    Collection<Country> possibilities, Collection<Country> countries
-  ) {
-    return possibilities != null ? possibilities.stream().filter(countries::contains).findFirst() : Optional.empty();
+      Collection<Country> possibilities, Collection<Country> countries) {
+    return possibilities != null
+        ? possibilities.stream().filter(countries::contains).findFirst()
+        : Optional.empty();
   }
 
   private static ParsedField<ParsedLocation> getFailResponse() {
-    return ParsedField.fail(Collections.singletonList(InterpretationIssue.of(IssueType.COUNTRY_COORDINATE_MISMATCH,
-                                                                             getCountryAndCoordinatesTerms())));
+    return ParsedField.fail(
+        Collections.singletonList(
+            InterpretationIssue.of(
+                IssueType.COUNTRY_COORDINATE_MISMATCH, getCountryAndCoordinatesTerms())));
   }
 
   private static List<Term> getCountryAndCoordinatesTerms() {

@@ -1,8 +1,6 @@
 package org.gbif.pipelines.assembling.interpretation.steps;
 
-/**
- * Wrapper for the target paths needed in a {@link org.apache.beam.sdk.Pipeline}.
- */
+/** Wrapper for the target paths needed in a {@link org.apache.beam.sdk.Pipeline}. */
 public class PipelineTargetPaths {
 
   private String dataTargetPath;

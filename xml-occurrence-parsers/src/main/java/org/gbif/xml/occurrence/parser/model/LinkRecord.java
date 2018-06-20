@@ -61,11 +61,20 @@ public class LinkRecord implements Serializable {
   }
 
   public boolean isEmpty() {
-    return Strings.isNullOrEmpty(rawLinkType) && Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(description);
+    return Strings.isNullOrEmpty(rawLinkType)
+        && Strings.isNullOrEmpty(url)
+        && Strings.isNullOrEmpty(description);
   }
 
   public String debugDump() {
-    return "LinkRecord [\nrawLinkType=" + rawLinkType + ",\nlinkType=" + linkType + ",\nurl=" + url
-           + ",\ndescription=" + description + "]";
+    return "LinkRecord [\nrawLinkType="
+        + rawLinkType
+        + ",\nlinkType="
+        + linkType
+        + ",\nurl="
+        + url
+        + ",\ndescription="
+        + description
+        + "]";
   }
 }

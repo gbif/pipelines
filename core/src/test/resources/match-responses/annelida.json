@@ -35,7 +35,7 @@
   "diagnostics": {
     "matchType": "HIGHERRANK",
     "status": "ACCEPTED",
-    "lineage": [ ],
-    "alternatives": [ ]
+    "lineage": [],
+    "alternatives": []
   }
 }

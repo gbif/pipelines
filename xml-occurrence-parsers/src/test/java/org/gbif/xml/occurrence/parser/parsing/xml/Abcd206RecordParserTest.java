@@ -15,7 +15,8 @@ public class Abcd206RecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseBasicFields() {
-    String fileName = getClass().getResource("/responses/abcd206/abcd206_all_simple_fields.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/abcd206/abcd206_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
     // System.out.println(ror.debugDump());
@@ -42,7 +43,7 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     String fileName = getClass().getResource("/responses/abcd206/abcd206_idtype.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-//    showIdentifiers(ror);
+    //    showIdentifiers(ror);
     assertEquals(7, ror.getIdentifierRecords().size());
     assertEquals("0123456789ABCD", ror.getId());
   }
@@ -60,13 +61,13 @@ public class Abcd206RecordParserTest extends ParserTestCase {
   }
 
   /**
-   * TODO: add these tests
-   * public void testParseMultiIdentificationPreferredTrue()
-   * public void testParseNoIdentification()
+   * TODO: add these tests public void testParseMultiIdentificationPreferredTrue() public void
+   * testParseNoIdentification()
    */
   @Test
   public void testParseMultiIdentificationPreferredFalse() {
-    String fileName = getClass().getResource("/responses/abcd206/abcd206_multi_ids_preferred_false.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/abcd206/abcd206_multi_ids_preferred_false.gz").getFile();
     List<RawOccurrenceRecord> rors = setupRor(fileName);
     assertEquals(2, rors.size());
 
@@ -81,7 +82,8 @@ public class Abcd206RecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseMultiIdentificationNoPreferred() {
-    String fileName = getClass().getResource("/responses/abcd206/abcd206_multi_ids_no_preferred.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/abcd206/abcd206_multi_ids_no_preferred.gz").getFile();
     List<RawOccurrenceRecord> rors = setupRor(fileName);
     assertEquals(2, rors.size());
 
@@ -96,7 +98,8 @@ public class Abcd206RecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseTypification() {
-    String fileName = getClass().getResource("/responses/abcd206/abcd206_typification.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/abcd206/abcd206_typification.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
     assertEquals(1, ror.getTypificationRecords().size());
@@ -113,15 +116,20 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
     assertEquals(7, ror.getImageRecords().size());
     ImageRecord image = ror.getImageRecords().get(0);
-    assertEquals("http://www.tierstimmenarchiv.de/recordings/Ailuroedus_buccoides_V2010_04_short.mp3", image.getUrl());
     assertEquals(
-      "http://www.tierstimmenarchiv.de/webinterface/contents/showdetails.php?edit=-1&unique_id=TSA:Ailuroedus_buccoides_V_2010_4_1&autologin=true",
-      image.getPageUrl());
-    assertEquals("CC BY-NC-ND (Attribution for non commercial use only and without derivative)", image.getRights());
+        "http://www.tierstimmenarchiv.de/recordings/Ailuroedus_buccoides_V2010_04_short.mp3",
+        image.getUrl());
+    assertEquals(
+        "http://www.tierstimmenarchiv.de/webinterface/contents/showdetails.php?edit=-1&unique_id=TSA:Ailuroedus_buccoides_V_2010_4_1&autologin=true",
+        image.getPageUrl());
+    assertEquals(
+        "CC BY-NC-ND (Attribution for non commercial use only and without derivative)",
+        image.getRights());
 
     image = ror.getImageRecords().get(1);
-    assertEquals("http://biology.africamuseum.be/STERNAImages/Ornithology/SternaRMCADetails.php?image=_PHM7832",
-      image.getUrl());
+    assertEquals(
+        "http://biology.africamuseum.be/STERNAImages/Ornithology/SternaRMCADetails.php?image=_PHM7832",
+        image.getUrl());
     assertEquals("zoomable image", image.getDescription());
   }
 

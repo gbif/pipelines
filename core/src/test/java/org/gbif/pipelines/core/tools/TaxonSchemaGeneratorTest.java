@@ -20,11 +20,11 @@ public class TaxonSchemaGeneratorTest {
     try {
       AvroSchemaGenerator.writeSchemaToFile(DEFAULT_TAXON_SCHEMA_PATH, schemaGenerated);
     } catch (IOException e) {
-      Assert.fail("Could not generate default taxonomic schema in path "
-                  + DEFAULT_TAXON_SCHEMA_PATH
-                  + ": "
-                  + e.getMessage());
+      Assert.fail(
+          "Could not generate default taxonomic schema in path "
+              + DEFAULT_TAXON_SCHEMA_PATH
+              + ": "
+              + e.getMessage());
     }
-
   }
 }

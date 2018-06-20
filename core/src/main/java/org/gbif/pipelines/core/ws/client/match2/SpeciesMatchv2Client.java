@@ -21,9 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 
-/**
- * Handles the calls to the species match WS.
- */
+/** Handles the calls to the species match WS. */
 public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, NameUsageMatch2> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SpeciesMatchv2Client.class);
@@ -35,7 +33,8 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
   }
 
   /**
-   * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from the path received.
+   * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from the
+   * path received.
    */
   public static SpeciesMatchv2Client newInstance(Config wsConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
@@ -46,7 +45,6 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
    * Matches a {@link ExtendedRecord} to an existing specie using the species match 2 WS.
    *
    * @param extendedRecord avro file with the taxonomic data
-   *
    * @return {@link NameUsageMatch2} with the match received from the WS.
    */
   public HttpResponse<NameUsageMatch2> getMatch(ExtendedRecord extendedRecord) {
@@ -59,21 +57,27 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     LOG.info("Retrying match with identification extension");
     // get identifications
     List<Map<String, String>> identifications =
-      extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
+        extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
 
     // sort them by date identified
     // Ask Markus D if this can be moved to the API?
-    identifications.sort(Comparator.comparing((Map<String, String> map) -> {
-      // parse dateIdentified field
-      ParsedTemporalDates parsedDates = TemporalParser.parse(map.get(DwcTerm.dateIdentified.qualifiedName()));
-      // TODO: I convert it to date just to compare the Temporal objects. Should we change it??
-      return TemporalAccessorUtils.toDate(parsedDates.getFrom().orElse(null));
-    }).reversed());
+    identifications.sort(
+        Comparator.comparing(
+                (Map<String, String> map) -> {
+                  // parse dateIdentified field
+                  ParsedTemporalDates parsedDates =
+                      TemporalParser.parse(map.get(DwcTerm.dateIdentified.qualifiedName()));
+                  // TODO: I convert it to date just to compare the Temporal objects. Should we
+                  // change it??
+                  return TemporalAccessorUtils.toDate(parsedDates.getFrom().orElse(null));
+                })
+            .reversed());
 
     for (Map<String, String> record : identifications) {
       response = tryNameMatch(record);
       if (isSuccessfulMatch(response)) {
-        LOG.info("match with identificationId {} succeed", record.get(DwcTerm.identificationID.name()));
+        LOG.info(
+            "match with identificationId {} succeed", record.get(DwcTerm.identificationID.name()));
         return response;
       }
     }
@@ -103,14 +107,12 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
   }
 
   private static boolean isSuccessfulMatch(HttpResponse<NameUsageMatch2> response) {
-    return !TaxonomyValidator.isEmpty(response.getBody()) && MatchType.NONE != response.getBody()
-      .getDiagnostics()
-      .getMatchType();
+    return !TaxonomyValidator.isEmpty(response.getBody())
+        && MatchType.NONE != response.getBody().getDiagnostics().getMatchType();
   }
 
   private static boolean hasIdentifications(ExtendedRecord extendedRecord) {
-    return extendedRecord.getExtensions() != null && extendedRecord.getExtensions()
-      .containsKey(DwcTerm.Identification.qualifiedName());
+    return extendedRecord.getExtensions() != null
+        && extendedRecord.getExtensions().containsKey(DwcTerm.Identification.qualifiedName());
   }
-
 }

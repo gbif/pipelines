@@ -10,14 +10,16 @@ import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
 /**
- * Validates the uniqueness of the String IDs passed using a map backed by a temp file. It uses the mapdb
- * library to implement the map (http://www.mapdb.org/).
- * <p>
- * This class is intended to be used per process that needs this validation, so a new instance has to be created each
- * time. At the moment of creating the instance, a {@link DB} backed by a temp file is created.
- * <p>
- * Keep in mind that {@link UniquenessValidator#close()} has to be called when finishing the validation in order to
- * release the resources used. Also notice that the class implements the {@link AutoCloseable} interface.
+ * Validates the uniqueness of the String IDs passed using a map backed by a temp file. It uses the
+ * mapdb library to implement the map (http://www.mapdb.org/).
+ *
+ * <p>This class is intended to be used per process that needs this validation, so a new instance
+ * has to be created each time. At the moment of creating the instance, a {@link DB} backed by a
+ * temp file is created.
+ *
+ * <p>Keep in mind that {@link UniquenessValidator#close()} has to be called when finishing the
+ * validation in order to release the resources used. Also notice that the class implements the
+ * {@link AutoCloseable} interface.
  */
 public class UniquenessValidator implements AutoCloseable {
 
@@ -27,9 +29,16 @@ public class UniquenessValidator implements AutoCloseable {
   private UniquenessValidator() {
 
     // create database in disk.
-    // The fileChannelEnable is set to be used only when mmap is not supported (mapdb does it internally).
-    // cleanerHackEnable is a workaround for a JVM bug (https://jankotek.gitbooks.io/mapdb/content/performance/).
-    dbDisk = DBMaker.tempFileDB().fileMmapEnableIfSupported().cleanerHackEnable().fileChannelEnable().make();
+    // The fileChannelEnable is set to be used only when mmap is not supported (mapdb does it
+    // internally).
+    // cleanerHackEnable is a workaround for a JVM bug
+    // (https://jankotek.gitbooks.io/mapdb/content/performance/).
+    dbDisk =
+        DBMaker.tempFileDB()
+            .fileMmapEnableIfSupported()
+            .cleanerHackEnable()
+            .fileChannelEnable()
+            .make();
 
     // prefix name to create the map
     long time = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
@@ -51,7 +60,6 @@ public class UniquenessValidator implements AutoCloseable {
    * Validates that the ID received is unique in the map that backs this class.
    *
    * @param id ID to validate. This parameter is required and cannot be null.
-   *
    * @return true if the ID is unique, false otherwise
    */
   public boolean isUnique(String id) {
@@ -66,9 +74,4 @@ public class UniquenessValidator implements AutoCloseable {
       dbDisk.close();
     }
   }
-
 }
-
-
-
-

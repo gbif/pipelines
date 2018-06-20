@@ -15,8 +15,8 @@ import java.util.Objects;
 
 /**
  * Builder for a {@link ExtendedRecord}.
- * <p>
- * Recommended for testing purposes.
+ *
+ * <p>Recommended for testing purposes.
  */
 public class ExtendedRecordCustomBuilder {
 
@@ -158,7 +158,8 @@ public class ExtendedRecordCustomBuilder {
     return this;
   }
 
-  public ExtendedRecordCustomBuilder addExtensionRecord(Extension extension, Map<String, String> record) {
+  public ExtendedRecordCustomBuilder addExtensionRecord(
+      Extension extension, Map<String, String> record) {
     if (Objects.nonNull(extension)) {
       if (Objects.isNull(extensions)) {
         extensions = new HashMap<>();
@@ -357,7 +358,5 @@ public class ExtendedRecordCustomBuilder {
 
       return Extension;
     }
-
   }
-
 }

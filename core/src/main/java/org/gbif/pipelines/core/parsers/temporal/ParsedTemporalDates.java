@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.parsers.temporal;
 
-
 import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.time.Month;
@@ -10,9 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Base temporal class, consists of two parsed dates from and to, also year, month and day
- */
+/** Base temporal class, consists of two parsed dates from and to, also year, month and day */
 public class ParsedTemporalDates {
 
   private Year year;
@@ -22,8 +19,7 @@ public class ParsedTemporalDates {
   private Temporal toDate;
   private List<IssueType> issueList = Collections.emptyList();
 
-  public ParsedTemporalDates() {
-  }
+  public ParsedTemporalDates() {}
 
   public ParsedTemporalDates(Temporal fromDate, Temporal toDate) {
     this.fromDate = fromDate;

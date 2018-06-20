@@ -34,11 +34,14 @@ public class Dwc14RuleSet extends AbstractDwcRuleSet implements RuleSet {
     addNonNullMethod(digester, "dateIdentified", "setDateIdentified", 1);
     addNonNullParam(digester, "dateIdentified", 0);
 
-    addNonNullPrioritizedProperty(digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 2);
+    addNonNullPrioritizedProperty(
+        digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 2);
     addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);
     addNonNullPrioritizedProperty(digester, "longitude", PrioritizedPropertyNameEnum.LONGITUDE, 2);
-    addNonNullPrioritizedProperty(digester, "continentOrOcean", PrioritizedPropertyNameEnum.CONTINENT_OR_OCEAN, 2);
-    addNonNullPrioritizedProperty(digester, "catalogueNumber", PrioritizedPropertyNameEnum.CATALOGUE_NUMBER, 2);
+    addNonNullPrioritizedProperty(
+        digester, "continentOrOcean", PrioritizedPropertyNameEnum.CONTINENT_OR_OCEAN, 2);
+    addNonNullPrioritizedProperty(
+        digester, "catalogueNumber", PrioritizedPropertyNameEnum.CATALOGUE_NUMBER, 2);
 
     // possibly many images
     String pattern = mappingProps.getProperty("imageElement");

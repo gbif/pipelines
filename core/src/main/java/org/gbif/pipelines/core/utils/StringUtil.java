@@ -4,8 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class StringUtil {
 
-  private StringUtil() {
-  }
+  private StringUtil() {}
 
   public static String cleanName(String x) {
     x = StringUtils.normalizeSpace(x).trim();
@@ -15,5 +14,4 @@ public class StringUtil {
     }
     return x;
   }
-
 }

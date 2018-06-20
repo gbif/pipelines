@@ -21,20 +21,15 @@ import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_REFRESH
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Tests the {@link EsHandler}.
- */
+/** Tests the {@link EsHandler}. */
 public class EsHandlerIT extends EsApiIntegrationTest {
 
   private static final String DATASET_TEST = "abc";
   private static final String ALIAS_TEST = "alias";
   private static final int DEFAULT_ATTEMPT = 1;
 
-  /**
-   * {@link Rule} requires this field to be public.
-   */
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  /** {@link Rule} requires this field to be public. */
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @After
   public void cleanIndexes() {
@@ -44,7 +39,8 @@ public class EsHandlerIT extends EsApiIntegrationTest {
   @Test
   public void createIndexTest() {
     // create index
-    String idxCreated = EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT);
+    String idxCreated =
+        EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT);
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -54,7 +50,8 @@ public class EsHandlerIT extends EsApiIntegrationTest {
   public void createIndexWithMappingsTest() {
     // create index
     String idxCreated =
-      EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
+        EsHandler.createIndex(
+            esServer.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -73,7 +70,8 @@ public class EsHandlerIT extends EsApiIntegrationTest {
     EsHandler.swapIndexInAlias(esServer.getEsConfig(), ALIAS_TEST, idxCreated);
 
     // assert result
-    assertSwapResults(idxCreated, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, Collections.emptySet());
+    assertSwapResults(
+        idxCreated, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, Collections.emptySet());
 
     // check settings of index after swapping
     assertTrue(EsService.existsIndex(esServer.getEsClient(), idxCreated));
@@ -106,7 +104,8 @@ public class EsHandlerIT extends EsApiIntegrationTest {
     EsHandler.swapIndexInAlias(esServer.getEsConfig(), ALIAS_TEST, idx4);
 
     // alias should have only the last index created
-    assertSwapResults(idx4, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, Collections.singleton(idx3));
+    assertSwapResults(
+        idx4, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, Collections.singleton(idx3));
 
     // check settings of index after swapping
     assertTrue(EsService.existsIndex(esServer.getEsClient(), idx4));
@@ -124,7 +123,9 @@ public class EsHandlerIT extends EsApiIntegrationTest {
   @Test
   public void countIndexDocumentsAfterSwappingTest() {
     // create index
-    String idx = EsHandler.createIndex(esServer.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
+    String idx =
+        EsHandler.createIndex(
+            esServer.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
 
     // index some documents
     long n = 3;
@@ -139,7 +140,9 @@ public class EsHandlerIT extends EsApiIntegrationTest {
 
     // wait the refresh interval for the documents to become searchable.
     try {
-      Thread.sleep(Long.valueOf(Iterables.get(Splitter.on('s').split(SEARCHING_REFRESH_INTERVAL), 0)) * 1000 + 500);
+      Thread.sleep(
+          Long.valueOf(Iterables.get(Splitter.on('s').split(SEARCHING_REFRESH_INTERVAL), 0)) * 1000
+              + 500);
     } catch (InterruptedException e) {
       throw new AssertionError(e.getMessage(), e);
     }
@@ -150,10 +153,9 @@ public class EsHandlerIT extends EsApiIntegrationTest {
     assertEquals(n, EsHandler.countIndexDocuments(esServer.getEsConfig(), idx));
   }
 
-  /**
-   * Utility mehtod to assert a newly created index.
-   */
-  private static void assertIndexWithSettingsAndIndexName(String idxCreated, String datasetId, int attempt) {
+  /** Utility mehtod to assert a newly created index. */
+  private static void assertIndexWithSettingsAndIndexName(
+      String idxCreated, String datasetId, int attempt) {
     // assert index created
     assertTrue(EsService.existsIndex(esServer.getEsClient(), idxCreated));
     // assert index settings
@@ -161,5 +163,4 @@ public class EsHandlerIT extends EsApiIntegrationTest {
     // assert idx name
     assertEquals(datasetId + INDEX_SEPARATOR + attempt, idxCreated);
   }
-
 }

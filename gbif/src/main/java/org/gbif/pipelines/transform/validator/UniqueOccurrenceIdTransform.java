@@ -19,9 +19,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Transformation for filtering all duplicate records with the same record id
- */
+/** Transformation for filtering all duplicate records with the same record id */
 public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRecord> {
 
   private static final Logger LOG = LoggerFactory.getLogger(UniqueOccurrenceIdTransform.class);
@@ -32,40 +30,47 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
 
   private final TupleTag<ExtendedRecord> dataTag = new TupleTag<ExtendedRecord>() {};
   private final TupleTag<KV<String, Iterable<ExtendedRecord>>> issueTag =
-    new TupleTag<KV<String, Iterable<ExtendedRecord>>>() {};
+      new TupleTag<KV<String, Iterable<ExtendedRecord>>>() {};
 
-  private UniqueOccurrenceIdTransform() {
-  }
+  private UniqueOccurrenceIdTransform() {}
 
-  public static UniqueOccurrenceIdTransform create(){
+  public static UniqueOccurrenceIdTransform create() {
     return new UniqueOccurrenceIdTransform();
   }
 
   @Override
   public PCollectionTuple expand(PCollection<ExtendedRecord> input) {
 
-    //Convert from list to map where, key - occurrenceId, value - object instance
-    PCollection<KV<String, ExtendedRecord>> map = input.apply(MAP_STEP,
-                                                              MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
-                                                                .via((ExtendedRecord uo) -> KV.of(uo.getId(), uo)));
+    // Convert from list to map where, key - occurrenceId, value - object instance
+    PCollection<KV<String, ExtendedRecord>> map =
+        input.apply(
+            MAP_STEP,
+            MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
+                .via((ExtendedRecord uo) -> KV.of(uo.getId(), uo)));
 
-    //Group map by key - occurrenceId
-    PCollection<KV<String, Iterable<ExtendedRecord>>> group = map.apply(GROUP_STEP, GroupByKey.create());
+    // Group map by key - occurrenceId
+    PCollection<KV<String, Iterable<ExtendedRecord>>> group =
+        map.apply(GROUP_STEP, GroupByKey.create());
 
-    //Filter duplicate occurrenceIds, all groups where value size != 1
-    return group.apply(FILTER_STEP, ParDo.of(new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
-      @ProcessElement
-      public void processElement(ProcessContext c) {
-        KV<String, Iterable<ExtendedRecord>> element = c.element();
-        long count = StreamSupport.stream(element.getValue().spliterator(), false).count();
-        if (count == 1) {
-          element.getValue().forEach(x -> c.output(dataTag, x));
-        } else {
-          c.output(issueTag, element);
-          LOG.warn("occurrenceId = {}, duplicate found = {}", element.getKey(), count);
-        }
-      }
-    }).withOutputTags(dataTag, TupleTagList.of(issueTag)));
+    // Filter duplicate occurrenceIds, all groups where value size != 1
+    return group.apply(
+        FILTER_STEP,
+        ParDo.of(
+                new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
+                  @ProcessElement
+                  public void processElement(ProcessContext c) {
+                    KV<String, Iterable<ExtendedRecord>> element = c.element();
+                    long count =
+                        StreamSupport.stream(element.getValue().spliterator(), false).count();
+                    if (count == 1) {
+                      element.getValue().forEach(x -> c.output(dataTag, x));
+                    } else {
+                      c.output(issueTag, element);
+                      LOG.warn("occurrenceId = {}, duplicate found = {}", element.getKey(), count);
+                    }
+                  }
+                })
+            .withOutputTags(dataTag, TupleTagList.of(issueTag)));
   }
 
   public TupleTag<ExtendedRecord> getDataTag() {
@@ -82,4 +87,3 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
     return this;
   }
 }
-

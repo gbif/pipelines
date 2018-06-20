@@ -16,38 +16,42 @@ import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 import java.util.function.Function;
 
 /**
- * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields should be based in the
- * Darwin Core specification (http://rs.tdwg.org/dwc/terms/).
- * <p>
- * The interpretation uses the species match WS to match the taxonomic fields to an existing specie. Configuration
- * of the WS has to be set in the "http.properties".
- * </p>
+ * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields
+ * should be based in the Darwin Core specification (http://rs.tdwg.org/dwc/terms/).
+ *
+ * <p>The interpretation uses the species match WS to match the taxonomic fields to an existing
+ * specie. Configuration of the WS has to be set in the "http.properties".
  */
-public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
+public interface TaxonomyInterpreter
+    extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
 
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
   static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, Config wsConfig) {
     return (ExtendedRecord extendedRecord) -> {
-
       AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
       // get match from WS
-      HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance(wsConfig).getMatch(extendedRecord);
+      HttpResponse<NameUsageMatch2> response =
+          SpeciesMatchv2Client.newInstance(wsConfig).getMatch(extendedRecord);
 
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       if (response.isError()) {
-        interpretation.withValidation(Trace.of(IssueType.INTERPRETATION_ERROR,
-                                               response.getErrorCode() + response.getErrorMessage()));
+        interpretation.withValidation(
+            Trace.of(
+                IssueType.INTERPRETATION_ERROR,
+                response.getErrorCode() + response.getErrorMessage()));
         return interpretation;
       }
 
       if (TaxonomyValidator.isEmpty(response.getBody())) {
-        // TODO: maybe I would need to add to the enum a new issue for this, sth like "NO_MATCHING_RESULTS". This
+        // TODO: maybe I would need to add to the enum a new issue for this, sth like
+        // "NO_MATCHING_RESULTS". This
         // happens when we get an empty response from the WS
-        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_NONE, "No results from match service"));
+        interpretation.withValidation(
+            Trace.of(IssueType.TAXON_MATCH_NONE, "No results from match service"));
         return interpretation;
       }
 
@@ -68,5 +72,4 @@ public interface TaxonomyInterpreter extends Function<ExtendedRecord, Interpreta
       return interpretation;
     };
   }
-
 }

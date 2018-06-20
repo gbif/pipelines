@@ -38,13 +38,20 @@ public class SetLiteralRule extends Rule {
   private String dumpStack() {
     StringBuilder sb = new StringBuilder("Digester stack:\n");
     for (int i = 0; i < digester.getCount(); i++) {
-      sb.append("Element [").append(i).append("] is of type [").append(digester.peek(i).getClass()).append("]\n");
+      sb.append("Element [")
+          .append(i)
+          .append("] is of type [")
+          .append(digester.peek(i).getClass())
+          .append("]\n");
     }
     return sb.toString();
   }
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add("methodName", methodName).add("value", value).toString();
+    return Objects.toStringHelper(this)
+        .add("methodName", methodName)
+        .add("value", value)
+        .toString();
   }
 }

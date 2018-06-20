@@ -40,7 +40,7 @@
   "diagnostics": {
     "matchType": "EXACT",
     "status": "ACCEPTED",
-    "lineage": [ ],
-    "alternatives": [ ]
+    "lineage": [],
+    "alternatives": []
   }
 }

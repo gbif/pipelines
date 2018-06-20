@@ -9,9 +9,7 @@ import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-/**
- * Interpreter for raw time. The main method parse
- */
+/** Interpreter for raw time. The main method parse */
 class ParserRawTime {
 
   private ParserRawTime() {
@@ -19,10 +17,10 @@ class ParserRawTime {
   }
 
   /**
-   * Parse hour, minute and second position in the raw date string, and save raw values into ChronoAccumulator
+   * Parse hour, minute and second position in the raw date string, and save raw values into
+   * ChronoAccumulator
    *
    * @param rawTime raw time string
-   *
    * @return ChronoAccumulator which store all parsed values
    */
   public static ChronoAccumulator parse(String rawTime) {
@@ -30,10 +28,10 @@ class ParserRawTime {
     if (isEmpty(rawTime)) {
       return accumulator;
     }
-    //Split by some zone char
+    // Split by some zone char
     String[] timeArray = DelimiterUtils.splitTime(rawTime);
 
-    //Parse time only
+    // Parse time only
     if (timeArray.length > 1) {
       accumulator.setChronoField(HOUR_OF_DAY, timeArray[0]);
       accumulator.setChronoField(MINUTE_OF_HOUR, timeArray[1]);
@@ -44,6 +42,4 @@ class ParserRawTime {
 
     return accumulator;
   }
-
 }
-

@@ -11,7 +11,8 @@ public class PublisherProvidedUniqueIdentifier implements UniqueIdentifier {
   public PublisherProvidedUniqueIdentifier(UUID datasetKey, String publisherProvidedIdentifier) {
     this.datasetKey = Objects.requireNonNull(datasetKey, "datasetKey can't be null");
     this.publisherProvidedIdentifier =
-      Objects.requireNonNull(publisherProvidedIdentifier, "publisherProvidedIdentifier can't be null");
+        Objects.requireNonNull(
+            publisherProvidedIdentifier, "publisherProvidedIdentifier can't be null");
   }
 
   public String getPublisherProvidedIdentifier() {
@@ -49,6 +50,6 @@ public class PublisherProvidedUniqueIdentifier implements UniqueIdentifier {
     final PublisherProvidedUniqueIdentifier other = (PublisherProvidedUniqueIdentifier) obj;
 
     return Objects.equals(this.datasetKey, other.datasetKey)
-           && Objects.equals(this.publisherProvidedIdentifier, other.publisherProvidedIdentifier);
+        && Objects.equals(this.publisherProvidedIdentifier, other.publisherProvidedIdentifier);
   }
 }

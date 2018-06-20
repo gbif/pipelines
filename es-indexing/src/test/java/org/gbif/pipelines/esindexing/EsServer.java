@@ -16,15 +16,15 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
 /**
  * ES server used for testing purposes.
- * <p>
- * This class is intended to be used as a {@link org.junit.ClassRule}.
+ *
+ * <p>This class is intended to be used as a {@link org.junit.ClassRule}.
  */
 public class EsServer extends ExternalResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(EsServer.class);
 
   private static EmbeddedElastic embeddedElastic;
-  private final static String CLUSTER_NAME = "test_EScluster";
+  private static final String CLUSTER_NAME = "test_EScluster";
   private static EsConfig esConfig;
   // needed to assert results against ES server directly
   private static RestClient restClient;
@@ -33,14 +33,15 @@ public class EsServer extends ExternalResource {
 
   @Override
   protected void before() throws Throwable {
-    embeddedElastic = EmbeddedElastic.builder()
-      // TODO: get version from pom??
-      .withElasticVersion("5.6.3")
-      .withEsJavaOpts("-Xms128m -Xmx512m")
-      .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
-      .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
-      .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
-      .build();
+    embeddedElastic =
+        EmbeddedElastic.builder()
+            // TODO: get version from pom??
+            .withElasticVersion("5.6.3")
+            .withEsJavaOpts("-Xms128m -Xmx512m")
+            .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
+            .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
+            .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
+            .build();
 
     embeddedElastic.start();
 
@@ -88,5 +89,4 @@ public class EsServer extends ExternalResource {
   public EsClient getEsClient() {
     return esClient;
   }
-
 }

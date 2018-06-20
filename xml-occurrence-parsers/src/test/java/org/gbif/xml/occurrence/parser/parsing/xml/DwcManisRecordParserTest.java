@@ -12,7 +12,8 @@ public class DwcManisRecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseBasicFields() {
-    String fileName = getClass().getResource("/responses/dwc_manis/dwc_manis_all_simple_fields.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/dwc_manis/dwc_manis_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
     // System.out.println(ror.debugDump());
@@ -52,7 +53,8 @@ public class DwcManisRecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseTypification() {
-    String fileName = getClass().getResource("/responses/dwc_manis/dwc_manis_typification.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/dwc_manis/dwc_manis_typification.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
     /** TODO: is this a valid TypificationRecord? */

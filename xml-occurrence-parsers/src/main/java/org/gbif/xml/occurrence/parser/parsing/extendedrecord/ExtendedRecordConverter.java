@@ -20,9 +20,11 @@ public class ExtendedRecordConverter {
 
     ExtendedRecord record = ExtendedRecord.newBuilder().setId(rawRecord.getId()).build();
 
-    final BiConsumer<DwcTerm, String> setter = (term, value) -> Optional.ofNullable(value)
-      .filter(str -> !str.isEmpty())
-      .ifPresent(x -> record.getCoreTerms().put(term.qualifiedName(), x));
+    final BiConsumer<DwcTerm, String> setter =
+        (term, value) ->
+            Optional.ofNullable(value)
+                .filter(str -> !str.isEmpty())
+                .ifPresent(x -> record.getCoreTerms().put(term.qualifiedName(), x));
 
     setter.accept(DwcTerm.institutionCode, rawRecord.getInstitutionCode());
     setter.accept(DwcTerm.collectionCode, rawRecord.getCollectionCode());
@@ -72,5 +74,4 @@ public class ExtendedRecordConverter {
 
     return record;
   }
-
 }

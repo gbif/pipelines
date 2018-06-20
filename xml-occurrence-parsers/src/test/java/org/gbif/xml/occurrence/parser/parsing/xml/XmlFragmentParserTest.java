@@ -33,7 +33,9 @@ public class XmlFragmentParserTest {
   @Test
   public void testUtf8a() throws IOException {
     // note the collector name has an u umlaut
-    String xml = Resources.toString(Resources.getResource("id_extraction/abcd1_umlaut.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("id_extraction/abcd1_umlaut.xml"), StandardCharsets.UTF_8);
 
     RawXmlOccurrence rawRecord = createFakeOcc(xml);
     List<RawOccurrenceRecord> results = XmlFragmentParser.parseRecord(rawRecord);
@@ -44,7 +46,9 @@ public class XmlFragmentParserTest {
   @Ignore("too expensive for constant use")
   @Test
   public void testMultiThreadLoad() throws Exception {
-    String xml = Resources.toString(Resources.getResource("id_extraction/abcd1_umlaut.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("id_extraction/abcd1_umlaut.xml"), StandardCharsets.UTF_8);
 
     // 5 parsers in 5 threads parse 1000 records each
     List<RawXmlOccurrence> raws = new ArrayList<>();
@@ -88,15 +92,21 @@ public class XmlFragmentParserTest {
 
   @Test
   public void testIdExtractionSimple() throws IOException {
-    String xml = Resources.toString(Resources.getResource("id_extraction/abcd1_simple.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("id_extraction/abcd1_simple.xml"), StandardCharsets.UTF_8);
     UUID datasetKey = UUID.randomUUID();
     Triplet target =
-      new Triplet(datasetKey, "TLMF", "Tiroler Landesmuseum Ferdinandeum", "82D45C93-B297-490E-B7B0-E0A9BEED1326",
-                  null);
+        new Triplet(
+            datasetKey,
+            "TLMF",
+            "Tiroler Landesmuseum Ferdinandeum",
+            "82D45C93-B297-490E-B7B0-E0A9BEED1326",
+            null);
     byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
     Set<IdentifierExtractionResult> extractionResults =
-      XmlFragmentParser.extractIdentifiers(datasetKey, xmlBytes, OccurrenceSchemaType.ABCD_1_2, true,
-        true);
+        XmlFragmentParser.extractIdentifiers(
+            datasetKey, xmlBytes, OccurrenceSchemaType.ABCD_1_2, true, true);
     Set<UniqueIdentifier> ids = extractionResults.iterator().next().getUniqueIdentifiers();
     assertEquals(1, ids.size());
     UniqueIdentifier id = ids.iterator().next();
@@ -106,62 +116,78 @@ public class XmlFragmentParserTest {
 
   @Test
   public void testIdExtractionMultipleIdsUnitQualifier() throws IOException {
-    String xml = Resources.toString(Resources.getResource("id_extraction/abcd2_multi.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("id_extraction/abcd2_multi.xml"), StandardCharsets.UTF_8);
 
     UUID datasetKey = UUID.randomUUID();
     byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
     Set<IdentifierExtractionResult> extractionResults =
-      XmlFragmentParser.extractIdentifiers(datasetKey, xmlBytes, OccurrenceSchemaType.ABCD_2_0_6, true,
-        true);
+        XmlFragmentParser.extractIdentifiers(
+            datasetKey, xmlBytes, OccurrenceSchemaType.ABCD_2_0_6, true, true);
     Triplet triplet1 =
-      new Triplet(datasetKey, "BGBM", "Bridel Herbar", "Bridel-1-428", "Grimmia alpicola Sw. ex Hedw.");
-    Triplet triplet2 = new Triplet(datasetKey, "BGBM", "Bridel Herbar", "Bridel-1-428",
-                                   "Schistidium agassizii Sull. & Lesq. in Sull.");
+        new Triplet(
+            datasetKey, "BGBM", "Bridel Herbar", "Bridel-1-428", "Grimmia alpicola Sw. ex Hedw.");
+    Triplet triplet2 =
+        new Triplet(
+            datasetKey,
+            "BGBM",
+            "Bridel Herbar",
+            "Bridel-1-428",
+            "Schistidium agassizii Sull. & Lesq. in Sull.");
     assertEquals(2, extractionResults.size());
     for (IdentifierExtractionResult result : extractionResults) {
       String uniqueId = result.getUniqueIdentifiers().iterator().next().getUniqueString();
-      assertTrue(uniqueId.equals(OccurrenceKeyHelper.buildKey(triplet1)) || uniqueId
-        .equals(OccurrenceKeyHelper.buildKey(triplet2)));
+      assertTrue(
+          uniqueId.equals(OccurrenceKeyHelper.buildKey(triplet1))
+              || uniqueId.equals(OccurrenceKeyHelper.buildKey(triplet2)));
     }
   }
 
   @Test
   public void testIdExtractionWithTripletAndDwcOccurrenceId() throws IOException {
-    String xml = Resources.toString(Resources.getResource("id_extraction/triplet_and_dwc_id.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("id_extraction/triplet_and_dwc_id.xml"), StandardCharsets.UTF_8);
     UUID datasetKey = UUID.randomUUID();
     byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
     Set<IdentifierExtractionResult> extractionResults =
-      XmlFragmentParser.extractIdentifiers(datasetKey, xmlBytes, OccurrenceSchemaType.DWC_1_4, true,
-        true);
+        XmlFragmentParser.extractIdentifiers(
+            datasetKey, xmlBytes, OccurrenceSchemaType.DWC_1_4, true, true);
     Set<UniqueIdentifier> ids = extractionResults.iterator().next().getUniqueIdentifiers();
     PublisherProvidedUniqueIdentifier pubProvided =
-      new PublisherProvidedUniqueIdentifier(datasetKey, "UGENT:vertebrata:50058");
+        new PublisherProvidedUniqueIdentifier(datasetKey, "UGENT:vertebrata:50058");
     Triplet triplet = new Triplet(datasetKey, "UGENT", "vertebrata", "50058", null);
     assertEquals(2, ids.size());
     for (UniqueIdentifier id : ids) {
-      assertTrue(id.getUniqueString().equals(OccurrenceKeyHelper.buildKey(triplet)) || id.getUniqueString()
-        .equals(OccurrenceKeyHelper.buildKey(pubProvided)));
+      assertTrue(
+          id.getUniqueString().equals(OccurrenceKeyHelper.buildKey(triplet))
+              || id.getUniqueString().equals(OccurrenceKeyHelper.buildKey(pubProvided)));
     }
   }
 
   @Test
   public void testIdExtractTapir() throws IOException {
     String xml =
-      Resources.toString(Resources.getResource("id_extraction/tapir_triplet_contains_unrecorded.xml"), StandardCharsets.UTF_8);
+        Resources.toString(
+            Resources.getResource("id_extraction/tapir_triplet_contains_unrecorded.xml"),
+            StandardCharsets.UTF_8);
     byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
     Set<IdentifierExtractionResult> extractionResults =
-      XmlFragmentParser.extractIdentifiers(UUID.randomUUID(), xmlBytes, OccurrenceSchemaType.DWC_1_4, true,
-        true);
+        XmlFragmentParser.extractIdentifiers(
+            UUID.randomUUID(), xmlBytes, OccurrenceSchemaType.DWC_1_4, true, true);
     assertFalse(extractionResults.isEmpty());
   }
 
   @Test
   public void testIdExtractManisBlankCC() throws IOException {
-    String xml = Resources.toString(Resources.getResource("id_extraction/manis_no_cc.xml"), StandardCharsets.UTF_8);
+    String xml =
+        Resources.toString(
+            Resources.getResource("id_extraction/manis_no_cc.xml"), StandardCharsets.UTF_8);
     byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
     Set<IdentifierExtractionResult> extractionResults =
-      XmlFragmentParser.extractIdentifiers(UUID.randomUUID(), xmlBytes, OccurrenceSchemaType.DWC_MANIS, true,
-        true);
+        XmlFragmentParser.extractIdentifiers(
+            UUID.randomUUID(), xmlBytes, OccurrenceSchemaType.DWC_MANIS, true, true);
     assertTrue(extractionResults.isEmpty());
   }
 

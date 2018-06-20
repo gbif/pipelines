@@ -4,9 +4,7 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Models the response of the {@link GeocodeService}.
- */
+/** Models the response of the {@link GeocodeService}. */
 public class GeocodeResponse implements Serializable {
 
   private static final long serialVersionUID = -9137655613118727430L;
@@ -14,8 +12,10 @@ public class GeocodeResponse implements Serializable {
   private String id;
   private String type;
   private String source;
+
   @JsonProperty("title")
   private String countryName;
+
   private String isoCountryCode2Digit;
 
   public String getId() {

@@ -18,21 +18,19 @@ public final class CoordinatesValidator {
 
   public static boolean isInRange(LatLng latLng) {
     return Double.compare(latLng.getLat(), 90) <= 0
-           && Double.compare(latLng.getLat(), -90) >= 0
-           && Double.compare(latLng.getLng(), 180) <= 0
-           && Double.compare(latLng.getLng(), -180) >= 0;
+        && Double.compare(latLng.getLat(), -90) >= 0
+        && Double.compare(latLng.getLng(), 180) <= 0
+        && Double.compare(latLng.getLng(), -180) >= 0;
   }
 
   /**
-   * Checks if the country and latitude belongs to Antarctica.
-   * Rule: country must be Country.ANTARCTICA or null and
-   * latitude must be less than (south of) {@link #ANTARCTICA_LATITUDE}
-   * but not less than -90°.
+   * Checks if the country and latitude belongs to Antarctica. Rule: country must be
+   * Country.ANTARCTICA or null and latitude must be less than (south of) {@link
+   * #ANTARCTICA_LATITUDE} but not less than -90°.
    */
   public static boolean isAntarctica(Double latitude, Country country) {
     return latitude != null
-           && (country == null || country == Country.ANTARCTICA)
-           && (latitude >= -90 && latitude < ANTARCTICA_LATITUDE);
+        && (country == null || country == Country.ANTARCTICA)
+        && (latitude >= -90 && latitude < ANTARCTICA_LATITUDE);
   }
-
 }

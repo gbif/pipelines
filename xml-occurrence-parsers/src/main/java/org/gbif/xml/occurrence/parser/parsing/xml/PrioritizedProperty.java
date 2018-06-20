@@ -48,6 +48,12 @@ public class PrioritizedProperty {
   }
 
   public String debugDump() {
-    return "PrioritizedProperty [priority=" + priority + ", name=" + name + ", property=" + property + "]";
+    return "PrioritizedProperty [priority="
+        + priority
+        + ", name="
+        + name
+        + ", property="
+        + property
+        + "]";
   }
 }

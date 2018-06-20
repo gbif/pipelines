@@ -44,23 +44,18 @@ public abstract class BaseServiceClient<T, R> {
    * Return the {@link Call} to be executed.
    *
    * @param params parameters to pass to the {@link Call}.
-   *
    * @return {@link Call} of T type.
    */
   protected abstract Call<T> getCall(Map<String, String> params);
 
-  /**
-   * Custom error message to be used when performing the call.
-   */
+  /** Custom error message to be used when performing the call. */
   protected abstract String getErrorMessage();
 
   /**
    * Parses the response T returned from the {@link Call} and returns a R response.
    *
    * @param body body response of the {@link Call} executed.
-   *
    * @return R response.
    */
   protected abstract R parseResponse(T body);
-
 }

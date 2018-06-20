@@ -27,13 +27,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class represents one of possibly many "identifications" in ABCD records. There are two primary cases where
- * multiple identifications would happen:
- * - an institution records all of the history of a given sample, and then marks the most recent as "preferred"
- * - a given sample (e.g. drop of swamp water) has many organisms within it and each of those is given as an
- * identification, and none are marked as preferred
- * We will generate a new occurrence record for each identification marked as "preferred", or for all given
- * identifications if none are marked preferred.
+ * This class represents one of possibly many "identifications" in ABCD records. There are two
+ * primary cases where multiple identifications would happen: - an institution records all of the
+ * history of a given sample, and then marks the most recent as "preferred" - a given sample (e.g.
+ * drop of swamp water) has many organisms within it and each of those is given as an
+ * identification, and none are marked as preferred We will generate a new occurrence record for
+ * each identification marked as "preferred", or for all given identifications if none are marked
+ * preferred.
  */
 public class Identification extends PropertyPrioritizer {
 
@@ -49,12 +49,14 @@ public class Identification extends PropertyPrioritizer {
   private HigherTaxonParser taxonParser = new HigherTaxonParser();
 
   /**
-   * Once this object has been populated by a Digester, there may be several PrioritizedProperties that
-   * need to be resolved, and thereby set the final value of the corresponding field on this object.
+   * Once this object has been populated by a Digester, there may be several PrioritizedProperties
+   * that need to be resolved, and thereby set the final value of the corresponding field on this
+   * object.
    */
   @Override
   public void resolvePriorities() {
-    for (Map.Entry<PrioritizedPropertyNameEnum,Set<PrioritizedProperty>> entry : prioritizedProps.entrySet()) {
+    for (Map.Entry<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> entry :
+        prioritizedProps.entrySet()) {
       PrioritizedPropertyNameEnum name = entry.getKey();
       String result = findHighestPriority(entry.getValue());
       switch (entry.getKey()) {
@@ -172,5 +174,4 @@ public class Identification extends PropertyPrioritizer {
   public void setHigherTaxons(Set<Taxon> higherTaxons) {
     this.higherTaxons = higherTaxons;
   }
-
 }

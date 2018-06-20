@@ -16,7 +16,8 @@ class ExtendedRecordBuilder implements Function<StarRecord, ExtendedRecord> {
   @Override
   public ExtendedRecord apply(StarRecord record) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(record.core().id());
-    Optional.ofNullable(record.core().rowType()).ifPresent(x->builder.setCoreRowType(x.qualifiedName()));
+    Optional.ofNullable(record.core().rowType())
+        .ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));
     builder.setCoreTerms(new HashMap<>());
 
     for (Term term : record.core().terms()) {
@@ -26,30 +27,33 @@ class ExtendedRecordBuilder implements Function<StarRecord, ExtendedRecord> {
       }
     }
 
-    record.extensions().forEach((extensionType, data) -> {
-      if (builder.getExtensions() == null) {
-        builder.setExtensions(new HashMap<>());
-      }
+    record
+        .extensions()
+        .forEach(
+            (extensionType, data) -> {
+              if (builder.getExtensions() == null) {
+                builder.setExtensions(new HashMap<>());
+              }
 
-      List<Map<String, String>> extensionData =
-        builder.getExtensions().getOrDefault(extensionType.qualifiedName(), new ArrayList<>());
+              List<Map<String, String>> extensionData =
+                  builder
+                      .getExtensions()
+                      .getOrDefault(extensionType.qualifiedName(), new ArrayList<>());
 
-      data.forEach(extensionRecord -> {
-        Map<String, String> extensionRecordTerms = new HashMap<>();
-        for (Term term : extensionRecord.terms()) {
-          // filter unusable content
-          if (term.qualifiedName() != null && extensionRecord.value(term) != null) {
-            extensionRecordTerms.put(term.qualifiedName(), extensionRecord.value(term));
-          }
-        }
-        extensionData.add(extensionRecordTerms);
+              data.forEach(
+                  extensionRecord -> {
+                    Map<String, String> extensionRecordTerms = new HashMap<>();
+                    for (Term term : extensionRecord.terms()) {
+                      // filter unusable content
+                      if (term.qualifiedName() != null && extensionRecord.value(term) != null) {
+                        extensionRecordTerms.put(term.qualifiedName(), extensionRecord.value(term));
+                      }
+                    }
+                    extensionData.add(extensionRecordTerms);
+                  });
 
-      });
-
-      builder.getExtensions().put(extensionType.qualifiedName(), extensionData);
-
-
-    });
+              builder.getExtensions().put(extensionType.qualifiedName(), extensionData);
+            });
 
     return builder.build();
   }

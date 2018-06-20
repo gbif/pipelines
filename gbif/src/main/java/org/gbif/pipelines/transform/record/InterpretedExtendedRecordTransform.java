@@ -20,19 +20,18 @@ import org.apache.beam.sdk.values.KV;
  * This transform provides interpretation for the record level fields: basisOfRecord, sex,
  * individualCount, establishmentMeans and lifeStage.
  */
-public class InterpretedExtendedRecordTransform extends RecordTransform<ExtendedRecord, InterpretedExtendedRecord> {
+public class InterpretedExtendedRecordTransform
+    extends RecordTransform<ExtendedRecord, InterpretedExtendedRecord> {
 
   private InterpretedExtendedRecordTransform() {
     super("Interpreting record level terms");
   }
 
-  public static InterpretedExtendedRecordTransform create(){
+  public static InterpretedExtendedRecordTransform create() {
     return new InterpretedExtendedRecordTransform();
   }
 
-  /**
-   * Transforms a ExtendedRecord into a InterpretedExtendedRecord.
-   */
+  /** Transforms a ExtendedRecord into a InterpretedExtendedRecord. */
   @Override
   public DoFn<ExtendedRecord, KV<String, InterpretedExtendedRecord>> interpret() {
     return new DoFn<ExtendedRecord, KV<String, InterpretedExtendedRecord>>() {
@@ -45,25 +44,27 @@ public class InterpretedExtendedRecordTransform extends RecordTransform<Extended
         List<Validation> validations = new ArrayList<>();
 
         // Transformation main output
-        InterpretedExtendedRecord interpretedRecord = InterpretedExtendedRecord.newBuilder().setId(id).build();
+        InterpretedExtendedRecord interpretedRecord =
+            InterpretedExtendedRecord.newBuilder().setId(id).build();
 
         Interpretation.of(extendedRecord)
-          .using(ExtendedRecordInterpreter.interpretBasisOfRecord(interpretedRecord))
-          .using(ExtendedRecordInterpreter.interpretSex(interpretedRecord))
-          .using(ExtendedRecordInterpreter.interpretEstablishmentMeans(interpretedRecord))
-          .using(ExtendedRecordInterpreter.interpretLifeStage(interpretedRecord))
-          .using(ExtendedRecordInterpreter.interpretTypeStatus(interpretedRecord))
-          .using(ExtendedRecordInterpreter.interpretIndividualCount(interpretedRecord))
-          .using(ExtendedRecordInterpreter.interpretReferences(interpretedRecord))
-          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
+            .using(ExtendedRecordInterpreter.interpretBasisOfRecord(interpretedRecord))
+            .using(ExtendedRecordInterpreter.interpretSex(interpretedRecord))
+            .using(ExtendedRecordInterpreter.interpretEstablishmentMeans(interpretedRecord))
+            .using(ExtendedRecordInterpreter.interpretLifeStage(interpretedRecord))
+            .using(ExtendedRecordInterpreter.interpretTypeStatus(interpretedRecord))
+            .using(ExtendedRecordInterpreter.interpretIndividualCount(interpretedRecord))
+            .using(ExtendedRecordInterpreter.interpretReferences(interpretedRecord))
+            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
-        //additional outputs
+        // additional outputs
         if (!validations.isEmpty()) {
-          OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
+          OccurrenceIssue issue =
+              OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
           context.output(getIssueTag(), KV.of(id, issue));
         }
 
-        //main output
+        // main output
         context.output(getDataTag(), KV.of(id, interpretedRecord));
       }
     };
@@ -71,8 +72,8 @@ public class InterpretedExtendedRecordTransform extends RecordTransform<Extended
 
   @Override
   public InterpretedExtendedRecordTransform withAvroCoders(Pipeline pipeline) {
-    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, InterpretedExtendedRecord.class, ExtendedRecord.class);
+    Coders.registerAvroCoders(
+        pipeline, OccurrenceIssue.class, InterpretedExtendedRecord.class, ExtendedRecord.class);
     return this;
   }
-
 }

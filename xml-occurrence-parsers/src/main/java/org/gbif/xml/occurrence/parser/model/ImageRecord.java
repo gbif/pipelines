@@ -26,9 +26,7 @@ import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Holds a single image for a RawOccurrenceRecord.
- */
+/** Holds a single image for a RawOccurrenceRecord. */
 public class ImageRecord extends PropertyPrioritizer implements Serializable {
 
   private static final long serialVersionUID = -4610903747490605198L;
@@ -44,12 +42,14 @@ public class ImageRecord extends PropertyPrioritizer implements Serializable {
   private String htmlForDisplay;
 
   /**
-   * Once this object has been populated by a Digester, there may be several PrioritizedProperties that
-   * need to be resolved, and thereby set the final value of the corresponding field on this object.
+   * Once this object has been populated by a Digester, there may be several PrioritizedProperties
+   * that need to be resolved, and thereby set the final value of the corresponding field on this
+   * object.
    */
   @Override
   public void resolvePriorities() {
-    for (Map.Entry<PrioritizedPropertyNameEnum,Set<PrioritizedProperty>> entry : prioritizedProps.entrySet()) {
+    for (Map.Entry<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> entry :
+        prioritizedProps.entrySet()) {
       PrioritizedPropertyNameEnum name = entry.getKey();
       String result = findHighestPriority(prioritizedProps.get(name));
       switch (name) {
@@ -122,13 +122,30 @@ public class ImageRecord extends PropertyPrioritizer implements Serializable {
   }
 
   public boolean isEmpty() {
-    return Strings.isNullOrEmpty(rawImageType) && imageType == null && Strings.isNullOrEmpty(url) && Strings.isNullOrEmpty(pageUrl) &&
-           Strings.isNullOrEmpty(description) && Strings.isNullOrEmpty(rights) && Strings.isNullOrEmpty(htmlForDisplay);
+    return Strings.isNullOrEmpty(rawImageType)
+        && imageType == null
+        && Strings.isNullOrEmpty(url)
+        && Strings.isNullOrEmpty(pageUrl)
+        && Strings.isNullOrEmpty(description)
+        && Strings.isNullOrEmpty(rights)
+        && Strings.isNullOrEmpty(htmlForDisplay);
   }
 
   public String debugDump() {
-    return "ImageRecord [\nrawImageType=" + rawImageType + ",\nimageType=" + imageType + ",\nurl=" + url + ",\npageUrl="
-           + pageUrl + ",\ndescription=" + description + ",\nrights=" + rights + ",\nhtmlForDisplay=" + htmlForDisplay
-           + "]";
+    return "ImageRecord [\nrawImageType="
+        + rawImageType
+        + ",\nimageType="
+        + imageType
+        + ",\nurl="
+        + url
+        + ",\npageUrl="
+        + pageUrl
+        + ",\ndescription="
+        + description
+        + ",\nrights="
+        + rights
+        + ",\nhtmlForDisplay="
+        + htmlForDisplay
+        + "]";
   }
 }

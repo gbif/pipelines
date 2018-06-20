@@ -11,7 +11,8 @@ public class Dwc2009RecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseBasicFields() {
-    String fileName = getClass().getResource("/responses/dwc2009/dwc2009_simple_fields.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/dwc2009/dwc2009_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
     // common to all schemas

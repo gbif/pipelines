@@ -7,18 +7,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-/**
- * Unit tests for {@link EsHandler}.
- */
+/** Unit tests for {@link EsHandler}. */
 public class EsHandlerTest {
 
   private static final String DUMMY_HOST = "http://dummy.com";
 
-  /**
-   * {@link Rule} requires this field to be public.
-   */
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  /** {@link Rule} requires this field to be public. */
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void createIndexNullDatasetIdTest() {
@@ -86,5 +81,4 @@ public class EsHandlerTest {
     thrown.expectMessage("index is required");
     EsHandler.countIndexDocuments(EsConfig.from(DUMMY_HOST), "");
   }
-
 }

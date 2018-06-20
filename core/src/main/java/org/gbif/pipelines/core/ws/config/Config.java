@@ -3,9 +3,7 @@ package org.gbif.pipelines.core.ws.config;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * Models the ws configuration.
- */
+/** Models the ws configuration. */
 public final class Config implements Serializable {
 
   // ws path
@@ -34,7 +32,8 @@ public final class Config implements Serializable {
   }
 
   /**
-   * Package-private to force the creation of {@link Config} instances using the {@link HttpConfigFactory}.
+   * Package-private to force the creation of {@link Config} instances using the {@link
+   * HttpConfigFactory}.
    */
   static class Builder {
 

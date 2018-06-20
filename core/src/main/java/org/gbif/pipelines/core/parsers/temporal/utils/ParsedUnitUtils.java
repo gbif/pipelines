@@ -8,12 +8,10 @@ import java.util.function.Predicate;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
-/**
- * Util class for parsing values
- */
+/** Util class for parsing values */
 public class ParsedUnitUtils {
 
-  //Cached instance
+  // Cached instance
   private static final String[] MONTHS = DateFormatSymbols.getInstance().getMonths();
 
   private ParsedUnitUtils() {
@@ -63,14 +61,15 @@ public class ParsedUnitUtils {
   /**
    * Common method for parsing shor numeric string to int
    *
-   * @param rawValue  raw value for parsing
+   * @param rawValue raw value for parsing
    * @param validator predicate with validity conditions
-   *
    * @return parsed value or ISSUE(-1) value, if value is invalid
    */
   private static Optional<Integer> parseInteger(String rawValue, Predicate<Integer> validator) {
-    Integer value = (!isNullOrEmpty(rawValue) && isNumeric(rawValue) && rawValue.length() < 5) ? Integer.valueOf(rawValue) : -1;
+    Integer value =
+        (!isNullOrEmpty(rawValue) && isNumeric(rawValue) && rawValue.length() < 5)
+            ? Integer.valueOf(rawValue)
+            : -1;
     return validator.test(value) ? Optional.empty() : Optional.of(value);
   }
-
 }

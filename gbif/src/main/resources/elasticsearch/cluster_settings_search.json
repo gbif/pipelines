@@ -1,8 +1,8 @@
 {
-  "persistent" : {
-    "indices.store.throttle.max_bytes_per_sec" : "20mb"
+  "persistent": {
+    "indices.store.throttle.max_bytes_per_sec": "20mb"
   },
-  "transient" : {
-    "indices.store.throttle.type" : "merge"
+  "transient": {
+    "indices.store.throttle.type": "merge"
   }
 }

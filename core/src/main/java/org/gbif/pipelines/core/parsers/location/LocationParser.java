@@ -28,19 +28,20 @@ import static org.gbif.pipelines.io.avro.issue.IssueType.COUNTRY_MISMATCH;
 
 /**
  * Parses the location fields.
- * <p>
- * Currently, it parses the country, countryCode and coordinates together.
+ *
+ * <p>Currently, it parses the country, countryCode and coordinates together.
  */
 public class LocationParser {
 
   private static final Logger LOG = LoggerFactory.getLogger(LocationParser.class);
 
   // Issues
-  private static final InterpretationIssue COUNTRY_ISSUE = InterpretationIssue.of(COUNTRY_INVALID, country);
+  private static final InterpretationIssue COUNTRY_ISSUE =
+      InterpretationIssue.of(COUNTRY_INVALID, country);
   private static final InterpretationIssue COUNTRY_CODE_ISSUE =
-    InterpretationIssue.of(COUNTRY_CODE_INVALID, countryCode);
+      InterpretationIssue.of(COUNTRY_CODE_INVALID, countryCode);
   private static final InterpretationIssue MISMATCH_ISSUE =
-    InterpretationIssue.of(COUNTRY_MISMATCH, country, countryCode);
+      InterpretationIssue.of(COUNTRY_MISMATCH, country, countryCode);
 
   private LocationParser() {}
 
@@ -50,21 +51,26 @@ public class LocationParser {
     List<InterpretationIssue> issues = new ArrayList<>();
 
     // Parse country
-    ParsedField<Country> parsedCountry = parse(extendedRecord, VocabularyParsers.countryParser(), COUNTRY_ISSUE);
+    ParsedField<Country> parsedCountry =
+        parse(extendedRecord, VocabularyParsers.countryParser(), COUNTRY_ISSUE);
     Optional<Country> countryName = getResult(parsedCountry, issues);
 
     // Parse country code
     ParsedField<Country> parsedCountryCode =
-      parse(extendedRecord, VocabularyParsers.countryCodeParser(), COUNTRY_CODE_ISSUE);
+        parse(extendedRecord, VocabularyParsers.countryCodeParser(), COUNTRY_CODE_ISSUE);
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
     if (!countryName.equals(countryCode)) {
-      LOG.debug("country mismatch found for country name {} and country code {}", countryName, countryCode);
+      LOG.debug(
+          "country mismatch found for country name {} and country code {}",
+          countryName,
+          countryCode);
       issues.add(MISMATCH_ISSUE);
     }
 
-    // Get the final country from the 2 previous parsings. We take the country code parsed as default
+    // Get the final country from the 2 previous parsings. We take the country code parsed as
+    // default
     Country countryMatched = countryCode.orElseGet(() -> countryName.orElse(null));
 
     // Parse coordinates
@@ -82,16 +88,20 @@ public class LocationParser {
 
     // Set current parsed values
     ParsedLocation parsedLocation =
-      ParsedLocation.newBuilder().country(countryMatched).latLng(coordsParsed.getResult()).build();
+        ParsedLocation.newBuilder()
+            .country(countryMatched)
+            .latLng(coordsParsed.getResult())
+            .build();
 
     // If the coords parsing was succesful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-      LocationMatcher.newMatcher(parsedLocation.getLatLng(), parsedLocation.getCountry(), wsConfig)
-        .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LAT)
-        .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LNG)
-        .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_COORDS)
-        .addAdditionalTransform(CoordinatesFunction.PRESUMED_SWAPPED_COORDS)
-        .applyMatch();
+        LocationMatcher.newMatcher(
+                parsedLocation.getLatLng(), parsedLocation.getCountry(), wsConfig)
+            .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LAT)
+            .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LNG)
+            .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_COORDS)
+            .addAdditionalTransform(CoordinatesFunction.PRESUMED_SWAPPED_COORDS)
+            .applyMatch();
 
     // Collect issues from the match
     issues.addAll(match.getIssues());
@@ -104,19 +114,21 @@ public class LocationParser {
     // If the match succeed we use it as a result
     boolean isParsingSuccessful = match.isSuccessful() && Objects.nonNull(countryMatched);
 
-    return ParsedField.<ParsedLocation>newBuilder().successful(isParsingSuccessful)
-      .result(parsedLocation)
-      .issues(issues)
-      .build();
+    return ParsedField.<ParsedLocation>newBuilder()
+        .successful(isParsingSuccessful)
+        .result(parsedLocation)
+        .issues(issues)
+        .build();
   }
 
   private static ParsedField<Country> parse(
-    ExtendedRecord extendedRecord, VocabularyParsers<Country> parser, InterpretationIssue issue
-  ) {
-    Optional<ParseResult<Country>> parseResultOpt = parser.map(extendedRecord, parseRes -> parseRes);
+      ExtendedRecord extendedRecord, VocabularyParsers<Country> parser, InterpretationIssue issue) {
+    Optional<ParseResult<Country>> parseResultOpt =
+        parser.map(extendedRecord, parseRes -> parseRes);
 
     if (!parseResultOpt.isPresent()) {
-      // case when the country is null in the extended record. We return an issue not to break the whole interpretation
+      // case when the country is null in the extended record. We return an issue not to break the
+      // whole interpretation
       return ParsedField.<Country>newBuilder().withIssue(issue).build();
     }
 
@@ -131,7 +143,8 @@ public class LocationParser {
     return builder.build();
   }
 
-  private static Optional<Country> getResult(ParsedField<Country> parse, List<InterpretationIssue> issues) {
+  private static Optional<Country> getResult(
+      ParsedField<Country> parse, List<InterpretationIssue> issues) {
     if (!parse.isSuccessful()) {
       LOG.debug("Parsing failed for country {}", parse.getResult());
       issues.addAll(parse.getIssues());
@@ -162,7 +175,10 @@ public class LocationParser {
     // collect issues from the projection parsing
     issues.addAll(projectedLatLng.getIssues());
 
-    return ParsedField.<LatLng>newBuilder().successful(true).result(projectedLatLng.getResult()).issues(issues).build();
+    return ParsedField.<LatLng>newBuilder()
+        .successful(true)
+        .result(projectedLatLng.getResult())
+        .issues(issues)
+        .build();
   }
-
 }

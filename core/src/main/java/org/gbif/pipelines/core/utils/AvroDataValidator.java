@@ -10,9 +10,7 @@ public final class AvroDataValidator {
     // Do nothing
   }
 
-  /**
-   * Checks if a {@link ExtendedRecord} is null or empty.
-   */
+  /** Checks if a {@link ExtendedRecord} is null or empty. */
   public static void checkNullOrEmpty(ExtendedRecord extendedRecord) {
     Objects.requireNonNull(extendedRecord, "ExtendedRecord cannot be null");
 
@@ -24,5 +22,4 @@ public final class AvroDataValidator {
       throw new IllegalArgumentException("ExtendedRecord with core terms is required");
     }
   }
-
 }

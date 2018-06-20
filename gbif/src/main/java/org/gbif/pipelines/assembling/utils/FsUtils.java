@@ -6,16 +6,12 @@ import java.util.StringJoiner;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.Path;
 
-/**
- * Utility class to work with FS.
- */
+/** Utility class to work with FS. */
 public final class FsUtils {
 
   private FsUtils() {}
 
-  /**
-   * Build a {@link Path} from an array of string values.
-   */
+  /** Build a {@link Path} from an array of string values. */
   @VisibleForTesting
   public static Path buildPath(String... values) {
     StringJoiner joiner = new StringJoiner(Path.SEPARATOR);
@@ -26,5 +22,4 @@ public final class FsUtils {
   public static String buildPathString(String... values) {
     return buildPath(values).toString();
   }
-
 }

@@ -24,12 +24,12 @@ import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Assembles a {@link Pipeline} dynamically that performs interpretations of verbatim data.
- */
+/** Assembles a {@link Pipeline} dynamically that performs interpretations of verbatim data. */
 class InterpretationPipelineAssembler
-  implements InterpretationAssemblerBuilderSteps.WithOptionsStep, InterpretationAssemblerBuilderSteps.WithInputStep,
-  InterpretationAssemblerBuilderSteps.UsingStep, InterpretationAssemblerBuilderSteps.FinalStep {
+    implements InterpretationAssemblerBuilderSteps.WithOptionsStep,
+        InterpretationAssemblerBuilderSteps.WithInputStep,
+        InterpretationAssemblerBuilderSteps.UsingStep,
+        InterpretationAssemblerBuilderSteps.FinalStep {
 
   private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipelineAssembler.class);
 
@@ -38,7 +38,8 @@ class InterpretationPipelineAssembler
   private PipelineOptions options;
   private String input;
   private final Set<InterpretationType> interpretationTypes;
-  private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler;
+  private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>>
+      beforeHandler;
   private BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler;
   private Map<InterpretationType, InterpretationStepSupplier> interpretationSteps;
 
@@ -47,21 +48,24 @@ class InterpretationPipelineAssembler
   }
 
   /**
-   * Creates a {@link InterpretationPipelineAssembler} for the list of {@link InterpretationType} received.
+   * Creates a {@link InterpretationPipelineAssembler} for the list of {@link InterpretationType}
+   * received.
    */
-  public static InterpretationAssemblerBuilderSteps.WithOptionsStep of(List<InterpretationType> interpretationTypes) {
+  public static InterpretationAssemblerBuilderSteps.WithOptionsStep of(
+      List<InterpretationType> interpretationTypes) {
     return new InterpretationPipelineAssembler(filterInterpretations(interpretationTypes));
   }
 
   /**
    * Filters the interpretations received.
-   * <p>
-   * By default, we use all the interpretations in case that we receive a null or empty list of
+   *
+   * <p>By default, we use all the interpretations in case that we receive a null or empty list of
    * {@link InterpretationType}.
    */
   private static EnumSet<InterpretationType> filterInterpretations(List<InterpretationType> types) {
-    return Objects.isNull(types) || types.isEmpty() || types.contains(InterpretationType.ALL) ?
-      EnumSet.complementOf(EnumSet.of(InterpretationType.ALL)) : EnumSet.copyOf(types);
+    return Objects.isNull(types) || types.isEmpty() || types.contains(InterpretationType.ALL)
+        ? EnumSet.complementOf(EnumSet.of(InterpretationType.ALL))
+        : EnumSet.copyOf(types);
   }
 
   @Override
@@ -81,30 +85,28 @@ class InterpretationPipelineAssembler
 
   @Override
   public InterpretationAssemblerBuilderSteps.FinalStep using(
-    Map<InterpretationType, InterpretationStepSupplier> interpretationSteps
-  ) {
+      Map<InterpretationType, InterpretationStepSupplier> interpretationSteps) {
     Objects.requireNonNull(interpretationSteps, "Interpretation steps map cannot be null");
     this.interpretationSteps = interpretationSteps;
     return this;
   }
 
   @Override
-  public InterpretationAssemblerBuilderSteps.FinalStep onBeforeInterpretations(BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>> beforeHandler) {
+  public InterpretationAssemblerBuilderSteps.FinalStep onBeforeInterpretations(
+      BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>>
+          beforeHandler) {
     this.beforeHandler = beforeHandler;
     return this;
   }
 
   @Override
   public InterpretationAssemblerBuilderSteps.FinalStep onOtherOperations(
-    BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler
-  ) {
+      BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler) {
     this.otherOperationsHandler = otherOperationsHandler;
     return this;
   }
 
-  /**
-   * Assembles a {@link Pipeline} from the parameters received.
-   */
+  /** Assembles a {@link Pipeline} from the parameters received. */
   @Override
   public Pipeline assemble() {
     // STEP 0: create pipeline from options
@@ -114,20 +116,24 @@ class InterpretationPipelineAssembler
     // STEP 1: Read Avro files
     LOG.info("Reading Avro records from {}", input);
     PCollection<ExtendedRecord> verbatimRecords =
-      pipeline.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(input));
+        pipeline.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(input));
 
     // STEP 2: Common operations before running the interpretations
-    LOG.info("{} steps before interpretation", Objects.nonNull(beforeHandler) ? "Adding" : "Skipping");
+    LOG.info(
+        "{} steps before interpretation", Objects.nonNull(beforeHandler) ? "Adding" : "Skipping");
     PCollection<ExtendedRecord> extendedRecords =
-      Objects.nonNull(beforeHandler) ? beforeHandler.apply(verbatimRecords, pipeline) : verbatimRecords;
+        Objects.nonNull(beforeHandler)
+            ? beforeHandler.apply(verbatimRecords, pipeline)
+            : verbatimRecords;
 
     // STEP 3: interpretations
     LOG.info("Adding interpretation steps");
-    interpretationTypes.stream()
-      .filter(stepSupplierFilter())
-      .map(interpretationStepMapper())
-      .filter(Objects::nonNull)
-      .forEach(step -> step.appendToPipeline(extendedRecords, pipeline));
+    interpretationTypes
+        .stream()
+        .filter(stepSupplierFilter())
+        .map(interpretationStepMapper())
+        .filter(Objects::nonNull)
+        .forEach(step -> step.appendToPipeline(extendedRecords, pipeline));
 
     // STEP 4: additional operations
     if (Objects.nonNull(otherOperationsHandler)) {
@@ -157,5 +163,4 @@ class InterpretationPipelineAssembler
       return step;
     };
   }
-
 }

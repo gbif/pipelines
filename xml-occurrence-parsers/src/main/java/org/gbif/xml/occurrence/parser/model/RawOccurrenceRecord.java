@@ -23,9 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This is mostly cut and paste from synchronizer-gbif, intended as a place holder until this project is
- * integrated with the main synchronizer process. Differences from sync-gbif are that id and dateIdentified are String,
- * and occurenceDate is retained as a verbatim string rather than parsed to year, month and day.
+ * This is mostly cut and paste from synchronizer-gbif, intended as a place holder until this
+ * project is integrated with the main synchronizer process. Differences from sync-gbif are that id
+ * and dateIdentified are String, and occurenceDate is retained as a verbatim string rather than
+ * parsed to year, month and day.
  */
 public class RawOccurrenceRecord implements Serializable {
 
@@ -85,37 +86,36 @@ public class RawOccurrenceRecord implements Serializable {
   private List<ImageRecord> imageRecords = new ArrayList<>();
   private List<LinkRecord> linkRecords = new ArrayList<>();
 
-  /**
-   * Default
-   */
-  public RawOccurrenceRecord() {
-  }
+  /** Default */
+  public RawOccurrenceRecord() {}
 
-  /**
-   * TODO: handle supporting table records & maybe dwca extensions?
-   */
+  /** TODO: handle supporting table records & maybe dwca extensions? */
   public RawOccurrenceRecord(Record dwcr) {
     this.basisOfRecord = dwcr.value(DwcTerm.basisOfRecord);
     this.catalogueNumber = dwcr.value(DwcTerm.catalogNumber);
     this.klass = dwcr.value(DwcTerm.class_);
     this.collectionCode = dwcr.value(DwcTerm.collectionCode);
     this.continentOrOcean = dwcr.value(DwcTerm.continent);
-    this.country = dwcr.value(DwcTerm.country) == null || dwcr.value(DwcTerm.country).isEmpty()
-      ? dwcr.value(DwcTerm.countryCode)
-      : dwcr.value(DwcTerm.country);
+    this.country =
+        dwcr.value(DwcTerm.country) == null || dwcr.value(DwcTerm.country).isEmpty()
+            ? dwcr.value(DwcTerm.countryCode)
+            : dwcr.value(DwcTerm.country);
     this.county = dwcr.value(DwcTerm.county);
     this.dateIdentified = dwcr.value(DwcTerm.dateIdentified);
-    this.latitude = dwcr.value(DwcTerm.verbatimLatitude) == null
-      ? dwcr.value(DwcTerm.decimalLatitude)
-      : dwcr.value(DwcTerm.verbatimLatitude);
-    this.longitude = dwcr.value(DwcTerm.verbatimLongitude) == null
-      ? dwcr.value(DwcTerm.decimalLongitude)
-      : dwcr.value(DwcTerm.verbatimLongitude);
+    this.latitude =
+        dwcr.value(DwcTerm.verbatimLatitude) == null
+            ? dwcr.value(DwcTerm.decimalLatitude)
+            : dwcr.value(DwcTerm.verbatimLatitude);
+    this.longitude =
+        dwcr.value(DwcTerm.verbatimLongitude) == null
+            ? dwcr.value(DwcTerm.decimalLongitude)
+            : dwcr.value(DwcTerm.verbatimLongitude);
     this.geodeticDatum = dwcr.value(DwcTerm.geodeticDatum);
     this.family = dwcr.value(DwcTerm.family);
-    this.scientificName = dwcr.value(DwcTerm.scientificName) == null || dwcr.value(DwcTerm.scientificName).isEmpty()
-      ? dwcr.value(DwcTerm.scientificName)
-      : dwcr.value(DwcTerm.scientificName);
+    this.scientificName =
+        dwcr.value(DwcTerm.scientificName) == null || dwcr.value(DwcTerm.scientificName).isEmpty()
+            ? dwcr.value(DwcTerm.scientificName)
+            : dwcr.value(DwcTerm.scientificName);
     this.genus = dwcr.value(DwcTerm.genus);
     this.identifierName = dwcr.value(DwcTerm.identifiedBy);
     this.institutionCode = dwcr.value(DwcTerm.institutionCode);
@@ -126,7 +126,8 @@ public class RawOccurrenceRecord implements Serializable {
     this.minAltitude = dwcr.value(DwcTerm.minimumElevationInMeters);
     this.order = dwcr.value(DwcTerm.order);
     this.phylum = dwcr.value(DwcTerm.phylum);
-    this.occurrenceDate = dwcr.value(DwcTerm.year) + '-' + dwcr.value(DwcTerm.month) + '-' + dwcr.value(DwcTerm.day);
+    this.occurrenceDate =
+        dwcr.value(DwcTerm.year) + '-' + dwcr.value(DwcTerm.month) + '-' + dwcr.value(DwcTerm.day);
     this.collectorsFieldNumber = dwcr.value(DwcTerm.recordNumber);
   }
 
@@ -548,86 +549,85 @@ public class RawOccurrenceRecord implements Serializable {
 
   public String debugDump() {
     return "RawOccurrenceRecord [\n id="
-           + id
-           + ",\n dataProviderId="
-           + dataProviderId
-           + ",\n dataResourceId="
-           + dataResourceId
-           + ",\n resourceAccessPointId="
-           + resourceAccessPointId
-           + ",\n institutionCode="
-           + institutionCode
-           + ",\n collectionCode="
-           + collectionCode
-           + ",\n catalogueNumber="
-           + catalogueNumber
-           + ",\n scientificName="
-           + scientificName
-           + ",\n author="
-           + author
-           + ",\n rank="
-           + rank
-           + ",\n kingdom="
-           + kingdom
-           + ",\n phylum="
-           + phylum
-           + ",\n klass="
-           + klass
-           + ",\n order="
-           + order
-           + ",\n family="
-           + family
-           + ",\n genus="
-           + genus
-           + ",\n species="
-           + species
-           + ",\n subspecies="
-           + subspecies
-           + ",\n latitude="
-           + latitude
-           + ",\n longitude="
-           + longitude
-           + ",\n latLongPrecision="
-           + latLongPrecision
-           + ",\n geodeticDatum="
-           + geodeticDatum
-           + ",\n minAltitude="
-           + minAltitude
-           + ",\n maxAltitude="
-           + maxAltitude
-           + ",\n altitudePrecision="
-           + altitudePrecision
-           + ",\n minDepth="
-           + minDepth
-           + ",\n maxDepth="
-           + maxDepth
-           + ",\n depthPrecision="
-           + depthPrecision
-           + ",\n continentOrOcean="
-           + continentOrOcean
-           + ",\n country="
-           + country
-           + ",\n stateOrProvince="
-           + stateOrProvince
-           + ",\n county="
-           + county
-           + ",\n collectorName="
-           + collectorName
-           + ",\n collectorsFieldNumber="
-           + collectorsFieldNumber
-           + ",\n locality="
-           + locality
-           + ",\n occurrenceDate="
-           + occurrenceDate
-           + ",\n basisOfRecord="
-           + basisOfRecord
-           + ",\n identifierName="
-           + identifierName
-           + ",\n dateIdentified="
-           + dateIdentified
-           + ",\n unitQualifier="
-           + unitQualifier
-           + "]";
+        + id
+        + ",\n dataProviderId="
+        + dataProviderId
+        + ",\n dataResourceId="
+        + dataResourceId
+        + ",\n resourceAccessPointId="
+        + resourceAccessPointId
+        + ",\n institutionCode="
+        + institutionCode
+        + ",\n collectionCode="
+        + collectionCode
+        + ",\n catalogueNumber="
+        + catalogueNumber
+        + ",\n scientificName="
+        + scientificName
+        + ",\n author="
+        + author
+        + ",\n rank="
+        + rank
+        + ",\n kingdom="
+        + kingdom
+        + ",\n phylum="
+        + phylum
+        + ",\n klass="
+        + klass
+        + ",\n order="
+        + order
+        + ",\n family="
+        + family
+        + ",\n genus="
+        + genus
+        + ",\n species="
+        + species
+        + ",\n subspecies="
+        + subspecies
+        + ",\n latitude="
+        + latitude
+        + ",\n longitude="
+        + longitude
+        + ",\n latLongPrecision="
+        + latLongPrecision
+        + ",\n geodeticDatum="
+        + geodeticDatum
+        + ",\n minAltitude="
+        + minAltitude
+        + ",\n maxAltitude="
+        + maxAltitude
+        + ",\n altitudePrecision="
+        + altitudePrecision
+        + ",\n minDepth="
+        + minDepth
+        + ",\n maxDepth="
+        + maxDepth
+        + ",\n depthPrecision="
+        + depthPrecision
+        + ",\n continentOrOcean="
+        + continentOrOcean
+        + ",\n country="
+        + country
+        + ",\n stateOrProvince="
+        + stateOrProvince
+        + ",\n county="
+        + county
+        + ",\n collectorName="
+        + collectorName
+        + ",\n collectorsFieldNumber="
+        + collectorsFieldNumber
+        + ",\n locality="
+        + locality
+        + ",\n occurrenceDate="
+        + occurrenceDate
+        + ",\n basisOfRecord="
+        + basisOfRecord
+        + ",\n identifierName="
+        + identifierName
+        + ",\n dateIdentified="
+        + dateIdentified
+        + ",\n unitQualifier="
+        + unitQualifier
+        + "]";
   }
-
 }

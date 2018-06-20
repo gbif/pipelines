@@ -44,8 +44,10 @@ public class Dwc2009RuleSet extends AbstractDwcRuleSet implements RuleSet {
     addNonNullMethod(digester, "dateIdentified", "setDateIdentified", 1);
     addNonNullParam(digester, "dateIdentified", 0);
 
-    addNonNullPrioritizedProperty(digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 2);
-    addNonNullPrioritizedProperty(digester, "continentOrOcean", PrioritizedPropertyNameEnum.CONTINENT_OR_OCEAN, 2);
+    addNonNullPrioritizedProperty(
+        digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 2);
+    addNonNullPrioritizedProperty(
+        digester, "continentOrOcean", PrioritizedPropertyNameEnum.CONTINENT_OR_OCEAN, 2);
     addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);
     addNonNullPrioritizedProperty(digester, "longitude", PrioritizedPropertyNameEnum.LONGITUDE, 2);
   }

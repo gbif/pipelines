@@ -29,7 +29,8 @@ public class DwcManisRuleSet extends AbstractDwcRuleSet implements RuleSet {
   public void addRuleInstances(Digester digester) {
     super.addRuleInstances(digester);
 
-    addNonNullPrioritizedProperty(digester, "catalogueNumber", PrioritizedPropertyNameEnum.CATALOGUE_NUMBER, 2);
+    addNonNullPrioritizedProperty(
+        digester, "catalogueNumber", PrioritizedPropertyNameEnum.CATALOGUE_NUMBER, 2);
     addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);
     addNonNullPrioritizedProperty(digester, "longitude", PrioritizedPropertyNameEnum.LONGITUDE, 2);
 

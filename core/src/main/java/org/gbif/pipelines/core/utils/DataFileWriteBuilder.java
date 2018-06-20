@@ -18,10 +18,9 @@ public class DataFileWriteBuilder {
   private Boolean flushOnEveryBlock;
   private OutputStream outputStream;
 
-  private DataFileWriteBuilder() {
-  }
+  private DataFileWriteBuilder() {}
 
-  public static DataFileWriteBuilder create(){
+  public static DataFileWriteBuilder create() {
     return new DataFileWriteBuilder();
   }
 
@@ -63,5 +62,4 @@ public class DataFileWriteBuilder {
 
     return dataFileWriter;
   }
-
 }

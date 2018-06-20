@@ -50,7 +50,7 @@
   "diagnostics": {
     "matchType": "EXACT",
     "status": "SYNONYM",
-    "lineage": [ ],
-    "alternatives": [ ]
+    "lineage": [],
+    "alternatives": []
   }
 }

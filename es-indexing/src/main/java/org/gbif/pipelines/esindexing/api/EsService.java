@@ -28,13 +28,14 @@ import static org.gbif.pipelines.esindexing.request.BodyBuilder.createBodyFromSt
 
 /**
  * Service to perform ES operations.
+ *
+ * <p>The {@link EsClient} is always received as a parameter and this class has no responsibility on
+ * handling the connection with the ES server.
+ *
  * <p>
- * The {@link EsClient} is always received as a parameter and this class has no responsibility on handling the
- * connection with the ES server.
- * <p>
- * <p>
- * This class is intended to be used internally within the same package, and <strong>never as a public API</strong>.
- * Therefore, the access modifiers should never be changed.
+ *
+ * <p>This class is intended to be used internally within the same package, and <strong>never as a
+ * public API</strong>. Therefore, the access modifiers should never be changed.
  */
 class EsService {
 
@@ -45,10 +46,9 @@ class EsService {
   /**
    * Creates a ES index.
    *
-   * @param esClient     client to call ES. It is required.
-   * @param idxName      name of the index to create.
+   * @param esClient client to call ES. It is required.
+   * @param idxName name of the index to create.
    * @param settingsType settings to use in the call.
-   *
    * @return name of the index created.
    */
   static String createIndex(EsClient esClient, String idxName, SettingsType settingsType) {
@@ -63,37 +63,19 @@ class EsService {
   /**
    * Creates a ES index.
    *
-   * @param esClient     client to call ES. It is required.
-   * @param idxName      name of the index to create.
+   * @param esClient client to call ES. It is required.
+   * @param idxName name of the index to create.
    * @param settingsType settings to use in the call.
-   * @param mappings     path of the file with the mappings.
-   *
+   * @param mappings path of the file with the mappings.
    * @return name of the index created.
    */
-  static String createIndex(EsClient esClient, String idxName, SettingsType settingsType, Path mappings) {
+  static String createIndex(
+      EsClient esClient, String idxName, SettingsType settingsType, Path mappings) {
     Objects.requireNonNull(esClient);
 
     // create entity body
-    HttpEntity body = BodyBuilder.newInstance().withSettingsType(settingsType).withMappings(mappings).build();
-
-    return createIndexInternal(esClient, idxName, body);
-  }
-
-  /**
-   * Creates a ES index.
-   *
-   * @param esClient     client to call ES. It is required.
-   * @param idxName      name of the index to create.
-   * @param settingsType settings to use in the call.
-   * @param mappings     mappings as json.
-   *
-   * @return name of the index created.
-   */
-  static String createIndex(EsClient esClient, String idxName, SettingsType settingsType, String mappings) {
-    Objects.requireNonNull(esClient);
-
-    // create entity body
-    HttpEntity body = BodyBuilder.newInstance().withSettingsType(settingsType).withMappings(mappings).build();
+    HttpEntity body =
+        BodyBuilder.newInstance().withSettingsType(settingsType).withMappings(mappings).build();
 
     return createIndexInternal(esClient, idxName, body);
   }
@@ -102,24 +84,46 @@ class EsService {
    * Creates a ES index.
    *
    * @param esClient client to call ES. It is required.
-   * @param idxName  name of the index to create.
-   * @param settings {@link Map} with thesettings to use in the call.
-   * @param mappings path of the file with the mappings.
-   *
+   * @param idxName name of the index to create.
+   * @param settingsType settings to use in the call.
+   * @param mappings mappings as json.
    * @return name of the index created.
    */
-  static String createIndex(EsClient esClient, String idxName, Map<String, String> settings, Path mappings) {
+  static String createIndex(
+      EsClient esClient, String idxName, SettingsType settingsType, String mappings) {
     Objects.requireNonNull(esClient);
 
     // create entity body
-    HttpEntity body = BodyBuilder.newInstance().withSettingsMap(settings).withMappings(mappings).build();
+    HttpEntity body =
+        BodyBuilder.newInstance().withSettingsType(settingsType).withMappings(mappings).build();
+
+    return createIndexInternal(esClient, idxName, body);
+  }
+
+  /**
+   * Creates a ES index.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxName name of the index to create.
+   * @param settings {@link Map} with thesettings to use in the call.
+   * @param mappings path of the file with the mappings.
+   * @return name of the index created.
+   */
+  static String createIndex(
+      EsClient esClient, String idxName, Map<String, String> settings, Path mappings) {
+    Objects.requireNonNull(esClient);
+
+    // create entity body
+    HttpEntity body =
+        BodyBuilder.newInstance().withSettingsMap(settings).withMappings(mappings).build();
 
     return createIndexInternal(esClient, idxName, body);
   }
 
   private static String createIndexInternal(EsClient esClient, String idxName, HttpEntity body) {
     try {
-      Response response = esClient.performPutRequest(getIndexEndpoint(idxName), Collections.emptyMap(), body);
+      Response response =
+          esClient.performPutRequest(getIndexEndpoint(idxName), Collections.emptyMap(), body);
       // parse response and return
       return ResponseParser.parseCreatedIndexResponse(response.getEntity());
     } catch (ResponseException exc) {
@@ -131,8 +135,8 @@ class EsService {
   /**
    * Updates the settings of an index.
    *
-   * @param esClient     client to call ES. It is required.
-   * @param idxName      name of the index to update.
+   * @param esClient client to call ES. It is required.
+   * @param idxName name of the index to update.
    * @param settingsType settings that will be set to the index.
    */
   static void updateIndexSettings(EsClient esClient, String idxName, SettingsType settingsType) {
@@ -151,17 +155,19 @@ class EsService {
   }
 
   /**
-   * Gets all the indexes associated to a specific alias and whose names match with a specified pattern.
+   * Gets all the indexes associated to a specific alias and whose names match with a specified
+   * pattern.
    *
-   * @param esClient   client to call ES. It is required.
-   * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a single index, or a
-   *                   pattern using wildcards. For example, "idx*" matches with all the indexes whose name starts
-   *                   with "idx".
-   * @param alias      alias that has to be associated to the indexes retrieved.
-   *
-   * @return {@link Set} with all the indexes that are in the alias specified and match with the pattern received.
+   * @param esClient client to call ES. It is required.
+   * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a
+   *     single index, or a pattern using wildcards. For example, "idx*" matches with all the
+   *     indexes whose name starts with "idx".
+   * @param alias alias that has to be associated to the indexes retrieved.
+   * @return {@link Set} with all the indexes that are in the alias specified and match with the
+   *     pattern received.
    */
-  static Set<String> getIndexesByAliasAndIndexPattern(EsClient esClient, String idxPattern, String alias) {
+  static Set<String> getIndexesByAliasAndIndexPattern(
+      EsClient esClient, String idxPattern, String alias) {
     Objects.requireNonNull(esClient);
 
     try {
@@ -175,19 +181,22 @@ class EsService {
 
   /**
    * Swaps indexes in an alias.
-   * <p>
-   * In this method we can add or remove indexes in an alias. Also note that in the case of removing indixes, they
-   * are <strong>completely removed</strong> from the ES instance, and not only from the alias.
    *
-   * @param esClient    client to call ES. It is required.
-   * @param alias       alias that will be modified
-   * @param idxToAdd    indexes to add to the alias.
+   * <p>In this method we can add or remove indexes in an alias. Also note that in the case of
+   * removing indixes, they are <strong>completely removed</strong> from the ES instance, and not
+   * only from the alias.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param alias alias that will be modified
+   * @param idxToAdd indexes to add to the alias.
    * @param idxToRemove indexes to remove from the alias.
    */
-  static void swapIndexes(EsClient esClient, String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
+  static void swapIndexes(
+      EsClient esClient, String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
     Objects.requireNonNull(esClient);
 
-    HttpEntity body = BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
+    HttpEntity body =
+        BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
     try {
       esClient.performPostRequest(getAliasesEndpoint(), Collections.emptyMap(), body);
     } catch (ResponseException exc) {
@@ -200,8 +209,7 @@ class EsService {
    * Counts the number of documents of an index.
    *
    * @param esClient client to call ES. It is required.
-   * @param idxName  index to get the count from.
-   *
+   * @param idxName index to get the count from.
    * @return number of documents of the index.
    */
   static long countIndexDocuments(EsClient esClient, String idxName) {
@@ -220,9 +228,9 @@ class EsService {
    * Indexes a document in an index.
    *
    * @param esClient client to call ES. It is required.
-   * @param idx      index where the document has to be indexed to.
-   * @param type     type of the document.
-   * @param id       id of the doucment.
+   * @param idx index where the document has to be indexed to.
+   * @param type type of the document.
+   * @param id id of the doucment.
    * @param document document to index.
    */
   static void indexDocument(EsClient esClient, String idx, String type, long id, String document) {
@@ -235,7 +243,8 @@ class EsService {
     try {
       esClient.performPutRequest(endpoint, Collections.emptyMap(), body);
     } catch (IOException exc) {
-      LOG.error("Could not index document with id {} and body {} in index {}", id, body.toString(), idx);
+      LOG.error(
+          "Could not index document with id {} and body {} in index {}", id, body.toString(), idx);
       throw new IllegalStateException("Could not index document", exc);
     }
   }
@@ -244,9 +253,9 @@ class EsService {
    * Deletes a document from an index.
    *
    * @param esClient client to call ES. It is required.
-   * @param idx      index to remove the document from.
-   * @param type     type of the document.
-   * @param id       id of the document to be removed.
+   * @param idx index to remove the document from.
+   * @param type type of the document.
+   * @param id id of the document to be removed.
    */
   static void deleteDocument(EsClient esClient, String idx, String type, long id) {
     Objects.requireNonNull(esClient);
@@ -264,13 +273,14 @@ class EsService {
    * Refreshes an index.
    *
    * @param esClient client to call ES. It is required.
-   * @param idx      index to be refreshed.
+   * @param idx index to be refreshed.
    */
   static void refreshIndex(EsClient esClient, String idx) {
     Objects.requireNonNull(esClient);
 
     try {
-      esClient.performPostRequest(EndpointHelper.getRefreshIndexEndpoint(idx), Collections.emptyMap(), null);
+      esClient.performPostRequest(
+          EndpointHelper.getRefreshIndexEndpoint(idx), Collections.emptyMap(), null);
     } catch (IOException exc) {
       LOG.error("Could not refresh index {}", idx);
       throw new IllegalStateException("Could not refresh index", exc);
@@ -297,8 +307,7 @@ class EsService {
    * Checks if an index exists in the ES instance.
    *
    * @param esClient client to call ES. It is required.
-   * @param idx      index to check.
-   *
+   * @param idx index to check.
    * @return true if the index exists, false otherwise.
    */
   static boolean existsIndex(EsClient esClient, String idx) {
@@ -314,5 +323,4 @@ class EsService {
     }
     return true;
   }
-
 }

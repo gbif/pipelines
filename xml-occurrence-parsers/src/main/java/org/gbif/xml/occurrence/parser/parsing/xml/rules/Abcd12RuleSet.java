@@ -65,8 +65,10 @@ public class Abcd12RuleSet extends AbstractRuleSet {
     addNonNullParam(digester, "longitude", 0);
 
     addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 4);
-    addNonNullPrioritizedProperty(digester, "collectorName", PrioritizedPropertyNameEnum.COLLECTOR_NAME, 3);
-    addNonNullPrioritizedProperty(digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
+    addNonNullPrioritizedProperty(
+        digester, "collectorName", PrioritizedPropertyNameEnum.COLLECTOR_NAME, 3);
+    addNonNullPrioritizedProperty(
+        digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
 
     // possibly many identifications
     String pattern = mappingProps.getProperty("idElement");
@@ -87,8 +89,10 @@ public class Abcd12RuleSet extends AbstractRuleSet {
       addNonNullMethod(digester, "idIdentifierName", "setIdentifierName", 1);
       addNonNullParam(digester, "idIdentifierName", 0);
 
-      addNonNullPrioritizedProperty(digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 3);
-      addNonNullPrioritizedProperty(digester, "idScientificName", PrioritizedPropertyNameEnum.ID_SCIENTIFIC_NAME, 2);
+      addNonNullPrioritizedProperty(
+          digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 3);
+      addNonNullPrioritizedProperty(
+          digester, "idScientificName", PrioritizedPropertyNameEnum.ID_SCIENTIFIC_NAME, 2);
 
       // possibly many higher taxons for every identification
       addNonNullMethod(digester, "higherTaxonElement", "addHigherTaxon", 2);

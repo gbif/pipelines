@@ -39,9 +39,7 @@ import static org.gbif.pipelines.esindexing.common.JsonHandler.createArrayNode;
 import static org.gbif.pipelines.esindexing.common.JsonHandler.createObjectNode;
 import static org.gbif.pipelines.esindexing.common.JsonHandler.writeToString;
 
-/**
- * Class that builds {@link HttpEntity} instances with JSON content.
- */
+/** Class that builds {@link HttpEntity} instances with JSON content. */
 public class BodyBuilder {
 
   // pre-defined settings
@@ -64,49 +62,38 @@ public class BodyBuilder {
 
   private BodyBuilder() {}
 
-  /**
-   * Creates a new {@link BodyBuilder}.
-   */
+  /** Creates a new {@link BodyBuilder}. */
   public static BodyBuilder newInstance() {
     return new BodyBuilder();
   }
 
-  /**
-   * Creates a {@link HttpEntity} from a {@link String} that will become the body of the entity.
-   */
+  /** Creates a {@link HttpEntity} from a {@link String} that will become the body of the entity. */
   public static HttpEntity createBodyFromString(String body) {
     return createEntity(body);
   }
 
-  /**
-   * Adds a {@link SettingsType} to the body.
-   */
+  /** Adds a {@link SettingsType} to the body. */
   public BodyBuilder withSettingsType(SettingsType settingsType) {
     Objects.requireNonNull(settingsType);
     this.settings = settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings;
     return this;
   }
 
-  /**
-   * Adds a {@link java.util.Map} of settings to the body.
-   */
+  /** Adds a {@link java.util.Map} of settings to the body. */
   public BodyBuilder withSettingsMap(Map<String, String> settingsMap) {
     this.settings = JsonHandler.convertToJsonNode(settingsMap);
     return this;
   }
 
-  /**
-   * Adds ES mappings in JSON format to the body.
-   */
+  /** Adds ES mappings in JSON format to the body. */
   public BodyBuilder withMappings(String mappings) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(mappings), "Mappings cannot be null or empty");
+    Preconditions.checkArgument(
+        !Strings.isNullOrEmpty(mappings), "Mappings cannot be null or empty");
     this.mappings = JsonHandler.readTree(mappings);
     return this;
   }
 
-  /**
-   * Adds ES mappings from a file in JSON format to the body.
-   */
+  /** Adds ES mappings from a file in JSON format to the body. */
   public BodyBuilder withMappings(Path mappingsPath) {
     Objects.requireNonNull(mappingsPath, "The path of the mappings cannot be null");
     this.mappings = JsonHandler.readTree(FileUtils.loadFile(mappingsPath));
@@ -114,14 +101,16 @@ public class BodyBuilder {
   }
 
   /**
-   * Adds actions to add and remove index from an alias. Note that the indexes to be removed will be removed
-   * completely from the ES instance.
+   * Adds actions to add and remove index from an alias. Note that the indexes to be removed will be
+   * removed completely from the ES instance.
    *
-   * @param alias       alias that wil be modify. This parameter is required.
-   * @param idxToAdd    indexes to add to the alias.
-   * @param idxToRemove indexes to remove from the alias. These indexes will be completely removed form the ES instance.
+   * @param alias alias that wil be modify. This parameter is required.
+   * @param idxToAdd indexes to add to the alias.
+   * @param idxToRemove indexes to remove from the alias. These indexes will be completely removed
+   *     form the ES instance.
    */
-  public BodyBuilder withIndexAliasAction(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
+  public BodyBuilder withIndexAliasAction(
+      String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
     this.indexAliasAction = new IndexAliasAction(alias, idxToAdd, idxToRemove);
     return this;
   }
@@ -149,7 +138,8 @@ public class BodyBuilder {
   }
 
   /**
-   * Builds a {@link ArrayNode} with the specified JSON content to add and remove indexes from an alias.
+   * Builds a {@link ArrayNode} with the specified JSON content to add and remove indexes from an
+   * alias.
    */
   private ArrayNode createIndexAliasActions(IndexAliasAction indexAliasAction) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(indexAliasAction.alias));
@@ -162,7 +152,8 @@ public class BodyBuilder {
     }
     // add index action
     if (indexAliasAction.idxToAdd != null) {
-      indexAliasAction.idxToAdd.forEach(idx -> addIndexToAliasAction(indexAliasAction.alias, idx, actions));
+      indexAliasAction.idxToAdd.forEach(
+          idx -> addIndexToAliasAction(indexAliasAction.alias, idx, actions));
     }
 
     return actions;
@@ -214,7 +205,5 @@ public class BodyBuilder {
       this.idxToAdd = idxToAdd;
       this.idxToRemove = idxToRemove;
     }
-
   }
-
 }

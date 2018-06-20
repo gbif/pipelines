@@ -22,12 +22,13 @@ import java.util.function.BiFunction;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
- * Main interpreter class. Interpreter for raw temporal period. The main method interpret two dates, from and to
+ * Main interpreter class. Interpreter for raw temporal period. The main method interpret two dates,
+ * from and to
  */
 public class TemporalParser {
 
   private static final BiFunction<ChronoAccumulator, List<IssueType>, Temporal> TEMPORAL_FUNC =
-    (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
+      (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
   private TemporalParser() {
     // Can't have an instance
@@ -37,7 +38,8 @@ public class TemporalParser {
     return parse("", "", "", rawDate);
   }
 
-  public static ParsedTemporalDates parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
+  public static ParsedTemporalDates parse(
+      String rawYear, String rawMonth, String rawDay, String rawDate) {
     // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
     if (isEmpty(rawYear) && isEmpty(rawDate)) {
       return new ParsedTemporalDates();
@@ -66,7 +68,8 @@ public class TemporalParser {
     String rawFrom = rawPeriod[0];
     String rawTo = rawPeriod[1];
     ChronoAccumulator fromAccumulator = ParserRawDateTime.parse(rawFrom, null);
-    ChronoAccumulator toAccumulator = ParserRawDateTime.parse(rawTo, fromAccumulator.getLastParsed().orElse(null));
+    ChronoAccumulator toAccumulator =
+        ParserRawDateTime.parse(rawTo, fromAccumulator.getLastParsed().orElse(null));
 
     if (fromAccumulator.areAllNumeric() || (!isEmpty(rawTo) && toAccumulator.areAllNumeric())) {
       issueList.add(IssueType.RECORDED_DATE_INVALID);
@@ -97,9 +100,7 @@ public class TemporalParser {
     return temporalDates;
   }
 
-  /**
-   * Compare dates, FROM cannot be greater than TO
-   */
+  /** Compare dates, FROM cannot be greater than TO */
   private static boolean isValidRange(Temporal from, Temporal to) {
     if (Objects.isNull(from) || Objects.isNull(to)) {
       return false;

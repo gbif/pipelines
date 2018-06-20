@@ -23,14 +23,13 @@ import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 
-/**
- * The main function convert ChronoAccumulator to Temporal in approrative way
- */
+/** The main function convert ChronoAccumulator to Temporal in approrative way */
 public class ChronoAccumulatorConverter {
 
   private static final Year OLD_YEAR = Year.of(1600);
 
-  private static final Map<ChronoField, Function<String, Optional<Integer>>> FUNCTION_MAP = new EnumMap<>(ChronoField.class);
+  private static final Map<ChronoField, Function<String, Optional<Integer>>> FUNCTION_MAP =
+      new EnumMap<>(ChronoField.class);
 
   static {
     FUNCTION_MAP.put(YEAR, ParsedUnitUtils::parseYear);
@@ -50,9 +49,10 @@ public class ChronoAccumulatorConverter {
    *
    * @return some Temporal value: Year, YearMonth, LocalDate, LocalDateTime
    */
-  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator, List<IssueType> issueList) {
+  public static Optional<Temporal> toTemporal(
+      ChronoAccumulator accumulator, List<IssueType> issueList) {
 
-    //Check Year
+    // Check Year
     Optional<Integer> intYear = convert(accumulator, YEAR, issueList);
     if (!intYear.isPresent()) {
       return Optional.empty();
@@ -62,14 +62,14 @@ public class ChronoAccumulatorConverter {
       issueList.add(IssueType.RECORDED_DATE_UNLIKELY);
     }
 
-    //Check Month
+    // Check Month
     Optional<Integer> intMonth = convert(accumulator, MONTH_OF_YEAR, issueList);
     if (!intMonth.isPresent()) {
       return Optional.of(year);
     }
 
     YearMonth yearMonth = year.atMonth(intMonth.get());
-    //Check Day
+    // Check Day
     Optional<Integer> intDay = convert(accumulator, DAY_OF_MONTH, issueList);
     if (!intDay.isPresent()) {
       return Optional.of(yearMonth);
@@ -81,21 +81,21 @@ public class ChronoAccumulatorConverter {
     }
     LocalDate localDate = yearMonth.atDay(intDay.get());
 
-    //Check Hour
+    // Check Hour
     Optional<Integer> intHour = convert(accumulator, HOUR_OF_DAY, issueList);
     if (!intHour.isPresent()) {
       return Optional.of(localDate);
     }
     LocalDateTime localDateTime = localDate.atTime(intHour.get(), 0);
 
-    //Check Minute
+    // Check Minute
     Optional<Integer> intMinute = convert(accumulator, MINUTE_OF_HOUR, issueList);
     if (!intMinute.isPresent()) {
       return Optional.of(localDateTime);
     }
     localDateTime = localDateTime.withMinute(intMinute.get());
 
-    //Check Second
+    // Check Second
     Optional<Integer> intSecond = convert(accumulator, SECOND_OF_MINUTE, issueList);
     if (!intSecond.isPresent()) {
       return Optional.of(localDateTime);
@@ -107,7 +107,6 @@ public class ChronoAccumulatorConverter {
    * Looks for the year in a ChronoAccumulator
    *
    * @param accumulator - where to look for a value
-   *
    * @return Year value if present
    */
   public static Optional<Year> getYear(ChronoAccumulator accumulator, List<IssueType> issueList) {
@@ -118,7 +117,6 @@ public class ChronoAccumulatorConverter {
    * Looks for the month in a ChronoAccumulator
    *
    * @param accumulator - where to look for a value
-   *
    * @return Month value if present
    */
   public static Optional<Month> getMonth(ChronoAccumulator accumulator, List<IssueType> issueList) {
@@ -129,7 +127,6 @@ public class ChronoAccumulatorConverter {
    * Looks for the day in a ChronoAccumulator
    *
    * @param accumulator - where to look for a value
-   *
    * @return Integer day value if present
    */
   public static Optional<Integer> getDay(ChronoAccumulator accumulator, List<IssueType> issueList) {
@@ -140,9 +137,11 @@ public class ChronoAccumulatorConverter {
    * Converts raw value to integer and setChronoField into the map
    *
    * @param accumulator raw value for parsing
-   * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY, MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
+   *     MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
-  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField chronoField, List<IssueType> issueList) {
+  private static Optional<Integer> convert(
+      ChronoAccumulator accumulator, ChronoField chronoField, List<IssueType> issueList) {
     Optional<String> rawValue = accumulator.getChronoFileValue(chronoField);
     if (rawValue.isPresent()) {
       Optional<Integer> value = FUNCTION_MAP.get(chronoField).apply(rawValue.get());
@@ -153,5 +152,4 @@ public class ChronoAccumulatorConverter {
     }
     return Optional.empty();
   }
-
 }

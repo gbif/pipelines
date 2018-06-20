@@ -6,9 +6,7 @@ import java.io.IOException;
 
 import org.apache.avro.file.DataFileWriter;
 
-/**
- * Sync class for avro DataFileWriter, created to avoid an issue during file writing
- */
+/** Sync class for avro DataFileWriter, created to avoid an issue during file writing */
 public class SyncDataFileWriter {
 
   private final DataFileWriter<ExtendedRecord> dataFileWriter;
@@ -17,9 +15,7 @@ public class SyncDataFileWriter {
     this.dataFileWriter = dataFileWriter;
   }
 
-  /**
-   * Synchronized append method, helps avoid the ArrayIndexOutOfBoundsException
-   */
+  /** Synchronized append method, helps avoid the ArrayIndexOutOfBoundsException */
   public synchronized void append(ExtendedRecord extendedRecord) throws IOException {
     dataFileWriter.append(extendedRecord);
   }

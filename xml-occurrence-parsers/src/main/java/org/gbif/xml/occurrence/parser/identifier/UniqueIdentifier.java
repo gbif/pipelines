@@ -2,9 +2,7 @@ package org.gbif.xml.occurrence.parser.identifier;
 
 import java.util.UUID;
 
-/**
- * This interface is meant to be used for classes that can uniquely identify occurrence records.
- */
+/** This interface is meant to be used for classes that can uniquely identify occurrence records. */
 public interface UniqueIdentifier {
 
   /**
@@ -15,18 +13,19 @@ public interface UniqueIdentifier {
   UUID getDatasetKey();
 
   /**
-   * A string that uniquely identifies the occurrence (e.g. a concatenation of it's unique fields) that could be used
-   * as a key for maps or databases.
+   * A string that uniquely identifies the occurrence (e.g. a concatenation of it's unique fields)
+   * that could be used as a key for maps or databases.
    *
    * @return a unique String representing the unique identifier
    */
   String getUniqueString();
 
   /**
-   * A string that uniquely identifies the occurrence within a dataset (e.g. a concatenation of it's unique fields) but
-   * does not incorporate the datasetKey.
+   * A string that uniquely identifies the occurrence within a dataset (e.g. a concatenation of it's
+   * unique fields) but does not incorporate the datasetKey.
    *
-   * @return a unique String representing the unique identifier within the dataset (but does not include the datasetKey)
+   * @return a unique String representing the unique identifier within the dataset (but does not
+   *     include the datasetKey)
    */
   String getUnscopedUniqueString();
 }

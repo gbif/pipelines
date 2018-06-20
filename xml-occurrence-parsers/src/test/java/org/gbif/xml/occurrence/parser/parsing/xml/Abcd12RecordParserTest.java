@@ -30,7 +30,8 @@ public class Abcd12RecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseBasicFields() {
-    String fileName = getClass().getResource("/responses/abcd12/abcd12_all_simple_fields.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/abcd12/abcd12_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
     // System.out.println(ror.debugDump());
@@ -47,7 +48,8 @@ public class Abcd12RecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseBasicFields2() {
-    String fileName = getClass().getResource("/responses/abcd12/abcd12_simple_fields_2.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/abcd12/abcd12_simple_fields_2.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
     // System.out.println(ror.debugDump());
@@ -64,7 +66,8 @@ public class Abcd12RecordParserTest extends ParserTestCase {
 
   @Test
   public void testParseMultiIdentificationPreferredTrue() {
-    String fileName = getClass().getResource("/responses/abcd12/abcd12_multi_ids_preferred_true.gz").getFile();
+    String fileName =
+        getClass().getResource("/responses/abcd12/abcd12_multi_ids_preferred_true.gz").getFile();
     List<RawOccurrenceRecord> rors = setupRor(fileName);
     assertEquals(1, rors.size());
 
@@ -104,6 +107,8 @@ public class Abcd12RecordParserTest extends ParserTestCase {
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
     assertEquals(1, ror.getImageRecords().size());
     ImageRecord image = ror.getImageRecords().get(0);
-    assertEquals("http://www.herbariumhamburgense.uni-hamburg.de/hbg/imag_bg/HBG-502719.jpg", image.getUrl());
+    assertEquals(
+        "http://www.herbariumhamburgense.uni-hamburg.de/hbg/imag_bg/HBG-502719.jpg",
+        image.getUrl());
   }
 }

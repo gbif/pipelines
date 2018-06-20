@@ -41,5 +41,4 @@ public class DwCAReaderTest {
     assertNotNull(current);
     assertNotNull(current.getId());
   }
-
 }

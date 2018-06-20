@@ -24,7 +24,7 @@ public class Abcd206RuleSet extends AbstractRuleSet {
 
   @Override
   public String getNamespaceURI() {
-    //TODO: should this be the real xml namespace and not just a flat string?
+    // TODO: should this be the real xml namespace and not just a flat string?
     return OccurrenceSchemaType.ABCD_2_0_6.toString();
   }
 
@@ -52,10 +52,12 @@ public class Abcd206RuleSet extends AbstractRuleSet {
     addNonNullParam(digester, "collectorsFieldNumber", 0);
 
     addNonNullPrioritizedProperty(digester, "country", PrioritizedPropertyNameEnum.COUNTRY, 3);
-    addNonNullPrioritizedProperty(digester, "collectorName", PrioritizedPropertyNameEnum.COLLECTOR_NAME, 3);
+    addNonNullPrioritizedProperty(
+        digester, "collectorName", PrioritizedPropertyNameEnum.COLLECTOR_NAME, 3);
     addNonNullPrioritizedProperty(digester, "latitude", PrioritizedPropertyNameEnum.LATITUDE, 2);
     addNonNullPrioritizedProperty(digester, "longitude", PrioritizedPropertyNameEnum.LONGITUDE, 2);
-    addNonNullPrioritizedProperty(digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
+    addNonNullPrioritizedProperty(
+        digester, "dateCollected", PrioritizedPropertyNameEnum.DATE_COLLECTED, 3);
 
     // possibly many identifications
     String pattern = mappingProps.getProperty("idElement");
@@ -75,8 +77,10 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       addNonNullMethod(digester, "idScientificName", "setScientificName", 1);
       addNonNullParam(digester, "idScientificName", 0);
 
-      addNonNullPrioritizedProperty(digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 2);
-      addNonNullPrioritizedProperty(digester, "idIdentifierName", PrioritizedPropertyNameEnum.ID_IDENTIFIER_NAME, 2);
+      addNonNullPrioritizedProperty(
+          digester, "idDateIdentified", PrioritizedPropertyNameEnum.ID_DATE_IDENTIFIED, 2);
+      addNonNullPrioritizedProperty(
+          digester, "idIdentifierName", PrioritizedPropertyNameEnum.ID_IDENTIFIER_NAME, 2);
 
       // possibly many higher taxons for every identification
       addNonNullMethod(digester, "higherTaxonElement", "addHigherTaxon", 2);
@@ -103,7 +107,8 @@ public class Abcd206RuleSet extends AbstractRuleSet {
       addNonNullMethod(digester, "imagePageUrl", "setPageUrl", 1);
       addNonNullParam(digester, "imagePageUrl", 0);
 
-      addNonNullPrioritizedProperty(digester, "imageRights", PrioritizedPropertyNameEnum.IMAGE_RIGHTS, 2);
+      addNonNullPrioritizedProperty(
+          digester, "imageRights", PrioritizedPropertyNameEnum.IMAGE_RIGHTS, 2);
     }
 
     // possibly many links

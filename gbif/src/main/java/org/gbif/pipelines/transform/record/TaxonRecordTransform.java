@@ -23,7 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@link PTransform} to convert {@link ExtendedRecord} into {@link TaxonRecord} with its {@link OccurrenceIssue}.
+ * {@link PTransform} to convert {@link ExtendedRecord} into {@link TaxonRecord} with its {@link
+ * OccurrenceIssue}.
  */
 public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonRecord> {
 
@@ -36,10 +37,13 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
     this.wsConfig = wsConfig;
 
     // add hook to delete ws cache at shutdown
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      LOG.info("Executing taxonomy shutdown hook");
-      SpeciesMatchv2ServiceRest.clearCache();
-    }));
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  LOG.info("Executing taxonomy shutdown hook");
+                  SpeciesMatchv2ServiceRest.clearCache();
+                }));
   }
 
   public static TaxonRecordTransform create(Config wsConfig) {
@@ -63,12 +67,13 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
 
         // interpretation
         Interpretation.of(extendedRecord)
-          .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, wsConfig))
-          .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
+            .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, wsConfig))
+            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // taxon record result
         if (Objects.nonNull(taxonRecord.getId())) {
-          // the id is null when there is an error in the interpretation. In these cases we do not write the
+          // the id is null when there is an error in the interpretation. In these cases we do not
+          // write the
           // taxonRecord because it is totally empty.
           context.output(getDataTag(), KV.of(id, taxonRecord));
         } else {
@@ -77,18 +82,18 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
 
         // issues
         if (!validations.isEmpty()) {
-          OccurrenceIssue issue = OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
+          OccurrenceIssue issue =
+              OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
           context.output(getIssueTag(), KV.of(id, issue));
         }
       }
-
     };
   }
 
   @Override
   public TaxonRecordTransform withAvroCoders(Pipeline pipeline) {
-    Coders.registerAvroCoders(pipeline, OccurrenceIssue.class, TaxonRecord.class, ExtendedRecord.class);
+    Coders.registerAvroCoders(
+        pipeline, OccurrenceIssue.class, TaxonRecord.class, ExtendedRecord.class);
     return this;
   }
-
 }

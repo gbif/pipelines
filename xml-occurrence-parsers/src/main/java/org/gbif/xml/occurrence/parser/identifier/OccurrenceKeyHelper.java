@@ -7,15 +7,14 @@ import java.util.StringJoiner;
 import javax.annotation.Nullable;
 
 /**
- * A helper class for building the row keys used in the occurrence lookup table/process.
- * TODO: this is too similar to OccurrenceKeyBuilder - they should be merged
+ * A helper class for building the row keys used in the occurrence lookup table/process. TODO: this
+ * is too similar to OccurrenceKeyBuilder - they should be merged
  */
 public class OccurrenceKeyHelper {
 
   private static final String DELIM = "|";
 
-  private OccurrenceKeyHelper() {
-  }
+  private OccurrenceKeyHelper() {}
 
   public static String buildKeyPrefix(String datasetKey) {
     return datasetKey + DELIM;
@@ -31,12 +30,13 @@ public class OccurrenceKeyHelper {
       return null;
     }
 
-    return join(DELIM,
-                triplet.getDatasetKey().toString(),
-                triplet.getInstitutionCode(),
-                triplet.getCollectionCode(),
-                triplet.getCatalogNumber(),
-                triplet.getUnitQualifier());
+    return join(
+        DELIM,
+        triplet.getDatasetKey().toString(),
+        triplet.getInstitutionCode(),
+        triplet.getCollectionCode(),
+        triplet.getCatalogNumber(),
+        triplet.getUnitQualifier());
   }
 
   @Nullable
@@ -47,11 +47,15 @@ public class OccurrenceKeyHelper {
       return null;
     }
 
-    return join(DELIM, pubProvided.getDatasetKey().toString(), pubProvided.getPublisherProvidedIdentifier());
+    return join(
+        DELIM,
+        pubProvided.getDatasetKey().toString(),
+        pubProvided.getPublisherProvidedIdentifier());
   }
 
   @Nullable
-  public static String buildUnscopedKey(@Nullable PublisherProvidedUniqueIdentifier pubProvidedUniqueId) {
+  public static String buildUnscopedKey(
+      @Nullable PublisherProvidedUniqueIdentifier pubProvidedUniqueId) {
     if (pubProvidedUniqueId == null) {
       return null;
     }
@@ -69,11 +73,12 @@ public class OccurrenceKeyHelper {
       return null;
     }
 
-    return join(DELIM,
-                triplet.getInstitutionCode(),
-                triplet.getCollectionCode(),
-                triplet.getCatalogNumber(),
-                triplet.getUnitQualifier());
+    return join(
+        DELIM,
+        triplet.getInstitutionCode(),
+        triplet.getCollectionCode(),
+        triplet.getCatalogNumber(),
+        triplet.getUnitQualifier());
   }
 
   @Nullable
@@ -86,16 +91,18 @@ public class OccurrenceKeyHelper {
     }
 
     // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
-    return join(":",
-                "urn:catalog",
-                triplet.getInstitutionCode(),
-                triplet.getCollectionCode(),
-                triplet.getCatalogNumber());
+    return join(
+        ":",
+        "urn:catalog",
+        triplet.getInstitutionCode(),
+        triplet.getCollectionCode(),
+        triplet.getCatalogNumber());
   }
 
   private static String join(String delim, String... values) {
     StringJoiner joiner = new StringJoiner(delim);
-    Arrays.stream(values).forEach(x -> Optional.ofNullable(x).filter(f -> !f.isEmpty()).ifPresent(joiner::add));
+    Arrays.stream(values)
+        .forEach(x -> Optional.ofNullable(x).filter(f -> !f.isEmpty()).ifPresent(joiner::add));
     return joiner.toString();
   }
 }

@@ -18,15 +18,15 @@ import org.apache.beam.sdk.values.PCollection;
 
 /**
  * IO operations for DwC-A formats.
- * <p>
- * Provides the ability to read a DwC-A as a bounded source, but in a non splittable manner.  This means that a single
- * threaded approach to reading is enforced.
- * <p>
- * This is intended only for demonstration usage, and not for production.
- * <p>
- * To use this:
- * <pre>
- * {@code
+ *
+ * <p>Provides the ability to read a DwC-A as a bounded source, but in a non splittable manner. This
+ * means that a single threaded approach to reading is enforced.
+ *
+ * <p>This is intended only for demonstration usage, and not for production.
+ *
+ * <p>To use this:
+ *
+ * <pre>{@code
  * p.apply("read",
  *     DwCAIO.Read.withPaths("/tmp/my-dwca.zip", "/tmp/working")
  *     ...;
@@ -43,6 +43,7 @@ public class DwCAIO {
 
     /**
      * Reads an expanded/uncompressed DwCA content
+     *
      * @param working path to an expanded/uncompressed DwCA content
      */
     public static Read withPaths(String working) {
@@ -51,6 +52,7 @@ public class DwCAIO {
 
     /**
      * Reads a DwCA archive and stores uncompressed DwCA content to a working directory
+     *
      * @param file path to a DwCA archive
      * @param working path to a directory for storing uncompressed DwCA content
      */
@@ -60,6 +62,7 @@ public class DwCAIO {
 
     /**
      * Reads an expanded/uncompressed DwCA content
+     *
      * @param workingPath path to an expanded/uncompressed DwCA content
      */
     private Read(String workingPath) {
@@ -68,6 +71,7 @@ public class DwCAIO {
 
     /**
      * Reads a DwCA archive and stores uncompressed DwCA content to a working directory
+     *
      * @param filePath path to a DwCA archive
      * @param workingPath path to a directory for storing uncompressed DwCA content
      */
@@ -89,9 +93,7 @@ public class DwCAIO {
     }
   }
 
-  /**
-   * A non-splittable bounded source.
-   */
+  /** A non-splittable bounded source. */
   private static class DwCASource extends BoundedSource<ExtendedRecord> {
 
     private final Read read;
@@ -105,11 +107,10 @@ public class DwCAIO {
       return AvroCoder.of(ExtendedRecord.class);
     }
 
-    /**
-     * Will always return a single entry list of just ourselves. This is not splittable.
-     */
+    /** Will always return a single entry list of just ourselves. This is not splittable. */
     @Override
-    public List<? extends BoundedSource<ExtendedRecord>> split(long desiredBundleSizeBytes, PipelineOptions options) {
+    public List<? extends BoundedSource<ExtendedRecord>> split(
+        long desiredBundleSizeBytes, PipelineOptions options) {
       List<DwCASource> readers = new ArrayList<>();
       readers.add(this);
       return readers;
@@ -126,9 +127,7 @@ public class DwCAIO {
     }
   }
 
-  /**
-   * A wrapper around the standard DwC-IO provided NormalizedDwcArchive.
-   */
+  /** A wrapper around the standard DwC-IO provided NormalizedDwcArchive. */
   private static class BoundedDwCAReader extends BoundedSource.BoundedReader<ExtendedRecord> {
 
     private final DwCASource source;

@@ -3,9 +3,7 @@ package org.gbif.pipelines.core.parsers.location;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.geospatial.LatLng;
 
-/**
- * Models a parsed location.
- */
+/** Models a parsed location. */
 public class ParsedLocation {
 
   private final Country country;
@@ -46,7 +44,5 @@ public class ParsedLocation {
     ParsedLocation build() {
       return new ParsedLocation(this);
     }
-
   }
-
 }

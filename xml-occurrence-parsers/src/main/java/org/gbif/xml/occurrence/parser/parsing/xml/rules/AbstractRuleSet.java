@@ -73,11 +73,16 @@ public abstract class AbstractRuleSet implements RuleSet {
     addNonNullParam(digester, "typeNotes", 3);
   }
 
-  protected void addNonNullMethod(Digester digester, String property, String methodName, int argCount) {
+  protected void addNonNullMethod(
+      Digester digester, String property, String methodName, int argCount) {
     String pattern = mappingProps.getProperty(property);
     if (pattern != null) {
       pattern = pattern.trim();
-      LOG.debug("adding call method [{}] for pattern [{}] from property [{}]", methodName, pattern, property);
+      LOG.debug(
+          "adding call method [{}] for pattern [{}] from property [{}]",
+          methodName,
+          pattern,
+          property);
       digester.addCallMethod(pattern, methodName, argCount);
     }
   }
@@ -91,21 +96,25 @@ public abstract class AbstractRuleSet implements RuleSet {
     }
   }
 
-  protected void addNonNullAttParam(Digester digester, String elementProperty, String attributeProperty, int argPosition) {
+  protected void addNonNullAttParam(
+      Digester digester, String elementProperty, String attributeProperty, int argPosition) {
     String elemPattern = mappingProps.getProperty(elementProperty);
     String attPattern = mappingProps.getProperty(attributeProperty);
     if (elemPattern != null && attPattern != null) {
       elemPattern = elemPattern.trim();
       attPattern = attPattern.trim();
       LOG.debug(
-        "adding call param from attribute for element pattern [{}] from property [{}], seeking attribute [{}] from property [{}]",
-        elemPattern, elementProperty, attPattern, attributeProperty);
+          "adding call param from attribute for element pattern [{}] from property [{}], seeking attribute [{}] from property [{}]",
+          elemPattern,
+          elementProperty,
+          attPattern,
+          attributeProperty);
       digester.addCallParam(elemPattern, argPosition, attPattern);
     }
   }
 
-  protected void addNonNullPrioritizedProperty(Digester digester, String property, PrioritizedPropertyNameEnum name,
-                                               int paramCount) {
+  protected void addNonNullPrioritizedProperty(
+      Digester digester, String property, PrioritizedPropertyNameEnum name, int paramCount) {
     for (int i = 1; i <= paramCount; i++) {
       String key = property + '.' + i;
       String pattern = mappingProps.getProperty(key);

@@ -7,8 +7,7 @@ public class Taxon {
   private TaxonRankEnum rank;
   private String name;
 
-  public Taxon() {
-  }
+  public Taxon() {}
 
   public Taxon(TaxonRankEnum rank, String name) {
     this.rank = rank;
@@ -30,5 +29,4 @@ public class Taxon {
   public void setName(String name) {
     this.name = name;
   }
-
 }

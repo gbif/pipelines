@@ -23,18 +23,18 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class ExtendedRecordConverterTest {
-  
+
   private final int number = ForkJoinPool.getCommonPoolParallelism();
 
   private final String inpPath =
-    getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
+      getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
   private final String outPath = inpPath + "verbatim.avro";
   private CodecFactory codec = CodecFactory.deflateCodec(Deflater.BEST_SPEED);
 
   @Test(expected = ParsingException.class)
   public void testInputPathIsAbsent() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("", dataFileWrite);
     }
   }
@@ -42,7 +42,7 @@ public class ExtendedRecordConverterTest {
   @Test(expected = ParsingException.class)
   public void testOutputPathIsAbsent() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
     }
   }
@@ -50,7 +50,7 @@ public class ExtendedRecordConverterTest {
   @Test(expected = ParsingException.class)
   public void testInputPathIsNull() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(null, dataFileWrite);
     }
   }
@@ -65,7 +65,7 @@ public class ExtendedRecordConverterTest {
   @Test(expected = ParsingException.class)
   public void testInputPathNotValid() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
     }
   }
@@ -77,7 +77,7 @@ public class ExtendedRecordConverterTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
   }
@@ -89,7 +89,7 @@ public class ExtendedRecordConverterTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
@@ -106,7 +106,7 @@ public class ExtendedRecordConverterTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
@@ -123,7 +123,7 @@ public class ExtendedRecordConverterTest {
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
     }
 
@@ -133,7 +133,8 @@ public class ExtendedRecordConverterTest {
 
     // Deserialize ExtendedRecord from disk
     DatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
-    try (DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(verbatim, datumReader)) {
+    try (DataFileReader<ExtendedRecord> dataFileReader =
+        new DataFileReader<>(verbatim, datumReader)) {
       while (dataFileReader.hasNext()) {
         ExtendedRecord record = dataFileReader.next();
         Assert.assertNotNull(record);
