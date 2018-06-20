@@ -41,7 +41,7 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
         .addShutdownHook(
             new Thread(
                 () -> {
-                  LOG.info("Executing taxonomy shutdown hook");
+                  LOG.info("Taxonomy transfrom shutdown hook called");
                   SpeciesMatchv2ServiceRest.clearCache();
                 }));
   }

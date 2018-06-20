@@ -36,7 +36,7 @@ public class LocationRecordTransform extends RecordTransform<ExtendedRecord, Loc
         .addShutdownHook(
             new Thread(
                 () -> {
-                  LOG.info("Executing location shutdown hook");
+                  LOG.info("Location transform shutdown hook called");
                   GeocodeServiceRest.clearCache();
                 }));
   }
