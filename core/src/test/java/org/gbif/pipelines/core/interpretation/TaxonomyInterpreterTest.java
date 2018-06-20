@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.interpretation;
 
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.core.ws.MockServer;
+import org.gbif.pipelines.core.ws.BaseMockServerTest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.taxon.Rank;
 import org.gbif.pipelines.io.avro.taxon.RankedName;
@@ -18,10 +18,9 @@ import org.junit.Test;
 /**
  * Tests the {@link TaxonomyInterpreter}.
  */
-public class TaxonomyInterpreterTest extends MockServer {
+public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
   private static final String TEST_RECORD_ID = "testId";
-  private static final String WS_PROPERTIES_PATH = "ws.properties";
 
   @Test
   public void testAssembledAuthor() throws IOException {
@@ -29,7 +28,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor")
       .authorship("")
@@ -39,7 +39,7 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH);
+    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig());
     Interpretation<ExtendedRecord> interpretation = interpreter.apply(record);
     Map<Rank, RankedName> ranksResponse =
       taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
@@ -52,7 +52,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: http://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor%20(Linnaeus,%201771)&strict=false&verbose=false
     // @formatter:on
-    record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
+    record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor (Linnaeus, 1771)")
       .rank(Rank.SPECIES.name())
@@ -73,7 +74,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: http://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor%20(Linnaeus,%201771)&strict=false&verbose=false
     // @formatter:on
-    record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
+    record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor")
       .authorship("(Linnaeus, 1771)")
@@ -98,7 +100,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Plantae&rank=GENUS&name=Oenanthe&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Plantae")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Plantae")
       .name("Oenanthe")
       .authorship("")
       .rank(Rank.GENUS.name())
@@ -107,7 +110,7 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(OENANTHE_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH);
+    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig());
     Interpretation<ExtendedRecord> interpretation = interpreter.apply(record);
 
     Map<Rank, RankedName> ranksResponse =
@@ -121,7 +124,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Plantae&rank=GENUS&name=Oenanthe%20L.&strict=false&verbose=false
     // @formatter:on
-    record = ExtendedRecordCustomBuilder.create().kingdom("Plantae")
+    record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Plantae")
       .name("Oenanthe")
       .authorship("L.")
       .rank(Rank.GENUS.name())
@@ -142,7 +146,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&rank=GENUS&name=Oenanthe%20Vieillot,%201816&strict=false&verbose=false
     // @formatter:on
-    record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
+    record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Animalia")
       .name("Oenanthe")
       .authorship("Vieillot, 1816")
       .rank(Rank.GENUS.name())
@@ -166,7 +171,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&phylum=Annelida&family=Lumbricidae&rank=SPECIES&name=Bold:acv7160&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Animalia")
       .phylum("Annelida")
       .family("Lumbricidae")
       .name("BOLD:ACV7160")
@@ -176,7 +182,8 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(ANNELIDA_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
+    Interpretation<ExtendedRecord> interpretation =
+      TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
 
     // FIXME: this test does not pass. It is copied from old adapter but it returns a different response.Should we check it??
     // this is the old test
@@ -190,7 +197,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Chromista&phylum=Dinophyta&class=Dinophyceae&order=Peridiniales&family=Ceratiaceae&genus=Ceratium&rank=SPECIES&name=Ceratium%20hirundinella&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Chromista")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Chromista")
       .phylum("Dinophyta")
       .clazz("Dinophyceae")
       .order("Peridiniales")
@@ -203,7 +211,8 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(CERATIACEAE_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
+    Interpretation<ExtendedRecord> interpretation =
+      TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
 
     Map<Rank, RankedName> ranksResponse =
       taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
@@ -223,7 +232,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = ExtendedRecordCustomBuilder.create().kingdom("Animalia")
+    ExtendedRecord record = ExtendedRecordCustomBuilder.create()
+      .kingdom("Animalia")
       .genus("Puma")
       .name("Puma concolor")
       .rank(Rank.SPECIES.name())
@@ -232,7 +242,8 @@ public class TaxonomyInterpreterTest extends MockServer {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
+    Interpretation<ExtendedRecord> interpretation =
+      TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
 
     Map<Rank, RankedName> ranksResponse =
       taxonRecord.getClassification().stream().collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
@@ -248,11 +259,13 @@ public class TaxonomyInterpreterTest extends MockServer {
     // @formatter:off
     // Call mocked: https://api.gbif-uat.org/v1/species/match2?rank=GENUS&name=Agallisus%20lepturoides&strict=false&verbose=false
     // @formatter:on
-    ExtendedRecord record = ExtendedRecordCustomBuilder.create().name("Agallisus lepturoides").id(TEST_RECORD_ID).build();
+    ExtendedRecord record =
+      ExtendedRecordCustomBuilder.create().name("Agallisus lepturoides").id(TEST_RECORD_ID).build();
 
     enqueueResponse(AGALLISUS_LEPTUROIDES_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation = TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
+    Interpretation<ExtendedRecord> interpretation =
+      TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
 
     Assert.assertNotNull(interpretation);
     Assert.assertEquals(1118030, taxonRecord.getUsage().getKey().intValue());
@@ -269,8 +282,8 @@ public class TaxonomyInterpreterTest extends MockServer {
   @Test(expected = NullPointerException.class)
   public void testMatchNullArgs() {
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation = TaxonomyInterpreter
-      .taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(null);
+    Interpretation<ExtendedRecord> interpretation =
+      TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(null);
     Assert.fail("This line should not be reached ");
   }
 
@@ -279,8 +292,8 @@ public class TaxonomyInterpreterTest extends MockServer {
     ExtendedRecord record = new ExtendedRecord();
     record.setCoreTerms(new HashMap<>());
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation = TaxonomyInterpreter
-      .taxonomyInterpreter(taxonRecord, WS_PROPERTIES_PATH).apply(record);
+    Interpretation<ExtendedRecord> interpretation =
+      TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
     Assert.fail("This line should not be reached ");
   }
 

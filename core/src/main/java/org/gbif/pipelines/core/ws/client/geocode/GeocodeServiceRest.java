@@ -1,11 +1,13 @@
 package org.gbif.pipelines.core.ws.client.geocode;
 
 import org.gbif.pipelines.core.ws.HttpClientFactory;
-import org.gbif.pipelines.core.ws.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.config.Config;
-import org.gbif.pipelines.core.ws.config.Service;
+
+import java.io.IOException;
 
 import okhttp3.OkHttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -14,14 +16,17 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  */
 public class GeocodeServiceRest {
 
+  private static final Logger LOG = LoggerFactory.getLogger(GeocodeServiceRest.class);
+
   private final GeocodeService service;
+  private final OkHttpClient client;
   private static volatile GeocodeServiceRest instance;
   private static final Object MUTEX = new Object();
 
   private GeocodeServiceRest(Config wsConfig) {
 
     // create client
-    OkHttpClient client = HttpClientFactory.createClient(wsConfig);
+    client = HttpClientFactory.createClient(wsConfig);
 
     // create service
     Retrofit retrofit = new Retrofit.Builder().client(client)
@@ -31,10 +36,6 @@ public class GeocodeServiceRest {
       .build();
 
     service = retrofit.create(GeocodeService.class);
-  }
-
-  public static GeocodeServiceRest getInstance() {
-    return getInstance(HttpConfigFactory.createConfig(Service.GEO_CODE));
   }
 
   public static GeocodeServiceRest getInstance(Config config) {
@@ -50,6 +51,22 @@ public class GeocodeServiceRest {
 
   public GeocodeService getService() {
     return service;
+  }
+
+  /**
+   * It deletes the ws cache.
+   *
+   * <strong>Keep in mind that this method is not thread-safe, so use it carefully.</strong>
+   */
+  public static void clearCache() {
+    if (instance != null && instance.client != null && instance.client.cache() != null) {
+      LOG.info("Deleting geocode ws cache");
+      try {
+        instance.client.cache().delete();
+      } catch (IOException e) {
+        LOG.error("Geocode ws cache could not be deleted", e);
+      }
+    }
   }
 
 }

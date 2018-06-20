@@ -1,5 +1,8 @@
 package org.gbif.pipelines.core.ws;
 
+import org.gbif.pipelines.core.ws.config.Config;
+import org.gbif.pipelines.core.ws.config.HttpConfigFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -10,15 +13,11 @@ import okio.BufferedSource;
 import okio.Okio;
 import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for tests that need a {@link MockWebServer}.
  */
-public abstract class MockServer {
-
-  private static final Logger LOG = LoggerFactory.getLogger(MockServer.class);
+public abstract class BaseMockServerTest {
 
   // mock match responses
   protected static final String MATCH_RESPONSES_FOLDER = "match-responses/";
@@ -49,30 +48,28 @@ public abstract class MockServer {
   protected static final Double LATITUDE_CANADA = 60.4;
   protected static final Double LONGITUDE_CANADA = -131.3;
 
-  protected static MockWebServer mockServer;
+  private static Config wsConfig;
 
-  // TODO: this class can be improved to use a random port (implies modifying interpretations to receive the config
-  // as a parameter instead of the path of the file). Also, MockWebServer is already a ExternalResource, so it can be
-  // used as a ClassRule directly and remove this serverResource.
+  /**
+   * Public field because {@link ClassRule} requires it.
+   * <p>
+   * It uses a random port.
+   */
+  @ClassRule
+  public static final MockWebServer mockServer = new MockWebServer();
 
   @ClassRule
-  public static ExternalResource serverResource = new ExternalResource() {
-    @Override
-    protected void before() throws Throwable {
-      mockServer = new MockWebServer();
-      // TODO: check if the port is in use??
-      mockServer.start(1111);
-    }
+  public static final ExternalResource configResource = new ExternalResource() {
 
     @Override
-    protected void after() {
-      try {
-        mockServer.shutdown();
-      } catch (IOException e) {
-        LOG.error("Could not stop the mock web server", e);
-      }
+    protected void before() {
+      wsConfig = HttpConfigFactory.createConfigFromUrl(mockServer.url("/").toString());
     }
   };
+
+  protected Config getWsConfig() {
+    return wsConfig;
+  }
 
   protected static void enqueueResponse(String fileName) throws IOException {
     InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);

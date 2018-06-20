@@ -7,7 +7,9 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,9 @@ import org.slf4j.LoggerFactory;
 public class UniquenessValidatorTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(UniquenessValidatorTest.class);
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void givenUniqueIdsWhenMappedThenNoDuplicates() {
@@ -63,8 +68,11 @@ public class UniquenessValidatorTest {
     }
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void givenNullIdWhenMappedThenExceptionThrown() {
+    thrown.expect(NullPointerException.class);
+    thrown.expectMessage("ID is required");
+
     try (UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
       validator.isUnique(null);
     }

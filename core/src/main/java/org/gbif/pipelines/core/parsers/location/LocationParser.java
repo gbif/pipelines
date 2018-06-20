@@ -9,6 +9,7 @@ import org.gbif.pipelines.core.parsers.common.InterpretationIssue;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.legacy.Wgs84Projection;
 import org.gbif.pipelines.core.utils.AvroDataValidator;
+import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.ArrayList;
@@ -36,12 +37,14 @@ public class LocationParser {
 
   // Issues
   private static final InterpretationIssue COUNTRY_ISSUE = InterpretationIssue.of(COUNTRY_INVALID, country);
-  private static final InterpretationIssue COUNTRY_CODE_ISSUE = InterpretationIssue.of(COUNTRY_CODE_INVALID, countryCode);
-  private static final InterpretationIssue MISMATCH_ISSUE = InterpretationIssue.of(COUNTRY_MISMATCH, country, countryCode);
+  private static final InterpretationIssue COUNTRY_CODE_ISSUE =
+    InterpretationIssue.of(COUNTRY_CODE_INVALID, countryCode);
+  private static final InterpretationIssue MISMATCH_ISSUE =
+    InterpretationIssue.of(COUNTRY_MISMATCH, country, countryCode);
 
   private LocationParser() {}
 
-  public static ParsedField<ParsedLocation> parse(ExtendedRecord extendedRecord, String wsPropertiesPath) {
+  public static ParsedField<ParsedLocation> parse(ExtendedRecord extendedRecord, Config wsConfig) {
     AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
     List<InterpretationIssue> issues = new ArrayList<>();
@@ -51,7 +54,8 @@ public class LocationParser {
     Optional<Country> countryName = getResult(parsedCountry, issues);
 
     // Parse country code
-    ParsedField<Country> parsedCountryCode = parse(extendedRecord, VocabularyParsers.countryCodeParser(), COUNTRY_CODE_ISSUE);
+    ParsedField<Country> parsedCountryCode =
+      parse(extendedRecord, VocabularyParsers.countryCodeParser(), COUNTRY_CODE_ISSUE);
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
@@ -82,7 +86,7 @@ public class LocationParser {
 
     // If the coords parsing was succesful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-      LocationMatcher.newMatcher(parsedLocation.getLatLng(), parsedLocation.getCountry(), wsPropertiesPath)
+      LocationMatcher.newMatcher(parsedLocation.getLatLng(), parsedLocation.getCountry(), wsConfig)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LAT)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_LNG)
         .addAdditionalTransform(CoordinatesFunction.PRESUMED_NEGATED_COORDS)
@@ -106,7 +110,9 @@ public class LocationParser {
       .build();
   }
 
-  private static ParsedField<Country> parse(ExtendedRecord extendedRecord, VocabularyParsers<Country> parser, InterpretationIssue issue) {
+  private static ParsedField<Country> parse(
+    ExtendedRecord extendedRecord, VocabularyParsers<Country> parser, InterpretationIssue issue
+  ) {
     Optional<ParseResult<Country>> parseResultOpt = parser.map(extendedRecord, parseRes -> parseRes);
 
     if (!parseResultOpt.isPresent()) {

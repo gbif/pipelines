@@ -3,7 +3,7 @@ package org.gbif.pipelines.core.ws.client.match2;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.core.ws.HttpResponse;
-import org.gbif.pipelines.core.ws.MockServer;
+import org.gbif.pipelines.core.ws.BaseMockServerTest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.io.IOException;
@@ -16,11 +16,11 @@ import org.junit.Test;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class SpeciesMatchv2RestServiceTest extends MockServer {
+public class SpeciesMatchv2RestServiceTest extends BaseMockServerTest {
 
   @Test
   public void simpleCallTest() throws IOException {
-    SpeciesMatchv2Service service = SpeciesMatchv2ServiceRest.getInstance().getService();
+    SpeciesMatchv2Service service = SpeciesMatchv2ServiceRest.getInstance(getWsConfig()).getService();
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
 
@@ -46,7 +46,7 @@ public class SpeciesMatchv2RestServiceTest extends MockServer {
 
     ExtendedRecord record = ExtendedRecordCustomBuilder.create().name("Puma concolor").id("1").build();
 
-    HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance().getMatch(record);
+    HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.newInstance(getWsConfig()).getMatch(record);
 
     Assert.assertEquals(HttpURLConnection.HTTP_INTERNAL_ERROR, response.getHttpResponseCode().intValue());
     Assert.assertEquals(HttpResponse.ErrorCode.CALL_FAILED, response.getErrorCode());

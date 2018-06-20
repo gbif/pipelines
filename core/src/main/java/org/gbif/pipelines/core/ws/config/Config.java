@@ -1,62 +1,65 @@
 package org.gbif.pipelines.core.ws.config;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 /**
  * Models the ws configuration.
  */
-public class Config {
+public final class Config implements Serializable {
 
-  private String basePath;
-  private long timeout;
-  private CacheConfig cacheConfig;
+  // ws path
+  private final String basePath;
+  // timeout in seconds
+  private final long timeout;
+  // cache size in bytes
+  private final long cacheSize;
+
+  private Config(Builder builder) {
+    this.basePath = builder.basePath;
+    this.timeout = builder.timeout;
+    this.cacheSize = builder.cacheSize;
+  }
 
   public String getBasePath() {
     return basePath;
-  }
-
-  public void setBasePath(String basePath) {
-    this.basePath = basePath;
-  }
-
-  public void setTimeout(long timeout) {
-    this.timeout = timeout;
-  }
-
-  public void setCacheConfig(CacheConfig cacheConfig) {
-    this.cacheConfig = cacheConfig;
   }
 
   public long getTimeout() {
     return timeout;
   }
 
-  public CacheConfig getCacheConfig() {
-    return cacheConfig;
+  public long getCacheSize() {
+    return cacheSize;
   }
 
   /**
-   * Models the cache configuration.
+   * Package-private to force the creation of {@link Config} instances using the {@link HttpConfigFactory}.
    */
-  public static class CacheConfig {
+  static class Builder {
 
-    private String name;
-    // size in bytes
-    private long size;
+    private String basePath;
+    private long timeout;
+    private long cacheSize;
 
-    public String getName() {
-      return name;
+    Builder basePath(String basePath) {
+      Objects.requireNonNull(basePath);
+      this.basePath = basePath;
+      return this;
     }
 
-    public long getSize() {
-      return size;
+    Builder timeout(long timeout) {
+      this.timeout = timeout;
+      return this;
     }
 
-    public void setName(String name) {
-      this.name = name;
+    Builder cacheSize(long cacheSize) {
+      this.cacheSize = cacheSize;
+      return this;
     }
 
-    public void setSize(long size) {
-      this.size = size;
+    public Config build() {
+      return new Config(this);
     }
   }
-
 }

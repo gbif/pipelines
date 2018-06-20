@@ -1,42 +1,69 @@
 package org.gbif.pipelines.core.ws.config;
 
-import org.gbif.pipelines.core.ws.HttpConfigFactory;
-
 import java.nio.file.Paths;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import static org.gbif.pipelines.core.ws.config.HttpConfigFactory.DEFAULT_CACHE_SIZE;
+import static org.gbif.pipelines.core.ws.config.HttpConfigFactory.DEFAULT_TIMEOUT;
 
 /**
  * Tests the {@link HttpConfigFactory}.
  */
 public class HttpConfigFactoryTest {
 
-  private static final String TEST_PROPERTIES_FILE = "ws-with-errors.properties";
+  // this file has the geocode properties wrong on purpose
+  private static final String TEST_PROPERTIES_FILE = "ws-test.properties";
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void speciesMatch2ConfiguratorTest() {
     Config config = HttpConfigFactory.createConfig(Service.SPECIES_MATCH2, Paths.get(TEST_PROPERTIES_FILE));
 
     Assert.assertNotNull(config);
-    // default timeout applies
-    Assert.assertEquals(60, config.getTimeout());
-    Assert.assertNotNull(config.getCacheConfig());
-    Assert.assertEquals(Service.SPECIES_MATCH2.name().toLowerCase() + "-cacheWs", config.getCacheConfig().getName());
+    // defaults apply
+    Assert.assertEquals(DEFAULT_TIMEOUT, config.getTimeout());
+    Assert.assertEquals(100L * 1024L * 1024L, config.getCacheSize());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
+  public void createConfigFromUrlTest() {
+    String url = "http://localhost";
+    Config config = HttpConfigFactory.createConfigFromUrl(url);
+
+    Assert.assertNotNull(config);
+    Assert.assertEquals(url, config.getBasePath());
+    // defaults apply
+    Assert.assertEquals(DEFAULT_TIMEOUT, config.getTimeout());
+    Assert.assertEquals(DEFAULT_CACHE_SIZE, config.getCacheSize());
+  }
+
+  @Test
   public void givenWrongConfigurationWhenGettingConfigThenExceptionThrownl() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage("WS base path is required");
+
     HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get(TEST_PROPERTIES_FILE));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void givenWrongPropertiesPathWhenGettingConfigThenExceptionThrown() {
+    thrown.expect(IllegalArgumentException.class);
+    thrown.expectMessage(CoreMatchers.containsString("Could not load properties file"));
+
     HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get("unknown"));
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void givenNullServiceWhenGettingConfigThenExceptionThrown() {
+    thrown.expect(NullPointerException.class);
+
     HttpConfigFactory.createConfig(null, Paths.get("unknown"));
   }
 

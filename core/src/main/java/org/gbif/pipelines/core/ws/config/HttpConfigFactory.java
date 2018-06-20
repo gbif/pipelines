@@ -1,18 +1,16 @@
-package org.gbif.pipelines.core.ws;
-
-import org.gbif.pipelines.core.ws.config.Config;
-import org.gbif.pipelines.core.ws.config.Service;
+package org.gbif.pipelines.core.ws.config;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,33 +23,31 @@ public class HttpConfigFactory {
 
   private static final Logger LOG = LoggerFactory.getLogger(HttpConfigFactory.class);
 
-  // default properties
-  private static final String PROPERTIES_FILE_PATH_DEFAULT = "ws.properties";
-
   // property suffixes
   private static final String WS_BASE_PATH_PROP = ".http.basePath";
   private static final String WS_TIMEOUT_PROP = ".http.timeoutSeconds";
   private static final String CACHE_SIZE_PROP = ".cache.sizeInMb";
 
-  // defaults
-  private static final String DEFAULT_TIMEOUT = "60";
-  private static final String DEFAULT_CACHE_SIZE = "256";
+  // property defaults
+  private static final String DEFAULT_TIMEOUT_PROP = "60";
+  private static final String DEFAULT_CACHE_SIZE_IN_MB_PROP = "256";
 
-  private static final String DEFAULT_CACHE_NAME_SUFFIX = "-cacheWs";
+  // long defaults
+  static final long DEFAULT_TIMEOUT = Long.parseLong(DEFAULT_TIMEOUT_PROP);
+  static final long DEFAULT_CACHE_SIZE = Long.parseLong(DEFAULT_CACHE_SIZE_IN_MB_PROP) * 1024L * 1024L;
 
   private HttpConfigFactory() {}
 
-  public static Config createConfig(Service service) {
-    Objects.requireNonNull(service);
-
-    // using default properties
-    Path propertiesPath = Paths.get(PROPERTIES_FILE_PATH_DEFAULT);
-
-    return createConfigInternal(service, propertiesPath);
-  }
-
   public static Config createConfig(Service service, Path propertiesPath) {
     return createConfigInternal(Objects.requireNonNull(service), Objects.requireNonNull(propertiesPath));
+  }
+
+  /**
+   * Creates a {@link Config} from a url and uses default timeout and cache size.
+   */
+  public static Config createConfigFromUrl(String url) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
+    return new Config.Builder().basePath(url).timeout(DEFAULT_TIMEOUT).cacheSize(DEFAULT_CACHE_SIZE).build();
   }
 
   private static Config createConfigInternal(Service service, Path propertiesPath) {
@@ -59,29 +55,23 @@ public class HttpConfigFactory {
     Properties props =
       loadProperties(propertiesPath).orElseThrow(() -> new IllegalArgumentException("Could not load properties file "
                                                                                     + propertiesPath));
-
     // get the base path or throw exception if not present
     String basePath = Optional.ofNullable(props.getProperty(generatePropertyName(service, WS_BASE_PATH_PROP)))
       .filter(prop -> !prop.isEmpty())
       .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
 
     // set config properties
-    Config config = new Config();
-    config.setBasePath(basePath);
-    config.setTimeout(Long.parseLong(props.getProperty(generatePropertyName(service, WS_TIMEOUT_PROP), DEFAULT_TIMEOUT)));
+    Config.Builder builder = new Config.Builder();
+    builder.basePath(basePath);
+    builder.timeout(Long.parseLong(props.getProperty(generatePropertyName(service, WS_TIMEOUT_PROP),
+                                                     DEFAULT_TIMEOUT_PROP)));
 
-    // cache properties
-    String cacheName = service.name().toLowerCase().concat(DEFAULT_CACHE_NAME_SUFFIX);
-
-    long configSize = Long.parseLong(props.getProperty(generatePropertyName(service, CACHE_SIZE_PROP), DEFAULT_CACHE_SIZE));
+    long configSize =
+      Long.parseLong(props.getProperty(generatePropertyName(service, CACHE_SIZE_PROP), DEFAULT_CACHE_SIZE_IN_MB_PROP));
     Long cacheSize = configSize * 1024L * 1024L; // Cache in megabytes
+    builder.cacheSize(cacheSize);
 
-    Config.CacheConfig cacheConfig = new Config.CacheConfig();
-    cacheConfig.setName(cacheName);
-    cacheConfig.setSize(cacheSize);
-    config.setCacheConfig(cacheConfig);
-
-    return config;
+    return builder.build();
   }
 
   private static Optional<Properties> loadProperties(Path propertiesPath) {
@@ -89,7 +79,7 @@ public class HttpConfigFactory {
       try {
         return new FileInputStream(path.toFile());
       } catch (FileNotFoundException ex) {
-        LOG.error("Properties could not be read from {}", propertiesPath.toString(), ex);
+        LOG.error("Properties with absolute path could not be read from {}", propertiesPath.toString(), ex);
         throw new IllegalArgumentException(ex.getMessage(), ex);
       }
     };
@@ -104,7 +94,7 @@ public class HttpConfigFactory {
       // read properties from input stream
       props.load(in);
     } catch (Exception e) {
-      LOG.error("Properties could not be read from {}", propertiesPath.toString(), e);
+      LOG.error("Properties could not be load from {}", propertiesPath.toString(), e);
       return Optional.empty();
     }
 
@@ -114,4 +104,5 @@ public class HttpConfigFactory {
   private static String generatePropertyName(Service service, String property) {
     return service.getPath() + property;
   }
+
 }
