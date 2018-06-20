@@ -52,12 +52,12 @@ public class LocationParser {
 
     // Parse country
     ParsedField<Country> parsedCountry =
-        parse(extendedRecord, VocabularyParsers.countryParser(), COUNTRY_ISSUE);
+      parseCountry(extendedRecord, VocabularyParsers.countryParser(), COUNTRY_ISSUE);
     Optional<Country> countryName = getResult(parsedCountry, issues);
 
     // Parse country code
     ParsedField<Country> parsedCountryCode =
-        parse(extendedRecord, VocabularyParsers.countryCodeParser(), COUNTRY_CODE_ISSUE);
+      parseCountry(extendedRecord, VocabularyParsers.countryCodeParser(), COUNTRY_CODE_ISSUE);
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
@@ -121,7 +121,7 @@ public class LocationParser {
         .build();
   }
 
-  private static ParsedField<Country> parse(
+  private static ParsedField<Country> parseCountry(
       ExtendedRecord extendedRecord, VocabularyParsers<Country> parser, InterpretationIssue issue) {
     Optional<ParseResult<Country>> parseResultOpt =
         parser.map(extendedRecord, parseRes -> parseRes);
