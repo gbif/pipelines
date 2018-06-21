@@ -17,7 +17,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,11 +70,8 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
                       TemporalParser.parse(map.get(DwcTerm.dateIdentified.qualifiedName()));
                   // TODO: I convert it to date just to compare the Temporal objects. Should we
                   // change it??
-                  Optional<Date> dateIdentified =
-                      Optional.ofNullable(
-                          TemporalAccessorUtils.toDate(parsedDates.getFrom().orElse(null)));
-                  // if it's null we return the minimun date to give it the least priority
-                  return dateIdentified.orElse(new Date(0L));
+                  // if it's null we return the minimum date to give it the least priority
+                  return parsedDates.getFrom().map(TemporalAccessorUtils::toDate).orElse(new Date(0L));
                 })
             .reversed());
 
