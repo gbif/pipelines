@@ -87,7 +87,12 @@ public class TemporalParser {
     Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccumulator, issueList);
     Temporal toTemporal = TEMPORAL_FUNC.apply(toAccumulator, issueList);
 
-    if (isValidRange(fromTemporal, toTemporal)) {
+    if(!isValidDateType(fromTemporal, toTemporal)){
+      toTemporal = null;
+      issueList.add(IssueType.RECORDED_DATE_INVALID);
+    }
+
+    if (!isValidRange(fromTemporal, toTemporal)) {
       Temporal tmp = fromTemporal;
       fromTemporal = toTemporal;
       toTemporal = tmp;
@@ -103,7 +108,7 @@ public class TemporalParser {
   /** Compare dates, FROM cannot be greater than TO */
   private static boolean isValidRange(Temporal from, Temporal to) {
     if (Objects.isNull(from) || Objects.isNull(to)) {
-      return false;
+      return true;
     }
     TemporalUnit unit = null;
     if (from instanceof Year) {
@@ -115,6 +120,17 @@ public class TemporalParser {
     } else if (from instanceof LocalDateTime) {
       unit = ChronoUnit.SECONDS;
     }
-    return from.until(to, unit) < 0;
+    return from.until(to, unit) >= 0;
+  }
+
+  /** Compare date types */
+  private static boolean isValidDateType(Temporal from, Temporal to) {
+    if (Objects.isNull(from)) {
+      return false;
+    }
+    if (Objects.isNull(to)) {
+      return true;
+    }
+    return from.getClass().equals(to.getClass());
   }
 }
