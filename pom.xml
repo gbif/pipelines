@@ -36,7 +36,7 @@
     <module>beam-common</module>
     <module>hadoop</module>
     <module>gbif</module>
-    <module>xml-occurrence-parsers</module>
+    <module>verbatim-converters</module>
     <module>es-indexing</module>
   </modules>
 
