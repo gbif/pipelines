@@ -1,13 +1,11 @@
 package org.gbif.pipelines.assembling;
 
-import org.gbif.pipelines.assembling.interpretation.GbifInterpretationPipeline;
 import org.gbif.pipelines.assembling.interpretation.MockGbifInterpretationPipeline;
-import org.gbif.pipelines.assembling.utils.FsUtils;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.core.ws.config.HttpConfigFactory;
+import org.gbif.pipelines.utils.FsUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,7 +84,7 @@ public class GbifInterpretationPipelineTest {
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
     options.setAttempt(1);
-    options.setInterpretationTypes(Collections.singletonList(InterpretationType.TEMPORAL));
+    options.setInterpretationTypes(Collections.singletonList(GbifInterpretationType.TEMPORAL.name()));
 
     Pipeline pipeline = GbifInterpretationPipeline.create(options).get();
 
@@ -104,7 +102,7 @@ public class GbifInterpretationPipelineTest {
         1);
 
     // check interpretation dir
-    checkInterpretationFiles(options, InterpretationType.TEMPORAL);
+    checkInterpretationFiles(options, GbifInterpretationType.TEMPORAL.name());
 
     // delete files created to leave the FS clean for other tests
     fs.delete(FsUtils.buildPath(options.getDefaultTargetDirectory()), true);
@@ -116,9 +114,9 @@ public class GbifInterpretationPipelineTest {
 
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
-    List<InterpretationType> interpretations =
+    List<String> interpretations =
         Arrays.asList(
-            InterpretationType.COMMON, InterpretationType.TEMPORAL, InterpretationType.LOCATION);
+          GbifInterpretationType.COMMON.name(), GbifInterpretationType.TEMPORAL.name(), GbifInterpretationType.LOCATION.name());
 
     options.setInputFile(INPUT);
     options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
@@ -144,7 +142,7 @@ public class GbifInterpretationPipelineTest {
         interpretations.size());
 
     // check interpretation dirs
-    for (InterpretationType interpretationType : interpretations) {
+    for (String interpretationType : interpretations) {
       checkInterpretationFiles(options, interpretationType);
     }
 
@@ -171,12 +169,12 @@ public class GbifInterpretationPipelineTest {
 
     // check dataset dir
     checkDirCreated(
-        hdfsClusterBaseUri.resolve(
+      hdfsClusterBaseUri.resolve(
             FsUtils.buildPathString(
                 options.getDefaultTargetDirectory(),
                 options.getDatasetId(),
                 options.getAttempt().toString())),
-        InterpretationType.values().length - 1);
+      GbifInterpretationType.values().length - 1);
 
     // delete files created to leave the FS clean for other tests
     fs.delete(FsUtils.buildPath(options.getDefaultTargetDirectory()), true);
@@ -212,14 +210,14 @@ public class GbifInterpretationPipelineTest {
    * Checks that the creation of expected directories and files for an interpretation was correct.
    */
   private void checkInterpretationFiles(
-      DataProcessingPipelineOptions options, InterpretationType type) throws IOException {
+      DataProcessingPipelineOptions options, String type) throws IOException {
 
     String pathString =
         FsUtils.buildPathString(
             options.getDefaultTargetDirectory(),
             options.getDatasetId(),
             options.getAttempt().toString(),
-            type.name().toLowerCase());
+            type.toLowerCase());
 
     // check interpretation DIR
     checkDirCreated(hdfsClusterBaseUri.resolve(pathString), 2);

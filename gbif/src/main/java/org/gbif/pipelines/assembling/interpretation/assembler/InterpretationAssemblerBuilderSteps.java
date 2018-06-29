@@ -1,7 +1,6 @@
-package org.gbif.pipelines.assembling.interpretation;
+package org.gbif.pipelines.assembling.interpretation.assembler;
 
 import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier;
-import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Map;
@@ -32,11 +31,11 @@ class InterpretationAssemblerBuilderSteps {
 
   /**
    * Defines the step to add map of {@link InterpretationStepSupplier} per each {@link
-   * InterpretationType}.
+   * String}.
    */
   public interface UsingStep {
 
-    FinalStep using(Map<InterpretationType, InterpretationStepSupplier> interpretationSteps);
+    FinalStep using(Map<String, InterpretationStepSupplier> interpretationSteps);
   }
 
   /** Defines the final step of the builder. */

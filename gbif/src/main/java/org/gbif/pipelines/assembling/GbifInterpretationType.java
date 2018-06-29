@@ -1,7 +1,7 @@
-package org.gbif.pipelines.config;
+package org.gbif.pipelines.assembling;
 
 /** Defines the types of the interpretations. */
-public enum InterpretationType {
+public enum GbifInterpretationType {
   ALL,
   LOCATION,
   TEMPORAL,
