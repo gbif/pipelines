@@ -1,15 +1,16 @@
-package org.gbif.pipelines.assembling.interpretation;
+package org.gbif.pipelines.assembling.interpretation.assembler;
 
+import org.gbif.pipelines.assembling.GbifInterpretationType;
 import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStep;
 import org.gbif.pipelines.assembling.interpretation.steps.InterpretationStepSupplier;
-import org.gbif.pipelines.config.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.EnumSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -25,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Assembles a {@link Pipeline} dynamically that performs interpretations of verbatim data. */
-class InterpretationPipelineAssembler
+public class InterpretationPipelineAssembler
     implements InterpretationAssemblerBuilderSteps.WithOptionsStep,
         InterpretationAssemblerBuilderSteps.WithInputStep,
         InterpretationAssemblerBuilderSteps.UsingStep,
@@ -37,22 +38,19 @@ class InterpretationPipelineAssembler
 
   private PipelineOptions options;
   private String input;
-  private final Set<InterpretationType> interpretationTypes;
+  private Set<String> interpretationTypes;
   private BiFunction<PCollection<ExtendedRecord>, Pipeline, PCollection<ExtendedRecord>>
       beforeHandler;
   private BiConsumer<PCollection<ExtendedRecord>, Pipeline> otherOperationsHandler;
-  private Map<InterpretationType, InterpretationStepSupplier> interpretationSteps;
+  private Map<String, InterpretationStepSupplier> interpretationSteps;
 
-  private InterpretationPipelineAssembler(EnumSet<InterpretationType> interpretationTypes) {
+  private InterpretationPipelineAssembler(Set<String> interpretationTypes) {
     this.interpretationTypes = interpretationTypes;
   }
 
-  /**
-   * Creates a {@link InterpretationPipelineAssembler} for the list of {@link InterpretationType}
-   * received.
-   */
+  /** Creates a {@link InterpretationPipelineAssembler} for the list of {@link String} received. */
   public static InterpretationAssemblerBuilderSteps.WithOptionsStep of(
-      List<InterpretationType> interpretationTypes) {
+      List<String> interpretationTypes) {
     return new InterpretationPipelineAssembler(filterInterpretations(interpretationTypes));
   }
 
@@ -60,12 +58,14 @@ class InterpretationPipelineAssembler
    * Filters the interpretations received.
    *
    * <p>By default, we use all the interpretations in case that we receive a null or empty list of
-   * {@link InterpretationType}.
+   * {@link String}.
    */
-  private static EnumSet<InterpretationType> filterInterpretations(List<InterpretationType> types) {
-    return Objects.isNull(types) || types.isEmpty() || types.contains(InterpretationType.ALL)
-        ? EnumSet.complementOf(EnumSet.of(InterpretationType.ALL))
-        : EnumSet.copyOf(types);
+  private static Set<String> filterInterpretations(List<String> types) {
+    return Objects.isNull(types)
+            || types.isEmpty()
+            || types.contains(GbifInterpretationType.ALL.name())
+        ? new TreeSet<>(Collections.singletonList(GbifInterpretationType.ALL.name()))
+        : new TreeSet<>(types);
   }
 
   @Override
@@ -85,7 +85,7 @@ class InterpretationPipelineAssembler
 
   @Override
   public InterpretationAssemblerBuilderSteps.FinalStep using(
-      Map<InterpretationType, InterpretationStepSupplier> interpretationSteps) {
+      Map<String, InterpretationStepSupplier> interpretationSteps) {
     Objects.requireNonNull(interpretationSteps, "Interpretation steps map cannot be null");
     this.interpretationSteps = interpretationSteps;
     return this;
@@ -128,6 +128,10 @@ class InterpretationPipelineAssembler
 
     // STEP 3: interpretations
     LOG.info("Adding interpretation steps");
+    if (interpretationTypes.contains(GbifInterpretationType.ALL.name())) {
+      interpretationTypes = interpretationSteps.keySet();
+    }
+
     interpretationTypes
         .stream()
         .filter(stepSupplierFilter())
@@ -144,7 +148,7 @@ class InterpretationPipelineAssembler
     return pipeline;
   }
 
-  private Predicate<InterpretationType> stepSupplierFilter() {
+  private Predicate<String> stepSupplierFilter() {
     return type -> {
       if (Objects.isNull(interpretationSteps.get(type))) {
         LOG.warn("No interpretation step supplier found for interpretation type {}", type);
@@ -154,7 +158,7 @@ class InterpretationPipelineAssembler
     };
   }
 
-  private Function<InterpretationType, InterpretationStep> interpretationStepMapper() {
+  private Function<String, InterpretationStep> interpretationStepMapper() {
     return type -> {
       InterpretationStep step = interpretationSteps.get(type).get();
       if (step == null) {

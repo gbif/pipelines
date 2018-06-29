@@ -1,5 +1,8 @@
 package org.gbif.pipelines.assembling;
 
+import org.gbif.pipelines.config.DataPipelineOptionsFactory;
+import org.gbif.pipelines.config.DataProcessingPipelineOptions;
+
 import java.util.Arrays;
 
 import org.apache.beam.sdk.Pipeline;
@@ -27,7 +30,8 @@ public class PipelineHandler {
 
   private static void createAndRunPipeline(String[] args) {
     LOG.info("Creating pipeline from args: {}", Arrays.asList(args));
-    Pipeline pipeline = InterpretationPipelineFactory.from(args).get();
+    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
+    Pipeline pipeline = GbifInterpretationPipeline.create(options).get();
 
     LOG.info("Running pipeline", Arrays.asList(args));
     PipelineResult.State state = pipeline.run().waitUntilFinish();

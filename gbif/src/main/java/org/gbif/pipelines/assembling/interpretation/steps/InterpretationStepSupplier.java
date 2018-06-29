@@ -1,6 +1,6 @@
 package org.gbif.pipelines.assembling.interpretation.steps;
 
-import org.gbif.pipelines.config.InterpretationType;
+import org.gbif.pipelines.assembling.GbifInterpretationType;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.core.ws.config.HttpConfigFactory;
 import org.gbif.pipelines.core.ws.config.Service;
@@ -49,7 +49,7 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
       PipelineTargetPaths paths, CodecFactory avroCodec, Config wsConfig) {
     return () ->
         InterpretationStep.<LocationRecord>newBuilder()
-            .interpretationType(InterpretationType.LOCATION)
+            .interpretationType(GbifInterpretationType.LOCATION.name())
             .avroClass(LocationRecord.class)
             .transform(LocationRecordTransform.create(wsConfig))
             .dataTargetPath(paths.getDataTargetPath())
@@ -64,7 +64,7 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
       PipelineTargetPaths paths, CodecFactory avroCodec) {
     return () ->
         InterpretationStep.<TemporalRecord>newBuilder()
-            .interpretationType(InterpretationType.TEMPORAL)
+            .interpretationType(GbifInterpretationType.TEMPORAL.name())
             .avroClass(TemporalRecord.class)
             .transform(TemporalRecordTransform.create())
             .dataTargetPath(paths.getDataTargetPath())
@@ -99,7 +99,7 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
       PipelineTargetPaths paths, CodecFactory avroCodec, Config wsConfig) {
     return () ->
         InterpretationStep.<TaxonRecord>newBuilder()
-            .interpretationType(InterpretationType.TAXONOMY)
+            .interpretationType(GbifInterpretationType.TAXONOMY.name())
             .avroClass(TaxonRecord.class)
             .transform(TaxonRecordTransform.create(wsConfig))
             .dataTargetPath(paths.getDataTargetPath())
@@ -113,7 +113,7 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
   static InterpretationStepSupplier commonGbif(PipelineTargetPaths paths, CodecFactory avroCodec) {
     return () ->
         InterpretationStep.<InterpretedExtendedRecord>newBuilder()
-            .interpretationType(InterpretationType.COMMON)
+            .interpretationType(GbifInterpretationType.COMMON.name())
             .avroClass(InterpretedExtendedRecord.class)
             .transform(InterpretedExtendedRecordTransform.create())
             .dataTargetPath(paths.getDataTargetPath())
@@ -128,7 +128,7 @@ public interface InterpretationStepSupplier extends Supplier<InterpretationStep>
       PipelineTargetPaths paths, CodecFactory avroCodec) {
     return () ->
         InterpretationStep.<MultimediaRecord>newBuilder()
-            .interpretationType(InterpretationType.MULTIMEDIA)
+            .interpretationType(GbifInterpretationType.MULTIMEDIA.name())
             .avroClass(MultimediaRecord.class)
             .transform(MultimediaRecordTransform.create())
             .dataTargetPath(paths.getDataTargetPath())
