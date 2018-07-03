@@ -69,9 +69,9 @@ public interface DataProcessingPipelineOptions extends HadoopFileSystemOptions {
   void setTargetParallelism(int target);
 
   @Description("Types for an interpretation - ALL, TAXON, LOCATION and etc.")
-  List<InterpretationType> getInterpretationTypes();
+  List<String> getInterpretationTypes();
 
-  void setInterpretationTypes(List<InterpretationType> types);
+  void setInterpretationTypes(List<String> types);
 
   @Description("Avro compression type")
   String getAvroCompressionType();
