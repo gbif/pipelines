@@ -1,13 +1,12 @@
 package org.gbif.pipelines.esindexing.response;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.http.HttpEntity;
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.common.SettingsType;
 
 import java.util.Set;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.http.HttpEntity;
 
 import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
 
