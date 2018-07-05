@@ -51,4 +51,4 @@ java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline -
 ~~~~ 
 
 
-DISCLAIMER: at the time being the ES schema is temporary and the development of the pipeline is still in an early stage, therefore issues may be encountered.
+NOTE: at the time being the ES schema is temporary and the development of the pipeline is still in an early stage, therefore issues may be encountered.
