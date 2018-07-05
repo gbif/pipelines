@@ -18,12 +18,16 @@ The Main class that runs this pipeline is `DwcaPipeline` and it uses a `DwcaMini
 
 The parameters that can be used can be seen using the `--help=DwcaMiniPipelineOptions` option:
 
-~~~~ java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --help=DwcaMiniPipelineOptions~~~~ 
+~~~~
+java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --help=DwcaMiniPipelineOptions
+~~~~ 
 
 
 This is an example to run this pipeline with the minimum required parameters:
 
-~~~~ java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200~~~~ 
+~~~~
+java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200
+~~~~ 
 
  This generates an output like this:
 
@@ -31,7 +35,9 @@ This is an example to run this pipeline with the minimum required parameters:
 
 If we ignore the intermediate outputs using this command:
 
-~~~~ java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200 --ignoreIntermediateOutputs=true~~~~ 
+~~~~
+java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200 --ignoreIntermediateOutputs=true
+~~~~ 
 
 there is no output written in the target path. In this case, the output is the records indexed in ES. 
 By default, the ES index name follows the format {datasetId}_{attempt}. This index is added to the alias 
@@ -40,7 +46,9 @@ specified in the `ESAlias` parameter. By default it's `occurrence`.
 
 Other examples of commands:
 - Only DWCA_TO_AVRO step: 
-~~~~java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=https://api.gbif-dev.org/v1/geocode/reverse --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200 --pipelineStep=DWCA_TO_AVRO~~~~ 
+~~~~
+java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=https://api.gbif-dev.org/v1/geocode/reverse --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200 --pipelineStep=DWCA_TO_AVRO
+~~~~ 
 
 
 DISCLAIMER: at the time being the ES schema is temporary and the development of the pipeline is still in an early stage, therefore issues may be encountered.
