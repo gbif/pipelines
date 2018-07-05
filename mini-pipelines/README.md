@@ -39,8 +39,7 @@ java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline -
 ~~~~ 
 
 In this case, the output is the records indexed in ES. 
-By default, the ES index name follows the format {datasetId}_{attempt}. This index is added to the alias 
-specified in the `ESAlias` parameter. By default it's `occurrence`.
+By default, the ES index name follows the format {datasetId}_{attempt} - in this example it's `abcde12345_1. This index is added to the alias specified in the `ESAlias` parameter. By default it's `occurrence`.
 
 
 Other examples of commands:
