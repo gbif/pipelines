@@ -12,9 +12,8 @@ As defined in [this issue](https://github.com/gbif/pipelines/issues/116) this pi
 - All the interpretation based on external service will use the GBIF services only.
 - The Elasticsearch schema will be aligned to the GBIF schema but it can change over time, users of this tool should expect continuos changes to the ES schema that could impact on the services depending on it.
 
-
-The Main class that runs this pipeline is `DwcaPipeline` and it uses a `DwcaMiniPipelineOptions` for configuration.  
-
+### How to run the pipeline ###
+The Main class that runs this pipeline is `DwcaPipeline` and it uses a `DwcaMiniPipelineOptions` for configuration.
 
 The parameters that can be used can be seen using the `--help=DwcaMiniPipelineOptions` option:
 
@@ -26,20 +25,20 @@ java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline -
 This is an example to run this pipeline with the minimum required parameters:
 
 ~~~~
-java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200
+java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=abcde12345 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200
 ~~~~ 
 
  This generates an output like this:
 
  <img src="docs/output_generated.png">
 
-If we ignore the intermediate outputs using this command:
+If we ignore the intermediate outputs using the next command there is no output written in the target path:
 
 ~~~~
 java -cp mini-pipelines.jar org.gbif.pipelines.minipipelines.dwca.DwcaPipeline --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200 --ignoreIntermediateOutputs=true
 ~~~~ 
 
-there is no output written in the target path. In this case, the output is the records indexed in ES. 
+In this case, the output is the records indexed in ES. 
 By default, the ES index name follows the format {datasetId}_{attempt}. This index is added to the alias 
 specified in the `ESAlias` parameter. By default it's `occurrence`.
 
