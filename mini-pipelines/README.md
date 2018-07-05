@@ -1,9 +1,9 @@
-## Mini pipelines ##
+# Mini pipelines #
 This project aims to provide a set of mini pipelines that can be used for testing or simply as tools for developers or small organizations. 
 
 The jar generated to be used by others is `mini-pipelines.jar`.
 
-### Dwca mini pipeline ###
+## Dwca mini pipeline ##
 This mini pipeline was created to work with Dwc-A as the input of the pipeline.
 
 As defined in [this issue](https://github.com/gbif/pipelines/issues/116) this pipeline has the following limitations:
