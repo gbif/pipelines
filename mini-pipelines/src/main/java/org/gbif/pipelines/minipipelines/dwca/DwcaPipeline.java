@@ -10,13 +10,11 @@ public class DwcaPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(DwcaPipeline.class);
 
   public static void main(String[] args) {
-    LOG.info("Creating DwcaMiniPipelineOptions");
     // Create PipelineOptions
     PipelineOptionsFactory.register(DwcaMiniPipelineOptions.class);
     DwcaMiniPipelineOptions options =
         PipelineOptionsFactory.fromArgs(args).withValidation().as(DwcaMiniPipelineOptions.class);
 
-    LOG.info("Running Dwc-A pipeline");
     DwcaPipelineRunner.from(options).run();
   }
 }

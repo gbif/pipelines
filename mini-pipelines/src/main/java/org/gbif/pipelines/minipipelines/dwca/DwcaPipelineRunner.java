@@ -8,10 +8,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /**
  * Class that handles the creation and execution of a pipeline that works with Dwc-A files.
- * Depending on the steps of the pipeline the execution process will vary.
+ *
+ * <p>Depending on the steps of the pipeline the execution process will vary. The main difference is
+ * when we are indexing in ES. In this case, we need to create the ES index before building the
+ * pipeline in order to set that index into the indexing step. After executing the pipeline we also
+ * have to swap the new index in the alias.
  *
  * <p>This class is intended to be used internally, so it should always be package-private.
  */
@@ -20,11 +25,11 @@ class DwcaPipelineRunner {
   private static final Logger LOG = LoggerFactory.getLogger(DwcaPipelineRunner.class);
 
   private final DwcaMiniPipelineOptions options;
-  private String idxCreated;
-  private EsConfig esConfig;
+  private final EsConfig esConfig;
 
   private DwcaPipelineRunner(DwcaMiniPipelineOptions options) {
     this.options = options;
+    esConfig = isEsIndexingIncludedInPipeline() ? EsConfig.from(options.getESHosts()) : null;
   }
 
   static DwcaPipelineRunner from(DwcaMiniPipelineOptions options) {
@@ -33,7 +38,7 @@ class DwcaPipelineRunner {
 
   void run() {
     // if ES indexing is included in the pipeline we first create the index
-    createIndex();
+    createIndex().ifPresent(options::setESIndexName);
 
     // we build the pipeline. This has to be done after creating the index because we need to know
     // the name of the index where we'll index the records to.
@@ -50,7 +55,7 @@ class DwcaPipelineRunner {
         .addShutdownHook(
             new Thread(
                 () -> {
-                  LOG.info("Dwca pipeline runner shutdown hook called");
+                  LOG.debug("Dwca pipeline runner shutdown hook called");
                   File tmp =
                       Paths.get(DwcaPipelineBuilder.OutputWriter.getTempDir(options)).toFile();
                   if (tmp.delete()) {
@@ -61,34 +66,35 @@ class DwcaPipelineRunner {
                 }));
   }
 
-  private void createIndex() {
-    if (isEsIncludedInPipeline()) {
-      esConfig = EsConfig.from(options.getESAddresses());
-      idxCreated = EsHandler.createIndex(esConfig, options.getDatasetId(), options.getAttempt());
-      options.setESIndexName(idxCreated);
-      LOG.info("ES index {} created", idxCreated);
+  private Optional<String> createIndex() {
+    if (isEsIndexingIncludedInPipeline()) {
+      String index = EsHandler.createIndex(esConfig, options.getDatasetId(), options.getAttempt());
+      LOG.info("ES index {} created", index);
+      return Optional.of(index);
     }
+
+    return Optional.empty();
   }
 
   private void swapIndex() {
-    if (isEsIncludedInPipeline()) {
-      EsHandler.swapIndexInAlias(esConfig, options.getESAlias(), idxCreated);
-      LOG.info("ES index {} added to alias {}", idxCreated, options.getESAlias());
+    if (isEsIndexingIncludedInPipeline()) {
+      EsHandler.swapIndexInAlias(esConfig, options.getESAlias(), options.getESIndexName());
+      LOG.info("ES index {} added to alias {}", options.getESIndexName(), options.getESAlias());
 
       // log number of records indexed
-      // TODO: find better way than refreshing??
+      // TODO: find better way than refreshing?? other option is to wait 1s
       // refresh the index because the records are not available to search immediately.
-      EsHandler.refreshIndex(esConfig, idxCreated);
-      long recordsIndexed = EsHandler.countIndexDocuments(esConfig, idxCreated);
+      EsHandler.refreshIndex(esConfig, options.getESIndexName());
+      long recordsIndexed = EsHandler.countIndexDocuments(esConfig, options.getESIndexName());
       LOG.info(
           "{} records indexed into the ES index {} in alias {}",
           recordsIndexed,
-          idxCreated,
+          options.getESIndexName(),
           options.getESAlias());
     }
   }
 
-  private boolean isEsIncludedInPipeline() {
+  private boolean isEsIndexingIncludedInPipeline() {
     return options.getPipelineStep() == DwcaMiniPipelineOptions.PipelineStep.INDEX_TO_ES;
   }
 }

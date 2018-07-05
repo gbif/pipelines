@@ -41,7 +41,7 @@ import static org.gbif.pipelines.minipipelines.dwca.DwcaMiniPipelineOptions.Pipe
 
 /**
  * Builder to create a Pipeline that works with Dwc-A files. It adds different steps to the pipeline
- * dependending on the {@link org.apache.beam.sdk.options.PipelineOptions}.
+ * dependending on the {@link DwcaMiniPipelineOptions#getPipelineStep()}.
  *
  * <p>This class is intended to be used internally, so it should always be package-private.
  */
@@ -76,11 +76,14 @@ class DwcaPipelineBuilder {
 
     // TODO: count number of records read to log it??
 
-    OutputWriter.writeToAvro(
-        verbatimRecords,
-        ExtendedRecord.class,
-        options,
-        FsUtils.buildPathString(OutputWriter.getRootPath(options), "verbatim"));
+    // only write if it'' the final the step or the intermediate outputs are not ignored
+    if (DWCA_TO_AVRO == options.getPipelineStep() || !options.getIgnoreIntermediateOutputs()) {
+      OutputWriter.writeToAvro(
+          verbatimRecords,
+          ExtendedRecord.class,
+          options,
+          FsUtils.buildPathString(OutputWriter.getRootPath(options), "verbatim"));
+    }
 
     if (DWCA_TO_AVRO == options.getPipelineStep()) {
       LOG.info("Returning pipeline for step {}", DWCA_TO_AVRO);
@@ -235,7 +238,7 @@ class DwcaPipelineBuilder {
 
     ElasticsearchIO.ConnectionConfiguration esBeamConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
-            options.getESAddresses(), options.getESIndexName(), "record");
+            options.getESHosts(), options.getESIndexName(), "record");
 
     resultCollection.apply(
         ElasticsearchIO.write()
@@ -250,14 +253,12 @@ class DwcaPipelineBuilder {
 
     private static <T> void writeToAvro(
         PCollection<T> records, Class<T> avroClass, DwcaMiniPipelineOptions options, String path) {
-      if (!options.getOmitIntermediateOutputs()) {
-        records.apply(
-            AvroIO.write(avroClass)
-                .to(FileSystems.matchNewResource(path, false))
-                .withSuffix(".avro")
-                .withCodec(CodecFactory.snappyCodec())
-                .withTempDirectory(FileSystems.matchNewResource(getTempDir(options), true)));
-      }
+      records.apply(
+          AvroIO.write(avroClass)
+              .to(FileSystems.matchNewResource(path, false))
+              .withSuffix(".avro")
+              .withCodec(CodecFactory.snappyCodec())
+              .withTempDirectory(FileSystems.matchNewResource(getTempDir(options), true)));
     }
 
     private static <T> void writeInterpretationResult(
@@ -267,7 +268,8 @@ class DwcaPipelineBuilder {
         DwcaMiniPipelineOptions options,
         GbifInterpretationType interpretationType) {
 
-      if (!options.getOmitIntermediateOutputs()) {
+      // only write if it'' the final the step or the intermediate outputs are not ignored
+      if (INTERPRET == options.getPipelineStep() || !options.getIgnoreIntermediateOutputs()) {
 
         String rootInterpretationPath =
             FsUtils.buildPathString(getRootPath(options), interpretationType.name().toLowerCase());
