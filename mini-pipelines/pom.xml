@@ -45,6 +45,10 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.gbif.pipelines.minipipelines.dwca.DwcaPipeline</mainClass>
+                                </transformer>
                             </transformers>
                             <relocations>
                                 <!-- Transient from core: conflicts with Beam on Spark -->
