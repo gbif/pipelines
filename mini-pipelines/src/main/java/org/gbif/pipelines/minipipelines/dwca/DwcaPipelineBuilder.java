@@ -33,7 +33,6 @@ import org.gbif.pipelines.utils.FsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.function.BiConsumer;
 
@@ -53,6 +52,8 @@ class DwcaPipelineBuilder {
 
   private static final String TEMP_DEFAULT = "tmp";
 
+  private DwcaPipelineBuilder() {}
+
   static Pipeline buildPipeline(DwcaMiniPipelineOptions options) {
     LOG.info("Starting pipeline building");
 
@@ -67,7 +68,7 @@ class DwcaPipelineBuilder {
     PCollection<ExtendedRecord> rawRecords =
         pipeline.apply(
             "Read from Darwin Core Archive",
-            Files.isDirectory(Paths.get(options.getInputPath()))
+            Paths.get(options.getInputPath()).toFile().isDirectory()
                 ? DwCAIO.Read.withPaths(options.getInputPath())
                 : DwCAIO.Read.withPaths(options.getInputPath(), OutputWriter.getTempDir(options)));
 
@@ -208,7 +209,7 @@ class DwcaPipelineBuilder {
             .and(extendedRecordTag, verbatimRecordsMapped)
             .apply(CoGroupByKey.create());
 
-    // LOG.info("Adding step 3: Converting to a flat object");
+    LOG.info("Adding step 3: Converting to a flat object");
     PCollection<String> resultCollection =
         groupedCollection.apply(
             "Merge objects",
@@ -254,6 +255,8 @@ class DwcaPipelineBuilder {
   }
 
   static class OutputWriter {
+
+    private OutputWriter() {}
 
     private static <T> void writeToAvro(
         PCollection<T> records, Class<T> avroClass, DwcaMiniPipelineOptions options, String path) {
@@ -310,6 +313,9 @@ class DwcaPipelineBuilder {
 
   private static class EsSchemaConverter {
     // FIXME: this is temporary till we define the final ES schema
+
+    private EsSchemaConverter() {}
+
     /** Assemble main object json with nested structure */
     private static String toIndex(
         InterpretedExtendedRecord interRecord,
@@ -350,6 +356,8 @@ class DwcaPipelineBuilder {
     private static final String DEV_URL = "https://api.gbif-dev.org/";
     private static final String UAT_URL = "https://api.gbif-uat.org/";
     private static final String PROD_URL = "https://api.gbif-prod.org/";
+
+    private WsConfigFactory() {}
 
     static Config getConfig(DwcaMiniPipelineOptions.GbifEnv env) {
       if (env == DEV) {
