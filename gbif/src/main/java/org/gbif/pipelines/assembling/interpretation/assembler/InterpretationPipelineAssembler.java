@@ -119,8 +119,7 @@ public class InterpretationPipelineAssembler
         pipeline.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(input));
 
     // STEP 2: Common operations before running the interpretations
-    LOG.info(
-        "{} steps before interpretation", Objects.nonNull(beforeHandler) ? "Adding" : "Skipping");
+    LOG.info("Steps before interpretation - {}", Objects.nonNull(beforeHandler));
     PCollection<ExtendedRecord> extendedRecords =
         Objects.nonNull(beforeHandler)
             ? beforeHandler.apply(verbatimRecords, pipeline)
