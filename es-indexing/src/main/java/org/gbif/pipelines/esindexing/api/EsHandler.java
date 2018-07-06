@@ -1,23 +1,20 @@
 package org.gbif.pipelines.esindexing.api;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
 import org.gbif.pipelines.esindexing.common.SettingsType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static org.gbif.pipelines.esindexing.api.EsService.getIndexesByAliasAndIndexPattern;
-import static org.gbif.pipelines.esindexing.api.EsService.swapIndexes;
-import static org.gbif.pipelines.esindexing.api.EsService.updateIndexSettings;
+import static org.gbif.pipelines.esindexing.api.EsService.*;
 
 /** Exposes a public API to perform operations in a ES instance. */
 public class EsHandler {
@@ -138,6 +135,22 @@ public class EsHandler {
 
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.countIndexDocuments(esClient, index);
+    }
+  }
+
+  /**
+   * Refreshes the index received.
+   *
+   * @param config configuration of the ES instance.
+   * @param index name of the index to refresh.
+   */
+  public static void refreshIndex(EsConfig config, String index) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
+
+    LOG.info("Refresing index {}", index);
+
+    try (EsClient esClient = EsClient.from(config)) {
+      EsService.refreshIndex(esClient, index);
     }
   }
 

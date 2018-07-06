@@ -1,13 +1,11 @@
 package org.gbif.pipelines.utils;
 
+import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.assembling.interpretation.steps.PipelineTargetPaths;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 
 import java.util.Arrays;
 import java.util.StringJoiner;
-
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.hadoop.fs.Path;
 
 /** Utility class to work with FS. */
 public final class FsUtils {
@@ -19,7 +17,6 @@ public final class FsUtils {
   private FsUtils() {}
 
   /** Build a {@link Path} from an array of string values. */
-  @VisibleForTesting
   public static Path buildPath(String... values) {
     StringJoiner joiner = new StringJoiner(Path.SEPARATOR);
     Arrays.stream(values).forEach(joiner::add);
