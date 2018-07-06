@@ -96,8 +96,8 @@ public interface DwcaMiniPipelineOptions extends PipelineOptions {
   void setESAlias(String esAlias);
 
   @Description(
-      "Name of the ES index that will be used to index the records. "
-          + "Hidden because the index should always be set programmatically.")
+      "Name of the ES index that will be used to index the records. It's for internal use, "
+          + "the index will always be set programmatically, so this parameter will be ignored.")
   @Hidden
   String getESIndexName();
 

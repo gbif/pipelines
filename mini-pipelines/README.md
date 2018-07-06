@@ -25,7 +25,7 @@ java -jar mini-pipelines.jar --help=DwcaMiniPipelineOptions
 This is an example to run this pipeline with the minimum required parameters:
 
 ~~~~
-java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcde12345 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200
+java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcde12345 --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200
 ~~~~ 
 
  This generates an output like this:
@@ -35,7 +35,7 @@ java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetI
 If we ignore the intermediate outputs using the next command there is no output written in the target path:
 
 ~~~~
-java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200 --ignoreIntermediateOutputs=true
+java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200 --ignoreIntermediateOutputs=true
 ~~~~ 
 
 In this case, the output is the records indexed in ES. 
@@ -45,7 +45,7 @@ By default, the ES index name follows the format {datasetId}_{attempt} - in this
 Other examples of commands:
 - Only DWCA_TO_AVRO step: 
 ~~~~
-java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=https://api.gbif-dev.org/v1/geocode/reverse --attempt=1 --gbifEnv=DEV --ESHosts=http://localhost:9200 --pipelineStep=DWCA_TO_AVRO
+java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=https://api.gbif-dev.org/v1/geocode/reverse --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200 --pipelineStep=DWCA_TO_AVRO
 ~~~~ 
 
 
