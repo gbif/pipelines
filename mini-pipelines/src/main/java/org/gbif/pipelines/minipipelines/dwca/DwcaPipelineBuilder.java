@@ -1,5 +1,30 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
+import org.gbif.pipelines.assembling.GbifInterpretationType;
+import org.gbif.pipelines.common.beam.Coders;
+import org.gbif.pipelines.common.beam.DwCAIO;
+import org.gbif.pipelines.core.ws.config.Config;
+import org.gbif.pipelines.core.ws.config.HttpConfigFactory;
+import org.gbif.pipelines.indexing.converter.GbifRecords2JsonConverter;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
+import org.gbif.pipelines.io.avro.location.LocationRecord;
+import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
+import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
+import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
+import org.gbif.pipelines.transform.Kv2Value;
+import org.gbif.pipelines.transform.RecordTransform;
+import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
+import org.gbif.pipelines.transform.record.LocationRecordTransform;
+import org.gbif.pipelines.transform.record.MultimediaRecordTransform;
+import org.gbif.pipelines.transform.record.TaxonRecordTransform;
+import org.gbif.pipelines.transform.record.TemporalRecordTransform;
+import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
+import org.gbif.pipelines.utils.FsUtils;
+
+import java.nio.file.Paths;
+
 import com.google.common.base.Strings;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
@@ -12,31 +37,17 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-import org.apache.beam.sdk.values.*;
-import org.gbif.pipelines.assembling.GbifInterpretationType;
-import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.common.beam.DwCAIO;
-import org.gbif.pipelines.core.ws.config.Config;
-import org.gbif.pipelines.core.ws.config.HttpConfigFactory;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.location.LocationRecord;
-import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
-import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
-import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
-import org.gbif.pipelines.transform.Kv2Value;
-import org.gbif.pipelines.transform.RecordTransform;
-import org.gbif.pipelines.transform.record.*;
-import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
-import org.gbif.pipelines.utils.FsUtils;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
+import org.apache.beam.sdk.values.TupleTag;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Paths;
-import java.util.function.BiConsumer;
-
-import static org.gbif.pipelines.minipipelines.dwca.DwcaMiniPipelineOptions.GbifEnv.*;
+import static org.gbif.pipelines.minipipelines.dwca.DwcaMiniPipelineOptions.GbifEnv.DEV;
+import static org.gbif.pipelines.minipipelines.dwca.DwcaMiniPipelineOptions.GbifEnv.PROD;
+import static org.gbif.pipelines.minipipelines.dwca.DwcaMiniPipelineOptions.GbifEnv.UAT;
 import static org.gbif.pipelines.minipipelines.dwca.DwcaMiniPipelineOptions.PipelineStep.DWCA_TO_AVRO;
 import static org.gbif.pipelines.minipipelines.dwca.DwcaMiniPipelineOptions.PipelineStep.INTERPRET;
 
@@ -236,8 +247,9 @@ class DwcaPipelineBuilder {
                         value.getOnly(
                             extendedRecordTag, ExtendedRecord.newBuilder().setId(key).build());
                     c.output(
-                        EsSchemaConverter.toIndex(
-                            interRecord, temporal, location, taxon, multimedia, extendedRecord));
+                        GbifRecords2JsonConverter.create(
+                                interRecord, temporal, location, taxon, multimedia, extendedRecord)
+                            .buildJson());
                   }
                 }));
 
@@ -308,46 +320,6 @@ class DwcaPipelineBuilder {
       return Strings.isNullOrEmpty(options.getTempLocation())
           ? FsUtils.buildPathString(options.getTargetPath(), TEMP_DEFAULT)
           : options.getTempLocation();
-    }
-  }
-
-  private static class EsSchemaConverter {
-    // FIXME: this is temporary till we define the final ES schema
-
-    private EsSchemaConverter() {}
-
-    /** Assemble main object json with nested structure */
-    private static String toIndex(
-        InterpretedExtendedRecord interRecord,
-        TemporalRecord temporal,
-        LocationRecord location,
-        TaxonRecord taxon,
-        MultimediaRecord multimedia,
-        ExtendedRecord extendedRecord) {
-
-      StringBuilder builder = new StringBuilder();
-      BiConsumer<String, String> f =
-          (k, v) -> builder.append("\"").append(k).append("\":").append(v);
-
-      builder.append("{\"id\":\"").append(extendedRecord.getId()).append("\"").append(",");
-
-      f.accept("raw", extendedRecord.toString());
-      builder.append(",");
-      f.accept("common", interRecord.toString());
-      builder.append(",");
-      f.accept("temporal", temporal.toString());
-      builder.append(",");
-      f.accept("location", location.toString());
-      builder.append(",");
-      f.accept("taxon", taxon.toString());
-      builder.append(",");
-      f.accept("multimedia", multimedia.toString());
-      builder.append("}");
-
-      return builder
-          .toString()
-          .replaceAll("http://rs.tdwg.org/dwc/terms/", "")
-          .replaceAll("http://rs.gbif.org/terms/1.0/", "");
     }
   }
 

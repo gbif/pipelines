@@ -1,0 +1,67 @@
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 9,
+      "number_of_replicas": 0
+    }
+  },
+  "mappings": {
+    "doc": {
+      "properties": {
+        "id": {"type": "keyword"},
+
+        "basisOfRecord": {"type": "keyword"},
+        "sex": {"type": "text"},
+        "lifeStage": {"type":  "text"},
+        "establishmentMeans": {"type": "text"},
+        "individualCount": {"type": "integer"},
+        "typeStatus": {"type": "text"},
+        "references": {"type":"text"},
+
+        "continent": {"type":"text"},
+        "waterBody": {"type":"text"},
+        "country": {"type":"text"},
+        "countryCode": {"type":"text"},
+        "stateProvince": {"type":"text"},
+        "minimumElevationInMeters": {"type":"double"},
+        "maximumElevationInMeters": {"type":"double"},
+        "minimumDepthInMeters": {"type":"double"},
+        "maximumDepthInMeters": {"type":"double"},
+        "minimumDistanceAboveSurfaceInMeters": {"type":"double"},
+        "maximumDistanceAboveSurfaceInMeters": {"type":"double"},
+        "coordinateUncertaintyInMeters": {"type":"double"},
+        "coordinatePrecision": {"type":"double"},
+        "location": {"type": "geo_point"},
+
+        "year": {"type": "integer"},
+        "month": {"type": "integer"},
+        "day": {"type": "integer"},
+        "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
+        "startDayOfYear": {"type": "integer"},
+        "endDayOfYear": {"type": "integer"},
+        "modified": {"type": "date"},
+        "dateIdentified": {"type": "date"},
+
+        "gbifScientificName": {"type": "keyword","boost": 100},
+        "gbifSpeciesKey": {"type": "keyword", "index": "false", "copy_to": false},
+        "gbifKingdom": {"type": "text"},
+        "gbifPhylum": {"type": "text"},
+        "gbifClass": {"type": "text"},
+        "gbifOrder": {"type": "text"},
+        "gbifFamily": {"type": "text"},
+        "gbifGenus": {"type": "text"},
+        "gbifSubgenus": {"type": "text"},
+        "gbifTaxonKey": {"type": "text"},
+
+        "synonym": {"type": "boolean"},
+        "usage":  {"type": "object"},
+        "classification": {"type": "object"},
+        "acceptedUsage":{"type": "object"},
+        "nomenclature":{"type": "text"},
+        "multimediaItems":{"type": "nested", "enabled": false},
+
+        "verbatim": {"type": "object", "enabled": false}
+      }
+    }
+  }
+}

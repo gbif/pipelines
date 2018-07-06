@@ -11,7 +11,7 @@
 
     <artifactId>mini-pipelines</artifactId>
 
-    <name>Pipelines :: mini</name>
+    <name>Pipelines :: Mini-pipeline</name>
 
     <build>
         <plugins>
