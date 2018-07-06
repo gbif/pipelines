@@ -1,12 +1,14 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.esindexing.api.EsHandler;
 import org.gbif.pipelines.esindexing.client.EsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -58,10 +60,13 @@ class DwcaPipelineRunner {
                   LOG.debug("Dwca pipeline runner shutdown hook called");
                   File tmp =
                       Paths.get(DwcaPipelineBuilder.OutputWriter.getTempDir(options)).toFile();
-                  if (tmp.delete()) {
-                    LOG.info("temp directory {} deleted", tmp.getPath());
-                  } else {
-                    LOG.warn("Could not delete temp directory {}", tmp.getPath());
+                  if (tmp.exists()) {
+                    try {
+                      FileUtils.deleteDirectory(tmp);
+                      LOG.info("temp directory {} deleted", tmp.getPath());
+                    } catch (IOException e) {
+                      LOG.warn("Could not delete temp directory {}", tmp.getPath());
+                    }
                   }
                 }));
   }

@@ -33,6 +33,8 @@ import org.gbif.pipelines.utils.FsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.function.BiConsumer;
 
 import static org.gbif.pipelines.minipipelines.dwca.DwcaMiniPipelineOptions.GbifEnv.*;
@@ -65,7 +67,9 @@ class DwcaPipelineBuilder {
     PCollection<ExtendedRecord> rawRecords =
         pipeline.apply(
             "Read from Darwin Core Archive",
-            DwCAIO.Read.withPaths(options.getInputPath(), OutputWriter.getTempDir(options)));
+            Files.isDirectory(Paths.get(options.getInputPath()))
+                ? DwCAIO.Read.withPaths(options.getInputPath())
+                : DwCAIO.Read.withPaths(options.getInputPath(), OutputWriter.getTempDir(options)));
 
     // STEP 2: Remove duplicates
     LOG.info("Adding step 2: removing duplicates");
