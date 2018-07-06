@@ -1,7 +1,7 @@
 # Mini pipelines #
 This project aims to provide a set of mini pipelines that can be used for testing or simply as tools for developers or small organizations. 
 
-The jar generated to be used by others is `mini-pipelines.jar`.
+The jar generated to be used by others is `mini-pipelines-{version}.jar`. It can be downloaded from http://repository.gbif.org/content/groups/gbif/org/gbif/pipelines/mini-pipelines/.
 
 ## Dwca mini pipeline ##
 This mini pipeline was created to work with Dwc-A as the input of the pipeline.
@@ -13,7 +13,7 @@ As defined in [this issue](https://github.com/gbif/pipelines/issues/116) this pi
 - The Elasticsearch schema will be aligned to the GBIF schema but it can change over time, users of this tool should expect continuos changes to the ES schema that could impact on the services depending on it.
 
 ### How to run the pipeline ###
-The Main class that runs this pipeline is `DwcaPipeline` and it uses a `DwcaMiniPipelineOptions` for configuration.
+The main class that runs this pipeline is `DwcaPipeline` and it uses a `DwcaMiniPipelineOptions` for configuration.
 
 The parameters that can be used can be seen using the `--help=DwcaMiniPipelineOptions` option:
 
@@ -45,8 +45,12 @@ By default, the ES index name follows the format {datasetId}_{attempt} - in this
 Other examples of commands:
 - Only DWCA_TO_AVRO step: 
 ~~~~
-java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=https://api.gbif-dev.org/v1/geocode/reverse --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200 --pipelineStep=DWCA_TO_AVRO
+java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=PROD --pipelineStep=DWCA_TO_AVRO
 ~~~~ 
 
+- INTERPRET step: 
+~~~~
+java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=PROD --pipelineStep=INTERPRET
+~~~~ 
 
 NOTE: at the time being the ES schema is temporary and the development of the pipeline is still in an early stage, therefore issues may be encountered.
