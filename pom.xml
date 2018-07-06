@@ -38,6 +38,7 @@
     <module>gbif</module>
     <module>verbatim-converters</module>
     <module>es-indexing</module>
+    <module>mini-pipelines</module>
   </modules>
 
   <repositories>
