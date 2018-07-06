@@ -355,7 +355,7 @@ class DwcaPipelineBuilder {
 
     private static final String DEV_URL = "https://api.gbif-dev.org/";
     private static final String UAT_URL = "https://api.gbif-uat.org/";
-    private static final String PROD_URL = "https://api.gbif-prod.org/";
+    private static final String PROD_URL = "https://api.gbif.org/";
 
     private WsConfigFactory() {}
 
