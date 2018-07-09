@@ -37,7 +37,7 @@ public class GbifRecords2JsonConverterTest {
             .build();
 
     String expected =
-        "{\"id\":\"777\",\"verbatim\":{},\"year\":\"2000\",\"month\":null,\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", "
+        "{\"id\":\"777\",\"verbatim\":null,\"year\":\"2000\",\"month\":null,\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", "
             + "\"lte\": \"01-01-2018\"},\"startDayOfYear\":\"1\",\"endDayOfYear\":null,\"modified\":null,\"dateIdentified\":null,"
             + "\"location\":{\"lon\":\"2.0\",\"lat\":\"1.0\"},\"continent\":null,\"waterBody\":null,\"country\":\"Country\","
             + "\"countryCode\":\"Code 1'2\\\",\",\"stateProvince\":null,\"minimumElevationInMeters\":null,\"maximumElevationInMeters\":null,"

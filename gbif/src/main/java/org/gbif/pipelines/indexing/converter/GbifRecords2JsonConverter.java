@@ -8,7 +8,7 @@ import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.apache.avro.specific.SpecificRecordBase;
@@ -16,9 +16,8 @@ import org.apache.avro.specific.SpecificRecordBase;
 /**
  * Converter for objects to GBIF elasticsearch schema. You must pass: {@link ExtendedRecord}, {@link
  * org.gbif.pipelines.io.avro.InterpretedExtendedRecord}, {@link
- * org.gbif.pipelines.io.avro.temporal.TemporalRecord}, {@link
- * LocationRecord}, {@link TaxonRecord}, {@link
- * org.gbif.pipelines.io.avro.multimedia.MultimediaRecord}
+ * org.gbif.pipelines.io.avro.temporal.TemporalRecord}, {@link LocationRecord}, {@link TaxonRecord},
+ * {@link org.gbif.pipelines.io.avro.multimedia.MultimediaRecord}
  *
  * <pre>{@code
  * Usage example:
@@ -70,14 +69,10 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<SpecificRecordBase, StringBuilder> getExtendedRecordConverter() {
-    return (record, sb) -> {
+  private Consumer<SpecificRecordBase> getExtendedRecordConverter() {
+    return record -> {
       Map<String, String> terms = ((ExtendedRecord) record).getCoreTerms();
-      addJsonFieldNoCheck("id", record.get(0));
-      // Create verbatim object
-      append("\"verbatim\":{");
-      terms.forEach(this::addJsonField);
-      append("},");
+      addJsonFieldNoCheck("id", record.get(0)).addJsonObject("verbatim", terms);
     };
   }
 
@@ -94,21 +89,21 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<SpecificRecordBase, StringBuilder> getLocationRecordConverter() {
-    return (record, sb) -> {
+  private Consumer<SpecificRecordBase> getLocationRecordConverter() {
+    return record -> {
       LocationRecord location = (LocationRecord) record;
-      append("\"location\":");
+
       if (Objects.isNull(location.getDecimalLongitude())
           || Objects.isNull(location.getDecimalLatitude())) {
-        append("null,");
+        addJsonObject("location");
       } else {
-        append("{");
-        addJsonField("lon", location.getDecimalLongitude());
-        addJsonField("lat", location.getDecimalLatitude());
-        append("},");
+        addJsonObject(
+            "location",
+            JsonFiled.create("lon", location.getDecimalLongitude().toString()),
+            JsonFiled.create("lat", location.getDecimalLatitude().toString()));
       }
       // Fields as a common view - "key": "value"
-      commonConvert(record);
+      addCommonFields(record);
     };
   }
 
@@ -138,8 +133,8 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<SpecificRecordBase, StringBuilder> getTaxonomyRecordConverter() {
-    return (record, sb) -> {
+  private Consumer<SpecificRecordBase> getTaxonomyRecordConverter() {
+    return record -> {
       TaxonRecord taxon = (TaxonRecord) record;
       Map<Rank, String> map =
           taxon
@@ -158,7 +153,7 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
       addJsonField("gbifSpeciesKey", taxon.getUsage().getKey());
       addJsonField("gbifScientificName", taxon.getUsage().getName());
       // Fields as a common view - "key": "value"
-      commonConvert(record);
+      addCommonFields(record);
     };
   }
 }

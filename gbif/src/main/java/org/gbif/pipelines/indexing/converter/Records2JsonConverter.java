@@ -7,7 +7,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.avro.specific.SpecificRecordBase;
 
@@ -27,9 +29,21 @@ public class Records2JsonConverter {
   private final StringBuilder sb = new StringBuilder().append("{");
   private SpecificRecordBase[] bases;
   private Set<String> escapeKeys = Collections.emptySet();
-  private Map<Class<? extends SpecificRecordBase>, BiConsumer<SpecificRecordBase, StringBuilder>>
-      biConsumer = new HashMap<>();
+  private Map<Class<? extends SpecificRecordBase>, Consumer<SpecificRecordBase>>
+      customConvertersMap = new HashMap<>();
   private String[] replaceKeys = {};
+
+  private static final Pattern PATTERN1 = Pattern.compile("(\\\\)", Pattern.DOTALL);
+  private static final Pattern PATTERN2 = Pattern.compile("\"", Pattern.DOTALL);
+  private static final Pattern PATTERN3 = Pattern.compile("(\"\\{)|(\\{,)", Pattern.DOTALL);
+  private static final Pattern PATTERN4 = Pattern.compile("(}\")|(,})", Pattern.DOTALL);
+  private static final Pattern PATTERN5 = Pattern.compile("(\\[,)", Pattern.DOTALL);
+  private static final Pattern PATTERN6 = Pattern.compile("(\"\\[\\{)", Pattern.DOTALL);
+  private static final Pattern PATTERN7 = Pattern.compile("(}]\")", Pattern.DOTALL);
+  private static final Pattern PATTERN8 = Pattern.compile("(,])", Pattern.DOTALL);
+  private static final Pattern PATTERN9 = Pattern.compile("(}]\\[\\{)", Pattern.DOTALL);
+  private static final Pattern PATTERN10 = Pattern.compile("(\"\")", Pattern.DOTALL);
+  private static final Pattern PATTERN11 = Pattern.compile("(}\\{)", Pattern.DOTALL);
 
   Records2JsonConverter() {}
 
@@ -76,9 +90,8 @@ public class Records2JsonConverter {
    * }</pre>
    */
   public Records2JsonConverter addSpecificConverter(
-      Class<? extends SpecificRecordBase> type,
-      BiConsumer<SpecificRecordBase, StringBuilder> consumer) {
-    biConsumer.put(type, consumer);
+      Class<? extends SpecificRecordBase> type, Consumer<SpecificRecordBase> consumer) {
+    this.customConvertersMap.put(type, consumer);
     return this;
   }
 
@@ -86,19 +99,19 @@ public class Records2JsonConverter {
     Arrays.stream(bases)
         .forEach(
             record -> {
-              BiConsumer<SpecificRecordBase, StringBuilder> consumer =
-                  biConsumer.get(record.getClass());
+              Consumer<SpecificRecordBase> consumer =
+                  this.customConvertersMap.get(record.getClass());
               if (Objects.nonNull(consumer)) {
-                consumer.accept(record, sb);
+                consumer.accept(record);
               } else {
-                commonConvert(record);
+                addCommonFields(record);
               }
             });
     return filterAndConvert();
   }
 
   /** Common way how to convert {@link SpecificRecordBase} to json string */
-  Records2JsonConverter commonConvert(SpecificRecordBase base) {
+  Records2JsonConverter addCommonFields(SpecificRecordBase base) {
     base.getSchema()
         .getFields()
         .forEach(field -> addJsonField(field.name(), base.get(field.pos())));
@@ -108,20 +121,37 @@ public class Records2JsonConverter {
   /** Filter possible incorrect symbols for json - \ or }{ and etc. */
   private String filterAndConvert() {
     append("}");
-    return sb.toString()
-        .replaceAll("(\"\\{)|(\\{,)", "{")
-        .replaceAll("(}\")|(,})", "}")
-        .replaceAll("(\\[,)", "[")
-        .replaceAll("(\"\\[\\{)", "[{")
-        .replaceAll("(}]\")", "}]")
-        .replaceAll("(,])", "]")
-        .replaceAll("(}]\\[\\{)", "],[")
-        .replaceAll("(\"\")", "\",\"")
-        .replaceAll("(}\\{)", "},{");
+    String r3 = PATTERN3.matcher(sb.toString()).replaceAll("{");
+    String r4 = PATTERN4.matcher(r3).replaceAll("}");
+    String r5 = PATTERN5.matcher(r4).replaceAll("[");
+    String r6 = PATTERN6.matcher(r5).replaceAll("[{");
+    String r7 = PATTERN7.matcher(r6).replaceAll("}]");
+    String r8 = PATTERN8.matcher(r7).replaceAll("]");
+    String r9 = PATTERN9.matcher(r8).replaceAll("}],[{");
+    String r10 = PATTERN10.matcher(r9).replaceAll("\",\"");
+    return PATTERN11.matcher(r10).replaceAll("},{");
   }
 
-  Records2JsonConverter append(Object obj) {
+  private Records2JsonConverter append(Object obj) {
     sb.append(obj);
+    return this;
+  }
+
+  Records2JsonConverter addJsonObject(String key, JsonFiled... fields) {
+    Map<String, String> map =
+        Arrays.stream(fields).collect(Collectors.toMap(JsonFiled::getKey, JsonFiled::getValue));
+    return addJsonObject(key, map);
+  }
+
+  Records2JsonConverter addJsonObject(String key, Map<String, String> fields) {
+    append("\"").append(key).append("\":");
+    if (!fields.isEmpty()) {
+      append("{");
+      fields.forEach(this::addJsonField);
+      append("},");
+    } else {
+      append("null,");
+    }
     return this;
   }
 
@@ -133,18 +163,42 @@ public class Records2JsonConverter {
     return addJsonFieldNoCheck(key, value);
   }
 
-  /** Convert - "key":"value" and check some incorrect symbols for json*/
+  /** Convert - "key":"value" and check some incorrect symbols for json */
   Records2JsonConverter addJsonFieldNoCheck(String key, Object value) {
     for (String rule : replaceKeys) {
       key = key.replaceAll(rule, "");
     }
     sb.append("\"").append(key).append("\":");
     if (Objects.isNull(value)) {
-      return append("null").append(",");
+      return append("null,");
     }
     if (value instanceof String) {
-      value = ((String) value).replaceAll("(\\\\)", "\\\\\\\\").replaceAll("\"", "\\\\\"");
+      String r1 = PATTERN1.matcher(((String) value)).replaceAll("\\\\\\\\");
+      value = PATTERN2.matcher(r1).replaceAll("\\\\\"");
     }
     return append("\"").append(value).append("\",");
+  }
+
+  public static class JsonFiled {
+
+    private final String key;
+    private final String value;
+
+    private JsonFiled(String key, String value) {
+      this.key = key;
+      this.value = value;
+    }
+
+    public static JsonFiled create(String key, String value) {
+      return new JsonFiled(key, value);
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public String getValue() {
+      return value;
+    }
   }
 }
