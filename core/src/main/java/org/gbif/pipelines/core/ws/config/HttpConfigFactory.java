@@ -47,12 +47,13 @@ public class HttpConfigFactory {
 
   /** Creates a {@link Config} from a url and uses default timeout and cache size. */
   public static Config createConfigFromUrl(String url) {
+    return createConfigFromUrl(url, DEFAULT_TIMEOUT, DEFAULT_CACHE_SIZE);
+  }
+
+  /** Creates a {@link Config} from a url and uses default timeout and cache size. */
+  public static Config createConfigFromUrl(String url, long timeout, long cacheSize) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
-    return new Config.Builder()
-        .basePath(url)
-        .timeout(DEFAULT_TIMEOUT)
-        .cacheSize(DEFAULT_CACHE_SIZE)
-        .build();
+    return new Config.Builder().basePath(url).timeout(timeout).cacheSize(cacheSize).build();
   }
 
   private static Config createConfigInternal(Service service, Path propertiesPath) {

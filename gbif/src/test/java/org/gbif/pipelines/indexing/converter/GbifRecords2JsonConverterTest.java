@@ -68,6 +68,6 @@ public class GbifRecords2JsonConverterTest {
     // Should
     String[] ids = result.split("id");
     Assert.assertTrue(JsonValidationUtils.isValid(result));
-    Assert.assertEquals(ids.length, 2);
+    Assert.assertEquals(2, ids.length);
   }
 }
