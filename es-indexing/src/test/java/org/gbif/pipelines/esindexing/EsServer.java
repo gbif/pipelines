@@ -1,18 +1,19 @@
 package org.gbif.pipelines.esindexing;
 
-import org.apache.http.HttpHost;
-import org.elasticsearch.client.RestClient;
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
-
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.util.concurrent.TimeUnit;
 
 /**
  * ES server used for testing purposes.

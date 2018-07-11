@@ -1,5 +1,9 @@
 package org.gbif.pipelines.esindexing.request;
 
+import org.gbif.pipelines.esindexing.common.EsConstants;
+import org.gbif.pipelines.esindexing.common.EsConstants.Action;
+import org.gbif.pipelines.esindexing.common.EsConstants.Constant;
+import org.gbif.pipelines.esindexing.common.EsConstants.Field;
 import org.gbif.pipelines.esindexing.common.FileUtils;
 import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.common.SettingsType;
@@ -19,23 +23,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.gbif.pipelines.esindexing.common.EsConstants.ACTIONS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.ADD_ACTION;
-import static org.gbif.pipelines.esindexing.common.EsConstants.ALIAS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_NUMBER_REPLICAS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_REPLICAS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_SHARDS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_REFRESH_INTERVAL_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_TRANSLOG_DURABILITY_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.MAPPINGS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.REMOVE_INDEX_ACTION;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_NUMBER_REPLICAS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SETTINGS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_DURABILITY;
 import static org.gbif.pipelines.esindexing.common.JsonHandler.readTree;
 
 import static org.junit.Assert.assertEquals;
@@ -56,49 +43,50 @@ public class BodyBuilderTest {
 
     // assert entity
     JsonNode node = readTree(entity);
-    assertTrue(node.has(SETTINGS_FIELD));
+    assertTrue(node.has(Field.SETTINGS));
 
-    assertEquals(4, node.path(SETTINGS_FIELD).size());
+    assertEquals(4, node.path(Field.SETTINGS).size());
     assertEquals(
-        INDEXING_REFRESH_INTERVAL,
-        node.path(SETTINGS_FIELD).path(INDEX_REFRESH_INTERVAL_FIELD).asText());
+        EsConstants.Indexing.REFRESH_INTERVAL,
+        node.path(Field.SETTINGS).path(Field.INDEX_REFRESH_INTERVAL).asText());
     assertEquals(
-        INDEXING_NUMBER_REPLICAS,
-        node.path(SETTINGS_FIELD).path(INDEX_NUMBER_REPLICAS_FIELD).asText());
-    assertEquals(NUMBER_SHARDS, node.path(SETTINGS_FIELD).path(INDEX_NUMBER_SHARDS_FIELD).asText());
+        EsConstants.Indexing.NUMBER_REPLICAS,
+        node.path(Field.SETTINGS).path(Field.INDEX_NUMBER_REPLICAS).asText());
     assertEquals(
-        TRANSLOG_DURABILITY,
-        node.path(SETTINGS_FIELD).path(INDEX_TRANSLOG_DURABILITY_FIELD).asText());
+        Constant.NUMBER_SHARDS, node.path(Field.SETTINGS).path(Field.INDEX_NUMBER_SHARDS).asText());
+    assertEquals(
+        Constant.TRANSLOG_DURABILITY,
+        node.path(Field.SETTINGS).path(Field.INDEX_TRANSLOG_DURABILITY).asText());
 
     // search settings
     entity = BodyBuilder.newInstance().withSettingsType(SettingsType.SEARCH).build();
     node = readTree(entity);
-    assertEquals(2, node.path(SETTINGS_FIELD).size());
-    assertTrue(node.has(SETTINGS_FIELD));
+    assertEquals(2, node.path(Field.SETTINGS).size());
+    assertTrue(node.has(Field.SETTINGS));
     assertEquals(
-        SEARCHING_REFRESH_INTERVAL,
-        node.path(SETTINGS_FIELD).path(INDEX_REFRESH_INTERVAL_FIELD).asText());
+        EsConstants.Searching.REFRESH_INTERVAL,
+        node.path(Field.SETTINGS).path(Field.INDEX_REFRESH_INTERVAL).asText());
     assertEquals(
-        SEARCHING_NUMBER_REPLICAS,
-        node.path(SETTINGS_FIELD).path(INDEX_NUMBER_REPLICAS_FIELD).asText());
+        EsConstants.Searching.NUMBER_REPLICAS,
+        node.path(Field.SETTINGS).path(Field.INDEX_NUMBER_REPLICAS).asText());
   }
 
   @Test
   public void bodyWithSettingsMapTest() {
     // settings map
     Map<String, String> settings = new HashMap<>();
-    settings.put(INDEX_NUMBER_REPLICAS_FIELD, "1");
-    settings.put(INDEX_NUMBER_SHARDS_FIELD, "2");
+    settings.put(Field.INDEX_NUMBER_REPLICAS, "1");
+    settings.put(Field.INDEX_NUMBER_SHARDS, "2");
 
     HttpEntity entity = BodyBuilder.newInstance().withSettingsMap(settings).build();
 
     // assert entity
     JsonNode node = readTree(entity);
-    assertTrue(node.has(SETTINGS_FIELD));
+    assertTrue(node.has(Field.SETTINGS));
 
-    assertEquals(2, node.path(SETTINGS_FIELD).size());
-    assertEquals("1", node.path(SETTINGS_FIELD).path(INDEX_NUMBER_REPLICAS_FIELD).asText());
-    assertEquals("2", node.path(SETTINGS_FIELD).path(INDEX_NUMBER_SHARDS_FIELD).asText());
+    assertEquals(2, node.path(Field.SETTINGS).size());
+    assertEquals("1", node.path(Field.SETTINGS).path(Field.INDEX_NUMBER_REPLICAS).asText());
+    assertEquals("2", node.path(Field.SETTINGS).path(Field.INDEX_NUMBER_SHARDS).asText());
   }
 
   @Test
@@ -112,29 +100,29 @@ public class BodyBuilderTest {
 
     // assert entity
     JsonNode node = readTree(entity);
-    assertTrue(node.has(ACTIONS_FIELD));
+    assertTrue(node.has(Field.ACTIONS));
 
-    assertEquals(4, node.path(ACTIONS_FIELD).size());
+    assertEquals(4, node.path(Field.ACTIONS).size());
 
-    JsonNode actions = node.path(ACTIONS_FIELD);
+    JsonNode actions = node.path(Field.ACTIONS);
 
     // add actions
-    List<JsonNode> addActions = actions.findValues(ADD_ACTION);
+    List<JsonNode> addActions = actions.findValues(Action.ADD);
     assertEquals(2, addActions.size());
 
     Set<String> indexesAdded = new HashSet<>();
-    addActions.forEach(jsonNode -> indexesAdded.add(jsonNode.get(INDEX_FIELD).asText()));
+    addActions.forEach(jsonNode -> indexesAdded.add(jsonNode.get(Field.INDEX).asText()));
     assertTrue(indexesAdded.containsAll(idxToAdd));
     assertEquals(idxToAdd.size(), indexesAdded.size());
-    assertEquals(alias, addActions.get(0).get(ALIAS_FIELD).asText());
-    assertEquals(alias, addActions.get(1).get(ALIAS_FIELD).asText());
+    assertEquals(alias, addActions.get(0).get(Field.ALIAS).asText());
+    assertEquals(alias, addActions.get(1).get(Field.ALIAS).asText());
 
     // remove index actions
-    List<JsonNode> removeActions = actions.findValues(REMOVE_INDEX_ACTION);
+    List<JsonNode> removeActions = actions.findValues(Action.REMOVE_INDEX);
     assertEquals(2, removeActions.size());
 
     Set<String> indexesRemoved = new HashSet<>();
-    removeActions.forEach(jsonNode -> indexesRemoved.add(jsonNode.get(INDEX_FIELD).asText()));
+    removeActions.forEach(jsonNode -> indexesRemoved.add(jsonNode.get(Field.INDEX).asText()));
     assertTrue(indexesRemoved.containsAll(idxToRemove));
     assertEquals(idxToRemove.size(), indexesRemoved.size());
   }
@@ -172,8 +160,8 @@ public class BodyBuilderTest {
     // assert entity
     JsonNode node = readTree(entity);
     assertEquals(2, node.size());
-    assertTrue(node.has(SETTINGS_FIELD));
-    assertTrue(node.has(MAPPINGS_FIELD));
+    assertTrue(node.has(Field.SETTINGS));
+    assertTrue(node.has(Field.MAPPINGS));
   }
 
   @Test
@@ -193,9 +181,9 @@ public class BodyBuilderTest {
   }
 
   private void assertMappings(JsonNode mappingsNode) {
-    assertTrue(mappingsNode.has(MAPPINGS_FIELD));
+    assertTrue(mappingsNode.has(Field.MAPPINGS));
 
-    JsonNode mappings = mappingsNode.path(MAPPINGS_FIELD);
+    JsonNode mappings = mappingsNode.path(Field.MAPPINGS);
     assertTrue(mappings.has("doc"));
     assertTrue(mappings.path("doc").has("properties"));
     assertTrue(mappings.path("doc").path("properties").has("test"));

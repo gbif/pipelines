@@ -1,16 +1,17 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
-import org.apache.beam.sdk.Pipeline;
-import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.esindexing.api.EsHandler;
 import org.gbif.pipelines.esindexing.client.EsConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
+
+import org.apache.beam.sdk.Pipeline;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class that handles the creation and execution of a pipeline that works with Dwc-A files.

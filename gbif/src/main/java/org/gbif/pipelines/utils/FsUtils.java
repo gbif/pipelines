@@ -1,11 +1,12 @@
 package org.gbif.pipelines.utils;
 
-import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.assembling.interpretation.steps.PipelineTargetPaths;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
 
 import java.util.Arrays;
 import java.util.StringJoiner;
+
+import org.apache.hadoop.fs.Path;
 
 /** Utility class to work with FS. */
 public final class FsUtils {

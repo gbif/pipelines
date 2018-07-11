@@ -18,23 +18,11 @@ import com.google.common.base.Strings;
 import org.apache.http.HttpEntity;
 import org.apache.http.nio.entity.NStringEntity;
 
-import static org.gbif.pipelines.esindexing.common.EsConstants.ACTIONS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.ADD_ACTION;
-import static org.gbif.pipelines.esindexing.common.EsConstants.ALIAS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_NUMBER_REPLICAS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_REPLICAS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_NUMBER_SHARDS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_REFRESH_INTERVAL_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_TRANSLOG_DURABILITY_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.MAPPINGS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.REMOVE_INDEX_ACTION;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_NUMBER_REPLICAS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SETTINGS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_DURABILITY;
+import static org.gbif.pipelines.esindexing.common.EsConstants.Action;
+import static org.gbif.pipelines.esindexing.common.EsConstants.Constant;
+import static org.gbif.pipelines.esindexing.common.EsConstants.Field;
+import static org.gbif.pipelines.esindexing.common.EsConstants.Indexing;
+import static org.gbif.pipelines.esindexing.common.EsConstants.Searching;
 import static org.gbif.pipelines.esindexing.common.JsonHandler.createArrayNode;
 import static org.gbif.pipelines.esindexing.common.JsonHandler.createObjectNode;
 import static org.gbif.pipelines.esindexing.common.JsonHandler.writeToString;
@@ -43,21 +31,21 @@ import static org.gbif.pipelines.esindexing.common.JsonHandler.writeToString;
 public class BodyBuilder {
 
   // pre-defined settings
-  private static final ObjectNode indexingSettings = createObjectNode();
-  private static final ObjectNode searchSettings = createObjectNode();
+  private static final ObjectNode INDEXING_SETTINGS = createObjectNode();
+  private static final ObjectNode SEARCH_SETTINGS = createObjectNode();
 
   private JsonNode settings;
   private JsonNode mappings;
   private IndexAliasAction indexAliasAction;
 
   static {
-    indexingSettings.put(INDEX_REFRESH_INTERVAL_FIELD, INDEXING_REFRESH_INTERVAL);
-    indexingSettings.put(INDEX_NUMBER_SHARDS_FIELD, NUMBER_SHARDS);
-    indexingSettings.put(INDEX_NUMBER_REPLICAS_FIELD, INDEXING_NUMBER_REPLICAS);
-    indexingSettings.put(INDEX_TRANSLOG_DURABILITY_FIELD, TRANSLOG_DURABILITY);
+    INDEXING_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Indexing.REFRESH_INTERVAL);
+    INDEXING_SETTINGS.put(Field.INDEX_NUMBER_SHARDS, Constant.NUMBER_SHARDS);
+    INDEXING_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Indexing.NUMBER_REPLICAS);
+    INDEXING_SETTINGS.put(Field.INDEX_TRANSLOG_DURABILITY, Constant.TRANSLOG_DURABILITY);
 
-    searchSettings.put(INDEX_REFRESH_INTERVAL_FIELD, SEARCHING_REFRESH_INTERVAL);
-    searchSettings.put(INDEX_NUMBER_REPLICAS_FIELD, SEARCHING_NUMBER_REPLICAS);
+    SEARCH_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Searching.REFRESH_INTERVAL);
+    SEARCH_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
   }
 
   private BodyBuilder() {}
@@ -75,7 +63,7 @@ public class BodyBuilder {
   /** Adds a {@link SettingsType} to the body. */
   public BodyBuilder withSettingsType(SettingsType settingsType) {
     Objects.requireNonNull(settingsType);
-    this.settings = settingsType == SettingsType.INDEXING ? indexingSettings : searchSettings;
+    this.settings = (settingsType == SettingsType.INDEXING) ? INDEXING_SETTINGS : SEARCH_SETTINGS;
     return this;
   }
 
@@ -120,17 +108,17 @@ public class BodyBuilder {
 
     // add settings
     if (Objects.nonNull(settings)) {
-      body.set(SETTINGS_FIELD, settings);
+      body.set(Field.SETTINGS, settings);
     }
 
     // add mappings
     if (Objects.nonNull(mappings)) {
-      body.set(MAPPINGS_FIELD, mappings);
+      body.set(Field.MAPPINGS, mappings);
     }
 
     // add alias actions
     if (Objects.nonNull(indexAliasAction)) {
-      body.set(ACTIONS_FIELD, createIndexAliasActions(indexAliasAction));
+      body.set(Field.ACTIONS, createIndexAliasActions(indexAliasAction));
     }
 
     // create entity and return
@@ -147,11 +135,11 @@ public class BodyBuilder {
     ArrayNode actions = createArrayNode();
 
     // remove all indixes from alias action
-    if (indexAliasAction.idxToRemove != null) {
+    if (Objects.nonNull(indexAliasAction.idxToRemove)) {
       indexAliasAction.idxToRemove.forEach(idx -> removeIndexFromAliasAction(idx, actions));
     }
     // add index action
-    if (indexAliasAction.idxToAdd != null) {
+    if (Objects.nonNull(indexAliasAction.idxToAdd)) {
       indexAliasAction.idxToAdd.forEach(
           idx -> addIndexToAliasAction(indexAliasAction.alias, idx, actions));
     }
@@ -162,23 +150,23 @@ public class BodyBuilder {
   private static void removeIndexFromAliasAction(String idxToRemove, ArrayNode actions) {
     // create swap node
     ObjectNode swapNode = createObjectNode();
-    swapNode.put(INDEX_FIELD, idxToRemove);
+    swapNode.put(Field.INDEX, idxToRemove);
 
     // add the node to the action
     ObjectNode action = createObjectNode();
-    action.set(REMOVE_INDEX_ACTION, swapNode);
+    action.set(Action.REMOVE_INDEX, swapNode);
     actions.add(action);
   }
 
   private static void addIndexToAliasAction(String alias, String idx, ArrayNode actions) {
     // create swap node
     ObjectNode swapNode = createObjectNode();
-    swapNode.put(INDEX_FIELD, idx);
-    swapNode.put(ALIAS_FIELD, alias);
+    swapNode.put(Field.INDEX, idx);
+    swapNode.put(Field.ALIAS, alias);
 
     // add the node to the action
     ObjectNode action = createObjectNode();
-    action.set(ADD_ACTION, swapNode);
+    action.set(Action.ADD, swapNode);
     actions.add(action);
   }
 

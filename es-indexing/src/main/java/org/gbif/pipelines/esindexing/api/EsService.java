@@ -1,15 +1,9 @@
 package org.gbif.pipelines.esindexing.api;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.common.SettingsType;
 import org.gbif.pipelines.esindexing.request.BodyBuilder;
 import org.gbif.pipelines.esindexing.response.ResponseParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,7 +12,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import static org.gbif.pipelines.esindexing.api.EndpointHelper.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getAliasIndexexEndpoint;
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getAliasesEndpoint;
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getIndexCountEndpoint;
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getIndexEndpoint;
+import static org.gbif.pipelines.esindexing.api.EndpointHelper.getIndexSettingsEndpoint;
 import static org.gbif.pipelines.esindexing.request.BodyBuilder.createBodyFromString;
 
 /**

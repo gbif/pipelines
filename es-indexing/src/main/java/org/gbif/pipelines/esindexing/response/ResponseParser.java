@@ -1,14 +1,15 @@
 package org.gbif.pipelines.esindexing.response;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.http.HttpEntity;
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.common.SettingsType;
 
 import java.util.Set;
 
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.http.HttpEntity;
+
+import static org.gbif.pipelines.esindexing.common.EsConstants.Field;
 
 /** Parser for the ES responses encapsulated in a {@link HttpEntity}. */
 public class ResponseParser {
@@ -25,7 +26,7 @@ public class ResponseParser {
    * @return the name of the index created.
    */
   public static String parseCreatedIndexResponse(HttpEntity entity) {
-    return JsonHandler.readValue(entity).get(INDEX_FIELD);
+    return JsonHandler.readValue(entity).get(Field.INDEX);
   }
 
   /**
@@ -50,6 +51,6 @@ public class ResponseParser {
    */
   public static long parseIndexCountResponse(HttpEntity entity) {
     JsonNode node = JsonHandler.readTree(entity);
-    return node.has("count") ? node.path("count").asLong() : 0L;
+    return node.has(Field.COUNT) ? node.path(Field.COUNT).asLong() : 0L;
   }
 }

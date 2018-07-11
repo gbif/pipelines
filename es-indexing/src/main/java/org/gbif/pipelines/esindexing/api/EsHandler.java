@@ -1,20 +1,23 @@
 package org.gbif.pipelines.esindexing.api;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
 import org.gbif.pipelines.esindexing.common.SettingsType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static org.gbif.pipelines.esindexing.api.EsService.*;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.gbif.pipelines.esindexing.api.EsService.getIndexesByAliasAndIndexPattern;
+import static org.gbif.pipelines.esindexing.api.EsService.swapIndexes;
+import static org.gbif.pipelines.esindexing.api.EsService.updateIndexSettings;
 
 /** Exposes a public API to perform operations in a ES instance. */
 public class EsHandler {

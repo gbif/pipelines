@@ -1,6 +1,10 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
-import org.apache.beam.sdk.options.*;
+import org.apache.beam.sdk.options.Default;
+import org.apache.beam.sdk.options.Description;
+import org.apache.beam.sdk.options.Hidden;
+import org.apache.beam.sdk.options.PipelineOptions;
+import org.apache.beam.sdk.options.Validation;
 
 public interface DwcaMiniPipelineOptions extends PipelineOptions {
 

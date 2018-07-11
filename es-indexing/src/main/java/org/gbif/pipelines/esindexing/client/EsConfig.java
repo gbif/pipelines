@@ -2,10 +2,10 @@ package org.gbif.pipelines.esindexing.client;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /** ES configuration. */
 public class EsConfig {
@@ -15,16 +15,17 @@ public class EsConfig {
   private EsConfig(String[] hostsAddresses) {
     Objects.requireNonNull(hostsAddresses);
 
-    hosts = new ArrayList<>();
-    Arrays.stream(hostsAddresses)
-        .forEach(
-            address -> {
-              try {
-                hosts.add(new URL(address));
-              } catch (MalformedURLException e) {
-                throw new IllegalArgumentException(address + " is not a valid url", e);
-              }
-            });
+    hosts =
+        Arrays.stream(hostsAddresses)
+            .map(
+                address -> {
+                  try {
+                    return new URL(address);
+                  } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException(address + " is not a valid url", e);
+                  }
+                })
+            .collect(Collectors.toList());
   }
 
   /**

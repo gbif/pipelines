@@ -1,6 +1,10 @@
 package org.gbif.pipelines.esindexing.api;
 
 import org.gbif.pipelines.esindexing.EsServer;
+import org.gbif.pipelines.esindexing.common.EsConstants.Constant;
+import org.gbif.pipelines.esindexing.common.EsConstants.Field;
+import org.gbif.pipelines.esindexing.common.EsConstants.Indexing;
+import org.gbif.pipelines.esindexing.common.EsConstants.Searching;
 import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.request.BodyBuilder;
 
@@ -17,20 +21,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.elasticsearch.client.Response;
 import org.junit.ClassRule;
 
-import static org.gbif.pipelines.esindexing.common.EsConstants.DURABILITY_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_NUMBER_REPLICAS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEXING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.INDEX_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_REPLICAS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.NUMBER_SHARDS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.REFRESH_INTERVAL_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_NUMBER_REPLICAS;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SEARCHING_REFRESH_INTERVAL;
-import static org.gbif.pipelines.esindexing.common.EsConstants.SETTINGS_FIELD;
-import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_DURABILITY;
-import static org.gbif.pipelines.esindexing.common.EsConstants.TRANSLOG_FIELD;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -43,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class EsApiIntegrationTest {
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule public static final EsServer esServer = new EsServer();
+  @ClassRule public static final EsServer ES_SERVER = new EsServer();
 
   // files for testing
   static final Path TEST_MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");
@@ -52,7 +42,7 @@ public abstract class EsApiIntegrationTest {
   static JsonNode getSettingsFromIndex(String idx) {
     try {
       Response response =
-          esServer
+          ES_SERVER
               .getRestClient()
               .performRequest(
                   HttpGet.METHOD_NAME,
@@ -72,12 +62,13 @@ public abstract class EsApiIntegrationTest {
    */
   static void assertIndexingSettings(String idx) {
     JsonNode indexSettings =
-        getSettingsFromIndex(idx).path(idx).path(SETTINGS_FIELD).path(INDEX_FIELD);
-    assertEquals(INDEXING_REFRESH_INTERVAL, indexSettings.path(REFRESH_INTERVAL_FIELD).asText());
-    assertEquals(NUMBER_SHARDS, indexSettings.path(NUMBER_SHARDS_FIELD).asText());
-    assertEquals(INDEXING_NUMBER_REPLICAS, indexSettings.path(NUMBER_REPLICAS_FIELD).asText());
+        getSettingsFromIndex(idx).path(idx).path(Field.SETTINGS).path(Field.INDEX);
+    assertEquals(Indexing.REFRESH_INTERVAL, indexSettings.path(Field.REFRESH_INTERVAL).asText());
+    assertEquals(Constant.NUMBER_SHARDS, indexSettings.path(Field.NUMBER_SHARDS).asText());
+    assertEquals(Indexing.NUMBER_REPLICAS, indexSettings.path(Field.NUMBER_REPLICAS).asText());
     assertEquals(
-        TRANSLOG_DURABILITY, indexSettings.path(TRANSLOG_FIELD).path(DURABILITY_FIELD).asText());
+        Constant.TRANSLOG_DURABILITY,
+        indexSettings.path(Field.TRANSLOG).path(Field.DURABILITY).asText());
   }
 
   /**
@@ -86,12 +77,14 @@ public abstract class EsApiIntegrationTest {
    */
   static void assertSearchSettings(String idx) {
     JsonNode indexSettings =
-        getSettingsFromIndex(idx).path(idx).path(SETTINGS_FIELD).path(INDEX_FIELD);
-    assertEquals(SEARCHING_REFRESH_INTERVAL, indexSettings.path(REFRESH_INTERVAL_FIELD).asText());
-    assertEquals(NUMBER_SHARDS, indexSettings.path(NUMBER_SHARDS_FIELD).asText());
-    assertEquals(SEARCHING_NUMBER_REPLICAS, indexSettings.path(NUMBER_REPLICAS_FIELD).asText());
+        getSettingsFromIndex(idx).path(idx).path(Field.SETTINGS).path(Field.INDEX);
     assertEquals(
-        TRANSLOG_DURABILITY, indexSettings.path(TRANSLOG_FIELD).path(DURABILITY_FIELD).asText());
+        Searching.REFRESH_INTERVAL, indexSettings.path(Searching.REFRESH_INTERVAL).asText());
+    assertEquals(Constant.NUMBER_SHARDS, indexSettings.path(Field.NUMBER_SHARDS).asText());
+    assertEquals(Searching.NUMBER_REPLICAS, indexSettings.path(Field.NUMBER_REPLICAS).asText());
+    assertEquals(
+        Constant.TRANSLOG_DURABILITY,
+        indexSettings.path(Field.TRANSLOG).path(Field.DURABILITY).asText());
   }
 
   /** Asserts that the swap operation was done as expected in the embedded ES instance. */
@@ -99,14 +92,14 @@ public abstract class EsApiIntegrationTest {
       String idxAdded, String idxPattern, String alias, Set<String> idxRemoved) {
     // get indexes of the alias again.
     Set<String> indexesFoundInAlias =
-        EsService.getIndexesByAliasAndIndexPattern(esServer.getEsClient(), idxPattern, alias);
+        EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), idxPattern, alias);
     // Only the last index should be returned.
     assertEquals(1, indexesFoundInAlias.size());
     assertTrue(indexesFoundInAlias.contains(idxAdded));
 
     // the other indexes shoudn't exist
     for (String removed : idxRemoved) {
-      assertFalse(EsService.existsIndex(esServer.getEsClient(), removed));
+      assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), removed));
     }
   }
 
@@ -119,7 +112,7 @@ public abstract class EsApiIntegrationTest {
             .build();
 
     try {
-      esServer
+      ES_SERVER
           .getRestClient()
           .performRequest(
               HttpPost.METHOD_NAME,
@@ -135,7 +128,7 @@ public abstract class EsApiIntegrationTest {
   static JsonNode getMappingsFromIndex(String idx) {
     try {
       Response response =
-          esServer
+          ES_SERVER
               .getRestClient()
               .performRequest(
                   HttpGet.METHOD_NAME,

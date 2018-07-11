@@ -1,10 +1,10 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.StringJoiner;
+
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class DwcaPipelineTest {
 
@@ -12,7 +12,7 @@ public class DwcaPipelineTest {
   @Test
   public void dwcaPipelineTest() {
     final String inputPath =
-        getClass().getClassLoader().getResource("dwca.zip").getPath().toString();
+        getClass().getClassLoader().getResource("dwca.zip").getPath();
     final String targetPath = Paths.get("src", "test", "resources", "output").toString();
     final String gbifEnv = DwcaMiniPipelineOptions.GbifEnv.DEV.name();
     final String datasetId = "abcd1234";
