@@ -68,9 +68,6 @@ public class TemporalRecordTransformTest {
         createTemporalRecordList(periodOne, periodTwo, periodThree);
 
     // When
-    // Coders.registerAvroCoders(p, ExtendedRecord.class, TemporalRecord.class,
-    // OccurrenceIssue.class);
-
     TemporalRecordTransform temporalRecord = TemporalRecordTransform.create().withAvroCoders(p);
     PCollection<ExtendedRecord> inputStream = p.apply(Create.of(input));
 

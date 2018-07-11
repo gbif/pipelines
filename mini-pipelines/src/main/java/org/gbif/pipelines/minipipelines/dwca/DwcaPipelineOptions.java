@@ -6,7 +6,7 @@ import org.apache.beam.sdk.options.Hidden;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.Validation;
 
-public interface DwcaMiniPipelineOptions extends PipelineOptions {
+public interface DwcaPipelineOptions extends PipelineOptions {
 
   long DEFAULT_ES_BATCH_SIZE = 1_000L;
   long DEFAULT_ES_BATCH_SIZE_BYTES = 5_242_880L;

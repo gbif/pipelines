@@ -27,15 +27,15 @@ class DwcaPipelineRunner {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaPipelineRunner.class);
 
-  private final DwcaMiniPipelineOptions options;
+  private final DwcaPipelineOptions options;
   private final EsConfig esConfig;
 
-  private DwcaPipelineRunner(DwcaMiniPipelineOptions options) {
+  private DwcaPipelineRunner(DwcaPipelineOptions options) {
     this.options = options;
     esConfig = isEsIndexingIncludedInPipeline() ? EsConfig.from(options.getESHosts()) : null;
   }
 
-  static DwcaPipelineRunner from(DwcaMiniPipelineOptions options) {
+  static DwcaPipelineRunner from(DwcaPipelineOptions options) {
     return new DwcaPipelineRunner(options);
   }
 
@@ -60,7 +60,7 @@ class DwcaPipelineRunner {
                 () -> {
                   LOG.debug("Dwca pipeline runner shutdown hook called");
                   File tmp =
-                      Paths.get(DwcaPipelineBuilder.OutputWriter.getTempDir(options)).toFile();
+                      Paths.get(OutputWriter.getTempDir(options)).toFile();
                   if (tmp.exists()) {
                     try {
                       FileUtils.deleteDirectory(tmp);
@@ -101,6 +101,6 @@ class DwcaPipelineRunner {
   }
 
   private boolean isEsIndexingIncludedInPipeline() {
-    return options.getPipelineStep() == DwcaMiniPipelineOptions.PipelineStep.INDEX_TO_ES;
+    return options.getPipelineStep() == DwcaPipelineOptions.PipelineStep.INDEX_TO_ES;
   }
 }

@@ -14,7 +14,7 @@ public class DwcaPipelineTest {
     final String inputPath =
         getClass().getClassLoader().getResource("dwca.zip").getPath();
     final String targetPath = Paths.get("src", "test", "resources", "output").toString();
-    final String gbifEnv = DwcaMiniPipelineOptions.GbifEnv.DEV.name();
+    final String gbifEnv = DwcaPipelineOptions.GbifEnv.DEV.name();
     final String datasetId = "abcd1234";
     final String attempt = "1";
     final String ESHosts = "http://localhost:9200";

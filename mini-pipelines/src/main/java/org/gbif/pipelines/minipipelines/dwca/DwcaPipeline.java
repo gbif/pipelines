@@ -7,9 +7,8 @@ public class DwcaPipeline {
 
   public static void main(String[] args) {
     // Create PipelineOptions
-    PipelineOptionsFactory.register(DwcaMiniPipelineOptions.class);
-    DwcaMiniPipelineOptions options =
-        PipelineOptionsFactory.fromArgs(args).withValidation().as(DwcaMiniPipelineOptions.class);
+    PipelineOptionsFactory.register(DwcaPipelineOptions.class);
+    DwcaPipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(DwcaPipelineOptions.class);
 
     DwcaPipelineRunner.from(options).run();
   }

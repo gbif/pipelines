@@ -6,6 +6,7 @@ import org.gbif.pipelines.io.avro.taxon.Rank;
 import org.gbif.pipelines.io.avro.taxon.RankedName;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -136,22 +137,29 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
   private Consumer<SpecificRecordBase> getTaxonomyRecordConverter() {
     return record -> {
       TaxonRecord taxon = (TaxonRecord) record;
-      Map<Rank, String> map =
-          taxon
-              .getClassification()
-              .stream()
-              .collect(Collectors.toMap(RankedName::getRank, RankedName::getName));
-      // Gbif fields from map
-      addJsonField("gbifKingdom", map.get(Rank.KINGDOM));
-      addJsonField("gbifPhylum", map.get(Rank.PHYLUM));
-      addJsonField("gbifClass", map.get(Rank.CLASS));
-      addJsonField("gbifOrder", map.get(Rank.ORDER));
-      addJsonField("gbifFamily", map.get(Rank.FAMILY));
-      addJsonField("gbifGenus", map.get(Rank.GENUS));
-      addJsonField("gbifSubgenus", map.get(Rank.SUBGENUS));
+
+      List<RankedName> classifications = taxon.getClassification();
+      if (Objects.nonNull(classifications) && !classifications.isEmpty()) {
+        Map<Rank, String> map =
+            classifications
+                .stream()
+                .collect(Collectors.toMap(RankedName::getRank, RankedName::getName));
+        // Gbif fields from map
+        addJsonField("gbifKingdom", map.get(Rank.KINGDOM));
+        addJsonField("gbifPhylum", map.get(Rank.PHYLUM));
+        addJsonField("gbifClass", map.get(Rank.CLASS));
+        addJsonField("gbifOrder", map.get(Rank.ORDER));
+        addJsonField("gbifFamily", map.get(Rank.FAMILY));
+        addJsonField("gbifGenus", map.get(Rank.GENUS));
+        addJsonField("gbifSubgenus", map.get(Rank.SUBGENUS));
+      }
+
       // Other Gbif fields
-      addJsonField("gbifSpeciesKey", taxon.getUsage().getKey());
-      addJsonField("gbifScientificName", taxon.getUsage().getName());
+      RankedName usage = taxon.getUsage();
+      if (Objects.nonNull(usage)) {
+        addJsonField("gbifSpeciesKey", usage.getKey());
+        addJsonField("gbifScientificName", usage.getName());
+      }
       // Fields as a common view - "key": "value"
       addCommonFields(record);
     };
