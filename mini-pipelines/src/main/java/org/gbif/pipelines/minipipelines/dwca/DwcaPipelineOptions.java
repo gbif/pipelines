@@ -106,4 +106,10 @@ public interface DwcaPipelineOptions extends PipelineOptions {
   String getESIndexName();
 
   void setESIndexName(String esIndexName);
+
+  @Description("Path to an occurrence indexing schema")
+  @Default.String("es-occurrence-shcema.json")
+  String getESSchemaPath();
+
+  void setESSchemaPath(String esSchemaPath);
 }

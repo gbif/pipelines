@@ -5,6 +5,7 @@ import org.gbif.pipelines.esindexing.client.EsConfig;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -59,8 +60,7 @@ class DwcaPipelineRunner {
             new Thread(
                 () -> {
                   LOG.debug("Dwca pipeline runner shutdown hook called");
-                  File tmp =
-                      Paths.get(OutputWriter.getTempDir(options)).toFile();
+                  File tmp = Paths.get(OutputWriter.getTempDir(options)).toFile();
                   if (tmp.exists()) {
                     try {
                       FileUtils.deleteDirectory(tmp);
@@ -74,7 +74,18 @@ class DwcaPipelineRunner {
 
   private Optional<String> createIndex() {
     if (isEsIndexingIncludedInPipeline()) {
-      String index = EsHandler.createIndex(esConfig, options.getDatasetId(), options.getAttempt());
+      Path path = null;
+      if (!Paths.get(options.getESSchemaPath()).isAbsolute()) {
+        path =
+            Optional.ofNullable(getClass().getClassLoader().getResource(options.getESSchemaPath()))
+                .map(x -> Paths.get(x.getPath()))
+                .orElseThrow(
+                    () ->
+                        new IllegalArgumentException(
+                            "Could not find the indexing schema - " + options.getESSchemaPath()));
+      }
+      String index =
+          EsHandler.createIndex(esConfig, options.getDatasetId(), options.getAttempt(), path);
       LOG.info("ES index {} created", index);
       return Optional.of(index);
     }
