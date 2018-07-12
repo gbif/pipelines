@@ -74,8 +74,8 @@ class DwcaPipelineRunner {
 
   private Optional<String> createIndex() {
     if (isEsIndexingIncludedInPipeline()) {
-      Path path = null;
-      if (!Paths.get(options.getESSchemaPath()).isAbsolute()) {
+      Path path = Paths.get(options.getESSchemaPath());
+      if (!path.isAbsolute()) {
         path =
             Optional.ofNullable(getClass().getClassLoader().getResource(options.getESSchemaPath()))
                 .map(x -> Paths.get(x.getPath()))
