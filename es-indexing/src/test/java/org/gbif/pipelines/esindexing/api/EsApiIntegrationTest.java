@@ -78,8 +78,7 @@ public abstract class EsApiIntegrationTest {
   static void assertSearchSettings(String idx) {
     JsonNode indexSettings =
         getSettingsFromIndex(idx).path(idx).path(Field.SETTINGS).path(Field.INDEX);
-    assertEquals(
-        Searching.REFRESH_INTERVAL, indexSettings.path(Searching.REFRESH_INTERVAL).asText());
+    assertEquals(Searching.REFRESH_INTERVAL, indexSettings.path(Field.REFRESH_INTERVAL).asText());
     assertEquals(Constant.NUMBER_SHARDS, indexSettings.path(Field.NUMBER_SHARDS).asText());
     assertEquals(Searching.NUMBER_REPLICAS, indexSettings.path(Field.NUMBER_REPLICAS).asText());
     assertEquals(
