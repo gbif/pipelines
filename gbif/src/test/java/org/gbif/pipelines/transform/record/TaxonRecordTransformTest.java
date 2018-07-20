@@ -11,7 +11,6 @@ import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.core.ws.config.HttpConfigFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
-import org.gbif.pipelines.transform.Kv2Value;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +26,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.junit.ClassRule;
@@ -80,7 +80,7 @@ public class TaxonRecordTransformTest {
     PCollectionTuple tuple = inputStream.apply(taxonRecordTransform);
 
     PCollection<TaxonRecord> recordCollection =
-        tuple.get(taxonRecordTransform.getDataTag()).apply(Kv2Value.create());
+        tuple.get(taxonRecordTransform.getDataTag()).apply(Values.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());

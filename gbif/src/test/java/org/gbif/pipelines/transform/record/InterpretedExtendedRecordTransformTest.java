@@ -4,7 +4,6 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
-import org.gbif.pipelines.transform.Kv2Value;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +13,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.junit.Rule;
@@ -53,7 +53,7 @@ public class InterpretedExtendedRecordTransformTest {
     PCollectionTuple tuple = inputStream.apply(interpretedTransform);
 
     PCollection<InterpretedExtendedRecord> recordCollection =
-        tuple.get(interpretedTransform.getDataTag()).apply(Kv2Value.create());
+        tuple.get(interpretedTransform.getDataTag()).apply(Values.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(interpretedRecords);

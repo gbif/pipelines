@@ -7,7 +7,6 @@ import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.core.ws.config.HttpConfigFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.location.LocationRecord;
-import org.gbif.pipelines.transform.Kv2Value;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +24,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.junit.Assert;
@@ -115,7 +115,7 @@ public class LocationTransformTest {
     PCollectionTuple tuple = inputStream.apply(locationTransform);
 
     PCollection<LocationRecord> recordCollection =
-        tuple.get(locationTransform.getDataTag()).apply(Kv2Value.create());
+        tuple.get(locationTransform.getDataTag()).apply(Values.create());
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(locations);

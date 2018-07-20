@@ -2,7 +2,6 @@ package org.gbif.pipelines.assembling.interpretation.steps;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
-import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.RecordTransform;
 
 import java.util.Objects;
@@ -13,6 +12,7 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileSystems;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
@@ -66,7 +66,7 @@ public class InterpretationStep<T> {
 
     // Get data and save it to an avro file
     PCollection<T> interpretedRecords =
-        interpretedRecordTuple.get(transform.getDataTag()).apply(Kv2Value.create());
+        interpretedRecordTuple.get(transform.getDataTag()).apply(Values.create());
     if (interpretedRecords != null) {
       interpretedRecords.apply(
           String.format(WRITE_DATA_MSG_PATTERN, interpretationType),
@@ -75,7 +75,7 @@ public class InterpretationStep<T> {
 
     // Get issues and save them to an avro file
     PCollection<OccurrenceIssue> issues =
-        interpretedRecordTuple.get(transform.getIssueTag()).apply(Kv2Value.create());
+        interpretedRecordTuple.get(transform.getIssueTag()).apply(Values.create());
     if (issues != null) {
       issues.apply(
           String.format(WRITE_ISSUES_MSG_PATTERN, interpretationType),

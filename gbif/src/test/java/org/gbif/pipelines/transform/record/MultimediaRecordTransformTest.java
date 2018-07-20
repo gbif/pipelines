@@ -6,7 +6,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.multimedia.MediaType;
 import org.gbif.pipelines.io.avro.multimedia.Multimedia;
 import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
-import org.gbif.pipelines.transform.Kv2Value;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +15,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.junit.Rule;
@@ -55,7 +55,7 @@ public class MultimediaRecordTransformTest {
     PCollectionTuple tuple = inputStream.apply(multimediaTransform);
 
     PCollection<MultimediaRecord> dataStream =
-        tuple.get(multimediaTransform.getDataTag()).apply(Kv2Value.create());
+        tuple.get(multimediaTransform.getDataTag()).apply(Values.create());
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(createExpectedMultimedia());

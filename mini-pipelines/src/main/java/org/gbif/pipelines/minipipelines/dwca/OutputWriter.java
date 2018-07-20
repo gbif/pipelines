@@ -3,7 +3,6 @@ package org.gbif.pipelines.minipipelines.dwca;
 import org.gbif.pipelines.assembling.GbifInterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
-import org.gbif.pipelines.transform.Kv2Value;
 import org.gbif.pipelines.transform.RecordTransform;
 import org.gbif.pipelines.utils.FsUtils;
 
@@ -11,6 +10,7 @@ import com.google.common.base.Strings;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileSystems;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 
@@ -46,12 +46,12 @@ class OutputWriter {
 
       // write interpeted data
       String interpretedPath = FsUtils.buildPathString(rootPath, "interpreted");
-      PCollection<T> data = tuple.get(transform.getDataTag()).apply(Kv2Value.create());
+      PCollection<T> data = tuple.get(transform.getDataTag()).apply(Values.create());
       writeToAvro(data, avroClass, options, interpretedPath);
 
       // write issues
       String issuesPath = FsUtils.buildPathString(rootPath, "issues");
-      PCollection<OccurrenceIssue> issues = tuple.get(transform.getIssueTag()).apply(Kv2Value.create());
+      PCollection<OccurrenceIssue> issues = tuple.get(transform.getIssueTag()).apply(Values.create());
       writeToAvro(issues, OccurrenceIssue.class, options, issuesPath);
     }
   }

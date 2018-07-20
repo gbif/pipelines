@@ -6,7 +6,6 @@ import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.temporal.EventDate;
 import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
-import org.gbif.pipelines.transform.Kv2Value;
 
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -21,6 +20,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.junit.Rule;
@@ -74,7 +74,7 @@ public class TemporalRecordTransformTest {
     PCollectionTuple tuple = inputStream.apply(temporalRecord);
 
     PCollection<TemporalRecord> dataStream =
-        tuple.get(temporalRecord.getDataTag()).apply(Kv2Value.create());
+        tuple.get(temporalRecord.getDataTag()).apply(Values.create());
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);
