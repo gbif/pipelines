@@ -24,10 +24,6 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
 
   private static final Logger LOG = LoggerFactory.getLogger(UniqueOccurrenceIdTransform.class);
 
-  private static final String MAP_STEP = "Mapping to KV";
-  private static final String GROUP_STEP = "Group by occurrenceId";
-  private static final String FILTER_STEP = "Filter duplicates";
-
   private final TupleTag<ExtendedRecord> dataTag = new TupleTag<ExtendedRecord>() {};
   private final TupleTag<KV<String, Iterable<ExtendedRecord>>> issueTag =
       new TupleTag<KV<String, Iterable<ExtendedRecord>>>() {};
@@ -44,17 +40,17 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
     // Convert from list to map where, key - occurrenceId, value - object instance
     PCollection<KV<String, ExtendedRecord>> map =
         input.apply(
-            MAP_STEP,
+            "Mapping to KV",
             MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
                 .via((ExtendedRecord uo) -> KV.of(uo.getId(), uo)));
 
     // Group map by key - occurrenceId
     PCollection<KV<String, Iterable<ExtendedRecord>>> group =
-        map.apply(GROUP_STEP, GroupByKey.create());
+        map.apply("Group by occurrenceId", GroupByKey.create());
 
     // Filter duplicate occurrenceIds, all groups where value size != 1
     return group.apply(
-        FILTER_STEP,
+        "Filter duplicates",
         ParDo.of(
                 new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
                   @ProcessElement
