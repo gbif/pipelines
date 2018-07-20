@@ -3,7 +3,7 @@ package org.gbif.pipelines.transform.validator;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.stream.StreamSupport;
+import java.util.Iterator;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -56,13 +56,13 @@ public class UniqueOccurrenceIdTransform extends ValidatorsTransform<ExtendedRec
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     KV<String, Iterable<ExtendedRecord>> element = c.element();
-                    long count =
-                        StreamSupport.stream(element.getValue().spliterator(), false).count();
-                    if (count == 1) {
-                      element.getValue().forEach(x -> c.output(dataTag, x));
+                    Iterator<ExtendedRecord> iterator = element.getValue().iterator();
+                    ExtendedRecord record = iterator.next();
+                    if (!iterator.hasNext()) {
+                      c.output(dataTag, record);
                     } else {
                       c.output(issueTag, element);
-                      LOG.warn("occurrenceId = {}, duplicate found = {}", element.getKey(), count);
+                      LOG.warn("occurrenceId = {}, duplicates were found", element.getKey());
                     }
                   }
                 })
