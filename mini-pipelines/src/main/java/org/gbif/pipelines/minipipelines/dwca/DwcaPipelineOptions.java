@@ -70,7 +70,7 @@ public interface DwcaPipelineOptions extends PipelineOptions {
   void setPipelineStep(PipelineStep step);
 
   @Description("If set to true it returns only the output of the last step of the pipeline.")
-  @Default.Boolean(false)
+  @Default.Boolean(true)
   boolean getIgnoreIntermediateOutputs();
 
   void setIgnoreIntermediateOutputs(boolean omitIntermediateOutputs);
