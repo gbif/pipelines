@@ -12,7 +12,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /*
- * Singleton to create the species match 2 service.
+ * Singleton to create the geo service.
  */
 public class GeocodeServiceRest {
 
@@ -38,6 +38,9 @@ public class GeocodeServiceRest {
             .build();
 
     service = retrofit.create(GeocodeService.class);
+
+    // add hook to delete ws cache at shutdown
+    clearCache();
   }
 
   public static GeocodeServiceRest getInstance(Config config) {
@@ -60,14 +63,20 @@ public class GeocodeServiceRest {
    *
    * <p><strong>Keep in mind that this method is not thread-safe, so use it carefully.</strong>
    */
-  public static void clearCache() {
-    if (instance != null && instance.client != null && instance.client.cache() != null) {
-      LOG.info("Deleting geocode ws cache");
-      try {
-        instance.client.cache().delete();
-      } catch (IOException e) {
-        LOG.error("Geocode ws cache could not be deleted", e);
-      }
-    }
+  private void clearCache() {
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  LOG.info("Ws shutdown hook called");
+                  if (client != null && client.cache() != null) {
+                    LOG.info("Deleting ws cache");
+                    try {
+                      client.cache().delete();
+                    } catch (IOException e) {
+                      LOG.error("Ws cache could not be deleted", e);
+                    }
+                  }
+                }));
   }
 }

@@ -38,6 +38,9 @@ public class SpeciesMatchv2ServiceRest {
             .build();
 
     service = retrofit.create(SpeciesMatchv2Service.class);
+
+    // add hook to delete ws cache at shutdown
+    clearCache();
   }
 
   public static SpeciesMatchv2ServiceRest getInstance(Config config) {
@@ -60,14 +63,20 @@ public class SpeciesMatchv2ServiceRest {
    *
    * <p><strong>Keep in mind that this method is not thread-safe, so use it carefully.</strong>
    */
-  public static void clearCache() {
-    if (instance != null && instance.client != null && instance.client.cache() != null) {
-      LOG.info("Deleting species match v2 ws cache");
-      try {
-        instance.client.cache().delete();
-      } catch (IOException e) {
-        LOG.error("Species match v2 ws cache could not be deleted", e);
-      }
-    }
+  private void clearCache() {
+    Runtime.getRuntime()
+      .addShutdownHook(
+        new Thread(
+          () -> {
+            LOG.info("Ws shutdown hook called");
+            if (client != null && client.cache() != null) {
+              LOG.info("Deleting ws cache");
+              try {
+                client.cache().delete();
+              } catch (IOException e) {
+                LOG.error("Ws cache could not be deleted", e);
+              }
+            }
+          }));
   }
 }

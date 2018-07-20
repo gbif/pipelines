@@ -3,7 +3,6 @@ package org.gbif.pipelines.transform.record;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.interpretation.Interpretation;
 import org.gbif.pipelines.core.interpretation.LocationInterpreter;
-import org.gbif.pipelines.core.ws.client.geocode.GeocodeServiceRest;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
@@ -18,27 +17,14 @@ import java.util.Objects;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LocationRecordTransform extends RecordTransform<ExtendedRecord, LocationRecord> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(LocationRecordTransform.class);
 
   private final Config wsConfig;
 
   private LocationRecordTransform(Config wsConfig) {
     super("Interpret location record");
     this.wsConfig = wsConfig;
-
-    // add hook to delete ws cache at shutdown
-    Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread(
-                () -> {
-                  LOG.info("Location transform shutdown hook called");
-                  GeocodeServiceRest.clearCache();
-                }));
   }
 
   public static LocationRecordTransform create(Config wsConfig) {
