@@ -26,6 +26,9 @@ public class Dwca2Verbatim extends ConverterToVerbatim {
     DwCAReader reader = new DwCAReader(inputPath.toString());
     reader.init();
     LOG.info("Exporting the DwC Archive to avro {} started");
+    // Read first record
+    dataFileWriter.append(reader.getCurrent());
+    // Read all records
     while (reader.advance()) {
       dataFileWriter.append(reader.getCurrent());
     }
