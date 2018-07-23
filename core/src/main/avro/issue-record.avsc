@@ -1,13 +1,5 @@
 [
   {
-    "name": "LineageType",
-    "namespace": "org.gbif.pipelines.io.avro.issue",
-    "type": "enum",
-    "symbols": [
-      "OTHERS", "SET_TO_NULL", "SET_COUNTRYCODE_FROM_COUNTRY"
-    ]
-  },
-  {
     "name": "IssueType",
     "namespace": "org.gbif.pipelines.io.avro.issue",
     "type": "enum",
@@ -36,25 +28,6 @@
     "fields": [
       {"name": "remark", "type": "string", "default" : "null"},
       {"name": "issueType", "type": "IssueType"}
-    ]
-  },
-  {
-    "name": "Lineage",
-    "namespace": "org.gbif.pipelines.io.avro.issue",
-    "type": "record",
-    "fields": [
-      {"name": "remark", "type": "string"},
-      {"name": "lineageType", "type": "LineageType"}
-    ]
-  },
-  {
-    "name": "IssueLineageRecord",
-    "namespace": "org.gbif.pipelines.io.avro.issue",
-    "type": "record",
-    "fields": [
-      {"name": "id", "type": "string"},
-      {"name": "fieldIssueMap", "type": {"type": "map", "values": {"type": "array", "items": "Issue"}}},
-      {"name": "fieldLineageMap", "type": {"type": "map", "values": {"type": "array", "items": "Lineage"}}}
     ]
   }
 ]

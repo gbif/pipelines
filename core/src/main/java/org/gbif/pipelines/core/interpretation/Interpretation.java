@@ -2,8 +2,6 @@ package org.gbif.pipelines.core.interpretation;
 
 import org.gbif.pipelines.io.avro.issue.Issue;
 import org.gbif.pipelines.io.avro.issue.IssueType;
-import org.gbif.pipelines.io.avro.issue.Lineage;
-import org.gbif.pipelines.io.avro.issue.LineageType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,22 +22,19 @@ public class Interpretation<T> implements Serializable {
 
   // Element to be interpreted
   private final T value;
-  // Stores the transformations and operations applied during an interpretation
-  private final List<Trace<LineageType>> lineage;
   // Stores the validations applied during an interpretation
   private final List<Trace<IssueType>> validations;
 
   /** Creates a interpretation of a value. */
   public static <U> Interpretation<U> of(U value) {
-    return new Interpretation<>(value, new ArrayList<>(), new ArrayList<>());
+    return new Interpretation<>(value, new ArrayList<>());
   }
 
   /** Full constructor. */
   private Interpretation(
-      T value, List<Trace<IssueType>> validations, List<Trace<LineageType>> lineage) {
+      T value, List<Trace<IssueType>> validations) {
     this.value = value;
     this.validations = validations;
-    this.lineage = lineage;
   }
 
   /** Adds a validation to the applied interpretation. */
@@ -54,42 +49,20 @@ public class Interpretation<T> implements Serializable {
     return this;
   }
 
-  /** Adds a lineage trace to the interpretation operation. */
-  public Interpretation<T> withLineage(Trace<LineageType> lineage) {
-    this.lineage.add(lineage);
-    return this;
-  }
-
-  /** Adds a lineage trace to the interpretation operation. */
-  public Interpretation<T> withLineage(String fieldName, Lineage lineage) {
-    this.lineage.add(Trace.of(fieldName, lineage.getLineageType(), lineage.getRemark()));
-    return this;
-  }
-
   public <U> Interpretation<U> using(Function<? super T, Interpretation<U>> mapper) {
     Interpretation<U> interpretation = mapper.apply(value);
-
-    List<Trace<LineageType>> newLineage = new ArrayList<>(lineage);
-    if (Objects.nonNull(interpretation.lineage)) {
-      newLineage.addAll(interpretation.lineage);
-    }
 
     List<Trace<IssueType>> newValidations = new ArrayList<>(validations);
     if (Objects.nonNull(interpretation.validations)) {
       newValidations.addAll(interpretation.validations);
     }
 
-    return new Interpretation<>(interpretation.value, newValidations, newLineage);
+    return new Interpretation<>(interpretation.value, newValidations);
   }
 
   /** Consumes all traces in the validation. */
   public void forEachValidation(Consumer<Trace<IssueType>> traceConsumer) {
     validations.forEach(traceConsumer);
-  }
-
-  /** Consumes all traces in the lineage. */
-  public void forEachLineage(Consumer<Trace<LineageType>> traceConsumer) {
-    lineage.forEach(traceConsumer);
   }
 
   /**
@@ -115,7 +88,7 @@ public class Interpretation<T> implements Serializable {
 
     /** Factory method to create a instance of trace object using a context element. */
     public static <U> Trace<U> of(U context, String remark) {
-      return of(null, context, null);
+      return of(null, context, remark);
     }
 
     /** Factory method to create a instance of trace object using a context element. */
