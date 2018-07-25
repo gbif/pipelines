@@ -36,7 +36,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 public class GbifRecords2JsonConverter extends Records2JsonConverter {
 
   private static final String[] ESCAPE_KEYS = {
-    "decimalLatitude", "decimalLongitude", "diagnostics", "id"
+    "decimalLatitude", "decimalLongitude", "diagnostics", "id", "http://rs.tdwg.org/dwc/terms/occurrenceRemarks"
   };
   private static final String[] REPLACE_KEYS = {
     "http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"
