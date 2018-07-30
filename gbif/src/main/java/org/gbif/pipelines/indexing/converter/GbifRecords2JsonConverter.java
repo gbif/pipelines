@@ -36,16 +36,24 @@ import org.apache.avro.specific.SpecificRecordBase;
 public class GbifRecords2JsonConverter extends Records2JsonConverter {
 
   private static final String[] ESCAPE_KEYS = {
-    "decimalLatitude", "decimalLongitude", "diagnostics", "id"
+    "decimalLatitude",
+    "decimalLongitude",
+    "diagnostics",
+    "id",
+    "http://rs.tdwg.org/dwc/terms/occurrenceRemarks"
   };
   private static final String[] REPLACE_KEYS = {
     "http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"
+  };
+  private static final String[] CLEAR_VALUES = {
+    "locality", "http://rs.tdwg.org/dwc/terms/locality"
   };
 
   private GbifRecords2JsonConverter(SpecificRecordBase[] bases) {
     setSpecificRecordBase(bases);
     setEscapeKeys(ESCAPE_KEYS);
     setReplaceKeys(REPLACE_KEYS);
+    setClearValues(CLEAR_VALUES);
     addSpecificConverter(ExtendedRecord.class, getExtendedRecordConverter());
     addSpecificConverter(LocationRecord.class, getLocationRecordConverter());
     addSpecificConverter(TaxonRecord.class, getTaxonomyRecordConverter());

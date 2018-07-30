@@ -32,6 +32,7 @@ public class Records2JsonConverter {
   private Map<Class<? extends SpecificRecordBase>, Consumer<SpecificRecordBase>>
       customConvertersMap = new HashMap<>();
   private String[] replaceKeys = {};
+  private Set<String> clearValues = new HashSet<>();
 
   private static final Pattern PATTERN1 = Pattern.compile("(\\\\)", Pattern.DOTALL);
   private static final Pattern PATTERN2 = Pattern.compile("\"", Pattern.DOTALL);
@@ -44,6 +45,8 @@ public class Records2JsonConverter {
   private static final Pattern PATTERN9 = Pattern.compile("(}]\\[\\{)", Pattern.DOTALL);
   private static final Pattern PATTERN10 = Pattern.compile("(\"\")", Pattern.DOTALL);
   private static final Pattern PATTERN11 = Pattern.compile("(}\\{)", Pattern.DOTALL);
+  private static final Pattern PATTERN12 = Pattern.compile("(})", Pattern.DOTALL);
+  private static final Pattern PATTERN13 = Pattern.compile("(\\{)", Pattern.DOTALL);
 
   Records2JsonConverter() {}
 
@@ -62,6 +65,15 @@ public class Records2JsonConverter {
 
   public Records2JsonConverter setReplaceKeys(String... replaceKeys) {
     this.replaceKeys = replaceKeys;
+    return this;
+  }
+
+  public Records2JsonConverter setClearValues(String... clearValues) {
+    if (this.clearValues.isEmpty()) {
+      this.clearValues = new HashSet<>(Arrays.asList(clearValues));
+    } else {
+      this.clearValues.addAll(Arrays.asList(clearValues));
+    }
     return this;
   }
 
@@ -173,7 +185,12 @@ public class Records2JsonConverter {
       return append("null,");
     }
     if (value instanceof String) {
-      String r1 = PATTERN1.matcher(((String) value)).replaceAll("\\\\\\\\");
+      String result = ((String) value);
+      if (clearValues.contains(key)) {
+        String r12 = PATTERN12.matcher(result).replaceAll("(");
+        result = PATTERN13.matcher(r12).replaceAll(")");
+      }
+      String r1 = PATTERN1.matcher(result).replaceAll("\\\\\\\\");
       value = PATTERN2.matcher(r1).replaceAll("\\\\\"");
     }
     return append("\"").append(value).append("\",");
