@@ -5,12 +5,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.POJONode;
 import org.apache.avro.specific.SpecificRecordBase;
 
 /**
@@ -26,27 +27,14 @@ import org.apache.avro.specific.SpecificRecordBase;
  */
 public class Records2JsonConverter {
 
-  private final StringBuilder sb = new StringBuilder().append("{");
+  final ObjectMapper mapper = new ObjectMapper();
+  private final ObjectNode mainNode = mapper.createObjectNode();
+
   private SpecificRecordBase[] bases;
-  private Set<String> escapeKeys = Collections.emptySet();
+  private Set<String> skipKeys = Collections.emptySet();
+  private String[] replaceKeys = {};
   private Map<Class<? extends SpecificRecordBase>, Consumer<SpecificRecordBase>>
       customConvertersMap = new HashMap<>();
-  private String[] replaceKeys = {};
-  private Set<String> clearValues = new HashSet<>();
-
-  private static final Pattern PATTERN1 = Pattern.compile("(\\\\)", Pattern.DOTALL);
-  private static final Pattern PATTERN2 = Pattern.compile("\"", Pattern.DOTALL);
-  private static final Pattern PATTERN3 = Pattern.compile("(\"\\{)|(\\{,)", Pattern.DOTALL);
-  private static final Pattern PATTERN4 = Pattern.compile("(}\")|(,})", Pattern.DOTALL);
-  private static final Pattern PATTERN5 = Pattern.compile("(\\[,)", Pattern.DOTALL);
-  private static final Pattern PATTERN6 = Pattern.compile("(\"\\[\\{)", Pattern.DOTALL);
-  private static final Pattern PATTERN7 = Pattern.compile("(}]\")", Pattern.DOTALL);
-  private static final Pattern PATTERN8 = Pattern.compile("(,])", Pattern.DOTALL);
-  private static final Pattern PATTERN9 = Pattern.compile("(}]\\[\\{)", Pattern.DOTALL);
-  private static final Pattern PATTERN10 = Pattern.compile("(\"\")", Pattern.DOTALL);
-  private static final Pattern PATTERN11 = Pattern.compile("(}\\{)", Pattern.DOTALL);
-  private static final Pattern PATTERN12 = Pattern.compile("(})", Pattern.DOTALL);
-  private static final Pattern PATTERN13 = Pattern.compile("(\\{)", Pattern.DOTALL);
 
   Records2JsonConverter() {}
 
@@ -68,21 +56,12 @@ public class Records2JsonConverter {
     return this;
   }
 
-  public Records2JsonConverter setClearValues(String... clearValues) {
-    if (this.clearValues.isEmpty()) {
-      this.clearValues = new HashSet<>(Arrays.asList(clearValues));
-    } else {
-      this.clearValues.addAll(Arrays.asList(clearValues));
-    }
-    return this;
-  }
-
   /** Set keys, if you don't want to see them in json string */
-  public Records2JsonConverter setEscapeKeys(String... escapeKeys) {
-    if (this.escapeKeys.isEmpty()) {
-      this.escapeKeys = new HashSet<>(Arrays.asList(escapeKeys));
+  public Records2JsonConverter setSkipKeys(String... escapeKeys) {
+    if (this.skipKeys.isEmpty()) {
+      this.skipKeys = new HashSet<>(Arrays.asList(escapeKeys));
     } else {
-      this.escapeKeys.addAll(Arrays.asList(escapeKeys));
+      this.skipKeys.addAll(Arrays.asList(escapeKeys));
     }
     return this;
   }
@@ -103,7 +82,7 @@ public class Records2JsonConverter {
    */
   public Records2JsonConverter addSpecificConverter(
       Class<? extends SpecificRecordBase> type, Consumer<SpecificRecordBase> consumer) {
-    this.customConvertersMap.put(type, consumer);
+    customConvertersMap.put(type, consumer);
     return this;
   }
 
@@ -111,111 +90,70 @@ public class Records2JsonConverter {
     Arrays.stream(bases)
         .forEach(
             record -> {
-              Consumer<SpecificRecordBase> consumer =
-                  this.customConvertersMap.get(record.getClass());
-              if (Objects.nonNull(consumer)) {
+              Consumer<SpecificRecordBase> consumer = customConvertersMap.get(record.getClass());
+              if (consumer != null) {
                 consumer.accept(record);
               } else {
                 addCommonFields(record);
               }
             });
-    return filterAndConvert();
+    return mainNode.toString();
   }
 
   /** Common way how to convert {@link SpecificRecordBase} to json string */
   Records2JsonConverter addCommonFields(SpecificRecordBase base) {
     base.getSchema()
         .getFields()
-        .forEach(field -> addJsonField(field.name(), base.get(field.pos())));
+        .forEach(
+            field ->
+                Optional.ofNullable(base.get(field.pos()))
+                    .map(Object::toString)
+                    .ifPresent(r -> addJsonField(field.name(), r)));
     return this;
   }
 
-  /** Filter possible incorrect symbols for json - \ or }{ and etc. */
-  private String filterAndConvert() {
-    append("}");
-    String r3 = PATTERN3.matcher(sb.toString()).replaceAll("{");
-    String r4 = PATTERN4.matcher(r3).replaceAll("}");
-    String r5 = PATTERN5.matcher(r4).replaceAll("[");
-    String r6 = PATTERN6.matcher(r5).replaceAll("[{");
-    String r7 = PATTERN7.matcher(r6).replaceAll("}]");
-    String r8 = PATTERN8.matcher(r7).replaceAll("]");
-    String r9 = PATTERN9.matcher(r8).replaceAll("}],[{");
-    String r10 = PATTERN10.matcher(r9).replaceAll("\",\"");
-    return PATTERN11.matcher(r10).replaceAll("},{");
-  }
-
-  private Records2JsonConverter append(Object obj) {
-    sb.append(obj);
+  Records2JsonConverter addJsonObject(String key, ObjectNode... nodes) {
+    ObjectNode node = mapper.createObjectNode();
+    Arrays.stream(nodes).forEach(node::setAll);
+    mainNode.set(key, node);
     return this;
-  }
-
-  Records2JsonConverter addJsonObject(String key, JsonFiled... fields) {
-    Map<String, String> map =
-        Arrays.stream(fields).collect(Collectors.toMap(JsonFiled::getKey, JsonFiled::getValue));
-    return addJsonObject(key, map);
   }
 
   Records2JsonConverter addJsonObject(String key, Map<String, String> fields) {
-    append("\"").append(key).append("\":");
-    if (!fields.isEmpty()) {
-      append("{");
-      fields.forEach(this::addJsonField);
-      append("},");
+    ObjectNode node = mapper.createObjectNode();
+    fields.forEach((k, v) -> addJsonField(node, k, v));
+    mainNode.set(key, node);
+    return this;
+  }
+
+  /** Check field in skipKeys and convert - "key":"value" */
+  Records2JsonConverter addJsonField(ObjectNode node, String key, String value) {
+    return skipKeys.contains(key) ? this : addJsonFieldNoCheck(node, key, value);
+  }
+
+  /** Check field in skipKeys and convert - "key":"value" */
+  Records2JsonConverter addJsonField(String key, String value) {
+    return addJsonField(mainNode, key, value);
+  }
+
+  /** Convert - "key":"value" and check some incorrect symbols for json */
+  Records2JsonConverter addJsonFieldNoCheck(ObjectNode node, String key, String value) {
+    for (String rule : replaceKeys) {
+      key = key.replaceAll(rule, "");
+    }
+    // Can be a json as a string
+    if (value != null
+        && ((value.startsWith("{\"") && value.endsWith("}"))
+            || (value.startsWith("[") && value.endsWith("]")))) {
+      node.set(key, new POJONode(value));
     } else {
-      append("null,");
+      node.put(key, value);
     }
     return this;
   }
 
-  /** Check field in escapeKeys and convert - "key":"value" */
-  Records2JsonConverter addJsonField(String key, Object value) {
-    if (escapeKeys.contains(key)) {
-      return this;
-    }
-    return addJsonFieldNoCheck(key, value);
-  }
-
   /** Convert - "key":"value" and check some incorrect symbols for json */
-  Records2JsonConverter addJsonFieldNoCheck(String key, Object value) {
-    for (String rule : replaceKeys) {
-      key = key.replaceAll(rule, "");
-    }
-    sb.append("\"").append(key).append("\":");
-    if (Objects.isNull(value)) {
-      return append("null,");
-    }
-    if (value instanceof String) {
-      String result = ((String) value);
-      if (clearValues.contains(key)) {
-        String r12 = PATTERN12.matcher(result).replaceAll("(");
-        result = PATTERN13.matcher(r12).replaceAll(")");
-      }
-      String r1 = PATTERN1.matcher(result).replaceAll("\\\\\\\\");
-      value = PATTERN2.matcher(r1).replaceAll("\\\\\"");
-    }
-    return append("\"").append(value).append("\",");
-  }
-
-  public static class JsonFiled {
-
-    private final String key;
-    private final String value;
-
-    private JsonFiled(String key, String value) {
-      this.key = key;
-      this.value = value;
-    }
-
-    public static JsonFiled create(String key, String value) {
-      return new JsonFiled(key, value);
-    }
-
-    public String getKey() {
-      return key;
-    }
-
-    public String getValue() {
-      return value;
-    }
+  Records2JsonConverter addJsonFieldNoCheck(String key, String value) {
+    return addJsonFieldNoCheck(mainNode, key, value);
   }
 }

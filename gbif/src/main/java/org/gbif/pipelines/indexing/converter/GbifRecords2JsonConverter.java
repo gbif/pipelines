@@ -8,10 +8,10 @@ import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.avro.specific.SpecificRecordBase;
 
 /**
@@ -35,28 +35,18 @@ import org.apache.avro.specific.SpecificRecordBase;
  */
 public class GbifRecords2JsonConverter extends Records2JsonConverter {
 
-  private static final String[] ESCAPE_KEYS = {
-    "decimalLatitude",
-    "decimalLongitude",
-    "diagnostics",
-    "id",
-    "http://rs.tdwg.org/dwc/terms/occurrenceRemarks"
-  };
+  private static final String[] SKIP_KEYS = {"id", "decimalLatitude", "decimalLongitude"};
   private static final String[] REPLACE_KEYS = {
     "http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"
   };
-  private static final String[] CLEAR_VALUES = {
-    "locality", "http://rs.tdwg.org/dwc/terms/locality"
-  };
 
   private GbifRecords2JsonConverter(SpecificRecordBase[] bases) {
-    setSpecificRecordBase(bases);
-    setEscapeKeys(ESCAPE_KEYS);
-    setReplaceKeys(REPLACE_KEYS);
-    setClearValues(CLEAR_VALUES);
-    addSpecificConverter(ExtendedRecord.class, getExtendedRecordConverter());
-    addSpecificConverter(LocationRecord.class, getLocationRecordConverter());
-    addSpecificConverter(TaxonRecord.class, getTaxonomyRecordConverter());
+    this.setSpecificRecordBase(bases)
+        .setSkipKeys(SKIP_KEYS)
+        .setReplaceKeys(REPLACE_KEYS)
+        .addSpecificConverter(ExtendedRecord.class, getExtendedRecordConverter())
+        .addSpecificConverter(LocationRecord.class, getLocationRecordConverter())
+        .addSpecificConverter(TaxonRecord.class, getTaxonomyRecordConverter());
   }
 
   public static GbifRecords2JsonConverter create(SpecificRecordBase... bases) {
@@ -81,7 +71,7 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
   private Consumer<SpecificRecordBase> getExtendedRecordConverter() {
     return record -> {
       Map<String, String> terms = ((ExtendedRecord) record).getCoreTerms();
-      addJsonFieldNoCheck("id", record.get(0)).addJsonObject("verbatim", terms);
+      this.addJsonFieldNoCheck("id", record.get(0).toString()).addJsonObject("verbatim", terms);
     };
   }
 
@@ -102,17 +92,16 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
     return record -> {
       LocationRecord location = (LocationRecord) record;
 
-      if (Objects.isNull(location.getDecimalLongitude())
-          || Objects.isNull(location.getDecimalLatitude())) {
-        addJsonObject("location");
+      if (location.getDecimalLongitude() == null || location.getDecimalLatitude() == null) {
+        this.addJsonObject("location");
       } else {
-        addJsonObject(
-            "location",
-            JsonFiled.create("lon", location.getDecimalLongitude().toString()),
-            JsonFiled.create("lat", location.getDecimalLatitude().toString()));
+        ObjectNode node = mapper.createObjectNode();
+        node.put("lon", location.getDecimalLongitude().toString());
+        node.put("lat", location.getDecimalLatitude().toString());
+        this.addJsonObject("location", node);
       }
       // Fields as a common view - "key": "value"
-      addCommonFields(record);
+      this.addCommonFields(record);
     };
   }
 
@@ -147,29 +136,31 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
       TaxonRecord taxon = (TaxonRecord) record;
 
       List<RankedName> classifications = taxon.getClassification();
-      if (Objects.nonNull(classifications) && !classifications.isEmpty()) {
+      if (classifications != null && !classifications.isEmpty()) {
+
         Map<Rank, String> map =
             classifications
                 .stream()
                 .collect(Collectors.toMap(RankedName::getRank, RankedName::getName));
+
         // Gbif fields from map
-        addJsonField("gbifKingdom", map.get(Rank.KINGDOM));
-        addJsonField("gbifPhylum", map.get(Rank.PHYLUM));
-        addJsonField("gbifClass", map.get(Rank.CLASS));
-        addJsonField("gbifOrder", map.get(Rank.ORDER));
-        addJsonField("gbifFamily", map.get(Rank.FAMILY));
-        addJsonField("gbifGenus", map.get(Rank.GENUS));
-        addJsonField("gbifSubgenus", map.get(Rank.SUBGENUS));
+        this.addJsonField("gbifKingdom", map.get(Rank.KINGDOM))
+            .addJsonField("gbifPhylum", map.get(Rank.PHYLUM))
+            .addJsonField("gbifClass", map.get(Rank.CLASS))
+            .addJsonField("gbifOrder", map.get(Rank.ORDER))
+            .addJsonField("gbifFamily", map.get(Rank.FAMILY))
+            .addJsonField("gbifGenus", map.get(Rank.GENUS))
+            .addJsonField("gbifSubgenus", map.get(Rank.SUBGENUS));
       }
 
       // Other Gbif fields
       RankedName usage = taxon.getUsage();
-      if (Objects.nonNull(usage)) {
-        addJsonField("gbifSpeciesKey", usage.getKey());
-        addJsonField("gbifScientificName", usage.getName());
+      if (usage != null) {
+        this.addJsonField("gbifSpeciesKey", usage.getKey().toString())
+            .addJsonField("gbifScientificName", usage.getName());
       }
       // Fields as a common view - "key": "value"
-      addCommonFields(record);
+      this.addCommonFields(record);
     };
   }
 }
