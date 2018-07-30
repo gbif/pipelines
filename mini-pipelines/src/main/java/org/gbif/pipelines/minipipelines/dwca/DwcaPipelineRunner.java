@@ -75,15 +75,6 @@ class DwcaPipelineRunner {
   private Optional<String> createIndex() {
     if (isEsIndexingIncludedInPipeline()) {
       Path path = Paths.get(options.getESSchemaPath());
-      if (!path.isAbsolute()) {
-        path =
-            Optional.ofNullable(getClass().getClassLoader().getResource(options.getESSchemaPath()))
-                .map(x -> Paths.get(x.getPath()))
-                .orElseThrow(
-                    () ->
-                        new IllegalArgumentException(
-                            "Could not find the indexing schema - " + options.getESSchemaPath()));
-      }
       String index =
           EsHandler.createIndex(esConfig, options.getDatasetId(), options.getAttempt(), path);
       LOG.info("ES index {} created", index);
