@@ -1,10 +1,10 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
-import java.nio.file.Paths;
-import java.util.StringJoiner;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.nio.file.Paths;
+import java.util.StringJoiner;
 
 public class DwcaPipelineTest {
 
@@ -15,7 +15,7 @@ public class DwcaPipelineTest {
         getClass().getClassLoader().getResource("dwca.zip").getPath();
     final String targetPath = Paths.get("src", "test", "resources", "output").toString();
     final String gbifEnv = DwcaPipelineOptions.GbifEnv.DEV.name();
-    final String datasetId = "abcd1234";
+    final String datasetId = "abcde12345";
     final String attempt = "1";
     final String ESHosts = "http://localhost:9200";
 
@@ -26,7 +26,8 @@ public class DwcaPipelineTest {
     joiner.add("--datasetId=" + datasetId);
     joiner.add("--attempt=" + attempt);
     joiner.add("--ESHosts=" + ESHosts);
-    joiner.add("--pipelineStep=DWCA_TO_AVRO");
+    //joiner.add("--pipelineStep=DWCA_TO_AVRO");
+    //joiner.add("--runner=SparkRunner");
 
     DwcaPipeline.main(joiner.toString().split(" "));
   }

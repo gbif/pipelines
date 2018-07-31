@@ -21,25 +21,26 @@ The parameters that can be used can be seen using the `--help=DwcaMiniPipelineOp
 java -jar mini-pipelines.jar --help=DwcaMiniPipelineOptions
 ~~~~ 
 
-
 This is an example to run this pipeline with the minimum required parameters:
 
 ~~~~
 java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcde12345 --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200
 ~~~~ 
 
- This generates an output like this:
+This command uses the default runner: DirectRunner. It is only recommended for very small datasets (thousands of records).
+The output of this command is the records indexed in ES. 
+By default, the ES index name follows the format `{datasetId}_{attempt}` - in this example it's `abcde12345_1`. 
+Also, if we want to add the index to an alias we should specify the alias name in the `ESAlias` option.
 
- <img src="docs/output_generated.png">
-
-If we ignore the intermediate outputs using the next command there is no output written in the target path:
+If we want the intermediate outputs to be written to avro files we need to set the `writeIntermediateOutputs`to `true`:
 
 ~~~~
-java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200 --ignoreIntermediateOutputs=true
+java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200 --writeIntermediateOutputs=true
 ~~~~ 
 
-In this case, the output is the records indexed in ES. 
-By default, the ES index name follows the format `{datasetId}_{attempt}` - in this example it's `abcde12345_1`. This index is added to the alias specified in the `ESAlias` parameter. By default it's `occurrence`.
+This generates an output like this:
+
+ <img src="docs/output_generated.png">
 
 
 Other examples of commands:
@@ -54,3 +55,19 @@ java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetI
 ~~~~ 
 
 NOTE: at the time being the ES schema is temporary and the development of the pipeline is still in an early stage, therefore issues may be encountered.
+
+#### Spark runner ####
+The Spark dependencies are included in the project so the pipelines can be run in an embedded Spark in our localhost. This runner has a much more better 
+performance than the default one, and it can handle datasets of some millions of records.
+  
+To run the pipeline with Spark, we need to use the SparkRunner. It's also recommended to increase the memory size and use the G1 garbage collector:
+
+~~~~
+java -XX:+UseG1GC -Xms256M -Xmx8G -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcde12345 --attempt=1 --gbifEnv=UAT --ESHosts=http://localhost:9200 --runner=SparkRunner
+~~~~
+
+By default, Spark uses 4 threads, but we can customize it by using the `sparkMaster` option:
+
+~~~~
+java -XX:+UseG1GC -Xms256M -Xmx8G -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcde12345 --attempt=1 --gbifEnv=UAT --ESHosts=http://localhost:9200 --runner=SparkRunner --sparkMaster=local[8]
+~~~~

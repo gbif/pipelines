@@ -40,7 +40,7 @@ class OutputWriter {
       GbifInterpretationType type) {
 
     // only write if it'' the final the step or the intermediate outputs are not ignored
-    if (INTERPRET == options.getPipelineStep() || !options.getIgnoreIntermediateOutputs()) {
+    if (INTERPRET == options.getPipelineStep() || options.getWriteIntermediateOutputs()) {
 
       String rootPath = FsUtils.buildPathString(getRootPath(options), type.name().toLowerCase());
 

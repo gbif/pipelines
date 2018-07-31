@@ -1,12 +1,12 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
+import org.apache.beam.runners.spark.SparkPipelineOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.Hidden;
-import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.Validation;
 
-public interface DwcaPipelineOptions extends PipelineOptions {
+public interface DwcaPipelineOptions extends SparkPipelineOptions {
 
   long DEFAULT_ES_BATCH_SIZE = 10_000L;
   long DEFAULT_ES_BATCH_SIZE_BYTES = 10_242_880L;
@@ -69,11 +69,12 @@ public interface DwcaPipelineOptions extends PipelineOptions {
 
   void setPipelineStep(PipelineStep step);
 
-  @Description("If set to true it returns only the output of the last step of the pipeline.")
-  @Default.Boolean(true)
-  boolean getIgnoreIntermediateOutputs();
+  @Description(
+      "If set to true it writes the outputs of every step of the pipeline. Otherwise, it writes only the output of the last step.")
+  @Default.Boolean(false)
+  boolean getWriteIntermediateOutputs();
 
-  void setIgnoreIntermediateOutputs(boolean omitIntermediateOutputs);
+  void setWriteIntermediateOutputs(boolean omitIntermediateOutputs);
 
   @Description("Target ES Max Batch Size bytes.")
   @Default.Long(DEFAULT_ES_BATCH_SIZE_BYTES)
@@ -94,7 +95,6 @@ public interface DwcaPipelineOptions extends PipelineOptions {
 
   @Description(
       "Name of the ES alias. The index created will be added to this alias. Only applies to the INDEX_TO_ES step.")
-  @Default.String("occurrence")
   String getESAlias();
 
   void setESAlias(String esAlias);
