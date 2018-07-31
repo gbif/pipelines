@@ -22,26 +22,26 @@ import org.apache.http.HttpEntity;
  */
 public final class JsonHandler {
 
-  private static final ObjectMapper mapper = new ObjectMapper();
-  private static final ObjectWriter writer = mapper.writer();
-  private static final ObjectReader reader = mapper.readerFor(Map.class);
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectWriter WRITER = MAPPER.writer();
+  private static final ObjectReader READER = MAPPER.readerFor(Map.class);
 
   private JsonHandler() {}
 
   /** Creates a {@link ObjectNode}. */
   public static ObjectNode createObjectNode() {
-    return mapper.createObjectNode();
+    return MAPPER.createObjectNode();
   }
 
   /** Creates a {@link ArrayNode}. */
   public static ArrayNode createArrayNode() {
-    return mapper.createArrayNode();
+    return MAPPER.createArrayNode();
   }
 
   /** Writes a {@link Object} to String. */
   public static String writeToString(Object obj) {
     try {
-      return writer.writeValueAsString(obj);
+      return WRITER.writeValueAsString(obj);
     } catch (JsonProcessingException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }
@@ -50,7 +50,7 @@ public final class JsonHandler {
   /** Writes a {@link InputStream} to String . */
   public static String writeToString(InputStream inputStream) {
     try {
-      return writeToString(reader.readTree(inputStream));
+      return writeToString(READER.readTree(inputStream));
     } catch (IOException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }
@@ -60,7 +60,7 @@ public final class JsonHandler {
   public static Map<String, String> readValue(HttpEntity entity) {
     Objects.requireNonNull(entity);
     try {
-      return reader.readValue(entity.getContent());
+      return READER.readValue(entity.getContent());
     } catch (IOException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }
@@ -70,7 +70,7 @@ public final class JsonHandler {
   public static JsonNode readTree(HttpEntity entity) {
     Objects.requireNonNull(entity);
     try {
-      return reader.readTree(entity.getContent());
+      return READER.readTree(entity.getContent());
     } catch (IOException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }
@@ -79,7 +79,7 @@ public final class JsonHandler {
   /** Reads a {@link InputStream} with JSON content and returns it as a {@link JsonNode}. */
   public static JsonNode readTree(InputStream inputStream) {
     try {
-      return reader.readTree(inputStream);
+      return READER.readTree(inputStream);
     } catch (IOException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }
@@ -88,7 +88,7 @@ public final class JsonHandler {
   /** Reads a {@link String} with JSON content and returns it as a {@link JsonNode}. */
   public static JsonNode readTree(String jsonString) {
     try {
-      return reader.readTree(jsonString);
+      return READER.readTree(jsonString);
     } catch (IOException exc) {
       throw new IllegalStateException(exc.getMessage(), exc);
     }
@@ -96,6 +96,6 @@ public final class JsonHandler {
 
   /** Converts a {@link Map} into a {@link JsonNode}. */
   public static JsonNode convertToJsonNode(Map<String, String> map) {
-    return mapper.valueToTree(map);
+    return MAPPER.valueToTree(map);
   }
 }
