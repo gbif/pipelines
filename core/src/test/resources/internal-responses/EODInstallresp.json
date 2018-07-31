@@ -1,0 +1,18 @@
+{
+  "key": "7182d304-b0a2-404b-baba-2086a325c221",
+  "organizationKey": "e2e717bf-551a-4917-bdc9-4fa0f342c530",
+  "type": "HTTP_INSTALLATION",
+  "title": "Cornell Lab of Ornithology Data",
+  "description": "Cornell Lab of Ornithology Data",
+  "createdBy": "trobertson",
+  "modifiedBy": "trobertson",
+  "created": "2016-11-23T10:59:29.080+0000",
+  "modified": "2016-11-23T10:59:29.080+0000",
+  "disabled": false,
+  "contacts": [],
+  "endpoints": [],
+  "machineTags": [],
+  "tags": [],
+  "identifiers": [],
+  "comments": []
+}

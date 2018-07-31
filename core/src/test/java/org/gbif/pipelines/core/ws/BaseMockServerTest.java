@@ -51,6 +51,15 @@ public abstract class BaseMockServerTest {
   protected static final String CHINA_REVERSE_RESPONSE =
       GEOCODE_RESPONSES_FOLDER + "reverse-china.json";
 
+  // mock internal responses
+  protected static final String INTERNAL_RESPONSES_FOLDER = "internal-responses/";
+  protected static final String EOD_INTERNAL_RESPONSE = INTERNAL_RESPONSES_FOLDER + "EOD.json";
+  protected static final String EOD_DATASET_INTERNAL_RESPONSE = INTERNAL_RESPONSES_FOLDER + "EODdatasetresponse.json";
+  protected static final String EOD_ORGANIZATION_INTERNAL_RESPONSE = INTERNAL_RESPONSES_FOLDER + "EODOrgresponse.json";
+  protected static final String EOD_INSTALL_INTERNAL_RESPONSE = INTERNAL_RESPONSES_FOLDER + "EODInstallresp.json";
+  protected static final String EOD_NETWORKS_INTERNAL_RESPONSE = INTERNAL_RESPONSES_FOLDER + "EODnetworks.json";
+
+
   // geocode test constants
   protected static final Double LATITUDE_CANADA = 60.4;
   protected static final Double LONGITUDE_CANADA = -131.3;
