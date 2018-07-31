@@ -1,5 +1,9 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionTuple;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.ws.config.Config;
@@ -10,28 +14,15 @@ import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 import org.gbif.pipelines.transform.indexing.MergeRecords2JsonTransform;
-import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
-import org.gbif.pipelines.transform.record.LocationRecordTransform;
-import org.gbif.pipelines.transform.record.MultimediaRecordTransform;
-import org.gbif.pipelines.transform.record.TaxonRecordTransform;
-import org.gbif.pipelines.transform.record.TemporalRecordTransform;
+import org.gbif.pipelines.transform.record.*;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 import org.gbif.pipelines.utils.FsUtils;
-
-import java.nio.file.Paths;
-
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.assembling.GbifInterpretationType.COMMON;
-import static org.gbif.pipelines.assembling.GbifInterpretationType.LOCATION;
-import static org.gbif.pipelines.assembling.GbifInterpretationType.MULTIMEDIA;
-import static org.gbif.pipelines.assembling.GbifInterpretationType.TAXONOMY;
-import static org.gbif.pipelines.assembling.GbifInterpretationType.TEMPORAL;
+import java.nio.file.Paths;
+
+import static org.gbif.pipelines.assembling.GbifInterpretationType.*;
 import static org.gbif.pipelines.minipipelines.dwca.DwcaPipelineOptions.PipelineStep.DWCA_TO_AVRO;
 import static org.gbif.pipelines.minipipelines.dwca.DwcaPipelineOptions.PipelineStep.INTERPRET;
 
@@ -72,7 +63,7 @@ class DwcaPipelineBuilder {
     // TODO: count number of records read to log it??
 
     // only write if it'' the final the step or the intermediate outputs are not ignored
-    if (DWCA_TO_AVRO == options.getPipelineStep() || !options.getIgnoreIntermediateOutputs()) {
+    if (DWCA_TO_AVRO == options.getPipelineStep() || options.getWriteIntermediateOutputs()) {
       String path = FsUtils.buildPathString(OutputWriter.getRootPath(options), "verbatim");
       OutputWriter.writeToAvro(verbatimRecords, ExtendedRecord.class, options, path);
     }

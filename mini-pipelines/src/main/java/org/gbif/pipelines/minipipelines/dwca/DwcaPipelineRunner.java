@@ -1,5 +1,6 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
+import com.google.common.base.Strings;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.esindexing.api.EsHandler;
@@ -70,7 +71,7 @@ class DwcaPipelineRunner {
   }
 
   private void swapIndex() {
-    if (isEsIndexingIncludedInPipeline()) {
+    if (isEsIndexingIncludedInPipeline() && !Strings.isNullOrEmpty(options.getESAlias())) {
       EsHandler.swapIndexInAlias(esConfig, options.getESAlias(), options.getESIndexName());
       LOG.info("ES index {} added to alias {}", options.getESIndexName(), options.getESAlias());
 
