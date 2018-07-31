@@ -105,6 +105,35 @@ class EsService {
    *
    * @param esClient client to call ES. It is required.
    * @param idxName name of the index to create.
+   * @param settingsType settings to use in the call.
+   * @param mappings mappings as json.
+   * @param settings custom settings, number of shards and etc.
+   * @return name of the index created.
+   */
+  static String createIndex(
+      EsClient esClient,
+      String idxName,
+      SettingsType settingsType,
+      Path mappings,
+      Map<String, String> settings) {
+    Objects.requireNonNull(esClient);
+
+    // create entity body
+    HttpEntity body =
+        BodyBuilder.newInstance()
+            .withSettingsType(settingsType)
+            .withSettingsMap(settings)
+            .withMappings(mappings)
+            .build();
+
+    return createIndexInternal(esClient, idxName, body);
+  }
+
+  /**
+   * Creates a ES index.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxName name of the index to create.
    * @param settings {@link Map} with thesettings to use in the call.
    * @param mappings path of the file with the mappings.
    * @return name of the index created.

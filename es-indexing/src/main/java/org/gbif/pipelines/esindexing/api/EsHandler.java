@@ -7,6 +7,7 @@ import org.gbif.pipelines.esindexing.common.SettingsType;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
@@ -88,6 +89,33 @@ public class EsHandler {
 
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
+    }
+  }
+
+  /**
+   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
+   *
+   * <p>Both datasetId and attempt parameters are required. The index created will follow the
+   * pattern "{datasetId}_{attempt}".
+   *
+   * @param config configuration of the ES instance.
+   * @param datasetId dataset id.
+   * @param attempt attempt of the dataset crawling.
+   * @param mappings mappings as json string.
+   * @param settingMap custom settings, number of shards and etc.
+   * @return name of the index created.
+   */
+  public static String createIndex(
+      EsConfig config,
+      String datasetId,
+      int attempt,
+      Path mappings,
+      Map<String, String> settingMap) {
+    final String idxName = createIndexName(datasetId, attempt);
+    LOG.info("Creating index {}", idxName);
+
+    try (EsClient esClient = EsClient.from(config)) {
+      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings, settingMap);
     }
   }
 
