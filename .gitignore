@@ -10,3 +10,4 @@ java-generated
 miniCluster
 bin
 .DS_Store
+mini-pipelines/state
