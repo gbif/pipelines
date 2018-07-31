@@ -54,21 +54,7 @@ class DwcaPipelineRunner {
     swapIndex();
 
     // we remove the tmp folder at shutdown
-    Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread(
-                () -> {
-                  LOG.debug("Dwca pipeline runner shutdown hook called");
-                  File tmp = Paths.get(OutputWriter.getTempDir(options)).toFile();
-                  if (tmp.exists()) {
-                    try {
-                      FileUtils.deleteDirectory(tmp);
-                      LOG.info("temp directory {} deleted", tmp.getPath());
-                    } catch (IOException e) {
-                      LOG.warn("Could not delete temp directory {}", tmp.getPath());
-                    }
-                  }
-                }));
+    removeTmp();
   }
 
   private Optional<String> createIndex() {
@@ -99,6 +85,24 @@ class DwcaPipelineRunner {
           options.getESIndexName(),
           options.getESAlias());
     }
+  }
+
+  private void removeTmp() {
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  LOG.debug("Dwca pipeline runner shutdown hook called");
+                  File tmp = Paths.get(OutputWriter.getTempDir(options)).toFile();
+                  if (tmp.exists()) {
+                    try {
+                      FileUtils.deleteDirectory(tmp);
+                      LOG.info("temp directory {} deleted", tmp.getPath());
+                    } catch (IOException e) {
+                      LOG.warn("Could not delete temp directory {}", tmp.getPath());
+                    }
+                  }
+                }));
   }
 
   private boolean isEsIndexingIncludedInPipeline() {

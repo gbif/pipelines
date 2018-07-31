@@ -139,8 +139,8 @@ class DwcaPipelineBuilder {
     resultCollection.apply(
         ElasticsearchIO.write()
             .withConnectionConfiguration(esBeamConfig)
-            .withMaxBatchSizeBytes(options.getESMaxBatchSize())
-            .withMaxBatchSize(options.getESMaxBatchSizeBytes()));
+            .withMaxBatchSizeBytes(options.getESMaxBatchSizeBytes())
+            .withMaxBatchSize(options.getESMaxBatchSize()));
 
     return pipeline;
   }

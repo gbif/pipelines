@@ -8,8 +8,8 @@ import org.apache.beam.sdk.options.Validation;
 
 public interface DwcaPipelineOptions extends SparkPipelineOptions {
 
-  long DEFAULT_ES_BATCH_SIZE = 1_000L;
-  long DEFAULT_ES_BATCH_SIZE_BYTES = 5_242_880L;
+  long DEFAULT_ES_BATCH_SIZE = 10_000L;
+  long DEFAULT_ES_BATCH_SIZE_BYTES = 10_242_880L;
 
   @Description(
       "Path of the Dwc-A file. It can be a zip file or a folder with the uncompressed files. Required.")
@@ -108,7 +108,7 @@ public interface DwcaPipelineOptions extends SparkPipelineOptions {
   void setESIndexName(String esIndexName);
 
   @Description("Path to an occurrence indexing schema")
-  @Default.String("es-occurrence-shcema.json")
+  @Default.String("elasticsearch/es-occurrence-shcema.json")
   String getESSchemaPath();
 
   void setESSchemaPath(String esSchemaPath);

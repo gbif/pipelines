@@ -91,15 +91,7 @@ public class MergeRecords2JsonTransformTest {
 
     // Expected
     final String expectedJson =
-        "{\"basisOfRecord\":null,\"sex\":null,\"lifeStage\":null,\"establishmentMeans\":null,\"individualCount\":null,"
-        + "\"typeStatus\":null,\"references\":null,\"year\":null,\"month\":null,\"day\":null,\"eventDate\":null,"
-        + "\"startDayOfYear\":null,\"endDayOfYear\":null,\"modified\":null,\"dateIdentified\":null,\"location\":null,"
-        + "\"continent\":null,\"waterBody\":null,\"country\":null,\"countryCode\":null,\"stateProvince\":null,"
-        + "\"minimumElevationInMeters\":null,\"maximumElevationInMeters\":null,\"minimumDepthInMeters\":null,"
-        + "\"maximumDepthInMeters\":null,\"minimumDistanceAboveSurfaceInMeters\":null,\"maximumDistanceAboveSurfaceInMeters\":null,"
-        + "\"coordinateUncertaintyInMeters\":null,\"coordinatePrecision\":null,\"synonym\":null,\"usage\":null,"
-        + "\"classification\":null,\"acceptedUsage\":null,\"nomenclature\":null,\"multimediaItems\":null,"
-        + "\"id\":\"1a52cef5-f4cf-43f4-8fdf-4b4951515688\",\"verbatim\":null}";
+        "{\"location\":{},\"id\":\"1a52cef5-f4cf-43f4-8fdf-4b4951515688\",\"verbatim\":{}}";
     final List<String> dataExpected = Collections.singletonList(expectedJson);
 
     // When

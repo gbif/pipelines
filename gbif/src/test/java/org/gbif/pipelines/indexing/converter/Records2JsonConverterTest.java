@@ -37,13 +37,9 @@ public class Records2JsonConverterTest {
             .build();
 
     String expected =
-        "{\"id\":\"777\",\"coreRowType\":\"core\",\"coreTerms\":{},\"extensions\":{},\"id\":\"777\",\"year\":\"2000\","
-        + "\"month\":null,\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},\"startDayOfYear\":\"1\","
-        + "\"endDayOfYear\":null,\"modified\":null,\"dateIdentified\":null,\"id\":\"777\",\"continent\":null,\"waterBody\":null,"
-        + "\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\",\",\"stateProvince\":null,\"minimumElevationInMeters\":null,"
-        + "\"maximumElevationInMeters\":null,\"minimumDepthInMeters\":null,\"maximumDepthInMeters\":null,"
-        + "\"minimumDistanceAboveSurfaceInMeters\":null,\"maximumDistanceAboveSurfaceInMeters\":null,\"decimalLatitude\":\"1.0\","
-        + "\"decimalLongitude\":\"2.0\",\"coordinateUncertaintyInMeters\":null,\"coordinatePrecision\":null}";
+        "{\"id\":\"777\",\"coreRowType\":\"core\",\"coreTerms\":\"{}\",\"extensions\":\"{}\",\"year\":\"2000\","
+            + "\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},\"startDayOfYear\":\"1\","
+            + "\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"decimalLatitude\":\"1.0\",\"decimalLongitude\":\"2.0\"}";
 
     // When
     String result =
