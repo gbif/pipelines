@@ -5,6 +5,7 @@ import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.location.LocationRecord;
 import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
@@ -12,6 +13,7 @@ import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 import org.gbif.pipelines.transform.indexing.MergeRecords2JsonTransform;
 import org.gbif.pipelines.transform.record.InterpretedExtendedRecordTransform;
 import org.gbif.pipelines.transform.record.LocationRecordTransform;
+import org.gbif.pipelines.transform.record.MetadataRecordTransform;
 import org.gbif.pipelines.transform.record.MultimediaRecordTransform;
 import org.gbif.pipelines.transform.record.TaxonRecordTransform;
 import org.gbif.pipelines.transform.record.TemporalRecordTransform;
@@ -21,7 +23,10 @@ import org.gbif.pipelines.utils.FsUtils;
 import java.nio.file.Paths;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.Values;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.slf4j.Logger;
@@ -34,6 +39,7 @@ import static org.gbif.pipelines.assembling.GbifInterpretationType.TAXONOMY;
 import static org.gbif.pipelines.assembling.GbifInterpretationType.TEMPORAL;
 import static org.gbif.pipelines.minipipelines.dwca.DwcaPipelineOptions.PipelineStep.DWCA_TO_AVRO;
 import static org.gbif.pipelines.minipipelines.dwca.DwcaPipelineOptions.PipelineStep.INTERPRET;
+import static org.gbif.pipelines.minipipelines.dwca.OutputWriter.getRootPath;
 
 /**
  * Builder to create a Pipeline that works with Dwc-A files. It adds different steps to the pipeline
@@ -50,13 +56,29 @@ class DwcaPipelineBuilder {
   static Pipeline buildPipeline(DwcaPipelineOptions options) {
     LOG.info("Starting pipeline building");
 
+    final Config wsConfig = WsConfigFactory.getConfig(options.getGbifEnv());
+
     // create pipeline
     Pipeline pipeline = Pipeline.create(options);
 
     // register Avro coders for serializing our messages
     Coders.registerAvroCoders(pipeline, ExtendedRecord.class);
 
-    LOG.info("STEP 1: Read the DwC-A using our custom reader");
+    LOG.info("STEP 1: Interpret metadata");
+    MetadataRecordTransform metadataTransform = MetadataRecordTransform.create(wsConfig).withAvroCoders(pipeline);
+    PCollection<String> metaCollection = pipeline.apply(Create.of(options.getDatasetId()));
+    PCollectionTuple metadataTuple = metaCollection.apply("Metadata interpretation", metadataTransform);
+    if (INTERPRET == options.getPipelineStep() || !options.getIgnoreIntermediateOutputs()) {
+      String path = FsUtils.buildPathString(getRootPath(options), "metadata");
+      metadataTuple
+          .get(metadataTransform.getDataTag())
+          .apply(Values.create())
+          .apply(
+              "Write metada avro",
+              AvroIO.write(MetadataRecord.class).to(path).withSuffix(".avro").withoutSharding());
+    }
+
+    LOG.info("STEP 2: Read the DwC-A using our custom reader");
     PCollection<ExtendedRecord> rawRecords =
         pipeline.apply(
             "Read from Darwin Core Archive",
@@ -64,16 +86,15 @@ class DwcaPipelineBuilder {
                 ? DwCAIO.Read.withPaths(options.getInputPath())
                 : DwCAIO.Read.withPaths(options.getInputPath(), OutputWriter.getTempDir(options)));
 
-    LOG.info("Adding step 2: removing duplicates");
+    LOG.info("Adding step 3: removing duplicates");
     UniqueOccurrenceIdTransform uniquenessTransform = UniqueOccurrenceIdTransform.create().withAvroCoders(pipeline);
     PCollectionTuple uniqueTuple = rawRecords.apply(uniquenessTransform);
     PCollection<ExtendedRecord> verbatimRecords = uniqueTuple.get(uniquenessTransform.getDataTag());
 
     // TODO: count number of records read to log it??
-
     // only write if it'' the final the step or the intermediate outputs are not ignored
     if (DWCA_TO_AVRO == options.getPipelineStep() || !options.getIgnoreIntermediateOutputs()) {
-      String path = FsUtils.buildPathString(OutputWriter.getRootPath(options), "verbatim");
+      String path = FsUtils.buildPathString(getRootPath(options), "verbatim");
       OutputWriter.writeToAvro(verbatimRecords, ExtendedRecord.class, options, path);
     }
 
@@ -82,8 +103,7 @@ class DwcaPipelineBuilder {
       return pipeline;
     }
 
-    LOG.info("Adding step 3: interpretations");
-    final Config wsConfig = WsConfigFactory.getConfig(options.getGbifEnv());
+    LOG.info("Adding step 4: interpretations");
 
     // Taxonomy
     LOG.info("Adding taxonomy interpretation");
@@ -127,7 +147,8 @@ class DwcaPipelineBuilder {
       .and(jsonTransform.getLocationKvTag(), locationTuple.get(locationTransform.getDataTag()))
       .and(jsonTransform.getMultimediaKvTag(), multimediaTuple.get(multimediaTransform.getDataTag()))
       .and(jsonTransform.getTaxonomyKvTag(), taxonRecordTuple.get(taxonTransform.getDataTag()))
-      .and(jsonTransform.getTemporalKvTag(), temporalTuple.get(temporalTransform.getDataTag()));
+      .and(jsonTransform.getTemporalKvTag(), temporalTuple.get(temporalTransform.getDataTag()))
+      .and(jsonTransform.getMetadataTag(), metadataTuple.get(metadataTransform.getDataTag()));
 
     PCollection<String> resultCollection = tuple.apply("Merge object to Json", jsonTransform);
 

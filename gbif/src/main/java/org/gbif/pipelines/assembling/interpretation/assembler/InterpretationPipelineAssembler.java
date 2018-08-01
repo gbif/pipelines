@@ -34,8 +34,6 @@ public class InterpretationPipelineAssembler
 
   private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipelineAssembler.class);
 
-  private static final String READ_STEP = "Read Avro files";
-
   private PipelineOptions options;
   private String input;
   private Set<String> interpretationTypes;
@@ -116,7 +114,7 @@ public class InterpretationPipelineAssembler
     // STEP 1: Read Avro files
     LOG.info("Reading Avro records from {}", input);
     PCollection<ExtendedRecord> verbatimRecords =
-        pipeline.apply(READ_STEP, AvroIO.read(ExtendedRecord.class).from(input));
+        pipeline.apply("Read Avro files", AvroIO.read(ExtendedRecord.class).from(input));
 
     // STEP 2: Common operations before running the interpretations
     LOG.info("Steps before interpretation - {}", Objects.nonNull(beforeHandler));

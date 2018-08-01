@@ -51,7 +51,8 @@ class OutputWriter {
 
       // write issues
       String issuesPath = FsUtils.buildPathString(rootPath, "issues");
-      PCollection<OccurrenceIssue> issues = tuple.get(transform.getIssueTag()).apply(Values.create());
+      PCollection<OccurrenceIssue> issues =
+          tuple.get(transform.getIssueTag()).apply(Values.create());
       writeToAvro(issues, OccurrenceIssue.class, options, issuesPath);
     }
   }

@@ -37,7 +37,7 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
    * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from the
    * path received.
    */
-  public static SpeciesMatchv2Client newInstance(Config wsConfig) {
+  public static SpeciesMatchv2Client create(Config wsConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
     return new SpeciesMatchv2Client(wsConfig);
   }
