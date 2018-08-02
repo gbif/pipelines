@@ -38,7 +38,7 @@ class LocationMatcher {
   private LocationMatcher(LatLng latLng, Country country, Config wsConfig) {
     this.latLng = latLng;
     this.country = country;
-    this.geocodeServiceClient = GeocodeServiceClient.newInstance(wsConfig);
+    this.geocodeServiceClient = GeocodeServiceClient.create(wsConfig);
   }
 
   static LocationMatcher newMatcher(LatLng latLng, Country country, Config wsConfig) {

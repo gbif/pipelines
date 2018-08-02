@@ -31,7 +31,7 @@ public class GeocodeServiceClient
    * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from the
    * path received.
    */
-  public static GeocodeServiceClient newInstance(Config wsConfig) {
+  public static GeocodeServiceClient create(Config wsConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
     return new GeocodeServiceClient(wsConfig);
   }

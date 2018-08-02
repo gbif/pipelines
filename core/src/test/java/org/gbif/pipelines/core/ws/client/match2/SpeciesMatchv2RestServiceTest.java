@@ -51,7 +51,7 @@ public class SpeciesMatchv2RestServiceTest extends BaseMockServerTest {
         ExtendedRecordCustomBuilder.create().name("Puma concolor").id("1").build();
 
     HttpResponse<NameUsageMatch2> response =
-        SpeciesMatchv2Client.newInstance(getWsConfig()).getMatch(record);
+        SpeciesMatchv2Client.create(getWsConfig()).getMatch(record);
 
     Assert.assertEquals(
         HttpURLConnection.HTTP_INTERNAL_ERROR, response.getHttpResponseCode().intValue());

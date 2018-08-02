@@ -7,5 +7,6 @@ public enum GbifInterpretationType {
   TEMPORAL,
   TAXONOMY,
   COMMON,
-  MULTIMEDIA
+  MULTIMEDIA,
+  METADATA
 }

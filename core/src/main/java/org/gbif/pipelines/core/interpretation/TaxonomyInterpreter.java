@@ -34,7 +34,7 @@ public interface TaxonomyInterpreter
 
       // get match from WS
       HttpResponse<NameUsageMatch2> response =
-          SpeciesMatchv2Client.newInstance(wsConfig).getMatch(extendedRecord);
+          SpeciesMatchv2Client.create(wsConfig).getMatch(extendedRecord);
 
       Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
