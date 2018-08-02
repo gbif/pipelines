@@ -1,9 +1,5 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionTuple;
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.common.beam.DwCAIO;
 import org.gbif.pipelines.core.ws.config.Config;
@@ -21,7 +17,6 @@ import org.gbif.pipelines.transform.record.MetadataRecordTransform;
 import org.gbif.pipelines.transform.record.MultimediaRecordTransform;
 import org.gbif.pipelines.transform.record.TaxonRecordTransform;
 import org.gbif.pipelines.transform.record.TemporalRecordTransform;
-import org.gbif.pipelines.transform.record.*;
 import org.gbif.pipelines.transform.validator.UniqueOccurrenceIdTransform;
 import org.gbif.pipelines.utils.FsUtils;
 
@@ -37,9 +32,11 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Paths;
-
-import static org.gbif.pipelines.assembling.GbifInterpretationType.*;
+import static org.gbif.pipelines.assembling.GbifInterpretationType.COMMON;
+import static org.gbif.pipelines.assembling.GbifInterpretationType.LOCATION;
+import static org.gbif.pipelines.assembling.GbifInterpretationType.MULTIMEDIA;
+import static org.gbif.pipelines.assembling.GbifInterpretationType.TAXONOMY;
+import static org.gbif.pipelines.assembling.GbifInterpretationType.TEMPORAL;
 import static org.gbif.pipelines.minipipelines.dwca.DwcaPipelineOptions.PipelineStep.DWCA_TO_AVRO;
 import static org.gbif.pipelines.minipipelines.dwca.DwcaPipelineOptions.PipelineStep.INTERPRET;
 import static org.gbif.pipelines.minipipelines.dwca.OutputWriter.getRootPath;
@@ -70,7 +67,7 @@ class DwcaPipelineBuilder {
     MetadataRecordTransform metadataTransform = MetadataRecordTransform.create(metaWsConfig).withAvroCoders(pipeline);
     PCollection<String> metaCollection = pipeline.apply(Create.of(options.getDatasetId()));
     PCollectionTuple metadataTuple = metaCollection.apply("Metadata interpretation", metadataTransform);
-    if (INTERPRET == options.getPipelineStep() || !options.getIgnoreIntermediateOutputs()) {
+    if (INTERPRET == options.getPipelineStep() || options.getWriteIntermediateOutputs()) {
       String path = FsUtils.buildPathString(getRootPath(options), "metadata");
       metadataTuple
           .get(metadataTransform.getDataTag())

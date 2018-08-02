@@ -1,10 +1,10 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.nio.file.Paths;
 import java.util.StringJoiner;
+
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class DwcaPipelineTest {
 
