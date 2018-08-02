@@ -31,21 +31,6 @@ public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptio
 
   void setESAddresses(String[] esAddresses);
 
-  @Default.InstanceFactory(DefaultESIndexPrefix.class)
-  @Description(
-      "ES Index Prefix is a prefix used while creating final index of format <esindexprefix>_datasetid_attempt.")
-  String getESIndexPrefix();
-
-  void setESIndexPrefix(String esIndexPrefix);
-
-  /** A {@link DefaultValueFactory} which identifies ES indexPrefix */
-  class DefaultESIndexPrefix implements DefaultValueFactory<String> {
-    @Override
-    public String create(PipelineOptions options) {
-      return "interpreted-dataset";
-    }
-  }
-
   /** A {@link DefaultValueFactory} which locates ES IPAddresses port */
   class DefaultESAddressFactory implements DefaultValueFactory<String[]> {
     @Override
@@ -55,6 +40,13 @@ public interface EsProcessingPipelineOptions extends DataProcessingPipelineOptio
       };
     }
   }
+
+  @Description(
+      "ES Index Prefix is a prefix used while creating final index of format <esindexprefix>_datasetid_attempt.")
+  @Default.String("interpreted-dataset")
+  String getESIndexPrefix();
+
+  void setESIndexPrefix(String esIndexPrefix);
 
   @Description("Path to an occurrence indexing schema")
   @Default.String("elasticsearch/es-occurrence-shcema.json")

@@ -5,6 +5,7 @@ import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.EsProcessingPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.location.LocationRecord;
 import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
@@ -46,6 +47,7 @@ public class IndexingPipelineBuilder {
             options.getAttempt().toString());
 
     final String pathVerbatim = pathIn + "/verbatim.avro";
+    final String pathMetadata = pathIn + "/metadata.avro";
     final String pathCommon = pathIn + "/common/interpreted*.avro";
     final String pathTemporal = pathIn + "/temporal/interpreted*.avro";
     final String pathLocation = pathIn + "/location/interpreted*.avro";
@@ -54,11 +56,24 @@ public class IndexingPipelineBuilder {
 
     Pipeline pipeline = Pipeline.create(options);
     Coders.registerAvroCoders(
-        pipeline, InterpretedExtendedRecord.class, LocationRecord.class, TemporalRecord.class);
-    Coders.registerAvroCoders(
-        pipeline, TaxonRecord.class, MultimediaRecord.class, ExtendedRecord.class);
+        pipeline,
+        InterpretedExtendedRecord.class,
+        LocationRecord.class,
+        TemporalRecord.class,
+        TaxonRecord.class,
+        MultimediaRecord.class,
+        ExtendedRecord.class,
+        MetadataRecord.class);
 
     LOG.info("Adding step 2: Reading avros");
+    PCollection<KV<String, MetadataRecord>> metadataCollection =
+        pipeline
+            .apply("Read METADATA", AvroIO.read(MetadataRecord.class).from(pathMetadata))
+            .apply(
+                "Map METADATA",
+                MapElements.into(new TypeDescriptor<KV<String, MetadataRecord>>() {})
+                    .via((MetadataRecord md) -> KV.of(md.getDatasetId(), md)));
+
     PCollection<ExtendedRecord> verbatimCollection =
         pipeline.apply("Read VERBATIM", AvroIO.read(ExtendedRecord.class).from(pathVerbatim));
 
@@ -111,20 +126,21 @@ public class IndexingPipelineBuilder {
             .and(jsonTransform.getLocationKvTag(), locationCollection)
             .and(jsonTransform.getMultimediaKvTag(), multimediaCollection)
             .and(jsonTransform.getTaxonomyKvTag(), taxonomyCollection)
-            .and(jsonTransform.getTemporalKvTag(), temporalCollection);
+            .and(jsonTransform.getTemporalKvTag(), temporalCollection)
+            .and(jsonTransform.getMetadataKvTag(), metadataCollection);
 
     PCollection<String> resultCollection = tuple.apply("Merge object to Json", jsonTransform);
 
     LOG.info("Adding step 4: Elasticsearch configuration");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
-            options.getESAddresses(), options.getESIndexPrefix(), options.getESIndexPrefix());
+            options.getESAddresses(), options.getESIndexPrefix(), "record");
 
     resultCollection.apply(
         ElasticsearchIO.write()
             .withConnectionConfiguration(esConfig)
-            .withMaxBatchSizeBytes(options.getESMaxBatchSize())
-            .withMaxBatchSize(options.getESMaxBatchSizeBytes()));
+            .withMaxBatchSizeBytes(options.getESMaxBatchSizeBytes())
+            .withMaxBatchSize(options.getESMaxBatchSize()));
 
     return pipeline;
   }

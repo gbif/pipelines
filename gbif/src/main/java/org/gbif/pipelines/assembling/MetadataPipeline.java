@@ -15,15 +15,33 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.Values;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/** MetadataPipeline creates metadata.avro @see with */
 public class MetadataPipeline {
+
+  private static final Logger LOG = LoggerFactory.getLogger(MetadataPipeline.class);
+
+  private DataProcessingPipelineOptions options;
+
+  private MetadataPipeline(DataProcessingPipelineOptions options) {
+    this.options = options;
+  }
+
+  public static MetadataPipeline from(DataProcessingPipelineOptions options) {
+    return new MetadataPipeline(options);
+  }
 
   public static void main(String[] args) {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
-    run(options);
+    MetadataPipeline.from(options).run();
   }
 
-  public static void run(DataProcessingPipelineOptions options) {
+  public void run() {
+
+    LOG.info("Running metadata pipeline");
+
     String path =
         FsUtils.buildPathString(
             options.getDefaultTargetDirectory(),
@@ -49,5 +67,7 @@ public class MetadataPipeline {
             AvroIO.write(MetadataRecord.class).to(path).withSuffix(".avro").withoutSharding());
 
     pipeline.run().waitUntilFinish();
+
+    LOG.info("Finished metadata pipeline");
   }
 }

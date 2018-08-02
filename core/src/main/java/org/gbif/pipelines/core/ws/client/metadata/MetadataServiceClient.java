@@ -1,16 +1,18 @@
-package org.gbif.pipelines.core.ws.client.internal;
+package org.gbif.pipelines.core.ws.client.metadata;
 
-import org.gbif.pipelines.core.ws.client.internal.response.Dataset;
-import org.gbif.pipelines.core.ws.client.internal.response.Installation;
-import org.gbif.pipelines.core.ws.client.internal.response.Network;
-import org.gbif.pipelines.core.ws.client.internal.response.Organization;
+import org.gbif.pipelines.core.ws.client.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.client.metadata.response.Installation;
+import org.gbif.pipelines.core.ws.client.metadata.response.Network;
+import org.gbif.pipelines.core.ws.client.metadata.response.Organization;
 import org.gbif.pipelines.core.ws.config.Config;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import javax.xml.ws.WebServiceException;
 
 import retrofit2.Call;
+import retrofit2.HttpException;
 import retrofit2.Response;
 
 /** rest client for getting gbif internal api responses */
@@ -30,11 +32,12 @@ public class MetadataServiceClient {
   /**
    * requests https://api.gbif.org/v1/dataset/{datasetid}/networks
    *
-   * @return array of networks for provided datasetID
+   * @return array of networks for provided datasetId
    */
   public List<Network> getNetworkFromDataset(String datasetId) {
     Objects.requireNonNull(datasetId);
-    return performCall(rest.getService().getNetworks(datasetId));
+    Call<List<Network>> call = rest.getService().getNetworks(datasetId);
+    return performCall(call);
   }
 
   /**
@@ -44,27 +47,30 @@ public class MetadataServiceClient {
    */
   public Organization getOrganization(String organizationId) {
     Objects.requireNonNull(organizationId);
-    return performCall(rest.getService().getOrganization(organizationId));
+    Call<Organization> call = rest.getService().getOrganization(organizationId);
+    return performCall(call);
   }
 
   /**
-   * requests http://api.gbif.org/v1/dataset/{datasetid}
+   * requests http://api.gbif.org/v1/dataset/{datasetId}
    *
-   * @return dataset info for provided dataset id
+   * @return dataset info for provided datasetId
    */
   public Dataset getDataset(String datasetId) {
     Objects.requireNonNull(datasetId);
-    return performCall(rest.getService().getDataset(datasetId));
+    Call<Dataset> call = rest.getService().getDataset(datasetId);
+    return performCall(call);
   }
 
   /**
-   * requests http://api.gbif.org/v1/installation/{installation_id}
+   * requests http://api.gbif.org/v1/installation/{installationId}
    *
    * @return installation info
    */
   public Installation getInstallation(String installationId) {
     Objects.requireNonNull(installationId);
-    return performCall(rest.getService().getInstallation(installationId));
+    Call<Installation> call = rest.getService().getInstallation(installationId);
+    return performCall(call);
   }
 
   /** executes request and handles response and errors. */
@@ -74,16 +80,10 @@ public class MetadataServiceClient {
       if (execute.isSuccessful()) {
         return execute.body();
       } else {
-        throw new IllegalArgumentException(
-            "Request "
-                + serviceCall.request()
-                + " failed with status code "
-                + execute.code()
-                + " and error response "
-                + (Objects.nonNull(execute.errorBody()) ? execute.errorBody().string() : null));
+        throw new HttpException(execute);
       }
     } catch (IOException e) {
-      throw new IllegalArgumentException("Error making request " + serviceCall.request(), e);
+      throw new WebServiceException("Error making request " + serviceCall.request(), e);
     }
   }
 }

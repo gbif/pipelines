@@ -29,4 +29,10 @@ class WsConfigFactory {
         .map(HttpConfigFactory::createConfigFromUrl)
         .orElseThrow(() -> new IllegalArgumentException(env + " environment not supported"));
   }
+
+  static Config getConfig(GbifEnv env, String api) {
+    return Optional.ofNullable(ENV_MAP.get(env))
+        .map(x -> HttpConfigFactory.createConfigFromUrl(x + api))
+        .orElseThrow(() -> new IllegalArgumentException(env + " environment not supported"));
+  }
 }

@@ -1,7 +1,12 @@
 {
   "record": {
     "properties": {
+
       "id": {"type": "keyword"},
+      "datasetId": {"type": "keyword"},
+      "installationKey": {"type": "keyword"},
+      "publishingOrganizationKey": {"type": "keyword"},
+      "endorsingNodeKey": {"type": "keyword"},
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "text"},

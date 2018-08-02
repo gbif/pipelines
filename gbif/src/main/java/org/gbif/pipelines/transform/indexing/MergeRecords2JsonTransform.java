@@ -101,7 +101,6 @@ public class MergeRecords2JsonTransform extends PTransform<PCollectionTuple, PCo
                                 value.getOnly(multimediaTag, emptyMultimedia(key)),
                                 value.getOnly(extendedTag, emptyExtendedRecord(key)))
                             .buildJson();
-
                     c.output(json);
                   }
                 })
@@ -141,7 +140,7 @@ public class MergeRecords2JsonTransform extends PTransform<PCollectionTuple, PCo
     return multimediaKvTag;
   }
 
-  public TupleTag<KV<String, MetadataRecord>> getMetadataTag() {
+  public TupleTag<KV<String, MetadataRecord>> getMetadataKvTag() {
     return metadataKvTag;
   }
 

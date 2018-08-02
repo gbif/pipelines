@@ -81,7 +81,7 @@ public class MergeRecords2JsonTransformTest {
             .and(jsonTransform.getMultimediaKvTag(), multimediaCollection)
             .and(jsonTransform.getTaxonomyKvTag(), taxonCollection)
             .and(jsonTransform.getTemporalKvTag(), temporalCollection)
-            .and(jsonTransform.getMetadataTag(), metadataCollection);
+            .and(jsonTransform.getMetadataKvTag(), metadataCollection);
 
     PCollection<String> resultCollection = tuple.apply(jsonTransform);
 

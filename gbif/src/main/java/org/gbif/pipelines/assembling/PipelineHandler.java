@@ -41,7 +41,7 @@ public class PipelineHandler {
     // Create metadata avro
     List<String> types = options.getInterpretationTypes();
     if (types.contains(ALL.name()) || types.contains(METADATA.name())) {
-      MetadataPipeline.run(options);
+      MetadataPipeline.from(options).run();
     }
 
     // Create temporal/common/location/etc. avros

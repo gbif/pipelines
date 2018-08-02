@@ -1,9 +1,9 @@
-package org.gbif.pipelines.core.ws.client.internal;
+package org.gbif.pipelines.core.ws.client.metadata;
 
-import org.gbif.pipelines.core.ws.client.internal.response.Dataset;
-import org.gbif.pipelines.core.ws.client.internal.response.Installation;
-import org.gbif.pipelines.core.ws.client.internal.response.Network;
-import org.gbif.pipelines.core.ws.client.internal.response.Organization;
+import org.gbif.pipelines.core.ws.client.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.client.metadata.response.Installation;
+import org.gbif.pipelines.core.ws.client.metadata.response.Network;
+import org.gbif.pipelines.core.ws.client.metadata.response.Organization;
 
 import java.util.List;
 

@@ -56,8 +56,6 @@ class DwcaPipelineBuilder {
   static Pipeline buildPipeline(DwcaPipelineOptions options) {
     LOG.info("Starting pipeline building");
 
-    final Config wsConfig = WsConfigFactory.getConfig(options.getGbifEnv());
-
     // create pipeline
     Pipeline pipeline = Pipeline.create(options);
 
@@ -65,7 +63,8 @@ class DwcaPipelineBuilder {
     Coders.registerAvroCoders(pipeline, ExtendedRecord.class);
 
     LOG.info("STEP 1: Interpret metadata");
-    MetadataRecordTransform metadataTransform = MetadataRecordTransform.create(wsConfig).withAvroCoders(pipeline);
+    final Config metaWsConfig = WsConfigFactory.getConfig(options.getGbifEnv(), "v1/");
+    MetadataRecordTransform metadataTransform = MetadataRecordTransform.create(metaWsConfig).withAvroCoders(pipeline);
     PCollection<String> metaCollection = pipeline.apply(Create.of(options.getDatasetId()));
     PCollectionTuple metadataTuple = metaCollection.apply("Metadata interpretation", metadataTransform);
     if (INTERPRET == options.getPipelineStep() || !options.getIgnoreIntermediateOutputs()) {
@@ -73,9 +72,7 @@ class DwcaPipelineBuilder {
       metadataTuple
           .get(metadataTransform.getDataTag())
           .apply(Values.create())
-          .apply(
-              "Write metada avro",
-              AvroIO.write(MetadataRecord.class).to(path).withSuffix(".avro").withoutSharding());
+          .apply(AvroIO.write(MetadataRecord.class).to(path).withSuffix(".avro").withoutSharding());
     }
 
     LOG.info("STEP 2: Read the DwC-A using our custom reader");
@@ -104,33 +101,34 @@ class DwcaPipelineBuilder {
     }
 
     LOG.info("Adding step 4: interpretations");
+    final Config wsConfig = WsConfigFactory.getConfig(options.getGbifEnv());
 
     // Taxonomy
-    LOG.info("Adding taxonomy interpretation");
+    LOG.info("-Adding taxonomy interpretation");
     TaxonRecordTransform taxonTransform = TaxonRecordTransform.create(wsConfig).withAvroCoders(pipeline);
     PCollectionTuple taxonRecordTuple = verbatimRecords.apply("Taxonomy interpretation", taxonTransform);
     OutputWriter.writeInterpretationResult(taxonRecordTuple, TaxonRecord.class, taxonTransform, options, TAXONOMY);
 
     // Location
-    LOG.info("Adding location interpretation");
+    LOG.info("-Adding location interpretation");
     LocationRecordTransform locationTransform = LocationRecordTransform.create(wsConfig).withAvroCoders(pipeline);
     PCollectionTuple locationTuple = verbatimRecords.apply("Location interpretation", locationTransform);
     OutputWriter.writeInterpretationResult(locationTuple, LocationRecord.class, locationTransform, options, LOCATION);
 
     // Temporal
-    LOG.info("Adding temporal interpretation");
+    LOG.info("-Adding temporal interpretation");
     TemporalRecordTransform temporalTransform = TemporalRecordTransform.create().withAvroCoders(pipeline);
     PCollectionTuple temporalTuple = verbatimRecords.apply("Temporal interpretation", temporalTransform);
     OutputWriter.writeInterpretationResult(temporalTuple, TemporalRecord.class, temporalTransform, options, TEMPORAL);
 
     // Common
-    LOG.info("Adding common interpretation");
+    LOG.info("-Adding common interpretation");
     InterpretedExtendedRecordTransform interpretedTransform = InterpretedExtendedRecordTransform.create().withAvroCoders(pipeline);
     PCollectionTuple interpretedTuple = verbatimRecords.apply("Common interpretation", interpretedTransform);
     OutputWriter.writeInterpretationResult(interpretedTuple, InterpretedExtendedRecord.class, interpretedTransform, options, COMMON);
 
     // Multimedia
-    LOG.info("Adding multimedia interpretation");
+    LOG.info("-Adding multimedia interpretation");
     MultimediaRecordTransform multimediaTransform = MultimediaRecordTransform.create().withAvroCoders(pipeline);
     PCollectionTuple multimediaTuple = verbatimRecords.apply("Multimedia interpretation", multimediaTransform);
     OutputWriter.writeInterpretationResult(multimediaTuple, MultimediaRecord.class, multimediaTransform, options, MULTIMEDIA);
@@ -148,7 +146,7 @@ class DwcaPipelineBuilder {
       .and(jsonTransform.getMultimediaKvTag(), multimediaTuple.get(multimediaTransform.getDataTag()))
       .and(jsonTransform.getTaxonomyKvTag(), taxonRecordTuple.get(taxonTransform.getDataTag()))
       .and(jsonTransform.getTemporalKvTag(), temporalTuple.get(temporalTransform.getDataTag()))
-      .and(jsonTransform.getMetadataTag(), metadataTuple.get(metadataTransform.getDataTag()));
+      .and(jsonTransform.getMetadataKvTag(), metadataTuple.get(metadataTransform.getDataTag()));
 
     PCollection<String> resultCollection = tuple.apply("Merge object to Json", jsonTransform);
 

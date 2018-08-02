@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.ws.client.internal;
+package org.gbif.pipelines.core.ws.client.metadata;
 
 import org.gbif.pipelines.core.ws.config.Config;
 

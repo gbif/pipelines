@@ -1,9 +1,9 @@
 package org.gbif.pipelines.core.interpretation;
 
-import org.gbif.pipelines.core.ws.client.internal.MetadataServiceClient;
-import org.gbif.pipelines.core.ws.client.internal.response.Dataset;
-import org.gbif.pipelines.core.ws.client.internal.response.Installation;
-import org.gbif.pipelines.core.ws.client.internal.response.Organization;
+import org.gbif.pipelines.core.ws.client.metadata.MetadataServiceClient;
+import org.gbif.pipelines.core.ws.client.metadata.response.Dataset;
+import org.gbif.pipelines.core.ws.client.metadata.response.Installation;
+import org.gbif.pipelines.core.ws.client.metadata.response.Organization;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 
