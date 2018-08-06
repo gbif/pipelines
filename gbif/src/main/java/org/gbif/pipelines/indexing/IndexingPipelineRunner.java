@@ -29,7 +29,7 @@ public class IndexingPipelineRunner {
 
   private IndexingPipelineRunner(EsProcessingPipelineOptions options) {
     this.options = options;
-    esConfig = EsConfig.from(options.getESAddresses());
+    esConfig = EsConfig.from(options.getESHosts());
   }
 
   static IndexingPipelineRunner from(EsProcessingPipelineOptions options) {
@@ -38,7 +38,7 @@ public class IndexingPipelineRunner {
 
   void run() {
     // if ES indexing is included in the pipeline we first create the index
-    createIndex().ifPresent(options::setESIndexPrefix);
+    createIndex().ifPresent(options::setESIndexName);
 
     // we build the pipeline. This has to be done after creating the index because we need to know
     // the name of the index where we'll index the records to.
@@ -64,18 +64,18 @@ public class IndexingPipelineRunner {
   }
 
   private void swapIndex() {
-    EsHandler.swapIndexInAlias(esConfig, options.getDatasetId(), options.getESIndexPrefix());
-    LOG.info("ES index {} added to alias {}", options.getESIndexPrefix(), options.getDatasetId());
+    EsHandler.swapIndexInAlias(esConfig, options.getDatasetId(), options.getESIndexName());
+    LOG.info("ES index {} added to alias {}", options.getESIndexName(), options.getDatasetId());
 
     // log number of records indexed
     // TODO: find better way than refreshing?? other option is to wait 1s
     // refresh the index because the records are not available to search immediately.
-    EsHandler.refreshIndex(esConfig, options.getESIndexPrefix());
-    long recordsIndexed = EsHandler.countIndexDocuments(esConfig, options.getESIndexPrefix());
+    EsHandler.refreshIndex(esConfig, options.getESIndexName());
+    long recordsIndexed = EsHandler.countIndexDocuments(esConfig, options.getESIndexName());
     LOG.info(
         "{} records indexed into the ES index {} in alias {}",
         recordsIndexed,
-        options.getESIndexPrefix(),
+        options.getESIndexName(),
         options.getDatasetId());
   }
 
@@ -99,7 +99,7 @@ public class IndexingPipelineRunner {
 
   private static String getTempDir(EsProcessingPipelineOptions options) {
     return Strings.isNullOrEmpty(options.getTempLocation())
-        ? FsUtils.buildPathString(options.getDefaultTargetDirectory(), "tmp")
+        ? FsUtils.buildPathString(options.getTargetPath(), "tmp")
         : options.getTempLocation();
   }
 

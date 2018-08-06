@@ -1,4 +1,4 @@
-package org.gbif.pipelines.assembling;
+package org.gbif.pipelines;
 
 /** Defines the types of the interpretations. */
 public enum GbifInterpretationType {

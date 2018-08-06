@@ -42,7 +42,7 @@ public class IndexingPipelineBuilder {
     LOG.info("Adding step 1: Options");
     final String pathIn =
         FsUtils.buildPathString(
-            options.getDefaultTargetDirectory(),
+            options.getTargetPath(),
             options.getDatasetId(),
             options.getAttempt().toString());
 
@@ -134,7 +134,7 @@ public class IndexingPipelineBuilder {
     LOG.info("Adding step 4: Elasticsearch configuration");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
-            options.getESAddresses(), options.getESIndexPrefix(), "record");
+            options.getESHosts(), options.getESIndexName(), "record");
 
     resultCollection.apply(
         ElasticsearchIO.write()

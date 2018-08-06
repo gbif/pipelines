@@ -15,6 +15,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.pipelines.utils.FsUtils.getTempDir;
+
 /**
  * Class that handles the creation and execution of a pipeline that works with Dwc-A files.
  *
@@ -95,7 +97,7 @@ class DwcaPipelineRunner {
             new Thread(
                 () -> {
                   LOG.debug("Dwca pipeline runner shutdown hook called");
-                  File tmp = Paths.get(OutputWriter.getTempDir(options)).toFile();
+                  File tmp = Paths.get(getTempDir(options)).toFile();
                   if (tmp.exists()) {
                     try {
                       FileUtils.deleteDirectory(tmp);

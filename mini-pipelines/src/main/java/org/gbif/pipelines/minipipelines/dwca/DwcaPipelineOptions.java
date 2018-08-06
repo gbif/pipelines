@@ -1,46 +1,45 @@
 package org.gbif.pipelines.minipipelines.dwca;
 
+import org.gbif.pipelines.config.base.BaseOptions;
+import org.gbif.pipelines.config.base.EsOptions;
+
 import org.apache.beam.runners.spark.SparkPipelineOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.Hidden;
 import org.apache.beam.sdk.options.Validation;
 
-public interface DwcaPipelineOptions extends SparkPipelineOptions {
-
-  long DEFAULT_ES_BATCH_SIZE = 10_000L;
-  long DEFAULT_ES_BATCH_SIZE_BYTES = 10_242_880L;
-
-  @Description(
-      "Path of the Dwc-A file. It can be a zip file or a folder with the uncompressed files. Required.")
-  @Validation.Required
-  String getInputPath();
-
-  void setInputPath(String inputPath);
-
-  @Description("Target path where the outputs of the pipeline will be written to. Required.")
-  @Validation.Required
-  String getTargetPath();
-
-  void setTargetPath(String targetPath);
-
-  @Description("Id of the dataset. Required")
-  @Validation.Required
-  String getDatasetId();
-
-  void setDatasetId(String id);
-
-  @Description("Attempt of the dataset. Required.")
-  @Validation.Required
-  Integer getAttempt();
-
-  void setAttempt(Integer attempt);
+public interface DwcaPipelineOptions extends BaseOptions, EsOptions, SparkPipelineOptions {
 
   enum GbifEnv {
     DEV,
     UAT,
     PROD
   }
+
+  enum PipelineStep {
+    DWCA_TO_AVRO, // only reads a Dwca and converts it to an avro file
+    INTERPRET, // reads a Dwca and interprets it
+    INDEX_TO_ES // reads a Dwca, interprets it and indexes it to ES
+  }
+
+  @Override
+  @Description(
+      "Path of the Dwc-A file. It can be a zip file or a folder with the uncompressed files. Required.")
+  @Validation.Required
+  String getInputPath();
+
+  @Override
+  void setInputPath(String inputPath);
+
+  @Override
+  @Description("Target path where the outputs of the pipeline will be written to. Required.")
+  @Validation.Required
+  @Default.InstanceFactory(DefaultDirectoryFactory.class)
+  String getTargetPath();
+
+  @Override
+  void setTargetPath(String targetPath);
 
   @Description(
       "Gbif environment to use when using web services."
@@ -49,12 +48,6 @@ public interface DwcaPipelineOptions extends SparkPipelineOptions {
   GbifEnv getGbifEnv();
 
   void setGbifEnv(GbifEnv env);
-
-  enum PipelineStep {
-    DWCA_TO_AVRO, // only reads a Dwca and converts it to an avro file
-    INTERPRET, // reads a Dwca and interprets it
-    INDEX_TO_ES // reads a Dwca, interprets it and indexes it to ES
-  }
 
   @Description(
       "The pipeline can be configured to run all the steps or only a few of them."
@@ -69,47 +62,22 @@ public interface DwcaPipelineOptions extends SparkPipelineOptions {
 
   void setPipelineStep(PipelineStep step);
 
-  @Description(
-      "If set to true it writes the outputs of every step of the pipeline. Otherwise, it writes only the output of the last step.")
-  @Default.Boolean(false)
-  boolean getWriteIntermediateOutputs();
-
-  void setWriteIntermediateOutputs(boolean omitIntermediateOutputs);
-
-  @Description("Target ES Max Batch Size bytes.")
-  @Default.Long(DEFAULT_ES_BATCH_SIZE_BYTES)
-  Long getESMaxBatchSizeBytes();
-
-  void setESMaxBatchSizeBytes(Long batchSize);
-
-  @Description("ES max batch size.")
-  @Default.Long(DEFAULT_ES_BATCH_SIZE)
-  long getESMaxBatchSize();
-
-  void setESMaxBatchSize(long esBatchSize);
-
-  @Description("List of ES hosts. Required for the INDEX_TO_ES step.")
-  String[] getESHosts();
-
-  void setESHosts(String[] esHosts);
-
-  @Description(
-      "Name of the ES alias. The index created will be added to this alias. Only applies to the INDEX_TO_ES step.")
-  String getESAlias();
-
-  void setESAlias(String esAlias);
-
+  @Override
   @Description(
       "Name of the ES index that will be used to index the records. It's for internal use, "
           + "the index will always be set programmatically, so this parameter will be ignored.")
   @Hidden
   String getESIndexName();
 
+  @Override
   void setESIndexName(String esIndexName);
 
-  @Description("Path to an occurrence indexing schema")
-  @Default.String("elasticsearch/es-occurrence-shcema.json")
-  String getESSchemaPath();
+  @Override
+  @Description(
+      "If set to true it writes the outputs of every step of the pipeline. Otherwise, it writes only the output of the last step.")
+  @Default.Boolean(false)
+  boolean getWriteOutput();
 
-  void setESSchemaPath(String esSchemaPath);
+  @Override
+  void setWriteOutput(boolean writeOutput);
 }

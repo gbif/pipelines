@@ -1,19 +1,15 @@
 package org.gbif.pipelines.utils;
 
-import org.gbif.pipelines.assembling.interpretation.steps.PipelineTargetPaths;
-import org.gbif.pipelines.config.DataProcessingPipelineOptions;
+import org.gbif.pipelines.config.base.BaseOptions;
 
 import java.util.Arrays;
 import java.util.StringJoiner;
 
+import com.google.common.base.Strings;
 import org.apache.hadoop.fs.Path;
 
 /** Utility class to work with FS. */
 public final class FsUtils {
-
-  private static final String DATA_FILENAME = "interpreted";
-  private static final String ISSUES_FOLDER = "issues";
-  private static final String ISSUES_FILENAME = "issues";
 
   private FsUtils() {}
 
@@ -28,22 +24,14 @@ public final class FsUtils {
     return buildPath(values).toString();
   }
 
-  public static PipelineTargetPaths createPaths(
-      DataProcessingPipelineOptions options, String interType) {
-    PipelineTargetPaths paths = new PipelineTargetPaths();
+  public static String getRootPath(BaseOptions options) {
+    return FsUtils.buildPathString(
+        options.getTargetPath(), options.getDatasetId(), String.valueOf(options.getAttempt()));
+  }
 
-    String targetDirectory = options.getDefaultTargetDirectory();
-    String datasetId = options.getDatasetId();
-    String attempt = options.getAttempt().toString();
-    String type = interType.toLowerCase();
-
-    String path = FsUtils.buildPathString(targetDirectory, datasetId, attempt, type);
-
-    paths.setDataTargetPath(FsUtils.buildPathString(path, DATA_FILENAME));
-    paths.setIssuesTargetPath(FsUtils.buildPathString(path, ISSUES_FOLDER, ISSUES_FILENAME));
-
-    paths.setTempDir(options.getHdfsTempLocation());
-
-    return paths;
+  public static String getTempDir(BaseOptions options) {
+    return Strings.isNullOrEmpty(options.getTempLocation())
+        ? FsUtils.buildPathString(options.getTargetPath(), "tmp")
+        : options.getTempLocation();
   }
 }

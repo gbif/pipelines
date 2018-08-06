@@ -1,16 +1,15 @@
-package org.gbif.pipelines.assembling;
+package org.gbif.pipelines.interpretation;
 
-import org.gbif.pipelines.assembling.interpretation.MockGbifInterpretationPipeline;
+import org.gbif.pipelines.GbifInterpretationType;
 import org.gbif.pipelines.config.DataPipelineOptionsFactory;
 import org.gbif.pipelines.config.DataProcessingPipelineOptions;
-import org.gbif.pipelines.core.ws.config.Config;
-import org.gbif.pipelines.core.ws.config.HttpConfigFactory;
 import org.gbif.pipelines.utils.FsUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,7 +19,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.BufferedSource;
 import okio.Okio;
-import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
@@ -33,13 +31,14 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-/** Tests the {@link GbifInterpretationPipeline}. */
-public class GbifInterpretationPipelineTest {
+@RunWith(JUnit4.class)
+public class IntepretationPipelineTest {
 
   private static final String INPUT = "src/test/resources/avro/extendedRecords*";
   private static final String OUTPUT = "output";
@@ -48,14 +47,13 @@ public class GbifInterpretationPipelineTest {
   private static MiniDFSCluster hdfsCluster;
   private static FileSystem fs;
   private static URI hdfsClusterBaseUri;
-  private static Config wsConfig;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @ClassRule public static final MockWebServer mockServer = new MockWebServer();
 
   @BeforeClass
-  public static void setUp() throws Exception {
+  public static void setUp() throws IOException, URISyntaxException {
     // mini cluster
     File baseDir = new File("./miniCluster/hdfs/").getAbsoluteFile();
     FileUtil.fullyDelete(baseDir);
@@ -65,7 +63,6 @@ public class GbifInterpretationPipelineTest {
     fs = FileSystem.newInstance(configuration);
     hdfsClusterBaseUri =
         new URI(configuration.get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY) + "/");
-    wsConfig = HttpConfigFactory.createConfigFromUrl(mockServer.url("/").toString(), 3L, 1024L);
   }
 
   @AfterClass
@@ -81,15 +78,14 @@ public class GbifInterpretationPipelineTest {
   @Test
   public void temporalInterpretationTest() throws IOException {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
-    options.setInputFile(INPUT);
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
+    options.setInputPath(INPUT);
+    options.setTargetPath(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
     options.setAttempt(1);
-    options.setInterpretationTypes(Collections.singletonList(GbifInterpretationType.TEMPORAL.name()));
+    options.setInterpretationTypes(
+        Collections.singletonList(GbifInterpretationType.TEMPORAL.name()));
 
-    Pipeline pipeline = GbifInterpretationPipeline.create(options).get();
-
-    PipelineResult.State state = pipeline.run().waitUntilFinish();
+    PipelineResult.State state = InterpretationPipeline.create(options).run();
 
     Assert.assertEquals(PipelineResult.State.DONE, state);
 
@@ -97,16 +93,14 @@ public class GbifInterpretationPipelineTest {
     checkDirCreated(
         hdfsClusterBaseUri.resolve(
             FsUtils.buildPathString(
-                options.getDefaultTargetDirectory(),
-                options.getDatasetId(),
-                options.getAttempt().toString())),
+                options.getTargetPath(), options.getDatasetId(), options.getAttempt().toString())),
         1);
 
     // check interpretation dir
     checkInterpretationFiles(options, GbifInterpretationType.TEMPORAL.name());
 
     // delete files created to leave the FS clean for other tests
-    fs.delete(FsUtils.buildPath(options.getDefaultTargetDirectory()), true);
+    fs.delete(FsUtils.buildPath(options.getTargetPath()), true);
   }
 
   @Test
@@ -116,20 +110,16 @@ public class GbifInterpretationPipelineTest {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
     List<String> interpretations =
-        Arrays.asList(
-          GbifInterpretationType.COMMON.name(), GbifInterpretationType.TEMPORAL.name());
+        Arrays.asList(GbifInterpretationType.COMMON.name(), GbifInterpretationType.TEMPORAL.name());
 
-    options.setInputFile(INPUT);
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
+    options.setInputPath(INPUT);
+    options.setTargetPath(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
     options.setAttempt(1);
     options.setInterpretationTypes(interpretations);
 
     // we use a mock pipeline to use it with the interpretations that require a mock server
-    Pipeline pipeline =
-        MockGbifInterpretationPipeline.mockInterpretationPipeline(options, wsConfig);
-
-    PipelineResult.State state = pipeline.run().waitUntilFinish();
+    PipelineResult.State state = InterpretationPipeline.create(options).run();
 
     Assert.assertEquals(PipelineResult.State.DONE, state);
 
@@ -137,9 +127,7 @@ public class GbifInterpretationPipelineTest {
     checkDirCreated(
         hdfsClusterBaseUri.resolve(
             FsUtils.buildPathString(
-                options.getDefaultTargetDirectory(),
-                options.getDatasetId(),
-                options.getAttempt().toString())),
+                options.getTargetPath(), options.getDatasetId(), options.getAttempt().toString())),
         interpretations.size());
 
     // check interpretation dirs
@@ -148,75 +136,40 @@ public class GbifInterpretationPipelineTest {
     }
 
     // delete files created to leave the FS clean for other tests
-    fs.delete(FsUtils.buildPath(options.getDefaultTargetDirectory()), true);
+    fs.delete(FsUtils.buildPath(options.getTargetPath()), true);
   }
 
-  @Test
-  @Ignore("Some problems with Beam 2.5.0 and ws-mock")
-  public void nullInterpretationParamTest() throws IOException {
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
-
-    options.setInputFile(INPUT);
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
-    options.setDatasetId("123");
-    options.setAttempt(1);
-
-    // we use a mock pipeline to use it with the interpretations that require a mock server
-    Pipeline pipeline =
-        MockGbifInterpretationPipeline.mockInterpretationPipeline(options, wsConfig);
-
-    PipelineResult.State state = pipeline.run().waitUntilFinish();
-
-    Assert.assertEquals(PipelineResult.State.DONE, state);
-
-    // check dataset dir
-    checkDirCreated(
-      hdfsClusterBaseUri.resolve(
-            FsUtils.buildPathString(
-                options.getDefaultTargetDirectory(),
-                options.getDatasetId(),
-                options.getAttempt().toString())),
-      GbifInterpretationType.values().length - 1);
-
-    // delete files created to leave the FS clean for other tests
-    fs.delete(FsUtils.buildPath(options.getDefaultTargetDirectory()), true);
-  }
-
-  @Test
+  @Test(expected = NullPointerException.class)
   public void nullInputTest() {
-    thrown.expect(NullPointerException.class);
-    thrown.expectMessage("Input cannot be null");
 
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
+    options.setTargetPath(hdfsClusterBaseUri + OUTPUT);
     options.setDatasetId("123");
     options.setAttempt(1);
 
-    GbifInterpretationPipeline.create(options).get();
+    InterpretationPipeline.create(options).run();
   }
 
-  @Test
+  @Test(expected = NullPointerException.class)
   public void nullDatasetIdTest() {
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("datasetId is required");
 
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(configuration);
 
-    options.setDefaultTargetDirectory(hdfsClusterBaseUri + OUTPUT);
+    options.setTargetPath(hdfsClusterBaseUri + OUTPUT);
 
-    GbifInterpretationPipeline.create(options).get();
+    InterpretationPipeline.create(options).run();
   }
 
   /**
    * Checks that the creation of expected directories and files for an interpretation was correct.
    */
-  private void checkInterpretationFiles(
-      DataProcessingPipelineOptions options, String type) throws IOException {
+  private void checkInterpretationFiles(DataProcessingPipelineOptions options, String type)
+      throws IOException {
 
     String pathString =
         FsUtils.buildPathString(
-            options.getDefaultTargetDirectory(),
+            options.getTargetPath(),
             options.getDatasetId(),
             options.getAttempt().toString(),
             type.toLowerCase());
