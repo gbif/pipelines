@@ -9,30 +9,33 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 
 import java.util.function.Function;
 
-public interface MetadataInerpreter extends Function<String, Interpretation<String>> {
+public interface MetadataInterpreter extends Function<String, Interpretation<String>> {
 
-  static MetadataInerpreter interpretDataset(MetadataRecord metadataRecord, Config wsConfig) {
+
+  static MetadataInterpreter interpretDataset(MetadataRecord metadataRecord, Config wsConfig) {
     return (String datasetId) -> {
       Interpretation<String> interpretation = Interpretation.of(datasetId);
       Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
       metadataRecord.setInstallationKey(dataset.getInstallationKey());
       metadataRecord.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
+      metadataRecord.setLicense(dataset.getLicense());
       return interpretation;
     };
   }
 
-  static MetadataInerpreter interpretInstallation(MetadataRecord metadataRecord, Config wsConfig) {
+  static MetadataInterpreter interpretInstallation(MetadataRecord metadataRecord, Config wsConfig) {
     return (String datasetId) -> {
       Interpretation<String> interpretation = Interpretation.of(datasetId);
       Installation installation =
           MetadataServiceClient.create(wsConfig)
               .getInstallation(metadataRecord.getInstallationKey());
       metadataRecord.setOrganizationKey(installation.getOrganizationKey());
+      metadataRecord.setProtocol(installation.getProtocol());
       return interpretation;
     };
   }
 
-  static MetadataInerpreter interpretOrganization(MetadataRecord metadataRecord, Config wsConfig) {
+  static MetadataInterpreter interpretOrganization(MetadataRecord metadataRecord, Config wsConfig) {
     return (String datasetId) -> {
       Interpretation<String> interpretation = Interpretation.of(datasetId);
       Organization organization =

@@ -12,6 +12,7 @@ public class Dataset implements Serializable {
 
   private String installationKey;
   private String publishingOrganizationKey;
+  private String license;
 
   public String getInstallationKey() {
     return installationKey;
@@ -28,4 +29,12 @@ public class Dataset implements Serializable {
   public void setPublishingOrganizationKey(String publishingOrganizationKey) {
     this.publishingOrganizationKey = publishingOrganizationKey;
   }
+
+    public String getLicense() {
+        return license;
+    }
+
+    public void setLicense(String license) {
+        this.license = license;
+    }
 }

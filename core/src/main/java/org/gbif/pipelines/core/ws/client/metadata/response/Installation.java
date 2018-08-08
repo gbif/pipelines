@@ -12,6 +12,8 @@ public class Installation implements Serializable {
 
   private String organizationKey;
 
+  private String protocol;
+
   public String getOrganizationKey() {
     return organizationKey;
   }
@@ -19,4 +21,12 @@ public class Installation implements Serializable {
   public void setOrganizationKey(String organizationKey) {
     this.organizationKey = organizationKey;
   }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
 }

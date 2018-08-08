@@ -2,7 +2,7 @@ package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
 import org.gbif.pipelines.core.interpretation.Interpretation;
-import org.gbif.pipelines.core.interpretation.MetadataInerpreter;
+import org.gbif.pipelines.core.interpretation.MetadataInterpreter;
 import org.gbif.pipelines.core.interpretation.MultimediaInterpreter;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -50,9 +50,9 @@ public class MetadataRecordTransform extends RecordTransform<String, MetadataRec
 
         // Interpret metadata terms and add validations
         Interpretation.of(datasetId)
-            .using(MetadataInerpreter.interpretDataset(metadataRecord, wsConfig))
-            .using(MetadataInerpreter.interpretInstallation(metadataRecord, wsConfig))
-            .using(MetadataInerpreter.interpretOrganization(metadataRecord, wsConfig))
+            .using(MetadataInterpreter.interpretDataset(metadataRecord, wsConfig))
+            .using(MetadataInterpreter.interpretInstallation(metadataRecord, wsConfig))
+            .using(MetadataInterpreter.interpretOrganization(metadataRecord, wsConfig))
             .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
         // Add validations to the additional output
