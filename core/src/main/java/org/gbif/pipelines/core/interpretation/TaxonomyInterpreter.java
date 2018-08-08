@@ -13,7 +13,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.IssueType;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields
@@ -23,53 +23,45 @@ import java.util.function.Function;
  * specie. Configuration of the WS has to be set in the "http.properties".
  */
 public interface TaxonomyInterpreter
-    extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
+    extends BiConsumer<ExtendedRecord, Interpretation<TaxonRecord>> {
 
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
-  static TaxonomyInterpreter taxonomyInterpreter(TaxonRecord taxonRecord, Config wsConfig) {
-    return (ExtendedRecord extendedRecord) -> {
+  static TaxonomyInterpreter taxonomyInterpreter(Config wsConfig) {
+    return (extendedRecord, interpretation) -> {
       AvroDataValidator.checkNullOrEmpty(extendedRecord);
 
       // get match from WS
       HttpResponse<NameUsageMatch2> response =
           SpeciesMatchv2Client.create(wsConfig).getMatch(extendedRecord);
 
-      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-
       if (response.isError()) {
-        interpretation.withValidation(
-            Trace.of(
-                IssueType.INTERPRETATION_ERROR,
-                response.getErrorCode() + response.getErrorMessage()));
-        return interpretation;
-      }
-
-      if (TaxonomyValidator.isEmpty(response.getBody())) {
+        String message = response.getErrorCode() + response.getErrorMessage();
+        interpretation.withValidation(Trace.of(IssueType.INTERPRETATION_ERROR, message));
+      } else if (TaxonomyValidator.isEmpty(response.getBody())) {
         // TODO: maybe I would need to add to the enum a new issue for this, sth like
         // "NO_MATCHING_RESULTS". This
         // happens when we get an empty response from the WS
-        interpretation.withValidation(
-            Trace.of(IssueType.TAXON_MATCH_NONE, "No results from match service"));
-        return interpretation;
+        String message = "No results from match service";
+        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_NONE, message));
+      } else {
+
+        MatchType matchType = response.getBody().getDiagnostics().getMatchType();
+
+        if (MatchType.NONE == matchType) {
+          interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_NONE));
+        } else if (MatchType.FUZZY == matchType) {
+          interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_FUZZY));
+        } else if (MatchType.HIGHERRANK == matchType) {
+          interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_HIGHERRANK));
+        }
+
+        // convert taxon record
+        TaxonRecord taxonRecord = interpretation.getValue();
+        TaxonRecordConverter.convert(response.getBody(), taxonRecord);
+        taxonRecord.setId(extendedRecord.getId());
       }
-
-      MatchType matchType = response.getBody().getDiagnostics().getMatchType();
-
-      if (MatchType.NONE == matchType) {
-        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_NONE));
-      } else if (MatchType.FUZZY == matchType) {
-        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_FUZZY));
-      } else if (MatchType.HIGHERRANK == matchType) {
-        interpretation.withValidation(Trace.of(IssueType.TAXON_MATCH_HIGHERRANK));
-      }
-
-      // convert taxon record
-      TaxonRecordConverter.convert(response.getBody(), taxonRecord);
-      taxonRecord.setId(extendedRecord.getId());
-
-      return interpretation;
     };
   }
 }

@@ -12,18 +12,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 
 /** Interprets the multimedia terms of a {@link ExtendedRecord}. */
 public interface MultimediaInterpreter
-    extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
+    extends BiConsumer<ExtendedRecord, Interpretation<MultimediaRecord>> {
+
+  static MultimediaInterpreter interpretId() {
+    return (extendedRecord, interpretation) ->
+        interpretation.getValue().setId(extendedRecord.getId());
+  }
 
   /**
    * Interprets the multimedia of a {@link ExtendedRecord} and populates a {@link MultimediaRecord}
    * with the interpreted values.
    */
-  static MultimediaInterpreter interpretMultimedia(MultimediaRecord multimediaRecord) {
-    return (ExtendedRecord extendedRecord) -> {
+  static MultimediaInterpreter interpretMultimedia() {
+    return (extendedRecord, interpretation) -> {
 
       // parse the multimedia fields of the ExtendedRecord
       ParsedField<List<ParsedMultimedia>> parsedResult =
@@ -65,11 +70,8 @@ public interface MultimediaInterpreter
                 });
 
         // add parsed multimedia items to the record
-        multimediaRecord.setMultimediaItems(multimediaList);
+        interpretation.getValue().setMultimediaItems(multimediaList);
       }
-
-      // create the interpretation instance
-      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
 
       // add issues
       parsedResult
@@ -91,8 +93,6 @@ public interface MultimediaInterpreter
 
                 interpretation.withValidation(trace);
               });
-
-      return interpretation;
     };
   }
 }

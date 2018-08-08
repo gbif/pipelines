@@ -1,22 +1,23 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.interpretation.Interpretation;
-import org.gbif.pipelines.core.interpretation.MetadataInerpreter;
+import org.gbif.pipelines.core.interpretation.InterpreterHandler;
 import org.gbif.pipelines.core.interpretation.MultimediaInterpreter;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.issue.Validation;
 import org.gbif.pipelines.transform.RecordTransform;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
+
+import static org.gbif.pipelines.core.interpretation.MetadataInerpreter.interpretDataset;
+import static org.gbif.pipelines.core.interpretation.MetadataInerpreter.interpretId;
+import static org.gbif.pipelines.core.interpretation.MetadataInerpreter.interpretInstallation;
+import static org.gbif.pipelines.core.interpretation.MetadataInerpreter.interpretOrganization;
 
 /**
  * {@link org.apache.beam.sdk.transforms.PTransform} that runs the {@link MultimediaInterpreter}.
@@ -41,29 +42,18 @@ public class MetadataRecordTransform extends RecordTransform<String, MetadataRec
       @ProcessElement
       public void processElement(ProcessContext context) {
         // get the record
-        String datasetId = context.element();
-
-        // create the target record
-        MetadataRecord metadataRecord = MetadataRecord.newBuilder().setDatasetId(datasetId).build();
-        // list to collect the validations
-        List<Validation> validations = new ArrayList<>();
+        String id = context.element();
 
         // Interpret metadata terms and add validations
-        Interpretation.of(datasetId)
-            .using(MetadataInerpreter.interpretDataset(metadataRecord, wsConfig))
-            .using(MetadataInerpreter.interpretInstallation(metadataRecord, wsConfig))
-            .using(MetadataInerpreter.interpretOrganization(metadataRecord, wsConfig))
-            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
 
-        // Add validations to the additional output
-        if (!validations.isEmpty()) {
-          OccurrenceIssue issue =
-              OccurrenceIssue.newBuilder().setId(datasetId).setIssues(validations).build();
-          context.output(getIssueTag(), KV.of(datasetId, issue));
-        }
-
-        // Main output
-        context.output(getDataTag(), KV.of(datasetId, metadataRecord));
+        InterpreterHandler.of(id, new MetadataRecord())
+            .withId(id)
+            .using(interpretId())
+            .using(interpretDataset(wsConfig))
+            .using(interpretInstallation(wsConfig))
+            .using(interpretOrganization(wsConfig))
+            .consumeData(d -> context.output(getDataTag(), KV.of(id, d)))
+            .consumeIssue(i -> context.output(getIssueTag(), KV.of(id, i)));
       }
     };
   }

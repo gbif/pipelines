@@ -4,11 +4,10 @@ import org.gbif.pipelines.io.avro.issue.Issue;
 import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * A container object of interpretation result that can be combined with the result of other
@@ -23,16 +22,15 @@ public class Interpretation<T> implements Serializable {
   // Element to be interpreted
   private final T value;
   // Stores the validations applied during an interpretation
-  private final List<Trace<IssueType>> validations;
+  private final Set<Trace<IssueType>> validations;
 
   /** Creates a interpretation of a value. */
-  public static <U> Interpretation<U> of(U value) {
-    return new Interpretation<>(value, new ArrayList<>());
+  public static <T> Interpretation<T> of(T value) {
+    return new Interpretation<>(value, new HashSet<>());
   }
 
   /** Full constructor. */
-  private Interpretation(
-      T value, List<Trace<IssueType>> validations) {
+  private Interpretation(T value, Set<Trace<IssueType>> validations) {
     this.value = value;
     this.validations = validations;
   }
@@ -49,15 +47,12 @@ public class Interpretation<T> implements Serializable {
     return this;
   }
 
-  public <U> Interpretation<U> using(Function<? super T, Interpretation<U>> mapper) {
-    Interpretation<U> interpretation = mapper.apply(value);
+  public T getValue() {
+    return value;
+  }
 
-    List<Trace<IssueType>> newValidations = new ArrayList<>(validations);
-    if (Objects.nonNull(interpretation.validations)) {
-      newValidations.addAll(interpretation.validations);
-    }
-
-    return new Interpretation<>(interpretation.value, newValidations);
+  public Set<Trace<IssueType>> getValidations() {
+    return validations;
   }
 
   /** Consumes all traces in the validation. */
@@ -121,6 +116,21 @@ public class Interpretation<T> implements Serializable {
     /** @return any comment or observation about the traced element */
     public String getRemark() {
       return remark;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      Trace<?> trace = (Trace<?>) o;
+      return Objects.equals(fieldName, trace.fieldName)
+          && Objects.equals(context, trace.context)
+          && Objects.equals(remark, trace.remark);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(fieldName, context, remark);
     }
   }
 }

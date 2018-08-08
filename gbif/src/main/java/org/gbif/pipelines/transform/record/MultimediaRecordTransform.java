@@ -1,20 +1,19 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.interpretation.Interpretation;
+import org.gbif.pipelines.core.interpretation.InterpreterHandler;
 import org.gbif.pipelines.core.interpretation.MultimediaInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.issue.Validation;
 import org.gbif.pipelines.io.avro.multimedia.MultimediaRecord;
 import org.gbif.pipelines.transform.RecordTransform;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
+
+import static org.gbif.pipelines.core.interpretation.MultimediaInterpreter.interpretId;
+import static org.gbif.pipelines.core.interpretation.MultimediaInterpreter.interpretMultimedia;
 
 /**
  * {@link org.apache.beam.sdk.transforms.PTransform} that runs the {@link MultimediaInterpreter}.
@@ -37,25 +36,14 @@ public class MultimediaRecordTransform extends RecordTransform<ExtendedRecord, M
         // get the record
         ExtendedRecord extendedRecord = context.element();
         String id = extendedRecord.getId();
-        // create the target record
-        MultimediaRecord multimediaRecord = MultimediaRecord.newBuilder().setId(id).build();
-        // list to collect the validations
-        List<Validation> validations = new ArrayList<>();
 
         // Interpret multimedia terms and add validations
-        Interpretation.of(extendedRecord)
-            .using(MultimediaInterpreter.interpretMultimedia(multimediaRecord))
-            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
-
-        // Add validations to the additional output
-        if (!validations.isEmpty()) {
-          OccurrenceIssue issue =
-              OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
-          context.output(getIssueTag(), KV.of(id, issue));
-        }
-
-        // Main output
-        context.output(getDataTag(), KV.of(id, multimediaRecord));
+        InterpreterHandler.of(extendedRecord, new MultimediaRecord())
+            .withId(id)
+            .using(interpretId())
+            .using(interpretMultimedia())
+            .consumeData(d -> context.output(getDataTag(), KV.of(id, d)))
+            .consumeIssue(i -> context.output(getIssueTag(), KV.of(id, i)));
       }
     };
   }

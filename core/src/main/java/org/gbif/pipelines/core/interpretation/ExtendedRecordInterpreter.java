@@ -12,7 +12,7 @@ import org.gbif.pipelines.io.avro.issue.IssueType;
 
 import java.net.URI;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 
 import com.google.common.base.Strings;
 
@@ -21,137 +21,121 @@ import com.google.common.base.Strings;
  * it.
  */
 public interface ExtendedRecordInterpreter
-    extends Function<ExtendedRecord, Interpretation<ExtendedRecord>> {
+    extends BiConsumer<ExtendedRecord, Interpretation<InterpretedExtendedRecord>> {
+
+  static ExtendedRecordInterpreter interpretId() {
+    return (extendedRecord, interpretation) ->
+        interpretation.getValue().setId(extendedRecord.getId());
+  }
 
   /** {@link DwcTerm#individualCount} interpretation. */
-  static ExtendedRecordInterpreter interpretIndividualCount(
-      InterpretedExtendedRecord interpretedExtendedRecord) {
-    return (ExtendedRecord extendedRecord) ->
+  static ExtendedRecordInterpreter interpretIndividualCount() {
+    return (extendedRecord, interpretation) ->
         SimpleTypeParser.parseInt(
-                extendedRecord,
-                DwcTerm.individualCount,
-                parseResult -> {
-                  Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
-                  if (parseResult.isPresent()) {
-                    interpretedExtendedRecord.setIndividualCount(parseResult.get());
-                  } else {
-                    interpretation.withValidation(
-                        Trace.of(
-                            DwcTerm.individualCount.name(), IssueType.INDIVIDUAL_COUNT_INVALID));
-                  }
-                  return interpretation;
-                })
-            .orElse(Interpretation.of(extendedRecord));
+            extendedRecord,
+            DwcTerm.individualCount,
+            parseResult -> {
+              if (parseResult.isPresent()) {
+                interpretation.getValue().setIndividualCount(parseResult.get());
+              } else {
+                interpretation.withValidation(
+                    Trace.of(DwcTerm.individualCount.name(), IssueType.INDIVIDUAL_COUNT_INVALID));
+              }
+              return interpretation;
+            });
   }
 
   /** {@link DwcTerm#typeStatus} interpretation. */
-  static ExtendedRecordInterpreter interpretTypeStatus(
-      InterpretedExtendedRecord interpretedExtendedRecord) {
-    return (ExtendedRecord extendedRecord) ->
+  static ExtendedRecordInterpreter interpretTypeStatus() {
+    return (extendedRecord, interpretation) ->
         VocabularyParsers.typeStatusParser()
             .map(
                 extendedRecord,
                 parseResult -> {
-                  Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
                   if (parseResult.isSuccessful()) {
-                    interpretedExtendedRecord.setTypeStatus(parseResult.getPayload().name());
+                    interpretation.getValue().setTypeStatus(parseResult.getPayload().name());
                   } else {
                     interpretation.withValidation(
                         Trace.of(DwcTerm.typeStatus.name(), IssueType.TYPE_STATUS_INVALID));
                   }
                   return interpretation;
-                })
-            .orElse(Interpretation.of(extendedRecord));
+                });
   }
 
   /** {@link DwcTerm#lifeStage} interpretation. */
-  static ExtendedRecordInterpreter interpretLifeStage(
-      InterpretedExtendedRecord interpretedExtendedRecord) {
-    return (ExtendedRecord extendedRecord) ->
+  static ExtendedRecordInterpreter interpretLifeStage() {
+    return (extendedRecord, interpretation) ->
         VocabularyParsers.lifeStageParser()
             .map(
                 extendedRecord,
                 parseResult -> {
-                  Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
                   if (parseResult.isSuccessful()) {
-                    interpretedExtendedRecord.setLifeStage(parseResult.getPayload().name());
+                    interpretation.getValue().setLifeStage(parseResult.getPayload().name());
                   }
                   return interpretation;
-                })
-            .orElse(Interpretation.of(extendedRecord));
+                });
   }
 
   /** {@link DwcTerm#establishmentMeans} interpretation. */
-  static ExtendedRecordInterpreter interpretEstablishmentMeans(
-      InterpretedExtendedRecord interpretedExtendedRecord) {
-    return (ExtendedRecord extendedRecord) ->
+  static ExtendedRecordInterpreter interpretEstablishmentMeans() {
+    return (extendedRecord, interpretation) ->
         VocabularyParsers.establishmentMeansParser()
             .map(
                 extendedRecord,
                 parseResult -> {
-                  Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
                   if (parseResult.isSuccessful()) {
-                    interpretedExtendedRecord.setEstablishmentMeans(
-                        parseResult.getPayload().name());
+                    interpretation
+                        .getValue()
+                        .setEstablishmentMeans(parseResult.getPayload().name());
                   }
                   return interpretation;
-                })
-            .orElse(Interpretation.of(extendedRecord));
+                });
   }
 
   /** {@link DwcTerm#sex} interpretation. */
-  static ExtendedRecordInterpreter interpretSex(
-      InterpretedExtendedRecord interpretedExtendedRecord) {
-    return (ExtendedRecord extendedRecord) ->
+  static ExtendedRecordInterpreter interpretSex() {
+    return (extendedRecord, interpretation) ->
         VocabularyParsers.sexParser()
             .map(
                 extendedRecord,
                 parseResult -> {
-                  Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
                   if (parseResult.isSuccessful()) {
-                    interpretedExtendedRecord.setSex(parseResult.getPayload().name());
+                    interpretation.getValue().setSex(parseResult.getPayload().name());
                   }
                   return interpretation;
-                })
-            .orElse(Interpretation.of(extendedRecord));
+                });
   }
 
   /** {@link DwcTerm#basisOfRecord} interpretation. */
-  static ExtendedRecordInterpreter interpretBasisOfRecord(
-      InterpretedExtendedRecord interpretedExtendedRecord) {
-    return (ExtendedRecord extendedRecord) ->
+  static ExtendedRecordInterpreter interpretBasisOfRecord() {
+    return (extendedRecord, interpretation) ->
         VocabularyParsers.basisOfRecordParser()
             .map(
                 extendedRecord,
                 parseResult -> {
-                  Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
                   if (parseResult.isSuccessful()) {
-                    interpretedExtendedRecord.setBasisOfRecord(parseResult.getPayload().name());
+                    interpretation.getValue().setBasisOfRecord(parseResult.getPayload().name());
                   } else {
                     interpretation.withValidation(
                         Trace.of(DwcTerm.basisOfRecord.name(), IssueType.BASIS_OF_RECORD_INVALID));
                   }
                   return interpretation;
-                })
-            .orElse(Interpretation.of(extendedRecord));
+                });
   }
 
   /** {@link DcTerm#references} interpretation. */
-  static ExtendedRecordInterpreter interpretReferences(
-      InterpretedExtendedRecord interpretedExtendedRecord) {
-    return (ExtendedRecord extendedRecord) -> {
-      Interpretation<ExtendedRecord> interpretation = Interpretation.of(extendedRecord);
+  static ExtendedRecordInterpreter interpretReferences() {
+    return (extendedRecord, interpretation) -> {
       String value = extendedRecord.getCoreTerms().get(DcTerm.references.qualifiedName());
       if (!Strings.isNullOrEmpty(value)) {
         URI parseResult = UrlParser.parse(value);
-        if (Objects.isNull(parseResult)) {
+        if (Objects.nonNull(parseResult)) {
+          interpretation.getValue().setReferences(parseResult.toString());
+        } else {
           interpretation.withValidation(
               Trace.of(DcTerm.references.name(), IssueType.REFERENCES_URI_INVALID));
-        } else {
-          interpretedExtendedRecord.setReferences(parseResult.toString());
         }
       }
-      return interpretation;
     };
   }
 }

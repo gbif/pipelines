@@ -7,39 +7,40 @@ import org.gbif.pipelines.core.ws.client.metadata.response.Organization;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 
-public interface MetadataInerpreter extends Function<String, Interpretation<String>> {
+public interface MetadataInerpreter extends BiConsumer<String, Interpretation<MetadataRecord>> {
 
-  static MetadataInerpreter interpretDataset(MetadataRecord metadataRecord, Config wsConfig) {
-    return (String datasetId) -> {
-      Interpretation<String> interpretation = Interpretation.of(datasetId);
+  static MetadataInerpreter interpretId() {
+    return (datasetId, interpretation) -> interpretation.getValue().setDatasetId(datasetId);
+  }
+
+  static MetadataInerpreter interpretDataset(Config wsConfig) {
+    return (datasetId, interpretation) -> {
+      MetadataRecord metadataRecord = interpretation.getValue();
       Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
       metadataRecord.setInstallationKey(dataset.getInstallationKey());
       metadataRecord.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-      return interpretation;
     };
   }
 
-  static MetadataInerpreter interpretInstallation(MetadataRecord metadataRecord, Config wsConfig) {
-    return (String datasetId) -> {
-      Interpretation<String> interpretation = Interpretation.of(datasetId);
+  static MetadataInerpreter interpretInstallation(Config wsConfig) {
+    return (datasetId, interpretation) -> {
+      MetadataRecord metadataRecord = interpretation.getValue();
       Installation installation =
           MetadataServiceClient.create(wsConfig)
               .getInstallation(metadataRecord.getInstallationKey());
       metadataRecord.setOrganizationKey(installation.getOrganizationKey());
-      return interpretation;
     };
   }
 
-  static MetadataInerpreter interpretOrganization(MetadataRecord metadataRecord, Config wsConfig) {
-    return (String datasetId) -> {
-      Interpretation<String> interpretation = Interpretation.of(datasetId);
+  static MetadataInerpreter interpretOrganization(Config wsConfig) {
+    return (datasetId, interpretation) -> {
+      MetadataRecord metadataRecord = interpretation.getValue();
       Organization organization =
           MetadataServiceClient.create(wsConfig)
               .getOrganization(metadataRecord.getOrganizationKey());
       metadataRecord.setEndorsingNodeKey(organization.getEndorsingNodeKey());
-      return interpretation;
     };
   }
 }

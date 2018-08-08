@@ -1,17 +1,13 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.interpretation.Interpretation;
-import org.gbif.pipelines.core.interpretation.TaxonomyInterpreter;
+import org.gbif.pipelines.core.interpretation.InterpreterHandler;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.issue.Validation;
 import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 import org.gbif.pipelines.transform.RecordTransform;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Objects;
 
 import org.apache.beam.sdk.Pipeline;
@@ -20,6 +16,8 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.values.KV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.gbif.pipelines.core.interpretation.TaxonomyInterpreter.taxonomyInterpreter;
 
 /**
  * {@link PTransform} to convert {@link ExtendedRecord} into {@link TaxonRecord} with its {@link
@@ -50,32 +48,25 @@ public class TaxonRecordTransform extends RecordTransform<ExtendedRecord, TaxonR
 
         ExtendedRecord extendedRecord = context.element();
         String id = extendedRecord.getId();
-        Collection<Validation> validations = new ArrayList<>();
-
-        // creates avro target file
-        TaxonRecord taxonRecord = new TaxonRecord();
 
         // interpretation
-        Interpretation.of(extendedRecord)
-            .using(TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, wsConfig))
-            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
-
-        // taxon record result
-        if (Objects.nonNull(taxonRecord.getId())) {
-          // the id is null when there is an error in the interpretation. In these cases we do not
-          // write the
-          // taxonRecord because it is totally empty.
-          context.output(getDataTag(), KV.of(id, taxonRecord));
-        } else {
-          LOG.info("TaxonRecord empty for extended record {} -- Not written.", id);
-        }
-
-        // issues
-        if (!validations.isEmpty()) {
-          OccurrenceIssue issue =
-              OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
-          context.output(getIssueTag(), KV.of(id, issue));
-        }
+        InterpreterHandler.of(extendedRecord, new TaxonRecord())
+            .withId(id)
+            .using(taxonomyInterpreter(wsConfig))
+            .consumeIssue(i -> context.output(getIssueTag(), KV.of(id, i)))
+            .consumeData(
+                d -> {
+                  // taxon record result
+                  if (Objects.nonNull(d.getId())) {
+                    // the id is null when there is an error in the interpretation. In these cases
+                    // we do not
+                    // write the
+                    // taxonRecord because it is totally empty.
+                    context.output(getDataTag(), KV.of(id, d));
+                  } else {
+                    LOG.info("TaxonRecord empty for extended record {} -- Not written.", id);
+                  }
+                });
       }
     };
   }

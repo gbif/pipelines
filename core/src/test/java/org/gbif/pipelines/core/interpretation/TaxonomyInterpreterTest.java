@@ -39,16 +39,15 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter interpreter =
-        TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig());
-    Interpretation<ExtendedRecord> interpretation = interpreter.apply(record);
+    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(getWsConfig());
+    Interpretation<TaxonRecord> taxon = Interpretation.of(taxonRecord);
+    interpreter.accept(record, taxon);
     Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-    Assert.assertNotNull(interpretation);
     Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
@@ -67,7 +66,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .build();
 
     enqueueResponse(PUMA_CONCOLOR_2_RESPONSE);
-    Interpretation<ExtendedRecord> interpretationPuma = interpreter.apply(record);
+    interpreter.accept(record, taxon);
 
     ranksResponse =
         taxonRecord
@@ -75,7 +74,6 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-    Assert.assertNotNull(interpretationPuma);
     Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
@@ -95,7 +93,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .build();
 
     enqueueResponse(PUMA_CONCOLOR_3_RESPONSE);
-    Interpretation<ExtendedRecord> interpretationPuma2 = interpreter.apply(record);
+    interpreter.accept(record, taxon);
 
     ranksResponse =
         taxonRecord
@@ -103,7 +101,6 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-    Assert.assertNotNull(interpretationPuma2);
     Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
@@ -126,9 +123,9 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(OENANTHE_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    TaxonomyInterpreter interpreter =
-        TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig());
-    Interpretation<ExtendedRecord> interpretation = interpreter.apply(record);
+    TaxonomyInterpreter interpreter = TaxonomyInterpreter.taxonomyInterpreter(getWsConfig());
+    Interpretation<TaxonRecord> taxon = Interpretation.of(taxonRecord);
+    interpreter.accept(record, taxon);
 
     Map<Rank, RankedName> ranksResponse =
         taxonRecord
@@ -136,7 +133,6 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-    Assert.assertNotNull(interpretation);
     Assert.assertEquals(3034893, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Oenanthe L.", taxonRecord.getUsage().getName());
@@ -155,7 +151,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .build();
 
     enqueueResponse(OENANTHE_2_RESPONSE);
-    Interpretation<ExtendedRecord> interpretationOneanthe2 = interpreter.apply(record);
+    interpreter.accept(record, taxon);
 
     ranksResponse =
         taxonRecord
@@ -163,7 +159,6 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-    Assert.assertNotNull(interpretationOneanthe2);
     Assert.assertEquals(3034893, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Oenanthe L.", taxonRecord.getUsage().getName());
@@ -182,7 +177,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .build();
 
     enqueueResponse(OENANTHE_3_RESPONSE);
-    Interpretation<ExtendedRecord> interpretationOneanthe3 = interpreter.apply(record);
+    interpreter.accept(record, taxon);
 
     ranksResponse =
         taxonRecord
@@ -190,7 +185,6 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-    Assert.assertNotNull(interpretationOneanthe3);
     Assert.assertEquals(2492483, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Oenanthe Vieillot, 1816", taxonRecord.getUsage().getName());
@@ -214,15 +208,14 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(ANNELIDA_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation =
-        TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
+    Interpretation<TaxonRecord> taxon = Interpretation.of(taxonRecord);
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxon);
 
     // FIXME: this test does not pass. It is copied from old adapter but it returns a different
     // response.Should we check it??
     // this is the old test
     //      Assert.assertEquals("BOLD:ACV7160",
     // interpretedTaxon.getTaxonRecord().getUsage().getName());
-    Assert.assertNotNull(interpretation);
     Assert.assertEquals("Lumbricidae", taxonRecord.getUsage().getName());
   }
 
@@ -247,8 +240,8 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(CERATIACEAE_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation =
-        TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
+    Interpretation<TaxonRecord> taxon = Interpretation.of(taxonRecord);
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxon);
 
     Map<Rank, RankedName> ranksResponse =
         taxonRecord
@@ -256,7 +249,6 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-    Assert.assertNotNull(interpretation);
     Assert.assertEquals(7598904, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(7479242, ranksResponse.get(Rank.FAMILY).getKey().intValue());
     // FIXME: this tests does not pass. It is copied from old adapter but it returns a different
@@ -285,8 +277,8 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation =
-        TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
+    Interpretation<TaxonRecord> taxon = Interpretation.of(taxonRecord);
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxon);
 
     Map<Rank, RankedName> ranksResponse =
         taxonRecord
@@ -294,7 +286,6 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
-    Assert.assertNotNull(interpretation);
     Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
@@ -314,10 +305,9 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(AGALLISUS_LEPTUROIDES_RESPONSE);
     TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation =
-        TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
+    Interpretation<TaxonRecord> taxon = Interpretation.of(taxonRecord);
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxon);
 
-    Assert.assertNotNull(interpretation);
     Assert.assertEquals(1118030, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1118026, taxonRecord.getAcceptedUsage().getKey().intValue());
     Assert.assertEquals(
@@ -328,15 +318,12 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
   @Test(expected = NullPointerException.class)
   public void testMatchNullTaxonRecord() {
-    Interpretation<ExtendedRecord> interpretation =
-        TaxonomyInterpreter.taxonomyInterpreter(null, null).apply(null);
+    TaxonomyInterpreter.taxonomyInterpreter(null).accept(null, null);
   }
 
   @Test(expected = NullPointerException.class)
   public void testMatchNullArgs() {
-    TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation =
-        TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(null);
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(null, null);
     Assert.fail("This line should not be reached ");
   }
 
@@ -344,9 +331,8 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
   public void testMatchEmptyArgs() {
     ExtendedRecord record = new ExtendedRecord();
     record.setCoreTerms(new HashMap<>());
-    TaxonRecord taxonRecord = new TaxonRecord();
-    Interpretation<ExtendedRecord> interpretation =
-        TaxonomyInterpreter.taxonomyInterpreter(taxonRecord, getWsConfig()).apply(record);
+    Interpretation<TaxonRecord> taxon = Interpretation.of(new TaxonRecord());
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxon);
     Assert.fail("This line should not be reached ");
   }
 }

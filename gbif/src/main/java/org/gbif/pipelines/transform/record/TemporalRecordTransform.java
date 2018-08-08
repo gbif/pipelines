@@ -1,20 +1,21 @@
 package org.gbif.pipelines.transform.record;
 
 import org.gbif.pipelines.common.beam.Coders;
-import org.gbif.pipelines.core.interpretation.Interpretation;
-import org.gbif.pipelines.core.interpretation.TemporalRecordInterpreter;
+import org.gbif.pipelines.core.interpretation.InterpreterHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.issue.Validation;
 import org.gbif.pipelines.io.avro.temporal.TemporalRecord;
 import org.gbif.pipelines.transform.RecordTransform;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
+
+import static org.gbif.pipelines.core.interpretation.TemporalRecordInterpreter.interpretDateIdentified;
+import static org.gbif.pipelines.core.interpretation.TemporalRecordInterpreter.interpretDayOfYear;
+import static org.gbif.pipelines.core.interpretation.TemporalRecordInterpreter.interpretEventDate;
+import static org.gbif.pipelines.core.interpretation.TemporalRecordInterpreter.interpretId;
+import static org.gbif.pipelines.core.interpretation.TemporalRecordInterpreter.interpretModifiedDate;
 
 /** This transform provides interpretation for the fields: year, month, day and eventDate */
 public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, TemporalRecord> {
@@ -37,27 +38,16 @@ public class TemporalRecordTransform extends RecordTransform<ExtendedRecord, Tem
         // Context element to be interpreted
         ExtendedRecord extendedRecord = context.element();
         String id = extendedRecord.getId();
-        List<Validation> validations = new ArrayList<>();
 
-        // Transformation main output
-        TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId(id).build();
-
-        Interpretation.of(extendedRecord)
-            .using(TemporalRecordInterpreter.interpretEventDate(temporalRecord))
-            .using(TemporalRecordInterpreter.interpretDateIdentified(temporalRecord))
-            .using(TemporalRecordInterpreter.interpretModifiedDate(temporalRecord))
-            .using(TemporalRecordInterpreter.interpretDayOfYear(temporalRecord))
-            .forEachValidation(trace -> validations.add(toValidation(trace.getContext())));
-
-        // Additional output
-        if (!validations.isEmpty()) {
-          OccurrenceIssue issue =
-              OccurrenceIssue.newBuilder().setId(id).setIssues(validations).build();
-          context.output(getIssueTag(), KV.of(id, issue));
-        }
-
-        // Main output
-        context.output(getDataTag(), KV.of(temporalRecord.getId(), temporalRecord));
+        InterpreterHandler.of(extendedRecord, new TemporalRecord())
+            .withId(id)
+            .using(interpretId())
+            .using(interpretEventDate())
+            .using(interpretDateIdentified())
+            .using(interpretModifiedDate())
+            .using(interpretDayOfYear())
+            .consumeData(d -> context.output(getDataTag(), KV.of(id, d)))
+            .consumeIssue(i -> context.output(getIssueTag(), KV.of(id, i)));
       }
     };
   }

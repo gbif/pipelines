@@ -1,8 +1,6 @@
 package org.gbif.pipelines.transform;
 
-import org.gbif.pipelines.io.avro.issue.IssueType;
 import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
-import org.gbif.pipelines.io.avro.issue.Validation;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -47,14 +45,6 @@ public abstract class RecordTransform<T, R> extends PTransform<PCollection<T>, P
   /** @return data only with issues */
   public TupleTag<KV<String, OccurrenceIssue>> getIssueTag() {
     return issueTag;
-  }
-
-  /** Translates a OccurrenceIssue into Validation object. */
-  protected static Validation toValidation(IssueType issueType) {
-    return Validation.newBuilder()
-        .setName(issueType.name())
-        .setSeverity("") // TODO: MUST BE SOME VALUE
-        .build();
   }
 
   public abstract RecordTransform<T, R> withAvroCoders(Pipeline pipeline);
