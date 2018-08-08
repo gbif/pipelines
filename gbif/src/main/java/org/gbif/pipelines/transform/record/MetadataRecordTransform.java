@@ -14,10 +14,10 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.KV;
 
-import static org.gbif.pipelines.core.interpretation.MetadataInerpreter.interpretDataset;
-import static org.gbif.pipelines.core.interpretation.MetadataInerpreter.interpretId;
-import static org.gbif.pipelines.core.interpretation.MetadataInerpreter.interpretInstallation;
-import static org.gbif.pipelines.core.interpretation.MetadataInerpreter.interpretOrganization;
+import static org.gbif.pipelines.core.interpretation.MetadataInterpreter.interpretDataset;
+import static org.gbif.pipelines.core.interpretation.MetadataInterpreter.interpretId;
+import static org.gbif.pipelines.core.interpretation.MetadataInterpreter.interpretInstallation;
+import static org.gbif.pipelines.core.interpretation.MetadataInterpreter.interpretOrganization;
 
 /**
  * {@link org.apache.beam.sdk.transforms.PTransform} that runs the {@link MultimediaInterpreter}.

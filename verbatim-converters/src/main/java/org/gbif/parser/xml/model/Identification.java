@@ -39,14 +39,13 @@ public class Identification extends PropertyPrioritizer {
 
   private static final Logger LOG = LoggerFactory.getLogger(Identification.class);
 
+  private final HigherTaxonParser taxonParser = new HigherTaxonParser();
   private boolean preferred;
   private String genus;
   private String dateIdentified;
   private String scientificName;
   private String identifierName;
   private Set<Taxon> higherTaxons = new HashSet<>();
-
-  private HigherTaxonParser taxonParser = new HigherTaxonParser();
 
   /**
    * Once this object has been populated by a Digester, there may be several PrioritizedProperties

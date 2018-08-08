@@ -15,7 +15,7 @@
  */
 package org.gbif.parser.xml.constants;
 
-/** The components of an occurence record that combine to uniquely identify it (composite key). */
+/** The components of an occurrence record that combine to uniquely identify it (composite key). */
 public enum ResponseElementEnum {
   RECORD,
   INSTITUTION_CODE,

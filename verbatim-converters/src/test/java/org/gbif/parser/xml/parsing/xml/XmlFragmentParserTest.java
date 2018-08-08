@@ -40,7 +40,7 @@ public class XmlFragmentParserTest {
     RawXmlOccurrence rawRecord = createFakeOcc(xml);
     List<RawOccurrenceRecord> results = XmlFragmentParser.parseRecord(rawRecord);
     assertEquals(1, results.size());
-    assertTrue(results.get(0).getCollectorName().equals("Oschütz"));
+    assertEquals("Oschütz", results.get(0).getCollectorName());
   }
 
   @Ignore("too expensive for constant use")
@@ -74,7 +74,7 @@ public class XmlFragmentParserTest {
 
   private static class BatchRecordParser implements Callable<List<RawOccurrenceRecord>> {
 
-    private List<RawXmlOccurrence> raws;
+    private final List<RawXmlOccurrence> raws;
 
     public BatchRecordParser(List<RawXmlOccurrence> raws) {
       this.raws = raws;

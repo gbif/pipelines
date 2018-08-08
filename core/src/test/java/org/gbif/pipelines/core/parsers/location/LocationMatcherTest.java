@@ -108,7 +108,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void givenCountryAndNegatedCoordsWhenMatchIdentityThenFail() throws IOException {
+  public void givenCountryAndNegatedCoordsWhenMatchIdentityThenFail() {
     enqueueEmptyResponse();
 
     Country canada = Country.CANADA;

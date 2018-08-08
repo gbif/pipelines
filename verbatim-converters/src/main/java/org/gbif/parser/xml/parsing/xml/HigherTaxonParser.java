@@ -30,7 +30,7 @@ public class HigherTaxonParser {
 
   private static final Logger LOG = LoggerFactory.getLogger(HigherTaxonParser.class);
 
-  private Properties taxonRankMapping = new Properties();
+  private final Properties taxonRankMapping = new Properties();
   private final String taxonRankMappingFilename = "/taxonRankMapping.properties";
 
   public HigherTaxonParser() {
@@ -60,7 +60,7 @@ public class HigherTaxonParser {
       if (rawRank == null) {
         LOG.info("Could not process taxon ranking of [{}], skipping.", processedTaxonRank);
       } else {
-        int rank = Integer.valueOf(rawRank.trim());
+        int rank = Integer.parseInt(rawRank.trim());
         LOG.debug("ProcessedTaxonRank [{}] gives numeric rank [{}]", processedTaxonRank, rank);
         switch (rank) {
           case 1000:

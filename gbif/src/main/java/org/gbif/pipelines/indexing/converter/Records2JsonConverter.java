@@ -30,11 +30,11 @@ public class Records2JsonConverter {
   final ObjectMapper mapper = new ObjectMapper();
   private final ObjectNode mainNode = mapper.createObjectNode();
 
+  private final Map<Class<? extends SpecificRecordBase>, Consumer<SpecificRecordBase>>
+      customConvertersMap = new HashMap<>();
   private SpecificRecordBase[] bases;
   private Set<String> skipKeys = Collections.emptySet();
   private String[] replaceKeys = {};
-  private Map<Class<? extends SpecificRecordBase>, Consumer<SpecificRecordBase>>
-      customConvertersMap = new HashMap<>();
 
   Records2JsonConverter() {}
 

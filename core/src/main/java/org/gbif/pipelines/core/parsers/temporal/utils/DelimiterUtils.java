@@ -51,9 +51,9 @@ public class DelimiterUtils {
     boolean canSplit =
         rawPeriod.lastIndexOf(CHAR_PERIOD) == rawPeriod.indexOf(CHAR_PERIOD)
             && rawPeriod.length() > 7;
-    String[] splited = canSplit ? RGX_PERIOD.split(rawPeriod) : new String[] {rawPeriod, ""};
+    String[] splitted = canSplit ? RGX_PERIOD.split(rawPeriod) : new String[] {rawPeriod, ""};
     // Returns an array of the same length each time
-    return splited.length < 2 ? new String[] {splited[0], ""} : splited;
+    return splitted.length < 2 ? new String[] {splitted[0], ""} : splitted;
   }
 
   /**

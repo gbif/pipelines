@@ -16,6 +16,7 @@ import static org.gbif.pipelines.core.tools.AvroSchemaGenerator.NULL_DEFAULT;
 import static org.gbif.pipelines.core.tools.AvroSchemaGenerator.generateSchema;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /** Tests the class {@link AvroSchemaGenerator}. */
 public class AvroSchemaGeneratorTest {
@@ -165,7 +166,7 @@ public class AvroSchemaGeneratorTest {
     Schema schemaGenerated = generateSchema(ClassFloatFields.class, name, null, namespace);
     System.out.println(schemaGenerated.toString(true));
 
-    assertEquals(null, schemaGenerated.getField("floatField").defaultVal());
+    assertNull(schemaGenerated.getField("floatField").defaultVal());
   }
 
   @Test(expected = NullPointerException.class)

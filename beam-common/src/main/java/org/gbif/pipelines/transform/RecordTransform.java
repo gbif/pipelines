@@ -13,7 +13,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 
 /**
- * Common class for a transform recocd process
+ * Common class for a transform record process
  *
  * @param <T> transform "from" class
  * @param <R> transform "to" class

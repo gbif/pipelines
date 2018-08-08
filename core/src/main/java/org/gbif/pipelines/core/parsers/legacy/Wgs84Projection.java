@@ -33,13 +33,13 @@ public class Wgs84Projection {
   private static final Logger LOG = LoggerFactory.getLogger(Wgs84Projection.class);
   private static final DatumParser PARSER = DatumParser.getInstance();
   private static final double SUSPICIOUS_SHIFT = 0.1d;
-  private static DatumAuthorityFactory DATUM_FACTORY;
+  private static DatumAuthorityFactory datumFactory;
 
   private Wgs84Projection() {}
 
   static {
     try {
-      DATUM_FACTORY = BasicFactories.getDefault().getDatumAuthorityFactory();
+      datumFactory = BasicFactories.getDefault().getDatumAuthorityFactory();
       LOG.debug("Wgs84Projection utils created");
     } catch (FactoryRegistryException e) {
       LOG.error("Failed to create geotools datum factory", e);
@@ -150,7 +150,7 @@ public class Wgs84Projection {
       } catch (FactoryException e) {
         // that didn't work, maybe it is *just* a datum
         try {
-          GeodeticDatum dat = DATUM_FACTORY.createGeodeticDatum(code);
+          GeodeticDatum dat = datumFactory.createGeodeticDatum(code);
           crs = new DefaultGeographicCRS(dat, DefaultEllipsoidalCS.GEODETIC_2D);
 
         } catch (FactoryException e1) {

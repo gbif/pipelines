@@ -43,7 +43,7 @@ public class IntepretationPipelineTest {
   private static final String INPUT = "src/test/resources/avro/extendedRecords*";
   private static final String OUTPUT = "output";
 
-  private static Configuration configuration = new Configuration();
+  private static final Configuration configuration = new Configuration();
   private static MiniDFSCluster hdfsCluster;
   private static FileSystem fs;
   private static URI hdfsClusterBaseUri;

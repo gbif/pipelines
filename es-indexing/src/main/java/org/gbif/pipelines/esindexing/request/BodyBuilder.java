@@ -184,9 +184,9 @@ public class BodyBuilder {
 
   private static class IndexAliasAction {
 
-    String alias;
-    Set<String> idxToAdd;
-    Set<String> idxToRemove;
+    final String alias;
+    final Set<String> idxToAdd;
+    final Set<String> idxToRemove;
 
     IndexAliasAction(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
       this.alias = alias;

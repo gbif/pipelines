@@ -82,7 +82,7 @@ public class HttpConfigFactory {
         Long.parseLong(
             props.getProperty(
                 generatePropertyName(service, CACHE_SIZE_PROP), DEFAULT_CACHE_SIZE_IN_MB_PROP));
-    Long cacheSize = configSize * 1024L * 1024L; // Cache in megabytes
+    long cacheSize = configSize * 1024L * 1024L; // Cache in megabytes
     builder.cacheSize(cacheSize);
 
     return builder.build();

@@ -17,7 +17,7 @@ package org.gbif.parser.xml.parsing;
 
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -39,10 +39,10 @@ public class RawXmlOccurrence {
     byte[] hash = null;
     try {
       String plain = resourceName + xml;
-      byte[] bytesOfMessage = plain.getBytes("UTF-8");
+      byte[] bytesOfMessage = plain.getBytes(StandardCharsets.UTF_8);
       MessageDigest md = MessageDigest.getInstance("MD5");
       hash = md.digest(bytesOfMessage);
-    } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+    } catch (NoSuchAlgorithmException e) {
       LOG.error("Encoding error creating hash - must be JVM problem", e);
     }
 

@@ -21,12 +21,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPInputStream;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class XmlSanitizingReaderTest {
 
@@ -75,42 +75,42 @@ public class XmlSanitizingReaderTest {
   public void testAsciiSingleReads() throws IOException {
     String test = "No bad chars and no funny chars.";
     String result = doSingleReads(test);
-    assertTrue(result.equals(test));
+    assertEquals(result, test);
   }
 
   @Test
   public void testAsciiSimpleBufferRead() throws IOException {
     String test = "No bad chars and no funny chars.";
     String result = doSimpleBufferRead(test);
-    assertTrue(result.equals(test));
+    assertEquals(result, test);
   }
 
   @Test
   public void testAsciiOffsetBufferRead() throws IOException {
     String test = "No bad chars and no funny chars.";
     String result = doOffsetBufferRead(test);
-    assertTrue(result.equals(test));
+    assertEquals(result, test);
   }
 
   @Test
   public void testUtf8SingleReads() throws IOException {
     String test = "No bad chars and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية";
     String result = doSingleReads(test);
-    assertTrue(result.equals(test));
+    assertEquals(result, test);
   }
 
   @Test
   public void testUtf8SimpleBufferRead() throws IOException {
     String test = "No bad chars and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية";
     String result = doSimpleBufferRead(test);
-    assertTrue(result.equals(test));
+    assertEquals(result, test);
   }
 
   @Test
   public void testUtf8OffsetBufferRead() throws IOException {
     String test = "No bad chars and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية";
     String result = doOffsetBufferRead(test);
-    assertTrue(result.equals(test));
+    assertEquals(result, test);
   }
 
   @Test
@@ -130,7 +130,7 @@ public class XmlSanitizingReaderTest {
             + goodWeird
             + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
     String result = doSingleReads(test);
-    assertTrue(result.equals(goal));
+    assertEquals(result, goal);
   }
 
   @Test
@@ -150,7 +150,7 @@ public class XmlSanitizingReaderTest {
             + goodWeird
             + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
     String result = doSimpleBufferRead(test);
-    assertTrue(result.equals(goal));
+    assertEquals(result, goal);
   }
 
   @Test
@@ -170,7 +170,7 @@ public class XmlSanitizingReaderTest {
             + goodWeird
             + " and some seriously funny chars: äåáàæœčéèêëïñøöüßšž北京العربية end";
     String result = doOffsetBufferRead(test);
-    assertTrue(result.equals(goal));
+    assertEquals(result, goal);
   }
 
   @Test
@@ -182,7 +182,7 @@ public class XmlSanitizingReaderTest {
 
     StringBuilder sb = new StringBuilder();
     try (XmlSanitizingReader xmlReader =
-        new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8"))) {
+        new XmlSanitizingReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
       while (xmlReader.ready()) {
         char[] buff = new char[8192];
         xmlReader.read(buff, 0, 8192);
@@ -201,7 +201,8 @@ public class XmlSanitizingReaderTest {
 
     StringBuilder sb = new StringBuilder();
     try (BufferedReader xmlReader =
-        new BufferedReader(new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8")))) {
+        new BufferedReader(
+            new XmlSanitizingReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)))) {
       while (xmlReader.ready()) {
         char[] buff = new char[8192];
         xmlReader.read(buff, 0, 8192);
@@ -220,7 +221,8 @@ public class XmlSanitizingReaderTest {
 
     StringBuilder sb = new StringBuilder();
     try (BufferedReader buffReader =
-        new BufferedReader(new XmlSanitizingReader(new InputStreamReader(inputStream, "UTF-8")))) {
+        new BufferedReader(
+            new XmlSanitizingReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8)))) {
       while (buffReader.ready()) {
         String line = buffReader.readLine();
         sb.append(line);

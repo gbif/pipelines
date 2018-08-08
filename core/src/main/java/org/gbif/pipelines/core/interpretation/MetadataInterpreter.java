@@ -9,13 +9,13 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 
 import java.util.function.BiConsumer;
 
-public interface MetadataInerpreter extends BiConsumer<String, Interpretation<MetadataRecord>> {
+public interface MetadataInterpreter extends BiConsumer<String, Interpretation<MetadataRecord>> {
 
-  static MetadataInerpreter interpretId() {
+  static MetadataInterpreter interpretId() {
     return (datasetId, interpretation) -> interpretation.getValue().setDatasetId(datasetId);
   }
 
-  static MetadataInerpreter interpretDataset(Config wsConfig) {
+  static MetadataInterpreter interpretDataset(Config wsConfig) {
     return (datasetId, interpretation) -> {
       MetadataRecord metadataRecord = interpretation.getValue();
       Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
@@ -24,7 +24,7 @@ public interface MetadataInerpreter extends BiConsumer<String, Interpretation<Me
     };
   }
 
-  static MetadataInerpreter interpretInstallation(Config wsConfig) {
+  static MetadataInterpreter interpretInstallation(Config wsConfig) {
     return (datasetId, interpretation) -> {
       MetadataRecord metadataRecord = interpretation.getValue();
       Installation installation =
@@ -34,7 +34,7 @@ public interface MetadataInerpreter extends BiConsumer<String, Interpretation<Me
     };
   }
 
-  static MetadataInerpreter interpretOrganization(Config wsConfig) {
+  static MetadataInterpreter interpretOrganization(Config wsConfig) {
     return (datasetId, interpretation) -> {
       MetadataRecord metadataRecord = interpretation.getValue();
       Organization organization =

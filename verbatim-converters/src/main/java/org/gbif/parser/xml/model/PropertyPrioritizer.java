@@ -35,7 +35,7 @@ public abstract class PropertyPrioritizer {
 
   private static final Logger LOG = LoggerFactory.getLogger(PropertyPrioritizer.class);
 
-  protected Map<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> prioritizedProps =
+  protected final Map<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> prioritizedProps =
       new EnumMap<>(PrioritizedPropertyNameEnum.class);
 
   public abstract void resolvePriorities();

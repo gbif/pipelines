@@ -29,7 +29,7 @@ public class ExtendedRecordConverterTest {
   private final String inpPath =
       getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
   private final String outPath = inpPath + "verbatim.avro";
-  private CodecFactory codec = CodecFactory.deflateCodec(Deflater.BEST_SPEED);
+  private final CodecFactory codec = CodecFactory.deflateCodec(Deflater.BEST_SPEED);
 
   @Test(expected = ParsingException.class)
   public void testInputPathIsAbsent() throws IOException {

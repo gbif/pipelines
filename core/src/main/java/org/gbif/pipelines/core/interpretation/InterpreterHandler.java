@@ -39,11 +39,11 @@ import java.util.stream.Collectors;
  */
 public class InterpreterHandler<S, V> {
 
-  /** Any source of data */
+  // Any source of data
   private final S source;
-  /** Container with the result value and issues {@link Interpretation} */
+  // Container with the result value and issues
   private final Interpretation<V> value;
-  /** Identifier of the record for {@link OccurrenceIssue} */
+  // Identifier of the record for OccurrenceIssue
   private String id;
 
   /** Full constructor */
