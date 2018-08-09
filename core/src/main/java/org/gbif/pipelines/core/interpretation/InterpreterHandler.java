@@ -4,6 +4,7 @@ import org.gbif.pipelines.io.avro.issue.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.issue.Validation;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -99,7 +100,7 @@ public class InterpreterHandler<S, V> {
             .map(
                 x ->
                     Validation.newBuilder()
-                        .setName(x.getFieldName())
+                        .setName(Optional.ofNullable(x.getFieldName()).orElse(""))
                         .setSeverity(x.getContext().toString())
                         .build())
             .collect(Collectors.toList());
