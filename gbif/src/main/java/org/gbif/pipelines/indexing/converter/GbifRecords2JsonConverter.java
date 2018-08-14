@@ -8,6 +8,7 @@ import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -144,14 +145,22 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
                         RankedName::getRank, rankedName -> rankedName.getKey().toString()));
 
         // Gbif fields from map
-        this.addJsonField("gbifKingdomKey", map.get(Rank.KINGDOM))
-            .addJsonField("gbifPhylumKey", map.get(Rank.PHYLUM))
-            .addJsonField("gbifClassKey", map.get(Rank.CLASS))
-            .addJsonField("gbifOrderKey", map.get(Rank.ORDER))
-            .addJsonField("gbifFamilyKey", map.get(Rank.FAMILY))
-            .addJsonField("gbifGenusKey", map.get(Rank.GENUS))
-            .addJsonField("gbifSubgenusKey", map.get(Rank.SUBGENUS))
-            .addJsonField("gbifSpeciesKey", map.get(Rank.SPECIES));
+        Optional.ofNullable(map.get(Rank.KINGDOM))
+            .ifPresent(val -> this.addJsonField("gbifKingdomKey", val));
+        Optional.ofNullable(map.get(Rank.PHYLUM))
+            .ifPresent(val -> this.addJsonField("gbifPhylumKey", val));
+        Optional.ofNullable(map.get(Rank.CLASS))
+            .ifPresent(val -> this.addJsonField("gbifClassKey", val));
+        Optional.ofNullable(map.get(Rank.ORDER))
+            .ifPresent(val -> this.addJsonField("gbifOrderKey", val));
+        Optional.ofNullable(map.get(Rank.FAMILY))
+            .ifPresent(val -> this.addJsonField("gbifFamilyKey", val));
+        Optional.ofNullable(map.get(Rank.GENUS))
+            .ifPresent(val -> this.addJsonField("gbifGenusKey", val));
+        Optional.ofNullable(map.get(Rank.SUBGENUS))
+            .ifPresent(val -> this.addJsonField("gbifSubgenusKey", val));
+        Optional.ofNullable(map.get(Rank.SPECIES))
+            .ifPresent(val -> this.addJsonField("gbifSpeciesKey", val));
       }
 
       // Other Gbif fields
@@ -159,7 +168,7 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
       if (usage != null) {
         this.addJsonField("gbifTaxonKey", usage.getKey().toString())
             .addJsonField("gbifScientificName", usage.getName())
-            .addJsonField("gbifTaxonRank", usage.getName());
+            .addJsonField("gbifTaxonRank", usage.getRank().name());
       }
       // Fields as a common view - "key": "value"
       this.addCommonFields(record);

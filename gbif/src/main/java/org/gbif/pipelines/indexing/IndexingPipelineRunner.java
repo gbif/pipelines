@@ -32,11 +32,13 @@ public class IndexingPipelineRunner {
     esConfig = EsConfig.from(options.getESHosts());
   }
 
-  static IndexingPipelineRunner from(EsProcessingPipelineOptions options) {
+  // visible to be able to use in the mini-pipelines
+  public static IndexingPipelineRunner from(EsProcessingPipelineOptions options) {
     return new IndexingPipelineRunner(options);
   }
 
-  void run() {
+  // visible to be able to use in the mini-pipelines
+  public void run() {
     // if ES indexing is included in the pipeline we first create the index
     createIndex().ifPresent(options::setESIndexName);
 
