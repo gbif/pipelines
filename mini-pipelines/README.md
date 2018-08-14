@@ -68,3 +68,5 @@ By default, Spark uses 4 threads, but we can customize it by using the `sparkMas
 ~~~~
 java -XX:+UseG1GC -Xms256M -Xmx8G -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcde12345 --attempt=1 --gbifEnv=UAT --ESHosts=http://localhost:9200 --runner=SparkRunner --sparkMaster=local[8]
 ~~~~
+
+
