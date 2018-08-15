@@ -144,7 +144,7 @@ public class Records2JsonConverter {
     // Can be a json as a string
     if (value != null
         && ((value.startsWith("{\"") && value.endsWith("}"))
-            || (value.startsWith("[") && value.endsWith("]")))) {
+            || (value.startsWith("[\"") && value.endsWith("]")))) {
       node.set(key, new POJONode(value));
     } else {
       node.put(key, value);
