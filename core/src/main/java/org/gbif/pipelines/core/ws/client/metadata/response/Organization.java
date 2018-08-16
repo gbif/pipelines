@@ -12,11 +12,21 @@ public class Organization implements Serializable {
 
   private String endorsingNodeKey;
 
+  private String country;
+
   public String getEndorsingNodeKey() {
     return endorsingNodeKey;
   }
 
   public void setEndorsingNodeKey(String endorsingNodeKey) {
     this.endorsingNodeKey = endorsingNodeKey;
+  }
+
+  public String getCountry() {
+    return country;
+  }
+
+  public void setCountry(String country) {
+    this.country = country;
   }
 }

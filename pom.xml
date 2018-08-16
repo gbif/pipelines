@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -12,7 +11,7 @@
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.2-SNAPSHOT</version>
 
   <name>Pipelines :: Mother POM</name>
   <url>http://github.com/gbif/pipelines</url>
@@ -71,7 +70,7 @@
     <gbif-common.version>0.38</gbif-common.version>
     <dwc-api.version>1.18</dwc-api.version>
 
-    <apache.beam.version>2.5.0</apache.beam.version>
+    <apache.beam.version>2.6.0</apache.beam.version>
     <avro.version>1.8.2</avro.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.1</hadoop-core.version>
     <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>

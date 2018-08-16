@@ -8,6 +8,7 @@ import org.gbif.pipelines.io.avro.taxon.TaxonRecord;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -92,9 +93,7 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
     return record -> {
       LocationRecord location = (LocationRecord) record;
 
-      if (location.getDecimalLongitude() == null || location.getDecimalLatitude() == null) {
-        this.addJsonObject("location");
-      } else {
+      if (location.getDecimalLongitude() != null && location.getDecimalLatitude() != null) {
         ObjectNode node = mapper.createObjectNode();
         node.put("lon", location.getDecimalLongitude().toString());
         node.put("lat", location.getDecimalLatitude().toString());
@@ -141,23 +140,35 @@ public class GbifRecords2JsonConverter extends Records2JsonConverter {
         Map<Rank, String> map =
             classifications
                 .stream()
-                .collect(Collectors.toMap(RankedName::getRank, RankedName::getName));
+                .collect(
+                    Collectors.toMap(
+                        RankedName::getRank, rankedName -> rankedName.getKey().toString()));
 
         // Gbif fields from map
-        this.addJsonField("gbifKingdom", map.get(Rank.KINGDOM))
-            .addJsonField("gbifPhylum", map.get(Rank.PHYLUM))
-            .addJsonField("gbifClass", map.get(Rank.CLASS))
-            .addJsonField("gbifOrder", map.get(Rank.ORDER))
-            .addJsonField("gbifFamily", map.get(Rank.FAMILY))
-            .addJsonField("gbifGenus", map.get(Rank.GENUS))
-            .addJsonField("gbifSubgenus", map.get(Rank.SUBGENUS));
+        Optional.ofNullable(map.get(Rank.KINGDOM))
+            .ifPresent(val -> this.addJsonField("gbifKingdomKey", val));
+        Optional.ofNullable(map.get(Rank.PHYLUM))
+            .ifPresent(val -> this.addJsonField("gbifPhylumKey", val));
+        Optional.ofNullable(map.get(Rank.CLASS))
+            .ifPresent(val -> this.addJsonField("gbifClassKey", val));
+        Optional.ofNullable(map.get(Rank.ORDER))
+            .ifPresent(val -> this.addJsonField("gbifOrderKey", val));
+        Optional.ofNullable(map.get(Rank.FAMILY))
+            .ifPresent(val -> this.addJsonField("gbifFamilyKey", val));
+        Optional.ofNullable(map.get(Rank.GENUS))
+            .ifPresent(val -> this.addJsonField("gbifGenusKey", val));
+        Optional.ofNullable(map.get(Rank.SUBGENUS))
+            .ifPresent(val -> this.addJsonField("gbifSubgenusKey", val));
+        Optional.ofNullable(map.get(Rank.SPECIES))
+            .ifPresent(val -> this.addJsonField("gbifSpeciesKey", val));
       }
 
       // Other Gbif fields
       RankedName usage = taxon.getUsage();
       if (usage != null) {
-        this.addJsonField("gbifSpeciesKey", usage.getKey().toString())
-            .addJsonField("gbifScientificName", usage.getName());
+        this.addJsonField("gbifTaxonKey", usage.getKey().toString())
+            .addJsonField("gbifScientificName", usage.getName())
+            .addJsonField("gbifTaxonRank", usage.getRank().name());
       }
       // Fields as a common view - "key": "value"
       this.addCommonFields(record);

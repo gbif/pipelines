@@ -142,9 +142,10 @@ public class Records2JsonConverter {
       key = key.replaceAll(rule, "");
     }
     // Can be a json as a string
-    if (value != null
-        && ((value.startsWith("{\"") && value.endsWith("}"))
-            || (value.startsWith("[") && value.endsWith("]")))) {
+    boolean isObject = value.startsWith("{\"") && value.endsWith("}");
+    boolean isArrayOne = value.startsWith("[\"") && value.endsWith("]");
+    boolean isArrayTwo = value.startsWith("[{") && value.endsWith("}]");
+    if (isObject || isArrayOne || isArrayTwo) {
       node.set(key, new POJONode(value));
     } else {
       node.put(key, value);

@@ -67,7 +67,7 @@ public class MergeRecords2JsonTransformTest {
 
     // Expected
     final String expectedJson =
-        "{\"datasetId\":\"1a52cef5-f4cf-43f4-8fdf-4b4951515688\",\"location\":{},\"id\":\"1a52cef5-f4cf-43f4-8fdf-4b4951515688\",\"verbatim\":{}}";
+        "{\"datasetId\":\"1a52cef5-f4cf-43f4-8fdf-4b4951515688\",\"id\":\"1a52cef5-f4cf-43f4-8fdf-4b4951515688\",\"verbatim\":{}}";
     final List<String> dataExpected = Collections.singletonList(expectedJson);
 
     // When

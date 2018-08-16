@@ -35,7 +35,7 @@ Also, if we want to add the index to an alias we should specify the alias name i
 If we want the intermediate outputs to be written to avro files we need to set the `writeIntermediateOutputs`to `true`:
 
 ~~~~
-java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200 --writeIntermediateOutputs=true
+java -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcd1234 --attempt=1 --gbifEnv=PROD --ESHosts=http://localhost:9200 --writeOutput=true
 ~~~~ 
 
 This generates an output like this:
@@ -68,3 +68,5 @@ By default, Spark uses 4 threads, but we can customize it by using the `sparkMas
 ~~~~
 java -XX:+UseG1GC -Xms256M -Xmx8G -jar mini-pipelines.jar --inputPath=dwca.zip --targetPath=output --datasetId=abcde12345 --attempt=1 --gbifEnv=UAT --ESHosts=http://localhost:9200 --runner=SparkRunner --sparkMaster=local[8]
 ~~~~
+
+
