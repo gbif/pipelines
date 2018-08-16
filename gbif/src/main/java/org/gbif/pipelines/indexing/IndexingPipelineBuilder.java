@@ -46,7 +46,7 @@ public class IndexingPipelineBuilder {
             options.getDatasetId(),
             options.getAttempt().toString());
 
-    final String pathVerbatim = pathIn + "/verbatim.avro";
+    final String pathVerbatim = pathIn + "/verbatim*.avro";
     final String pathMetadata = pathIn + "/metadata.avro";
     final String pathCommon = pathIn + "/common/interpreted*.avro";
     final String pathTemporal = pathIn + "/temporal/interpreted*.avro";

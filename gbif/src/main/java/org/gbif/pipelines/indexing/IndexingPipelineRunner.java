@@ -32,11 +32,13 @@ public class IndexingPipelineRunner {
     esConfig = EsConfig.from(options.getESHosts());
   }
 
-  static IndexingPipelineRunner from(EsProcessingPipelineOptions options) {
+  // visible to be able to use in the mini-pipelines
+  public static IndexingPipelineRunner from(EsProcessingPipelineOptions options) {
     return new IndexingPipelineRunner(options);
   }
 
-  void run() {
+  // visible to be able to use in the mini-pipelines
+  public void run() {
     // if ES indexing is included in the pipeline we first create the index
     createIndex().ifPresent(options::setESIndexName);
 
@@ -64,8 +66,8 @@ public class IndexingPipelineRunner {
   }
 
   private void swapIndex() {
-    EsHandler.swapIndexInAlias(esConfig, options.getDatasetId(), options.getESIndexName());
-    LOG.info("ES index {} added to alias {}", options.getESIndexName(), options.getDatasetId());
+    EsHandler.swapIndexInAlias(esConfig, options.getESAlias(), options.getESIndexName());
+    LOG.info("ES index {} added to alias {}", options.getESIndexName(), options.getESAlias());
 
     // log number of records indexed
     // TODO: find better way than refreshing?? other option is to wait 1s
@@ -76,7 +78,7 @@ public class IndexingPipelineRunner {
         "{} records indexed into the ES index {} in alias {}",
         recordsIndexed,
         options.getESIndexName(),
-        options.getDatasetId());
+        options.getESAlias());
   }
 
   private void removeTmp() {
