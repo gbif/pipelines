@@ -1,0 +1,9 @@
+{
+  "name":"IssueRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"Issue information",
+  "fields":[
+    {"name" : "issueList", "type" : {"type" : "array", "items" : "string"}, "default": []}
+  ]
+}

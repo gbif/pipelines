@@ -1,0 +1,33 @@
+/**
+ * Represents the interpreted fields of terms related to event/temporal.
+ */
+[
+  {
+    "name":"EventDate",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "doc": "http://rs.tdwg.org/dwc/terms/eventDate",
+    "fields":[
+      {"name":"gte","type":["null","string"],"default":null},
+      {"name":"lte","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name": "TemporalRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for temporal fields of DarwinCore that have been interpreted.",
+    "fields": [
+      {"name": "id", "type": "string", "doc":"http://rs.tdwg.org/dwc/terms/occurrenceID"},
+      {"name": "year", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/year"},
+      {"name": "month", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/month"},
+      {"name": "day", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/day"},
+      {"name": "eventDate", "type": ["null", "EventDate"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/eventDate"},
+      {"name": "startDayOfYear", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/startDayOfYear"},
+      {"name": "endDayOfYear", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/endDayOfYear"},
+      {"name": "modified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://purl.org/dc/terms/modified"},
+      {"name": "dateIdentified", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/dateIdentified"},
+      {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
+]

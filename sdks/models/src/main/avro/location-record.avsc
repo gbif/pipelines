@@ -1,0 +1,28 @@
+/**
+ * Represents the interpreted fields of terms related to location.
+ */
+{
+  "name":"LocationRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"A spatial region or named place.",
+  "fields":[
+    {"name":"id","type":"string", "doc":"http://rs.tdwg.org/dwc/terms/occurrenceID"},
+    {"name":"continent","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/continent"},
+    {"name":"waterBody","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/waterBody"},
+    {"name":"country","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/country"},
+    {"name":"countryCode","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/countryCode"},
+    {"name":"stateProvince","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/stateProvince"},
+    {"name":"minimumElevationInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/minimumElevationInMeters"},
+    {"name":"maximumElevationInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters"},
+    {"name":"minimumDepthInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/minimumDepthInMeters"},
+    {"name":"maximumDepthInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/maximumDepthInMeters"},
+    {"name":"minimumDistanceAboveSurfaceInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/minimumDistanceAboveSurfaceInMeters"},
+    {"name":"maximumDistanceAboveSurfaceInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/maximumDistanceAboveSurfaceInMeters"},
+    {"name":"decimalLatitude","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/decimalLatitude"},
+    {"name":"decimalLongitude","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/decimalLongitude"},
+    {"name":"coordinateUncertaintyInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/coordinateUncertaintyInMeters"},
+    {"name":"coordinatePrecision","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/coordinatePrecision"},
+    {"name": "issues", "type": "IssueRecord", "default":{}}
+  ]
+}

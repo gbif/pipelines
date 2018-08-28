@@ -1,0 +1,46 @@
+/**
+ * Represents the interpreted fields of terms related to multimedia.
+ */
+[
+  {
+    "name" : "MediaType",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type" : "enum",
+    "symbols" : [
+      "StillImage", "MovingImage", "Sound"
+    ]
+  },
+  {
+    "name":"Multimedia",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name":"type","type":[ "null", "MediaType"], "default":null },
+      {"name": "format", "type": ["null", "string"], "default" : null },
+      {"name": "identifier", "type": ["null", "string"], "default" : null },
+      {"name": "references", "type": ["null", "string"], "default" : null },
+      {"name": "title", "type": ["null", "string"], "default" : null },
+      {"name": "description", "type": ["null", "string"], "default" : null },
+      {"name": "source", "type": ["null", "string"], "default" : null },
+      {"name": "audience", "type": ["null", "string"], "default" : null },
+      {"name": "created", "type": ["null", "string"], "default" : null },
+      {"name": "creator", "type": ["null", "string"], "default" : null },
+      {"name": "contributor", "type": ["null", "string"], "default" : null },
+      {"name": "publisher", "type": ["null", "string"], "default" : null },
+      {"name": "license", "type": ["null", "string"], "default" : null },
+      {"name": "rightsHolder", "type": ["null", "string"], "default" : null }
+    ]
+  },
+  {
+    "name": "MultimediaRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for interpreted multimedia fields.",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "http://rs.tdwg.org/dwc/terms/occurrenceID"},
+      {"name": "multimediaItems", "type": ["null", {"type" : "array", "items" : "Multimedia"}], "default" : null },
+      {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
+]
+

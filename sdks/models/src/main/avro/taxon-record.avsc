@@ -1,0 +1,84 @@
+[
+  {
+    "name" : "Rank",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "enum",
+    "symbols" : [
+      "DOMAIN", "SUPERKINGDOM", "KINGDOM", "SUBKINGDOM", "INFRAKINGDOM", "SUPERPHYLUM", "PHYLUM", "SUBPHYLUM", "INFRAPHYLUM",
+      "SUPERCLASS", "CLASS", "SUBCLASS", "INFRACLASS", "PARVCLASS", "SUPERLEGION", "LEGION", "SUBLEGION", "INFRALEGION",
+      "SUPERCOHORT", "COHORT", "SUBCOHORT", "INFRACOHORT", "MAGNORDER", "SUPERORDER", "GRANDORDER", "ORDER", "SUBORDER",
+      "INFRAORDER", "PARVORDER", "SUPERFAMILY", "FAMILY", "SUBFAMILY", "INFRAFAMILY", "SUPERTRIBE", "TRIBE", "SUBTRIBE",
+      "INFRATRIBE", "SUPRAGENERIC_NAME", "GENUS", "SUBGENUS", "INFRAGENUS", "SECTION", "SUBSECTION", "SERIES", "SUBSERIES",
+      "INFRAGENERIC_NAME", "SPECIES_AGGREGATE", "SPECIES", "INFRASPECIFIC_NAME", "GREX", "SUBSPECIES", "CULTIVAR_GROUP",
+      "CONVARIETY", "INFRASUBSPECIFIC_NAME", "PROLES", "RACE", "NATIO", "ABERRATION", "MORPH", "VARIETY", "SUBVARIETY",
+      "FORM", "SUBFORM", "PATHOVAR", "BIOVAR", "CHEMOVAR", "MORPHOVAR", "PHAGOVAR", "SEROVAR", "CHEMOFORM", "FORMA_SPECIALIS",
+      "CULTIVAR", "STRAIN", "OTHER", "UNRANKED"
+    ]
+  },
+  {
+    "name" : "Status",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "enum",
+    "symbols" : [
+      "ACCEPTED", "DOUBTFUL", "SYNONYM", "HETEROTYPIC_SYNONYM", "HOMOTYPIC_SYNONYM", "PROPARTE_SYNONYM", "MISAPPLIED",
+      "INTERMEDIATE_RANK_SYNONYM", "DETERMINATION_SYNONYM"
+    ]
+  },
+  {
+    "name" : "MatchType",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "enum",
+    "symbols" : [
+      "EXACT", "FUZZY", "HIGHERRANK", "NONE"
+    ]
+  },
+  {
+    "name" : "Nomenclature",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "fields" : [
+      {"name" : "id", "type" : ["null", "string"], "default" : null},
+      {"name" : "source", "type" : ["null", "string"], "default" : null}
+    ]
+  },
+  {
+    "name" : "RankedName",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "fields" : [
+      {"name" : "key", "type" : ["null", "int"], "default" : null},
+      {"name" : "name", "type" : ["null", "string"], "default" : null},
+      {"name" : "rank", "type" : ["null", "Rank"], "default" : null}
+    ]
+  },
+  {
+    "name" : "TaxonRecord",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "record",
+    "doc" : "A taxonomic record",
+    "fields" : [
+      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc" : "The record id"},
+      {"name" : "synonym", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "usage", "type" : ["null", "RankedName"], "default" : null},
+      {"name" : "classification", "type" : ["null", {"type" : "array", "items" : "RankedName"}], "default" : null},
+      {"name" : "acceptedUsage", "type" : ["null", "RankedName"], "default" : null},
+      {"name" : "nomenclature", "type" : ["null", "Nomenclature"], "default" : null},
+      {"name" : "diagnostics", "default" : null, "type" : ["null",
+          {
+            "name" : "Diagnostic",
+            "type" : "record",
+            "fields" : [
+              {"name" : "matchType", "type" : ["null", "MatchType"], "default" : null},
+              {"name" : "confidence", "type" : ["null", "int"], "default" : null},
+              {"name" : "status", "type" : ["null", "Status"], "default" : null},
+              {"name" : "lineage", "type" : ["null", {"type" : "array", "items" : "string"}], "default" : null},
+              {"name" : "alternatives", "type" : ["null", { "type" : "array", "items" : "TaxonRecord"}], "default" : null},
+              {"name" : "note", "type" : ["null", "string"], "default" : null}
+            ]
+          }
+        ]
+      },
+      {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
+]

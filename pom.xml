@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.gbif</groupId>
+    <artifactId>motherpom</artifactId>
+    <version>37</version>
+  </parent>
+
+  <groupId>org.gbif.artery</groupId>
+  <artifactId>artery-parent</artifactId>
+  <version>0.1-SNAPSHOT</version>
+
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>tools</module>
+    <module>sdks</module>
+    <module>pipelines</module>
+    <module>exmaples</module>
+  </modules>
+
+  <name>Artery :: Parent</name>
+  <url>http://github.com/gbif/artery</url>
+
+  <scm>
+    <connection>scm:git:git@github.com:gbif/artery.git</connection>
+    <url>https://github.com/gbif/artery</url>
+    <developerConnection>scm:git:git@github.com:gbif/artery.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
+  <distributionManagement>
+    <site>
+      <id>gh-pages</id>
+      <url>http://gbif.github.io/artery/</url>
+    </site>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>gbif-all</id>
+      <url>http://repository.gbif.org/content/groups/gbif</url>
+    </repository>
+    <repository>
+      <id>osgeo</id>
+      <name>Open Source Geospatial Foundation Repository</name>
+      <url>http://download.osgeo.org/webdav/geotools/</url>
+    </repository>
+    <repository>
+      <id>cloudera-release</id>
+      <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+  </repositories>
+
+  <properties>
+    <!-- Common variables -->
+    <jdkLevel>1.8</jdkLevel>
+    <encoding>UTF-8</encoding>
+    <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
+    <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
+
+    <!-- GBIF libraries -->
+
+    <!-- Common libraries -->
+    <avro.version>1.8.2</avro.version>
+    <apache.beam.version>2.6.0</apache.beam.version>
+
+    <maven-plugin-api.version>3.5.0</maven-plugin-api.version>
+    <maven-plugin-annotations.version>3.5</maven-plugin-annotations.version>
+
+    <!-- Plugins -->
+    <build-helper-maven.version>3.0.0</build-helper-maven.version>
+    <maven-shade-plugin.version>3.1.1</maven-shade-plugin.version>
+    <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
+    <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+    <maven-plugin-plugin.version>3.5.2</maven-plugin-plugin.version>
+
+    <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
+    <error_prone_core.version>2.3.1</error_prone_core.version>
+
+  </properties>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.avro</groupId>
+          <artifactId>avro-maven-plugin</artifactId>
+          <version>${avro.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.gbif.artery</groupId>
+          <artifactId>pipelines-maven-plugin</artifactId>
+          <version>${project.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>${maven-clean-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>${maven-plugin-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <compilerId>javac-with-errorprone</compilerId>
+            <forceJavacCompilerUse>true</forceJavacCompilerUse>
+            <source>${jdkLevel}</source>
+            <target>${jdkLevel}</target>
+            <compilerArgs>
+              <arg>-XepExcludedPaths:.*/src/main/java-generated/.*</arg>
+              <arg>-XepDisableWarningsInGeneratedCode</arg>
+              <arg>-Xep:MissingOverride:ERROR</arg>
+            </compilerArgs>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.codehaus.plexus</groupId>
+              <artifactId>plexus-compiler-javac-errorprone</artifactId>
+              <version>${plexus-compiler-javac-errorprone.version}</version>
+            </dependency>
+            <!-- override plexus-compiler-javac-errorprone's dependency on
+                 Error Prone with the latest version -->
+            <dependency>
+              <groupId>com.google.errorprone</groupId>
+              <artifactId>error_prone_core</artifactId>
+              <version>${error_prone_core.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <dependencyManagement>
+    <dependencies>
+
+      <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>${avro.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-core</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.maven</groupId>
+        <artifactId>maven-plugin-api</artifactId>
+        <version>${maven-plugin-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.maven.plugin-tools</groupId>
+        <artifactId>maven-plugin-annotations</artifactId>
+        <version>${maven-plugin-annotations.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
+
+    </dependencies>
+  </dependencyManagement>
+
+</project>

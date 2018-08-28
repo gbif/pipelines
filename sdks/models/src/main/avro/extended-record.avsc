@@ -1,0 +1,23 @@
+/**
+ * Utilities when dealing with DwC-A.
+ *   ExtendedRecord represents the core and linked extensions for a single record in an archive.
+ */
+{
+  "name": "ExtendedRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "type": "record",
+  "doc": "A container for an extended DwC record (core plus extension data for a single record)",
+  "fields": [
+    {"name": "id", "type": "string", "doc": "The record id"},
+    {"name": "coreRowType","type": "string","doc": "A URI for the term identifying the class of data represented by each row", "default": "http://rs.tdwg.org/dwc/terms/Occurrence"},
+    {"name": "coreTerms", "doc": "The core record terms", "default": {}, "type": {"type": "map", "values": "string"}},
+    {"name": "extensions", "doc": "The extensions records", "default": {}, "type": {
+      "type": "map", "values": {
+          "type": "array", "doc": "The extension records", "default": [], "items": {
+            "type": "map", "doc": "The extension record terms", "default": {}, "values": ["null", "string"]
+          }
+        }
+      }
+    }
+  ]
+}

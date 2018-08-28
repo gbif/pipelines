@@ -1,0 +1,20 @@
+/**
+ * Represents the interpreted fields of terms related to location.
+ */
+{
+  "name":"MetadataRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"Additional information",
+  "fields":[
+    {"name": "datasetId","type":"string"},
+    {"name": "installationKey","type":["null","string"],"default":null},
+    {"name": "publishingOrganizationKey","type":["null","string"],"default":null},
+    {"name": "organizationKey","type":["null","string"],"default":null},
+    {"name": "endorsingNodeKey","type":["null","string"],"default":null},
+    {"name": "protocol","type":["null","string"],"default":null},
+    {"name": "license","type":["null","string"],"default":null},
+    {"name": "publishingCountry","type":["null","string"],"default":null},
+    {"name": "issues", "type": "IssueRecord", "default":{}}
+  ]
+}
