@@ -80,7 +80,8 @@ public class AvroPostprocessMojo extends AbstractMojo {
   private void addAvroCodecAnnotation(List<String> lines, List<Integer> idxs) {
     int beforeIdx = idxs.get(0);
     if (beforeIdx != -1) {
-      String imports = "import org.apache.beam.sdk.coders.AvroCoder;\nimport org.apache.beam.sdk.coders.DefaultCoder;";
+      String imports =
+          "import org.apache.beam.sdk.coders.AvroCoder;\nimport org.apache.beam.sdk.coders.DefaultCoder;";
       lines.add(beforeIdx, imports);
       lines.add(beforeIdx + 1, "@DefaultCoder(AvroCoder.class)");
     }
@@ -140,8 +141,10 @@ public class AvroPostprocessMojo extends AbstractMojo {
   /** TODO: FILL DOC! */
   private boolean createIssueInterface() {
     String path = directory + defaultPackage.replaceAll("\\.", "/") + "/Issue.java";
-    String clazz = "package " + defaultPackage
-                   + ";\npublic interface Issue {\n  org.gbif.pipelines.io.avro.IssueRecord getIssues();\n}";
+    String clazz =
+        "package "
+            + defaultPackage
+            + ";\npublic interface Issue {\n  org.gbif.pipelines.io.avro.IssueRecord getIssues();\n}";
     try {
       Path path1 = Paths.get(path);
       boolean exists = path1.toFile().exists();
