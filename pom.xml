@@ -174,14 +174,19 @@
   <dependencyManagement>
     <dependencies>
 
-      <!-- -->
+      <!-- This project -->
       <dependency>
         <groupId>org.gbif.artery</groupId>
         <artifactId>models</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.artery</groupId>
+        <artifactId>core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
-      <!-- -->
+      <!-- GBIF -->
       <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>dwca-io</artifactId>

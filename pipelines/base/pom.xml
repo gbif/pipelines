@@ -16,5 +16,27 @@
 
   <name>Artery :: Pipelines :: Base</name>
 
+  <dependencies>
+
+    <!-- -->
+    <dependency>
+      <groupId>org.gbif.artery</groupId>
+      <artifactId>models</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.artery</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
+
+    <!-- -->
+
+    <!-- -->
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-core</artifactId>
+    </dependency>
+
+  </dependencies>
+
 
 </project>
