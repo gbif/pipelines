@@ -20,6 +20,7 @@
   <modules>
     <module>base</module>
     <module>mini-pipelines</module>
+    <module>beam-common</module>
   </modules>
 
 </project>

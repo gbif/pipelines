@@ -73,26 +73,29 @@
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
     <apache.beam.version>2.6.0</apache.beam.version>
-    <retrofit.version>2.4.0</retrofit.version>
-    <guava.version>20.0</guava.version>
-    <okhttp.version>3.10.0</okhttp.version>
+    <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
+
     <geotools.version>12.1</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
     <guava.version>18.0</guava.version>
     <slf4j.version>1.7.24</slf4j.version>
 
-    <okio.version>1.14.0</okio.version>
-
     <elasticsearch.version>5.6.3</elasticsearch.version>
-    <jackson.version>2.9.5</jackson.version>
-
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
 
+    <jackson.version>2.9.5</jackson.version>
+
+    <retrofit.version>2.4.0</retrofit.version>
+    <okhttp.version>3.10.0</okhttp.version>
+    <okio.version>1.14.0</okio.version>
+
+    <!-- Test -->
     <junit.version>4.12</junit.version>
     <mockwebserver.version>3.10.0</mockwebserver.version>
     <hamcrest.version>1.3</hamcrest.version>
     <embedded.elasticsearch.version>2.5.1</embedded.elasticsearch.version>
 
+    <!-- Maven plugin -->
     <maven-plugin-api.version>3.5.0</maven-plugin-api.version>
     <maven-plugin-annotations.version>3.5</maven-plugin-annotations.version>
 
@@ -103,6 +106,7 @@
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
     <maven-plugin-plugin.version>3.5.2</maven-plugin-plugin.version>
 
+    <!-- Checkstyle -->
     <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
     <error_prone_core.version>2.3.1</error_prone_core.version>
 
@@ -228,21 +232,49 @@
         <version>${gbif-common.version}</version>
       </dependency>
 
-      <!-- -->
+      <!-- Avro -->
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>
         <version>${avro.version}</version>
       </dependency>
 
-      <!-- -->
+      <!-- Beam -->
       <dependency>
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-sdks-java-core</artifactId>
         <version>${apache.beam.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-runners-direct-java</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
 
-      <!-- -->
+      <!-- Hadoop -->
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>${hadoop-common.version}</version>
+        <exclusions>
+          <!-- Avoid conflicts with Apache Beam -->
+          <exclusion>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- Utils -->
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
@@ -259,13 +291,26 @@
         <version>${slf4j.version}</version>
       </dependency>
 
+      <!-- ES -->
       <dependency>
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-client</artifactId>
         <version>${elasticsearch.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>${apache.httpcomponents.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore-nio</artifactId>
+        <version>${apache.httpcomponents.version}</version>
+        <scope>provided</scope>
+      </dependency>
 
-      <!-- -->
+      <!-- Json -->
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
@@ -283,20 +328,7 @@
         <scope>provided</scope>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>${apache.httpcomponents.version}</version>
-        <scope>provided</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore-nio</artifactId>
-        <version>${apache.httpcomponents.version}</version>
-        <scope>provided</scope>
-      </dependency>
-
-      <!-- -->
+      <!-- Http clients -->
       <dependency>
         <groupId>com.squareup.retrofit2</groupId>
         <artifactId>retrofit</artifactId>
@@ -319,7 +351,7 @@
         <scope>provided</scope>
       </dependency>
 
-      <!-- geotools -->
+      <!-- Geotools -->
       <dependency>
         <groupId>org.geotools</groupId>
         <artifactId>gt-referencing</artifactId>
@@ -341,7 +373,7 @@
         <version>${geotools.version}</version>
       </dependency>
 
-      <!-- -->
+      <!-- Maven plugin -->
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
@@ -354,7 +386,7 @@
         <scope>provided</scope>
       </dependency>
 
-      <!-- -->
+      <!-- Test -->
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>

@@ -18,13 +18,13 @@
 
   <dependencies>
 
-    <!-- -->
+    <!-- This project -->
     <dependency>
       <groupId>org.gbif.artery</groupId>
       <artifactId>models</artifactId>
     </dependency>
 
-    <!-- -->
+    <!-- GBIF -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>dwca-io</artifactId>
@@ -46,7 +46,7 @@
       <artifactId>gbif-common</artifactId>
     </dependency>
 
-    <!-- Retrofit -->
+    <!-- Http clients -->
     <dependency>
       <groupId>com.squareup.retrofit2</groupId>
       <artifactId>retrofit</artifactId>
@@ -64,7 +64,7 @@
       <artifactId>okio</artifactId>
     </dependency>
 
-    <!-- GeoTools -->
+    <!-- Geotools -->
     <dependency>
       <groupId>org.geotools</groupId>
       <artifactId>gt-referencing</artifactId>
@@ -82,7 +82,7 @@
       <artifactId>gt-main</artifactId>
     </dependency>
 
-    <!-- -->
+    <!-- Utils -->
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
@@ -96,7 +96,7 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <!-- -->
+    <!-- Json -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
