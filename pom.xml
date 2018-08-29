@@ -19,7 +19,7 @@
     <module>tools</module>
     <module>sdks</module>
     <module>pipelines</module>
-    <module>exmaples</module>
+    <module>examples</module>
   </modules>
 
   <name>Artery :: Parent</name>
