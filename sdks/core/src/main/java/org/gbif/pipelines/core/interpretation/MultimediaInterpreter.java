@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
+
 /** Interprets the multimedia terms of a {@link ExtendedRecord}. */
 public class MultimediaInterpreter {
 
@@ -58,7 +60,7 @@ public class MultimediaInterpreter {
     }
 
     // add issues
-    mr.getIssues().getIssueList().addAll(parsedResult.getIssues());
+    addIssue(mr, parsedResult.getIssues());
   }
 
   private static Multimedia create(ParsedMultimedia parsedMultimedia) {

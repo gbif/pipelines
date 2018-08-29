@@ -18,6 +18,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 /**
@@ -44,7 +45,7 @@ public class ExtendedRecordInterpreter {
           if (parseResult.isPresent()) {
             ier.setIndividualCount(parseResult.get());
           } else {
-            ier.getIssues().getIssueList().add(INDIVIDUAL_COUNT_INVALID.name());
+            addIssue(ier, INDIVIDUAL_COUNT_INVALID);
           }
         });
   }
@@ -58,7 +59,7 @@ public class ExtendedRecordInterpreter {
               if (parseResult.isSuccessful()) {
                 ier.setTypeStatus(parseResult.getPayload().name());
               } else {
-                ier.getIssues().getIssueList().add(TYPE_STATUS_INVALID.name());
+                addIssue(ier, TYPE_STATUS_INVALID);
               }
               return ier;
             });
@@ -112,7 +113,7 @@ public class ExtendedRecordInterpreter {
               if (parseResult.isSuccessful()) {
                 ier.setBasisOfRecord(parseResult.getPayload().name());
               } else {
-                ier.getIssues().getIssueList().add(BASIS_OF_RECORD_INVALID.name());
+                addIssue(ier, BASIS_OF_RECORD_INVALID);
               }
               return ier;
             });
@@ -126,7 +127,7 @@ public class ExtendedRecordInterpreter {
       if (Objects.nonNull(parseResult)) {
         ier.setReferences(parseResult.toString());
       } else {
-        ier.getIssues().getIssueList().add(REFERENCES_URI_INVALID.name());
+        addIssue(ier, REFERENCES_URI_INVALID);
       }
     }
   }

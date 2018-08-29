@@ -16,24 +16,36 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 public class LocationMatcherTest extends BaseMockServerTest {
 
   @Test
-  public void givenCountryAndCoordsWhenMatchIdentityThenSuccess() throws IOException {
+  public void countryAndCoordsMatchIdentityTest() throws IOException {
+
+    // State
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
 
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(coordsCanada, canada, getWsConfig()).applyMatch();
 
-    Assert.assertEquals(canada, match.getResult().getCountry());
-    Assert.assertEquals(coordsCanada, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
-    Assert.assertTrue(match.getIssues().isEmpty());
+    // Should
+    Assert.assertEquals(canada, result.getResult().getCountry());
+    Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertTrue(result.getIssues().isEmpty());
+  }
 
+  @Test
+  public void countryAndCoordsMatchIdentityAdditionalMatcherTest() throws IOException {
+
+    // State
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
-    // should not execute any additional transformations
-    match =
+    Country canada = Country.CANADA;
+    LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
+
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(coordsCanada, canada, getWsConfig())
             .addAdditionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .addAdditionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
@@ -41,35 +53,42 @@ public class LocationMatcherTest extends BaseMockServerTest {
             .addAdditionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
             .applyMatch();
 
-    Assert.assertEquals(canada, match.getResult().getCountry());
-    Assert.assertEquals(coordsCanada, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
-    Assert.assertTrue(match.getIssues().isEmpty());
+    // Should
+    Assert.assertEquals(canada, result.getResult().getCountry());
+    Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertTrue(result.getIssues().isEmpty());
   }
 
   @Test
-  public void givenCoordsWhenMatchIdentityThenCountryFound() throws IOException {
+  public void coordsIdentityCountryFoundTest() throws IOException {
+
+    // State
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
 
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(coordsCanada, null, getWsConfig()).applyMatch();
 
-    Country canada = Country.CANADA;
-    Assert.assertEquals(canada, match.getResult().getCountry());
-    Assert.assertEquals(coordsCanada, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
-    Assert.assertEquals(match.getIssues().get(0), COUNTRY_DERIVED_FROM_COORDINATES.name());
+    // Should
+    Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
+    Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertEquals(result.getIssues().get(0), COUNTRY_DERIVED_FROM_COORDINATES.name());
   }
 
   @Test
-  public void givenWrongCoordsWhenMatchWithAlternativesThenCountryNotFound() {
+  public void wrongCoordsWhenMatchWithAlternativesCountryNotFoundTest() {
+
+    // State
     enqueueEmptyResponse();
 
     LatLng wrongCoords = new LatLng(-50, 100);
 
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(wrongCoords, null, getWsConfig())
             .addAdditionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .addAdditionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
@@ -77,48 +96,68 @@ public class LocationMatcherTest extends BaseMockServerTest {
             .addAdditionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
             .applyMatch();
 
-    Assert.assertFalse(match.isSuccessful());
-    Assert.assertEquals(match.getIssues().get(0), COUNTRY_COORDINATE_MISMATCH.name());
+    // Should
+    Assert.assertFalse(result.isSuccessful());
+    Assert.assertEquals(result.getIssues().get(0), COUNTRY_COORDINATE_MISMATCH.name());
   }
 
   @Test
-  public void givenAntarcticaCoordsWhenMatchThenAntarcticaFound() throws IOException {
+  public void coordsAntarcticaFoundEmptyTest() throws IOException {
+
+    // State
     enqueueEmptyResponse();
 
     LatLng antarcticaEdgeCoords = new LatLng(-61, -130);
 
-    // in this case the ws returns empty response
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(antarcticaEdgeCoords, null, getWsConfig()).applyMatch();
 
-    Country antarctica = Country.ANTARCTICA;
-    Assert.assertTrue(match.isSuccessful());
-    Assert.assertEquals(antarctica, match.getResult().getCountry());
-
-    enqueueResponse(ANTARCTICA_REVERSE_RESPONSE);
-
-    // in this case, the ws returns antarctica
-    match = LocationMatcher.newMatcher(antarcticaEdgeCoords, null, getWsConfig()).applyMatch();
-    Assert.assertTrue(match.isSuccessful());
-    Assert.assertEquals(antarctica, match.getResult().getCountry());
+    // Should
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertEquals(Country.ANTARCTICA, result.getResult().getCountry());
   }
 
   @Test
-  public void givenCountryAndNegatedCoordsWhenMatchIdentityThenFail() {
+  public void coordsAntarcticaFoundTest() throws IOException {
+
+    // State
+    enqueueEmptyResponse();
+
+    LatLng antarcticaEdgeCoords = new LatLng(-61, -130);
+
+    // When
+
+    // in this case, the ws returns antarctica
+    ParsedField<ParsedLocation> result =
+        LocationMatcher.newMatcher(antarcticaEdgeCoords, null, getWsConfig()).applyMatch();
+
+    // Should
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertEquals(Country.ANTARCTICA, result.getResult().getCountry());
+  }
+
+  @Test
+  public void countryAndNegatedIdentityFailTest() {
+
+    // State
     enqueueEmptyResponse();
 
     Country canada = Country.CANADA;
     LatLng negatedLatCoords = new LatLng(-LATITUDE_CANADA, LONGITUDE_CANADA);
 
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(negatedLatCoords, canada, getWsConfig()).applyMatch();
 
-    Assert.assertFalse(match.isSuccessful());
+    // Should
+    Assert.assertFalse(result.isSuccessful());
   }
 
   @Test
-  public void givenCountryAndNegatedLatWhenMatchWithAdditionalTransformThenSuccess()
-      throws IOException {
+  public void countryAndNegatedLatTest() throws IOException {
+
+    // State
     enqueueEmptyResponse();
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
@@ -126,47 +165,53 @@ public class LocationMatcherTest extends BaseMockServerTest {
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
     LatLng negatedLatCoords = new LatLng(-LATITUDE_CANADA, LONGITUDE_CANADA);
 
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(negatedLatCoords, canada, getWsConfig())
             .addAdditionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .applyMatch();
 
-    Assert.assertEquals(canada, match.getResult().getCountry());
-    Assert.assertEquals(coordsCanada, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
+    // Should
+    Assert.assertEquals(canada, result.getResult().getCountry());
+    Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
     Assert.assertTrue(
-        match
+        result
             .getIssues()
             .containsAll(CoordinatesFunction.getIssueTypes(CoordinatesFunction.NEGATED_LAT_FN)));
   }
 
   @Test
-  public void givenCountryAndNegatedLngWhenMatchWithAdditionalTransformThenSuccess()
-      throws IOException {
-    enqueueResponse(RUSSIA_REVERSE_RESPONSE);
+  public void countryAndNegatedLngTest() throws IOException {
+
+    // State
+    enqueueEmptyResponse();
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
     LatLng negatedLngCoords = new LatLng(LATITUDE_CANADA, -LONGITUDE_CANADA);
 
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(negatedLngCoords, canada, getWsConfig())
             .addAdditionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .applyMatch();
 
-    Assert.assertEquals(canada, match.getResult().getCountry());
-    Assert.assertEquals(coordsCanada, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
+    // Should
+    Assert.assertEquals(canada, result.getResult().getCountry());
+    Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
     Assert.assertTrue(
-        match
+        result
             .getIssues()
             .containsAll(CoordinatesFunction.getIssueTypes(CoordinatesFunction.NEGATED_LNG_FN)));
   }
 
   @Test
-  public void givenCountryAndNegatedCoordsWhenMatchWithAdditionalTransformThenSuccess()
-      throws IOException {
+  public void countryAndNegatedCoordsTest() throws IOException {
+
+    // State
     enqueueEmptyResponse();
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
@@ -174,81 +219,99 @@ public class LocationMatcherTest extends BaseMockServerTest {
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
     LatLng negatedCoords = new LatLng(-LATITUDE_CANADA, -LONGITUDE_CANADA);
 
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(negatedCoords, canada, getWsConfig())
             .addAdditionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
             .applyMatch();
 
-    Assert.assertEquals(canada, match.getResult().getCountry());
-    Assert.assertEquals(coordsCanada, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
+    // Should
+    Assert.assertEquals(canada, result.getResult().getCountry());
+    Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
     Assert.assertTrue(
-        match
+        result
             .getIssues()
             .containsAll(CoordinatesFunction.getIssueTypes(CoordinatesFunction.NEGATED_COORDS_FN)));
   }
 
   @Test
-  public void givenCountryAndSwappedCoordsWhenMatchWithAdditionalTransformThenSuccess()
-      throws IOException {
-    // only needs to enqueue one response because the first try is out of range and does not call
-    // the ws
+  public void countryAndSwappedTest() throws IOException {
+
+    // State
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
     LatLng swappedCoords = new LatLng(LONGITUDE_CANADA, LATITUDE_CANADA);
 
-    ParsedField<ParsedLocation> match =
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(swappedCoords, canada, getWsConfig())
             .addAdditionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
             .applyMatch();
 
-    Assert.assertEquals(canada, match.getResult().getCountry());
-    Assert.assertEquals(coordsCanada, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
+    // Should
+    Assert.assertEquals(canada, result.getResult().getCountry());
+    Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
     Assert.assertTrue(
-        match
+        result
             .getIssues()
             .containsAll(CoordinatesFunction.getIssueTypes(CoordinatesFunction.SWAPPED_COORDS_FN)));
   }
 
   @Test
-  public void given2MatcheswhenMatchThenReturnEquivalent() throws IOException {
+  public void matchReturnEquivalentTest() throws IOException {
+
+    // State
     enqueueResponse(MOROCCO_WESTERN_SAHARA_REVERSE_RESPONSE);
 
     LatLng coords = new LatLng(27.15, -13.20);
-    ParsedField<ParsedLocation> match =
+
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(coords, Country.WESTERN_SAHARA, getWsConfig()).applyMatch();
 
-    Assert.assertEquals(Country.MOROCCO, match.getResult().getCountry());
-    Assert.assertEquals(coords, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
-    Assert.assertTrue(match.getIssues().isEmpty());
+    // Should
+    Assert.assertEquals(Country.MOROCCO, result.getResult().getCountry());
+    Assert.assertEquals(coords, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertTrue(result.getIssues().isEmpty());
   }
 
   @Test
-  public void whenMatchConfusedCountryThenReturnEquivalent() throws IOException {
+  public void matchConfusedEquivalentTest() throws IOException {
+
+    // State
     enqueueResponse(FRENCH_POLYNESIA_REVERSE_RESPONSE);
 
     LatLng coords = new LatLng(-17.65, -149.46);
-    ParsedField<ParsedLocation> match =
+
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(coords, Country.FRANCE, getWsConfig()).applyMatch();
 
-    Assert.assertEquals(Country.FRENCH_POLYNESIA, match.getResult().getCountry());
-    Assert.assertEquals(coords, match.getResult().getLatLng());
-    Assert.assertTrue(match.isSuccessful());
-    Assert.assertTrue(match.getIssues().isEmpty());
+    // Should
+    Assert.assertEquals(Country.FRENCH_POLYNESIA, result.getResult().getCountry());
+    Assert.assertEquals(coords, result.getResult().getLatLng());
+    Assert.assertTrue(result.isSuccessful());
+    Assert.assertTrue(result.getIssues().isEmpty());
   }
 
   @Test
-  public void whenMatchConfusedCountryThenReturnConfused() throws IOException {
+  public void matchConfusedReturnConfusedTest() throws IOException {
+
+    // State
     enqueueResponse(GREENLAND_REVERSE_RESPONSE);
 
     LatLng coords = new LatLng(71.7, -42.6);
+
+    // When
     ParsedField<ParsedLocation> match =
         LocationMatcher.newMatcher(coords, Country.DENMARK, getWsConfig()).applyMatch();
 
+    // Should
     Assert.assertEquals(Country.GREENLAND, match.getResult().getCountry());
     Assert.assertEquals(coords, match.getResult().getLatLng());
     Assert.assertTrue(match.isSuccessful());
@@ -256,21 +319,25 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void nullValues() {
+  public void nullValuesTest() {
+    // When
     LocationMatcher.newMatcher(null, null, getWsConfig()).applyMatch();
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void emptyCoordinates() {
+  public void emptyCoordinatesTest() {
+    // When
     LocationMatcher.newMatcher(new LatLng(), null, getWsConfig()).applyMatch();
   }
 
   @Test
-  public void outOfRangeCoordinates() {
-    ParsedField<ParsedLocation> match =
+  public void outOfRangeCoordinatesTest() {
+    // When
+    ParsedField<ParsedLocation> result =
         LocationMatcher.newMatcher(new LatLng(200, 200), null, getWsConfig()).applyMatch();
 
-    Assert.assertFalse(match.isSuccessful());
-    Assert.assertEquals(match.getIssues().get(0), COUNTRY_COORDINATE_MISMATCH.name());
+    // Should
+    Assert.assertFalse(result.isSuccessful());
+    Assert.assertEquals(result.getIssues().get(0), COUNTRY_COORDINATE_MISMATCH.name());
   }
 }

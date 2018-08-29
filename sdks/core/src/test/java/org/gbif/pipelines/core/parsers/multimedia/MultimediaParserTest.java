@@ -22,8 +22,9 @@ import static org.junit.Assert.assertTrue;
 public class MultimediaParserTest {
 
   @Test
-  public void audubonExtensionSuccesfulTest() {
+  public void audubonExtensionTest() {
 
+    // State
     Map<String, String> audubonExtension =
         ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
             .accessURI("http://uri.com")
@@ -49,23 +50,23 @@ public class MultimediaParserTest {
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .build();
 
-    ParsedField<List<ParsedMultimedia>> parsedMultimedia =
-        MultimediaParser.parseMultimedia(extendedRecord);
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedMultimedia multimediaResult = result.getResult().get(0);
 
-    assertTrue(parsedMultimedia.isSuccessful());
-    assertEquals(0, parsedMultimedia.getIssues().size());
-    assertEquals(1, parsedMultimedia.getResult().size());
-
-    // assert field values that check several terms
-    ParsedMultimedia multimedia = parsedMultimedia.getResult().get(0);
-    assertEquals("description", multimedia.getDescription());
-    assertEquals("source", multimedia.getSource());
-    assertEquals(MediaType.StillImage, multimedia.getType());
+    // Should
+    assertTrue(result.isSuccessful());
+    assertEquals(0, result.getIssues().size());
+    assertEquals(1, result.getResult().size());
+    assertEquals("description", multimediaResult.getDescription());
+    assertEquals("source", multimediaResult.getSource());
+    assertEquals(MediaType.StillImage, multimediaResult.getType());
   }
 
   @Test
   public void multipleExtensionsTest() {
-    // using 2 extensions
+
+    // State
     Map<String, String> audubonExtension =
         ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
             .accessURI("http://uri.com")
@@ -89,53 +90,69 @@ public class MultimediaParserTest {
             .addExtensionRecord(Extension.MULTIMEDIA, multimediaExtension)
             .build();
 
-    ParsedField<List<ParsedMultimedia>> parsedMultimedia =
-        MultimediaParser.parseMultimedia(extendedRecord);
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
-    assertTrue(parsedMultimedia.isSuccessful());
-    assertEquals(0, parsedMultimedia.getIssues().size());
+    // Should
+    assertTrue(result.isSuccessful());
+    assertEquals(0, result.getIssues().size());
+    assertEquals(1, result.getResult().size());
+    assertEquals("multimedia", result.getResult().get(0).getTitle());
+  }
 
-    // it should use multimedia extension
-    assertEquals(1, parsedMultimedia.getResult().size());
-    assertEquals("multimedia", parsedMultimedia.getResult().get(0).getTitle());
+  @Test
+  public void oneExtensionsTest() {
 
-    // using 1 extension
-    extendedRecord =
+    // State
+    Map<String, String> audubonExtension =
+        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+            .accessURI("http://uri.com")
+            .identifier("http://identifier.com")
+            .references("http://references.com")
+            .title("audubon")
+            .build();
+
+    ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id("123")
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .build();
 
-    parsedMultimedia = MultimediaParser.parseMultimedia(extendedRecord);
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
-    assertTrue(parsedMultimedia.isSuccessful());
-    assertEquals(0, parsedMultimedia.getIssues().size());
-
-    // it should use multimedia extension
-    assertEquals(1, parsedMultimedia.getResult().size());
-    assertEquals("audubon", parsedMultimedia.getResult().get(0).getTitle());
+    // Should
+    assertTrue(result.isSuccessful());
+    assertEquals(0, result.getIssues().size());
+    assertEquals(1, result.getResult().size());
+    assertEquals("audubon", result.getResult().get(0).getTitle());
   }
 
   @Test
   public void multimediaCoreTest() {
+
+    // State
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id("123")
             .associatedMedia("http://uri1.com,http://uri2.com")
             .build();
 
-    ParsedField<List<ParsedMultimedia>> parsedMultimedia =
-        MultimediaParser.parseMultimedia(extendedRecord);
-    assertTrue(parsedMultimedia.isSuccessful());
-    assertEquals(0, parsedMultimedia.getIssues().size());
-    assertEquals(2, parsedMultimedia.getResult().size());
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
-    assertEquals("http://uri1.com", parsedMultimedia.getResult().get(0).getReferences().toString());
-    assertEquals("http://uri2.com", parsedMultimedia.getResult().get(1).getReferences().toString());
+    // Should
+    assertTrue(result.isSuccessful());
+    assertEquals(0, result.getIssues().size());
+    assertEquals(2, result.getResult().size());
+    assertEquals("http://uri1.com", result.getResult().get(0).getReferences().toString());
+    assertEquals("http://uri2.com", result.getResult().get(1).getReferences().toString());
   }
 
   @Test
   public void issuesTest() {
+
+    // State
     Map<String, String> audubonExtension =
         ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder().title("test").build();
 
@@ -145,16 +162,19 @@ public class MultimediaParserTest {
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .build();
 
-    ParsedField<List<ParsedMultimedia>> parsedMultimedia =
-        MultimediaParser.parseMultimedia(extendedRecord);
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
-    assertFalse(parsedMultimedia.isSuccessful());
-    assertEquals(1, parsedMultimedia.getIssues().size());
-    assertEquals(MULTIMEDIA_URI_INVALID.name(), parsedMultimedia.getIssues().get(0));
+    // Should
+    assertFalse(result.isSuccessful());
+    assertEquals(1, result.getIssues().size());
+    assertEquals(MULTIMEDIA_URI_INVALID.name(), result.getIssues().get(0));
   }
 
   @Test
   public void testInterpretMediaCore() {
+
+    // State
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id("123")
@@ -162,11 +182,12 @@ public class MultimediaParserTest {
                 "http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg, http://www.flickr.com/photos/70939559@N02/7039524065.png")
             .build();
 
-    ParsedField<List<ParsedMultimedia>> parsedMultimedia =
-        MultimediaParser.parseMultimedia(extendedRecord);
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
-    assertEquals(2, parsedMultimedia.getResult().size());
-    for (ParsedMultimedia media : parsedMultimedia.getResult()) {
+    // Should
+    assertEquals(2, result.getResult().size());
+    for (ParsedMultimedia media : result.getResult()) {
       assertEquals(MediaType.StillImage, media.getType());
       assertTrue(media.getFormat().startsWith("image/"));
       assertNotNull(media.getIdentifier());
@@ -176,6 +197,7 @@ public class MultimediaParserTest {
   @Test
   public void testInterpretMediaExtension() {
 
+    // State
     Map<String, String> imageExtension =
         ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
             .identifier("http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg")
@@ -200,33 +222,34 @@ public class MultimediaParserTest {
             .addExtensionRecord(Extension.IMAGE, imageExtension2)
             .build();
 
-    ParsedField<List<ParsedMultimedia>> parsedMultimedia =
-        MultimediaParser.parseMultimedia(extendedRecord);
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedMultimedia multimediaResult = result.getResult().get(0);
 
-    assertEquals(2, parsedMultimedia.getResult().size());
-    for (ParsedMultimedia media : parsedMultimedia.getResult()) {
+    // Should
+    assertEquals(2, result.getResult().size());
+    for (ParsedMultimedia media : result.getResult()) {
       assertEquals(MediaType.StillImage, media.getType());
       assertNotNull(media.getIdentifier());
     }
-
-    ParsedMultimedia multimedia = parsedMultimedia.getResult().get(0);
-    assertEquals("image/jpeg", multimedia.getFormat());
-    assertEquals("Geranium Plume Moth 0032", multimedia.getTitle());
-    assertEquals("Geranium Plume Moth 0032 description", multimedia.getDescription());
-    assertEquals("BY-NC-SA 2.0", multimedia.getLicense());
-    assertEquals("Moayed Bahajjaj", multimedia.getCreator());
-    assertEquals("2012-03-29", multimedia.getCreated().toString());
+    assertEquals("image/jpeg", multimediaResult.getFormat());
+    assertEquals("Geranium Plume Moth 0032", multimediaResult.getTitle());
+    assertEquals("Geranium Plume Moth 0032 description", multimediaResult.getDescription());
+    assertEquals("BY-NC-SA 2.0", multimediaResult.getLicense());
+    assertEquals("Moayed Bahajjaj", multimediaResult.getCreator());
+    assertEquals("2012-03-29", multimediaResult.getCreated().toString());
     assertEquals(
         "http://www.flickr.com/photos/70939559@N02/7039524065",
-        multimedia.getReferences().toString());
+        multimediaResult.getReferences().toString());
     assertEquals(
         "http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg",
-        multimedia.getIdentifier().toString());
+        multimediaResult.getIdentifier().toString());
   }
 
   @Test
   public void testInterpretAudubonExtension() {
 
+    // State
     Map<String, String> audubonExtension =
         ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
             .accessURI(
@@ -253,16 +276,16 @@ public class MultimediaParserTest {
             .addExtensionRecord(Extension.AUDUBON, audubonExtension2)
             .build();
 
-    ParsedField<List<ParsedMultimedia>> parsedMultimedia =
-        MultimediaParser.parseMultimedia(extendedRecord);
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedMultimedia multimedia = result.getResult().get(1);
 
-    assertEquals(2, parsedMultimedia.getResult().size());
-    for (ParsedMultimedia media : parsedMultimedia.getResult()) {
+    // Should
+    assertEquals(2, result.getResult().size());
+    for (ParsedMultimedia media : result.getResult()) {
       assertEquals(MediaType.StillImage, media.getType());
       assertNotNull(media.getIdentifier());
     }
-
-    ParsedMultimedia multimedia = parsedMultimedia.getResult().get(1);
     assertEquals("image/jpeg", multimedia.getFormat());
     assertEquals("Geranium Plume Moth 0032", multimedia.getTitle());
     assertEquals("Geranium Plume Moth 0032 description", multimedia.getDescription());
@@ -275,11 +298,13 @@ public class MultimediaParserTest {
   }
 
   /**
-   * If the information about the same image (same URI) is given in the org.gbif.pipelines.core AND the extension we
-   * should use the one from the extension (richer data).
+   * If the information about the same image (same URI) is given in the org.gbif.pipelines.core AND
+   * the extension we should use the one from the extension (richer data).
    */
   @Test
   public void testExtensionsPriority() {
+
+    // State
     Map<String, String> audubonExtension =
         ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
             .accessURI("http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg")
@@ -301,10 +326,11 @@ public class MultimediaParserTest {
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .build();
 
-    ParsedField<List<ParsedMultimedia>> parsedMultimedia =
-        MultimediaParser.parseMultimedia(extendedRecord);
+    // When
+    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
-    assertEquals(2, parsedMultimedia.getResult().size());
-    assertEquals("BY-NC-SA 2.0", parsedMultimedia.getResult().get(0).getLicense());
+    // Should
+    assertEquals(2, result.getResult().size());
+    assertEquals("BY-NC-SA 2.0", result.getResult().get(0).getLicense());
   }
 }

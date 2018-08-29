@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 public class LocationInterpreter {
@@ -46,7 +47,8 @@ public class LocationInterpreter {
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
-  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(Config wsConfig) {
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
+      Config wsConfig) {
     return (er, lr) -> {
       // parse the terms
       ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, wsConfig);
@@ -64,7 +66,7 @@ public class LocationInterpreter {
       }
 
       // set the issues to the interpretation
-      lr.getIssues().getIssueList().addAll(parsedResult.getIssues());
+      addIssue(lr, parsedResult.getIssues());
     };
   }
 
@@ -77,7 +79,7 @@ public class LocationInterpreter {
               if (parseResult.isSuccessful()) {
                 lr.setContinent(parseResult.getPayload().name());
               } else {
-                lr.getIssues().getIssueList().add(CONTINENT_INVALID.name());
+                addIssue(lr, CONTINENT_INVALID);
               }
               return lr;
             });
@@ -106,7 +108,7 @@ public class LocationInterpreter {
     if (parseResult.isSuccessful()) {
       lr.setMinimumElevationInMeters(parseResult.getPayload());
     } else {
-      lr.getIssues().getIssueList().add("MIN_ELEVATION_INVALID");
+      addIssue(lr, "MIN_ELEVATION_INVALID");
     }
   }
 
@@ -117,7 +119,7 @@ public class LocationInterpreter {
     if (parseResult.isSuccessful()) {
       lr.setMaximumElevationInMeters(parseResult.getPayload());
     } else {
-      lr.getIssues().getIssueList().add("MAX_ELEVATION_INVALID");
+      addIssue(lr, "MAX_ELEVATION_INVALID");
     }
   }
 
@@ -128,7 +130,7 @@ public class LocationInterpreter {
     if (parseResult.isSuccessful()) {
       lr.setMinimumDepthInMeters(parseResult.getPayload());
     } else {
-      lr.getIssues().getIssueList().add("MIN_DEPTH_INVALID");
+      addIssue(lr, "MIN_DEPTH_INVALID");
     }
   }
 
@@ -139,7 +141,7 @@ public class LocationInterpreter {
     if (parseResult.isSuccessful()) {
       lr.setMaximumDepthInMeters(parseResult.getPayload());
     } else {
-      lr.getIssues().getIssueList().add("MAX_DEPTH_INVALID");
+      addIssue(lr, "MAX_DEPTH_INVALID");
     }
   }
 
@@ -151,7 +153,7 @@ public class LocationInterpreter {
     if (parseResult.isSuccessful()) {
       lr.setMinimumDistanceAboveSurfaceInMeters(parseResult.getPayload());
     } else {
-      lr.getIssues().getIssueList().add("MIN_DISTANCE_ABOVE_SURFACE_INVALID");
+      addIssue(lr, "MIN_DISTANCE_ABOVE_SURFACE_INVALID");
     }
   }
 
@@ -163,7 +165,7 @@ public class LocationInterpreter {
     if (parseResult.isSuccessful()) {
       lr.setMaximumDistanceAboveSurfaceInMeters(parseResult.getPayload());
     } else {
-      lr.getIssues().getIssueList().add("MAX_DISTANCE_ABOVE_SURFACE_INVALID");
+      addIssue(lr, "MAX_DISTANCE_ABOVE_SURFACE_INVALID");
     }
   }
 
@@ -177,7 +179,7 @@ public class LocationInterpreter {
         && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
       lr.setCoordinateUncertaintyInMeters(result);
     } else {
-      lr.getIssues().getIssueList().add(COORDINATE_UNCERTAINTY_METERS_INVALID.name());
+      addIssue(lr, COORDINATE_UNCERTAINTY_METERS_INVALID);
     }
   }
 
@@ -193,7 +195,7 @@ public class LocationInterpreter {
               && result <= COORDINATE_PRECISION_UPPER_BOUND) {
             lr.setCoordinatePrecision(result);
           } else {
-            lr.getIssues().getIssueList().add(COORDINATE_PRECISION_INVALID.name());
+            addIssue(lr, COORDINATE_PRECISION_INVALID);
           }
         });
   }

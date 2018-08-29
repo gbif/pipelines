@@ -18,6 +18,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.INTERPRETATION_ERROR;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 
 /**
  * Interpreter for taxonomic fields present in an {@link ExtendedRecord} avro file. These fields
@@ -46,22 +47,21 @@ public class TaxonomyInterpreter {
       HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.create(wsConfig).getMatch(er);
 
       if (response.isError()) {
-        tr.getIssues().getIssueList().add(INTERPRETATION_ERROR.name());
+        addIssue(tr, INTERPRETATION_ERROR);
       } else if (TaxonomyValidator.isEmpty(response.getBody())) {
-        // TODO: maybe I would need to add to the enum a new issue for this, sth like
         // "NO_MATCHING_RESULTS". This
         // happens when we get an empty response from the WS
-        tr.getIssues().getIssueList().add(TAXON_MATCH_NONE.name());
+        addIssue(tr, TAXON_MATCH_NONE);
       } else {
 
         MatchType matchType = response.getBody().getDiagnostics().getMatchType();
 
         if (MatchType.NONE == matchType) {
-          tr.getIssues().getIssueList().add(TAXON_MATCH_NONE.name());
+          addIssue(tr, TAXON_MATCH_NONE);
         } else if (MatchType.FUZZY == matchType) {
-          tr.getIssues().getIssueList().add(TAXON_MATCH_FUZZY.name());
+          addIssue(tr, TAXON_MATCH_FUZZY);
         } else if (MatchType.HIGHERRANK == matchType) {
-          tr.getIssues().getIssueList().add(TAXON_MATCH_HIGHERRANK.name());
+          addIssue(tr, TAXON_MATCH_HIGHERRANK);
         }
 
         // convert taxon record

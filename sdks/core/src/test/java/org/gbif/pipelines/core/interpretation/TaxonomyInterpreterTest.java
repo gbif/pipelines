@@ -10,7 +10,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.junit.Assert;
@@ -21,13 +20,14 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
   private static final String TEST_RECORD_ID = "testId";
 
+  /**
+   * Call mocked:
+   * https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
+   */
   @Test
-  public void testAssembledAuthor() throws IOException {
+  public void assembledAuthorTest() throws IOException {
 
-    // @formatter:off
-    // Call mocked:
-    // https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
-    // @formatter:on
+    // State
     ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Animalia")
@@ -40,24 +40,30 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = createTaxonRecord();
-    BiConsumer<ExtendedRecord, TaxonRecord> interpreter =
-        TaxonomyInterpreter.taxonomyInterpreter(getWsConfig());
-    interpreter.accept(record, taxonRecord);
+
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
     Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
+    // Should
     Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
+  }
 
-    // @formatter:off
-    // Call mocked:
-    // http://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor%20(Linnaeus,%201771)&strict=false&verbose=false
-    // @formatter:on
-    record =
+  /**
+   * Call mocked:
+   * http://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor%20(Linnaeus,%201771)&strict=false&verbose=false
+   */
+  @Test
+  public void assembledAuthorRankTest() throws IOException {
+
+    // State
+    ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Animalia")
             .genus("Puma")
@@ -67,23 +73,31 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .build();
 
     enqueueResponse(PUMA_CONCOLOR_2_RESPONSE);
-    interpreter.accept(record, taxonRecord);
+    TaxonRecord taxonRecord = createTaxonRecord();
 
-    ranksResponse =
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
+    Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
+    // Should
     Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
+  }
 
-    // @formatter:off
-    // Call mocked:
-    // http://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor%20(Linnaeus,%201771)&strict=false&verbose=false
-    // @formatter:on
-    record =
+  /**
+   * Call mocked:
+   * http://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor%20(Linnaeus,%201771)&strict=false&verbose=false
+   */
+  @Test
+  public void assembledAuthorRankAuthorshipTest() throws IOException {
+
+    // State
+    ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Animalia")
             .genus("Puma")
@@ -94,9 +108,11 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .build();
 
     enqueueResponse(PUMA_CONCOLOR_3_RESPONSE);
-    interpreter.accept(record, taxonRecord);
+    TaxonRecord taxonRecord = createTaxonRecord();
 
-    ranksResponse =
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
+    Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
@@ -107,12 +123,14 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
     Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
   }
 
+  /**
+   * Call mocked:
+   * https://api.gbif-uat.org/v1/species/match2?kingdom=Plantae&rank=GENUS&name=Oenanthe&strict=false&verbose=false
+   */
   @Test
-  public void testOenanthe() throws IOException {
-    // @formatter:off
-    // Call mocked:
-    // https://api.gbif-uat.org/v1/species/match2?kingdom=Plantae&rank=GENUS&name=Oenanthe&strict=false&verbose=false
-    // @formatter:on
+  public void oenantheTest() throws IOException {
+
+    // State
     ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Plantae")
@@ -124,25 +142,30 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(OENANTHE_RESPONSE);
     TaxonRecord taxonRecord = createTaxonRecord();
-    BiConsumer<ExtendedRecord, TaxonRecord> interpreter =
-        TaxonomyInterpreter.taxonomyInterpreter(getWsConfig());
-    interpreter.accept(record, taxonRecord);
 
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
     Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
+    // Should
     Assert.assertEquals(3034893, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Oenanthe L.", taxonRecord.getUsage().getName());
+  }
 
-    // @formatter:off
-    // Call mocked:
-    // https://api.gbif-uat.org/v1/species/match2?kingdom=Plantae&rank=GENUS&name=Oenanthe%20L.&strict=false&verbose=false
-    // @formatter:on
-    record =
+  /**
+   * Call mocked:
+   * https://api.gbif-uat.org/v1/species/match2?kingdom=Plantae&rank=GENUS&name=Oenanthe%20L.&strict=false&verbose=false
+   */
+  @Test
+  public void oenantheAuthorshipTest() throws IOException {
+
+    // State
+    ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Plantae")
             .name("Oenanthe")
@@ -152,9 +175,11 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .build();
 
     enqueueResponse(OENANTHE_2_RESPONSE);
-    interpreter.accept(record, taxonRecord);
+    TaxonRecord taxonRecord = createTaxonRecord();
 
-    ranksResponse =
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
+    Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
@@ -163,12 +188,17 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
     Assert.assertEquals(3034893, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(6, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Oenanthe L.", taxonRecord.getUsage().getName());
+  }
 
-    // @formatter:off
-    // Call mocked:
-    // https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&rank=GENUS&name=Oenanthe%20Vieillot,%201816&strict=false&verbose=false
-    // @formatter:on
-    record =
+  /**
+   * Call mocked:
+   * https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&rank=GENUS&name=Oenanthe%20Vieillot,%201816&strict=false&verbose=false
+   */
+  @Test
+  public void testOenantheRankAuthorshipTest() throws IOException {
+
+    // State
+    ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Animalia")
             .name("Oenanthe")
@@ -178,25 +208,31 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
             .build();
 
     enqueueResponse(OENANTHE_3_RESPONSE);
-    interpreter.accept(record, taxonRecord);
 
-    ranksResponse =
+    TaxonRecord taxonRecord = createTaxonRecord();
+
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
+    Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
+    // Should
     Assert.assertEquals(2492483, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Oenanthe Vieillot, 1816", taxonRecord.getUsage().getName());
   }
 
+  /**
+   * Call mocked:
+   * https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&phylum=Annelida&family=Lumbricidae&rank=SPECIES&name=Bold:acv7160&strict=false&verbose=false
+   */
   @Test
-  public void testOtu() throws IOException {
-    // @formatter:off
-    // Call mocked:
-    // https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&phylum=Annelida&family=Lumbricidae&rank=SPECIES&name=Bold:acv7160&strict=false&verbose=false
-    // @formatter:on
+  public void otuTest() throws IOException {
+
+    // State
     ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Animalia")
@@ -209,22 +245,22 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(ANNELIDA_RESPONSE);
     TaxonRecord taxonRecord = createTaxonRecord();
+
+    // When
     TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
 
-    // FIXME: this test does not pass. It is copied from old adapter but it returns a different
-    // response.Should we check it??
-    // this is the old test
-    //      Assert.assertEquals("BOLD:ACV7160",
-    // interpretedTaxon.getTaxonRecord().getUsage().getName());
+    // Should
     Assert.assertEquals("Lumbricidae", taxonRecord.getUsage().getName());
   }
 
+  /**
+   * Call mocked:
+   * https://api.gbif-uat.org/v1/species/match2?kingdom=Chromista&phylum=Dinophyta&class=Dinophyceae&order=Peridiniales&family=Ceratiaceae&genus=Ceratium&rank=SPECIES&name=Ceratium%20hirundinella&strict=false&verbose=false
+   */
   @Test
-  public void testCeratiaceae() throws IOException {
-    // @formatter:off
-    // Call mocked:
-    // https://api.gbif-uat.org/v1/species/match2?kingdom=Chromista&phylum=Dinophyta&class=Dinophyceae&order=Peridiniales&family=Ceratiaceae&genus=Ceratium&rank=SPECIES&name=Ceratium%20hirundinella&strict=false&verbose=false
-    // @formatter:on
+  public void ceratiaceaeTest() throws IOException {
+
+    // State
     ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Chromista")
@@ -240,31 +276,30 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(CERATIACEAE_RESPONSE);
     TaxonRecord taxonRecord = createTaxonRecord();
-    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
 
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
     Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
+    // Should
     Assert.assertEquals(7598904, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(7479242, ranksResponse.get(Rank.FAMILY).getKey().intValue());
-    // FIXME: this tests does not pass. It is copied from old adapter but it returns a different
-    // response.Should we check it??
-    // this is the old test
-    //      Assert.assertEquals("Ceratium hirundinella (O.F.Müller) Dujardin, 1841",
-    //                          interpretedTaxon.getTaxonRecord().getUsage().getName());
     Assert.assertEquals(
         "Ceratium hirundinella (O.F.Müll.) Dujard.", taxonRecord.getUsage().getName());
   }
 
+  /**
+   * Call mocked:
+   * https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
+   */
   @Test
-  public void testNubLookupGood() throws IOException {
-    // @formatter:off
-    // Call mocked:
-    // https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&genus=Puma&rank=SPECIES&name=Puma%20concolor&strict=false&verbose=false
-    // @formatter:on
+  public void nubLookupGoodTest() throws IOException {
+
+    // State
     ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .kingdom("Animalia")
@@ -276,35 +311,42 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     enqueueResponse(PUMA_CONCOLOR_RESPONSE);
     TaxonRecord taxonRecord = createTaxonRecord();
-    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
 
+    // When
+    TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
     Map<Rank, RankedName> ranksResponse =
         taxonRecord
             .getClassification()
             .stream()
             .collect(Collectors.toMap(RankedName::getRank, rankedName -> rankedName));
 
+    // Should
     Assert.assertEquals(2435099, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1, ranksResponse.get(Rank.KINGDOM).getKey().intValue());
     Assert.assertEquals("Chordata", ranksResponse.get(Rank.PHYLUM).getName());
   }
 
+  /**
+   * Calls
+   * https://api.gbif-uat.org/v1/species/match2?rank=GENUS&name=Agallisus%20lepturoides&strict=false&verbose=false
+   */
   @Test
-  public void testAcceptedUsage() throws IOException {
-    // @formatter:off
-    // Call mocked:
-    // https://api.gbif-uat.org/v1/species/match2?rank=GENUS&name=Agallisus%20lepturoides&strict=false&verbose=false
-    // @formatter:on
+  public void acceptedUsageTest() throws IOException {
+
+    // State
     ExtendedRecord record =
         ExtendedRecordCustomBuilder.create()
             .name("Agallisus lepturoides")
             .id(TEST_RECORD_ID)
             .build();
+    TaxonRecord taxonRecord = createTaxonRecord();
 
     enqueueResponse(AGALLISUS_LEPTUROIDES_RESPONSE);
-    TaxonRecord taxonRecord = createTaxonRecord();
+
+    // When
     TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, taxonRecord);
 
+    // Should
     Assert.assertEquals(1118030, taxonRecord.getUsage().getKey().intValue());
     Assert.assertEquals(1118026, taxonRecord.getAcceptedUsage().getKey().intValue());
     Assert.assertEquals(
@@ -314,21 +356,33 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void testMatchNullTaxonRecord() {
+  public void matchNullTaxonRecordTest() {
+
+    // When
     TaxonomyInterpreter.taxonomyInterpreter(null).accept(null, null);
   }
 
   @Test(expected = NullPointerException.class)
-  public void testMatchNullArgs() {
+  public void matchNullArgsTest() {
+
+    // When
     TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(null, null);
+
+    // Should
     Assert.fail("This line should not be reached ");
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testMatchEmptyArgs() {
+  public void matchEmptyArgsTest() {
+
+    // State
     ExtendedRecord record = new ExtendedRecord();
     record.setCoreTerms(new HashMap<>());
+
+    // When
     TaxonomyInterpreter.taxonomyInterpreter(getWsConfig()).accept(record, createTaxonRecord());
+
+    // Should
     Assert.fail("This line should not be reached ");
   }
 

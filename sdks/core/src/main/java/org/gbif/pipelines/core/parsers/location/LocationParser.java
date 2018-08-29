@@ -16,9 +16,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
@@ -29,8 +26,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
  * <p>Currently, it parses the country, countryCode and coordinates together.
  */
 public class LocationParser {
-
-  private static final Logger LOG = LoggerFactory.getLogger(LocationParser.class);
 
   private LocationParser() {}
 

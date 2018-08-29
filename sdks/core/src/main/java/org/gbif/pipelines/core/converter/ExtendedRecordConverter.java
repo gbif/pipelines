@@ -10,11 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/** Converter from some class to {@link ExtendedRecord} */
 public class ExtendedRecordConverter {
 
   private ExtendedRecordConverter() {}
 
-  public static ExtendedRecord convert(StarRecord record) {
+  public static ExtendedRecord from(StarRecord record) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(record.core().id());
     Optional.ofNullable(record.core().rowType())
         .ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));

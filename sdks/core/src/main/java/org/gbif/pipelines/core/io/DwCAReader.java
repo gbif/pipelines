@@ -63,7 +63,7 @@ public class DwCAReader {
     if (recordsReturned % 1000 == 0) {
       LOG.info("Read [{}] records", recordsReturned);
     }
-    current = ExtendedRecordConverter.convert(next);
+    current = ExtendedRecordConverter.from(next);
     return true;
   }
 

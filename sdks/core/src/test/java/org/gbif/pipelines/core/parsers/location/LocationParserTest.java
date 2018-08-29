@@ -23,56 +23,97 @@ public class LocationParserTest extends BaseMockServerTest {
   private static final String TEST_ID = "1";
 
   @Test
-  public void givenCountryWhenParsedThenReturnCountry() {
-    // only with country
-    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").build();
+  public void parseByCountryTest() {
+
+    // State
+    ExtendedRecord extendedRecord =
+        ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").build();
+
+    // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
-    Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
 
-    // only with country code
-    extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("ES").build();
-    result = LocationParser.parse(extendedRecord, getWsConfig());
+    // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
+  }
 
-    // with country and country code
-    extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
-    result = LocationParser.parse(extendedRecord, getWsConfig());
+  @Test
+  public void parseByCountryCodeTest() {
+
+    // State
+    ExtendedRecord extendedRecord =
+        ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("ES").build();
+
+    // When
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // Should
+    Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
+  }
+
+  @Test
+  public void parseByCountryAndAcountryCodeTest() {
+
+    // State
+    ExtendedRecord extendedRecord =
+        ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
+
+    // When
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
     Assert.assertTrue(result.getIssues().contains(COORDINATE_INVALID.name()));
   }
 
   @Test
-  public void givenInvalidCountryWhenParsedThenReturnIssue() {
-    // only with country
-    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).country("foo").build();
+  public void invalidCountryIssueTest() {
+
+    // State
+    ExtendedRecord extendedRecord =
+        ExtendedRecordCustomBuilder.create().id(TEST_ID).country("foo").build();
+
+    // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertNull(result.getResult().getCountry());
     Assert.assertTrue(result.getIssues().contains(COUNTRY_INVALID.name()));
   }
 
   @Test
-  public void givenInvalidCountryCodeWhenParsedThenReturnIssue() {
-    // only with country code
-    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("foo").build();
+  public void invalidCountryCodeIssue() {
+
+    // State
+    ExtendedRecord extendedRecord =
+        ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("foo").build();
+
+    // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertNull(result.getResult().getCountry());
     Assert.assertTrue(result.getIssues().contains(COUNTRY_INVALID.name()));
   }
 
   @Test
-  public void givenOnlyCoordsWhenParsedThenReturnCoordsWithDerivedCountry() throws IOException {
+  public void coordsWithDerivedCountryTest() throws IOException {
+
+    // State
     enqueueResponse(CHINA_REVERSE_RESPONSE);
 
-    // only with coords
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id(TEST_ID)
             .decimalLatitude("30.2")
             .decimalLongitude("100.2344349")
             .build();
+
+    // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
     Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
@@ -89,19 +130,22 @@ public class LocationParserTest extends BaseMockServerTest {
   }
 
   @Test
-  public void givenOnlyVerbatimCoordsWhenParsedThenReturnCoordsWithDerivedCountry()
-      throws IOException {
-    enqueueResponse(CHINA_REVERSE_RESPONSE);
+  public void verbatimLtnLngWithDerivedCountryTest() throws IOException {
+
+    // State
     enqueueResponse(CHINA_REVERSE_RESPONSE);
 
-    // only with verbatim latitude and longitude
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id(TEST_ID)
             .verbatimLatitude("30.2")
             .verbatimLongitude("100.2344349")
             .build();
+
+    // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
     Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
@@ -115,20 +159,30 @@ public class LocationParserTest extends BaseMockServerTest {
                     COORDINATE_ROUNDED.name(),
                     COUNTRY_DERIVED_FROM_COORDINATES.name(),
                     GEODETIC_DATUM_ASSUMED_WGS84.name())));
+  }
 
-    // only with verbatim latitude and longitude
-    extendedRecord =
+  @Test
+  public void verbatimCoordsWithDerivedCountryTest() throws IOException {
+
+    // State
+    enqueueResponse(CHINA_REVERSE_RESPONSE);
+    ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id(TEST_ID)
             .verbatimCoords("30.2, 100.2344349")
             .build();
-    result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // When
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
     Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
     Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
     Assert.assertTrue(
-        result.getIssues()
+        result
+            .getIssues()
             .containsAll(
                 Arrays.asList(
                     COUNTRY_INVALID.name(),
@@ -138,10 +192,11 @@ public class LocationParserTest extends BaseMockServerTest {
   }
 
   @Test
-  public void givenCoordsAndCountryWhenParsedThenReturnCoordsAndCountry() throws IOException {
+  public void coordsAndCountryWhenParsedThenReturnCoordsAndCountry() throws IOException {
+
+    // State
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
-    // only with coords
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id(TEST_ID)
@@ -150,7 +205,11 @@ public class LocationParserTest extends BaseMockServerTest {
             .decimalLatitude(String.valueOf(LATITUDE_CANADA))
             .decimalLongitude(String.valueOf(LONGITUDE_CANADA))
             .build();
+
+    // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+
+    // Should
     Assert.assertTrue(result.isSuccessful());
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
     Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLat(), 0);
@@ -161,11 +220,13 @@ public class LocationParserTest extends BaseMockServerTest {
 
   @Test(expected = NullPointerException.class)
   public void nullArgs() {
+    // When
     LocationParser.parse(null, null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void invalidArgs() {
+    // When
     LocationParser.parse(new ExtendedRecord(), null);
   }
 }

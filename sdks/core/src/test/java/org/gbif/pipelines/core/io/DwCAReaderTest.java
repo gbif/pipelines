@@ -20,6 +20,7 @@ public class DwCAReaderTest {
     DwCAReader dwCAReader = new DwCAReader(fileName);
     dwCAReader.init();
     ExtendedRecord current = dwCAReader.getCurrent();
+    dwCAReader.close();
 
     // Should
     assertNotNull(current);
@@ -36,6 +37,7 @@ public class DwCAReaderTest {
     DwCAReader dwCAReader = new DwCAReader(fileName, fileOut);
     dwCAReader.init();
     ExtendedRecord current = dwCAReader.getCurrent();
+    dwCAReader.close();
 
     // Should
     assertNotNull(current);
