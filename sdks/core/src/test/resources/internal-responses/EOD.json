@@ -1,0 +1,11 @@
+{
+  "datasetKey": "4fa7b334-ce0d-4e88-aaae-2e0c138d049e",
+  "publishingCountry": "US",
+  "protocol": "HTTP_INSTALLATION",
+  "publishingOrgKey": "e2e717bf-551a-4917-bdc9-4fa0f342c530",
+  "networkKey": [
+    "7ddd1f14-a2b0-4838-95b0-785846f656f3",
+    "e8fbd857-c988-48e5-954f-6e14d0961137"
+  ],
+  "datasetTitle": "EOD - eBird Observation Dataset"
+}

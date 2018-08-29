@@ -1,0 +1,46 @@
+{
+  "synonym": "false",
+  "usage": {
+    "key": "2492483",
+    "name": "Oenanthe Vieillot, 1816",
+    "rank": "GENUS"
+  },
+  "classification": [
+    {
+      "key": "1",
+      "name": "Animalia",
+      "rank": "KINGDOM"
+    },
+    {
+      "key": "44",
+      "name": "Chordata",
+      "rank": "PHYLUM"
+    },
+    {
+      "key": "212",
+      "name": "Aves",
+      "rank": "CLASS"
+    },
+    {
+      "key": "729",
+      "name": "Passeriformes",
+      "rank": "ORDER"
+    },
+    {
+      "key": "9322",
+      "name": "Muscicapidae",
+      "rank": "FAMILY"
+    },
+    {
+      "key": "2492483",
+      "name": "Oenanthe",
+      "rank": "GENUS"
+    }
+  ],
+  "diagnostics": {
+    "matchType": "EXACT",
+    "status": "ACCEPTED",
+    "lineage": [],
+    "alternatives": []
+  }
+}

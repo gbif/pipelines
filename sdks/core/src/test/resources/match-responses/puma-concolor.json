@@ -1,0 +1,51 @@
+{
+  "synonym": "false",
+  "usage": {
+    "key": "2435099",
+    "name": "Puma concolor (Linnaeus, 1771)",
+    "rank": "SPECIES"
+  },
+  "classification": [
+    {
+      "key": "1",
+      "name": "Animalia",
+      "rank": "KINGDOM"
+    },
+    {
+      "key": "44",
+      "name": "Chordata",
+      "rank": "PHYLUM"
+    },
+    {
+      "key": "359",
+      "name": "Mammalia",
+      "rank": "CLASS"
+    },
+    {
+      "key": "732",
+      "name": "Carnivora",
+      "rank": "ORDER"
+    },
+    {
+      "key": "9703",
+      "name": "Felidae",
+      "rank": "FAMILY"
+    },
+    {
+      "key": "2435098",
+      "name": "Puma",
+      "rank": "GENUS"
+    },
+    {
+      "key": "2435099",
+      "name": "Puma concolor",
+      "rank": "SPECIES"
+    }
+  ],
+  "diagnostics": {
+    "matchType": "EXACT",
+    "status": "ACCEPTED",
+    "lineage": [],
+    "alternatives": []
+  }
+}

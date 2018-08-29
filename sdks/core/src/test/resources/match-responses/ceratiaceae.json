@@ -1,0 +1,51 @@
+{
+  "synonym": "false",
+  "usage": {
+    "key": "7598904",
+    "name": "Ceratium hirundinella (O.F.Müll.) Dujard.",
+    "rank": "SPECIES"
+  },
+  "classification": [
+    {
+      "key": 4,
+      "name": "Chromista",
+      "rank": "KINGDOM"
+    },
+    {
+      "key": "8770992",
+      "name": "Myzozoa",
+      "rank": "PHYLUM"
+    },
+    {
+      "key": "9049014",
+      "name": "Dinophyceae",
+      "rank": "CLASS"
+    },
+    {
+      "key": "8775728",
+      "name": "Gonyaulacales",
+      "rank": "ORDER"
+    },
+    {
+      "key": "7479242",
+      "name": "Ceratiaceae",
+      "rank": "FAMILY"
+    },
+    {
+      "key": "3206734",
+      "name": "Ceratium",
+      "rank": "GENUS"
+    },
+    {
+      "key": "7598904",
+      "name": "Ceratium hirundinella",
+      "rank": "SPECIES"
+    }
+  ],
+  "diagnostics": {
+    "matchType": "EXACT",
+    "status": "ACCEPTED",
+    "lineage": [],
+    "alternatives": []
+  }
+}

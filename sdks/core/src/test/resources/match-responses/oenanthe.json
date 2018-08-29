@@ -1,0 +1,46 @@
+{
+  "synonym": "false",
+  "usage": {
+    "key": "3034893",
+    "name": "Oenanthe L.",
+    "rank": "GENUS"
+  },
+  "classification": [
+    {
+      "key": "6",
+      "name": "Plantae",
+      "rank": "KINGDOM"
+    },
+    {
+      "key": "7707728",
+      "name": "Tracheophyta",
+      "rank": "PHYLUM"
+    },
+    {
+      "key": "220",
+      "name": "Magnoliopsida",
+      "rank": "CLASS"
+    },
+    {
+      "key": "1351",
+      "name": "Apiales",
+      "rank": "ORDER"
+    },
+    {
+      "key": "6720",
+      "name": "Apiaceae",
+      "rank": "FAMILY"
+    },
+    {
+      "key": "3034893",
+      "name": "Oenanthe",
+      "rank": "GENUS"
+    }
+  ],
+  "diagnostics": {
+    "matchType": "EXACT",
+    "status": "ACCEPTED",
+    "lineage": [],
+    "alternatives": []
+  }
+}
