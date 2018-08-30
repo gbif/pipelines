@@ -108,17 +108,17 @@ class HttpRequestBuilder {
     ObjectNode body = createObjectNode();
 
     // add settings
-    if (Objects.nonNull(settings)) {
+    if (settings != null) {
       body.set(Field.SETTINGS, settings);
     }
 
     // add mappings
-    if (Objects.nonNull(mappings)) {
+    if (mappings != null) {
       body.set(Field.MAPPINGS, mappings);
     }
 
     // add alias actions
-    if (Objects.nonNull(indexAliasAction)) {
+    if (indexAliasAction != null) {
       body.set(Field.ACTIONS, createIndexAliasActions(indexAliasAction));
     }
 
@@ -136,11 +136,11 @@ class HttpRequestBuilder {
     ArrayNode actions = createArrayNode();
 
     // remove all indixes from alias action
-    if (Objects.nonNull(indexAliasAction.idxToRemove)) {
+    if (indexAliasAction.idxToRemove != null) {
       indexAliasAction.idxToRemove.forEach(idx -> removeIndexFromAliasAction(idx, actions));
     }
     // add index action
-    if (Objects.nonNull(indexAliasAction.idxToAdd)) {
+    if (indexAliasAction.idxToAdd != null) {
       indexAliasAction.idxToAdd.forEach(
           idx -> addIndexToAliasAction(indexAliasAction.alias, idx, actions));
     }

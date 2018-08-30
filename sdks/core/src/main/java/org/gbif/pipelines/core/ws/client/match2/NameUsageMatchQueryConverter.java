@@ -9,7 +9,6 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -155,13 +154,13 @@ public class NameUsageMatchQueryConverter {
   }
 
   private static Optional<Rank> fromAtomizedFields(AtomizedFields atomizedFields) {
-    if (Objects.nonNull(atomizedFields.getGenus())) {
+    if (atomizedFields.getGenus() != null) {
       return Optional.empty();
     }
-    if (!Objects.nonNull(atomizedFields.getSpecificEpithet())) {
+    if (atomizedFields.getSpecificEpithet() == null) {
       return Optional.of(Rank.GENUS);
     }
-    return Objects.nonNull(atomizedFields.getInfraspecificEpithet())
+    return atomizedFields.getInfraspecificEpithet() != null
         ? Optional.of(Rank.INFRASPECIFIC_NAME)
         : Optional.of(Rank.SPECIES);
   }

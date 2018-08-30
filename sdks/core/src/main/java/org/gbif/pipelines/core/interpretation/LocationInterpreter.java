@@ -9,15 +9,14 @@ import org.gbif.pipelines.core.parsers.VocabularyParsers;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.location.LocationParser;
 import org.gbif.pipelines.core.parsers.location.ParsedLocation;
-import org.gbif.pipelines.core.utils.StringUtil;
 import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 
-import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
@@ -55,12 +54,12 @@ public class LocationInterpreter {
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();
-      if (Objects.nonNull(parsedLocation.getCountry())) {
+      if (parsedLocation.getCountry() != null) {
         lr.setCountry(parsedLocation.getCountry().getTitle());
         lr.setCountryCode(parsedLocation.getCountry().getIso2LetterCode());
       }
 
-      if (Objects.nonNull(parsedLocation.getLatLng())) {
+      if (parsedLocation.getLatLng() != null) {
         lr.setDecimalLatitude(parsedLocation.getLatLng().getLat());
         lr.setDecimalLongitude(parsedLocation.getLatLng().getLng());
       }
@@ -89,7 +88,7 @@ public class LocationInterpreter {
   public static void interpretWaterBody(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.waterBody);
     if (!Strings.isNullOrEmpty(value)) {
-      lr.setWaterBody(StringUtil.cleanName(value));
+      lr.setWaterBody(cleanName(value));
     }
   }
 
@@ -97,7 +96,7 @@ public class LocationInterpreter {
   public static void interpretStateProvince(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.stateProvince);
     if (!Strings.isNullOrEmpty(value)) {
-      lr.setStateProvince(StringUtil.cleanName(value));
+      lr.setStateProvince(cleanName(value));
     }
   }
 
@@ -174,7 +173,7 @@ public class LocationInterpreter {
     String value = extractValue(er, DwcTerm.coordinateUncertaintyInMeters);
     ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
     Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
-    if (Objects.nonNull(result)
+    if (result != null
         && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
         && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
       lr.setCoordinateUncertaintyInMeters(result);
@@ -190,7 +189,7 @@ public class LocationInterpreter {
         DwcTerm.coordinatePrecision,
         parseResult -> {
           Double result = parseResult.orElse(null);
-          if (Objects.nonNull(result)
+          if (result != null
               && result >= COORDINATE_PRECISION_LOWER_BOUND
               && result <= COORDINATE_PRECISION_UPPER_BOUND) {
             lr.setCoordinatePrecision(result);
@@ -198,5 +197,14 @@ public class LocationInterpreter {
             addIssue(lr, COORDINATE_PRECISION_INVALID);
           }
         });
+  }
+
+  private static String cleanName(String x) {
+    x = StringUtils.normalizeSpace(x).trim();
+    // if we get all upper names, Capitalize them
+    if (StringUtils.isAllUpperCase(StringUtils.deleteWhitespace(x))) {
+      x = StringUtils.capitalize(x.toLowerCase());
+    }
+    return x;
   }
 }

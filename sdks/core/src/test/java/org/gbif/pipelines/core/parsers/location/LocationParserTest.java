@@ -2,7 +2,7 @@ package org.gbif.pipelines.core.parsers.location;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
+import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.core.ws.BaseMockServerTest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -27,7 +27,7 @@ public class LocationParserTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").build();
+        ExtendedRecordBuilder.create().id(TEST_ID).country("Spain").build();
 
     // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
@@ -41,7 +41,7 @@ public class LocationParserTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("ES").build();
+        ExtendedRecordBuilder.create().id(TEST_ID).countryCode("ES").build();
 
     // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
@@ -55,7 +55,7 @@ public class LocationParserTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
+        ExtendedRecordBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
 
     // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
@@ -70,7 +70,7 @@ public class LocationParserTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create().id(TEST_ID).country("foo").build();
+        ExtendedRecordBuilder.create().id(TEST_ID).country("foo").build();
 
     // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
@@ -86,7 +86,7 @@ public class LocationParserTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create().id(TEST_ID).countryCode("foo").build();
+        ExtendedRecordBuilder.create().id(TEST_ID).countryCode("foo").build();
 
     // When
     ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
@@ -104,7 +104,7 @@ public class LocationParserTest extends BaseMockServerTest {
     enqueueResponse(CHINA_REVERSE_RESPONSE);
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id(TEST_ID)
             .decimalLatitude("30.2")
             .decimalLongitude("100.2344349")
@@ -136,7 +136,7 @@ public class LocationParserTest extends BaseMockServerTest {
     enqueueResponse(CHINA_REVERSE_RESPONSE);
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id(TEST_ID)
             .verbatimLatitude("30.2")
             .verbatimLongitude("100.2344349")
@@ -167,7 +167,7 @@ public class LocationParserTest extends BaseMockServerTest {
     // State
     enqueueResponse(CHINA_REVERSE_RESPONSE);
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id(TEST_ID)
             .verbatimCoords("30.2, 100.2344349")
             .build();
@@ -198,7 +198,7 @@ public class LocationParserTest extends BaseMockServerTest {
     enqueueResponse(CANADA_REVERSE_RESPONSE);
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id(TEST_ID)
             .country(Country.CANADA.getTitle())
             .countryCode(Country.CANADA.getIso2LetterCode())

@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
+/** Interprets the date related terms of a {@link ExtendedRecord}. */
 public class TemporalRecordInterpreter {
 
   private TemporalRecordInterpreter() {}
@@ -27,6 +28,7 @@ public class TemporalRecordInterpreter {
     return new Context<>(er, tr);
   }
 
+  /** {@link DwcTerm#eventDate} interpretation. */
   public static void interpretEventDate(ExtendedRecord er, TemporalRecord tr) {
 
     // Interpretation of the main dates
@@ -54,22 +56,22 @@ public class TemporalRecordInterpreter {
     tr.getIssues().setIssueList(temporalDates.getIssueList());
   }
 
+  /** {@link DcTerm#modified} interpretation. */
   public static void interpretModifiedDate(ExtendedRecord er, TemporalRecord tr) {
-    // Interpretation of the modified date
     ParsedTemporalDates date = TemporalParser.parse(extractValue(er, DcTerm.modified));
     date.getFrom().map(Temporal::toString).ifPresent(tr::setModified);
     tr.getIssues().setIssueList(date.getIssueList());
   }
 
+  /** {@link DwcTerm#dateIdentified} interpretation. */
   public static void interpretDateIdentified(ExtendedRecord er, TemporalRecord tr) {
-    // Interpretation of the dateIdentified
     ParsedTemporalDates date = TemporalParser.parse(extractValue(er, DwcTerm.dateIdentified));
     date.getFrom().map(Temporal::toString).ifPresent(tr::setDateIdentified);
     tr.getIssues().setIssueList(date.getIssueList());
   }
 
+  /** {@link DwcTerm#startDayOfYear} and {@link DwcTerm#endDayOfYear} interpretation. */
   public static void interpretDayOfYear(ExtendedRecord er, TemporalRecord tr) {
-    // Interpretation of endDayOfYear and startDayOfYear
     Optional<LocalDate> year = Optional.ofNullable(tr.getYear()).map(y -> LocalDate.of(y, 1, 1));
     year.map(x -> x.with(TemporalAdjusters.lastDayOfYear()))
         .ifPresent(x -> tr.setEndDayOfYear(x.getDayOfYear()));

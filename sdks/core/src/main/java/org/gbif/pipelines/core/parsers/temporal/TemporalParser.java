@@ -15,7 +15,6 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiFunction;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
@@ -72,7 +71,8 @@ public class TemporalParser {
     ChronoAccumulator toAccumulator =
         ParserRawDateTime.parse(rawTo, fromAccumulator.getLastParsed().orElse(null));
 
-    if (fromAccumulator.areAllNumeric() || (!isNullOrEmpty(rawTo) && toAccumulator.areAllNumeric())) {
+    if (fromAccumulator.areAllNumeric()
+        || (!isNullOrEmpty(rawTo) && toAccumulator.areAllNumeric())) {
       issueList.add(RECORDED_DATE_INVALID.name());
     }
 
@@ -108,7 +108,7 @@ public class TemporalParser {
 
   /** Compare dates, FROM cannot be greater than TO */
   private static boolean isValidRange(Temporal from, Temporal to) {
-    if (Objects.isNull(from) || Objects.isNull(to)) {
+    if (from == null || to == null) {
       return true;
     }
     TemporalUnit unit = null;
@@ -126,10 +126,10 @@ public class TemporalParser {
 
   /** Compare date types */
   private static boolean isValidDateType(Temporal from, Temporal to) {
-    if (Objects.isNull(from)) {
+    if (from == null) {
       return false;
     }
-    if (Objects.isNull(to)) {
+    if (to == null) {
       return true;
     }
     return from.getClass().equals(to.getClass());

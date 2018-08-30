@@ -2,7 +2,6 @@ package org.gbif.pipelines.core.parsers.taxonomy;
 
 import org.gbif.api.v2.NameUsageMatch2;
 
-import java.util.Objects;
 import java.util.function.Predicate;
 
 /** Utility class for the taxonomic interpretation. */
@@ -16,9 +15,9 @@ public final class TaxonomyValidator {
    * @return {@link Predicate}
    */
   public static boolean isEmpty(NameUsageMatch2 response) {
-    return Objects.isNull(response)
-        || Objects.isNull(response.getUsage())
-        || Objects.isNull(response.getClassification())
-        || Objects.isNull(response.getDiagnostics());
+    return response == null
+        || response.getUsage() == null
+        || response.getClassification() == null
+        || response.getDiagnostics() == null;
   }
 }

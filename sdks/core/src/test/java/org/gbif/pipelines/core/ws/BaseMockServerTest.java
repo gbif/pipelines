@@ -64,15 +64,15 @@ public abstract class BaseMockServerTest {
    *
    * <p>It uses a random port.
    */
-  @ClassRule public static final MockWebServer mockServer = new MockWebServer();
+  @ClassRule public static final MockWebServer MOCK_SERVER = new MockWebServer();
 
   @ClassRule
-  public static final ExternalResource configResource =
+  public static final ExternalResource CONFIG_RESOURCE =
       new ExternalResource() {
 
         @Override
         protected void before() {
-          wsConfig = HttpConfigFactory.createConfigFromUrl(mockServer.url("/").toString());
+          wsConfig = HttpConfigFactory.createConfigFromUrl(MOCK_SERVER.url("/").toString());
         }
       };
 
@@ -85,14 +85,14 @@ public abstract class BaseMockServerTest {
         Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
     BufferedSource source = Okio.buffer(Okio.source(inputStream));
     MockResponse mockResponse = new MockResponse();
-    mockServer.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
+    MOCK_SERVER.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
   }
 
   protected static void enqueueErrorResponse(int httpCode) {
-    mockServer.enqueue(new MockResponse().setResponseCode(httpCode));
+    MOCK_SERVER.enqueue(new MockResponse().setResponseCode(httpCode));
   }
 
   protected static void enqueueEmptyResponse() {
-    mockServer.enqueue(new MockResponse().setBody("[ ]"));
+    MOCK_SERVER.enqueue(new MockResponse().setBody("[ ]"));
   }
 }

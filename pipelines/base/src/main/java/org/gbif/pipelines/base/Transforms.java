@@ -16,7 +16,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
-import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -129,14 +129,9 @@ public class Transforms {
             Interpretation.of(context.element())
                 .convert(TaxonomyInterpreter::createContext)
                 .using(TaxonomyInterpreter.taxonomyInterpreter(wsConfig))
-                .consumeValue(
-                    v -> {
-                      // the id is null when there is an error in the interpretation. In these
-                      // cases we do not write the taxonRecord because it is totally empty.
-                      if (Objects.nonNull(v.getId())) {
-                        context.output(KV.of(v.getId(), v));
-                      }
-                    });
+                // the id is null when there is an error in the interpretation. In these
+                // cases we do not write the taxonRecord because it is totally empty.
+                .consumeValue(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(KV.of(id, v))));
           }
         });
   }

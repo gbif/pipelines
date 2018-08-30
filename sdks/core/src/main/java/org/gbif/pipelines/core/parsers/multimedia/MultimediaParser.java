@@ -84,7 +84,7 @@ public class MultimediaParser {
   private static void parseCoreTermMedia(
       ExtendedRecord er, Map<URI, ParsedMultimedia> multimediaMap, List<String> issues, URI uri) {
 
-    if (Objects.isNull(uri)) {
+    if (uri == null) {
       issues.add(MULTIMEDIA_URI_INVALID.name());
       return;
     }
@@ -139,7 +139,7 @@ public class MultimediaParser {
             recordsMap, DcTerm.references, AcTerm.furtherInformationURL, AcTerm.attributionLinkURL);
 
     // link or media uri must exist
-    if (Objects.isNull(uri) && Objects.isNull(link)) {
+    if (uri == null && link == null) {
       issues.add(MULTIMEDIA_URI_INVALID.name());
       return;
     }
@@ -181,7 +181,7 @@ public class MultimediaParser {
             .orElseGet(() -> MEDIA_PARSER.parseMimeType(identifier));
 
     AtomicFields atomicFields = new AtomicFields();
-    if (HTML_TYPE.equalsIgnoreCase(format) && Objects.nonNull(identifier)) {
+    if (HTML_TYPE.equalsIgnoreCase(format) && identifier != null) {
       atomicFields.references = identifier;
       return atomicFields;
     }
@@ -198,7 +198,7 @@ public class MultimediaParser {
     ParsedTemporalDates temporalDate =
         TemporalParser.parse(getTermValue(recordsMap, DcTerm.created));
 
-    if (Objects.nonNull(temporalDate.getIssueList())) {
+    if (temporalDate.getIssueList() != null) {
       issues.addAll(temporalDate.getIssueList());
     }
 
@@ -242,10 +242,9 @@ public class MultimediaParser {
     String result =
         Arrays.stream(terms)
             .filter(term -> record.containsKey(term.qualifiedName()))
-            .map(term -> new TermWithValue(term, cleanTerm(getTermValue(record, term))))
-            .filter(termWithValue -> Objects.nonNull(termWithValue.value))
+            .map(term -> new TermWithValue(term, cleanTerm(getTermValue(record, term))).value)
+            .filter(Objects::nonNull)
             .findFirst()
-            .map(termWithValue -> termWithValue.value)
             .orElse(null);
     return UrlParser.parse(result);
   }

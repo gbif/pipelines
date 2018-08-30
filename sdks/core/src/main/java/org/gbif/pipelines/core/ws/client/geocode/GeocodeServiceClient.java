@@ -64,7 +64,7 @@ public class GeocodeServiceClient
 
   @Override
   protected List<Country> parseResponse(Collection<GeocodeResponse> response) {
-    if (Objects.nonNull(response) && !response.isEmpty()) {
+    if (response != null && !response.isEmpty()) {
       return response
           .stream()
           .filter(resp -> Objects.nonNull(resp.getIsoCountryCode2Digit()))

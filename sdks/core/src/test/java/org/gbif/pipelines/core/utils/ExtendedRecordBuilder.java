@@ -11,14 +11,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Builder for a {@link ExtendedRecord}.
  *
  * <p>Recommended for testing purposes.
  */
-public class ExtendedRecordCustomBuilder {
+public class ExtendedRecordBuilder {
 
   private String country;
   private String countryCode;
@@ -43,131 +42,128 @@ public class ExtendedRecordCustomBuilder {
   private String associatedMedia;
   private Map<String, List<Map<String, String>>> extensions;
 
-  private ExtendedRecordCustomBuilder() {}
+  private ExtendedRecordBuilder() {}
 
-  public static ExtendedRecordCustomBuilder create() {
-    return new ExtendedRecordCustomBuilder();
+  public static ExtendedRecordBuilder create() {
+    return new ExtendedRecordBuilder();
   }
 
   public static MultimediaExtensionBuilder createMultimediaExtensionBuilder() {
     return new MultimediaExtensionBuilder();
   }
 
-  public ExtendedRecordCustomBuilder country(String country) {
+  public ExtendedRecordBuilder country(String country) {
     this.country = country;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder countryCode(String countryCode) {
+  public ExtendedRecordBuilder countryCode(String countryCode) {
     this.countryCode = countryCode;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder decimalLatitude(String decimalLatitude) {
+  public ExtendedRecordBuilder decimalLatitude(String decimalLatitude) {
     this.decimalLatitude = decimalLatitude;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder decimalLongitude(String decimalLongitude) {
+  public ExtendedRecordBuilder decimalLongitude(String decimalLongitude) {
     this.decimalLongitude = decimalLongitude;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder verbatimLatitude(String verbatimLatitude) {
+  public ExtendedRecordBuilder verbatimLatitude(String verbatimLatitude) {
     this.verbatimLatitude = verbatimLatitude;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder verbatimLongitude(String verbatimLongitude) {
+  public ExtendedRecordBuilder verbatimLongitude(String verbatimLongitude) {
     this.verbatimLongitude = verbatimLongitude;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder verbatimCoords(String verbatimCoords) {
+  public ExtendedRecordBuilder verbatimCoords(String verbatimCoords) {
     this.verbatimCoords = verbatimCoords;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder geodeticDatum(String geodeticDatum) {
+  public ExtendedRecordBuilder geodeticDatum(String geodeticDatum) {
     this.geodeticDatum = geodeticDatum;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder kingdom(String kingdom) {
+  public ExtendedRecordBuilder kingdom(String kingdom) {
     this.kingdom = kingdom;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder phylum(String phylum) {
+  public ExtendedRecordBuilder phylum(String phylum) {
     this.phylum = phylum;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder clazz(String clazz) {
+  public ExtendedRecordBuilder clazz(String clazz) {
     this.clazz = clazz;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder order(String order) {
+  public ExtendedRecordBuilder order(String order) {
     this.order = order;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder family(String family) {
+  public ExtendedRecordBuilder family(String family) {
     this.family = family;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder genus(String genus) {
+  public ExtendedRecordBuilder genus(String genus) {
     this.genus = genus;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder rank(String rank) {
+  public ExtendedRecordBuilder rank(String rank) {
     this.rank = rank;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder name(String name) {
+  public ExtendedRecordBuilder name(String name) {
     this.name = name;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder authorship(String authorship) {
+  public ExtendedRecordBuilder authorship(String authorship) {
     this.authorship = authorship;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder specificEpithet(String specificEpithet) {
+  public ExtendedRecordBuilder specificEpithet(String specificEpithet) {
     this.specificEpithet = specificEpithet;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder infraspecificEpithet(String infraspecificEpithet) {
+  public ExtendedRecordBuilder infraspecificEpithet(String infraspecificEpithet) {
     this.infraspecificEpithet = infraspecificEpithet;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder associatedMedia(String associatedMedia) {
+  public ExtendedRecordBuilder associatedMedia(String associatedMedia) {
     this.associatedMedia = associatedMedia;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder id(String id) {
+  public ExtendedRecordBuilder id(String id) {
     this.id = id;
     return this;
   }
 
-  public ExtendedRecordCustomBuilder addExtensionRecord(
-      Extension extension, Map<String, String> record) {
-    if (Objects.nonNull(extension)) {
-      if (Objects.isNull(extensions)) {
+  public ExtendedRecordBuilder addExtensionRecord(Extension extension, Map<String, String> record) {
+    if (extension != null) {
+      if (extensions == null) {
         extensions = new HashMap<>();
       }
 
-      if (Objects.isNull(extensions.get(extension.getRowType()))) {
-        extensions.put(extension.getRowType(), new ArrayList<>());
-      }
+      extensions.computeIfAbsent(extension.getRowType(), k -> new ArrayList<>());
 
       extensions.get(extension.getRowType()).add(record);
     }
@@ -201,7 +197,7 @@ public class ExtendedRecordCustomBuilder {
 
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(id).setCoreTerms(terms);
 
-    if (Objects.nonNull(extensions)) {
+    if (extensions != null) {
       builder.setExtensions(extensions);
     }
 
@@ -209,7 +205,7 @@ public class ExtendedRecordCustomBuilder {
   }
 
   private static void addToMap(Map<String, String> map, Term term, String value) {
-    if (Objects.nonNull(value)) {
+    if (value != null) {
       map.put(term.qualifiedName(), value);
     }
   }

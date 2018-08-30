@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.ws.client.match2;
 
 import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
+import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.core.ws.BaseMockServerTest;
 import org.gbif.pipelines.core.ws.HttpResponse;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -40,10 +40,10 @@ public class SpeciesMatchv2RestServiceTest extends BaseMockServerTest {
   public void shouldReturn500error() {
 
     // State
-    mockServer.enqueue(new MockResponse().setResponseCode(HttpURLConnection.HTTP_INTERNAL_ERROR));
+    MOCK_SERVER.enqueue(new MockResponse().setResponseCode(HttpURLConnection.HTTP_INTERNAL_ERROR));
 
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create().name("Puma concolor").id("1").build();
+        ExtendedRecordBuilder.create().name("Puma concolor").id("1").build();
 
     // When
     HttpResponse<NameUsageMatch2> response =

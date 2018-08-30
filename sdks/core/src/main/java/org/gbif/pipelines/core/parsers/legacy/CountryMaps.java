@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.parsers.legacy;
 
 import org.gbif.api.vocabulary.Country;
-import org.gbif.pipelines.core.utils.IORuntimeException;
+import org.gbif.pipelines.core.exception.IORuntimeException;
 
 import java.io.BufferedReader;
 import java.io.IOException;

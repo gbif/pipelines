@@ -13,7 +13,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
@@ -91,7 +90,7 @@ public class LocationParser {
     }
 
     // If the match succeed we use it as a result
-    boolean isParsingSuccessful = match.isSuccessful() && Objects.nonNull(countryMatched);
+    boolean isParsingSuccessful = match.isSuccessful() && countryMatched != null;
 
     return ParsedField.<ParsedLocation>newBuilder()
         .successful(isParsingSuccessful)

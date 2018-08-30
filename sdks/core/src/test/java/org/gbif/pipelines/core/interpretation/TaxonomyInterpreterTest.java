@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core.interpretation;
 
-import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
+import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.core.ws.BaseMockServerTest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Rank;
@@ -29,7 +29,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Animalia")
             .genus("Puma")
             .name("Puma concolor")
@@ -64,7 +64,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Animalia")
             .genus("Puma")
             .name("Puma concolor (Linnaeus, 1771)")
@@ -98,7 +98,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Animalia")
             .genus("Puma")
             .name("Puma concolor")
@@ -132,7 +132,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Plantae")
             .name("Oenanthe")
             .authorship("")
@@ -166,7 +166,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Plantae")
             .name("Oenanthe")
             .authorship("L.")
@@ -199,7 +199,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Animalia")
             .name("Oenanthe")
             .authorship("Vieillot, 1816")
@@ -234,7 +234,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Animalia")
             .phylum("Annelida")
             .family("Lumbricidae")
@@ -262,7 +262,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Chromista")
             .phylum("Dinophyta")
             .clazz("Dinophyceae")
@@ -301,7 +301,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .kingdom("Animalia")
             .genus("Puma")
             .name("Puma concolor")
@@ -335,7 +335,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
 
     // State
     ExtendedRecord record =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .name("Agallisus lepturoides")
             .id(TEST_RECORD_ID)
             .build();

@@ -2,7 +2,7 @@ package org.gbif.pipelines.core.parsers.multimedia;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
-import org.gbif.pipelines.core.utils.ExtendedRecordCustomBuilder;
+import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 
@@ -26,7 +26,7 @@ public class MultimediaParserTest {
 
     // State
     Map<String, String> audubonExtension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .accessURI("http://uri.com")
             .references("http://references.com")
             .title("title")
@@ -45,7 +45,7 @@ public class MultimediaParserTest {
             .build();
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .build();
@@ -68,7 +68,7 @@ public class MultimediaParserTest {
 
     // State
     Map<String, String> audubonExtension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .accessURI("http://uri.com")
             .identifier("http://identifier.com")
             .references("http://references.com")
@@ -76,7 +76,7 @@ public class MultimediaParserTest {
             .build();
 
     Map<String, String> multimediaExtension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .accessURI("http://uri.com")
             .identifier("http://identifier.com")
             .references("http://references.com")
@@ -84,7 +84,7 @@ public class MultimediaParserTest {
             .build();
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .addExtensionRecord(Extension.MULTIMEDIA, multimediaExtension)
@@ -105,7 +105,7 @@ public class MultimediaParserTest {
 
     // State
     Map<String, String> audubonExtension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .accessURI("http://uri.com")
             .identifier("http://identifier.com")
             .references("http://references.com")
@@ -113,7 +113,7 @@ public class MultimediaParserTest {
             .build();
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .build();
@@ -133,7 +133,7 @@ public class MultimediaParserTest {
 
     // State
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .associatedMedia("http://uri1.com,http://uri2.com")
             .build();
@@ -154,10 +154,10 @@ public class MultimediaParserTest {
 
     // State
     Map<String, String> audubonExtension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder().title("test").build();
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder().title("test").build();
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .build();
@@ -176,7 +176,7 @@ public class MultimediaParserTest {
 
     // State
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .associatedMedia(
                 "http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg, http://www.flickr.com/photos/70939559@N02/7039524065.png")
@@ -199,7 +199,7 @@ public class MultimediaParserTest {
 
     // State
     Map<String, String> imageExtension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .identifier("http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg")
             .references("http://www.flickr.com/photos/70939559@N02/7039524065")
             .format("jpg")
@@ -211,12 +211,12 @@ public class MultimediaParserTest {
             .build();
 
     Map<String, String> imageExtension2 =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .identifier("http://www.flickr.com/photos/70939559@N02/7039524065.jpg")
             .build();
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .addExtensionRecord(Extension.IMAGE, imageExtension)
             .addExtensionRecord(Extension.IMAGE, imageExtension2)
@@ -251,7 +251,7 @@ public class MultimediaParserTest {
 
     // State
     Map<String, String> audubonExtension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .accessURI(
                 "http://specify-attachments-saiab.saiab.ac.za/originals/sp6-3853933608872243693.att.JPG")
             .identifier("d79633d3-0967-40fa-9557-d6915e4d1353")
@@ -265,12 +265,12 @@ public class MultimediaParserTest {
             .build();
 
     Map<String, String> audubonExtension2 =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .identifier("http://www.flickr.com/photos/70939559@N02/7039524065.jpg")
             .build();
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .addExtensionRecord(Extension.AUDUBON, audubonExtension)
             .addExtensionRecord(Extension.AUDUBON, audubonExtension2)
@@ -306,7 +306,7 @@ public class MultimediaParserTest {
 
     // State
     Map<String, String> audubonExtension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordBuilder.createMultimediaExtensionBuilder()
             .accessURI("http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg")
             .format("jpg")
             .title("Geranium Plume Moth 0032")
@@ -318,7 +318,7 @@ public class MultimediaParserTest {
             .build();
 
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create()
+        ExtendedRecordBuilder.create()
             .id("123")
             .associatedMedia(
                 "http://farm8.staticflickr"

@@ -9,7 +9,7 @@ import org.gbif.pipelines.io.avro.Issues;
 import java.util.List;
 import java.util.Objects;
 
-/** */
+/** Helps to work with org.gbif.pipelines.io.avro models */
 public class ModelUtils {
 
   private ModelUtils() {}

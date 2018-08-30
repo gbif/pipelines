@@ -10,7 +10,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 
 import java.net.URI;
-import java.util.Objects;
 
 import com.google.common.base.Strings;
 
@@ -124,7 +123,7 @@ public class ExtendedRecordInterpreter {
     String value = extractValue(er, DcTerm.references);
     if (!Strings.isNullOrEmpty(value)) {
       URI parseResult = UrlParser.parse(value);
-      if (Objects.nonNull(parseResult)) {
+      if (parseResult != null) {
         ier.setReferences(parseResult.toString());
       } else {
         addIssue(ier, REFERENCES_URI_INVALID);
