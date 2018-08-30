@@ -2,7 +2,7 @@
  * Represents the interpreted fields of terms related to temporal.
  */
 {
-  "name": "InterpretedExtendedRecord",
+  "name": "BasicRecord",
   "namespace": "org.gbif.pipelines.io.avro",
   "type": "record",
   "doc": "Interpreted values at the occurrence record level",

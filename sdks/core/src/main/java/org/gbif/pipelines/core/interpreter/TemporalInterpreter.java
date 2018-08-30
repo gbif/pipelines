@@ -18,9 +18,9 @@ import java.util.Optional;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 
 /** Interprets the date related terms of a {@link ExtendedRecord}. */
-public class TemporalRecordInterpreter {
+public class TemporalInterpreter {
 
-  private TemporalRecordInterpreter() {}
+  private TemporalInterpreter() {}
 
   /** {@link DwcTerm#eventDate} interpretation. */
   public static void interpretEventDate(ExtendedRecord er, TemporalRecord tr) {

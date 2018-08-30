@@ -1,15 +1,15 @@
 package org.gbif.pipelines.base;
 
 import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.core.interpreter.ExtendedRecordInterpreter;
+import org.gbif.pipelines.core.interpreter.BasicInterpreter;
 import org.gbif.pipelines.core.interpreter.LocationInterpreter;
 import org.gbif.pipelines.core.interpreter.MetadataInterpreter;
 import org.gbif.pipelines.core.interpreter.MultimediaInterpreter;
 import org.gbif.pipelines.core.interpreter.TaxonomyInterpreter;
-import org.gbif.pipelines.core.interpreter.TemporalRecordInterpreter;
+import org.gbif.pipelines.core.interpreter.TemporalInterpreter;
 import org.gbif.pipelines.core.ws.config.Config;
+import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.InterpretedExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -58,7 +58,7 @@ public class Transforms {
 
   /**
    * ParDo runs sequence of interpretations for {@link TemporalRecord} using {@link ExtendedRecord}
-   * as a source and {@link TemporalRecordInterpreter} as interpretation steps
+   * as a source and {@link TemporalInterpreter} as interpretation steps
    */
   public static SingleOutput<ExtendedRecord, KV<String, TemporalRecord>> temporal() {
     return ParDo.of(
@@ -67,33 +67,33 @@ public class Transforms {
           public void processElement(ProcessContext context) {
             Interpretation.from(context.element())
                 .to(er -> TemporalRecord.newBuilder().setId(er.getId()).build())
-                .via(TemporalRecordInterpreter::interpretEventDate)
-                .via(TemporalRecordInterpreter::interpretDateIdentified)
-                .via(TemporalRecordInterpreter::interpretModifiedDate)
-                .via(TemporalRecordInterpreter::interpretDayOfYear)
+                .via(TemporalInterpreter::interpretEventDate)
+                .via(TemporalInterpreter::interpretDateIdentified)
+                .via(TemporalInterpreter::interpretModifiedDate)
+                .via(TemporalInterpreter::interpretDayOfYear)
                 .consume(v -> context.output(KV.of(v.getId(), v)));
           }
         });
   }
 
   /**
-   * ParDo runs sequence of interpretations for {@link InterpretedExtendedRecord} using {@link
-   * ExtendedRecord} as a source and {@link ExtendedRecordInterpreter} as interpretation steps
+   * ParDo runs sequence of interpretations for {@link BasicRecord} using {@link ExtendedRecord} as
+   * a source and {@link BasicInterpreter} as interpretation steps
    */
-  public static SingleOutput<ExtendedRecord, KV<String, InterpretedExtendedRecord>> common() {
+  public static SingleOutput<ExtendedRecord, KV<String, BasicRecord>> common() {
     return ParDo.of(
-        new DoFn<ExtendedRecord, KV<String, InterpretedExtendedRecord>>() {
+        new DoFn<ExtendedRecord, KV<String, BasicRecord>>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context.element())
-                .to(er -> InterpretedExtendedRecord.newBuilder().setId(er.getId()).build())
-                .via(ExtendedRecordInterpreter::interpretBasisOfRecord)
-                .via(ExtendedRecordInterpreter::interpretSex)
-                .via(ExtendedRecordInterpreter::interpretEstablishmentMeans)
-                .via(ExtendedRecordInterpreter::interpretLifeStage)
-                .via(ExtendedRecordInterpreter::interpretTypeStatus)
-                .via(ExtendedRecordInterpreter::interpretIndividualCount)
-                .via(ExtendedRecordInterpreter::interpretReferences)
+                .to(er -> BasicRecord.newBuilder().setId(er.getId()).build())
+                .via(BasicInterpreter::interpretBasisOfRecord)
+                .via(BasicInterpreter::interpretSex)
+                .via(BasicInterpreter::interpretEstablishmentMeans)
+                .via(BasicInterpreter::interpretLifeStage)
+                .via(BasicInterpreter::interpretTypeStatus)
+                .via(BasicInterpreter::interpretIndividualCount)
+                .via(BasicInterpreter::interpretReferences)
                 .consume(v -> context.output(KV.of(v.getId(), v)));
           }
         });
