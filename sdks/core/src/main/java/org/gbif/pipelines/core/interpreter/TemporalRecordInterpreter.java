@@ -1,8 +1,7 @@
-package org.gbif.pipelines.core.interpretation;
+package org.gbif.pipelines.core.interpreter;
 
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.Context;
 import org.gbif.pipelines.core.parsers.temporal.ParsedTemporalDates;
 import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -22,11 +21,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 public class TemporalRecordInterpreter {
 
   private TemporalRecordInterpreter() {}
-
-  public static Context<ExtendedRecord, TemporalRecord> createContext(ExtendedRecord er) {
-    TemporalRecord tr = TemporalRecord.newBuilder().setId(er.getId()).build();
-    return new Context<>(er, tr);
-  }
 
   /** {@link DwcTerm#eventDate} interpretation. */
   public static void interpretEventDate(ExtendedRecord er, TemporalRecord tr) {
@@ -71,7 +65,7 @@ public class TemporalRecordInterpreter {
   }
 
   /** {@link DwcTerm#startDayOfYear} and {@link DwcTerm#endDayOfYear} interpretation. */
-  public static void interpretDayOfYear(ExtendedRecord er, TemporalRecord tr) {
+  public static void interpretDayOfYear(TemporalRecord tr) {
     Optional<LocalDate> year = Optional.ofNullable(tr.getYear()).map(y -> LocalDate.of(y, 1, 1));
     year.map(x -> x.with(TemporalAdjusters.lastDayOfYear()))
         .ifPresent(x -> tr.setEndDayOfYear(x.getDayOfYear()));

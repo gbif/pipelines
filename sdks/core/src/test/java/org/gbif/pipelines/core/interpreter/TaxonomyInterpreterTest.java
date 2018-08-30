@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpretation;
+package org.gbif.pipelines.core.interpreter;
 
 import org.gbif.pipelines.core.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.core.ws.BaseMockServerTest;

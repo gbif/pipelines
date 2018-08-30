@@ -1,9 +1,8 @@
-package org.gbif.pipelines.core.interpretation;
+package org.gbif.pipelines.core.interpreter;
 
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.Context;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -27,13 +26,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
 public class ExtendedRecordInterpreter {
 
   private ExtendedRecordInterpreter() {}
-
-  public static Context<ExtendedRecord, InterpretedExtendedRecord> createContext(
-      ExtendedRecord er) {
-    InterpretedExtendedRecord ier =
-        InterpretedExtendedRecord.newBuilder().setId(er.getId()).build();
-    return new Context<>(er, ier);
-  }
 
   /** {@link DwcTerm#individualCount} interpretation. */
   public static void interpretIndividualCount(ExtendedRecord er, InterpretedExtendedRecord ier) {

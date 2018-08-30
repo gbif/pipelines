@@ -1,9 +1,8 @@
-package org.gbif.pipelines.core.interpretation;
+package org.gbif.pipelines.core.interpreter;
 
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.core.Context;
 import org.gbif.pipelines.core.parsers.SimpleTypeParser;
 import org.gbif.pipelines.core.parsers.VocabularyParsers;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
@@ -36,11 +35,6 @@ public class LocationInterpreter {
   private static final double COORDINATE_PRECISION_UPPER_BOUND = 45d;
 
   private LocationInterpreter() {}
-
-  public static Context<ExtendedRecord, LocationRecord> createContext(ExtendedRecord er) {
-    LocationRecord lr = LocationRecord.newBuilder().setId(er.getId()).build();
-    return new Context<>(er, lr);
-  }
 
   /**
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link

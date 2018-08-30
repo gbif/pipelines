@@ -1,8 +1,7 @@
-package org.gbif.pipelines.core.interpretation;
+package org.gbif.pipelines.core.interpreter;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.pipelines.core.Context;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.core.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.core.utils.ModelUtils;
@@ -30,11 +29,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 public class TaxonomyInterpreter {
 
   private TaxonomyInterpreter() {}
-
-  public static Context<ExtendedRecord, TaxonRecord> createContext(ExtendedRecord er) {
-    TaxonRecord taxonRecord = TaxonRecord.newBuilder().build();
-    return new Context<>(er, taxonRecord);
-  }
 
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.

@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Interpretation<S extends Serializable> {
 
@@ -13,41 +14,42 @@ public class Interpretation<S extends Serializable> {
     this.source = source;
   }
 
-  public static <S extends Serializable> Interpretation<S> of(S source) {
+  public static <S extends Serializable> Interpretation<S> from(S source) {
     return new Interpretation<>(source);
   }
 
-  public <T extends Serializable> Handler<S, T> convert(Function<S, Context<S, T>> func) {
+  public <T extends Serializable> Handler<T> to(Function<S, T> func) {
     return new Handler<>(func.apply(source));
   }
 
-  public static class Handler<S extends Serializable, T extends Serializable> {
-    private final Context<S, T> context;
+  public <T extends Serializable> Handler<T> to(Supplier<T> func) {
+    return new Handler<>(func.get());
+  }
 
-    private Handler(Context<S, T> context) {
-      this.context = context;
+  public class Handler<T extends Serializable> {
+
+    private final T target;
+
+    private Handler(T target) {
+      this.target = target;
     }
 
-    public Handler<S, T> using(BiConsumer<S, T> func) {
-      func.accept(context.getSource(), context.getTarget());
+    public Handler<T> via(BiConsumer<S, T> func) {
+      func.accept(source, target);
       return this;
     }
 
-    public Handler<S, T> using(Consumer<Context<S, T>> func) {
-      func.accept(context);
+    public Handler<T> via(Consumer<T> func) {
+      func.accept(target);
       return this;
     }
 
-    public T getValue() {
-      return context.getTarget();
+    public T get() {
+      return target;
     }
 
-    public void consumeValue(Consumer<T> consumer) {
-      consumer.accept(getValue());
-    }
-
-    public Context<S, T> getContext() {
-      return context;
+    public void consume(Consumer<T> consumer) {
+      consumer.accept(target);
     }
   }
 }

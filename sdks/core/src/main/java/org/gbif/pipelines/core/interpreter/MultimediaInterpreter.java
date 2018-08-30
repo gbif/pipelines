@@ -1,6 +1,5 @@
-package org.gbif.pipelines.core.interpretation;
+package org.gbif.pipelines.core.interpreter;
 
-import org.gbif.pipelines.core.Context;
 import org.gbif.pipelines.core.parsers.common.ParsedField;
 import org.gbif.pipelines.core.parsers.multimedia.MultimediaParser;
 import org.gbif.pipelines.core.parsers.multimedia.ParsedMultimedia;
@@ -18,11 +17,6 @@ import static org.gbif.pipelines.core.utils.ModelUtils.addIssue;
 public class MultimediaInterpreter {
 
   private MultimediaInterpreter() {}
-
-  public static Context<ExtendedRecord, MultimediaRecord> createContext(ExtendedRecord er) {
-    MultimediaRecord mr = MultimediaRecord.newBuilder().setId(er.getId()).build();
-    return new Context<>(er, mr);
-  }
 
   /**
    * Interprets the multimedia of a {@link ExtendedRecord} and populates a {@link MultimediaRecord}

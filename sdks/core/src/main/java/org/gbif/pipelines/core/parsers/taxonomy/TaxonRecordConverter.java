@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.parsers.taxonomy;
 
 import org.gbif.api.v2.NameUsageMatch2;
-import org.gbif.pipelines.core.interpretation.TaxonomyInterpreter;
+import org.gbif.pipelines.core.interpreter.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.MatchType;
 import org.gbif.pipelines.io.avro.Nomenclature;
