@@ -17,6 +17,36 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+/**
+ * Mojo class adds new annotations and Issue interface to avro generated classes
+ *
+ * <p>Adds Beam Avro annotation:
+ *
+ * <pre>{@code
+ * import org.apache.beam.sdk.coders.AvroCoder;
+ * import org.apache.beam.sdk.coders.DefaultCoder;
+ *
+ * @DefaultCoder(AvroCoder.class)
+ * }</pre>
+ *
+ * <p>Creates Issue.java interface:
+ *
+ * <pre>{@code
+ * package org.gbif.pipelines.io.avro;
+ * public interface Issues {
+ *    org.gbif.pipelines.io.avro.IssueRecord getIssues();
+ * }
+ * }</pre>
+ *
+ * <p>Adds Override annotation:
+ *
+ * <pre>{@code
+ *  @Override
+ *  public org.gbif.pipelines.io.avro.IssueRecord getIssues() {
+ *    return issues;
+ *  }
+ * }</pre>
+ */
 @Mojo(name = "postprocess", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class AvroPostprocessMojo extends AbstractMojo {
 
@@ -36,7 +66,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException {
 
     if (!DEFAULT.equals(directory) && !DEFAULT.equals(defaultPackage)) {
-      boolean interfaceExist = createIssueInterface();
+      boolean interfaceExist = createIssuesInterface();
 
       if (!interfaceExist) {
         searchClasses().forEach(this::modifyFile);
@@ -44,19 +74,19 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** TODO: FILL DOC! */
+  /** Modifies java class, adds Issues interface, Beam Avro and override annotations */
   private void modifyFile(Path path) {
     List<String> lines = getLines(path);
     List<Integer> idxs = getIdx(lines);
 
+    addOverrideMethod(lines, idxs);
     changeInterface(lines, idxs);
     addAvroCodecAnnotation(lines, idxs);
-    addOverrideMethod(lines, idxs);
 
     writeFile(path, lines, idxs);
   }
 
-  /** TODO: FILL DOC! */
+  /** Writes changes to a java class */
   private void writeFile(Path path, List<String> lines, List<Integer> idxs) {
     if (idxs.get(0) != -1 || idxs.get(1) != -1) {
       try {
@@ -68,15 +98,15 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** TODO: FILL DOC! */
+  /** Adds override annotation to a "getIssues()" method */
   private void addOverrideMethod(List<String> lines, List<Integer> idxs) {
     int ovrdIdx = idxs.get(2);
     if (ovrdIdx != -1) {
-      lines.add(ovrdIdx, "@Override ");
+      lines.add(ovrdIdx, "  @Override");
     }
   }
 
-  /** TODO: FILL DOC! */
+  /** Adds @DefaultCoder(AvroCoder.class) annotation to class */
   private void addAvroCodecAnnotation(List<String> lines, List<Integer> idxs) {
     int beforeIdx = idxs.get(0);
     if (beforeIdx != -1) {
@@ -87,18 +117,18 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** TODO: FILL DOC! */
+  /** Adds Issues interface extension to a class */
   private void changeInterface(List<String> lines, List<Integer> idxs) {
     int interIdx = idxs.get(1);
     int ovrdIdx = idxs.get(2);
     if (interIdx != -1 && ovrdIdx != -1) {
-      String replace = INTER_BASE + ", " + defaultPackage + ".Issue {";
+      String replace = INTER_BASE + ", " + defaultPackage + ".Issues {";
       replace = lines.get(interIdx).replace(INTER, replace);
       lines.set(interIdx, replace);
     }
   }
 
-  /** TODO: FILL DOC! */
+  /** Finds line indexes for, Beam Avro annotation, Issues interface and override annotation */
   private List<Integer> getIdx(List<String> lines) {
     int beforeIdx = -1;
     int interIdx = -1;
@@ -120,7 +150,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     return Arrays.asList(beforeIdx, interIdx, ovrdIdx);
   }
 
-  /** TODO: FILL DOC! */
+  /** Reads lines in a java class */
   private List<String> getLines(Path path) {
     try {
       return Files.readAllLines(path);
@@ -129,7 +159,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** TODO: FILL DOC! */
+  /** Searches for all java classes in a directory */
   private List<Path> searchClasses() {
     try (Stream<Path> paths = Files.walk(Paths.get(directory))) {
       return paths.filter(path -> path.toFile().isFile()).collect(Collectors.toList());
@@ -138,13 +168,13 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** TODO: FILL DOC! */
-  private boolean createIssueInterface() {
-    String path = directory + defaultPackage.replaceAll("\\.", "/") + "/Issue.java";
+  /** Creates Issues.java interface in a defaultPackage directory */
+  private boolean createIssuesInterface() {
+    String path = directory + defaultPackage.replaceAll("\\.", "/") + "/Issues.java";
     String clazz =
         "package "
             + defaultPackage
-            + ";\npublic interface Issue {\n  org.gbif.pipelines.io.avro.IssueRecord getIssues();\n}";
+            + ";\npublic interface Issues {\n  org.gbif.pipelines.io.avro.IssueRecord getIssues();\n}";
     try {
       Path path1 = Paths.get(path);
       boolean exists = path1.toFile().exists();

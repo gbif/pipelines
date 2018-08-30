@@ -15,7 +15,16 @@
   <packaging>maven-plugin</packaging>
 
   <name>Artery :: Tools :: Maven plugin</name>
-  <description>TODO: FILL</description>
+  <description>Maven plugin adds new annotations and interface to avro generated classes</description>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 
   <dependencies>
     <dependency>
@@ -28,13 +37,5 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-plugin-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>
