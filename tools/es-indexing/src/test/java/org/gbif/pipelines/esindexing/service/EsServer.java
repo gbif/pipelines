@@ -1,10 +1,11 @@
-package org.gbif.pipelines.esindexing;
+package org.gbif.pipelines.esindexing.service;
 
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpHost;
@@ -24,20 +25,20 @@ public class EsServer extends ExternalResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(EsServer.class);
 
-  private static EmbeddedElastic embeddedElastic;
   private static final String CLUSTER_NAME = "test_EScluster";
-  private static EsConfig esConfig;
+
+  private EmbeddedElastic embeddedElastic;
+  private EsConfig esConfig;
   // needed to assert results against ES server directly
-  private static RestClient restClient;
+  private RestClient restClient;
   // I create both clients not to expose the restClient in EsClient
-  private static EsClient esClient;
+  private EsClient esClient;
 
   @Override
   protected void before() throws Throwable {
     embeddedElastic =
         EmbeddedElastic.builder()
-            // TODO: get version from pom??
-            .withElasticVersion("5.6.3")
+            .withElasticVersion(getEsVersion())
             .withEsJavaOpts("-Xms128m -Xmx512m")
             .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
             .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
@@ -71,24 +72,30 @@ public class EsServer extends ExternalResource {
     return port;
   }
 
-  private static String getServerAddress() {
+  private String getServerAddress() {
     return "http://localhost:" + embeddedElastic.getHttpPort();
   }
 
-  private static RestClient buildRestClient() {
+  private RestClient buildRestClient() {
     HttpHost host = new HttpHost("localhost", embeddedElastic.getHttpPort());
     return RestClient.builder(host).build();
   }
 
-  public EsConfig getEsConfig() {
+  private String getEsVersion() throws IOException {
+    Properties properties = new Properties();
+    properties.load(this.getClass().getClassLoader().getResourceAsStream("maven.properties"));
+    return properties.getProperty("elasticsearch.version");
+  }
+
+  EsConfig getEsConfig() {
     return esConfig;
   }
 
-  public RestClient getRestClient() {
+  RestClient getRestClient() {
     return restClient;
   }
 
-  public EsClient getEsClient() {
+  EsClient getEsClient() {
     return esClient;
   }
 }

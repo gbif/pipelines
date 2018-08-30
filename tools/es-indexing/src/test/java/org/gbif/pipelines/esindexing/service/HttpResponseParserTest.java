@@ -1,6 +1,4 @@
-package org.gbif.pipelines.esindexing.response;
-
-import org.gbif.pipelines.esindexing.common.JsonHandler;
+package org.gbif.pipelines.esindexing.service;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Set;
@@ -12,8 +10,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/** Tests the {@link ResponseParser}. */
-public class ResponseParserTest {
+/** Tests the {@link HttpResponseParser}. */
+public class HttpResponseParserTest {
 
   @Test
   public void parseCreatedIndexResponseTest() {
@@ -22,7 +20,7 @@ public class ResponseParserTest {
     String path = "/responses/create-index.json";
 
     // When
-    String index = ResponseParser.parseCreatedIndexResponse(getEntityFromResponse(path));
+    String index = HttpResponseParser.parseCreatedIndexResponse(getEntityFromResponse(path));
 
     // Should
     assertEquals("idxtest", index);
@@ -35,7 +33,8 @@ public class ResponseParserTest {
     String path = "/responses/alias-indexes.json";
 
     // When
-    Set<String> indexes = ResponseParser.parseIndexesInAliasResponse(getEntityFromResponse(path));
+    Set<String> indexes =
+        HttpResponseParser.parseIndexesInAliasResponse(getEntityFromResponse(path));
 
     // Should
     assertEquals(2, indexes.size());

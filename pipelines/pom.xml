@@ -18,9 +18,9 @@
   <name>Artery :: Pipelines</name>
 
   <modules>
+    <module>beam-common</module>
     <module>base</module>
     <module>mini-pipelines</module>
-    <module>beam-common</module>
   </modules>
 
 </project>

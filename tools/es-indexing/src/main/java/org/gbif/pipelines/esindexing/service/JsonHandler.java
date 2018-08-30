@@ -1,4 +1,4 @@
-package org.gbif.pipelines.esindexing.common;
+package org.gbif.pipelines.esindexing.service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +20,7 @@ import org.apache.http.HttpEntity;
  * <p>This class handles all the exceptions thrown when working with JSON and rethrows the checked
  * exceptions as unchecked.
  */
-public final class JsonHandler {
+final class JsonHandler {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final ObjectWriter WRITER = MAPPER.writer();
@@ -29,17 +29,17 @@ public final class JsonHandler {
   private JsonHandler() {}
 
   /** Creates a {@link ObjectNode}. */
-  public static ObjectNode createObjectNode() {
+  static ObjectNode createObjectNode() {
     return MAPPER.createObjectNode();
   }
 
   /** Creates a {@link ArrayNode}. */
-  public static ArrayNode createArrayNode() {
+  static ArrayNode createArrayNode() {
     return MAPPER.createArrayNode();
   }
 
   /** Writes a {@link Object} to String. */
-  public static String writeToString(Object obj) {
+  static String writeToString(Object obj) {
     try {
       return WRITER.writeValueAsString(obj);
     } catch (JsonProcessingException exc) {
@@ -48,7 +48,7 @@ public final class JsonHandler {
   }
 
   /** Writes a {@link InputStream} to String . */
-  public static String writeToString(InputStream inputStream) {
+  static String writeToString(InputStream inputStream) {
     try {
       return writeToString(READER.readTree(inputStream));
     } catch (IOException exc) {
@@ -57,7 +57,7 @@ public final class JsonHandler {
   }
 
   /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link Map}. */
-  public static Map<String, String> readValue(HttpEntity entity) {
+  static Map<String, String> readValue(HttpEntity entity) {
     Objects.requireNonNull(entity);
     try {
       return READER.readValue(entity.getContent());
@@ -67,7 +67,7 @@ public final class JsonHandler {
   }
 
   /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link JsonNode}. */
-  public static JsonNode readTree(HttpEntity entity) {
+  static JsonNode readTree(HttpEntity entity) {
     Objects.requireNonNull(entity);
     try {
       return READER.readTree(entity.getContent());
@@ -77,7 +77,7 @@ public final class JsonHandler {
   }
 
   /** Reads a {@link InputStream} with JSON content and returns it as a {@link JsonNode}. */
-  public static JsonNode readTree(InputStream inputStream) {
+  static JsonNode readTree(InputStream inputStream) {
     try {
       return READER.readTree(inputStream);
     } catch (IOException exc) {
@@ -86,7 +86,7 @@ public final class JsonHandler {
   }
 
   /** Reads a {@link String} with JSON content and returns it as a {@link JsonNode}. */
-  public static JsonNode readTree(String jsonString) {
+  static JsonNode readTree(String jsonString) {
     try {
       return READER.readTree(jsonString);
     } catch (IOException exc) {
@@ -95,7 +95,7 @@ public final class JsonHandler {
   }
 
   /** Converts a {@link Map} into a {@link JsonNode}. */
-  public static JsonNode convertToJsonNode(Map<String, String> map) {
+  static JsonNode convertToJsonNode(Map<String, String> map) {
     return MAPPER.valueToTree(map);
   }
 }

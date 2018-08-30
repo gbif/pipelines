@@ -1,9 +1,10 @@
-package org.gbif.pipelines.esindexing.request;
+package org.gbif.pipelines.esindexing.service;
 
-import org.gbif.pipelines.esindexing.common.FileUtils;
-import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.common.SettingsType;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -18,17 +19,17 @@ import com.google.common.base.Strings;
 import org.apache.http.HttpEntity;
 import org.apache.http.nio.entity.NStringEntity;
 
-import static org.gbif.pipelines.esindexing.common.EsConstants.Action;
-import static org.gbif.pipelines.esindexing.common.EsConstants.Constant;
-import static org.gbif.pipelines.esindexing.common.EsConstants.Field;
-import static org.gbif.pipelines.esindexing.common.EsConstants.Indexing;
-import static org.gbif.pipelines.esindexing.common.EsConstants.Searching;
-import static org.gbif.pipelines.esindexing.common.JsonHandler.createArrayNode;
-import static org.gbif.pipelines.esindexing.common.JsonHandler.createObjectNode;
-import static org.gbif.pipelines.esindexing.common.JsonHandler.writeToString;
+import static org.gbif.pipelines.esindexing.service.EsConstants.Action;
+import static org.gbif.pipelines.esindexing.service.EsConstants.Constant;
+import static org.gbif.pipelines.esindexing.service.EsConstants.Field;
+import static org.gbif.pipelines.esindexing.service.EsConstants.Indexing;
+import static org.gbif.pipelines.esindexing.service.EsConstants.Searching;
+import static org.gbif.pipelines.esindexing.service.JsonHandler.createArrayNode;
+import static org.gbif.pipelines.esindexing.service.JsonHandler.createObjectNode;
+import static org.gbif.pipelines.esindexing.service.JsonHandler.writeToString;
 
 /** Class that builds {@link HttpEntity} instances with JSON content. */
-public class BodyBuilder {
+class HttpRequestBuilder {
 
   // pre-defined settings
   private static final ObjectNode INDEXING_SETTINGS = createObjectNode();
@@ -48,33 +49,33 @@ public class BodyBuilder {
     SEARCH_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
   }
 
-  private BodyBuilder() {}
+  private HttpRequestBuilder() {}
 
-  /** Creates a new {@link BodyBuilder}. */
-  public static BodyBuilder newInstance() {
-    return new BodyBuilder();
+  /** Creates a new {@link HttpRequestBuilder}. */
+  static HttpRequestBuilder newInstance() {
+    return new HttpRequestBuilder();
   }
 
   /** Creates a {@link HttpEntity} from a {@link String} that will become the body of the entity. */
-  public static HttpEntity createBodyFromString(String body) {
+  static HttpEntity createBodyFromString(String body) {
     return createEntity(body);
   }
 
   /** Adds a {@link SettingsType} to the body. */
-  public BodyBuilder withSettingsType(SettingsType settingsType) {
+  HttpRequestBuilder withSettingsType(SettingsType settingsType) {
     Objects.requireNonNull(settingsType);
     this.settings = (settingsType == SettingsType.INDEXING) ? INDEXING_SETTINGS : SEARCH_SETTINGS;
     return this;
   }
 
   /** Adds a {@link Map} of settings to the body. */
-  public BodyBuilder withSettingsMap(Map<String, String> settingsMap) {
+  HttpRequestBuilder withSettingsMap(Map<String, String> settingsMap) {
     this.settings = JsonHandler.convertToJsonNode(settingsMap);
     return this;
   }
 
   /** Adds ES mappings in JSON format to the body. */
-  public BodyBuilder withMappings(String mappings) {
+  HttpRequestBuilder withMappings(String mappings) {
     Preconditions.checkArgument(
         !Strings.isNullOrEmpty(mappings), "Mappings cannot be null or empty");
     this.mappings = JsonHandler.readTree(mappings);
@@ -82,9 +83,9 @@ public class BodyBuilder {
   }
 
   /** Adds ES mappings from a file in JSON format to the body. */
-  public BodyBuilder withMappings(Path mappingsPath) {
+  HttpRequestBuilder withMappings(Path mappingsPath) {
     Objects.requireNonNull(mappingsPath, "The path of the mappings cannot be null");
-    this.mappings = JsonHandler.readTree(FileUtils.loadFile(mappingsPath));
+    this.mappings = JsonHandler.readTree(loadFile(mappingsPath));
     return this;
   }
 
@@ -97,13 +98,13 @@ public class BodyBuilder {
    * @param idxToRemove indexes to remove from the alias. These indexes will be completely removed
    *     form the ES instance.
    */
-  public BodyBuilder withIndexAliasAction(
+  HttpRequestBuilder withIndexAliasAction(
       String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
     this.indexAliasAction = new IndexAliasAction(alias, idxToAdd, idxToRemove);
     return this;
   }
 
-  public HttpEntity build() {
+  HttpEntity build() {
     ObjectNode body = createObjectNode();
 
     // add settings
@@ -192,6 +193,18 @@ public class BodyBuilder {
       this.alias = alias;
       this.idxToAdd = idxToAdd;
       this.idxToRemove = idxToRemove;
+    }
+  }
+
+  static InputStream loadFile(Path path) {
+    if (path.isAbsolute()) {
+      try {
+        return new FileInputStream(path.toFile());
+      } catch (FileNotFoundException exc) {
+        throw new IllegalArgumentException(exc.getMessage(), exc);
+      }
+    } else {
+      return Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
     }
   }
 }

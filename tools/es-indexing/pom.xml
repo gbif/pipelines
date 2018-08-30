@@ -16,8 +16,19 @@
 
   <name>Artery :: Tools :: ES-indexing</name>
 
+  <!-- Copy pom.xml value to test resources maven.properties -->
+  <build>
+    <resources>
+      <resource>
+        <directory>src/test/resources</directory>
+        <targetPath>../test-classes/</targetPath>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+  </build>
+
   <dependencies>
-    
+
     <dependency>
       <groupId>org.elasticsearch.client</groupId>
       <artifactId>elasticsearch-rest-client</artifactId>

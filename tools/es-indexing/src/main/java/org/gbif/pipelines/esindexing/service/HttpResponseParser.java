@@ -1,7 +1,6 @@
-package org.gbif.pipelines.esindexing.response;
+package org.gbif.pipelines.esindexing.service;
 
 import org.gbif.pipelines.esindexing.client.EsClient;
-import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.common.SettingsType;
 
 import java.util.Set;
@@ -9,23 +8,23 @@ import java.util.Set;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.http.HttpEntity;
 
-import static org.gbif.pipelines.esindexing.common.EsConstants.Field;
+import static org.gbif.pipelines.esindexing.service.EsConstants.Field;
 
 /** Parser for the ES responses encapsulated in a {@link HttpEntity}. */
-public class ResponseParser {
+class HttpResponseParser {
 
-  private ResponseParser() {}
+  private HttpResponseParser() {}
 
   /**
    * Parses the response from an index creation request.
    *
    * <p>Specifically designed to use with a request similar to the one used in {@link
-   * org.gbif.pipelines.esindexing.api.EsService#createIndex(EsClient, String, SettingsType)}.
+   * org.gbif.pipelines.esindexing.service.EsService#createIndex(EsClient, String, SettingsType)}.
    *
    * @param entity {@link HttpEntity} from the response.
    * @return the name of the index created.
    */
-  public static String parseCreatedIndexResponse(HttpEntity entity) {
+  static String parseCreatedIndexResponse(HttpEntity entity) {
     return JsonHandler.readValue(entity).get(Field.INDEX);
   }
 
@@ -33,13 +32,13 @@ public class ResponseParser {
    * Parses the response from a request that gets the indexes in an alias.
    *
    * <p>Specifically designed to use with a request similar to the one used in {@link
-   * org.gbif.pipelines.esindexing.api.EsService#getIndexesByAliasAndIndexPattern(EsClient, String,
-   * String)}.
+   * org.gbif.pipelines.esindexing.service.EsService#getIndexesByAliasAndIndexPattern(EsClient,
+   * String, String)}.
    *
    * @param entity {@link HttpEntity} from the response.
    * @return {@link Set} with the indexes of the alias.
    */
-  public static Set<String> parseIndexesInAliasResponse(HttpEntity entity) {
+  static Set<String> parseIndexesInAliasResponse(HttpEntity entity) {
     return JsonHandler.readValue(entity).keySet();
   }
 
@@ -49,7 +48,7 @@ public class ResponseParser {
    * @param entity {@link HttpEntity} from the response.
    * @return number of documents of the index.
    */
-  public static long parseIndexCountResponse(HttpEntity entity) {
+  static long parseIndexCountResponse(HttpEntity entity) {
     JsonNode node = JsonHandler.readTree(entity);
     return node.has(Field.COUNT) ? node.path(Field.COUNT).asLong() : 0L;
   }

@@ -10,6 +10,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 
 import java.util.function.BiConsumer;
 
+/** TODO */
 public interface MetadataInterpreter extends BiConsumer<String, MetadataRecord> {
 
   static Context<String, MetadataRecord> createContext(String datasetId) {

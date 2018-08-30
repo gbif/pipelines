@@ -1,12 +1,9 @@
-package org.gbif.pipelines.esindexing.api;
+package org.gbif.pipelines.esindexing.service;
 
-import org.gbif.pipelines.esindexing.EsServer;
-import org.gbif.pipelines.esindexing.common.EsConstants.Constant;
-import org.gbif.pipelines.esindexing.common.EsConstants.Field;
-import org.gbif.pipelines.esindexing.common.EsConstants.Indexing;
-import org.gbif.pipelines.esindexing.common.EsConstants.Searching;
-import org.gbif.pipelines.esindexing.common.JsonHandler;
-import org.gbif.pipelines.esindexing.request.BodyBuilder;
+import org.gbif.pipelines.esindexing.service.EsConstants.Constant;
+import org.gbif.pipelines.esindexing.service.EsConstants.Field;
+import org.gbif.pipelines.esindexing.service.EsConstants.Indexing;
+import org.gbif.pipelines.esindexing.service.EsConstants.Searching;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,7 +16,10 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RestClient;
 import org.junit.ClassRule;
+
+import static org.gbif.pipelines.esindexing.service.EsService.buildEndpoint;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
  *
  * <p>{@link ClassRule} requires this class to be public.
  */
-public abstract class EsApiIntegrationTest {
+public abstract class EsApiIntegration {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule public static final EsServer ES_SERVER = new EsServer();
@@ -39,15 +39,13 @@ public abstract class EsApiIntegrationTest {
   static final Path TEST_MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");
 
   /** Utility method to get the settings of an index. */
-  private static JsonNode getSettingsFromIndex(String idx) {
+  private static JsonNode getSettingsFromIndex(String idxName) {
+
+    String endpoint = buildEndpoint(idxName, "_settings");
     try {
+      RestClient client = ES_SERVER.getRestClient();
       Response response =
-          ES_SERVER
-              .getRestClient()
-              .performRequest(
-                  HttpGet.METHOD_NAME,
-                  EndpointHelper.getIndexSettingsEndpoint(idx),
-                  Collections.emptyMap());
+          client.performRequest(HttpGet.METHOD_NAME, endpoint, Collections.emptyMap());
 
       // parse response and return
       return JsonHandler.readTree(response.getEntity());
@@ -106,33 +104,27 @@ public abstract class EsApiIntegrationTest {
   static void addIndexesToAlias(String alias, Set<String> idxToAdd) {
     // add them to the same alias
     HttpEntity entityBody =
-        BodyBuilder.newInstance()
+        HttpRequestBuilder.newInstance()
             .withIndexAliasAction(alias, idxToAdd, Collections.emptySet())
             .build();
 
     try {
-      ES_SERVER
-          .getRestClient()
-          .performRequest(
-              HttpPost.METHOD_NAME,
-              EndpointHelper.getAliasesEndpoint(),
-              Collections.emptyMap(),
-              entityBody);
+      String endpoint = buildEndpoint("_aliases");
+      RestClient client = ES_SERVER.getRestClient();
+      client.performRequest(HttpPost.METHOD_NAME, endpoint, Collections.emptyMap(), entityBody);
     } catch (IOException e) {
       throw new AssertionError("Could not add indexes to alias", e);
     }
   }
 
   /** Utility method to get the mappings of an index. */
-  static JsonNode getMappingsFromIndex(String idx) {
+  static JsonNode getMappingsFromIndex(String idxName) {
+
+    String endpoint = buildEndpoint(idxName, "_mapping");
     try {
+      RestClient client = ES_SERVER.getRestClient();
       Response response =
-          ES_SERVER
-              .getRestClient()
-              .performRequest(
-                  HttpGet.METHOD_NAME,
-                  EndpointHelper.getIndexMappingsEndpoint(idx),
-                  Collections.emptyMap());
+          client.performRequest(HttpGet.METHOD_NAME, endpoint, Collections.emptyMap());
 
       // parse response and return
       return JsonHandler.readTree(response.getEntity());

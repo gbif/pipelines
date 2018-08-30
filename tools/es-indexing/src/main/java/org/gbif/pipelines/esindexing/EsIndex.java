@@ -1,8 +1,9 @@
-package org.gbif.pipelines.esindexing.api;
+package org.gbif.pipelines.esindexing;
 
 import org.gbif.pipelines.esindexing.client.EsClient;
 import org.gbif.pipelines.esindexing.client.EsConfig;
 import org.gbif.pipelines.esindexing.common.SettingsType;
+import org.gbif.pipelines.esindexing.service.EsService;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -16,18 +17,18 @@ import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.esindexing.api.EsService.getIndexesByAliasAndIndexPattern;
-import static org.gbif.pipelines.esindexing.api.EsService.swapIndexes;
-import static org.gbif.pipelines.esindexing.api.EsService.updateIndexSettings;
+import static org.gbif.pipelines.esindexing.service.EsService.getIndexesByAliasAndIndexPattern;
+import static org.gbif.pipelines.esindexing.service.EsService.swapIndexes;
+import static org.gbif.pipelines.esindexing.service.EsService.updateIndexSettings;
 
 /** Exposes a public API to perform operations in a ES instance. */
-public class EsHandler {
+public class EsIndex {
 
-  private static final Logger LOG = LoggerFactory.getLogger(EsHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EsIndex.class);
 
-  static final String INDEX_SEPARATOR = "_";
+  public static final String INDEX_SEPARATOR = "_";
 
-  private EsHandler() {}
+  private EsIndex() {}
 
   /**
    * Creates an Index in the ES instance specified in the {@link EsConfig} received.
@@ -40,7 +41,7 @@ public class EsHandler {
    * @param attempt attempt of the dataset crawling.
    * @return name of the index created.
    */
-  public static String createIndex(EsConfig config, String datasetId, int attempt) {
+  public static String create(EsConfig config, String datasetId, int attempt) {
     final String idxName = createIndexName(datasetId, attempt);
     LOG.info("Creating index {}", idxName);
 
@@ -61,7 +62,7 @@ public class EsHandler {
    * @param mappings path of the file with the mappings.
    * @return name of the index created.
    */
-  public static String createIndex(EsConfig config, String datasetId, int attempt, Path mappings) {
+  public static String create(EsConfig config, String datasetId, int attempt, Path mappings) {
     final String idxName = createIndexName(datasetId, attempt);
     LOG.info("Creating index {}", idxName);
 
@@ -82,8 +83,7 @@ public class EsHandler {
    * @param mappings mappings as json string.
    * @return name of the index created.
    */
-  public static String createIndex(
-      EsConfig config, String datasetId, int attempt, String mappings) {
+  public static String create(EsConfig config, String datasetId, int attempt, String mappings) {
     final String idxName = createIndexName(datasetId, attempt);
     LOG.info("Creating index {}", idxName);
 
@@ -105,7 +105,7 @@ public class EsHandler {
    * @param settingMap custom settings, number of shards and etc.
    * @return name of the index created.
    */
-  public static String createIndex(
+  public static String create(
       EsConfig config,
       String datasetId,
       int attempt,
@@ -159,7 +159,7 @@ public class EsHandler {
    * @param index index to count the elements from.
    * @return number of documents of the index.
    */
-  public static long countIndexDocuments(EsConfig config, String index) {
+  public static long countDocuments(EsConfig config, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
     LOG.info("Counting documents from index {}", index);
@@ -175,7 +175,7 @@ public class EsHandler {
    * @param config configuration of the ES instance.
    * @param index name of the index to refresh.
    */
-  public static void refreshIndex(EsConfig config, String index) {
+  public static void refresh(EsConfig config, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
     LOG.info("Refresing index {}", index);

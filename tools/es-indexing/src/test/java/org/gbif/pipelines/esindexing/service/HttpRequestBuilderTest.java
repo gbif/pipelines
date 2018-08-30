@@ -1,13 +1,11 @@
-package org.gbif.pipelines.esindexing.request;
+package org.gbif.pipelines.esindexing.service;
 
-import org.gbif.pipelines.esindexing.common.EsConstants.Action;
-import org.gbif.pipelines.esindexing.common.EsConstants.Constant;
-import org.gbif.pipelines.esindexing.common.EsConstants.Field;
-import org.gbif.pipelines.esindexing.common.EsConstants.Indexing;
-import org.gbif.pipelines.esindexing.common.EsConstants.Searching;
-import org.gbif.pipelines.esindexing.common.FileUtils;
-import org.gbif.pipelines.esindexing.common.JsonHandler;
 import org.gbif.pipelines.esindexing.common.SettingsType;
+import org.gbif.pipelines.esindexing.service.EsConstants.Action;
+import org.gbif.pipelines.esindexing.service.EsConstants.Constant;
+import org.gbif.pipelines.esindexing.service.EsConstants.Field;
+import org.gbif.pipelines.esindexing.service.EsConstants.Indexing;
+import org.gbif.pipelines.esindexing.service.EsConstants.Searching;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,13 +23,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.gbif.pipelines.esindexing.common.JsonHandler.readTree;
+import static org.gbif.pipelines.esindexing.service.HttpRequestBuilder.loadFile;
+import static org.gbif.pipelines.esindexing.service.JsonHandler.readTree;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/** Tests the {@link BodyBuilder}. */
-public class BodyBuilderTest {
+/** Tests the {@link HttpRequestBuilder}. */
+public class HttpRequestBuilderTest {
 
   private static final String TEST_MAPPINGS_PATH = "mappings/simple-mapping.json";
 
@@ -42,7 +41,8 @@ public class BodyBuilderTest {
   public void bodyIndexingTest() {
 
     // State
-    HttpEntity entity = BodyBuilder.newInstance().withSettingsType(SettingsType.INDEXING).build();
+    HttpEntity entity =
+        HttpRequestBuilder.newInstance().withSettingsType(SettingsType.INDEXING).build();
 
     // When
     JsonNode node = readTree(entity);
@@ -67,7 +67,8 @@ public class BodyBuilderTest {
   public void bodySearchTest() {
 
     // State
-    HttpEntity entity = BodyBuilder.newInstance().withSettingsType(SettingsType.SEARCH).build();
+    HttpEntity entity =
+        HttpRequestBuilder.newInstance().withSettingsType(SettingsType.SEARCH).build();
 
     // When
     JsonNode node = readTree(entity);
@@ -91,7 +92,7 @@ public class BodyBuilderTest {
     settings.put(Field.INDEX_NUMBER_REPLICAS, "1");
     settings.put(Field.INDEX_NUMBER_SHARDS, "2");
 
-    HttpEntity entity = BodyBuilder.newInstance().withSettingsMap(settings).build();
+    HttpEntity entity = HttpRequestBuilder.newInstance().withSettingsMap(settings).build();
 
     // When
     JsonNode node = readTree(entity);
@@ -112,7 +113,7 @@ public class BodyBuilderTest {
     Set<String> idxToRemove = new HashSet<>(Arrays.asList("remove1", "remove2"));
 
     HttpEntity entity =
-        BodyBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
+        HttpRequestBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
 
     // When
     JsonNode node = readTree(entity);
@@ -149,7 +150,6 @@ public class BodyBuilderTest {
     assertEquals(2, removeActions.size());
     assertTrue(indexesRemoved.containsAll(idxToRemove));
     assertEquals(idxToRemove.size(), indexesRemoved.size());
-
   }
 
   @Test
@@ -157,7 +157,7 @@ public class BodyBuilderTest {
 
     // State
     HttpEntity entity =
-        BodyBuilder.newInstance().withMappings(Paths.get(TEST_MAPPINGS_PATH)).build();
+        HttpRequestBuilder.newInstance().withMappings(Paths.get(TEST_MAPPINGS_PATH)).build();
 
     // When
     JsonNode node = readTree(entity);
@@ -170,10 +170,9 @@ public class BodyBuilderTest {
   public void bodyWithMappingsAsStringTest() {
 
     // State
-    String jsonMappings =
-        JsonHandler.writeToString(FileUtils.loadFile(Paths.get(TEST_MAPPINGS_PATH)));
+    String jsonMappings = JsonHandler.writeToString(loadFile(Paths.get(TEST_MAPPINGS_PATH)));
 
-    HttpEntity entity = BodyBuilder.newInstance().withMappings(jsonMappings).build();
+    HttpEntity entity = HttpRequestBuilder.newInstance().withMappings(jsonMappings).build();
 
     // When
     JsonNode node = readTree(entity);
@@ -187,7 +186,7 @@ public class BodyBuilderTest {
 
     // State
     HttpEntity entity =
-        BodyBuilder.newInstance()
+        HttpRequestBuilder.newInstance()
             .withSettingsType(SettingsType.INDEXING)
             .withMappings(Paths.get(TEST_MAPPINGS_PATH))
             .build();
@@ -208,7 +207,7 @@ public class BodyBuilderTest {
     String mappings = null;
 
     // When
-    BodyBuilder.newInstance().withMappings(mappings).build();
+    HttpRequestBuilder.newInstance().withMappings(mappings).build();
 
     // Should
     thrown.expectMessage("Mappings cannot be null or empty");
@@ -221,7 +220,7 @@ public class BodyBuilderTest {
     Path mappings = null;
 
     // When
-    BodyBuilder.newInstance().withMappings(mappings).build();
+    HttpRequestBuilder.newInstance().withMappings(mappings).build();
 
     // Should
     thrown.expectMessage("The path of the mappings cannot be null");

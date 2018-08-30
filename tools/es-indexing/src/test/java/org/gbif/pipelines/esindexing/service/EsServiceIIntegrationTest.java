@@ -1,6 +1,6 @@
-package org.gbif.pipelines.esindexing.api;
+package org.gbif.pipelines.esindexing.service;
 
-import org.gbif.pipelines.esindexing.common.EsConstants.Field;
+import org.gbif.pipelines.esindexing.service.EsConstants.Field;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link EsService}. */
-public class EsServiceIIntegrationTest extends EsApiIntegrationTest {
+public class EsServiceIIntegrationTest extends EsApiIntegration {
 
   private static final String ALIAS_TEST = "alias";
 

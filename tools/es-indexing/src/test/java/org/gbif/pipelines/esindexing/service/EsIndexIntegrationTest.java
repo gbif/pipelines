@@ -1,4 +1,6 @@
-package org.gbif.pipelines.esindexing.api;
+package org.gbif.pipelines.esindexing.service;
+
+import org.gbif.pipelines.esindexing.EsIndex;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,19 +16,20 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.gbif.pipelines.esindexing.api.EsHandler.INDEX_SEPARATOR;
-import static org.gbif.pipelines.esindexing.common.EsConstants.Field;
-import static org.gbif.pipelines.esindexing.common.EsConstants.Searching;
+import static org.gbif.pipelines.esindexing.EsIndex.INDEX_SEPARATOR;
+import static org.gbif.pipelines.esindexing.service.EsConstants.Field;
+import static org.gbif.pipelines.esindexing.service.EsConstants.Searching;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/** Tests the {@link EsHandler}. */
-public class EsHandlerIntegrationTest extends EsApiIntegrationTest {
+/** Tests the {@link EsIndex}. */
+public class EsIndexIntegrationTest extends EsApiIntegration {
 
   private static final String DATASET_TEST = "abc";
   private static final String ALIAS_TEST = "alias";
   private static final int DEFAULT_ATTEMPT = 1;
+  private static final String SEARCH = DATASET_TEST + INDEX_SEPARATOR + "*";
 
   /** {@link Rule} requires this field to be public. */
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -39,8 +42,7 @@ public class EsHandlerIntegrationTest extends EsApiIntegrationTest {
   @Test
   public void createIndexTest() {
     // create index
-    String idxCreated =
-        EsHandler.createIndex(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT);
+    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT);
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -50,7 +52,7 @@ public class EsHandlerIntegrationTest extends EsApiIntegrationTest {
   public void createIndexWithMappingsTest() {
     // create index
     String idxCreated =
-        EsHandler.createIndex(
+        EsIndex.create(
             ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
 
     // assert index created
@@ -64,14 +66,13 @@ public class EsHandlerIntegrationTest extends EsApiIntegrationTest {
   @Test
   public void swpaIndexInEmptyAliasTest() {
     // create index
-    String idxCreated = EsHandler.createIndex(ES_SERVER.getEsConfig(), DATASET_TEST, 1);
+    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 1);
 
     // swap index
-    EsHandler.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idxCreated);
+    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idxCreated);
 
     // assert result
-    assertSwapResults(
-        idxCreated, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, Collections.emptySet());
+    assertSwapResults(idxCreated, SEARCH, ALIAS_TEST, Collections.emptySet());
 
     // check settings of index after swapping
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxCreated));
@@ -81,31 +82,30 @@ public class EsHandlerIntegrationTest extends EsApiIntegrationTest {
   @Test
   public void swapIndexInAliasTest() {
     // create index
-    String idx1 = EsHandler.createIndex(ES_SERVER.getEsConfig(), DATASET_TEST, 1);
-    String idx2 = EsHandler.createIndex(ES_SERVER.getEsConfig(), DATASET_TEST, 2);
+    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 1);
+    String idx2 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 2);
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2));
 
     // add the indexes to the alias
     addIndexesToAlias(ALIAS_TEST, initialIndexes);
 
     // create another index and swap it in the alias
-    String idx3 = EsHandler.createIndex(ES_SERVER.getEsConfig(), DATASET_TEST, 3);
-    EsHandler.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx3);
+    String idx3 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 3);
+    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx3);
 
     // alias should have only the last index created
-    assertSwapResults(idx3, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, initialIndexes);
+    assertSwapResults(idx3, SEARCH, ALIAS_TEST, initialIndexes);
 
     // check settings of index after swapping
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx3));
     assertSearchSettings(idx3);
 
     // create another index and swap it again
-    String idx4 = EsHandler.createIndex(ES_SERVER.getEsConfig(), DATASET_TEST, 4);
-    EsHandler.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx4);
+    String idx4 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 4);
+    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx4);
 
     // alias should have only the last index created
-    assertSwapResults(
-        idx4, DATASET_TEST + INDEX_SEPARATOR + "*", ALIAS_TEST, Collections.singleton(idx3));
+    assertSwapResults(idx4, SEARCH, ALIAS_TEST, Collections.singleton(idx3));
 
     // check settings of index after swapping
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx4));
@@ -117,14 +117,14 @@ public class EsHandlerIntegrationTest extends EsApiIntegrationTest {
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage(CoreMatchers.containsString("Error swapping index"));
 
-    EsHandler.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, "dummy_1");
+    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, "dummy_1");
   }
 
   @Test
   public void countIndexDocumentsAfterSwappingTest() throws InterruptedException {
     // create index
     String idx =
-        EsHandler.createIndex(
+        EsIndex.create(
             ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
 
     // index some documents
@@ -136,7 +136,7 @@ public class EsHandlerIntegrationTest extends EsApiIntegrationTest {
     }
 
     // swap index in alias
-    EsHandler.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx);
+    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx);
 
     // wait the refresh interval for the documents to become searchable.
 
@@ -145,9 +145,9 @@ public class EsHandlerIntegrationTest extends EsApiIntegrationTest {
             + 500);
 
     // assert results against the alias
-    assertEquals(n, EsHandler.countIndexDocuments(ES_SERVER.getEsConfig(), ALIAS_TEST));
+    assertEquals(n, EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS_TEST));
     // assert results against the index
-    assertEquals(n, EsHandler.countIndexDocuments(ES_SERVER.getEsConfig(), idx));
+    assertEquals(n, EsIndex.countDocuments(ES_SERVER.getEsConfig(), idx));
   }
 
   /** Utility mehtod to assert a newly created index. */

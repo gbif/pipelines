@@ -9,6 +9,7 @@ import org.gbif.pipelines.io.avro.Issue;
 import java.util.List;
 import java.util.Objects;
 
+/** */
 public class ModelUtils {
 
   private ModelUtils() {}
@@ -34,15 +35,15 @@ public class ModelUtils {
     }
   }
 
-  public static void addIssue(Issue model, String issue){
+  public static void addIssue(Issue model, String issue) {
     model.getIssues().getIssueList().add(issue);
   }
 
-  public static void addIssue(Issue model, OccurrenceIssue issue){
+  public static void addIssue(Issue model, OccurrenceIssue issue) {
     model.getIssues().getIssueList().add(issue.name());
   }
 
-  public static void addIssue(Issue model, List<String> issues){
+  public static void addIssue(Issue model, List<String> issues) {
     model.getIssues().getIssueList().addAll(issues);
   }
 }

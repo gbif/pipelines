@@ -18,9 +18,9 @@
   <name>Artery :: Tools</name>
 
   <modules>
+    <module>pipelines-maven-plugin</module>
     <module>xml-converter</module>
     <module>es-indexing</module>
-    <module>pipelines-maven-plugin</module>
   </modules>
 
 </project>
