@@ -41,10 +41,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * <p>Adds Override annotation:
  *
  * <pre>{@code
- *  @Override
- *  public org.gbif.pipelines.io.avro.IssueRecord getIssues() {
- *    return issues;
- *  }
+ * @Override
+ * public org.gbif.pipelines.io.avro.IssueRecord getIssues() {
+ *   return issues;
+ * }
+ *
  * }</pre>
  */
 @Mojo(name = "postprocess", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
@@ -74,7 +75,11 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** Modifies java class, adds Issues interface, Beam Avro and override annotations */
+  /**
+   * Modifies java class, adds Issues interface, Beam Avro and override annotation
+   *
+   * @param path path to a java class
+   */
   private void modifyFile(Path path) {
     List<String> lines = getLines(path);
     List<Integer> idxs = getIdx(lines);
@@ -86,7 +91,13 @@ public class AvroPostprocessMojo extends AbstractMojo {
     writeFile(path, lines, idxs);
   }
 
-  /** Writes changes to a java class */
+  /**
+   * Writes changes to a java class
+   *
+   * @param path path to a java class
+   * @param lines lines to write in a file
+   * @param idxs excepted line indexes
+   */
   private void writeFile(Path path, List<String> lines, List<Integer> idxs) {
     if (idxs.get(0) != -1 || idxs.get(1) != -1) {
       try {
@@ -98,7 +109,12 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** Adds override annotation to a "getIssues()" method */
+  /**
+   * Adds override annotation to a "getIssues()" method
+   *
+   * @param lines java class source lines
+   * @param idxs excepted line indexes
+   */
   private void addOverrideMethod(List<String> lines, List<Integer> idxs) {
     int ovrdIdx = idxs.get(2);
     if (ovrdIdx != -1) {
@@ -106,7 +122,12 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** Adds @DefaultCoder(AvroCoder.class) annotation to class */
+  /**
+   * Adds @DefaultCoder(AvroCoder.class) annotation to class
+   *
+   * @param lines java class source lines
+   * @param idxs excepted line indexes
+   */
   private void addAvroCodecAnnotation(List<String> lines, List<Integer> idxs) {
     int beforeIdx = idxs.get(0);
     if (beforeIdx != -1) {
@@ -117,7 +138,12 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** Adds Issues interface extension to a class */
+  /**
+   * Adds Issues interface extension to a class
+   *
+   * @param lines java class source lines
+   * @param idxs excepted line indexes
+   */
   private void changeInterface(List<String> lines, List<Integer> idxs) {
     int interIdx = idxs.get(1);
     int ovrdIdx = idxs.get(2);
@@ -128,7 +154,11 @@ public class AvroPostprocessMojo extends AbstractMojo {
     }
   }
 
-  /** Finds line indexes for, Beam Avro annotation, Issues interface and override annotation */
+  /**
+   * Finds line indexes for, Beam Avro annotation, Issues interface and override annotation
+   *
+   * @param lines java class source lines
+   */
   private List<Integer> getIdx(List<String> lines) {
     int beforeIdx = -1;
     int interIdx = -1;
@@ -150,7 +180,11 @@ public class AvroPostprocessMojo extends AbstractMojo {
     return Arrays.asList(beforeIdx, interIdx, ovrdIdx);
   }
 
-  /** Reads lines in a java class */
+  /**
+   * Reads lines in a java class
+   *
+   * @param path path to a java class
+   */
   private List<String> getLines(Path path) {
     try {
       return Files.readAllLines(path);
