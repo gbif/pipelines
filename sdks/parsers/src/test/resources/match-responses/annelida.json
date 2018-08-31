@@ -1,0 +1,41 @@
+{
+  "synonym": "false",
+  "usage": {
+    "key": "6103",
+    "name": "Lumbricidae",
+    "rank": "FAMILY"
+  },
+  "classification": [
+    {
+      "key": "1",
+      "name": "Animalia",
+      "rank": "KINGDOM"
+    },
+    {
+      "key": "42",
+      "name": "Annelida",
+      "rank": "PHYLUM"
+    },
+    {
+      "key": "255",
+      "name": "Clitellata",
+      "rank": "CLASS"
+    },
+    {
+      "key": "5958860",
+      "name": "Crassiclitellata",
+      "rank": "ORDER"
+    },
+    {
+      "key": "6103",
+      "name": "Lumbricidae",
+      "rank": "FAMILY"
+    }
+  ],
+  "diagnostics": {
+    "matchType": "HIGHERRANK",
+    "status": "ACCEPTED",
+    "lineage": [],
+    "alternatives": []
+  }
+}

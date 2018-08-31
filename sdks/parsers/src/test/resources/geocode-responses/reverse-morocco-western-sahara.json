@@ -1,0 +1,16 @@
+[
+  {
+    "id": "142",
+    "type": "Political",
+    "source": "http://www.naturalearthdata.com",
+    "title": "Morocco",
+    "isoCountryCode2Digit": "MA"
+  },
+  {
+    "id": "249",
+    "type": "EEZ",
+    "source": "http://vliz.be/vmdcdata/marbound/",
+    "title": "Western Sahara",
+    "isoCountryCode2Digit": "MA"
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "synonym": "true",
+  "usage": {
+    "key": "1118030",
+    "name": "Agallisus lepturoides Hovore, Penrose & Neck, 1987",
+    "rank": "SPECIES"
+  },
+  "acceptedUsage": {
+    "key": "1118026",
+    "name": "Agallissus lepturoides (Chevrolat, 1849)",
+    "rank": "SPECIES"
+  },
+  "classification": [
+    {
+      "key": "1",
+      "name": "Animalia",
+      "rank": "KINGDOM"
+    },
+    {
+      "key": "54",
+      "name": "Arthropoda",
+      "rank": "PHYLUM"
+    },
+    {
+      "key": "216",
+      "name": "Insecta",
+      "rank": "CLASS"
+    },
+    {
+      "key": "1470",
+      "name": "Coleoptera",
+      "rank": "ORDER"
+    },
+    {
+      "key": "5602",
+      "name": "Cerambycidae",
+      "rank": "FAMILY"
+    },
+    {
+      "key": "1118010",
+      "name": "Agallissus",
+      "rank": "GENUS"
+    },
+    {
+      "key": "1118026",
+      "name": "Agallissus lepturoides",
+      "rank": "SPECIES"
+    }
+  ],
+  "diagnostics": {
+    "matchType": "EXACT",
+    "status": "SYNONYM",
+    "lineage": [],
+    "alternatives": []
+  }
+}

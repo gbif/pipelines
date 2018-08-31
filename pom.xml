@@ -89,6 +89,9 @@
     <okhttp.version>3.10.0</okhttp.version>
     <okio.version>1.14.0</okio.version>
 
+    <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
+    <joda-time.version>2.4</joda-time.version>
+
     <!-- Test -->
     <junit.version>4.12</junit.version>
     <mockwebserver.version>3.10.0</mockwebserver.version>
@@ -186,6 +189,11 @@
       <dependency>
         <groupId>org.gbif.artery</groupId>
         <artifactId>models</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.artery</groupId>
+        <artifactId>parsers</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -289,6 +297,16 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>${findbugs-jsr305.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>${joda-time.version}</version>
       </dependency>
 
       <!-- ES -->

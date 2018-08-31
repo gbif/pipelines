@@ -1,13 +1,5 @@
 package org.gbif.pipelines.base;
 
-import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.core.interpreter.BasicInterpreter;
-import org.gbif.pipelines.core.interpreter.LocationInterpreter;
-import org.gbif.pipelines.core.interpreter.MetadataInterpreter;
-import org.gbif.pipelines.core.interpreter.MultimediaInterpreter;
-import org.gbif.pipelines.core.interpreter.TaxonomyInterpreter;
-import org.gbif.pipelines.core.interpreter.TemporalInterpreter;
-import org.gbif.pipelines.core.ws.config.Config;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -15,6 +7,14 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.Interpretation;
+import org.gbif.pipelines.parsers.interpreter.BasicInterpreter;
+import org.gbif.pipelines.parsers.interpreter.LocationInterpreter;
+import org.gbif.pipelines.parsers.interpreter.MetadataInterpreter;
+import org.gbif.pipelines.parsers.interpreter.MultimediaInterpreter;
+import org.gbif.pipelines.parsers.interpreter.TaxonomyInterpreter;
+import org.gbif.pipelines.parsers.interpreter.TemporalInterpreter;
+import org.gbif.pipelines.parsers.ws.config.Config;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;

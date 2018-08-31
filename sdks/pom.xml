@@ -19,6 +19,7 @@
 
   <modules>
     <module>models</module>
+    <module>parsers</module>
     <module>core</module>
   </modules>
 

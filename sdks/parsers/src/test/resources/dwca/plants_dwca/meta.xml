@@ -1,0 +1,23 @@
+<archive xmlns="http://rs.tdwg.org/dwc/text/" metadata="eml.xml">
+  <core encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="0"
+        rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+    <files>
+      <location>occurrence.txt</location>
+    </files>
+    <id index="0"/>
+    <field index="1" term="http://rs.tdwg.org/dwc/terms/kingdom"/>
+    <field index="2" term="http://rs.tdwg.org/dwc/terms/institutionCode"/>
+    <field index="3" term="http://rs.tdwg.org/dwc/terms/basisOfRecord"/>
+    <field index="4" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+    <field index="5" term="http://rs.tdwg.org/dwc/terms/collectionCode"/>
+    <field index="6" term="http://rs.tdwg.org/dwc/terms/family"/>
+  </core>
+  <extension encoding="utf-8" fieldsTerminatedBy="\t" linesTerminatedBy="\n" fieldsEnclosedBy="" ignoreHeaderLines="0"
+             rowType="http://rs.gbif.org/terms/1.0/Identifier">
+    <files>
+      <location>identifier.txt</location>
+    </files>
+    <coreid index="0"/>
+    <field index="1" term="http://purl.org/dc/terms/identifier"/>
+  </extension>
+</archive>
