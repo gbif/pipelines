@@ -1,4 +1,4 @@
-package org.gbif.pipelines.esindexing.client;
+package org.gbif.pipelines.estools.client;
 
 import org.junit.Rule;
 import org.junit.Test;

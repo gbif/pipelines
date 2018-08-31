@@ -1,4 +1,4 @@
-package org.gbif.pipelines.esindexing.service;
+package org.gbif.pipelines.estools.service;
 
 /** Utility class to store ES-related constants. */
 final class EsConstants {

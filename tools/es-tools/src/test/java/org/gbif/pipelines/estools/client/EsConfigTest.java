@@ -1,4 +1,4 @@
-package org.gbif.pipelines.esindexing.client;
+package org.gbif.pipelines.estools.client;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Rule;

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.esindexing.service;
+package org.gbif.pipelines.estools.service;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Set;

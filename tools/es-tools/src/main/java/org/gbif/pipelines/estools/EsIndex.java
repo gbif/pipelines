@@ -1,9 +1,9 @@
-package org.gbif.pipelines.esindexing;
+package org.gbif.pipelines.estools;
 
-import org.gbif.pipelines.esindexing.client.EsClient;
-import org.gbif.pipelines.esindexing.client.EsConfig;
-import org.gbif.pipelines.esindexing.common.SettingsType;
-import org.gbif.pipelines.esindexing.service.EsService;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.client.EsConfig;
+import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.service.EsService;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -17,9 +17,9 @@ import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.esindexing.service.EsService.getIndexesByAliasAndIndexPattern;
-import static org.gbif.pipelines.esindexing.service.EsService.swapIndexes;
-import static org.gbif.pipelines.esindexing.service.EsService.updateIndexSettings;
+import static org.gbif.pipelines.estools.service.EsService.getIndexesByAliasAndIndexPattern;
+import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
+import static org.gbif.pipelines.estools.service.EsService.updateIndexSettings;
 
 /** Exposes a public API to perform operations in a ES instance. */
 public class EsIndex {

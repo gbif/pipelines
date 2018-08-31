@@ -1,7 +1,7 @@
-package org.gbif.pipelines.esindexing.service;
+package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.esindexing.client.EsClient;
-import org.gbif.pipelines.esindexing.client.EsConfig;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.client.EsConfig;
 
 import java.io.IOException;
 import java.net.ServerSocket;

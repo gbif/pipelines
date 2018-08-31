@@ -1,7 +1,7 @@
-package org.gbif.pipelines.esindexing.service;
+package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.esindexing.client.EsClient;
-import org.gbif.pipelines.esindexing.common.SettingsType;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.common.SettingsType;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,7 +19,7 @@ import org.elasticsearch.client.ResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.gbif.pipelines.esindexing.service.HttpRequestBuilder.createBodyFromString;
+import static org.gbif.pipelines.estools.service.HttpRequestBuilder.createBodyFromString;
 
 /**
  * Service to perform ES operations.

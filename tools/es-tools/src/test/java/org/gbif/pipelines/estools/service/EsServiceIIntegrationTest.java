@@ -1,6 +1,6 @@
-package org.gbif.pipelines.esindexing.service;
+package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.esindexing.service.EsConstants.Field;
+import org.gbif.pipelines.estools.service.EsConstants.Field;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,8 +18,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.gbif.pipelines.esindexing.common.SettingsType.INDEXING;
-import static org.gbif.pipelines.esindexing.common.SettingsType.SEARCH;
+import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
+import static org.gbif.pipelines.estools.common.SettingsType.SEARCH;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

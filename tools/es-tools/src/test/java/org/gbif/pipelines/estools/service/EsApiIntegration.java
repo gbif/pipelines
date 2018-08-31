@@ -1,9 +1,9 @@
-package org.gbif.pipelines.esindexing.service;
+package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.esindexing.service.EsConstants.Constant;
-import org.gbif.pipelines.esindexing.service.EsConstants.Field;
-import org.gbif.pipelines.esindexing.service.EsConstants.Indexing;
-import org.gbif.pipelines.esindexing.service.EsConstants.Searching;
+import org.gbif.pipelines.estools.service.EsConstants.Constant;
+import org.gbif.pipelines.estools.service.EsConstants.Field;
+import org.gbif.pipelines.estools.service.EsConstants.Indexing;
+import org.gbif.pipelines.estools.service.EsConstants.Searching;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,7 +19,7 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.junit.ClassRule;
 
-import static org.gbif.pipelines.esindexing.service.EsService.buildEndpoint;
+import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

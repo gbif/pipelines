@@ -1,6 +1,6 @@
-package org.gbif.pipelines.esindexing.service;
+package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.esindexing.common.SettingsType;
+import org.gbif.pipelines.estools.common.SettingsType;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,14 +19,14 @@ import com.google.common.base.Strings;
 import org.apache.http.HttpEntity;
 import org.apache.http.nio.entity.NStringEntity;
 
-import static org.gbif.pipelines.esindexing.service.EsConstants.Action;
-import static org.gbif.pipelines.esindexing.service.EsConstants.Constant;
-import static org.gbif.pipelines.esindexing.service.EsConstants.Field;
-import static org.gbif.pipelines.esindexing.service.EsConstants.Indexing;
-import static org.gbif.pipelines.esindexing.service.EsConstants.Searching;
-import static org.gbif.pipelines.esindexing.service.JsonHandler.createArrayNode;
-import static org.gbif.pipelines.esindexing.service.JsonHandler.createObjectNode;
-import static org.gbif.pipelines.esindexing.service.JsonHandler.writeToString;
+import static org.gbif.pipelines.estools.service.EsConstants.Action;
+import static org.gbif.pipelines.estools.service.EsConstants.Constant;
+import static org.gbif.pipelines.estools.service.EsConstants.Field;
+import static org.gbif.pipelines.estools.service.EsConstants.Indexing;
+import static org.gbif.pipelines.estools.service.EsConstants.Searching;
+import static org.gbif.pipelines.estools.service.JsonHandler.createArrayNode;
+import static org.gbif.pipelines.estools.service.JsonHandler.createObjectNode;
+import static org.gbif.pipelines.estools.service.JsonHandler.writeToString;
 
 /** Class that builds {@link HttpEntity} instances with JSON content. */
 class HttpRequestBuilder {

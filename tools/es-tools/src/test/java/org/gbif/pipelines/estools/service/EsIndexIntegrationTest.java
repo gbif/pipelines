@@ -1,6 +1,6 @@
-package org.gbif.pipelines.esindexing.service;
+package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.esindexing.EsIndex;
+import org.gbif.pipelines.estools.EsIndex;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,9 +16,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.gbif.pipelines.esindexing.EsIndex.INDEX_SEPARATOR;
-import static org.gbif.pipelines.esindexing.service.EsConstants.Field;
-import static org.gbif.pipelines.esindexing.service.EsConstants.Searching;
+import static org.gbif.pipelines.estools.EsIndex.INDEX_SEPARATOR;
+import static org.gbif.pipelines.estools.service.EsConstants.Field;
+import static org.gbif.pipelines.estools.service.EsConstants.Searching;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
