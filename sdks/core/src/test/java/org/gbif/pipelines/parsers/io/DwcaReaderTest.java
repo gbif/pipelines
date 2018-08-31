@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
-public class DwCAReaderTest {
+public class DwcaReaderTest {
 
   @Test
   public void uncompressedReaderTest() throws IOException {
@@ -17,7 +17,7 @@ public class DwCAReaderTest {
     String fileName = getClass().getResource("/dwca/plants_dwca").getFile();
 
     // When
-    DwCAReader dwCAReader = new DwCAReader(fileName);
+    DwcaReader dwCAReader = new DwcaReader(fileName);
     dwCAReader.init();
     ExtendedRecord current = dwCAReader.getCurrent();
     dwCAReader.close();
@@ -34,7 +34,7 @@ public class DwCAReaderTest {
     String fileOut = new File("target/tmp").getAbsolutePath();
 
     // When
-    DwCAReader dwCAReader = new DwCAReader(fileName, fileOut);
+    DwcaReader dwCAReader = new DwcaReader(fileName, fileOut);
     dwCAReader.init();
     ExtendedRecord current = dwCAReader.getCurrent();
     dwCAReader.close();

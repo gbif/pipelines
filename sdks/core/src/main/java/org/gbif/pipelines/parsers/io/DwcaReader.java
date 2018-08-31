@@ -19,22 +19,22 @@ import org.slf4j.LoggerFactory;
  * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in
  * Avro.
  */
-public class DwCAReader {
+public class DwcaReader {
 
   private static final String UNCOMPRESSED = "UNCOMPRESSED";
 
-  private static final Logger LOG = LoggerFactory.getLogger(DwCAReader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DwcaReader.class);
   private final String source;
   private final String workingDir;
   private ClosableIterator<StarRecord> starRecordsIt;
   private long recordsReturned;
   private ExtendedRecord current;
 
-  public DwCAReader(String workingDir) {
+  public DwcaReader(String workingDir) {
     this(UNCOMPRESSED, workingDir);
   }
 
-  public DwCAReader(String source, String workingDir) {
+  public DwcaReader(String source, String workingDir) {
     this.source = source;
     this.workingDir = workingDir;
   }

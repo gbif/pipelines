@@ -1,7 +1,7 @@
 package org.gbif.pipelines.common.beam;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.io.DwCAReader;
+import org.gbif.pipelines.parsers.io.DwcaReader;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -131,7 +131,7 @@ public class DwcaIO {
   private static class BoundedDwCAReader extends BoundedSource.BoundedReader<ExtendedRecord> {
 
     private final DwCASource source;
-    private DwCAReader reader;
+    private DwcaReader reader;
 
     private BoundedDwCAReader(DwCASource source) {
       this.source = source;
@@ -140,9 +140,9 @@ public class DwcaIO {
     @Override
     public boolean start() throws IOException {
       if (Read.UNCOMPRESSED.equals(source.read.path)) {
-        reader = new DwCAReader(source.read.workingPath);
+        reader = new DwcaReader(source.read.workingPath);
       } else {
-        reader = new DwCAReader(source.read.path, source.read.workingPath);
+        reader = new DwcaReader(source.read.path, source.read.workingPath);
       }
 
       return reader.init();
