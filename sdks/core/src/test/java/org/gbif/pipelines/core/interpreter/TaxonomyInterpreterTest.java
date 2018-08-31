@@ -195,7 +195,7 @@ public class TaxonomyInterpreterTest extends BaseMockServerTest {
    * https://api.gbif-uat.org/v1/species/match2?kingdom=Animalia&rank=GENUS&name=Oenanthe%20Vieillot,%201816&strict=false&verbose=false
    */
   @Test
-  public void testOenantheRankAuthorshipTest() throws IOException {
+  public void oenantheRankAuthorshipTest() throws IOException {
 
     // State
     ExtendedRecord record =

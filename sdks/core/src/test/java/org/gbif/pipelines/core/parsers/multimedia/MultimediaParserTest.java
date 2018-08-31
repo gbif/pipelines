@@ -172,7 +172,7 @@ public class MultimediaParserTest {
   }
 
   @Test
-  public void testInterpretMediaCore() {
+  public void interpretMediaCoreTest() {
 
     // State
     ExtendedRecord extendedRecord =
@@ -195,7 +195,7 @@ public class MultimediaParserTest {
   }
 
   @Test
-  public void testInterpretMediaExtension() {
+  public void interpretMediaExtensionTest() {
 
     // State
     Map<String, String> imageExtension =
@@ -247,7 +247,7 @@ public class MultimediaParserTest {
   }
 
   @Test
-  public void testInterpretAudubonExtension() {
+  public void interpretAudubonExtensionTest() {
 
     // State
     Map<String, String> audubonExtension =
@@ -302,7 +302,7 @@ public class MultimediaParserTest {
    * the extension we should use the one from the extension (richer data).
    */
   @Test
-  public void testExtensionsPriority() {
+  public void extensionsPriorityTest() {
 
     // State
     Map<String, String> audubonExtension =

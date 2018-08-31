@@ -17,7 +17,7 @@ import static org.junit.Assert.assertFalse;
 public class TemporalParserTest {
 
   @Test
-  public void testAllNull() {
+  public void allNullTest() {
     // State
     String eventDate = null;
     String year = null;
@@ -33,7 +33,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testYearOnly() {
+  public void yearOnlyTest() {
     // State
     Temporal expectedFirst = Year.of(1999);
 
@@ -50,7 +50,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testYearAndEventDateNull() {
+  public void yearAndEventDateNullTest() {
     // State
     String eventDate = null;
     String year = null;
@@ -65,7 +65,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testEventDateNull() {
+  public void eventDateNullTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -82,7 +82,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testEventDateEmpty() {
+  public void eventDateEmptyTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -98,7 +98,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testEventDateYearOnly() {
+  public void eventDateYearOnlyTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -114,7 +114,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testEventDateYearMonthOnly() {
+  public void eventDateYearMonthOnlyTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -130,7 +130,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateIso() {
+  public void localDateIsoTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 5);
 
@@ -146,7 +146,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTimeIso() {
+  public void localDateTimeIsoTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 1, 9, 26, 0);
 
@@ -162,7 +162,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testYearPeriodOnly() {
+  public void yearPeriodOnlyTest() {
     // State
     Temporal expectedFirst = Year.of(1999);
     Temporal expectedSecond = Year.of(2010);
@@ -179,7 +179,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testFullYearMonthPeriod() {
+  public void fullYearMonthPeriodTest() {
     // State
     Temporal expectedFirst = YearMonth.of(1999, 4);
     Temporal expectedSecond = YearMonth.of(2010, 1);
@@ -196,7 +196,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testFullLocalDatePeriod() {
+  public void fullLocalDatePeriodTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 12);
     Temporal expectedSecond = LocalDate.of(2009, 10, 8);
@@ -213,7 +213,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testFullLocalDateTimePeriod() {
+  public void fullLocalDateTimePeriodTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 17, 12, 26, 0);
     Temporal expectedSecond = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
@@ -230,7 +230,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testFullLocalDateTimePeriodSkipZone() {
+  public void fullLocalDateTimePeriodSkipZoneTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 8, 14, 7, 0);
     Temporal expectedSecond = LocalDateTime.of(2010, 8, 3, 6, 0, 0);
@@ -247,7 +247,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateShortTextMonth() {
+  public void localDateShortTextMonthTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -263,7 +263,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateShortTextMistakeMonth() {
+  public void localDateShortTextMistakeMonthTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -279,7 +279,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateFullTextMonth() {
+  public void localDateFullTextMonthTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -295,7 +295,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateShortTextMonthDash() {
+  public void localDateShortTextMonthDashTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -311,7 +311,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateShortTextMonthDateMistake() {
+  public void localDateShortTextMonthDateMistakeTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -327,7 +327,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testEventDateWrongYear() {
+  public void eventDateWrongYearTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -343,7 +343,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testEventDateWrongYearMonthMistake() {
+  public void eventDateWrongYearMonthMistakeTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -359,7 +359,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTextMonthFirstComma() {
+  public void localDateTextMonthFirstCommaTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -377,7 +377,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateShortTextMonthFirst() {
+  public void localDateShortTextMonthFirstTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -393,7 +393,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateShortTextMonthFirstDot() {
+  public void localDateShortTextMonthFirstDotTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -409,7 +409,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateSlashYearLast() {
+  public void localDateSlashYearLastTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -425,7 +425,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateSlashYearFirst() {
+  public void localDateSlashYearFirstTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -441,7 +441,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateSlashShortDate() {
+  public void localDateSlashShortDateTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -457,7 +457,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateSlashShortMonthDate() {
+  public void localDateSlashShortMonthDateTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -473,7 +473,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTextMonthFirst() {
+  public void localDateTextMonthFirstTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
 
@@ -491,7 +491,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTimeSkipZone() {
+  public void localDateTimeSkipZoneTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 1, 9, 33, 59);
 
@@ -509,7 +509,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testYearPeriod() {
+  public void yearPeriodTest() {
     // State
     Temporal expectedFirst = Year.of(1999);
     Temporal expectedSecond = Year.of(2010);
@@ -528,7 +528,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testShortYearMonthPeriod() {
+  public void shortYearMonthPeriodTest() {
     // State
     Temporal expectedFirst = YearMonth.of(1999, 4);
     Temporal expectedSecond = YearMonth.of(1999, 10);
@@ -547,7 +547,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDatePeriod() {
+  public void localDatePeriodTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 12);
     Temporal expectedSecond = LocalDate.of(2009, 10, 8);
@@ -566,7 +566,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTimePeriodToTimeOnly() {
+  public void localDateTimePeriodToTimeOnlyTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(1999, 4, 17, 12, 26, 0);
     Temporal expectedSecond = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
@@ -585,7 +585,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testFeatureYear() {
+  public void featureYearTest() {
     String eventDate = "2100";
     String year = null;
     String month = null;
@@ -600,7 +600,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testYearMonthSlashMontFirst() {
+  public void yearMonthSlashMontFirstTest() {
     // State
     Temporal expectedFirst = YearMonth.of(2000, 12);
 
@@ -618,7 +618,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testYearMonthSlash() {
+  public void yearMonthSlashTest() {
     // State
     Temporal expectedFirst = YearMonth.of(2000, 12);
 
@@ -636,7 +636,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testYearMonthPeriod() {
+  public void yearMonthPeriodTest() {
     // State
     Temporal expectedFirst = YearMonth.of(1999, 4);
     Temporal expectedSecond = YearMonth.of(2010, 1);
@@ -655,7 +655,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDatePeriodToMonthOnly() {
+  public void localDatePeriodToMonthOnlyTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
     Temporal expectedSecond = LocalDate.of(1999, 4, 11);
@@ -674,7 +674,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testYearMonthShortMonthSlash() {
+  public void yearMonthShortMonthSlashTest() {
     // State
     Temporal expectedFirst = YearMonth.of(2000, 2);
 
@@ -692,7 +692,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTimeSkipLongZone() {
+  public void localDateTimeSkipLongZoneTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(2016, 9, 15, 0, 5, 0);
 
@@ -711,7 +711,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTimeSpace() {
+  public void localDateTimeSpaceTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(2009, 2, 13, 15, 20, 0);
 
@@ -729,7 +729,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTimeDoubleSpace() {
+  public void localDateTimeDoubleSpaceTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(1987, 4, 11, 9, 30, 0);
 
@@ -747,7 +747,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTimeSpaceShortHour() {
+  public void localDateTimeSpaceShortHourTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(1958, 5, 5, 9, 0, 0);
 
@@ -765,7 +765,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTimeMilliseconds() {
+  public void localDateTimeMillisecondsTest() {
     // State
     Temporal expectedFirst = LocalDateTime.of(1997, 12, 15, 0, 0, 0);
 
@@ -783,7 +783,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testTextEventDateOnly() {
+  public void textEventDateOnlyTest() {
     // State
     String eventDate =
         "NOTEBY J.Longino: St. 804, general collecting in canopy Basiloxylon, 30m high.";
@@ -800,7 +800,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testWrongYearOnly() {
+  public void wrongYearOnlyTest() {
     // State
     String eventDate = null;
     String year = "0";
@@ -815,7 +815,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDatePeriodToMonthDay() {
+  public void localDatePeriodToMonthDayTest() {
     // State
     Temporal expectedFirst = LocalDate.of(2011, 9, 21);
     Temporal expectedSecond = LocalDate.of(2011, 10, 5);
@@ -834,7 +834,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateNumbersOnly() {
+  public void localDateNumbersOnlyTest() {
     // State
     Temporal expectedFirst = LocalDate.of(2012, 5, 6);
 
@@ -851,7 +851,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testLocalDateTextEventDate() {
+  public void localDateTextEventDateTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 1, 1);
 
@@ -870,7 +870,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testWrongLeapDay() {
+  public void wrongLeapDayTest() {
     // State
     Temporal expectedFirst = YearMonth.of(2013, 2);
 
@@ -887,7 +887,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testWrongLeapDayWithBase() {
+  public void wrongLeapDayWithBaseTest() {
     // State
     Temporal expectedFirst = LocalDate.of(2013, 2, 28);
 
@@ -904,7 +904,7 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void testInvalidPeriod() {
+  public void invalidPeriodTest() {
 
     // State
     Temporal expectedFirst = Year.of(2011);
