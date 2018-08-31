@@ -172,7 +172,7 @@ find_maven_basedir() {
     return 1
   fi
 
-  basedir="$1"
+  basedir="$1"/buildSrc
   wdir="$1"
   while [ "$wdir" != '/' ] ; do
     if [ -d "$wdir"/.mvn ] ; then

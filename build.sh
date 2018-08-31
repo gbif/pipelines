@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-./mvnw clean install
+buildSrc/mvnw clean install
