@@ -52,8 +52,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   public void createIndexWithMappingsTest() {
     // create index
     String idxCreated =
-        EsIndex.create(
-            ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
+        EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -124,8 +123,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   public void countIndexDocumentsAfterSwappingTest() throws InterruptedException {
     // create index
     String idx =
-        EsIndex.create(
-            ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
+        EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
 
     // index some documents
     long n = 3;

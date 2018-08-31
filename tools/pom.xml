@@ -20,7 +20,7 @@
   <modules>
     <module>pipelines-maven-plugin</module>
     <module>xml-converter</module>
-    <module>es-indexing</module>
+    <module>es-tools</module>
   </modules>
 
 </project>
