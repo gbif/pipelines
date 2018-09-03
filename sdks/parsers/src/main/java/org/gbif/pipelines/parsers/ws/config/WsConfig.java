@@ -3,8 +3,8 @@ package org.gbif.pipelines.parsers.ws.config;
 import java.io.Serializable;
 import java.util.Objects;
 
-/** Models the ws configuration. */
-public final class Config implements Serializable {
+/** Models the ws configuration. If you want to create an istance, use {@link WsConfigFactory} */
+public final class WsConfig implements Serializable {
 
   // ws path
   private final String basePath;
@@ -13,7 +13,7 @@ public final class Config implements Serializable {
   // cache size in bytes
   private final long cacheSize;
 
-  private Config(Builder builder) {
+  private WsConfig(Builder builder) {
     this.basePath = builder.basePath;
     this.timeout = builder.timeout;
     this.cacheSize = builder.cacheSize;
@@ -32,8 +32,8 @@ public final class Config implements Serializable {
   }
 
   /**
-   * Package-private to force the creation of {@link Config} instances using the {@link
-   * HttpConfigFactory}.
+   * Package-private to force the creation of {@link WsConfig} instances using the {@link
+   * WsConfigFactory}.
    */
   static class Builder {
 
@@ -57,8 +57,8 @@ public final class Config implements Serializable {
       return this;
     }
 
-    public Config build() {
-      return new Config(this);
+    public WsConfig build() {
+      return new WsConfig(this);
     }
   }
 }

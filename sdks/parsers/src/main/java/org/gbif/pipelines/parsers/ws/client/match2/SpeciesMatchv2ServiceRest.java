@@ -1,7 +1,7 @@
 package org.gbif.pipelines.parsers.ws.client.match2;
 
 import org.gbif.pipelines.parsers.ws.HttpClientFactory;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.io.IOException;
 
@@ -23,7 +23,7 @@ public class SpeciesMatchv2ServiceRest {
   private static volatile SpeciesMatchv2ServiceRest instance;
   private static final Object MUTEX = new Object();
 
-  private SpeciesMatchv2ServiceRest(Config wsConfig) {
+  private SpeciesMatchv2ServiceRest(WsConfig wsConfig) {
 
     // create client
     client = HttpClientFactory.createClient(wsConfig);
@@ -43,7 +43,7 @@ public class SpeciesMatchv2ServiceRest {
     clearCache();
   }
 
-  public static SpeciesMatchv2ServiceRest getInstance(Config config) {
+  public static SpeciesMatchv2ServiceRest getInstance(WsConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {

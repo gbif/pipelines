@@ -5,7 +5,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalDates;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
 import java.time.LocalDate;
@@ -32,7 +32,7 @@ public class TemporalInterpreter {
     String rawEventDate = extractValue(er, DwcTerm.eventDate);
 
     // Call temporal parser
-    ParsedTemporalDates temporalDates =
+    ParsedTemporal temporalDates =
         TemporalParser.parse(rawYear, rawMonth, rawDay, rawEventDate);
 
     // Get all parsed values and set
@@ -52,14 +52,14 @@ public class TemporalInterpreter {
 
   /** {@link DcTerm#modified} interpretation. */
   public static void interpretModifiedDate(ExtendedRecord er, TemporalRecord tr) {
-    ParsedTemporalDates date = TemporalParser.parse(extractValue(er, DcTerm.modified));
+    ParsedTemporal date = TemporalParser.parse(extractValue(er, DcTerm.modified));
     date.getFrom().map(Temporal::toString).ifPresent(tr::setModified);
     tr.getIssues().setIssueList(date.getIssueList());
   }
 
   /** {@link DwcTerm#dateIdentified} interpretation. */
   public static void interpretDateIdentified(ExtendedRecord er, TemporalRecord tr) {
-    ParsedTemporalDates date = TemporalParser.parse(extractValue(er, DwcTerm.dateIdentified));
+    ParsedTemporal date = TemporalParser.parse(extractValue(er, DwcTerm.dateIdentified));
     date.getFrom().map(Temporal::toString).ifPresent(tr::setDateIdentified);
     tr.getIssues().setIssueList(date.getIssueList());
   }

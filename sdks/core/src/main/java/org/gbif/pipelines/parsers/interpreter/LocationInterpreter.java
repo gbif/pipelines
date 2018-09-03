@@ -10,7 +10,7 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.util.function.BiConsumer;
 
@@ -41,7 +41,7 @@ public class LocationInterpreter {
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      Config wsConfig) {
+      WsConfig wsConfig) {
     return (er, lr) -> {
       // parse the terms
       ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, wsConfig);

@@ -17,11 +17,11 @@ class CoordinatesFunction {
   private CoordinatesFunction() {}
 
   static final Function<LatLng, LatLng> NEGATED_LAT_FN =
-      latLng -> new LatLng(-1 * latLng.getLat(), latLng.getLng());
+      latLng -> new LatLng(-1d * latLng.getLat(), latLng.getLng());
   static final Function<LatLng, LatLng> NEGATED_LNG_FN =
-      latLng -> new LatLng(latLng.getLat(), -1 * latLng.getLng());
+      latLng -> new LatLng(latLng.getLat(), -1d * latLng.getLng());
   static final Function<LatLng, LatLng> NEGATED_COORDS_FN =
-      latLng -> new LatLng(-1 * latLng.getLat(), -1 * latLng.getLng());
+      latLng -> new LatLng(-1d * latLng.getLat(), -1d * latLng.getLng());
   static final Function<LatLng, LatLng> SWAPPED_COORDS_FN =
       latLng -> new LatLng(latLng.getLng(), latLng.getLat());
 

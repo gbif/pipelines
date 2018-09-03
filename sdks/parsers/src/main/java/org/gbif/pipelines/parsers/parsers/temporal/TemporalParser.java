@@ -34,15 +34,15 @@ public class TemporalParser {
     // Can't have an instance
   }
 
-  public static ParsedTemporalDates parse(String rawDate) {
+  public static ParsedTemporal parse(String rawDate) {
     return parse("", "", "", rawDate);
   }
 
-  public static ParsedTemporalDates parse(
+  public static ParsedTemporal parse(
       String rawYear, String rawMonth, String rawDay, String rawDate) {
     // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
     if (isNullOrEmpty(rawYear) && isNullOrEmpty(rawDate)) {
-      return new ParsedTemporalDates();
+      return new ParsedTemporal();
     }
 
     List<String> issueList = new ArrayList<>();
@@ -57,7 +57,7 @@ public class TemporalParser {
     Temporal base = TEMPORAL_FUNC.apply(baseAccumulator, issueList);
 
     // Base temporal instance
-    ParsedTemporalDates temporalDates = new ParsedTemporalDates(year, month, day, base);
+    ParsedTemporal temporalDates = new ParsedTemporal(year, month, day, base);
 
     if (isNullOrEmpty(rawDate)) {
       return temporalDates;

@@ -4,7 +4,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -16,14 +16,12 @@ import java.util.stream.Collectors;
 
 import retrofit2.Call;
 
-import static org.gbif.pipelines.parsers.parsers.location.CoordinatesValidator.isInRange;
-
 public class GeocodeServiceClient
     extends BaseServiceClient<Collection<GeocodeResponse>, List<Country>> {
 
   private final GeocodeServiceRest geocodeServiceRest;
 
-  private GeocodeServiceClient(Config wsConfig) {
+  private GeocodeServiceClient(WsConfig wsConfig) {
     geocodeServiceRest = GeocodeServiceRest.getInstance(wsConfig);
   }
 
@@ -31,25 +29,30 @@ public class GeocodeServiceClient
    * It creates an instance of {@link GeocodeServiceClient} reading the ws configuration from the
    * path received.
    */
-  public static GeocodeServiceClient create(Config wsConfig) {
+  public static GeocodeServiceClient create(WsConfig wsConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
     return new GeocodeServiceClient(wsConfig);
   }
 
   public HttpResponse<List<Country>> getCountriesFromLatLng(LatLng latLng) {
-    if (!isInRange(latLng)) {
+
+    // Check range
+    boolean isInRange =
+        Double.compare(latLng.getLat(), 90) <= 0
+            && Double.compare(latLng.getLat(), -90) >= 0
+            && Double.compare(latLng.getLng(), 180) <= 0
+            && Double.compare(latLng.getLng(), -180) >= 0;
+
+    if (!isInRange) {
       return HttpResponse.fail("lat and lng out of range", HttpResponse.ErrorCode.ABORTED);
     }
 
-    return performCall(createParamsMap(latLng));
-  }
-
-  private static Map<String, String> createParamsMap(LatLng latLng) {
+    // Map lat and lng parameters
     Map<String, String> params = new HashMap<>();
     params.put("lat", String.valueOf(latLng.getLat()));
     params.put("lng", String.valueOf(latLng.getLng()));
 
-    return params;
+    return performCall(params);
   }
 
   @Override

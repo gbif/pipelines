@@ -26,7 +26,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(coordsCanada, canada, getWsConfig()).applyMatch();
+        LocationMatcher.create(coordsCanada, canada, getWsConfig()).apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -46,12 +46,12 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(coordsCanada, canada, getWsConfig())
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
-            .addAdditionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
-            .applyMatch();
+        LocationMatcher.create(coordsCanada, canada, getWsConfig())
+            .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
+            .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
+            .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
+            .additionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
+            .apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -70,7 +70,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(coordsCanada, null, getWsConfig()).applyMatch();
+        LocationMatcher.create(coordsCanada, null, getWsConfig()).apply();
 
     // Should
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
@@ -89,12 +89,12 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(wrongCoords, null, getWsConfig())
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
-            .addAdditionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
-            .applyMatch();
+        LocationMatcher.create(wrongCoords, null, getWsConfig())
+            .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
+            .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
+            .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
+            .additionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
+            .apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -111,7 +111,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(antarcticaEdgeCoords, null, getWsConfig()).applyMatch();
+        LocationMatcher.create(antarcticaEdgeCoords, null, getWsConfig()).apply();
 
     // Should
     Assert.assertTrue(result.isSuccessful());
@@ -129,7 +129,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(negatedLatCoords, canada, getWsConfig()).applyMatch();
+        LocationMatcher.create(negatedLatCoords, canada, getWsConfig()).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -148,9 +148,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(negatedLatCoords, canada, getWsConfig())
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
-            .applyMatch();
+        LocationMatcher.create(negatedLatCoords, canada, getWsConfig())
+            .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
+            .apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -175,9 +175,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(negatedLngCoords, canada, getWsConfig())
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
-            .applyMatch();
+        LocationMatcher.create(negatedLngCoords, canada, getWsConfig())
+            .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
+            .apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -202,9 +202,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(negatedCoords, canada, getWsConfig())
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
-            .applyMatch();
+        LocationMatcher.create(negatedCoords, canada, getWsConfig())
+            .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
+            .apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -228,9 +228,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(swappedCoords, canada, getWsConfig())
-            .addAdditionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
-            .applyMatch();
+        LocationMatcher.create(swappedCoords, canada, getWsConfig())
+            .additionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
+            .apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -252,7 +252,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(coords, Country.WESTERN_SAHARA, getWsConfig()).applyMatch();
+        LocationMatcher.create(coords, Country.WESTERN_SAHARA, getWsConfig()).apply();
 
     // Should
     Assert.assertEquals(Country.MOROCCO, result.getResult().getCountry());
@@ -271,7 +271,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(coords, Country.FRANCE, getWsConfig()).applyMatch();
+        LocationMatcher.create(coords, Country.FRANCE, getWsConfig()).apply();
 
     // Should
     Assert.assertEquals(Country.FRENCH_POLYNESIA, result.getResult().getCountry());
@@ -290,7 +290,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> match =
-        LocationMatcher.newMatcher(coords, Country.DENMARK, getWsConfig()).applyMatch();
+        LocationMatcher.create(coords, Country.DENMARK, getWsConfig()).apply();
 
     // Should
     Assert.assertEquals(Country.GREENLAND, match.getResult().getCountry());
@@ -302,20 +302,20 @@ public class LocationMatcherTest extends BaseMockServerTest {
   @Test(expected = NullPointerException.class)
   public void nullValuesTest() {
     // When
-    LocationMatcher.newMatcher(null, null, getWsConfig()).applyMatch();
+    LocationMatcher.create(null, null, getWsConfig()).apply();
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void emptyCoordinatesTest() {
     // When
-    LocationMatcher.newMatcher(new LatLng(), null, getWsConfig()).applyMatch();
+    LocationMatcher.create(new LatLng(), null, getWsConfig()).apply();
   }
 
   @Test
   public void outOfRangeCoordinatesTest() {
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.newMatcher(new LatLng(200, 200), null, getWsConfig()).applyMatch();
+        LocationMatcher.create(new LatLng(200, 200), null, getWsConfig()).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());

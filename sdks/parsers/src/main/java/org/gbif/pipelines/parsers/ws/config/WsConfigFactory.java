@@ -16,13 +16,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Creates the configuration to use a specific WS. The supported web services are defined in {@link
- * Service}.
+ * ServiceType}.
  *
  * <p>By default it reads the configurarion from the "http.properties" file.
  */
-public class HttpConfigFactory {
+public class WsConfigFactory {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HttpConfigFactory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WsConfigFactory.class);
 
   // property suffixes
   private static final String WS_BASE_PATH_PROP = ".http.basePath";
@@ -38,25 +38,25 @@ public class HttpConfigFactory {
   static final long DEFAULT_CACHE_SIZE =
       Long.parseLong(DEFAULT_CACHE_SIZE_IN_MB_PROP) * 1024L * 1024L;
 
-  private HttpConfigFactory() {}
+  private WsConfigFactory() {}
 
-  public static Config createConfig(Service service, Path propertiesPath) {
-    return createConfigInternal(
+  public static WsConfig create(ServiceType service, Path propertiesPath) {
+    return createInternal(
         Objects.requireNonNull(service), Objects.requireNonNull(propertiesPath));
   }
 
-  /** Creates a {@link Config} from a url and uses default timeout and cache size. */
-  public static Config createConfigFromUrl(String url) {
-    return createConfigFromUrl(url, DEFAULT_TIMEOUT, DEFAULT_CACHE_SIZE);
+  /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
+  public static WsConfig createFromUrl(String url) {
+    return createFromUrl(url, DEFAULT_TIMEOUT, DEFAULT_CACHE_SIZE);
   }
 
-  /** Creates a {@link Config} from a url and uses default timeout and cache size. */
-  public static Config createConfigFromUrl(String url, long timeout, long cacheSize) {
+  /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
+  public static WsConfig createFromUrl(String url, long timeout, long cacheSize) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
-    return new Config.Builder().basePath(url).timeout(timeout).cacheSize(cacheSize).build();
+    return new WsConfig.Builder().basePath(url).timeout(timeout).cacheSize(cacheSize).build();
   }
 
-  private static Config createConfigInternal(Service service, Path propertiesPath) {
+  private static WsConfig createInternal(ServiceType service, Path propertiesPath) {
     // load properties or throw exception if cannot be loaded
     Properties props =
         loadProperties(propertiesPath)
@@ -71,7 +71,7 @@ public class HttpConfigFactory {
             .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
 
     // set config properties
-    Config.Builder builder = new Config.Builder();
+    WsConfig.Builder builder = new WsConfig.Builder();
     builder.basePath(basePath);
     builder.timeout(
         Long.parseLong(
@@ -119,7 +119,7 @@ public class HttpConfigFactory {
     return Optional.of(props);
   }
 
-  private static String generatePropertyName(Service service, String property) {
+  private static String generatePropertyName(ServiceType service, String property) {
     return service.getPath() + property;
   }
 }

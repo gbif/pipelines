@@ -14,7 +14,7 @@ import org.gbif.pipelines.parsers.interpreter.MetadataInterpreter;
 import org.gbif.pipelines.parsers.interpreter.MultimediaInterpreter;
 import org.gbif.pipelines.parsers.interpreter.TaxonomyInterpreter;
 import org.gbif.pipelines.parsers.interpreter.TemporalInterpreter;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -103,7 +103,7 @@ public class Transforms {
    * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
    * as a source and {@link LocationInterpreter} as interpretation steps
    */
-  public static SingleOutput<ExtendedRecord, KV<String, LocationRecord>> location(Config wsConfig) {
+  public static SingleOutput<ExtendedRecord, KV<String, LocationRecord>> location(WsConfig wsConfig) {
     return ParDo.of(
         new DoFn<ExtendedRecord, KV<String, LocationRecord>>() {
           @ProcessElement
@@ -131,7 +131,7 @@ public class Transforms {
    * ParDo runs sequence of interpretations for {@link MetadataRecord} using {@link ExtendedRecord}
    * as a source and {@link MetadataInterpreter} as interpretation steps
    */
-  public static SingleOutput<String, KV<String, MetadataRecord>> metadata(Config wsConfig) {
+  public static SingleOutput<String, KV<String, MetadataRecord>> metadata(WsConfig wsConfig) {
     return ParDo.of(
         new DoFn<String, KV<String, MetadataRecord>>() {
           @ProcessElement
@@ -150,7 +150,9 @@ public class Transforms {
    * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
    * a source and {@link TaxonomyInterpreter} as interpretation steps
    */
-  public static SingleOutput<ExtendedRecord, KV<String, TaxonRecord>> taxonomy(Config wsConfig) {
+  public static SingleOutput<ExtendedRecord, KV<String, TaxonRecord>> taxonomy(WsConfig wsConfig) {
+
+
     return ParDo.of(
         new DoFn<ExtendedRecord, KV<String, TaxonRecord>>() {
           @ProcessElement

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.parsers.ws.client.geocode;
 
 import org.gbif.pipelines.parsers.ws.HttpClientFactory;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.io.IOException;
 
@@ -23,7 +23,7 @@ public class GeocodeServiceRest {
   private static volatile GeocodeServiceRest instance;
   private static final Object MUTEX = new Object();
 
-  private GeocodeServiceRest(Config wsConfig) {
+  private GeocodeServiceRest(WsConfig wsConfig) {
 
     // create client
     client = HttpClientFactory.createClient(wsConfig);
@@ -43,7 +43,7 @@ public class GeocodeServiceRest {
     clearCache();
   }
 
-  public static GeocodeServiceRest getInstance(Config config) {
+  public static GeocodeServiceRest getInstance(WsConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {

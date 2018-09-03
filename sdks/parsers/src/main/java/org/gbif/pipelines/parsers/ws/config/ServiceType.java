@@ -1,7 +1,7 @@
 package org.gbif.pipelines.parsers.ws.config;
 
 /** Enum of web services supported in the application. */
-public enum Service {
+public enum ServiceType {
   SPECIES_MATCH2("match"),
   GEO_CODE("geocode"),
   DATASET_META("metads");
@@ -9,7 +9,7 @@ public enum Service {
   // path to use in the properties file
   private final String path;
 
-  Service(String path) {
+  ServiceType(String path) {
     this.path = path;
   }
 

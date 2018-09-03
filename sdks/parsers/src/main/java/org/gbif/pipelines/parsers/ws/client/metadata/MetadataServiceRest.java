@@ -1,6 +1,6 @@
 package org.gbif.pipelines.parsers.ws.client.metadata;
 
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.util.concurrent.TimeUnit;
 
@@ -14,7 +14,7 @@ public class MetadataServiceRest {
   private static volatile MetadataServiceRest instance;
   private static final Object MUTEX = new Object();
 
-  private MetadataServiceRest(Config wsConfig) {
+  private MetadataServiceRest(WsConfig wsConfig) {
 
     // create client
     OkHttpClient client =
@@ -35,7 +35,7 @@ public class MetadataServiceRest {
     service = retrofit.create(MetadataService.class);
   }
 
-  public static MetadataServiceRest getInstance(Config config) {
+  public static MetadataServiceRest getInstance(WsConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {

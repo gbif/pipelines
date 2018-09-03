@@ -11,7 +11,7 @@ import org.gbif.dwc.terms.Terms;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalDates;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
 import java.net.URI;
@@ -89,20 +89,20 @@ public class MultimediaParser {
       return;
     }
 
-    // parse the atomic fields at once
-    AtomicFields atomicFields = parseAtomicFields(er.getCoreTerms(), uri, null);
+    // parse the fields at once
+    Fields fields = parseFields(er.getCoreTerms(), uri, null);
 
     // create multimedia from core
     Function<URI, ParsedMultimedia> fn =
         u ->
             ParsedMultimedia.newBuilder()
-                .identifier(atomicFields.identifier)
-                .references(atomicFields.references)
-                .format(atomicFields.format)
-                .type(detectType(atomicFields.format))
+                .identifier(fields.identifier)
+                .references(fields.references)
+                .format(fields.format)
+                .type(detectType(fields.format))
                 .build();
 
-    multimediaMap.computeIfAbsent(getPreferredIdentifier(atomicFields), fn);
+    multimediaMap.computeIfAbsent(getPreferredIdentifier(fields), fn);
   }
 
   /** */
@@ -144,14 +144,14 @@ public class MultimediaParser {
       return;
     }
 
-    // parse the atomic fields at once
-    AtomicFields atomicFields = parseAtomicFields(recordsMap, uri, link);
+    // parse the fields at once
+    Fields fields = parseFields(recordsMap, uri, link);
 
     Function<URI, ParsedMultimedia> fn =
         u ->
             ParsedMultimedia.newBuilder()
-                .identifier(atomicFields.identifier)
-                .references(atomicFields.references)
+                .identifier(fields.identifier)
+                .references(fields.references)
                 .title(getTermValue(recordsMap, DcTerm.title))
                 .description(getValueOfFirst(recordsMap, DcTerm.description, AcTerm.caption))
                 .license(getValueOfFirst(recordsMap, DcTerm.license, DcTerm.rights))
@@ -161,18 +161,17 @@ public class MultimediaParser {
                 .audience(getTermValue(recordsMap, DcTerm.audience))
                 .rightsHolder(getTermValue(recordsMap, DcTerm.rightsHolder))
                 .creator(getTermValue(recordsMap, DcTerm.creator))
-                .format(atomicFields.format)
-                .type(detectType(atomicFields.format))
+                .format(fields.format)
+                .type(detectType(fields.format))
                 .created(parseCreatedDate(recordsMap, issues))
                 .build();
 
     // create multimedia from extension
-    multimediaMap.computeIfAbsent(getPreferredIdentifier(atomicFields), fn);
+    multimediaMap.computeIfAbsent(getPreferredIdentifier(fields), fn);
   }
 
   /** */
-  private static AtomicFields parseAtomicFields(
-      Map<String, String> recordsMap, URI identifier, URI link) {
+  private static Fields parseFields(Map<String, String> recordsMap, URI identifier, URI link) {
     // get format
     String mimeType = MEDIA_PARSER.parseMimeType(getTermValue(recordsMap, DcTerm.format));
     String format =
@@ -180,22 +179,22 @@ public class MultimediaParser {
             .filter(value -> !value.isEmpty())
             .orElseGet(() -> MEDIA_PARSER.parseMimeType(identifier));
 
-    AtomicFields atomicFields = new AtomicFields();
+    Fields fields = new Fields();
     if (HTML_TYPE.equalsIgnoreCase(format) && identifier != null) {
-      atomicFields.references = identifier;
-      return atomicFields;
+      fields.references = identifier;
+      return fields;
     }
 
-    atomicFields.references = link;
-    atomicFields.identifier = identifier;
-    atomicFields.format = format;
+    fields.references = link;
+    fields.identifier = identifier;
+    fields.format = format;
 
-    return atomicFields;
+    return fields;
   }
 
   /** */
   private static Temporal parseCreatedDate(Map<String, String> recordsMap, List<String> issues) {
-    ParsedTemporalDates temporalDate =
+    ParsedTemporal temporalDate =
         TemporalParser.parse(getTermValue(recordsMap, DcTerm.created));
 
     if (temporalDate.getIssueList() != null) {
@@ -255,8 +254,8 @@ public class MultimediaParser {
   }
 
   /** */
-  private static URI getPreferredIdentifier(AtomicFields atomicFields) {
-    return atomicFields.identifier != null ? atomicFields.identifier : atomicFields.references;
+  private static URI getPreferredIdentifier(Fields fields) {
+    return fields.identifier != null ? fields.identifier : fields.references;
   }
 
   /** {@link Term} with its value. */
@@ -272,7 +271,7 @@ public class MultimediaParser {
   }
 
   /** Fields that have to be parsed at once. */
-  private static class AtomicFields {
+  private static class Fields {
 
     String format;
     URI identifier;

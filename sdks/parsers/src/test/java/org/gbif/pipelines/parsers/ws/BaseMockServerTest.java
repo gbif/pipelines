@@ -1,7 +1,7 @@
 package org.gbif.pipelines.parsers.ws;
 
-import org.gbif.pipelines.parsers.ws.config.Config;
-import org.gbif.pipelines.parsers.ws.config.HttpConfigFactory;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +57,7 @@ public abstract class BaseMockServerTest {
   protected static final Double LATITUDE_CANADA = 60.4;
   protected static final Double LONGITUDE_CANADA = -131.3;
 
-  private static Config wsConfig;
+  private static WsConfig wsConfig;
 
   /**
    * Public field because {@link ClassRule} requires it.
@@ -72,11 +72,11 @@ public abstract class BaseMockServerTest {
 
         @Override
         protected void before() {
-          wsConfig = HttpConfigFactory.createConfigFromUrl(MOCK_SERVER.url("/").toString());
+          wsConfig = WsConfigFactory.createFromUrl(MOCK_SERVER.url("/").toString());
         }
       };
 
-  protected Config getWsConfig() {
+  protected WsConfig getWsConfig() {
     return wsConfig;
   }
 

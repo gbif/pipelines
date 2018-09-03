@@ -5,18 +5,17 @@ import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonomyValidator;
-import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalDates;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +28,7 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
 
   private final SpeciesMatchv2ServiceRest speciesMatchv2ServiceRest;
 
-  private SpeciesMatchv2Client(Config wsConfig) {
+  private SpeciesMatchv2Client(WsConfig wsConfig) {
     speciesMatchv2ServiceRest = SpeciesMatchv2ServiceRest.getInstance(wsConfig);
   }
 
@@ -37,7 +36,7 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
    * It creates an instance of {@link SpeciesMatchv2Client} reading the ws configuration from the
    * path received.
    */
-  public static SpeciesMatchv2Client create(Config wsConfig) {
+  public static SpeciesMatchv2Client create(WsConfig wsConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
     return new SpeciesMatchv2Client(wsConfig);
   }
@@ -56,41 +55,16 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     }
 
     LOG.info("Retrying match with identification extension");
-    // get identifications
-    List<Map<String, String>> identifications =
-        extendedRecord.getExtensions().get(DwcTerm.Identification.qualifiedName());
 
-    // sort them by date identified
-    // Ask Markus D if this can be moved to the API?
-    identifications.sort(
-        Comparator.comparing(
-                (Map<String, String> map) -> {
-                  // parse dateIdentified field
-                  ParsedTemporalDates parsedDates =
-                      TemporalParser.parse(map.get(DwcTerm.dateIdentified.qualifiedName()));
-                  // TODO: I convert it to date just to compare the Temporal objects. Should we
-                  // change it??
-                  // if it's null we return the minimum date to give it the least priority
-                  return parsedDates.getFrom().map(TemporalAccessorUtils::toDate).orElse(new Date(0L));
-                })
-            .reversed());
-
-    for (Map<String, String> record : identifications) {
-      response = tryNameMatch(record);
-      if (isSuccessfulMatch(response)) {
-        LOG.info(
-            "match with identificationId {} succeed", record.get(DwcTerm.identificationID.name()));
-        return response;
-      }
-    }
-
-    return response;
-  }
-
-  private HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
-    Map<String, String> params = NameUsageMatchQueryConverter.convert(terms);
-
-    return performCall(params);
+    return extendedRecord
+        .getExtensions()
+        .get(DwcTerm.Identification.qualifiedName())
+        .stream()
+        .sorted(sortByDateIdentified())
+        .map(this::tryNameMatch)
+        .filter(this::isSuccessfulMatch)
+        .findFirst()
+        .orElse(response);
   }
 
   @Override
@@ -108,12 +82,39 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
     return body;
   }
 
-  private static boolean isSuccessfulMatch(HttpResponse<NameUsageMatch2> response) {
-    return !TaxonomyValidator.isEmpty(response.getBody())
-           && MatchType.NONE != response.getBody().getDiagnostics().getMatchType();
+  /** Ask Markus D if this can be moved to the API? */
+  private Comparator<Map<String, String>> sortByDateIdentified() {
+
+    Function<Map<String, String>, Date> fn =
+        map -> {
+          ParsedTemporal dates =
+              TemporalParser.parse(map.get(DwcTerm.dateIdentified.qualifiedName()));
+          // if it's null we return the minimum date to give it the least priority
+          return dates.getFrom().map(TemporalAccessorUtils::toDate).orElse(new Date(0L));
+        };
+
+    return Comparator.comparing(fn).reversed();
   }
 
-  private static boolean hasIdentifications(ExtendedRecord extendedRecord) {
+  private HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
+    Map<String, String> params = MatchQueryConverter.convert(terms);
+
+    return performCall(params);
+  }
+
+  private boolean isSuccessfulMatch(HttpResponse<NameUsageMatch2> response) {
+    NameUsageMatch2 body = response.getBody();
+
+    boolean isEmpty =
+        body == null
+            || body.getUsage() == null
+            || body.getClassification() == null
+            || body.getDiagnostics() == null;
+
+    return !isEmpty && MatchType.NONE != body.getDiagnostics().getMatchType();
+  }
+
+  private boolean hasIdentifications(ExtendedRecord extendedRecord) {
     return extendedRecord.getExtensions() != null
         && extendedRecord.getExtensions().containsKey(DwcTerm.Identification.qualifiedName());
   }

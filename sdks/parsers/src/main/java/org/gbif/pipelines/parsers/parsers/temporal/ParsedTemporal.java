@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 /** Base temporal class, consists of two parsed dates from and to, also year, month and day */
-public class ParsedTemporalDates {
+public class ParsedTemporal {
 
   private Year year;
   private Month month;
@@ -17,9 +17,9 @@ public class ParsedTemporalDates {
   private Temporal toDate;
   private List<String> issueList = Collections.emptyList();
 
-  public ParsedTemporalDates() {}
+  public ParsedTemporal() {}
 
-  public ParsedTemporalDates(Year year, Month month, Integer day, Temporal fromDate) {
+  public ParsedTemporal(Year year, Month month, Integer day, Temporal fromDate) {
     this.year = year;
     this.month = month;
     this.day = day;

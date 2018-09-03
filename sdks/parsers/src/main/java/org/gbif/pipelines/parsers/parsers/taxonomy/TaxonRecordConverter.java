@@ -28,16 +28,19 @@ public class TaxonRecordConverter {
   }
 
   private static TaxonRecord convertInternal(NameUsageMatch2 source, TaxonRecord taxonRecord) {
-    taxonRecord.setSynonym(source.isSynonym());
-    taxonRecord.setUsage(convertRankedName(source.getUsage()));
-    taxonRecord.setAcceptedUsage(convertRankedName(source.getAcceptedUsage()));
-    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
-    taxonRecord.setClassification(
+
+    List<RankedName> classifications =
         source
             .getClassification()
             .stream()
             .map(TaxonRecordConverter::convertRankedName)
-            .collect(Collectors.toList()));
+            .collect(Collectors.toList());
+
+    taxonRecord.setClassification(classifications);
+    taxonRecord.setSynonym(source.isSynonym());
+    taxonRecord.setUsage(convertRankedName(source.getUsage()));
+    taxonRecord.setAcceptedUsage(convertRankedName(source.getAcceptedUsage()));
+    taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
     taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
     return taxonRecord;

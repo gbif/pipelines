@@ -5,7 +5,7 @@ import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.util.function.BiConsumer;
 
@@ -14,7 +14,7 @@ public class MetadataInterpreter {
 
   private MetadataInterpreter() {}
 
-  public static BiConsumer<String, MetadataRecord> interpretDataset(Config wsConfig) {
+  public static BiConsumer<String, MetadataRecord> interpretDataset(WsConfig wsConfig) {
     return (datasetId, mdr) -> {
       Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
       mdr.setInstallationKey(dataset.getInstallationKey());
@@ -23,7 +23,7 @@ public class MetadataInterpreter {
     };
   }
 
-  public static BiConsumer<String, MetadataRecord> interpretInstallation(Config wsConfig) {
+  public static BiConsumer<String, MetadataRecord> interpretInstallation(WsConfig wsConfig) {
     return (datasetId, mdr) -> {
       Installation installation =
           MetadataServiceClient.create(wsConfig).getInstallation(mdr.getInstallationKey());
@@ -32,7 +32,7 @@ public class MetadataInterpreter {
     };
   }
 
-  public static BiConsumer<String, MetadataRecord> interpretOrganization(Config wsConfig) {
+  public static BiConsumer<String, MetadataRecord> interpretOrganization(WsConfig wsConfig) {
     return (datasetId, mdr) -> {
       Organization organization =
           MetadataServiceClient.create(wsConfig).getOrganization(mdr.getOrganizationKey());

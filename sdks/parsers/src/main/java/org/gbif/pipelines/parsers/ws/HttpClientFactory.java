@@ -1,6 +1,6 @@
 package org.gbif.pipelines.parsers.ws;
 
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,8 +19,8 @@ public final class HttpClientFactory {
 
   private HttpClientFactory() {}
 
-  /** Creates a {@link OkHttpClient} with {@link Cache} from a specific {@link Config}. */
-  public static OkHttpClient createClient(Config config) {
+  /** Creates a {@link OkHttpClient} with {@link Cache} from a specific {@link WsConfig}. */
+  public static OkHttpClient createClient(WsConfig config) {
     // create cache file
     File httpCacheDirectory;
     try {

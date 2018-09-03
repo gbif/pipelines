@@ -5,11 +5,10 @@ import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
-import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonomyValidator;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.match2.SpeciesMatchv2Client;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.util.function.BiConsumer;
 
@@ -33,7 +32,7 @@ public class TaxonomyInterpreter {
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
-  public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(Config wsConfig) {
+  public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(WsConfig wsConfig) {
     return (er, tr) -> {
       ModelUtils.checkNullOrEmpty(er);
 
@@ -42,7 +41,7 @@ public class TaxonomyInterpreter {
 
       if (response.isError()) {
         addIssue(tr, INTERPRETATION_ERROR);
-      } else if (TaxonomyValidator.isEmpty(response.getBody())) {
+      } else if (isEmpty(response.getBody())) {
         // "NO_MATCHING_RESULTS". This
         // happens when we get an empty response from the WS
         addIssue(tr, TAXON_MATCH_NONE);
@@ -63,5 +62,12 @@ public class TaxonomyInterpreter {
         tr.setId(er.getId());
       }
     };
+  }
+
+  private static boolean isEmpty(NameUsageMatch2 response) {
+    return response == null
+        || response.getUsage() == null
+        || response.getClassification() == null
+        || response.getDiagnostics() == null;
   }
 }

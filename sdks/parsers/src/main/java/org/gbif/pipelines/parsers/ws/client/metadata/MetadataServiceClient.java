@@ -4,7 +4,7 @@ import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,11 +20,11 @@ public class MetadataServiceClient {
 
   private final MetadataServiceRest rest;
 
-  private MetadataServiceClient(Config wsConfig) {
+  private MetadataServiceClient(WsConfig wsConfig) {
     rest = MetadataServiceRest.getInstance(wsConfig);
   }
 
-  public static MetadataServiceClient create(Config wsConfig) {
+  public static MetadataServiceClient create(WsConfig wsConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
     return new MetadataServiceClient(wsConfig);
   }

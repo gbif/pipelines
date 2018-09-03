@@ -9,7 +9,7 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.legacy.Wgs84Projection;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,19 +28,19 @@ public class LocationParser {
 
   private LocationParser() {}
 
-  public static ParsedField<ParsedLocation> parse(ExtendedRecord extendedRecord, Config wsConfig) {
-    ModelUtils.checkNullOrEmpty(extendedRecord);
+  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, WsConfig wsConfig) {
+    ModelUtils.checkNullOrEmpty(er);
 
     List<String> issues = new ArrayList<>();
 
     // Parse country
     ParsedField<Country> parsedCountry =
-        parseCountry(extendedRecord, VocabularyParsers.countryParser(), COUNTRY_INVALID.name());
+        parseCountry(er, VocabularyParsers.countryParser(), COUNTRY_INVALID.name());
     Optional<Country> countryName = getResult(parsedCountry, issues);
 
     // Parse country code
     ParsedField<Country> parsedCountryCode =
-        parseCountry(extendedRecord, VocabularyParsers.countryCodeParser(), COUNTRY_INVALID.name());
+        parseCountry(er, VocabularyParsers.countryCodeParser(), COUNTRY_INVALID.name());
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
@@ -53,33 +53,28 @@ public class LocationParser {
     Country countryMatched = countryCode.orElseGet(() -> countryName.orElse(null));
 
     // Parse coordinates
-    ParsedField<LatLng> coordsParsed = parseLatLng(extendedRecord);
+    ParsedField<LatLng> coordsParsed = parseLatLng(er);
 
     // Add issues from coordinates parsing
     issues.addAll(coordsParsed.getIssues());
 
     // Eeturn if coordinates parsing failed
     if (!coordsParsed.isSuccessful()) {
-      ParsedLocation parsedLocation = ParsedLocation.newBuilder().country(countryMatched).build();
+      ParsedLocation parsedLocation = new ParsedLocation(countryMatched, null);
       return ParsedField.fail(parsedLocation, issues);
     }
 
     // Set current parsed values
-    ParsedLocation parsedLocation =
-        ParsedLocation.newBuilder()
-            .country(countryMatched)
-            .latLng(coordsParsed.getResult())
-            .build();
+    ParsedLocation parsedLocation = new ParsedLocation(countryMatched, coordsParsed.getResult());
 
     // If the coords parsing was succesful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-        LocationMatcher.newMatcher(
-                parsedLocation.getLatLng(), parsedLocation.getCountry(), wsConfig)
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
-            .addAdditionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
-            .addAdditionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
-            .applyMatch();
+        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), wsConfig)
+            .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
+            .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
+            .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
+            .additionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
+            .apply();
 
     // Collect issues from the match
     issues.addAll(match.getIssues());
@@ -100,9 +95,8 @@ public class LocationParser {
   }
 
   private static ParsedField<Country> parseCountry(
-      ExtendedRecord extendedRecord, VocabularyParsers<Country> parser, String issue) {
-    Optional<ParseResult<Country>> parseResultOpt =
-        parser.map(extendedRecord, parseRes -> parseRes);
+      ExtendedRecord er, VocabularyParsers<Country> parser, String issue) {
+    Optional<ParseResult<Country>> parseResultOpt = parser.map(er, parseRes -> parseRes);
 
     if (!parseResultOpt.isPresent()) {
       // case when the country is null in the extended record. We return an issue not to break the
@@ -121,12 +115,12 @@ public class LocationParser {
     return builder.build();
   }
 
-  private static Optional<Country> getResult(ParsedField<Country> parse, List<String> issues) {
-    if (!parse.isSuccessful()) {
-      issues.addAll(parse.getIssues());
+  private static Optional<Country> getResult(ParsedField<Country> field, List<String> issues) {
+    if (!field.isSuccessful()) {
+      issues.addAll(field.getIssues());
     }
 
-    return Optional.ofNullable(parse.getResult());
+    return Optional.ofNullable(field.getResult());
   }
 
   private static ParsedField<LatLng> parseLatLng(ExtendedRecord er) {

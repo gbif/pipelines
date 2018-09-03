@@ -9,9 +9,9 @@ public class ParsedLocation {
   private final Country country;
   private final LatLng latLng;
 
-  private ParsedLocation(Builder builder) {
-    country = builder.country;
-    latLng = builder.latLng;
+  ParsedLocation(Country country, LatLng latLng) {
+    this.country = country;
+    this.latLng = latLng;
   }
 
   public Country getCountry() {
@@ -20,29 +20,5 @@ public class ParsedLocation {
 
   public LatLng getLatLng() {
     return latLng;
-  }
-
-  public static Builder newBuilder() {
-    return new Builder();
-  }
-
-  public static class Builder {
-
-    private Country country;
-    private LatLng latLng;
-
-    Builder country(Country country) {
-      this.country = country;
-      return this;
-    }
-
-    Builder latLng(LatLng latLng) {
-      this.latLng = latLng;
-      return this;
-    }
-
-    ParsedLocation build() {
-      return new ParsedLocation(this);
-    }
   }
 }

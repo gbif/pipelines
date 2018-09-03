@@ -7,7 +7,7 @@ import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.legacy.CountryMaps;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
-import org.gbif.pipelines.parsers.ws.config.Config;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,12 +23,14 @@ import org.slf4j.LoggerFactory;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
-import static org.gbif.pipelines.parsers.parsers.location.CoordinatesValidator.isAntarctica;
 
 /** Matches the location fields related to Country and Coordinates to find possible mismatches. */
 class LocationMatcher {
 
   private static final Logger LOG = LoggerFactory.getLogger(LocationMatcher.class);
+
+  // Antarctica: "Territories south of 60° south latitude"
+  private static final double ANTARCTICA_LATITUDE = -60d;
   private static final Predicate<List> CHECK_LIST = list -> list != null && !list.isEmpty();
 
   private final LatLng latLng;
@@ -36,28 +38,33 @@ class LocationMatcher {
   private final GeocodeServiceClient geocodeServiceClient;
   private final List<Function<LatLng, LatLng>> alternativeTransformations = new ArrayList<>();
 
-  private LocationMatcher(LatLng latLng, Country country, Config wsConfig) {
+  private LocationMatcher(LatLng latLng, Country country, WsConfig wsConfig) {
     this.latLng = latLng;
     this.country = country;
     this.geocodeServiceClient = GeocodeServiceClient.create(wsConfig);
   }
 
-  static LocationMatcher newMatcher(LatLng latLng, Country country, Config wsConfig) {
+  static LocationMatcher create(LatLng latLng, Country country, WsConfig wsConfig) {
     return new LocationMatcher(latLng, country, wsConfig);
   }
 
-  LocationMatcher addAdditionalTransform(Function<LatLng, LatLng> transormation) {
+  LocationMatcher additionalTransform(Function<LatLng, LatLng> transormation) {
     alternativeTransformations.add(transormation);
     return this;
   }
 
-  ParsedField<ParsedLocation> applyMatch() {
+  ParsedField<ParsedLocation> apply() {
+    // Check parameters
     Objects.requireNonNull(latLng);
-    CoordinatesValidator.checkEmptyCoordinates(latLng);
-    return country != null ? applyMatchWithCountry() : applyMatchWithoutCountry();
+    if (latLng.getLat() == null || latLng.getLng() == null) {
+      throw new IllegalArgumentException("Empty coordinates");
+    }
+
+    // Match country
+    return country != null ? applyWithCountry() : applyWithoutCountry();
   }
 
-  private ParsedField<ParsedLocation> applyMatchWithCountry() {
+  private ParsedField<ParsedLocation> applyWithCountry() {
     // call WS with identity coords
     List<Country> countries = getCountriesFromCoordinates(latLng);
 
@@ -104,7 +111,7 @@ class LocationMatcher {
     return fail();
   }
 
-  private ParsedField<ParsedLocation> applyMatchWithoutCountry() {
+  private ParsedField<ParsedLocation> applyWithoutCountry() {
     // call WS with identity coords
     List<Country> countries = getCountriesFromCoordinates(latLng);
 
@@ -133,7 +140,7 @@ class LocationMatcher {
   private static Optional<Country> containsAnyCountry(
       Set<Country> possibilities, List<Country> countries) {
     return Optional.ofNullable(possibilities)
-        .flatMap(possibilities1 -> possibilities1.stream().filter(countries::contains).findFirst());
+        .flatMap(set -> set.stream().filter(countries::contains).findFirst());
   }
 
   private static ParsedField<ParsedLocation> fail() {
@@ -142,7 +149,7 @@ class LocationMatcher {
 
   private static ParsedField<ParsedLocation> success(
       Country country, LatLng latLng, List<String> issues) {
-    ParsedLocation pl = ParsedLocation.newBuilder().country(country).latLng(latLng).build();
+    ParsedLocation pl = new ParsedLocation(country, latLng);
     return ParsedField.success(pl, issues);
   }
 
@@ -152,7 +159,18 @@ class LocationMatcher {
   }
 
   private static ParsedField<ParsedLocation> success(Country country, LatLng latLng) {
-    ParsedLocation pl = ParsedLocation.newBuilder().country(country).latLng(latLng).build();
+    ParsedLocation pl = new ParsedLocation(country, latLng);
     return ParsedField.success(pl);
+  }
+
+  /**
+   * Checks if the country and latitude belongs to Antarctica. Rule: country must be
+   * Country.ANTARCTICA or null and latitude must be less than (south of) {@link
+   * #ANTARCTICA_LATITUDE} but not less than -90°.
+   */
+  private static boolean isAntarctica(Double latitude, Country country) {
+    return latitude != null
+        && (country == null || country == Country.ANTARCTICA)
+        && (latitude >= -90d && latitude < ANTARCTICA_LATITUDE);
   }
 }

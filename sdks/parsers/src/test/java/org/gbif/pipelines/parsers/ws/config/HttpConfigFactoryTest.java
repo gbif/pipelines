@@ -8,10 +8,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.gbif.pipelines.parsers.ws.config.HttpConfigFactory.DEFAULT_CACHE_SIZE;
-import static org.gbif.pipelines.parsers.ws.config.HttpConfigFactory.DEFAULT_TIMEOUT;
+import static org.gbif.pipelines.parsers.ws.config.WsConfigFactory.DEFAULT_CACHE_SIZE;
+import static org.gbif.pipelines.parsers.ws.config.WsConfigFactory.DEFAULT_TIMEOUT;
 
-/** Tests the {@link HttpConfigFactory}. */
+/** Tests the {@link WsConfigFactory}. */
 public class HttpConfigFactoryTest {
 
   // this file has the geocode properties wrong on purpose
@@ -21,8 +21,8 @@ public class HttpConfigFactoryTest {
 
   @Test
   public void speciesMatch2ConfiguratorTest() {
-    Config config =
-        HttpConfigFactory.createConfig(Service.SPECIES_MATCH2, Paths.get(TEST_PROPERTIES_FILE));
+    WsConfig config =
+        WsConfigFactory.create(ServiceType.SPECIES_MATCH2, Paths.get(TEST_PROPERTIES_FILE));
 
     Assert.assertNotNull(config);
     // defaults apply
@@ -33,7 +33,7 @@ public class HttpConfigFactoryTest {
   @Test
   public void createConfigFromUrlTest() {
     String url = "http://localhost";
-    Config config = HttpConfigFactory.createConfigFromUrl(url);
+    WsConfig config = WsConfigFactory.createFromUrl(url);
 
     Assert.assertNotNull(config);
     Assert.assertEquals(url, config.getBasePath());
@@ -47,7 +47,7 @@ public class HttpConfigFactoryTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("WS base path is required");
 
-    HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get(TEST_PROPERTIES_FILE));
+    WsConfigFactory.create(ServiceType.GEO_CODE, Paths.get(TEST_PROPERTIES_FILE));
   }
 
   @Test
@@ -55,13 +55,13 @@ public class HttpConfigFactoryTest {
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage(CoreMatchers.containsString("Could not load properties file"));
 
-    HttpConfigFactory.createConfig(Service.GEO_CODE, Paths.get("unknown"));
+    WsConfigFactory.create(ServiceType.GEO_CODE, Paths.get("unknown"));
   }
 
   @Test
   public void givenNullServiceWhenGettingConfigThenExceptionThrown() {
     thrown.expect(NullPointerException.class);
 
-    HttpConfigFactory.createConfig(null, Paths.get("unknown"));
+    WsConfigFactory.create(null, Paths.get("unknown"));
   }
 }
