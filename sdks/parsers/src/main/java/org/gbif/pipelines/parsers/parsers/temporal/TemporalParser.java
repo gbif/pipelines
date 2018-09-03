@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
@@ -48,16 +49,9 @@ public class TemporalParser {
     List<String> issueList = new ArrayList<>();
 
     // Parse year, month and day
-    ChronoAccumulator baseAccumulator = ChronoAccumulator.from(rawYear, rawMonth, rawDay);
+    ChronoAccumulator accum = ChronoAccumulator.from(rawYear, rawMonth, rawDay);
 
-    // Convert year, month and day parsed values
-    Year year = ChronoAccumulatorConverter.getYear(baseAccumulator, issueList).orElse(null);
-    Month month = ChronoAccumulatorConverter.getMonth(baseAccumulator, issueList).orElse(null);
-    Integer day = ChronoAccumulatorConverter.getDay(baseAccumulator, issueList).orElse(null);
-    Temporal base = TEMPORAL_FUNC.apply(baseAccumulator, issueList);
-
-    // Base temporal instance
-    ParsedTemporal temporalDates = new ParsedTemporal(year, month, day, base);
+    ParsedTemporal temporalDates = getBaseParsedTemporal(accum, issueList);
 
     if (isNullOrEmpty(rawDate)) {
       return temporalDates;
@@ -67,26 +61,27 @@ public class TemporalParser {
     String[] rawPeriod = DelimiterUtils.splitPeriod(rawDate);
     String rawFrom = rawPeriod[0];
     String rawTo = rawPeriod[1];
-    ChronoAccumulator fromAccumulator = ParserRawDateTime.parse(rawFrom, null);
-    ChronoAccumulator toAccumulator =
-        ParserRawDateTime.parse(rawTo, fromAccumulator.getLastParsed().orElse(null));
 
-    if (fromAccumulator.areAllNumeric()
-        || (!isNullOrEmpty(rawTo) && toAccumulator.areAllNumeric())) {
+    ChronoAccumulator fromAccum = ParserRawDateTime.parse(rawFrom, null);
+
+    ChronoField lastChronoField = fromAccum.getLastParsed().orElse(null);
+    ChronoAccumulator toAccum = ParserRawDateTime.parse(rawTo, lastChronoField);
+
+    if (fromAccum.areAllNumeric() || (!isNullOrEmpty(rawTo) && toAccum.areAllNumeric())) {
       issueList.add(RECORDED_DATE_INVALID.name());
     }
 
-    // If toAccumulator doesn't contain last parsed value, raw date will consist of one date only
-    if (toAccumulator.getLastParsed().isPresent()) {
-      // Use toAccumulator value toAccumulator improve fromAccumulator parsed date
-      toAccumulator.mergeAbsent(fromAccumulator);
+    // If toAccum doesn't contain last parsed value, raw date will consist of one date only
+    if (toAccum.getLastParsed().isPresent()) {
+      // Use toAccum value toAccum improve fromAccum parsed date
+      toAccum.mergeAbsent(fromAccum);
     } else {
-      // Use baseAccumulator value toAccumulator improve parsed date
-      fromAccumulator.mergeReplace(baseAccumulator);
+      // Use accum value toAccum improve parsed date
+      fromAccum.mergeReplace(accum);
     }
 
-    Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccumulator, issueList);
-    Temporal toTemporal = TEMPORAL_FUNC.apply(toAccumulator, issueList);
+    Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccum, issueList);
+    Temporal toTemporal = TEMPORAL_FUNC.apply(toAccum, issueList);
 
     if (!isValidDateType(fromTemporal, toTemporal)) {
       toTemporal = null;
@@ -104,6 +99,18 @@ public class TemporalParser {
     temporalDates.setToDate(toTemporal);
     temporalDates.setIssueList(issueList);
     return temporalDates;
+  }
+
+  private static ParsedTemporal getBaseParsedTemporal(
+      ChronoAccumulator accumulator, List<String> issueList) {
+    // Convert year, month and day parsed values
+    Year year = ChronoAccumulatorConverter.getYear(accumulator, issueList).orElse(null);
+    Month month = ChronoAccumulatorConverter.getMonth(accumulator, issueList).orElse(null);
+    Integer day = ChronoAccumulatorConverter.getDay(accumulator, issueList).orElse(null);
+    Temporal base = TEMPORAL_FUNC.apply(accumulator, issueList);
+
+    // Base temporal instance
+    return new ParsedTemporal(year, month, day, base);
   }
 
   /** Compare dates, FROM cannot be greater than TO */

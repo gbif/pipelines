@@ -139,14 +139,14 @@ public class ChronoAccumulatorConverter {
    * Converts raw value to integer and setChronoField into the map
    *
    * @param accumulator raw value for parsing
-   * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
+   * @param field one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
    *     MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
   private static Optional<Integer> convert(
-      ChronoAccumulator accumulator, ChronoField chronoField, List<String> issueList) {
-    Optional<String> rawValue = accumulator.getChronoFileValue(chronoField);
+      ChronoAccumulator accumulator, ChronoField field, List<String> issueList) {
+    Optional<String> rawValue = accumulator.getChronoFileValue(field);
     if (rawValue.isPresent()) {
-      Optional<Integer> value = FUNCTION_MAP.get(chronoField).apply(rawValue.get());
+      Optional<Integer> value = FUNCTION_MAP.get(field).apply(rawValue.get());
       if (!value.isPresent()) {
         issueList.add(RECORDED_DATE_INVALID.name());
       }

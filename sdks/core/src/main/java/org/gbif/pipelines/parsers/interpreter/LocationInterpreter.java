@@ -1,5 +1,6 @@
 package org.gbif.pipelines.parsers.interpreter;
 
+import org.gbif.api.vocabulary.Continent;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
@@ -12,7 +13,10 @@ import org.gbif.pipelines.parsers.parsers.location.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
@@ -48,15 +52,20 @@ public class LocationInterpreter {
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();
-      if (parsedLocation.getCountry() != null) {
-        lr.setCountry(parsedLocation.getCountry().getTitle());
-        lr.setCountryCode(parsedLocation.getCountry().getIso2LetterCode());
-      }
 
-      if (parsedLocation.getLatLng() != null) {
-        lr.setDecimalLatitude(parsedLocation.getLatLng().getLat());
-        lr.setDecimalLongitude(parsedLocation.getLatLng().getLng());
-      }
+      Optional.ofNullable(parsedLocation.getCountry())
+          .ifPresent(
+              country -> {
+                lr.setCountry(country.getTitle());
+                lr.setCountryCode(country.getIso2LetterCode());
+              });
+
+      Optional.ofNullable(parsedLocation.getLatLng())
+          .ifPresent(
+              latLng -> {
+                lr.setDecimalLatitude(latLng.getLat());
+                lr.setDecimalLongitude(latLng.getLng());
+              });
 
       // set the issues to the interpretation
       addIssue(lr, parsedResult.getIssues());
@@ -65,17 +74,18 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#continent} interpretation. */
   public static void interpretContinent(ExtendedRecord er, LocationRecord lr) {
-    VocabularyParsers.continentParser()
-        .map(
-            er,
-            parseResult -> {
-              if (parseResult.isSuccessful()) {
-                lr.setContinent(parseResult.getPayload().name());
-              } else {
-                addIssue(lr, CONTINENT_INVALID);
-              }
-              return lr;
-            });
+
+    Function<ParseResult<Continent>, LocationRecord> fn =
+        parseResult -> {
+          if (parseResult.isSuccessful()) {
+            lr.setContinent(parseResult.getPayload().name());
+          } else {
+            addIssue(lr, CONTINENT_INVALID);
+          }
+          return lr;
+        };
+
+    VocabularyParsers.continentParser().map(er, fn);
   }
 
   /** {@link DwcTerm#waterBody} interpretation. */
@@ -178,9 +188,8 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#coordinatePrecision} interpretation. */
   public static void interpretCoordinatePrecision(ExtendedRecord er, LocationRecord lr) {
-    SimpleTypeParser.parseDouble(
-        er,
-        DwcTerm.coordinatePrecision,
+
+    Consumer<Optional<Double>> fn =
         parseResult -> {
           Double result = parseResult.orElse(null);
           if (result != null
@@ -190,7 +199,9 @@ public class LocationInterpreter {
           } else {
             addIssue(lr, COORDINATE_PRECISION_INVALID);
           }
-        });
+        };
+
+    SimpleTypeParser.parseDouble(er, DwcTerm.coordinatePrecision, fn);
   }
 
   private static String cleanName(String x) {

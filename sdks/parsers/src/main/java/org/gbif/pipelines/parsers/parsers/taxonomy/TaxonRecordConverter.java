@@ -79,8 +79,7 @@ public class TaxonRecordConverter {
         diagnosticsApi
             .getAlternatives()
             .stream()
-            .map(
-                nameUsageMatch -> convertInternal(nameUsageMatch, TaxonRecord.newBuilder().build()))
+            .map(match -> convertInternal(match, TaxonRecord.newBuilder().build()))
             .collect(Collectors.toList());
 
     Diagnostic.Builder builder =
