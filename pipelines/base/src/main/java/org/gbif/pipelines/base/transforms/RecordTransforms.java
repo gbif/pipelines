@@ -1,5 +1,12 @@
-package org.gbif.pipelines.base;
+package org.gbif.pipelines.base.transforms;
 
+import org.gbif.pipelines.core.Interpretation;
+import org.gbif.pipelines.core.interpreters.BasicInterpreter;
+import org.gbif.pipelines.core.interpreters.LocationInterpreter;
+import org.gbif.pipelines.core.interpreters.MetadataInterpreter;
+import org.gbif.pipelines.core.interpreters.MultimediaInterpreter;
+import org.gbif.pipelines.core.interpreters.TaxonomyInterpreter;
+import org.gbif.pipelines.core.interpreters.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -7,13 +14,6 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.parsers.Interpretation;
-import org.gbif.pipelines.parsers.interpreter.BasicInterpreter;
-import org.gbif.pipelines.parsers.interpreter.LocationInterpreter;
-import org.gbif.pipelines.parsers.interpreter.MetadataInterpreter;
-import org.gbif.pipelines.parsers.interpreter.MultimediaInterpreter;
-import org.gbif.pipelines.parsers.interpreter.TaxonomyInterpreter;
-import org.gbif.pipelines.parsers.interpreter.TemporalInterpreter;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import org.apache.beam.sdk.transforms.DoFn;
@@ -35,9 +35,9 @@ import static java.util.Optional.ofNullable;
  *
  * }</pre>
  */
-public class Transforms {
+public class RecordTransforms {
 
-  private Transforms() {}
+  private RecordTransforms() {}
 
   /**
    * ParDo runs sequence of interpretations for {@link MultimediaRecord} using {@link

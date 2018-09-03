@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.interpreter;
+package org.gbif.pipelines.core.interpreters;
 
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.common.parsers.core.ParseResult;

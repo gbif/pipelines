@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.interpreter;
+package org.gbif.pipelines.core.interpreters;
 
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;

@@ -1,10 +1,10 @@
-package org.gbif.pipelines.parsers.io;
+package org.gbif.pipelines.core.io;
 
 import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.StarRecord;
+import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.converter.ExtendedRecordConverter;
 import org.gbif.utils.file.ClosableIterator;
 
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.interpreter;
+package org.gbif.pipelines.core.interpreters;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;

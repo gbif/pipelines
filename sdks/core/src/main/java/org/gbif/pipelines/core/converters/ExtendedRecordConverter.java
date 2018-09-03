@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.converter;
+package org.gbif.pipelines.core.converters;
 
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.Term;

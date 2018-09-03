@@ -1,7 +1,7 @@
 package org.gbif.pipelines.common.beam;
 
+import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.io.DwcaReader;
 
 import java.io.IOException;
 import java.util.ArrayList;

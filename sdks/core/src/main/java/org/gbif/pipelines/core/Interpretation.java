@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers;
+package org.gbif.pipelines.core;
 
 import java.io.Serializable;
 import java.util.function.BiConsumer;
