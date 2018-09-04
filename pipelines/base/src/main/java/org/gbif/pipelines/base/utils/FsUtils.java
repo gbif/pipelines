@@ -19,6 +19,10 @@ public final class FsUtils {
     return new Path(joiner.toString());
   }
 
+  public static String buildPathString(String... values) {
+    return buildPath(values).toString();
+  }
+
   public static String buildPath(BaseOptions options, String name) {
     return FsUtils.buildPath(
             options.getTargetPath(),

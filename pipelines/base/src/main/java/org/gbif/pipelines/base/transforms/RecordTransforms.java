@@ -14,7 +14,11 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.ws.config.ServiceType;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
+import java.nio.file.Paths;
 import java.util.Optional;
 
 import org.apache.beam.sdk.transforms.DoFn;
@@ -101,14 +105,14 @@ public class RecordTransforms {
    * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
    * as a source and {@link LocationInterpreter} as interpretation steps
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> location(String properties) {
+  public static SingleOutput<ExtendedRecord, LocationRecord> location(WsConfig wsConfig) {
     return ParDo.of(
         new DoFn<ExtendedRecord, LocationRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context.element())
                 .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-                .via(LocationInterpreter.interpretCountryAndCoordinates(properties))
+                .via(LocationInterpreter.interpretCountryAndCoordinates(wsConfig))
                 .via(LocationInterpreter::interpretContinent)
                 .via(LocationInterpreter::interpretWaterBody)
                 .via(LocationInterpreter::interpretStateProvince)
@@ -129,14 +133,14 @@ public class RecordTransforms {
    * ParDo runs sequence of interpretations for {@link MetadataRecord} using {@link ExtendedRecord}
    * as a source and {@link MetadataInterpreter} as interpretation steps
    */
-  public static SingleOutput<String, MetadataRecord> metadata(String properties) {
+  public static SingleOutput<String, MetadataRecord> metadata(WsConfig wsConfig) {
     return ParDo.of(
         new DoFn<String, MetadataRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context.element())
                 .to(id -> MetadataRecord.newBuilder().setDatasetId(id).build())
-                .via(MetadataInterpreter.interpret(properties))
+                .via(MetadataInterpreter.interpret(wsConfig))
                 .consume(context::output);
           }
         });
@@ -146,18 +150,45 @@ public class RecordTransforms {
    * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
    * a source and {@link TaxonomyInterpreter} as interpretation steps
    */
-  public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(String properties) {
+  public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(WsConfig wsConfig) {
     return ParDo.of(
         new DoFn<ExtendedRecord, TaxonRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context.element())
                 .to(TaxonRecord.newBuilder()::build)
-                .via(TaxonomyInterpreter.taxonomyInterpreter(properties))
+                .via(TaxonomyInterpreter.taxonomyInterpreter(wsConfig))
                 // the id is null when there is an error in the interpretation. In these
                 // cases we do not write the taxonRecord because it is totally empty.
                 .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));
           }
         });
+  }
+
+  /**
+   * ParDo runs sequence of interpretations for {@link MetadataRecord} using {@link ExtendedRecord}
+   * as a source and {@link MetadataInterpreter} as interpretation steps
+   */
+  public static SingleOutput<String, MetadataRecord> metadata(String properties) {
+    WsConfig wsConfig = WsConfigFactory.create(ServiceType.DATASET_META, Paths.get(properties));
+    return metadata(wsConfig);
+  }
+
+  /**
+   * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
+   * a source and {@link TaxonomyInterpreter} as interpretation steps
+   */
+  public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(String properties) {
+    WsConfig wsConfig = WsConfigFactory.create(ServiceType.SPECIES_MATCH2, Paths.get(properties));
+    return taxonomy(wsConfig);
+  }
+
+  /**
+   * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
+   * as a source and {@link LocationInterpreter} as interpretation steps
+   */
+  public static SingleOutput<ExtendedRecord, LocationRecord> location(String properties) {
+    WsConfig wsConfig = WsConfigFactory.create(ServiceType.GEO_CODE, Paths.get(properties));
+    return location(wsConfig);
   }
 }

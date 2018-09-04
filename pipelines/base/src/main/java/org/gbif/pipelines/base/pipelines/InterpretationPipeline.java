@@ -1,4 +1,4 @@
-package org.gbif.pipelines.base.pipeline;
+package org.gbif.pipelines.base.pipelines;
 
 import org.gbif.pipelines.base.options.DataPipelineOptionsFactory;
 import org.gbif.pipelines.base.options.DataProcessingPipelineOptions;

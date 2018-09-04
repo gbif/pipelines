@@ -19,6 +19,11 @@ public class ParsedTemporal {
 
   public ParsedTemporal() {}
 
+  public ParsedTemporal(Temporal fromDate, Temporal toDate) {
+    this.fromDate = fromDate;
+    this.toDate = toDate;
+  }
+
   public ParsedTemporal(Year year, Month month, Integer day, Temporal fromDate) {
     this.year = year;
     this.month = month;

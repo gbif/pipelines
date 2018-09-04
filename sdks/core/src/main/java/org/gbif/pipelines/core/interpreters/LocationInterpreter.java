@@ -11,11 +11,8 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
-import org.gbif.pipelines.parsers.ws.config.ServiceType;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
-import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -42,16 +39,6 @@ public class LocationInterpreter {
   private static final double COORDINATE_PRECISION_UPPER_BOUND = 45d;
 
   private LocationInterpreter() {}
-
-  /**
-   * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
-   * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
-   */
-  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      String properties) {
-    WsConfig wsConfig = WsConfigFactory.create(ServiceType.GEO_CODE, Paths.get(properties));
-    return interpretCountryAndCoordinates(wsConfig);
-  }
 
   /**
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
