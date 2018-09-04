@@ -10,6 +10,8 @@ import org.gbif.pipelines.base.utils.FsUtils;
 import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.function.Function;
 
@@ -51,8 +53,10 @@ public class InterpretationPipeline {
 
     List<String> types = options.getInterpretationTypes();
     String wsProperties = options.getWsProperties();
-    Function<RecordType, String> pathFn = t -> FsUtils.buildPath(options, t);
-    Function<RecordType, String> pathInterFn = t -> FsUtils.buildPathInterpret(options, t);
+    String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+
+    Function<RecordType, String> metaPathFn = t -> FsUtils.buildPath(options, t.name());
+    Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
 
     LOG.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
@@ -64,35 +68,35 @@ public class InterpretationPipeline {
 
     LOG.info("Adding interpretations");
 
-    p.apply(Create.of(options.getDatasetId()))
-        .apply(CheckTransforms.metadata(types))
-        .apply(RecordTransforms.metadata(wsProperties))
-        .apply(WriteTransforms.metadata(pathFn.apply(METADATA)));
+    p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+        .apply("Check metadata transform condition", CheckTransforms.metadata(types))
+        .apply("Interpret metadata", RecordTransforms.metadata(wsProperties))
+        .apply("Write metadata to avro", WriteTransforms.metadata(metaPathFn.apply(METADATA)));
 
     uniqueRecords
-        .apply(CheckTransforms.basic(types))
-        .apply(RecordTransforms.basic())
-        .apply(WriteTransforms.basic(pathInterFn.apply(BASIC)));
+        .apply("Check basic transform condition", CheckTransforms.basic(types))
+        .apply("Interpret basic", RecordTransforms.basic())
+        .apply("Write basic to avro", WriteTransforms.basic(pathFn.apply(BASIC)));
 
     uniqueRecords
-        .apply(CheckTransforms.temporal(types))
-        .apply(RecordTransforms.temporal())
-        .apply(WriteTransforms.temporal(pathInterFn.apply(TEMPORAL)));
+        .apply("Check temporal transform condition", CheckTransforms.temporal(types))
+        .apply("Interpret temporal", RecordTransforms.temporal())
+        .apply("Write temporal to avro", WriteTransforms.temporal(pathFn.apply(TEMPORAL)));
 
     uniqueRecords
-        .apply(CheckTransforms.multimedia(types))
-        .apply(RecordTransforms.multimedia())
-        .apply(WriteTransforms.multimedia(pathInterFn.apply(MULTIMEDIA)));
+        .apply("Check multimedia transform condition", CheckTransforms.multimedia(types))
+        .apply("Interpret multimedia", RecordTransforms.multimedia())
+        .apply("Write multimedia to avro", WriteTransforms.multimedia(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply(CheckTransforms.taxon(types))
-        .apply(RecordTransforms.taxonomy(wsProperties))
-        .apply(WriteTransforms.taxon(pathInterFn.apply(TAXONOMY)));
+        .apply("Check taxonomy transform condition", CheckTransforms.taxon(types))
+        .apply("Interpret taxonomy", RecordTransforms.taxonomy(wsProperties))
+        .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply(CheckTransforms.location(types))
-        .apply(RecordTransforms.location(wsProperties))
-        .apply(WriteTransforms.location(pathInterFn.apply(LOCATION)));
+        .apply("Check location transform condition", CheckTransforms.location(types))
+        .apply("Interpret location", RecordTransforms.location(wsProperties))
+        .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
     LOG.info("Running the pipeline");
     return p.run().waitUntilFinish();

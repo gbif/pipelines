@@ -1,7 +1,6 @@
 package org.gbif.pipelines.base.utils;
 
 import org.gbif.pipelines.base.options.base.BaseOptions;
-import org.gbif.pipelines.core.RecordType;
 
 import java.util.Arrays;
 import java.util.StringJoiner;
@@ -20,16 +19,18 @@ public final class FsUtils {
     return new Path(joiner.toString());
   }
 
-  public static String buildPath(BaseOptions options, RecordType type) {
+  public static String buildPath(BaseOptions options, String name) {
     return FsUtils.buildPath(
             options.getTargetPath(),
             options.getDatasetId(),
             options.getAttempt().toString(),
-            type.name().toLowerCase())
+            name.toLowerCase())
         .toString();
   }
 
-  public static String buildPathInterpret(BaseOptions options, RecordType type) {
-    return FsUtils.buildPath(buildPath(options, type), "interpret").toString();
+  public static String buildPathInterpret(BaseOptions options, String directory, String uniqueId) {
+    String mainPath = buildPath(options, directory);
+    String fileName = "interpret-" + uniqueId;
+    return FsUtils.buildPath(mainPath, fileName).toString();
   }
 }
