@@ -14,11 +14,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.parsers.ws.config.ServiceType;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
-import java.nio.file.Paths;
 import java.util.Optional;
 
 import org.apache.beam.sdk.transforms.DoFn;
@@ -106,14 +102,13 @@ public class RecordTransforms {
    * as a source and {@link LocationInterpreter} as interpretation steps
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> location(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create(ServiceType.GEO_CODE, Paths.get(properties));
     return ParDo.of(
         new DoFn<ExtendedRecord, LocationRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context.element())
                 .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-                .via(LocationInterpreter.interpretCountryAndCoordinates(wsConfig))
+                .via(LocationInterpreter.interpretCountryAndCoordinates(properties))
                 .via(LocationInterpreter::interpretContinent)
                 .via(LocationInterpreter::interpretWaterBody)
                 .via(LocationInterpreter::interpretStateProvince)
@@ -135,16 +130,13 @@ public class RecordTransforms {
    * as a source and {@link MetadataInterpreter} as interpretation steps
    */
   public static SingleOutput<String, MetadataRecord> metadata(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create(ServiceType.DATASET_META, Paths.get(properties));
     return ParDo.of(
         new DoFn<String, MetadataRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context.element())
                 .to(id -> MetadataRecord.newBuilder().setDatasetId(id).build())
-                .via(MetadataInterpreter.interpretDataset(wsConfig))
-                .via(MetadataInterpreter.interpretInstallation(wsConfig))
-                .via(MetadataInterpreter.interpretOrganization(wsConfig))
+                .via(MetadataInterpreter.interpret(properties))
                 .consume(context::output);
           }
         });
@@ -155,14 +147,13 @@ public class RecordTransforms {
    * a source and {@link TaxonomyInterpreter} as interpretation steps
    */
   public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create(ServiceType.SPECIES_MATCH2, Paths.get(properties));
     return ParDo.of(
         new DoFn<ExtendedRecord, TaxonRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context.element())
                 .to(TaxonRecord.newBuilder()::build)
-                .via(TaxonomyInterpreter.taxonomyInterpreter(wsConfig))
+                .via(TaxonomyInterpreter.taxonomyInterpreter(properties))
                 // the id is null when there is an error in the interpretation. In these
                 // cases we do not write the taxonRecord because it is totally empty.
                 .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));

@@ -8,8 +8,11 @@ import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.match2.SpeciesMatchv2Client;
+import org.gbif.pipelines.parsers.ws.config.ServiceType;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
+import java.nio.file.Paths;
 import java.util.function.BiConsumer;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.INTERPRETATION_ERROR;
@@ -28,6 +31,14 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 public class TaxonomyInterpreter {
 
   private TaxonomyInterpreter() {}
+
+  /**
+   * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
+   */
+  public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(String properties) {
+    WsConfig wsConfig = WsConfigFactory.create(ServiceType.SPECIES_MATCH2, Paths.get(properties));
+    return taxonomyInterpreter(wsConfig);
+  }
 
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
