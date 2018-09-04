@@ -49,8 +49,8 @@ public class JsonTransformTest {
     PCollection<KV<String, MetadataRecord>> metadataCollection =
         p.apply("MetadataRecord", Create.of(Collections.singletonMap(id, mdr)));
 
-    PCollection<KV<String, BasicRecord>> interpretedCollection =
-        p.apply("InterpretedExtendedRecord", Create.of(Collections.singletonMap(id, br)));
+    PCollection<KV<String, BasicRecord>> basicCollection =
+        p.apply("BasicRecord", Create.of(Collections.singletonMap(id, br)));
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
         p.apply("TemporalRecord", Create.of(Collections.singletonMap(id, tr)));
@@ -74,7 +74,7 @@ public class JsonTransformTest {
 
     PCollection<String> result =
         PCollectionTuple.of(jsonTransform.getExtendedRecordTag(), verbatimCollections)
-            .and(jsonTransform.getBasicKvTag(), interpretedCollection)
+            .and(jsonTransform.getBasicKvTag(), basicCollection)
             .and(jsonTransform.getLocationKvTag(), locationCollection)
             .and(jsonTransform.getMultimediaKvTag(), multimediaCollection)
             .and(jsonTransform.getTaxonomyKvTag(), taxonCollection)

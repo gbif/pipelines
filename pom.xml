@@ -78,7 +78,8 @@
     <geotools.version>12.1</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
     <guava.version>18.0</guava.version>
-    <slf4j.version>1.7.24</slf4j.version>
+    <slf4j.version>1.7.25</slf4j.version>
+    <logback.version>1.1.5</logback.version>
 
     <elasticsearch.version>5.6.3</elasticsearch.version>
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
@@ -295,11 +296,6 @@
         <version>${commons-lang3.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>${slf4j.version}</version>
-      </dependency>
-      <dependency>
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>${findbugs-jsr305.version}</version>
@@ -308,6 +304,18 @@
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
         <version>${joda-time.version}</version>
+      </dependency>
+
+      <!-- Logging -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>${slf4j.version}</version>
       </dependency>
 
       <!-- ES -->
@@ -344,7 +352,6 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
-        <scope>provided</scope>
       </dependency>
 
       <!-- Http clients -->
@@ -367,7 +374,6 @@
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio</artifactId>
         <version>${okio.version}</version>
-        <scope>provided</scope>
       </dependency>
 
       <!-- Geotools -->
@@ -391,6 +397,27 @@
         <artifactId>gt-main</artifactId>
         <version>${geotools.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-api</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-transform</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-geometry</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-epsg-hsql</artifactId>
+        <version>${geotools.version}</version>
+      </dependency>
+
 
       <!-- Maven plugin -->
       <dependency>

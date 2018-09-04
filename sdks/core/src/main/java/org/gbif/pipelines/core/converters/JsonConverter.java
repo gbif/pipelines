@@ -20,7 +20,7 @@ import org.apache.avro.specific.SpecificRecordBase;
  * <pre>{@code
  * Usage example:
  *
- * InterpretedExtendedRecord interRecord = ...
+ * BasicRecord basic = ...
  * String result = SpecificRecordBase.create(interRecord).buildJson();
  *
  * }</pre>

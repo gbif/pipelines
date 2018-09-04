@@ -82,20 +82,19 @@ public class JsonTransform extends PTransform<PCollectionTuple, PCollection<Stri
         new DoFn<KV<String, CoGbkResult>, String>() {
           @ProcessElement
           public void processElement(ProcessContext c) {
-            //
-            CoGbkResult value = c.element().getValue();
-            String key = c.element().getKey();
+            CoGbkResult v = c.element().getValue();
+            String k = c.element().getKey();
 
             MetadataRecord mdr = c.sideInput(metadataView);
-            ExtendedRecord er = value.getOnly(erTag, ExtendedRecord.newBuilder().setId(key).build());
-            BasicRecord br = value.getOnly(brTag, BasicRecord.newBuilder().setId(key).build());
-            TemporalRecord tr = value.getOnly(trTag, TemporalRecord.newBuilder().setId(key).build());
-            LocationRecord lr = value.getOnly(lrTag, LocationRecord.newBuilder().setId(key).build());
-            TaxonRecord txr = value.getOnly(txrTag, TaxonRecord.newBuilder().setId(key).build());
-            MultimediaRecord mr = value.getOnly(mrTag, MultimediaRecord.newBuilder().setId(key).build());
+            ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
+            BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
+            TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
+            LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
+            TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
+            MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
 
-            //
-            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
+            String json =
+                GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
 
             c.output(json);
           }

@@ -1,6 +1,7 @@
 .idea
 *.iml
 *.log
+*.log.*
 target
 output
 java-generated
