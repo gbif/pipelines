@@ -1,10 +1,10 @@
 package org.gbif.pipelines.base.pipelines;
 
-import org.gbif.pipelines.base.options.DataPipelineOptionsFactory;
-import org.gbif.pipelines.base.options.EsProcessingPipelineOptions;
+import org.gbif.pipelines.base.options.IndexingPipelineOptions;
+import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
-import org.gbif.pipelines.estools.service.EsConstants;
+import org.gbif.pipelines.estools.service.EsConstants.Field;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,21 +27,21 @@ public class IndexingWithCreationPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(IndexingWithCreationPipeline.class);
 
-  private final EsProcessingPipelineOptions options;
+  private final IndexingPipelineOptions options;
   private final EsConfig esConfig;
 
-  private IndexingWithCreationPipeline(EsProcessingPipelineOptions options) {
+  private IndexingWithCreationPipeline(IndexingPipelineOptions options) {
     this.options = options;
-    this.esConfig = EsConfig.from(options.getESHosts());
+    this.esConfig = EsConfig.from(options.getEsHosts());
   }
 
-  public static IndexingWithCreationPipeline create(EsProcessingPipelineOptions options) {
+  public static IndexingWithCreationPipeline create(IndexingPipelineOptions options) {
     return new IndexingWithCreationPipeline(options);
   }
 
   /** TODO: DOC */
   public static void main(String[] args) {
-    EsProcessingPipelineOptions options = DataPipelineOptionsFactory.createForEs(args);
+    IndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     IndexingWithCreationPipeline.create(options).run();
   }
 
@@ -59,24 +59,24 @@ public class IndexingWithCreationPipeline {
 
   /** If ES indexing is included in the pipeline we first create the index */
   private void createIndex() {
-    options.getESIndexName();
-    Path path = Paths.get(options.getESSchemaPath());
+    options.getEsIndexName();
+    Path path = Paths.get(options.getEsSchemaPath());
 
     Map<String, String> map = new HashMap<>();
-    map.put(EsConstants.Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
-    map.put(EsConstants.Field.INDEX_NUMBER_SHARDS, options.getIndexNumberShards().toString());
-    map.put(EsConstants.Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
+    map.put(Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
+    map.put(Field.INDEX_NUMBER_SHARDS, options.getIndexNumberShards().toString());
+    map.put(Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
 
     String idx = EsIndex.create(esConfig, options.getDatasetId(), options.getAttempt(), path, map);
     LOG.info("ES index {} created", idx);
 
-    Optional.of(idx).ifPresent(options::setESIndexName);
+    Optional.of(idx).ifPresent(options::setEsIndexName);
   }
 
   /** TODO: DOC */
   private void swapIndex() {
-    String alias = options.getESAlias();
-    String index = options.getESIndexName();
+    String alias = options.getEsAlias();
+    String index = options.getEsIndexName();
 
     EsIndex.swapIndexInAlias(esConfig, alias, index);
     LOG.info("ES index {} added to alias {}", index, alias);

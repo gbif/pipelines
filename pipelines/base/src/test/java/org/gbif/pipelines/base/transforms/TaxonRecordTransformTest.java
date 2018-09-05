@@ -4,7 +4,7 @@ import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.pipelines.base.options.DataProcessingPipelineOptions;
+import org.gbif.pipelines.base.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
@@ -80,8 +80,8 @@ public class TaxonRecordTransformTest {
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());
 
     // run pipeline with the options required
-    DataProcessingPipelineOptions options =
-        PipelineOptionsFactory.create().as(DataProcessingPipelineOptions.class);
+    InterpretationPipelineOptions options =
+        PipelineOptionsFactory.create().as(InterpretationPipelineOptions.class);
     p.run(options);
   }
 

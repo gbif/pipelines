@@ -2,7 +2,7 @@ package org.gbif.pipelines.base.transforms;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.base.options.DataProcessingPipelineOptions;
+import org.gbif.pipelines.base.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
@@ -120,8 +120,8 @@ public class LocationTransformTest {
     PAssert.that(recordCollection).containsInAnyOrder(locations);
 
     // run pipeline with the options required
-    DataProcessingPipelineOptions options =
-        PipelineOptionsFactory.create().as(DataProcessingPipelineOptions.class);
+    InterpretationPipelineOptions options =
+        PipelineOptionsFactory.create().as(InterpretationPipelineOptions.class);
     p.run(options);
   }
 

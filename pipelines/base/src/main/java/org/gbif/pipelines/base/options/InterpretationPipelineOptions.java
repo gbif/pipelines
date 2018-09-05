@@ -1,14 +1,10 @@
 package org.gbif.pipelines.base.options;
 
-import org.gbif.pipelines.base.options.base.BaseOptions;
-
 import java.io.File;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.beam.runners.direct.DirectOptions;
-import org.apache.beam.sdk.annotations.Experimental;
-import org.apache.beam.sdk.annotations.Experimental.Kind;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
@@ -19,8 +15,8 @@ import org.apache.beam.sdk.options.PipelineOptions;
  * Pipeline options (configuration) for GBIF based data pipelines. Optionally can use a {@link
  * HadoopFileSystemOptions} when exporting files.
  */
-@Experimental(Kind.FILESYSTEM)
-public interface DataProcessingPipelineOptions extends BaseOptions, HadoopFileSystemOptions {
+public interface InterpretationPipelineOptions
+    extends BasePipelineOptions, HadoopFileSystemOptions {
 
   @Override
   @Description(

@@ -1,7 +1,7 @@
 package org.gbif.pipelines.base.pipelines;
 
-import org.gbif.pipelines.base.options.DataPipelineOptionsFactory;
-import org.gbif.pipelines.base.options.DataProcessingPipelineOptions;
+import org.gbif.pipelines.base.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.base.transforms.CheckTransforms;
 import org.gbif.pipelines.base.transforms.RecordTransforms;
 import org.gbif.pipelines.base.transforms.UniqueIdTransform;
@@ -35,19 +35,19 @@ public class InterpretationPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipeline.class);
 
-  private final DataProcessingPipelineOptions options;
+  private final InterpretationPipelineOptions options;
 
-  private InterpretationPipeline(DataProcessingPipelineOptions options) {
+  private InterpretationPipeline(InterpretationPipelineOptions options) {
     this.options = options;
   }
 
-  public static InterpretationPipeline create(DataProcessingPipelineOptions options) {
+  public static InterpretationPipeline create(InterpretationPipelineOptions options) {
     return new InterpretationPipeline(options);
   }
 
   /** TODO: DOC! */
   public static void main(String[] args) {
-    DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.create(args);
     InterpretationPipeline.create(options).run();
   }
 

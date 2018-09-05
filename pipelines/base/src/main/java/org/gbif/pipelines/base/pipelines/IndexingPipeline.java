@@ -1,9 +1,11 @@
 package org.gbif.pipelines.base.pipelines;
 
-import org.gbif.pipelines.base.options.DataPipelineOptionsFactory;
-import org.gbif.pipelines.base.options.EsProcessingPipelineOptions;
+import org.gbif.pipelines.base.options.IndexingPipelineOptions;
+import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.base.transforms.MapTransforms;
 import org.gbif.pipelines.base.transforms.ReadTransforms;
+import org.gbif.pipelines.base.utils.FsUtils;
+import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -12,6 +14,8 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+
+import java.util.function.Function;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -29,24 +33,30 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.pipelines.core.RecordType.BASIC;
+import static org.gbif.pipelines.core.RecordType.LOCATION;
+import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
+import static org.gbif.pipelines.core.RecordType.TAXONOMY;
+import static org.gbif.pipelines.core.RecordType.TEMPORAL;
+
 /** TODO: DOC! */
 public class IndexingPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(IndexingPipeline.class);
 
-  private final EsProcessingPipelineOptions options;
+  private final IndexingPipelineOptions options;
 
-  private IndexingPipeline(EsProcessingPipelineOptions options) {
+  private IndexingPipeline(IndexingPipelineOptions options) {
     this.options = options;
   }
 
-  public static IndexingPipeline create(EsProcessingPipelineOptions options) {
+  public static IndexingPipeline create(IndexingPipelineOptions options) {
     return new IndexingPipeline(options);
   }
 
   /** TODO: DOC! */
   public static void main(String[] args) {
-    EsProcessingPipelineOptions options = DataPipelineOptionsFactory.createForEs(args);
+    IndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     IndexingPipeline.create(options).run();
   }
 
@@ -54,6 +64,9 @@ public class IndexingPipeline {
   public PipelineResult.State run() {
 
     LOG.info("Adding step 1: Options");
+    Function<String, String> pathFn = s -> FsUtils.buildPath(options, s + "*.avro");
+    Function<RecordType, String> pathInterFn =
+        t -> FsUtils.buildPathInterpret(options, t.name().toLowerCase(), "*.avro");
 
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
     final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
@@ -66,31 +79,31 @@ public class IndexingPipeline {
 
     LOG.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", ReadTransforms.metadata(options))
+        p.apply("Read Metadata", ReadTransforms.metadata(pathFn.apply("metadata")))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        p.apply("Read Verbatim", ReadTransforms.verbatim(options))
+        p.apply("Read Verbatim", ReadTransforms.verbatim(pathFn.apply("verbatim")))
             .apply("Map Verbatim to KV", MapTransforms.extendedToKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
-        p.apply("Read Basic", ReadTransforms.basic(options))
+        p.apply("Read Basic", ReadTransforms.basic(pathInterFn.apply(BASIC)))
             .apply("Map Basic to KV", MapTransforms.basicToKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
-        p.apply("Read Temporal", ReadTransforms.temporal(options))
+        p.apply("Read Temporal", ReadTransforms.temporal(pathInterFn.apply(TEMPORAL)))
             .apply("Map Temporal to KV", MapTransforms.temporalToKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
-        p.apply("Read Location", ReadTransforms.location(options))
+        p.apply("Read Location", ReadTransforms.location(pathInterFn.apply(LOCATION)))
             .apply("Map Location to KV", MapTransforms.locationToKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read Taxon", ReadTransforms.taxon(options))
+        p.apply("Read Taxon", ReadTransforms.taxon(pathInterFn.apply(TAXONOMY)))
             .apply("Map Taxon to KV", MapTransforms.taxonToKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
-        p.apply("Read Multimedia", ReadTransforms.multimedia(options))
+        p.apply("Read Multimedia", ReadTransforms.multimedia(pathInterFn.apply(MULTIMEDIA)))
             .apply("Map Multimedia to KV", MapTransforms.multimediaToKv());
 
     LOG.info("Adding step 3: Converting to a json object");
@@ -130,13 +143,13 @@ public class IndexingPipeline {
     LOG.info("Adding step 5: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
-            options.getESHosts(), options.getESIndexName(), "record");
+            options.getEsHosts(), options.getEsIndexName(), "record");
 
     jsonCollection.apply(
         ElasticsearchIO.write()
             .withConnectionConfiguration(esConfig)
-            .withMaxBatchSizeBytes(options.getESMaxBatchSizeBytes())
-            .withMaxBatchSize(options.getESMaxBatchSize()));
+            .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
+            .withMaxBatchSize(options.getEsMaxBatchSize()));
 
     LOG.info("Running the pipeline");
     return p.run().waitUntilFinish();

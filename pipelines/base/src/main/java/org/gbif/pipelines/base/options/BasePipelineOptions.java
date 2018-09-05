@@ -1,4 +1,4 @@
-package org.gbif.pipelines.base.options.base;
+package org.gbif.pipelines.base.options;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +12,8 @@ import org.apache.beam.sdk.options.Validation;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
-public interface BaseOptions extends PipelineOptions {
+/** TODO: DOC */
+public interface BasePipelineOptions extends PipelineOptions {
 
   @Description("Id of the dataset used to name the target file in file system.")
   @Validation.Required
@@ -59,15 +60,14 @@ public interface BaseOptions extends PipelineOptions {
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 
-    public static Optional<String> getDefaultFs(PipelineOptions options) {
+    static Optional<String> getDefaultFs(PipelineOptions options) {
       List<Configuration> configs =
           options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
-      if (configs != null && !configs.isEmpty()) {
-        // we take the first config as default
-        return Optional.ofNullable(
-            configs.get(0).get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY));
-      }
-      return Optional.empty();
+
+      return Optional.ofNullable(configs)
+          .filter(x -> !x.isEmpty())
+          // we take the first config as default
+          .map(c -> configs.get(0).get(CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY));
     }
 
     @Override

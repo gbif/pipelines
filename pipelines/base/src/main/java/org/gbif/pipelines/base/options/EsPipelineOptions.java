@@ -1,46 +1,44 @@
-package org.gbif.pipelines.base.options.base;
+package org.gbif.pipelines.base.options;
 
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
-public interface EsOptions extends PipelineOptions {
-
-  long DEFAULT_ES_BATCH_SIZE = 10_000L;
-  long DEFAULT_ES_BATCH_SIZE_BYTES = 10_242_880L; //10mb
+/** TODO: DOC */
+public interface EsPipelineOptions extends PipelineOptions {
 
   @Description("Target ES Max Batch Size bytes")
-  @Default.Long(DEFAULT_ES_BATCH_SIZE_BYTES)
-  Long getESMaxBatchSizeBytes();
+  @Default.Long(10_242_880L) // 10mb
+  Long getEsMaxBatchSizeBytes();
 
-  void setESMaxBatchSizeBytes(Long batchSize);
+  void setEsMaxBatchSizeBytes(Long batchSize);
 
-  @Description("ES max batch size")
-  @Default.Long(DEFAULT_ES_BATCH_SIZE)
-  long getESMaxBatchSize();
+  @Description("Es max batch size")
+  @Default.Long(10_000L)
+  long getEsMaxBatchSize();
 
-  void setESMaxBatchSize(long esBatchSize);
+  void setEsMaxBatchSize(long esBatchSize);
 
-  @Description("List of ES hosts. Required for the INDEX_TO_ES step.")
-  String[] getESHosts();
+  @Description("List of Elasticsearch hosts. Required for the INDEX_TO_ES step.")
+  String[] getEsHosts();
 
-  void setESHosts(String[] esHosts);
+  void setEsHosts(String[] esHosts);
 
-  @Description("Name of the ES index that will be used to index the records")
-  String getESIndexName();
+  @Description("Name of the Elasticsearch index that will be used to index the records")
+  String getEsIndexName();
 
-  void setESIndexName(String esIndexName);
+  void setEsIndexName(String esIndexName);
 
-  @Description("Name of the ES alias. The index created will be added to this alias.")
-  String getESAlias();
+  @Description("Name of the Elasticsearch alias. The index created will be added to this alias.")
+  String getEsAlias();
 
-  void setESAlias(String esAlias);
+  void setEsAlias(String esAlias);
 
   @Description("Path to an occurrence indexing schema")
   @Default.String("elasticsearch/es-occurrence-shcema.json")
-  String getESSchemaPath();
+  String getEsSchemaPath();
 
-  void setESSchemaPath(String esSchemaPath);
+  void setEsSchemaPath(String esSchemaPath);
 
   @Description(
       "How often to perform a refresh operation, which makes recent changes to the index visible to search. Defaults to 30s")

@@ -1,6 +1,6 @@
 package org.gbif.pipelines.base.utils;
 
-import org.gbif.pipelines.base.options.base.BaseOptions;
+import org.gbif.pipelines.base.options.BasePipelineOptions;
 
 import java.util.Arrays;
 import java.util.StringJoiner;
@@ -23,7 +23,7 @@ public final class FsUtils {
     return buildPath(values).toString();
   }
 
-  public static String buildPath(BaseOptions options, String name) {
+  public static String buildPath(BasePipelineOptions options, String name) {
     return FsUtils.buildPath(
             options.getTargetPath(),
             options.getDatasetId(),
@@ -32,7 +32,7 @@ public final class FsUtils {
         .toString();
   }
 
-  public static String buildPathInterpret(BaseOptions options, String directory, String uniqueId) {
+  public static String buildPathInterpret(BasePipelineOptions options, String directory, String uniqueId) {
     String mainPath = buildPath(options, directory);
     String fileName = "interpret-" + uniqueId;
     return FsUtils.buildPath(mainPath, fileName).toString();
