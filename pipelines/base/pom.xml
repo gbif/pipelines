@@ -29,6 +29,10 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.artery</groupId>
+      <artifactId>beam-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.artery</groupId>
       <artifactId>parsers</artifactId>
     </dependency>
     <dependency>

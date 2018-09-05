@@ -40,7 +40,7 @@ public class ReadTransforms {
   }
 
   /** TODO: DOC */
-  public static AvroIO.Read<ExtendedRecord> verbatim(String path) {
+  public static AvroIO.Read<ExtendedRecord> extended(String path) {
     return AvroIO.read(ExtendedRecord.class).from(path);
   }
 

@@ -208,6 +208,16 @@
         <artifactId>es-tools</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.artery</groupId>
+        <artifactId>base</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.artery</groupId>
+        <artifactId>beam-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
       <!-- GBIF -->
       <dependency>
@@ -258,6 +268,11 @@
       <dependency>
         <groupId>org.apache.beam</groupId>
         <artifactId>beam-runners-direct-java</artifactId>
+        <version>${apache.beam.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.beam</groupId>
+        <artifactId>beam-runners-spark</artifactId>
         <version>${apache.beam.version}</version>
       </dependency>
       <dependency>

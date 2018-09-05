@@ -1,23 +1,20 @@
-package org.gbif.pipelines.base.pipelines;
+package org.gbif.pipelines.minipipelines;
 
 import org.gbif.pipelines.base.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.base.transforms.CheckTransforms;
-import org.gbif.pipelines.base.transforms.ReadTransforms;
 import org.gbif.pipelines.base.transforms.RecordTransforms;
 import org.gbif.pipelines.base.transforms.UniqueIdTransform;
 import org.gbif.pipelines.base.transforms.WriteTransforms;
 import org.gbif.pipelines.base.utils.FsUtils;
+import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.function.Function;
 
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
@@ -31,77 +28,72 @@ import static org.gbif.pipelines.core.RecordType.TAXONOMY;
 import static org.gbif.pipelines.core.RecordType.TEMPORAL;
 
 /** TODO: DOC! */
-public class InterpretationPipeline {
+class DwcaInterpretationPipeline {
 
-  private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipeline.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DwcaInterpretationPipeline.class);
 
   private final InterpretationPipelineOptions options;
 
-  private InterpretationPipeline(InterpretationPipelineOptions options) {
+  private DwcaInterpretationPipeline(InterpretationPipelineOptions options) {
     this.options = options;
   }
 
-  public static InterpretationPipeline create(InterpretationPipelineOptions options) {
-    return new InterpretationPipeline(options);
+  static DwcaInterpretationPipeline create(InterpretationPipelineOptions options) {
+    return new DwcaInterpretationPipeline(options);
   }
 
   /** TODO: DOC! */
-  public static void main(String[] args) {
-    InterpretationPipelineOptions options = PipelinesOptionsFactory.create(args);
-    InterpretationPipeline.create(options).run();
-  }
+  void run() {
 
-  /** TODO: DOC! */
-  public PipelineResult.State run() {
-
-    List<String> types = options.getInterpretationTypes();
     String wsProperties = options.getWsProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     Function<RecordType, String> metaPathFn = t -> FsUtils.buildPath(options, t.name());
     Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
 
+    String inputPath = options.getInputPath();
+    boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
+
+    String tmpDir = FsUtils.getTempDir(options);
+
+    DwcaIO.Read reader =
+        isDirectory ? DwcaIO.Read.withPaths(inputPath) : DwcaIO.Read.withPaths(inputPath, tmpDir);
+
     LOG.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
     LOG.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
-        p.apply("Read ExtendedRecords", ReadTransforms.extended(options.getInputPath()))
+        p.apply("Read ExtendedRecords", reader)
             .apply("Filter duplicates", UniqueIdTransform.create());
 
     LOG.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Check metadata transform condition", CheckTransforms.metadata(types))
         .apply("Interpret metadata", RecordTransforms.metadata(wsProperties))
         .apply("Write metadata to avro", WriteTransforms.metadata(metaPathFn.apply(METADATA)));
 
     uniqueRecords
-        .apply("Check basic transform condition", CheckTransforms.basic(types))
         .apply("Interpret basic", RecordTransforms.basic())
         .apply("Write basic to avro", WriteTransforms.basic(pathFn.apply(BASIC)));
 
     uniqueRecords
-        .apply("Check temporal transform condition", CheckTransforms.temporal(types))
         .apply("Interpret temporal", RecordTransforms.temporal())
         .apply("Write temporal to avro", WriteTransforms.temporal(pathFn.apply(TEMPORAL)));
 
     uniqueRecords
-        .apply("Check multimedia transform condition", CheckTransforms.multimedia(types))
         .apply("Interpret multimedia", RecordTransforms.multimedia())
         .apply("Write multimedia to avro", WriteTransforms.multimedia(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply("Check taxonomy transform condition", CheckTransforms.taxon(types))
         .apply("Interpret taxonomy", RecordTransforms.taxonomy(wsProperties))
         .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply("Check location transform condition", CheckTransforms.location(types))
         .apply("Interpret location", RecordTransforms.location(wsProperties))
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
     LOG.info("Running interpretation pipeline");
-    return p.run().waitUntilFinish();
+    p.run().waitUntilFinish();
   }
 }

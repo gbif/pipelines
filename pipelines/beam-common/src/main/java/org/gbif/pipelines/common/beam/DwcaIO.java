@@ -34,6 +34,8 @@ import org.apache.beam.sdk.values.PCollection;
  */
 public class DwcaIO {
 
+  private DwcaIO() {}
+
   public static class Read extends PTransform<PBegin, PCollection<ExtendedRecord>> {
 
     private static final String UNCOMPRESSED = "UNCOMPRESSED";

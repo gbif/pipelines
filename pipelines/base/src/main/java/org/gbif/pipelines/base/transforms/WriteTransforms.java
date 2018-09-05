@@ -1,6 +1,7 @@
 package org.gbif.pipelines.base.transforms;
 
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -37,6 +38,10 @@ public class WriteTransforms {
 
   public static AvroIO.Write<LocationRecord> location(String toPath) {
     return create(LocationRecord.class, toPath);
+  }
+
+  public static AvroIO.Write<ExtendedRecord> extended(String toPath) {
+    return create(ExtendedRecord.class, toPath);
   }
 
   public static <T> AvroIO.Write<T> create(Class<T> clazz, String toPath) {

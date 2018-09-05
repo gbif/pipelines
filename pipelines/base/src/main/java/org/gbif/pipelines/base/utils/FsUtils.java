@@ -5,6 +5,7 @@ import org.gbif.pipelines.base.options.BasePipelineOptions;
 import java.util.Arrays;
 import java.util.StringJoiner;
 
+import com.google.common.base.Strings;
 import org.apache.hadoop.fs.Path;
 
 /** Utility class to work with FS. */
@@ -32,9 +33,16 @@ public final class FsUtils {
         .toString();
   }
 
-  public static String buildPathInterpret(BasePipelineOptions options, String directory, String uniqueId) {
+  public static String buildPathInterpret(
+      BasePipelineOptions options, String directory, String uniqueId) {
     String mainPath = buildPath(options, directory);
     String fileName = "interpret-" + uniqueId;
     return FsUtils.buildPath(mainPath, fileName).toString();
+  }
+
+  public static String getTempDir(BasePipelineOptions options) {
+    return Strings.isNullOrEmpty(options.getTempLocation())
+        ? FsUtils.buildPathString(options.getTargetPath(), "tmp")
+        : options.getTempLocation();
   }
 }

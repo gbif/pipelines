@@ -46,15 +46,17 @@ public class IndexingWithCreationPipeline {
   }
 
   /** TODO: DOC */
-  public void run() {
-
+  public void run(Runnable runnable) {
     createIndex();
-
-    IndexingPipeline.create(options).run();
-
+    runnable.run();
     swapIndex();
-
     removeTmpDirecrory();
+  }
+
+  /** TODO: DOC */
+  public void run() {
+    Runnable pipeline = () -> IndexingPipeline.create(options).run();
+    run(pipeline);
   }
 
   /** If ES indexing is included in the pipeline we first create the index */
