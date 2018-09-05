@@ -26,6 +26,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,24 +40,27 @@ import static org.gbif.api.vocabulary.TaxonomicStatus.ACCEPTED;
 @RunWith(JUnit4.class)
 public class TaxonRecordTransformTest {
 
-  private static final String TEST_ID = "1";
-
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   /** Public field because {@link ClassRule} requires it. */
-  @ClassRule public static final MockWebServer mockServer = new MockWebServer();
+  @ClassRule public static final MockWebServer MOCK_SERVER = new MockWebServer();
 
   private static WsConfig wsConfig;
 
   @ClassRule
-  public static final ExternalResource configResource =
+  public static final ExternalResource CONFIG_RESOURCE =
       new ExternalResource() {
 
         @Override
         protected void before() {
-          wsConfig = WsConfigFactory.createFromUrl(mockServer.url("/").toString());
+          wsConfig = WsConfigFactory.createFromUrl(MOCK_SERVER.url("/").toString());
         }
       };
+
+  @AfterClass
+  public static void close() throws IOException {
+    MOCK_SERVER.close();
+  }
 
   @Test
   @Category(NeedsRunner.class)
@@ -66,12 +70,11 @@ public class TaxonRecordTransformTest {
 
     // State
     ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create().id(TEST_ID).name("foo").build();
+        ExtendedRecordCustomBuilder.create().id("1").name("foo").build();
 
     // When
     PCollection<TaxonRecord> recordCollection =
-        p.apply(Create.of(extendedRecord))
-            .apply(RecordTransforms.taxonomy(wsConfig));
+        p.apply(Create.of(extendedRecord)).apply(RecordTransforms.taxonomy(wsConfig));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());
@@ -85,7 +88,7 @@ public class TaxonRecordTransformTest {
   private TaxonRecord createTaxonRecordExpected() {
     TaxonRecord taxonRecord = TaxonRecord.newBuilder().build();
     TaxonRecordConverter.convert(createDummyNameUsageMatch(), taxonRecord);
-    taxonRecord.setId(TEST_ID);
+    taxonRecord.setId("1");
     return taxonRecord;
   }
 
@@ -114,12 +117,15 @@ public class TaxonRecordTransformTest {
   }
 
   private static void enqueueDummyResponse() throws IOException {
-    InputStream inputStream =
+    BufferedSource source;
+    try (InputStream inputStream =
         Thread.currentThread()
             .getContextClassLoader()
-            .getResourceAsStream("dummy-match-response.json");
-    BufferedSource source = Okio.buffer(Okio.source(inputStream));
-    MockResponse mockResponse = new MockResponse();
-    mockServer.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
+            .getResourceAsStream("dummy-match-response.json")) {
+      source = Okio.buffer(Okio.source(inputStream));
+      MockResponse mockResponse = new MockResponse();
+      MOCK_SERVER.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
+      source.close();
+    }
   }
 }

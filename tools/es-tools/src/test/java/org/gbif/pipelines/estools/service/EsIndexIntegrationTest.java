@@ -137,7 +137,6 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx);
 
     // wait the refresh interval for the documents to become searchable.
-
     Thread.sleep(
         Long.valueOf(Iterables.get(Splitter.on('s').split(Searching.REFRESH_INTERVAL), 0)) * 1000
             + 500);

@@ -31,6 +31,10 @@
       <groupId>org.gbif.artery</groupId>
       <artifactId>parsers</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.artery</groupId>
+      <artifactId>es-tools</artifactId>
+    </dependency>
 
     <!-- Beam -->
     <dependency>
@@ -44,6 +48,10 @@
     <dependency>
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.beam</groupId>
+      <artifactId>beam-sdks-java-io-elasticsearch</artifactId>
     </dependency>
 
     <!-- Hadoop -->

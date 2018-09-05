@@ -1,0 +1,65 @@
+{
+  "record": {
+    "properties": {
+
+      "id": {"type": "keyword"},
+      "datasetId": {"type": "keyword"},
+      "installationKey": {"type": "keyword"},
+      "publishingOrganizationKey": {"type": "keyword"},
+      "endorsingNodeKey": {"type": "keyword"},
+
+      "basisOfRecord": {"type": "keyword"},
+      "sex": {"type": "text"},
+      "lifeStage": {"type":  "text"},
+      "establishmentMeans": {"type": "text"},
+      "individualCount": {"type": "integer"},
+      "typeStatus": {"type": "text"},
+      "references": {"type":"text"},
+
+      "continent": {"type":"text"},
+      "waterBody": {"type":"text"},
+      "country": {"type":"text"},
+      "countryCode": {"type":"text"},
+      "stateProvince": {"type":"text"},
+      "minimumElevationInMeters": {"type":"double"},
+      "maximumElevationInMeters": {"type":"double"},
+      "minimumDepthInMeters": {"type":"double"},
+      "maximumDepthInMeters": {"type":"double"},
+      "minimumDistanceAboveSurfaceInMeters": {"type":"double"},
+      "maximumDistanceAboveSurfaceInMeters": {"type":"double"},
+      "coordinateUncertaintyInMeters": {"type":"double"},
+      "coordinatePrecision": {"type":"double"},
+      "location": {"type": "geo_point"},
+
+      "year": {"type": "integer"},
+      "month": {"type": "integer"},
+      "day": {"type": "integer"},
+      "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
+      "startDayOfYear": {"type": "integer"},
+      "endDayOfYear": {"type": "integer"},
+      "modified": {"type": "date"},
+      "dateIdentified": {"type": "date"},
+
+      "gbifScientificName": {"type": "text", "boost": 100},
+      "gbifSpeciesKey": {"type": "keyword", "copy_to": false},
+      "gbifKingdomKey": {"type": "keyword", "copy_to": false},
+      "gbifPhylumKey": {"type": "keyword", "copy_to": false},
+      "gbifClassKey": {"type": "keyword", "copy_to": false},
+      "gbifOrderKey": {"type": "keyword", "copy_to": false},
+      "gbifFamilyKey": {"type": "keyword", "copy_to": false},
+      "gbifGenusKey": {"type": "keyword", "copy_to": false},
+      "gbifSubgenusKey": {"type": "keyword", "copy_to": false},
+      "gbifTaxonKey": {"type": "keyword", "copy_to": false},
+      "gbifTaxonRank": {"type": "keyword", "copy_to": false},
+
+      "synonym": {"type": "boolean"},
+      "usage":  {"type": "object", "enabled": false},
+      "classification": {"type": "object", "enabled": false},
+      "acceptedUsage":{"type": "object", "enabled": false},
+      "nomenclature":{"type": "text"},
+      "multimediaItems":{"type": "nested", "enabled": false},
+
+      "verbatim": {"type": "object", "enabled": false}
+    }
+  }
+}

@@ -9,12 +9,12 @@ import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -26,6 +26,7 @@ import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -43,19 +44,24 @@ public class LocationTransformTest {
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
   /** Public field because {@link ClassRule} requires it. */
-  @ClassRule public static final MockWebServer mockServer = new MockWebServer();
+  @ClassRule public static final MockWebServer MOCK_SERVER = new MockWebServer();
 
   private static WsConfig wsConfig;
 
   @ClassRule
-  public static final ExternalResource configResource =
+  public static final ExternalResource CONFIG_RESOURCE =
       new ExternalResource() {
 
         @Override
         protected void before() {
-          wsConfig = WsConfigFactory.createFromUrl(mockServer.url("/").toString());
+          wsConfig = WsConfigFactory.createFromUrl(MOCK_SERVER.url("/").toString());
         }
       };
+
+  @AfterClass
+  public static void close() throws IOException {
+    MOCK_SERVER.close();
+  }
 
   @Test
   @Category(NeedsRunner.class)
@@ -175,15 +181,15 @@ public class LocationTransformTest {
   }
 
   private static void enqueueGeocodeResponses() {
-    Arrays.asList("denmark-reverse.json", "japan-reverse.json")
+    Stream.of("denmark-reverse.json", "japan-reverse.json")
+        .map(f -> Thread.currentThread().getContextClassLoader().getResourceAsStream(f))
         .forEach(
-            fileName -> {
-              InputStream inputStream =
-                  Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName);
-              BufferedSource source = Okio.buffer(Okio.source(inputStream));
+            is -> {
+              BufferedSource source = Okio.buffer(Okio.source(is));
               MockResponse mockResponse = new MockResponse();
               try {
-                mockServer.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
+                MOCK_SERVER.enqueue(
+                    mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
               } catch (IOException e) {
                 Assert.fail(e.getMessage());
               }

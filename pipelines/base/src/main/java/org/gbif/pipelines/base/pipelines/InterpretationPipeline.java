@@ -30,6 +30,7 @@ import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.core.RecordType.TAXONOMY;
 import static org.gbif.pipelines.core.RecordType.TEMPORAL;
 
+/** TODO: DOC! */
 public class InterpretationPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipeline.class);
@@ -44,11 +45,13 @@ public class InterpretationPipeline {
     return new InterpretationPipeline(options);
   }
 
+  /** TODO: DOC! */
   public static void main(String[] args) {
     DataProcessingPipelineOptions options = DataPipelineOptionsFactory.create(args);
     InterpretationPipeline.create(options).run();
   }
 
+  /** TODO: DOC! */
   public PipelineResult.State run() {
 
     List<String> types = options.getInterpretationTypes();
