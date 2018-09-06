@@ -189,6 +189,11 @@
     </pluginManagement>
   </build>
 
+
+  <!--
+  All dependencies of all modules are listed here with the project-wide default version.  Only when necessary
+  are library versions overridden in modules.
+-->
   <dependencyManagement>
     <dependencies>
 
