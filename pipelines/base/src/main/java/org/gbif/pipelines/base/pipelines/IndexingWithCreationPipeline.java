@@ -43,6 +43,7 @@ public class IndexingWithCreationPipeline {
   public static void main(String[] args) {
     IndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     IndexingWithCreationPipeline.create(options).run();
+    LOG.info("Indexing pipeline has been finished");
   }
 
   /** TODO: DOC */

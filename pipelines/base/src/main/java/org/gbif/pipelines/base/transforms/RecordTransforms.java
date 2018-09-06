@@ -187,7 +187,7 @@ public class RecordTransforms {
    * as a source and {@link LocationInterpreter} as interpretation steps
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> location(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create("geo", Paths.get(properties));
+    WsConfig wsConfig = WsConfigFactory.create("geocode", Paths.get(properties));
     return location(wsConfig);
   }
 }

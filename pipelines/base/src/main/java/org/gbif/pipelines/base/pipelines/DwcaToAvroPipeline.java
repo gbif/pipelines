@@ -1,16 +1,15 @@
 package org.gbif.pipelines.base.pipelines;
 
 import org.gbif.pipelines.base.options.BasePipelineOptions;
+import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.base.transforms.WriteTransforms;
 import org.gbif.pipelines.base.utils.FsUtils;
 import org.gbif.pipelines.common.beam.DwcaIO;
 
 import java.nio.file.Paths;
 
-import com.google.common.base.Strings;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +29,7 @@ public class DwcaToAvroPipeline {
 
   /** TODO: DOC! */
   public static void main(String[] args) {
-    BasePipelineOptions options =
-        PipelineOptionsFactory.fromArgs(args).as(BasePipelineOptions.class);
+    BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
     DwcaToAvroPipeline.create(options).run();
   }
 
@@ -42,10 +40,7 @@ public class DwcaToAvroPipeline {
     String targetPath = options.getTargetPath();
     boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
 
-    String tmp =
-        Strings.isNullOrEmpty(options.getTempLocation())
-            ? FsUtils.buildPathString(options.getTargetPath(), "tmp")
-            : options.getTempLocation();
+    String tmp = FsUtils.getTempDir(options);
 
     DwcaIO.Read reader =
         isDirectory ? DwcaIO.Read.withPaths(inputPath) : DwcaIO.Read.withPaths(inputPath, tmp);

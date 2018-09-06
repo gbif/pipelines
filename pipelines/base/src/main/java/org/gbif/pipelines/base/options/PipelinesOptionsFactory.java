@@ -1,9 +1,12 @@
 package org.gbif.pipelines.base.options;
 
+import org.gbif.pipelines.base.utils.FsUtils;
+
 import java.io.File;
 import java.util.Collections;
 
 import com.google.common.base.Strings;
+import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -13,17 +16,14 @@ public final class PipelinesOptionsFactory {
 
   private PipelinesOptionsFactory() {}
 
-  public static InterpretationPipelineOptions create(String[] args) {
-    return create(InterpretationPipelineOptions.class, args);
-  }
-
-  public static IndexingPipelineOptions createIndexing(String[] args) {
-    return create(IndexingPipelineOptions.class, args);
-  }
-
-  private static <T extends InterpretationPipelineOptions> T create(Class<T> clazz, String[] args) {
+  public static <T extends PipelineOptions> T create(Class<T> clazz, String[] args) {
     PipelineOptionsFactory.register(clazz);
-    T options = PipelineOptionsFactory.fromArgs(args).withValidation().as(clazz);
+    return PipelineOptionsFactory.fromArgs(FsUtils.readArgsAsFile(args)).withValidation().as(clazz);
+  }
+
+  private static <T extends InterpretationPipelineOptions> T createWithHdfs(
+      Class<T> clazz, String[] args) {
+    T options = create(clazz, args);
 
     String hdfsPath = options.getHdfsSiteConfig();
     String corePath = options.getCoreSiteConfig();
@@ -37,5 +37,13 @@ public final class PipelinesOptionsFactory {
     }
 
     return options;
+  }
+
+  public static InterpretationPipelineOptions createInterpretation(String[] args) {
+    return createWithHdfs(InterpretationPipelineOptions.class, args);
+  }
+
+  public static IndexingPipelineOptions createIndexing(String[] args) {
+    return createWithHdfs(IndexingPipelineOptions.class, args);
   }
 }

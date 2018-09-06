@@ -1,7 +1,11 @@
 package org.gbif.pipelines.base.utils;
 
 import org.gbif.pipelines.base.options.BasePipelineOptions;
+import org.gbif.pipelines.parsers.exception.IORuntimeException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.StringJoiner;
 
@@ -44,5 +48,23 @@ public final class FsUtils {
     return Strings.isNullOrEmpty(options.getTempLocation())
         ? FsUtils.buildPathString(options.getTargetPath(), "tmp")
         : options.getTempLocation();
+  }
+
+  public static String[] readArgsAsFile(String[] args) {
+    if (args != null && args.length == 1) {
+      String file = args[0];
+      if (file.endsWith(".properties")) {
+        try {
+          return Files.readAllLines(Paths.get(file))
+              .stream()
+              .filter(x -> !Strings.isNullOrEmpty(x))
+              .map(x -> x.startsWith("--") ? x : "--" + x)
+              .toArray(String[]::new);
+        } catch (IOException ex) {
+          throw new IORuntimeException(ex);
+        }
+      }
+    }
+    return args;
   }
 }

@@ -47,8 +47,9 @@ public class InterpretationPipeline {
 
   /** TODO: DOC! */
   public static void main(String[] args) {
-    InterpretationPipelineOptions options = PipelinesOptionsFactory.create(args);
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     InterpretationPipeline.create(options).run();
+    LOG.info("Interpretation pipeline has been finished");
   }
 
   /** TODO: DOC! */
