@@ -70,7 +70,7 @@ public class GeocodeServiceClient
     if (response != null && !response.isEmpty()) {
       return response
           .stream()
-          .filter(resp -> Objects.nonNull(resp.getIsoCountryCode2Digit()))
+          .filter(resp -> resp.getIsoCountryCode2Digit() != null)
           .map(resp -> Country.fromIsoCode(resp.getIsoCountryCode2Digit()))
           .collect(Collectors.toList());
     }

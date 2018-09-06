@@ -14,7 +14,6 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.parsers.ws.config.ServiceType;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
@@ -170,7 +169,7 @@ public class RecordTransforms {
    * as a source and {@link MetadataInterpreter} as interpretation steps
    */
   public static SingleOutput<String, MetadataRecord> metadata(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create(ServiceType.DATASET_META, Paths.get(properties));
+    WsConfig wsConfig = WsConfigFactory.create("metadata", Paths.get(properties));
     return metadata(wsConfig);
   }
 
@@ -179,7 +178,7 @@ public class RecordTransforms {
    * a source and {@link TaxonomyInterpreter} as interpretation steps
    */
   public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create(ServiceType.SPECIES_MATCH2, Paths.get(properties));
+    WsConfig wsConfig = WsConfigFactory.create("match", Paths.get(properties));
     return taxonomy(wsConfig);
   }
 
@@ -188,7 +187,7 @@ public class RecordTransforms {
    * as a source and {@link LocationInterpreter} as interpretation steps
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> location(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create(ServiceType.GEO_CODE, Paths.get(properties));
+    WsConfig wsConfig = WsConfigFactory.create("geo", Paths.get(properties));
     return location(wsConfig);
   }
 }

@@ -37,8 +37,7 @@ public class ExtendedRecordConverter {
   }
 
   /** @param inputPath path to directory with response files or a tar.xz archive */
-  public void toAvroFromXmlResponse(
-      String inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
+  public void toAvro(String inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
     if (Strings.isNullOrEmpty(inputPath)) {
       throw new ParsingException("Input or output stream must not be empty or null!");
     }

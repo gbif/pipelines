@@ -42,6 +42,6 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
   @Override
   public void convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
     ExtendedRecordConverter.crete(xmlReaderParallelism)
-        .toAvroFromXmlResponse(inputPath.toString(), dataFileWriter);
+        .toAvro(inputPath.toString(), dataFileWriter);
   }
 }

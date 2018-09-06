@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Builder for a {@link ExtendedRecord}.
@@ -160,15 +159,12 @@ public class ExtendedRecordCustomBuilder {
 
   public ExtendedRecordCustomBuilder addExtensionRecord(
       Extension extension, Map<String, String> record) {
-    if (Objects.nonNull(extension)) {
-      if (Objects.isNull(extensions)) {
+    if (extension != null) {
+      if (extensions == null) {
         extensions = new HashMap<>();
       }
 
-      if (Objects.isNull(extensions.get(extension.getRowType()))) {
-        extensions.put(extension.getRowType(), new ArrayList<>());
-      }
-
+      extensions.computeIfAbsent(extension.getRowType(), k -> new ArrayList<>());
       extensions.get(extension.getRowType()).add(record);
     }
 
@@ -201,7 +197,7 @@ public class ExtendedRecordCustomBuilder {
 
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(id).setCoreTerms(terms);
 
-    if (Objects.nonNull(extensions)) {
+    if (extensions != null) {
       builder.setExtensions(extensions);
     }
 
@@ -209,7 +205,7 @@ public class ExtendedRecordCustomBuilder {
   }
 
   private static void addToMap(Map<String, String> map, Term term, String value) {
-    if (Objects.nonNull(value)) {
+    if (value != null) {
       map.put(term.qualifiedName(), value);
     }
   }

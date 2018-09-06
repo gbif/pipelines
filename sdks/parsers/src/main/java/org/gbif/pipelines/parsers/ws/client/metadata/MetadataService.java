@@ -20,7 +20,7 @@ interface MetadataService {
    * @param datasetId datasetId
    * @return JsonElement with networks info for provided dataset uuid.
    */
-  @GET("dataset/{datasetId}/networks")
+  @GET("/v1/dataset/{datasetId}/networks")
   Call<List<Network>> getNetworks(@Path("datasetId") String datasetId);
 
   /**
@@ -29,7 +29,7 @@ interface MetadataService {
    * @param datasetId datasetId
    * @return JsonElement with provided dataset info.
    */
-  @GET("dataset/{datasetId}")
+  @GET("/v1/dataset/{datasetId}")
   Call<Dataset> getDataset(@Path("datasetId") String datasetId);
 
   /**
@@ -38,7 +38,7 @@ interface MetadataService {
    * @param installationId installationId
    * @return JsonElement with provided installation info.
    */
-  @GET("installation/{installationId}")
+  @GET("/v1/installation/{installationId}")
   Call<Installation> getInstallation(@Path("installationId") String installationId);
 
   /**
@@ -47,6 +47,6 @@ interface MetadataService {
    * @param organizationId organizationId
    * @return JsonElement with organization info
    */
-  @GET("organization/{organizationId}")
+  @GET("/v1/organization/{organizationId}")
   Call<Organization> getOrganization(@Path("organizationId") String organizationId);
 }

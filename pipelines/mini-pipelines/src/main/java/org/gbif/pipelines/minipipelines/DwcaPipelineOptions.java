@@ -10,12 +10,6 @@ import org.apache.beam.sdk.options.Validation;
 
 public interface DwcaPipelineOptions extends IndexingPipelineOptions, SparkPipelineOptions {
 
-  enum GbifEnv {
-    DEV,
-    UAT,
-    PROD
-  }
-
   enum PipelineStep {
     DWCA_TO_AVRO, // only reads a Dwca and converts it to an avro file
     INTERPRET, // reads a Dwca and interprets it
@@ -41,13 +35,11 @@ public interface DwcaPipelineOptions extends IndexingPipelineOptions, SparkPipel
   @Override
   void setTargetPath(String targetPath);
 
-  @Description(
-      "Gbif environment to use when using web services."
-          + "Note that DEV is not accesible from outside GBIF network. Required")
-  @Validation.Required
-  GbifEnv getGbifEnv();
+  @Description("Gbif API url, by defaut is https://api.gbif.org")
+  @Default.String("https://api.gbif.org")
+  String getGbifApiUrl();
 
-  void setGbifEnv(GbifEnv env);
+  void setGbifApiUrl(String path);
 
   @Description(
       "The pipeline can be configured to run all the steps or only a few of them."

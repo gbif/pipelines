@@ -32,65 +32,65 @@ public class ExtendedRecordConverterTest {
   private final CodecFactory codec = CodecFactory.deflateCodec(Deflater.BEST_SPEED);
 
   @Test(expected = ParsingException.class)
-  public void testInputPathIsAbsent() throws IOException {
+  public void inputPathIsAbsentTest() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("", dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro("", dataFileWrite);
     }
   }
 
   @Test(expected = ParsingException.class)
-  public void testOutputPathIsAbsent() throws IOException {
+  public void outputPathIsAbsentTest() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
     }
   }
 
   @Test(expected = ParsingException.class)
-  public void testInputPathIsNull() throws IOException {
+  public void inputPathIsNullTest() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(null, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro(null, dataFileWrite);
     }
   }
 
   @Test(expected = NullPointerException.class)
-  public void testOutputPathIsNull() throws IOException {
+  public void outputPathIsNullTest() throws IOException {
     try (DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(null)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
     }
   }
 
   @Test(expected = ParsingException.class)
-  public void testInputPathNotValid() throws IOException {
+  public void inputPathNotValidTest() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse("test", dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
     }
   }
 
   @Test(expected = ParsingException.class)
-  public void testInputFileWrongExtension() throws IOException {
+  public void inputFileWrongExtensionTest() throws IOException {
     // State
     String inputPath = inpPath + "61.zip";
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
     }
   }
 
   @Test
-  public void testParsingDirectory() throws IOException {
+  public void parsingDirectoryTest() throws IOException {
     // State
     String inputPath = inpPath + "61";
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
@@ -100,14 +100,14 @@ public class ExtendedRecordConverterTest {
   }
 
   @Test
-  public void testParsingArchive() throws IOException {
+  public void parsingArchiveTest() throws IOException {
     // State
     String inputPath = inpPath + "61.tar.xz";
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
@@ -117,14 +117,14 @@ public class ExtendedRecordConverterTest {
   }
 
   @Test
-  public void testAvroDeserializing() throws IOException {
+  public void avroDeserializingTest() throws IOException {
     // State
     String inputPath = inpPath + "61";
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvroFromXmlResponse(inputPath, dataFileWrite);
+      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should

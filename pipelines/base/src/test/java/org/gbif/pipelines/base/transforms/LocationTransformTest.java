@@ -54,7 +54,7 @@ public class LocationTransformTest {
 
         @Override
         protected void before() {
-          wsConfig = WsConfigFactory.createFromUrl(MOCK_SERVER.url("/").toString());
+          wsConfig = WsConfigFactory.create(MOCK_SERVER.url("/").toString());
         }
       };
 
@@ -65,7 +65,7 @@ public class LocationTransformTest {
 
   @Test
   @Category(NeedsRunner.class)
-  public void testTransformation() {
+  public void transformationTest() {
 
     // State
     final String[] denmark = {

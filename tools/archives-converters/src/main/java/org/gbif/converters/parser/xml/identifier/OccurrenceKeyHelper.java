@@ -1,7 +1,6 @@
 package org.gbif.converters.parser.xml.identifier;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 import javax.annotation.Nullable;
@@ -22,11 +21,11 @@ public class OccurrenceKeyHelper {
 
   @Nullable
   public static String buildKey(@Nullable Triplet triplet) {
-    if (Objects.isNull(triplet)
-        || Objects.isNull(triplet.getDatasetKey())
-        || Objects.isNull(triplet.getInstitutionCode())
-        || Objects.isNull(triplet.getCollectionCode())
-        || Objects.isNull(triplet.getCatalogNumber())) {
+    if (triplet == null
+        || triplet.getDatasetKey() == null
+        || triplet.getInstitutionCode() == null
+        || triplet.getCollectionCode() == null
+        || triplet.getCatalogNumber() == null) {
       return null;
     }
 
@@ -41,9 +40,9 @@ public class OccurrenceKeyHelper {
 
   @Nullable
   public static String buildKey(@Nullable PublisherProvidedUniqueIdentifier pubProvided) {
-    if (Objects.isNull(pubProvided)
-        || Objects.isNull(pubProvided.getDatasetKey())
-        || Objects.isNull(pubProvided.getPublisherProvidedIdentifier())) {
+    if (pubProvided == null
+        || pubProvided.getDatasetKey() == null
+        || pubProvided.getPublisherProvidedIdentifier() == null) {
       return null;
     }
 
@@ -65,11 +64,11 @@ public class OccurrenceKeyHelper {
 
   @Nullable
   public static String buildUnscopedKey(@Nullable Triplet triplet) {
-    if (Objects.isNull(triplet)
-        || Objects.isNull(triplet.getDatasetKey())
-        || Objects.isNull(triplet.getInstitutionCode())
-        || Objects.isNull(triplet.getCollectionCode())
-        || Objects.isNull(triplet.getCatalogNumber())) {
+    if (triplet == null
+        || triplet.getDatasetKey() == null
+        || triplet.getInstitutionCode() == null
+        || triplet.getCollectionCode() == null
+        || triplet.getCatalogNumber() == null) {
       return null;
     }
 
@@ -83,10 +82,10 @@ public class OccurrenceKeyHelper {
 
   @Nullable
   public static String toKey(@Nullable Triplet triplet) {
-    if (Objects.isNull(triplet)
-        || Objects.isNull(triplet.getInstitutionCode())
-        || Objects.isNull(triplet.getCollectionCode())
-        || Objects.isNull(triplet.getCatalogNumber())) {
+    if (triplet == null
+        || triplet.getInstitutionCode() == null
+        || triplet.getCollectionCode() == null
+        || triplet.getCatalogNumber() == null) {
       return null;
     }
 

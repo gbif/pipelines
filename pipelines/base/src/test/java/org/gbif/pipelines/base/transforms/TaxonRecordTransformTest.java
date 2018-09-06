@@ -53,7 +53,7 @@ public class TaxonRecordTransformTest {
 
         @Override
         protected void before() {
-          wsConfig = WsConfigFactory.createFromUrl(MOCK_SERVER.url("/").toString());
+          wsConfig = WsConfigFactory.create(MOCK_SERVER.url("/").toString());
         }
       };
 
