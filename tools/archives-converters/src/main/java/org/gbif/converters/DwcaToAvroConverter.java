@@ -11,14 +11,14 @@ import org.apache.avro.file.DataFileWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Dwca2Verbatim extends ConverterToVerbatim {
+public class DwcaToAvroConverter extends ConverterToVerbatim {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Dwca2Verbatim.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DwcaToAvroConverter.class);
 
-  private Dwca2Verbatim() {}
+  private DwcaToAvroConverter() {}
 
-  public static Dwca2Verbatim create() {
-    return new Dwca2Verbatim();
+  public static DwcaToAvroConverter create() {
+    return new DwcaToAvroConverter();
   }
 
   /** TODO: DOC */
@@ -28,7 +28,7 @@ public class Dwca2Verbatim extends ConverterToVerbatim {
     }
     String inputPath = args[0];
     String outputPath = args[1];
-    boolean isFileCreated = Dwca2Verbatim.create().convert(inputPath, outputPath);
+    boolean isFileCreated = DwcaToAvroConverter.create().convert(inputPath, outputPath);
     LOG.info("Verbatim avro file has been created - {}", isFileCreated);
   }
 
