@@ -93,6 +93,11 @@
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <joda-time.version>2.4</joda-time.version>
 
+    <commons-compress.version>1.16.1</commons-compress.version>
+    <commons-digester.version>2.1</commons-digester.version>
+    <mapdb.version>3.0.5</mapdb.version>
+    <commons-beanutils.version>1.9.2</commons-beanutils.version>
+
     <!-- Test -->
     <junit.version>4.12</junit.version>
     <mockwebserver.version>3.10.0</mockwebserver.version>
@@ -205,7 +210,7 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.artery</groupId>
-        <artifactId>es-tools</artifactId>
+        <artifactId>elasticsearch-tools</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -324,6 +329,28 @@
         <groupId>joda-time</groupId>
         <artifactId>joda-time</artifactId>
         <version>${joda-time.version}</version>
+      </dependency>
+
+      <!-- XML -->
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>${commons-compress.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-digester</groupId>
+        <artifactId>commons-digester</artifactId>
+        <version>${commons-digester.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mapdb</groupId>
+        <artifactId>mapdb</artifactId>
+        <version>${mapdb.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>${commons-beanutils.version}</version>
       </dependency>
 
       <!-- Logging -->

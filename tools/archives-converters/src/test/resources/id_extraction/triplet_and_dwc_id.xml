@@ -1,0 +1,82 @@
+<DarwinRecord>
+  <GlobalUniqueIdentifier>UGENT:vertebrata:50058</GlobalUniqueIdentifier>
+  <DateLastModified>2007-06-30</DateLastModified>
+  <BasisOfRecord>PreservedSpecimen</BasisOfRecord>
+  <InstitutionCode>UGENT</InstitutionCode>
+  <CollectionCode>vertebrata</CollectionCode>
+  <CatalogNumber>50058</CatalogNumber>
+  <InformationWithheld nil="true"/>
+  <Remarks nil="true"/>
+  <ScientificName>Alouatta villosa Gray, 1845</ScientificName>
+  <HigherTaxon nil="true"/>
+  <Kingdom>Animalia</Kingdom>
+  <Phylum>Chordata</Phylum>
+  <Class>Mammalia</Class>
+  <Order>Primates</Order>
+  <Family>Atelidae</Family>
+  <Genus>Alouatta</Genus>
+  <SpecificEpithet>villosa</SpecificEpithet>
+  <InfraspecificRank nil="true"/>
+  <InfraspecificEpithet nil="true"/>
+  <AuthorYearOfScientificName>Gray, 1845</AuthorYearOfScientificName>
+  <NomenclaturalCode nil="true"/>
+  <IdentificationQualifier nil="true"/>
+  <HigherGeography nil="true"/>
+  <Continent nil="true"/>
+  <WaterBody nil="true"/>
+  <IslandGroup nil="true"/>
+  <Island nil="true"/>
+  <Country nil="true"/>
+  <StateProvince nil="true"/>
+  <County nil="true"/>
+  <Locality nil="true"/>
+  <MinimumElevationInMeters nil="true"/>
+  <MaximumElevationInMeters nil="true"/>
+  <MinimumDepthInMeters nil="true"/>
+  <MaximumDepthInMeters nil="true"/>
+  <CollectingMethod nil="true"/>
+  <ValidDistributionFlag nil="true"/>
+  <EarliestDateCollected nil="true"/>
+  <LatestDateCollected nil="true"/>
+  <DayOfYear nil="true"/>
+  <Collector nil="true"/>
+  <Sex>unknown</Sex>
+  <LifeStage>unknown</LifeStage>
+  <Attributes nil="true"/>
+  <ImageURL nil="true"/>
+  <RelatedInformation nil="true"/>
+  <DecimalLatitude nil="true"/>
+  <DecimalLongitude nil="true"/>
+  <GeodeticDatum nil="true"/>
+  <CoordinateUncertaintyInMeters nil="true"/>
+  <PointRadiusSpatialFit nil="true"/>
+  <FootprintWKT nil="true"/>
+  <FootprintSpatialFit nil="true"/>
+  <VerbatimCoordinates nil="true"/>
+  <VerbatimLatitude nil="true"/>
+  <VerbatimLongitude nil="true"/>
+  <VerbatimCoordinateSystem nil="true"/>
+  <GeoreferenceProtocol nil="true"/>
+  <GeoreferenceSources nil="true"/>
+  <GeoreferenceVerificationStatus nil="true"/>
+  <GeoreferenceRemarks nil="true"/>
+  <CatalogNumberNumeric>50058</CatalogNumberNumeric>
+  <IdentifiedBy nil="true"/>
+  <DateIdentified nil="true"/>
+  <CollectorNumber nil="true"/>
+  <FieldNumber nil="true"/>
+  <FieldNotes nil="true"/>
+  <VerbatimCollectingDate nil="true"/>
+  <VerbatimElevation nil="true"/>
+  <VerbatimDepth nil="true"/>
+  <Preparations>Model</Preparations>
+  <TypeStatus nil="true"/>
+  <GenBankNumber nil="true"/>
+  <OtherCatalogNumbers nil="true"/>
+  <RelatedCatalogedItems nil="true"/>
+  <Disposition nil="true"/>
+  <IndividualCount>1</IndividualCount>
+  <MinimumElevationInMeters>200</MinimumElevationInMeters>
+  <MaximumElevationInMeters>400</MaximumElevationInMeters>
+  <CoordinateUncertaintyInMeters>25</CoordinateUncertaintyInMeters>
+</DarwinRecord>

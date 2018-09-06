@@ -11,10 +11,10 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>es-tools</artifactId>
+  <artifactId>elasticsearch-tools</artifactId>
   <packaging>jar</packaging>
 
-  <name>Artery :: Tools :: ES-tools</name>
+  <name>Artery :: Tools :: Elasticsearch tools</name>
 
   <!-- Copy pom.xml value to test resources maven.properties -->
   <build>

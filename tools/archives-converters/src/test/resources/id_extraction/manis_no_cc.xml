@@ -1,0 +1,65 @@
+<record>
+  <InstitutionCode>USNM</InstitutionCode>
+  <CollectionCode nil="true"/>
+  <CatalogNumberText>88168</CatalogNumberText>
+  <ScientificName>Acris blanchardi</ScientificName>
+  <TypeStatus nil="true"/>
+  <Sex nil="true"/>
+  <AgeClass nil="true"/>
+  <Preparations>Alcoholic</Preparations>
+  <Tissues nil="true"/>
+  <Country>USA</Country>
+  <StateProvince>Kansas</StateProvince>
+  <County>Cheyenne</County>
+  <Island nil="true"/>
+  <IslandGroup nil="true"/>
+  <ContinentOcean>North America</ContinentOcean>
+  <Locality>St Francis</Locality>
+  <YearCollected>1932</YearCollected>
+  <MonthCollected>8</MonthCollected>
+  <DayCollected nil="true"/>
+  <TimeCollected nil="true"/>
+  <VerbatimCollectingDate>August 1932</VerbatimCollectingDate>
+  <Collector>Charles E. Burt</Collector>
+  <CollectorNumber nil="true"/>
+  <FieldNumber nil="true"/>
+  <FieldNotes nil="true"/>
+  <JulianDay nil="true"/>
+  <DecimalLatitude>39.7716</DecimalLatitude>
+  <DecimalLongitude>-101.7976</DecimalLongitude>
+  <HorizontalDatum nil="true"/>
+  <CoordinateUncertaintyInMeters nil="true"/>
+  <OriginalCoordinateSystem>Decimal Degrees</OriginalCoordinateSystem>
+  <VerbatimLatitude>39.7716</VerbatimLatitude>
+  <VerbatimLongitude>-101.798</VerbatimLongitude>
+  <GeorefMethod nil="true"/>
+  <LatLongComments nil="true"/>
+  <MinimumElevationInMeters nil="true"/>
+  <MaximumElevationInMeters nil="true"/>
+  <VerbatimElevation nil="true"/>
+  <MinimumDepthInMeters nil="true"/>
+  <MaximumDepthInMeters nil="true"/>
+  <VerbatimDepth nil="true"/>
+  <Remarks nil="true"/>
+  <Kingdom>Animalia</Kingdom>
+  <Phylum>Chordata</Phylum>
+  <Class nil="true"/>
+  <Order>Anura</Order>
+  <Family>Hylidae - Rafinesque, 1815</Family>
+  <Genus>Acris</Genus>
+  <Species>blanchardi</Species>
+  <Subspecies nil="true"/>
+  <ScientificNameAuthor nil="true"/>
+  <IdentificationModifier nil="true"/>
+  <IdentifiedBy nil="true"/>
+  <YearIdentified nil="true"/>
+  <MonthIdentified nil="true"/>
+  <DayIdentified nil="true"/>
+  <IndividualCount>1</IndividualCount>
+  <GenBankNum nil="true"/>
+  <OtherCatalogNumbers nil="true"/>
+  <RelatedCatalogedItems nil="true"/>
+  <CatalogNumberNumeric>88168</CatalogNumberNumeric>
+  <BasisOfRecord>Voucher</BasisOfRecord>
+  <DateLastModified>2013-03-03TCentral Standard Time</DateLastModified>
+</record>

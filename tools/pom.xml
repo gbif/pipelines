@@ -19,8 +19,8 @@
 
   <modules>
     <module>pipelines-maven-plugin</module>
-    <module>xml-converter</module>
-    <module>es-tools</module>
+    <module>elasticsearch-tools</module>
+    <module>archives-converters</module>
   </modules>
 
 </project>

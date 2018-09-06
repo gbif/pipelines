@@ -1,0 +1,26 @@
+<SimpleDarwinRecord>
+  <modified>20110623</modified>
+  <institutionID>21</institutionID>
+  <datasetID>1099</datasetID>
+  <institutionCode>BGBM</institutionCode>
+  <collectionCode>Pontaurus</collectionCode>
+  <basisOfRecord>specimen</basisOfRecord>
+  <occurrenceID>142316220</occurrenceID>
+  <catalogNumber>2004</catalogNumber>
+  <recordedBy>Markus Döring</recordedBy>
+  <year>1999</year>
+  <month>7</month>
+  <day>29</day>
+  <country>Turkey</country>
+  <minimumElevationInMeters>2360</minimumElevationInMeters>
+  <verbatimLatitude>37.42</verbatimLatitude>
+  <verbatimLongitude>34.568</verbatimLongitude>
+  <identifiedBy>Markus Döring</identifiedBy>
+  <scientificName>Acantholimon armenum var. armenum</scientificName>
+  <kingdom>Plantae</kingdom>
+  <phylum>Magnoliophyta</phylum>
+  <class>Magnoliopsida</class>
+  <order>Plumbaginales</order>
+  <family>Plumbaginaceae</family>
+  <genus>Acantholimon</genus>
+</SimpleDarwinRecord>

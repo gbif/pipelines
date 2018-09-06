@@ -38,7 +38,7 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.artery</groupId>
-      <artifactId>es-tools</artifactId>
+      <artifactId>elasticsearch-tools</artifactId>
     </dependency>
 
     <!-- Beam -->
