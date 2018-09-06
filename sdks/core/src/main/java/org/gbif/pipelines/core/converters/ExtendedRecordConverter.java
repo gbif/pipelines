@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** Converter from some class to {@link ExtendedRecord} */
 public class ExtendedRecordConverter {
@@ -16,19 +18,11 @@ public class ExtendedRecordConverter {
   private ExtendedRecordConverter() {}
 
   public static ExtendedRecord from(StarRecord record) {
-    ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(record.core().id());
-    Optional.ofNullable(record.core().rowType())
-        .ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));
-    builder.setCoreTerms(new HashMap<>());
+    Record core = record.core();
+    ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(core.id());
+    Optional.ofNullable(core.rowType()).ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));
 
-    // remove empty content
-    record
-        .core()
-        .terms()
-        .stream()
-        .filter(term -> term.qualifiedName() != null && record.core().value(term) != null)
-        .forEach(
-            term -> builder.getCoreTerms().put(term.qualifiedName(), record.core().value(term)));
+    builder.setCoreTerms(removeEmptyContent(core));
 
     record
         .extensions()
@@ -44,20 +38,19 @@ public class ExtendedRecordConverter {
                       .getOrDefault(extensionType.qualifiedName(), new ArrayList<>());
 
               data.forEach(
-                  extensionRecord -> {
-                    Map<String, String> extensionRecordTerms = new HashMap<>();
-                    for (Term term : extensionRecord.terms()) {
-                      // filter unusable content
-                      if (term.qualifiedName() != null && extensionRecord.value(term) != null) {
-                        extensionRecordTerms.put(term.qualifiedName(), extensionRecord.value(term));
-                      }
-                    }
-                    extensionData.add(extensionRecordTerms);
-                  });
+                  extensionRecord -> extensionData.add(removeEmptyContent(extensionRecord)));
 
               builder.getExtensions().put(extensionType.qualifiedName(), extensionData);
             });
 
     return builder.build();
+  }
+
+  private static Map<String, String> removeEmptyContent(Record record) {
+    return record
+        .terms()
+        .stream()
+        .filter(term -> term.qualifiedName() != null && record.value(term) != null)
+        .collect(Collectors.toMap(Term::qualifiedName, record::value, (a, b) -> b));
   }
 }
