@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
@@ -35,25 +34,22 @@ public class InterpretationPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipeline.class);
 
-  private final InterpretationPipelineOptions options;
-
-  private InterpretationPipeline(InterpretationPipelineOptions options) {
-    this.options = options;
-  }
-
-  public static InterpretationPipeline create(InterpretationPipelineOptions options) {
-    return new InterpretationPipeline(options);
-  }
+  private InterpretationPipeline() {}
 
   /** TODO: DOC! */
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    InterpretationPipeline.create(options).run();
+    createAndRun(options);
+  }
+
+  public static void createAndRun(InterpretationPipelineOptions options) {
+    LOG.info("Running interpretation pipeline");
+    InterpretationPipeline.create(options).run().waitUntilFinish();
     LOG.info("Interpretation pipeline has been finished");
   }
 
   /** TODO: DOC! */
-  public PipelineResult.State run() {
+  public static Pipeline create(InterpretationPipelineOptions options) {
 
     List<String> types = options.getInterpretationTypes();
     String wsProperties = options.getWsProperties();
@@ -102,7 +98,6 @@ public class InterpretationPipeline {
         .apply("Interpret location", RecordTransforms.location(wsProperties))
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
-    LOG.info("Running interpretation pipeline");
-    return p.run().waitUntilFinish();
+    return p;
   }
 }

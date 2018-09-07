@@ -13,16 +13,16 @@ public class DwcaPipeline {
 
     switch (options.getPipelineStep()) {
       case DWCA_TO_AVRO:
-        DwcaToAvroPipeline.create(options).run();
+        DwcaToAvroPipeline.createAndRun(options);
         break;
       case INTERPRET:
-        DwcaInterpretationPipeline.create(options).run();
+        DwcaInterpretationPipeline.createAndRun(options);
         break;
       case INDEX_TO_ES:
-        DwcaIndexingPipeline.create(options).run();
+        DwcaIndexingPipeline.createAndRun(options);
         break;
-      case AVRO_TO_INDEX:
-        IndexingWithCreationPipeline.create(options).run();
+      case INTERPRET_TO_INDEX:
+        IndexingWithCreationPipeline.createAndRun(options);
         break;
       default:
         break;

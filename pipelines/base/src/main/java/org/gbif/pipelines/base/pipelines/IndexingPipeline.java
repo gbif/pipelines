@@ -18,7 +18,6 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import java.util.function.Function;
 
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -44,25 +43,23 @@ public class IndexingPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(IndexingPipeline.class);
 
-  private final IndexingPipelineOptions options;
-
-  private IndexingPipeline(IndexingPipelineOptions options) {
-    this.options = options;
-  }
-
-  public static IndexingPipeline create(IndexingPipelineOptions options) {
-    return new IndexingPipeline(options);
-  }
+  private IndexingPipeline() {}
 
   /** TODO: DOC! */
   public static void main(String[] args) {
     IndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
-    IndexingPipeline.create(options).run();
+    createAndRun(options);
+  }
+
+  /** TODO: DOC! */
+  public static void createAndRun(IndexingPipelineOptions options) {
+    LOG.info("Running indexing pipeline");
+    IndexingPipeline.create(options).run().waitUntilFinish();
     LOG.info("Indexing pipeline has been finished");
   }
 
   /** TODO: DOC! */
-  public PipelineResult.State run() {
+  public static Pipeline create(IndexingPipelineOptions options) {
 
     LOG.info("Adding step 1: Options");
     Function<String, String> pathFn = s -> FsUtils.buildPath(options, s + "*.avro");
@@ -130,7 +127,6 @@ public class IndexingPipeline {
           }
         };
 
-    LOG.info("Adding step 4: Converting to a json object");
     PCollection<String> jsonCollection =
         KeyedPCollectionTuple.of(brTag, basicCollection)
             .and(trTag, temporalCollection)
@@ -141,7 +137,7 @@ public class IndexingPipeline {
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", ParDo.of(doFn).withSideInputs(metadataView));
 
-    LOG.info("Adding step 5: Elasticsearch indexing");
+    LOG.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
             options.getEsHosts(), options.getEsIndexName(), "record");
@@ -152,7 +148,6 @@ public class IndexingPipeline {
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize()));
 
-    LOG.info("Running indexing pipeline");
-    return p.run().waitUntilFinish();
+    return p;
   }
 }

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.minipipelines;
 
-import org.gbif.pipelines.base.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.base.transforms.RecordTransforms;
 import org.gbif.pipelines.base.transforms.UniqueIdTransform;
 import org.gbif.pipelines.base.transforms.WriteTransforms;
@@ -8,6 +7,8 @@ import org.gbif.pipelines.base.utils.FsUtils;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -32,20 +33,12 @@ class DwcaInterpretationPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaInterpretationPipeline.class);
 
-  private final InterpretationPipelineOptions options;
-
-  private DwcaInterpretationPipeline(InterpretationPipelineOptions options) {
-    this.options = options;
-  }
-
-  static DwcaInterpretationPipeline create(InterpretationPipelineOptions options) {
-    return new DwcaInterpretationPipeline(options);
-  }
+  private DwcaInterpretationPipeline() {}
 
   /** TODO: DOC! */
-  void run() {
+  static void createAndRun(DwcaPipelineOptions options) {
 
-    String wsProperties = options.getWsProperties();
+    WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     Function<RecordType, String> metaPathFn = t -> FsUtils.buildPath(options, t.name());
@@ -70,7 +63,7 @@ class DwcaInterpretationPipeline {
     LOG.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Interpret metadata", RecordTransforms.metadata(wsProperties))
+        .apply("Interpret metadata", RecordTransforms.metadata(wsConfig))
         .apply("Write metadata to avro", WriteTransforms.metadata(metaPathFn.apply(METADATA)));
 
     uniqueRecords
@@ -86,14 +79,15 @@ class DwcaInterpretationPipeline {
         .apply("Write multimedia to avro", WriteTransforms.multimedia(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply("Interpret taxonomy", RecordTransforms.taxonomy(wsProperties))
+        .apply("Interpret taxonomy", RecordTransforms.taxonomy(wsConfig))
         .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply("Interpret location", RecordTransforms.location(wsProperties))
+        .apply("Interpret location", RecordTransforms.location(wsConfig))
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
     LOG.info("Running interpretation pipeline");
     p.run().waitUntilFinish();
+    LOG.info("Interpretation pipeline has been finished");
   }
 }

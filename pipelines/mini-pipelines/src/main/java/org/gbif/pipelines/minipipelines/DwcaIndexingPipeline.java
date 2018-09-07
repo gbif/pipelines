@@ -1,13 +1,13 @@
 package org.gbif.pipelines.minipipelines;
 
-import org.gbif.pipelines.base.options.IndexingPipelineOptions;
-import org.gbif.pipelines.base.pipelines.IndexingWithCreationPipeline;
 import org.gbif.pipelines.base.transforms.MapTransforms;
 import org.gbif.pipelines.base.transforms.RecordTransforms;
 import org.gbif.pipelines.base.transforms.UniqueIdTransform;
 import org.gbif.pipelines.base.utils.FsUtils;
+import org.gbif.pipelines.base.utils.IndexingUtils;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
+import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -15,6 +15,8 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
 import java.nio.file.Paths;
 
@@ -39,27 +41,23 @@ class DwcaIndexingPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaIndexingPipeline.class);
 
-  private final IndexingPipelineOptions options;
+  private DwcaIndexingPipeline() {}
 
-  private DwcaIndexingPipeline(IndexingPipelineOptions options) {
-    this.options = options;
-  }
+  /** TODO: DOC! */
+  static void createAndRun(DwcaPipelineOptions options) {
+    IndexingUtils.createIndex(options, EsConfig.from(options.getEsHosts()));
 
-  static DwcaIndexingPipeline create(IndexingPipelineOptions options) {
-    return new DwcaIndexingPipeline(options);
+    createAndRunPipeline(options);
+
+    IndexingUtils.removeTmpDirecrory(options);
   }
 
   /** TODO: DOC! */
-  void run() {
-    IndexingWithCreationPipeline.create(options).run(this::runPipeline);
-  }
-
-  /** TODO: DOC! */
-  void runPipeline() {
+  private static void createAndRunPipeline(DwcaPipelineOptions options) {
 
     LOG.info("Adding step 1: Options");
 
-    String wsProperties = options.getWsProperties();
+    WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
 
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
     final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
@@ -86,7 +84,7 @@ class DwcaIndexingPipeline {
     LOG.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", RecordTransforms.metadata(wsProperties))
+            .apply("Interpret metadata", RecordTransforms.metadata(wsConfig))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
@@ -104,12 +102,12 @@ class DwcaIndexingPipeline {
 
     PCollection<KV<String, LocationRecord>> locationCollection =
         uniqueRecords
-            .apply("Interpret location", RecordTransforms.location(wsProperties))
+            .apply("Interpret location", RecordTransforms.location(wsConfig))
             .apply("Map Location to KV", MapTransforms.locationToKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         uniqueRecords
-            .apply("Interpret taxonomy", RecordTransforms.taxonomy(wsProperties))
+            .apply("Interpret taxonomy", RecordTransforms.taxonomy(wsConfig))
             .apply("Map Taxon to KV", MapTransforms.taxonToKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =

@@ -33,6 +33,20 @@ public class EsIndex {
   /**
    * Creates an Index in the ES instance specified in the {@link EsConfig} received.
    *
+   * @param config configuration of the ES instance.
+   * @param idxName index name.
+   * @return name of the index created.
+   */
+  public static String create(EsConfig config, String idxName) {
+    LOG.info("Creating index {}", idxName);
+    try (EsClient esClient = EsClient.from(config)) {
+      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING);
+    }
+  }
+
+  /**
+   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
+   *
    * <p>Both datasetId and attempt parameters are required. The index created will follow the
    * pattern "{datasetId}_{attempt}".
    *
@@ -43,10 +57,23 @@ public class EsIndex {
    */
   public static String create(EsConfig config, String datasetId, int attempt) {
     final String idxName = createIndexName(datasetId, attempt);
-    LOG.info("Creating index {}", idxName);
+    return create(config, idxName);
+  }
 
+  /**
+   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
+   *
+   * <p>Both datasetId and attempt parameters are required.
+   *
+   * @param config configuration of the ES instance.
+   * @param idxName index name
+   * @param mappings path of the file with the mappings.
+   * @return name of the index created.
+   */
+  public static String create(EsConfig config, String idxName, Path mappings) {
+    LOG.info("Creating index {}", idxName);
     try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING);
+      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
     }
   }
 
@@ -64,8 +91,21 @@ public class EsIndex {
    */
   public static String create(EsConfig config, String datasetId, int attempt, Path mappings) {
     final String idxName = createIndexName(datasetId, attempt);
-    LOG.info("Creating index {}", idxName);
+    return create(config, idxName, mappings);
+  }
 
+  /**
+   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
+   *
+   * <p>Both datasetId and attempt parameters are required.
+   *
+   * @param config configuration of the ES instance.
+   * @param idxName index name
+   * @param mappings mappings as json string.
+   * @return name of the index created.
+   */
+  public static String create(EsConfig config, String idxName, String mappings) {
+    LOG.info("Creating index {}", idxName);
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
     }
@@ -85,10 +125,25 @@ public class EsIndex {
    */
   public static String create(EsConfig config, String datasetId, int attempt, String mappings) {
     final String idxName = createIndexName(datasetId, attempt);
-    LOG.info("Creating index {}", idxName);
+    return create(config, idxName, mappings);
+  }
 
+  /**
+   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
+   *
+   * <p>Both datasetId and attempt parameters are required.
+   *
+   * @param config configuration of the ES instance.
+   * @param idxName index name
+   * @param mappings mappings as json string.
+   * @param settingMap custom settings, number of shards and etc.
+   * @return name of the index created.
+   */
+  public static String create(
+      EsConfig config, String idxName, Path mappings, Map<String, String> settingMap) {
+    LOG.info("Creating index {}", idxName);
     try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
+      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings, settingMap);
     }
   }
 
@@ -112,11 +167,7 @@ public class EsIndex {
       Path mappings,
       Map<String, String> settingMap) {
     final String idxName = createIndexName(datasetId, attempt);
-    LOG.info("Creating index {}", idxName);
-
-    try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings, settingMap);
-    }
+    return create(config, idxName, mappings, settingMap);
   }
 
   /**

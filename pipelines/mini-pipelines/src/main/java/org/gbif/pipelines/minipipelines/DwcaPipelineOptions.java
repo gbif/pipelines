@@ -14,7 +14,7 @@ public interface DwcaPipelineOptions extends IndexingPipelineOptions, SparkPipel
     DWCA_TO_AVRO, // only reads a Dwca and converts it to an avro file
     INTERPRET, // reads a Dwca and interprets it
     INDEX_TO_ES, // reads a Dwca, interprets it and indexes it to ES
-    AVRO_TO_INDEX
+    INTERPRET_TO_INDEX // reads interpreted avro files and indexes them to ES
   }
 
   @Override
@@ -63,13 +63,4 @@ public interface DwcaPipelineOptions extends IndexingPipelineOptions, SparkPipel
 
   @Override
   void setEsIndexName(String esIndexName);
-
-  @Override
-  @Description(
-      "If set to true it writes the outputs of every step of the pipeline. Otherwise, it writes only the output of the last step.")
-  @Default.Boolean(false)
-  boolean getWriteOutput();
-
-  @Override
-  void setWriteOutput(boolean writeOutput);
 }
