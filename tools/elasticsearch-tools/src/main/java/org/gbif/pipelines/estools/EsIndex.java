@@ -6,13 +6,13 @@ import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.service.EsService;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -241,7 +241,7 @@ public class EsIndex {
   }
 
   private static String getDatasetIdFromIndex(String index) {
-    List<String> pieces = Splitter.on(INDEX_SEPARATOR).splitToList(index);
+    List<String> pieces = Arrays.asList(index.split(INDEX_SEPARATOR));
 
     if (pieces.size() != 2) {
       LOG.error("Index {} doesn't follow the pattern \"{datasetId}_{attempt}\"", index);
