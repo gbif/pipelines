@@ -1,6 +1,6 @@
 package org.gbif.pipelines.base.pipelines;
 
-import org.gbif.pipelines.base.options.BasePipelineOptions;
+import org.gbif.pipelines.base.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.base.transforms.WriteTransforms;
 import org.gbif.pipelines.base.utils.FsUtils;
@@ -20,18 +20,19 @@ public class DwcaToAvroPipeline {
 
   /** TODO: DOC! */
   public static void main(String[] args) {
-    BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
+    InterpretationPipelineOptions options =
+        PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
     DwcaToAvroPipeline.createAndRun(options);
   }
 
-  public static void createAndRun(BasePipelineOptions options) {
+  public static void createAndRun(InterpretationPipelineOptions options) {
     LOG.info("Running the pipeline");
     create(options).run().waitUntilFinish();
     LOG.info("Pipeline has been finished");
   }
 
   /** TODO: DOC! */
-  public static Pipeline create(BasePipelineOptions options) {
+  public static Pipeline create(InterpretationPipelineOptions options) {
 
     String inputPath = options.getInputPath();
     String targetPath = FsUtils.buildPath(options, "verbatim");

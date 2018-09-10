@@ -73,7 +73,7 @@ public class IndexingUtils {
               FileUtils.deleteDirectory(tmp);
               LOG.info("temp directory {} deleted", tmp.getPath());
             } catch (IOException e) {
-              LOG.warn("Could not delete temp directory {}", tmp.getPath());
+              LOG.error("Could not delete temp directory {}", tmp.getPath());
             }
           }
         };

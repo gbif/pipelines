@@ -1,12 +1,12 @@
 package org.gbif.pipelines.core;
 
-import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class Interpretation<S extends Serializable> {
+/** TODO:DOC */
+public class Interpretation<S> {
 
   private final S source;
 
@@ -14,19 +14,19 @@ public class Interpretation<S extends Serializable> {
     this.source = source;
   }
 
-  public static <S extends Serializable> Interpretation<S> from(S source) {
+  public static <S> Interpretation<S> from(S source) {
     return new Interpretation<>(source);
   }
 
-  public <T extends Serializable> Handler<T> to(Function<S, T> func) {
+  public <T> Handler<T> to(Function<S, T> func) {
     return new Handler<>(func.apply(source));
   }
 
-  public <T extends Serializable> Handler<T> to(Supplier<T> func) {
+  public <T> Handler<T> to(Supplier<T> func) {
     return new Handler<>(func.get());
   }
 
-  public class Handler<T extends Serializable> {
+  public class Handler<T> {
 
     private final T target;
 
