@@ -12,10 +12,10 @@
   </parent>
 
   <artifactId>pipelines</artifactId>
-
   <packaging>pom</packaging>
 
   <name>Artery :: Pipelines</name>
+  <description>Apache Beam pipelines</description>
 
   <modules>
     <module>beam-common</module>
