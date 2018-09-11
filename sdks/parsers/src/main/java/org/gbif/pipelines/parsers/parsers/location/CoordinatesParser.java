@@ -12,7 +12,7 @@ import java.util.function.Function;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
-/** Parser for the Dwc Terms related with the coordinates. */
+/** Parser for the Dwc Terms related to the coordinates. */
 class CoordinatesParser {
 
   // parses decimal latitude and longitude fields
