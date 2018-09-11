@@ -1,4 +1,4 @@
-Apache Beam pipelines
+<h2>Apache Beam pipelines</h2>
 
 <h3>Module structure:</h3>
 <ul>

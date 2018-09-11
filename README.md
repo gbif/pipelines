@@ -2,9 +2,9 @@
 
 <h3>Project structure:</h3>
 <ul>
-    <li>buildSrc</li>
-    <li>docs</li>
-    <li>examples</li>
+    <li>**buildSrc** - Tools for building the project</li>
+    <li>docs - Documents related to the project</li>
+    <li>examples - Examples of using project API and base classes</li>
     <li>pipelines
         <ul>
             <li>base</li>
