@@ -1,0 +1,15 @@
+/**
+ * Example of an avro record
+ */
+{
+  "name":"ExampleRecord",
+  "namespace":"org.gbif.example.io.avro",
+  "type":"record",
+  "doc":"Example of an avro record",
+  "fields":[
+    {"name":"id","type":"string"},
+    {"name":"one","type":["null","string"],"default":null},
+    {"name":"two","type":["null","string"],"default":null},
+    {"name":"three","type":["null","string"],"default":null}
+  ]
+}

@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-/** TODO:DOC */
+/** TODO: DOC */
 public class Interpretation<S> {
 
   private final S source;
@@ -16,6 +16,10 @@ public class Interpretation<S> {
 
   public static <S> Interpretation<S> from(S source) {
     return new Interpretation<>(source);
+  }
+
+  public <T> Handler<T> to(T t) {
+    return new Handler<>(t);
   }
 
   public <T> Handler<T> to(Function<S, T> func) {
