@@ -1,1 +1,1 @@
-TODO: README.md
+<h2>Maven plugin adds new annotations and interface to avro generated classes</h2>
