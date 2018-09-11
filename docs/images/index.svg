@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="122 816 536 289"
+     width="536pt" height="289pt">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:date>2017-12-30 20:25Z</dc:date><!-- Produced by OmniGraffle Professional 5.4.4 -->
+  </metadata>
+  <defs>
+    <font-face font-family="Helvetica" font-size="12" units-per-em="1000" underline-position="-75.683594"
+               underline-thickness="49.316406" slope="0" x-height="522.94922" cap-height="717.28516" ascent="770.01953"
+               descent="-229.98047" font-weight="500">
+      <font-face-src>
+        <font-face-name name="Helvetica"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <g stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1">
+    <title>Canvas 1</title>
+    <rect fill="white" width="806" height="1608"/>
+    <g>
+      <title>Layer 1</title>
+      <path
+        d="M 226.11538 818.59065 L 295.61538 818.59065 L 295.61538 860.19065 C 274.76538 854.99065 246.96538 875.79065 226.11538 865.39065 Z"
+        fill="#c5daf0"/>
+      <path
+        d="M 226.11538 818.59065 L 295.61538 818.59065 L 295.61538 860.19065 C 274.76538 854.99065 246.96538 875.79065 226.11538 865.39065 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(231.11538 827.99065)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="4.7392578" y="11"
+               textLength="50.021484">temporal.
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="18.078125" y="25"
+               textLength="23.34375">avro
+        </tspan>
+      </text>
+      <path
+        d="M 327.30768 818.5906 L 396.80768 818.5906 L 396.80768 860.1906 C 375.95768 854.9906 348.15768 875.7906 327.30768 865.3906 Z"
+        fill="#c5daf0"/>
+      <path
+        d="M 327.30768 818.5906 L 396.80768 818.5906 L 396.80768 860.1906 C 375.95768 854.9906 348.15768 875.7906 327.30768 865.3906 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(332.30768 827.9906)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="7.4023438" y="11"
+               textLength="44.695312">location.
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="18.078125" y="25"
+               textLength="23.34375">avro
+        </tspan>
+      </text>
+      <path
+        d="M 428.49998 818.5906 L 497.99998 818.5906 L 497.99998 860.1906 C 477.14998 854.9906 449.34998 875.7906 428.49998 865.3906 Z"
+        fill="#c5daf0"/>
+      <path
+        d="M 428.49998 818.5906 L 497.99998 818.5906 L 497.99998 860.1906 C 477.14998 854.9906 449.34998 875.7906 428.49998 865.3906 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(433.49998 820.9906)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="18.078125" y="11"
+               textLength="23.34375">gbif-
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="2.0615234" y="25"
+               textLength="55.376953">backbone.
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="18.078125" y="39"
+               textLength="23.34375">avro
+        </tspan>
+      </text>
+      <path
+        d="M 124.92308 818.59065 L 194.42308 818.59065 L 194.42308 860.19065 C 173.57308 854.99065 145.77308 875.79065 124.92308 865.39065 Z"
+        fill="#c5daf0"/>
+      <path
+        d="M 124.92308 818.59065 L 194.42308 818.59065 L 194.42308 860.19065 C 173.57308 854.99065 145.77308 875.79065 124.92308 865.39065 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(129.92308 827.99065)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="5.076172" y="11"
+               textLength="49.347656">verbatim.
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="18.078125" y="25"
+               textLength="23.34375">avro
+        </tspan>
+      </text>
+      <path
+        d="M 529.6923 818.5906 L 599.1923 818.5906 L 599.1923 860.1906 C 578.3423 854.9906 550.5423 875.7906 529.6923 865.3906 Z"
+        fill="#d1d5e2"/>
+      <path
+        d="M 529.6923 818.5906 L 599.1923 818.5906 L 599.1923 860.1906 C 578.3423 854.9906 550.5423 875.7906 529.6923 865.3906 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(534.6923 834.9906)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="13.074219" y="11"
+               textLength="33.351562">?.avro
+        </tspan>
+      </text>
+      <path
+        d="M 166.67308 906.3077 L 253.86539 906.3077 L 253.86539 906.30773 L 267.86539 906.30773 L 267.86539 906.3077 L 355.05767 906.3077 L 355.05767 906.30773 L 355.05769 906.30773 L 355.05769 925.4793 L 348.05769 925.4793 L 362.05769 936.4793 L 376.05769 925.4793 L 369.05769 925.4793 L 369.05769 906.3077 L 456.24998 906.3077 L 456.24997 906.30773 L 470.24997 906.30773 L 470.24997 906.3077 L 559.1346 906.3077 L 559.1346 906.30773 L 573.1346 906.30773 L 573.1346 906.3077 L 573.38163 906.3077 L 573.38163 892.3077 L 573.1346 892.3077 L 573.1346 874.2131 L 559.1346 874.2131 L 559.1346 892.3077 L 470.24997 892.3077 L 470.24997 874.2131 L 456.24997 874.2131 L 456.24997 892.3077 L 369.05766 892.3077 L 369.05767 874.2131 L 355.05767 874.2131 L 355.05767 892.3077 L 267.86538 892.3077 L 267.86539 874.2131 L 253.86539 874.2131 L 253.86539 892.3077 L 166.67307 892.3077 L 166.67308 874.2131 L 152.67308 874.2131 L 152.67308 906.30773 L 166.67308 906.30773 Z"
+        fill="#5b8ae4"/>
+      <path
+        d="M 166.67308 906.3077 L 253.86539 906.3077 L 253.86539 906.30773 L 267.86539 906.30773 L 267.86539 906.3077 L 355.05767 906.3077 L 355.05767 906.30773 L 355.05769 906.30773 L 355.05769 925.4793 L 348.05769 925.4793 L 362.05769 936.4793 L 376.05769 925.4793 L 369.05769 925.4793 L 369.05769 906.3077 L 456.24998 906.3077 L 456.24997 906.30773 L 470.24997 906.30773 L 470.24997 906.3077 L 559.1346 906.3077 L 559.1346 906.30773 L 573.1346 906.30773 L 573.1346 906.3077 L 573.38163 906.3077 L 573.38163 892.3077 L 573.1346 892.3077 L 573.1346 874.2131 L 559.1346 874.2131 L 559.1346 892.3077 L 470.24997 892.3077 L 470.24997 874.2131 L 456.24997 874.2131 L 456.24997 892.3077 L 369.05766 892.3077 L 369.05767 874.2131 L 355.05767 874.2131 L 355.05767 892.3077 L 267.86538 892.3077 L 267.86539 874.2131 L 253.86539 874.2131 L 253.86539 892.3077 L 166.67307 892.3077 L 166.67308 874.2131 L 152.67308 874.2131 L 152.67308 906.30773 L 166.67308 906.30773 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(585.1649 874.2131)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="16.989258" y="11"
+               textLength="41.355469">Join by
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".31933594" y="25"
+               textLength="71.36133">occurrenceID
+        </tspan>
+      </text>
+      <path
+        d="M 322.52736 940.1018 L 403.52736 940.1018 C 406.28878 940.1018 408.52736 942.3404 408.52736 945.1018 L 408.52736 979.1018 C 408.52736 981.8632 406.28878 984.1018 403.52736 984.1018 L 322.52736 984.1018 C 319.76593 984.1018 317.52736 981.8632 317.52736 979.1018 L 317.52736 945.1018 C 317.52736 942.3404 319.76593 940.1018 322.52736 940.1018 Z"
+        fill="#81b96a"/>
+      <path
+        d="M 322.52736 940.1018 L 403.52736 940.1018 C 406.28878 940.1018 408.52736 942.3404 408.52736 945.1018 L 408.52736 979.1018 C 408.52736 981.8632 406.28878 984.1018 403.52736 984.1018 L 322.52736 984.1018 C 319.76593 984.1018 317.52736 981.8632 317.52736 979.1018 L 317.52736 945.1018 C 317.52736 942.3404 319.76593 940.1018 322.52736 940.1018 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(322.52736 941.1018)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="3.4804688" y="11"
+               textLength="77.373047">PCollection of
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="11.81543" y="25"
+               textLength="57.36914">interpreted
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="28.822266" y="39"
+               textLength="23.355469">data
+        </tspan>
+      </text>
+      <path
+        d="M 253.75803 1013.0385 L 253.75803 1020.4239 L 246.86539 1020.4239 L 260.86539 1038.2153 L 274.86539 1020.4239 L 267.97275 1020.4239 L 267.97275 1013.0385 L 456.14262 1013.0385 L 456.14262 1020.4239 L 449.24998 1020.4239 L 463.24998 1038.2153 L 477.24998 1020.4239 L 470.35734 1020.4239 L 470.35734 1008.65394 L 470.2857 1008.65394 L 470.2857 999.0385 L 370.02735 999.0385 L 370.02735 987.72425 L 356.02735 987.72425 L 356.02735 999.0385 L 253.71429 999.0385 L 253.71429 1013.0385 Z"
+        fill="#5b8ae5"/>
+      <path
+        d="M 253.75803 1013.0385 L 253.75803 1020.4239 L 246.86539 1020.4239 L 260.86539 1038.2153 L 274.86539 1020.4239 L 267.97275 1020.4239 L 267.97275 1013.0385 L 456.14262 1013.0385 L 456.14262 1020.4239 L 449.24998 1020.4239 L 463.24998 1038.2153 L 477.24998 1020.4239 L 470.35734 1020.4239 L 470.35734 1008.65394 L 470.2857 1008.65394 L 470.2857 999.0385 L 370.02735 999.0385 L 370.02735 987.72425 L 356.02735 987.72425 L 356.02735 999.0385 L 253.71429 999.0385 L 253.71429 1013.0385 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(479.6875 987.7243)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="1.7138672" y="11" textLength="7.330078">T
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="8.604492" y="11"
+               textLength="68.015625">ransform for
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="26.830078" y="25"
+               textLength="21.339844">sink
+        </tspan>
+      </text>
+      <path
+        d="M 232.9375 1096.8 L 232.9375 1055.2 C 232.9375 1052.3296 246.3775 1050 262.9375 1050 C 279.4975 1050 292.9375 1052.3296 292.9375 1055.2 L 292.9375 1096.8 C 292.9375 1099.6704 279.4975 1102 262.9375 1102 C 246.3775 1102 232.9375 1099.6704 232.9375 1096.8"
+        fill="#c5daf0"/>
+      <path
+        d="M 232.9375 1096.8 L 232.9375 1055.2 C 232.9375 1052.3296 246.3775 1050 262.9375 1050 C 279.4975 1050 292.9375 1052.3296 292.9375 1055.2 L 292.9375 1096.8 C 292.9375 1099.6704 279.4975 1102 262.9375 1102 C 246.3775 1102 232.9375 1099.6704 232.9375 1096.8 M 232.9375 1055.2 C 232.9375 1058.0704 246.3775 1060.4 262.9375 1060.4 C 279.4975 1060.4 292.9375 1058.0704 292.9375 1055.2"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(237.9375 1064.6)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="7.328125" y="11"
+               textLength="35.34375">Elastic
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="5.9892578" y="25"
+               textLength="38.021484">Search
+        </tspan>
+      </text>
+      <path
+        d="M 434.87498 1095.2375 L 434.87498 1053.6375 C 434.87498 1050.7671 448.31498 1048.4375 464.87498 1048.4375 C 481.43498 1048.4375 494.87498 1050.7671 494.87498 1053.6375 L 494.87498 1095.2375 C 494.87498 1098.1079 481.43498 1100.4375 464.87498 1100.4375 C 448.31498 1100.4375 434.87498 1098.1079 434.87498 1095.2375"
+        fill="#c5daf0"/>
+      <path
+        d="M 434.87498 1095.2375 L 434.87498 1053.6375 C 434.87498 1050.7671 448.31498 1048.4375 464.87498 1048.4375 C 481.43498 1048.4375 494.87498 1050.7671 494.87498 1053.6375 L 494.87498 1095.2375 C 494.87498 1098.1079 481.43498 1100.4375 464.87498 1100.4375 C 448.31498 1100.4375 434.87498 1098.1079 434.87498 1095.2375 M 434.87498 1053.6375 C 434.87498 1056.5079 448.31498 1058.8375 464.87498 1058.8375 C 481.43498 1058.8375 494.87498 1056.5079 494.87498 1053.6375"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(439.87498 1070.0375)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="8.661133" y="11"
+               textLength="32.677734">SOLR
+        </tspan>
+      </text>
+    </g>
+  </g>
+</svg>

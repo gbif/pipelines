@@ -1,1 +1,3 @@
-<h2>Data models represented in Avro binary format, generated from Avro schemas</h2>
+## Models
+
+Data models represented in Avro binary format, generated from Avro schemas

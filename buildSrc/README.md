@@ -1,1 +1,5 @@
-<h2>Directory contains tools for building the project</h2>
+buildSrc
+
+## Directory contains tools for building the project
+
+Internal directory, contains maven wrapper libs and scripts

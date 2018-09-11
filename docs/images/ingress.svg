@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="64 12 401 282"
+     width="401pt" height="282pt">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:date>2017-12-30 20:22Z</dc:date><!-- Produced by OmniGraffle Professional 5.4.4 -->
+  </metadata>
+  <defs>
+    <font-face font-family="Helvetica" font-size="12" units-per-em="1000" underline-position="-75.683594"
+               underline-thickness="49.316406" slope="0" x-height="522.94922" cap-height="717.28516" ascent="770.01953"
+               descent="-229.98047" font-weight="500">
+      <font-face-src>
+        <font-face-name name="Helvetica"/>
+      </font-face-src>
+    </font-face>
+  </defs>
+  <g stroke="none" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1">
+    <title>Canvas 1</title>
+    <rect fill="white" width="806" height="1608"/>
+    <g>
+      <title>Layer 1</title>
+      <path
+        d="M 66 60.8 L 66 19.2 C 66 16.3296 79.44 14 96 14 C 112.56 14 126 16.3296 126 19.2 L 126 60.8 C 126 63.6704 112.56 66 96 66 C 79.44 66 66 63.6704 66 60.8"
+        fill="#c5daf0"/>
+      <path
+        d="M 66 60.8 L 66 19.2 C 66 16.3296 79.44 14 96 14 C 112.56 14 126 16.3296 126 19.2 L 126 60.8 C 126 63.6704 112.56 66 96 66 C 79.44 66 66 63.6704 66 60.8 M 66 19.2 C 66 22.0704 79.44 24.4 96 24.4 C 112.56 24.4 126 22.0704 126 19.2"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(71 35.6)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="6.0009766" y="11"
+               textLength="37.998047">DwC-A
+        </tspan>
+      </text>
+      <path
+        d="M 66 151.8 L 66 110.2 C 66 107.3296 79.44 105 96 105 C 112.56 105 126 107.3296 126 110.2 L 126 151.8 C 126 154.6704 112.56 157 96 157 C 79.44 157 66 154.6704 66 151.8"
+        fill="#c5daf0"/>
+      <path
+        d="M 66 151.8 L 66 110.2 C 66 107.3296 79.44 105 96 105 C 112.56 105 126 107.3296 126 110.2 L 126 151.8 C 126 154.6704 112.56 157 96 157 C 79.44 157 66 154.6704 66 151.8 M 66 110.2 C 66 113.0704 79.44 115.4 96 115.4 C 112.56 115.4 126 113.0704 126 110.2"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(71 126.6)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="2.3300781" y="11"
+               textLength="45.339844">ABCD-A
+        </tspan>
+      </text>
+      <path d="M 136 51 L 136 29 L 184 29 L 184 18 L 209 40 L 184 62 L 184 51 Z" fill="#5b8ae5"/>
+      <path d="M 136 51 L 136 29 L 184 29 L 184 18 L 209 40 L 184 62 L 184 51 Z" stroke="black" stroke-linecap="round"
+            stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 136 142 L 136 120 L 184 120 L 184 109 L 209 131 L 184 153 L 184 142 Z" fill="#5b8ae5"/>
+      <path d="M 136 142 L 136 120 L 184 120 L 184 109 L 209 131 L 184 153 L 184 142 Z" stroke="black"
+            stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(151.5 33)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".15625" y="11" textLength="28.6875">Read
+        </tspan>
+      </text>
+      <path
+        d="M 224 18 L 305 18 C 307.76142 18 310 20.238576 310 23 L 310 57 C 310 59.761424 307.76142 62 305 62 L 224 62 C 221.23858 62 219 59.761424 219 57 L 219 23 C 219 20.238576 221.23858 18 224 18 Z"
+        fill="#81b96a"/>
+      <path
+        d="M 224 18 L 305 18 C 307.76142 18 310 20.238576 310 23 L 310 57 C 310 59.761424 307.76142 62 305 62 L 224 62 C 221.23858 62 219 59.761424 219 57 L 219 23 C 219 20.238576 221.23858 18 224 18 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(224 26)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" fill="black" x="3.4804688" y="11"
+               textLength="77.373047">PCollection of
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" fill="black" x="4.1484375" y="25"
+               textLength="72.703125">verbatim data
+        </tspan>
+      </text>
+      <path d="M 320 51 L 320 29 L 368 29 L 368 18 L 393 40 L 368 62 L 368 51 Z" fill="#5b8ae5"/>
+      <path d="M 320 51 L 320 29 L 368 29 L 368 18 L 393 40 L 368 62 L 368 51 Z" stroke="black" stroke-linecap="round"
+            stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 403 14 L 463 14 L 463 55.6 C 445 50.4 421 71.2 403 60.8 Z" fill="#c5daf0"/>
+      <path d="M 403 14 L 463 14 L 463 55.6 C 445 50.4 421 71.2 403 60.8 Z" stroke="black" stroke-linecap="round"
+            stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(408 23.4)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".32617188" y="11"
+               textLength="49.347656">verbatim.
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="13.328125" y="25"
+               textLength="23.34375">avro
+        </tspan>
+      </text>
+      <text transform="translate(151.5 124)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".15625" y="11" textLength="28.6875">Read
+        </tspan>
+      </text>
+      <path
+        d="M 224 109 L 305 109 C 307.76142 109 310 111.238576 310 114 L 310 148 C 310 150.76142 307.76142 153 305 153 L 224 153 C 221.23858 153 219 150.76142 219 148 L 219 114 C 219 111.238576 221.23858 109 224 109 Z"
+        fill="#81b96a"/>
+      <path
+        d="M 224 109 L 305 109 C 307.76142 109 310 111.238576 310 114 L 310 148 C 310 150.76142 307.76142 153 305 153 L 224 153 C 221.23858 153 219 150.76142 219 148 L 219 114 C 219 111.238576 221.23858 109 224 109 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(224 117)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="3.4804688" y="11"
+               textLength="77.373047">PCollection of
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".10839844" y="25"
+               textLength="24.673828">XML
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="24.342773" y="25"
+               textLength="56.548828">"snippets"
+        </tspan>
+      </text>
+      <text transform="translate(332 33)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".16308594" y="11"
+               textLength="36.673828">Persist
+        </tspan>
+      </text>
+      <path
+        d="M 224 213.5 L 305 213.5 C 307.76142 213.5 310 215.73858 310 218.5 L 310 252.5 C 310 255.26142 307.76142 257.5 305 257.5 L 224 257.5 C 221.23858 257.5 219 255.26142 219 252.5 L 219 218.5 C 219 215.73858 221.23858 213.5 224 213.5 Z"
+        fill="#81b96a"/>
+      <path
+        d="M 224 213.5 L 305 213.5 C 307.76142 213.5 310 215.73858 310 218.5 L 310 252.5 C 310 255.26142 307.76142 257.5 305 257.5 L 224 257.5 C 221.23858 257.5 219 255.26142 219 252.5 L 219 218.5 C 219 215.73858 221.23858 213.5 224 213.5 Z"
+        stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(224 221.5)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="3.4804688" y="11"
+               textLength="77.373047">PCollection of
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="4.1484375" y="25"
+               textLength="72.703125">verbatim data
+        </tspan>
+      </text>
+      <path d="M 253.5 161 L 275.5 161 L 275.5 180.5 L 286.5 180.5 L 264.5 205.5 L 242.5 180.5 L 253.5 180.5 Z"
+            fill="#5b8ae5"/>
+      <path d="M 253.5 161 L 275.5 161 L 275.5 180.5 L 286.5 180.5 L 264.5 205.5 L 242.5 180.5 L 253.5 180.5 Z"
+            stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 320 246.5 L 320 224.5 L 368 224.5 L 368 213.5 L 393 235.5 L 368 257.5 L 368 246.5 Z" fill="#5b8ae5"/>
+      <path d="M 320 246.5 L 320 224.5 L 368 224.5 L 368 213.5 L 393 235.5 L 368 257.5 L 368 246.5 Z" stroke="black"
+            stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <path d="M 403 209.5 L 463 209.5 L 463 251.1 C 445 245.9 421 266.7 403 256.3 Z" fill="#c5daf0"/>
+      <path d="M 403 209.5 L 463 209.5 L 463 251.1 C 445 245.9 421 266.7 403 256.3 Z" stroke="black"
+            stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      <text transform="translate(408 218.9)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".32617188" y="11"
+               textLength="49.347656">verbatim.
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="13.328125" y="25"
+               textLength="23.34375">avro
+        </tspan>
+      </text>
+      <text transform="translate(332 228.5)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".16308594" y="11"
+               textLength="36.673828">Persist
+        </tspan>
+      </text>
+      <text transform="translate(295 169.25)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="1.9824219" y="11"
+               textLength="45.351562">Convert
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="46.677734" y="11"
+               textLength="36.673828">ABCD
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="21.330078" y="25"
+               textLength="39.339844">to DwC
+        </tspan>
+      </text>
+      <text transform="translate(306 64)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="2.1455078" y="11"
+               textLength="100.04297">Ensure all records
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".14160156" y="25"
+               textLength="100.716797">have occurrenceID
+        </tspan>
+      </text>
+      <text transform="translate(306 265.5)" fill="black">
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x="2.1455078" y="11"
+               textLength="100.04297">Ensure all records
+        </tspan>
+        <tspan font-family="Helvetica" font-size="12" font-weight="500" x=".14160156" y="25"
+               textLength="100.716797">have occurrenceID
+        </tspan>
+      </text>
+    </g>
+  </g>
+</svg>

@@ -1,1 +1,3 @@
-<h2>Documents related to the project</h2>
+## Docs
+
+Documents related to the project

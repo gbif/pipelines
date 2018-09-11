@@ -1,1 +1,3 @@
-<h2>Independed GBIF pipelines for ingestion biodiversity data</h2>
+## Mini pipelines
+
+Independed GBIF pipelines for ingestion biodiversity data

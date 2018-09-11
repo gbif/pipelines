@@ -1,1 +1,3 @@
-<h2>Tool for creating/deleting/swapping Elasticsearch indexes</h2>
+## Elasticsearch tools
+
+Tool for creating/deleting/swapping Elasticsearch indexes

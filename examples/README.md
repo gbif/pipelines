@@ -1,1 +1,3 @@
-<h2>Examples of using project API and base classes</h2>
+## Examples
+
+Examples of using project API and base classes
