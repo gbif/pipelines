@@ -1,17 +1,17 @@
-## Ingestion platform to orchestrate the parsing and interpretation of biodiversity data
+# Ingestion platform to orchestrate the parsing and interpretation of biodiversity data
 
 _Status: early development_
 
 Vision: Consistent data processing pipelines (parsing, interpretation and quality flagging) for use in GBIF, the Living Atlases project and beyond.
 Built to scale from laptop to GBIF volumes. Deployable on JVM, Spark, Google Cloud, <insert your favourite cloud provider here>.
 
-## Architecture
+# Architecture
 
 The project provides vanilla JVM-based parsing and interpretation libraries, and pipelines for indexing into SOLR and ElasticSearch, built using Apache Beam.
 
 > Apache Beam provides a high level abstraction framework ideal for this purpose with the ability to deploy across target environments (e.g. Spark, local JVM) and with many built in connectors for e.g. HBase, SOLR, ElasticSearch etc.
 
-### Ingress
+## Ingress
 
 Ingress is from [Darwin Core Archive](https://www.tdwg.org/standards/dwc/) (zip files of one or more "CSV"s) or ABCD Archives (compressed XML) only[1].
 During ingress data is converted from it's native format and stored as Avro files containing Darwin Core compliant data.
@@ -24,7 +24,7 @@ This is depicted below:
 
 [1] Other protocols (e.g. DiGIR, TAPIR) are supported by GBIF but are converted by crawling code upstream of this project.
 
-### Interpretation
+## Interpretation
 
 During interpretation the verbatim data is parsed, normalised and tested against quality control procedures.
 
@@ -40,7 +40,7 @@ Interpretation is depicted below:
 
 > It is a design decision to ensure that all the underlying parsers are as reusable as possible for other projects with careful consideration to not bring in dependencies such as Beam or Hadoop.
 
-### Indexing
+## Indexing
 
 Initial implementations will be available for both SOLR and for ElasticSearch to allow for evaluation of both at GBIF.
 During indexing the categories of interpreted information of use are merged and loaded into the search indexes:
@@ -49,7 +49,7 @@ During indexing the categories of interpreted information of use are merged and 
 
 > Note that GBIF target 10,000 records/sec per node indexing speed (i.e. 100,000 records/sec on current production cluster).  This will allow simplified disaster recovery and rapid deployment and of new features.
 
-## Structure
+# Structure
 
 The project is structured as:
 
@@ -69,7 +69,7 @@ The project is structured as:
     - **elasticsearch-tools** - Tool for creating/deleting/swapping Elasticsearch indexes
     - **pipelines-maven-plugin** - Maven plugin adds new annotations and interface to avro generated classes
 
-## How to build the project?
+# How to build the project?
 
 The project uses [Apache Maven](https://maven.apache.org/) tool for building. Project contains maven wrapper and script for Linux and MacOS systems, you just can run **build.sh** script:
 

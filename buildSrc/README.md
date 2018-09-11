@@ -1,5 +1,3 @@
-buildSrc
-
-## Directory contains tools for building the project
+# buildSrc
 
 Internal directory, contains maven wrapper libs and scripts

@@ -1,6 +1,6 @@
-## SDKs
+# SDKs
 
-### Module structure:
+## Module structure:
 - **core** - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader and etc
 - **models** - Data models represented in Avro binary format, generated from Avro schemas
 - **parsers** - Data parsers and converters, mainly for internal usage inside of interpretations

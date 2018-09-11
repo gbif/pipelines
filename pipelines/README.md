@@ -1,6 +1,6 @@
-## Pipelines
+# Pipelines
 
-### Module structure:
+## Module structure:
 - **base** - Main transformations and pipelines for ingestion biodiversity data
 - **beam-common** - Classes and API for using with Apache Beam
 - **mini-pipelines** - Independed GBIF pipelines for ingestion biodiversity data
