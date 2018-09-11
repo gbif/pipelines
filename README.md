@@ -1,3 +1,5 @@
+<h2>Ingestion platform to orchestrate the parsing and interpretation of biodiversity data</h2>
+
 <h3>Project structure:</h3>
 <ul>
     <li>buildSrc</li>

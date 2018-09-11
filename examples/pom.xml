@@ -16,6 +16,7 @@
   <packaging>jar</packaging>
 
   <name>Artery :: Examples</name>
+  <description>Examples of using project API and base classes</description>
 
 
 </project>

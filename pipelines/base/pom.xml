@@ -15,6 +15,7 @@
   <packaging>jar</packaging>
 
   <name>Artery :: Pipelines :: Base</name>
+  <description>Base Apache Beam transformations and pipelines for ingestion biodiversity data</description>
 
   <build>
     <plugins>

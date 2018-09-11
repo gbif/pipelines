@@ -15,6 +15,7 @@
   <packaging>jar</packaging>
 
   <name>Artery :: Tools :: Elasticsearch tools</name>
+  <description>Tool for creating/deleting/swapping an Elasticsearch indexes</description>
 
   <!-- Copy pom.xml value to test resources maven.properties -->
   <build>

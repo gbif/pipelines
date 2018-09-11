@@ -14,6 +14,7 @@
   <packaging>jar</packaging>
 
   <name>Artery :: Pipelines :: Beam-common</name>
+  <description>Classes and API for use with Apache Beam</description>
 
   <dependencies>
 

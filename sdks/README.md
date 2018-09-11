@@ -1,1 +1,1 @@
-TODO: README.md
+<h2>Main package contains common classes, such as data models, data format iterpretations, parsers, web services clients ant etc.</h2>

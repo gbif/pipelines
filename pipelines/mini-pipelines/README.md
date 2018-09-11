@@ -1,1 +1,1 @@
-TODO: README.md
+<h2>Independed GBIF pipelines for ingestion biodiversity data</h2>

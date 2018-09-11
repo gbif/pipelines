@@ -15,6 +15,7 @@
   <packaging>jar</packaging>
 
   <name>Artery :: Sdks :: Models</name>
+  <description>Data models represented in Avro binary format, generated from Avro schemas</description>
 
   <properties>
     <avro-generated-path>${project.basedir}/src/main/java-generated/</avro-generated-path>

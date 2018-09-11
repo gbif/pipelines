@@ -12,10 +12,12 @@
   </parent>
 
   <artifactId>sdks</artifactId>
-
   <packaging>pom</packaging>
 
   <name>Artery :: Sdks</name>
+  <description>Main package contains common classes, such as data models, data format iterpretations, parsers, web
+    services clients ant etc.
+  </description>
 
   <modules>
     <module>models</module>

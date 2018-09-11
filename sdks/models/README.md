@@ -1,1 +1,1 @@
-TODO: README.md
+<h2>Data models represented in Avro binary format, generated from Avro schemas</h2>

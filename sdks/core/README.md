@@ -1,1 +1,1 @@
-TODO: README.md
+<h2>Main module contains API like classes, such as data interpretations, converters, DwCA reader and etc.</h2>

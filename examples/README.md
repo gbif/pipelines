@@ -1,1 +1,1 @@
-TODO: README.md
+<h2>Examples of using project API and base classes</h2>
