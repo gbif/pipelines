@@ -10,19 +10,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/** Converter from some class to {@link ExtendedRecord} */
+/** Converters from *.class to {@link ExtendedRecord} */
 public class ExtendedRecordConverter {
 
   private ExtendedRecordConverter() {}
 
+  /** Converts {@link StarRecord} to {@link ExtendedRecord} */
   public static ExtendedRecord from(StarRecord record) {
     Record core = record.core();
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder().setId(core.id());
     Optional.ofNullable(core.rowType()).ifPresent(x -> builder.setCoreRowType(x.qualifiedName()));
 
-    builder.setCoreTerms(removeEmptyContent(core));
+    Function<Record, Map<String, String>> removeEmptyContent =
+        r ->
+            r.terms()
+                .stream()
+                .filter(term -> term.qualifiedName() != null && r.value(term) != null)
+                .collect(Collectors.toMap(Term::qualifiedName, r::value, (a, b) -> b));
+
+    builder.setCoreTerms(removeEmptyContent.apply(core));
 
     record
         .extensions()
@@ -38,19 +47,11 @@ public class ExtendedRecordConverter {
                       .getOrDefault(extensionType.qualifiedName(), new ArrayList<>());
 
               data.forEach(
-                  extensionRecord -> extensionData.add(removeEmptyContent(extensionRecord)));
+                  extensionRecord -> extensionData.add(removeEmptyContent.apply(extensionRecord)));
 
               builder.getExtensions().put(extensionType.qualifiedName(), extensionData);
             });
 
     return builder.build();
-  }
-
-  private static Map<String, String> removeEmptyContent(Record record) {
-    return record
-        .terms()
-        .stream()
-        .filter(term -> term.qualifiedName() != null && record.value(term) != null)
-        .collect(Collectors.toMap(Term::qualifiedName, record::value, (a, b) -> b));
   }
 }

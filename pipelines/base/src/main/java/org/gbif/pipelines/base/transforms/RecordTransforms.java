@@ -25,8 +25,9 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 
 /**
- * Contains ParDo functions for Beam, each method returns GBIF interpretation (basic, temporal,
- * multimedia, location, metadata, taxonomy)
+ * Contains ParDo functions for Beam, each method returns GBIF transformation (basic, temporal,
+ * multimedia, location, metadata, taxonomy). Transformation uses {@link
+ * org.gbif.pipelines.core.interpreters} to interpret and convert source data to target data
  *
  * <p>You can apply this functions to your Beam pipeline:
  *
@@ -103,6 +104,8 @@ public class RecordTransforms {
   /**
    * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
    * as a source and {@link LocationInterpreter} as interpretation steps
+   *
+   * @param wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> location(WsConfig wsConfig) {
     return ParDo.of(
@@ -131,6 +134,8 @@ public class RecordTransforms {
   /**
    * ParDo runs sequence of interpretations for {@link MetadataRecord} using {@link ExtendedRecord}
    * as a source and {@link MetadataInterpreter} as interpretation steps
+   *
+   * @param wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
   public static SingleOutput<String, MetadataRecord> metadata(WsConfig wsConfig) {
     return ParDo.of(
@@ -148,6 +153,8 @@ public class RecordTransforms {
   /**
    * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
    * a source and {@link TaxonomyInterpreter} as interpretation steps
+   *
+   * @param wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
   public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(WsConfig wsConfig) {
     return ParDo.of(
@@ -167,6 +174,8 @@ public class RecordTransforms {
   /**
    * ParDo runs sequence of interpretations for {@link MetadataRecord} using {@link ExtendedRecord}
    * as a source and {@link MetadataInterpreter} as interpretation steps
+   *
+   * @param properties path to a properties file
    */
   public static SingleOutput<String, MetadataRecord> metadata(String properties) {
     WsConfig wsConfig = WsConfigFactory.create("metadata", Paths.get(properties));
@@ -176,6 +185,8 @@ public class RecordTransforms {
   /**
    * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
    * a source and {@link TaxonomyInterpreter} as interpretation steps
+   *
+   * @param properties path to a properties file
    */
   public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(String properties) {
     WsConfig wsConfig = WsConfigFactory.create("match", Paths.get(properties));
@@ -185,6 +196,8 @@ public class RecordTransforms {
   /**
    * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
    * as a source and {@link LocationInterpreter} as interpretation steps
+   *
+   * @param properties path to a properties file
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> location(String properties) {
     WsConfig wsConfig = WsConfigFactory.create("geocode", Paths.get(properties));

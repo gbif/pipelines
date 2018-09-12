@@ -13,7 +13,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Transformation for filtering all duplicate records with the same record id */
+/** Transformation for filtering all duplicate records with the same {@link ExtendedRecord#getId} */
 public class UniqueIdTransform
     extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
 
