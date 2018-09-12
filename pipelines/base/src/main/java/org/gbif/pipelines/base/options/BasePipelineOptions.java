@@ -16,13 +16,11 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 public interface BasePipelineOptions extends PipelineOptions {
 
   @Description("Id of the dataset used to name the target file in file system.")
-  @Validation.Required
   String getDatasetId();
 
   void setDatasetId(String id);
 
   @Description("Attempt of the dataset used to name the target file in file system.")
-  @Validation.Required
   Integer getAttempt();
 
   void setAttempt(Integer attempt);

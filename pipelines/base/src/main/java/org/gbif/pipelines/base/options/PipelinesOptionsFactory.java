@@ -18,7 +18,8 @@ public final class PipelinesOptionsFactory {
 
   public static <T extends PipelineOptions> T create(Class<T> clazz, String[] args) {
     PipelineOptionsFactory.register(clazz);
-    return PipelineOptionsFactory.fromArgs(FsUtils.readArgsAsFile(args)).withValidation().as(clazz);
+    String[] parsedArgs = FsUtils.readArgsAsFile(args);
+    return PipelineOptionsFactory.fromArgs(parsedArgs).withValidation().as(clazz);
   }
 
   private static <T extends InterpretationPipelineOptions> T createWithHdfs(
