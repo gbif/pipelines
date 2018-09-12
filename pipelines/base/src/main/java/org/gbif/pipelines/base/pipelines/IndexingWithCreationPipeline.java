@@ -2,8 +2,8 @@ package org.gbif.pipelines.base.pipelines;
 
 import org.gbif.pipelines.base.options.IndexingPipelineOptions;
 import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.base.utils.FsUtils;
 import org.gbif.pipelines.base.utils.IndexingUtils;
-import org.gbif.pipelines.estools.client.EsConfig;
 
 /** TODO: DOC */
 public class IndexingWithCreationPipeline {
@@ -18,13 +18,13 @@ public class IndexingWithCreationPipeline {
 
   /** TODO: DOC */
   public static void createAndRun(IndexingPipelineOptions options) {
-    EsConfig config = EsConfig.from(options.getEsHosts());
 
-    IndexingUtils.createIndex(options, config);
+    IndexingUtils.createIndex(options);
 
     IndexingPipeline.createAndRun(options);
 
-    IndexingUtils.swapIndex(options, config);
-    IndexingUtils.removeTmpDirecrory(options);
+    IndexingUtils.swapIndex(options);
+
+    FsUtils.removeTmpDirecrory(options);
   }
 }

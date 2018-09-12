@@ -3,6 +3,7 @@ package org.gbif.pipelines.base.utils;
 import org.gbif.pipelines.base.options.BasePipelineOptions;
 import org.gbif.pipelines.parsers.exception.IORuntimeException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,10 +11,15 @@ import java.util.Arrays;
 import java.util.StringJoiner;
 
 import com.google.common.base.Strings;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Utility class to work with file system. */
 public final class FsUtils {
+
+  private static final Logger LOG = LoggerFactory.getLogger(FsUtils.class);
 
   private FsUtils() {}
 
@@ -87,5 +93,23 @@ public final class FsUtils {
       }
     }
     return args;
+  }
+
+  /** Removes temporal directory, before closing Main thread */
+  public static void removeTmpDirecrory(BasePipelineOptions options) {
+    Runnable runnable =
+        () -> {
+          File tmp = Paths.get(getTempDir(options)).toFile();
+          if (tmp.exists()) {
+            try {
+              FileUtils.deleteDirectory(tmp);
+              LOG.info("temp directory {} deleted", tmp.getPath());
+            } catch (IOException e) {
+              LOG.error("Could not delete temp directory {}", tmp.getPath());
+            }
+          }
+        };
+
+    Runtime.getRuntime().addShutdownHook(new Thread(runnable));
   }
 }

@@ -12,6 +12,23 @@ import org.apache.beam.sdk.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Pipeline converts DwCA to avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} files
+ *
+ * <p>How to run:
+ *
+ * <pre>{@code
+ * java -cp target/base-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.DwcaToAvroPipeline examples/configs/dwca2avro.properties
+ *
+ * or pass all parameters:
+ *
+ * java -cp target/base-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.DwcaToAvroPipeline
+ * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82 --attempt=1 --runner=DirectRunner
+ * --targetPath=/path/GBIF/output/
+ * --inputPath=/path/GBIF/input/dwca/9f747cff-839f-4485-83a1-f10317a92a82.dwca
+ *
+ * }</pre>
+ */
 public class DwcaToAvroPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaToAvroPipeline.class);

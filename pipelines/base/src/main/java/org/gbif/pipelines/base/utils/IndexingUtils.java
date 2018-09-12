@@ -5,8 +5,6 @@ import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsConstants;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -14,13 +12,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.base.Strings;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.gbif.pipelines.base.utils.FsUtils.buildPathString;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class IndexingUtils {
 
@@ -28,8 +21,9 @@ public class IndexingUtils {
 
   private IndexingUtils() {}
 
-  /** If ES indexing is included in the pipeline we first create the index */
-  public static void createIndex(IndexingPipelineOptions options, EsConfig config) {
+  /** Connects to Elasticsearch instace and creates an index */
+  public static void createIndex(IndexingPipelineOptions options) {
+    EsConfig config = EsConfig.from(options.getEsHosts());
     Path path = Paths.get(options.getEsSchemaPath());
 
     Map<String, String> map = new HashMap<>();
@@ -48,8 +42,10 @@ public class IndexingUtils {
     Optional.of(idx).ifPresent(options::setEsIndexName);
   }
 
-  /** TODO: DOC */
-  public static void swapIndex(IndexingPipelineOptions options, EsConfig config) {
+  /** Connects to Elasticsearch instace and swaps an index and an alias */
+  public static void swapIndex(IndexingPipelineOptions options) {
+    EsConfig config = EsConfig.from(options.getEsHosts());
+
     String alias = options.getEsAlias();
     String index = options.getEsIndexName();
 
@@ -59,25 +55,5 @@ public class IndexingUtils {
     EsIndex.refresh(config, index);
     long count = EsIndex.countDocuments(config, index);
     LOG.info("Index name - {}, Alias - {}, Number of records -  {}", index, alias, count);
-  }
-
-  /** TODO: DOC */
-  public static void removeTmpDirecrory(IndexingPipelineOptions options) {
-    Runnable runnable =
-        () -> {
-          String l = options.getTempLocation();
-          String t = isNullOrEmpty(l) ? buildPathString(options.getTargetPath(), "tmp") : l;
-          File tmp = Paths.get(t).toFile();
-          if (tmp.exists()) {
-            try {
-              FileUtils.deleteDirectory(tmp);
-              LOG.info("temp directory {} deleted", tmp.getPath());
-            } catch (IOException e) {
-              LOG.error("Could not delete temp directory {}", tmp.getPath());
-            }
-          }
-        };
-
-    Runtime.getRuntime().addShutdownHook(new Thread(runnable));
   }
 }

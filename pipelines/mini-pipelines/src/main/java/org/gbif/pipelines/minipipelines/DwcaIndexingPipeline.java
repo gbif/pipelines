@@ -7,7 +7,6 @@ import org.gbif.pipelines.base.utils.FsUtils;
 import org.gbif.pipelines.base.utils.IndexingUtils;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
-import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -45,11 +44,11 @@ class DwcaIndexingPipeline {
 
   /** TODO: DOC! */
   static void createAndRun(DwcaPipelineOptions options) {
-    IndexingUtils.createIndex(options, EsConfig.from(options.getEsHosts()));
+    IndexingUtils.createIndex(options);
 
     createAndRunPipeline(options);
 
-    IndexingUtils.removeTmpDirecrory(options);
+    FsUtils.removeTmpDirecrory(options);
   }
 
   /** TODO: DOC! */
