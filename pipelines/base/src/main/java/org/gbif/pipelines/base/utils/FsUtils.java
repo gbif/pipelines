@@ -12,22 +12,28 @@ import java.util.StringJoiner;
 import com.google.common.base.Strings;
 import org.apache.hadoop.fs.Path;
 
-/** Utility class to work with FS. */
+/** Utility class to work with file system. */
 public final class FsUtils {
 
   private FsUtils() {}
 
-  /** Build a {@link Path} from an array of string values. */
+  /** Build a {@link Path} from an array of string values using path separator. */
   public static Path buildPath(String... values) {
     StringJoiner joiner = new StringJoiner(Path.SEPARATOR);
     Arrays.stream(values).forEach(joiner::add);
     return new Path(joiner.toString());
   }
 
+  /** Build a {@link String} path from an array of string values using path separator. */
   public static String buildPathString(String... values) {
     return buildPath(values).toString();
   }
 
+  /**
+   * Uses pattern for path - "{targetPath}/{datasetId}/{attempt}/{name}"
+   *
+   * @return string path
+   */
   public static String buildPath(BasePipelineOptions options, String name) {
     return FsUtils.buildPath(
             options.getTargetPath(),
@@ -37,6 +43,11 @@ public final class FsUtils {
         .toString();
   }
 
+  /**
+   * Uses pattern for path - "{targetPath}/{datasetId}/{attempt}/{directory}/interpret-{uniqueId}"
+   *
+   * @return string path to interpretation
+   */
   public static String buildPathInterpret(
       BasePipelineOptions options, String directory, String uniqueId) {
     String mainPath = buildPath(options, directory);
@@ -44,12 +55,22 @@ public final class FsUtils {
     return FsUtils.buildPath(mainPath, fileName).toString();
   }
 
+  /**
+   * Gets temporary directory from options or returns default value.
+   *
+   * @return path to a temporary directory.
+   */
   public static String getTempDir(BasePipelineOptions options) {
     return Strings.isNullOrEmpty(options.getTempLocation())
         ? FsUtils.buildPathString(options.getTargetPath(), "tmp")
         : options.getTempLocation();
   }
 
+  /**
+   * Reads Beam options from arguments or file.
+   *
+   * @return array of Beam arguments.
+   */
   public static String[] readArgsAsFile(String[] args) {
     if (args != null && args.length == 1) {
       String file = args[0];
