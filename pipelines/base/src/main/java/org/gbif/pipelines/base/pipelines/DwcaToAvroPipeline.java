@@ -13,7 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Pipeline converts DwCA to avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} files
+ * Pipeline sequence:
+ *
+ * <pre>
+ *    1) Reads DwCA arhcive and converst to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
+ *    2) Writes data to verbatim.avro file
+ * </pre>
  *
  * <p>How to run:
  *
@@ -35,7 +40,6 @@ public class DwcaToAvroPipeline {
 
   private DwcaToAvroPipeline() {}
 
-  /** TODO: DOC! */
   public static void main(String[] args) {
     BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
     DwcaToAvroPipeline.createAndRun(options);
@@ -47,9 +51,9 @@ public class DwcaToAvroPipeline {
     LOG.info("Pipeline has been finished");
   }
 
-  /** TODO: DOC! */
   public static Pipeline create(BasePipelineOptions options) {
 
+    LOG.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
     String targetPath = FsUtils.buildPath(options, "verbatim");
     String tmpPath = FsUtils.getTempDir(options);
@@ -57,6 +61,7 @@ public class DwcaToAvroPipeline {
     boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
     Read reader = isDirectory ? Read.withPaths(inputPath) : Read.withPaths(inputPath, tmpPath);
 
+    LOG.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);
 
     p.apply("Read from Darwin Core Archive", reader)

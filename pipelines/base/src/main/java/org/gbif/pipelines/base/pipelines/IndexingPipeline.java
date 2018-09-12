@@ -38,27 +38,54 @@ import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.core.RecordType.TAXONOMY;
 import static org.gbif.pipelines.core.RecordType.TEMPORAL;
 
-/** TODO: DOC! */
+/**
+ * Pipeline sequence:
+ *
+ * <pre>
+ *    1) Reads {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link org.gbif.pipelines.io.avro.BasicRecord},
+ *        {@link org.gbif.pipelines.io.avro.TemporalRecord}, {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *        {@link org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord} avro files
+ *    2) Joins avro files
+ *    3) Converts to json model (resources/elasticsearch/es-occurrence-shcema.json)
+ *    4) Pushes data to Elasticsearch instance
+ * </pre>
+ *
+ * <p>How to run:
+ *
+ * <pre>{@code
+ * java -cp target/base-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.IndexingPipeline examples/configs/indexing.properties
+ *
+ * or pass all parameters:
+ *
+ * java -cp target/base-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.IndexingPipeline
+ * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
+ * --attempt=1
+ * --runner=SparkRunner
+ * --targetPath=hdfs://ha-nn/output/
+ * --esIndexName=pipeline
+ * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200
+ * --hdfsSiteConfig=/config/hdfs-site.xml
+ * --coreSiteConfig=/config/core-site.xml
+ *
+ * }</pre>
+ */
 public class IndexingPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(IndexingPipeline.class);
 
   private IndexingPipeline() {}
 
-  /** TODO: DOC! */
   public static void main(String[] args) {
     IndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     createAndRun(options);
   }
 
-  /** TODO: DOC! */
   public static void createAndRun(IndexingPipelineOptions options) {
     LOG.info("Running indexing pipeline");
     IndexingPipeline.create(options).run().waitUntilFinish();
     LOG.info("Indexing pipeline has been finished");
   }
 
-  /** TODO: DOC! */
   public static Pipeline create(IndexingPipelineOptions options) {
 
     LOG.info("Adding step 1: Options");

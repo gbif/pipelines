@@ -29,14 +29,43 @@ import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.core.RecordType.TAXONOMY;
 import static org.gbif.pipelines.core.RecordType.TEMPORAL;
 
-/** TODO: DOC! */
+/**
+ * Pipeline sequence:
+ *
+ * <pre>
+ *    1) Reads verbatim.avro file
+ *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file
+ *        to {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link
+ *        org.gbif.pipelines.io.avro.BasicRecord}, {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *        {@link org.gbif.pipelines.io.avro.MultimediaRecord}, {@link
+ *        org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    3) Writes data to independent files
+ * </pre>
+ *
+ * <p>How to run:
+ *
+ * <pre>{@code
+ * java -cp target/base-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.InterpretationPipeline examples/configs/interpretation.properties
+ *
+ * or pass all parameters:
+ *
+ * java -cp target/base-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.InterpretationPipeline
+ * --wsProperties=/some/path/to/output/ws.properties
+ * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
+ * --attempt=1
+ * --interpretationTypes=ALL
+ * --runner=SparkRunner
+ * --targetPath=/some/path/to/output/
+ * --inputPath=/some/path/to/output/0057a720-17c9-4658-971e-9578f3577cf5/1/verbatim.avro
+ *
+ * }</pre>
+ */
 public class InterpretationPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(InterpretationPipeline.class);
 
   private InterpretationPipeline() {}
 
-  /** TODO: DOC! */
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     createAndRun(options);
@@ -48,7 +77,6 @@ public class InterpretationPipeline {
     LOG.info("Interpretation pipeline has been finished");
   }
 
-  /** TODO: DOC! */
   public static Pipeline create(InterpretationPipelineOptions options) {
 
     List<String> types = options.getInterpretationTypes();
