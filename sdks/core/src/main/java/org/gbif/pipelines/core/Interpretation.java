@@ -40,6 +40,11 @@ public class Interpretation<S> {
     return new Interpretation<>(source);
   }
 
+  /** @param func Supplier produces source data object */
+  public static <S> Interpretation<S> from(Supplier<S> func) {
+    return new Interpretation<>(func.get());
+  }
+
   /** @param target target data object */
   public <T> Handler<T> to(T target) {
     return new Handler<>(target);
