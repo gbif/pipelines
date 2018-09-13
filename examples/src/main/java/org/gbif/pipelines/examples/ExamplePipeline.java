@@ -3,6 +3,7 @@ package org.gbif.pipelines.examples;
 import org.gbif.example.io.avro.ExampleRecord;
 import org.gbif.pipelines.base.options.BasePipelineOptions;
 import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.base.transforms.RecordTransforms;
 import org.gbif.pipelines.base.transforms.WriteTransforms;
 import org.gbif.pipelines.base.utils.FsUtils;
 import org.gbif.pipelines.common.beam.DwcaIO;
@@ -45,7 +46,9 @@ public class ExamplePipeline {
 
     // Reads DwCA archive and convert to ExtendedRecord
     p.apply("Read DwCA zip archive", DwcaIO.Read.withPaths(inputPath, tmpDir))
-        // Interpret and Transform from ExtendedRecord to ExampleRecord using ExampleInterpreter
+        // Interprets and transforms from ExtendedRecord to TemporalRerord using GBIF TemporalInterpreter
+        .apply("Interpret TemporalRerord", RecordTransforms.temporal())
+        // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter
         .apply("Intertret ExampleRecord", ExampleTransform.exampleOne())
         // Write ExampleRecords as avro files using AvroIO.Write
         .apply("Write as avro files", WriteTransforms.create(ExampleRecord.class, outPath));

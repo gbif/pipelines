@@ -8,8 +8,8 @@
   "doc":"Example of an avro record",
   "fields":[
     {"name":"id","type":"string"},
-    {"name":"one","type":["null","string"],"default":null},
-    {"name":"two","type":["null","string"],"default":null},
-    {"name":"three","type":["null","string"],"default":null}
+    {"name":"one","type":["null","int"],"default":null},
+    {"name":"two","type":["null","int"],"default":null},
+    {"name":"three","type":["null","int"],"default":null}
   ]
 }

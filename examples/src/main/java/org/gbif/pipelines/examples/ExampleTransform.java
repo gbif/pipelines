@@ -2,7 +2,7 @@ package org.gbif.pipelines.examples;
 
 import org.gbif.example.io.avro.ExampleRecord;
 import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -23,14 +23,14 @@ class ExampleTransform {
    *
    * @return ParDo.SingleOutput as a final transformation
    */
-  static ParDo.SingleOutput<ExtendedRecord, ExampleRecord> exampleOne() {
+  static ParDo.SingleOutput<TemporalRecord, ExampleRecord> exampleOne() {
     return ParDo.of(
-        new DoFn<ExtendedRecord, ExampleRecord>() {
+        new DoFn<TemporalRecord, ExampleRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
-            ExtendedRecord extendedRecord = context.element();
+            TemporalRecord temporalRecord = context.element();
             // Create an interpretation function
-            Interpretation.from(extendedRecord)
+            Interpretation.from(temporalRecord)
                 // Create an instance using an anonymous class or just pass an instance
                 // .to(new ExampleRecord())
                 // Or use Java 8 java.util.function.Supplier to create an instance
