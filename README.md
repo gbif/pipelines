@@ -53,21 +53,21 @@ During indexing the categories of interpreted information of use are merged and 
 
 The project is structured as:
 
-- **buildSrc** - Tools for building the project
-- **docs** - Documents related to the project
-- **examples** - Examples of using project API and base classes
-- **pipelines** - Main pipelines module
-    - **base** - Main transformations and pipelines for ingestion biodiversity data
-    - **beam-common** - Classes and API for using with Apache Beam
-    - **mini-pipelines** - Independed GBIF pipelines for ingestion biodiversity data
-- **sdks** - Main module contains common classes, such as data models, data format iterpretations, parsers, web services clients ant etc.
-    - **core** - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader and etc
-    - **models** - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
-    - **parsers** - Data parsers and converters, mainly for internal usage inside of interpretations
-- **tools** - Module for different independent tools
-    - **archives-converters** - Converters from [DwCA/DWC 1.0/DWC](https://www.tdwg.org/standards/dwc/) 1.4/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
-    - **elasticsearch-tools** - Tool for creating/deleting/swapping Elasticsearch indexes
-    - **pipelines-maven-plugin** - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
+- [**buildSrc**](https://github.com/gbif/artery/tree/master/buildSrc) - Tools for building the project
+- [**docs**](https://github.com/gbif/artery/tree/master/docs) - Documents related to the project
+- [**examples**](https://github.com/gbif/artery/tree/master/examples) - Examples of using project API and base classes
+- [**pipelines**](https://github.com/gbif/artery/tree/master/pipelines) - Main pipelines module
+    - [**base**](https://github.com/gbif/artery/tree/master/pipelines/base) - Main transformations and pipelines for ingestion biodiversity data
+    - [**beam-common**](https://github.com/gbif/artery/tree/master/pipelines/beam-common) - Classes and API for using with Apache Beam
+    - [**mini-pipelines**](https://github.com/gbif/artery/tree/master/pipelines/mini-pipelines) - Independed GBIF pipelines for ingestion biodiversity data
+- [**sdks**](https://github.com/gbif/artery/tree/master/sdks) - Main module contains common classes, such as data models, data format iterpretations, parsers, web services clients ant etc.
+    - [**core**](https://github.com/gbif/artery/tree/master/sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader and etc
+    - [**models**](https://github.com/gbif/artery/tree/master/sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
+    - [**parsers**](https://github.com/gbif/artery/tree/master/sdks/parsers) - Data parsers and converters, mainly for internal usage inside of interpretations
+- [**tools**](https://github.com/gbif/artery/tree/master/tools) - Module for different independent tools
+    - [**archives-converters**](https://github.com/gbif/artery/tree/master/tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC](https://www.tdwg.org/standards/dwc/) 1.4/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
+    - [**elasticsearch-tools**](https://github.com/gbif/artery/tree/master/tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
+    - [**pipelines-maven-plugin**](https://github.com/gbif/artery/tree/master/tools/pipelines-maven-plugin) - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
 
 # How to build the project?
 
