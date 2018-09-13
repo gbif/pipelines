@@ -6,7 +6,7 @@ Maven plugin adds new annotations [@DefaultCoder(AvroCoder.class)](https://beam.
 
 ```xml
 avro-generated-path - the path to generated classes package
-avro-namespace = the namespace used in Avro schemas
+avro-namespace - the namespace used in Avro schemas
 
 <!-- Change generated avros, add GBIF features -->
 <plugin>
