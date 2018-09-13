@@ -1,6 +1,6 @@
 package org.gbif.pipelines.core;
 
-/** Defines the types of the interpretations. */
+/** Defines GBIF types of the interpretations. */
 public enum RecordType {
   ALL,
   METADATA,

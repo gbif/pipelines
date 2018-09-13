@@ -27,6 +27,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_MET
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
+/** Interprets the location terms of a {@link ExtendedRecord}. */
 public class LocationInterpreter {
 
   // COORDINATE_UNCERTAINTY_METERS bounds are exclusive bounds
