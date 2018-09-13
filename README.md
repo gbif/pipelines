@@ -14,7 +14,7 @@ The project provides vanilla JVM-based parsing and interpretation libraries, and
 ## Ingress
 
 Ingress is from [Darwin Core Archive](https://www.tdwg.org/standards/dwc/) (zip files of one or more "CSV"s) or ABCD Archives (compressed XML) only[1].
-During ingress data is converted from it's native format and stored as Avro files containing Darwin Core compliant data.
+During ingress data is converted from it's native format and stored as [Avro](https://avro.apache.org/docs/current/) files containing Darwin Core compliant data.
 
 This is depicted below:
 
@@ -62,12 +62,12 @@ The project is structured as:
     - **mini-pipelines** - Independed GBIF pipelines for ingestion biodiversity data
 - **sdks** - Main module contains common classes, such as data models, data format iterpretations, parsers, web services clients ant etc.
     - **core** - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader and etc
-    - **models** - Data models represented in Avro binary format, generated from Avro schemas
+    - **models** - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
     - **parsers** - Data parsers and converters, mainly for internal usage inside of interpretations
 - **tools** - Module for different independent tools
-    - **archives-converters** - Converters from [DwCA/DWC 1.0/DWC](https://www.tdwg.org/standards/dwc/) 1.4/ABCD 1.2/ABCD 2.06 to *.avro format
+    - **archives-converters** - Converters from [DwCA/DWC 1.0/DWC](https://www.tdwg.org/standards/dwc/) 1.4/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
     - **elasticsearch-tools** - Tool for creating/deleting/swapping Elasticsearch indexes
-    - **pipelines-maven-plugin** - Maven plugin adds new annotations and interface to avro generated classes
+    - **pipelines-maven-plugin** - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
 
 # How to build the project?
 
