@@ -50,7 +50,7 @@ public class RecordTransforms {
         new DoFn<ExtendedRecord, MultimediaRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
-            Interpretation.from(context.element())
+            Interpretation.from(context::element)
                 .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).build())
                 .via(MultimediaInterpreter::interpretMultimedia)
                 .consume(context::output);
@@ -67,7 +67,7 @@ public class RecordTransforms {
         new DoFn<ExtendedRecord, TemporalRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
-            Interpretation.from(context.element())
+            Interpretation.from(context::element)
                 .to(er -> TemporalRecord.newBuilder().setId(er.getId()).build())
                 .via(TemporalInterpreter::interpretEventDate)
                 .via(TemporalInterpreter::interpretDateIdentified)
@@ -87,7 +87,7 @@ public class RecordTransforms {
         new DoFn<ExtendedRecord, BasicRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
-            Interpretation.from(context.element())
+            Interpretation.from(context::element)
                 .to(er -> BasicRecord.newBuilder().setId(er.getId()).build())
                 .via(BasicInterpreter::interpretBasisOfRecord)
                 .via(BasicInterpreter::interpretSex)
@@ -112,7 +112,7 @@ public class RecordTransforms {
         new DoFn<ExtendedRecord, LocationRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
-            Interpretation.from(context.element())
+            Interpretation.from(context::element)
                 .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
                 .via(LocationInterpreter.interpretCountryAndCoordinates(wsConfig))
                 .via(LocationInterpreter::interpretContinent)
@@ -142,7 +142,7 @@ public class RecordTransforms {
         new DoFn<String, MetadataRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
-            Interpretation.from(context.element())
+            Interpretation.from(context::element)
                 .to(id -> MetadataRecord.newBuilder().setDatasetId(id).build())
                 .via(MetadataInterpreter.interpret(wsConfig))
                 .consume(context::output);
@@ -161,7 +161,7 @@ public class RecordTransforms {
         new DoFn<ExtendedRecord, TaxonRecord>() {
           @ProcessElement
           public void processElement(ProcessContext context) {
-            Interpretation.from(context.element())
+            Interpretation.from(context::element)
                 .to(TaxonRecord.newBuilder()::build)
                 .via(TaxonomyInterpreter.taxonomyInterpreter(wsConfig))
                 // the id is null when there is an error in the interpretation. In these

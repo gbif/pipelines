@@ -18,7 +18,7 @@ import java.util.function.Supplier;
  * <p>Example:
  *
  * <pre>{@code
- * Interpretation.from(context.element())
+ * Interpretation.from(context::element)
  *     .to(er -> TemporalRecord.newBuilder().setId(er.getId()).build())
  *     .via(TemporalInterpreter::interpretEventDate)
  *     .via(TemporalInterpreter::interpretDateIdentified)
