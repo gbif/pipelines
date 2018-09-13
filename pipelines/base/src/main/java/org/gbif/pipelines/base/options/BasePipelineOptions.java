@@ -12,7 +12,7 @@ import org.apache.beam.sdk.options.Validation;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 
-/** TODO: DOC */
+/** Main pipeline options necessary for work with GBIF data and Apache Avro binary format */
 public interface BasePipelineOptions extends PipelineOptions {
 
   @Description("Id of the dataset used to name the target file in file system.")

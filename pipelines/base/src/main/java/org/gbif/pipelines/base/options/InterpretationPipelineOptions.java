@@ -12,8 +12,8 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
 /**
- * Pipeline options (configuration) for GBIF based data pipelines. Optionally can use a {@link
- * HadoopFileSystemOptions} when exporting files.
+ * Pipeline options (configuration) for GBIF based data interpretation pipelines. Optionally can use
+ * a {@link HadoopFileSystemOptions} when exporting/reading files.
  */
 public interface InterpretationPipelineOptions
     extends BasePipelineOptions, HadoopFileSystemOptions {

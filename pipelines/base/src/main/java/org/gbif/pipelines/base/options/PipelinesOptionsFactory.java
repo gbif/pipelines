@@ -11,17 +11,30 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
-/** TODO: DOC */
+/** Factory parsres arguments or file, registers and produces {@link PipelineOptions} */
 public final class PipelinesOptionsFactory {
 
   private PipelinesOptionsFactory() {}
 
+  /**
+   * Creates pipeline options object extended {@link PipelineOptions} from args or file
+   *
+   * @param clazz class extended {@link PipelineOptions}
+   * @param args string arguments or file
+   */
   public static <T extends PipelineOptions> T create(Class<T> clazz, String[] args) {
-    PipelineOptionsFactory.register(clazz);
     String[] parsedArgs = FsUtils.readArgsAsFile(args);
+    PipelineOptionsFactory.register(clazz);
     return PipelineOptionsFactory.fromArgs(parsedArgs).withValidation().as(clazz);
   }
 
+  /**
+   * Creates pipeline options object extended {@link InterpretationPipelineOptions} from args or
+   * file, adds hdfs configuration to options
+   *
+   * @param clazz class extended {@link InterpretationPipelineOptions}
+   * @param args string arguments or file
+   */
   private static <T extends InterpretationPipelineOptions> T createWithHdfs(
       Class<T> clazz, String[] args) {
     T options = create(clazz, args);
@@ -40,10 +53,20 @@ public final class PipelinesOptionsFactory {
     return options;
   }
 
+  /**
+   * Creates {@link InterpretationPipelineOptions} from args
+   *
+   * @param args string arguments or file
+   */
   public static InterpretationPipelineOptions createInterpretation(String[] args) {
     return createWithHdfs(InterpretationPipelineOptions.class, args);
   }
 
+  /**
+   * Creates {@link IndexingPipelineOptions} from args
+   *
+   * @param args string arguments or file
+   */
   public static IndexingPipelineOptions createIndexing(String[] args) {
     return createWithHdfs(IndexingPipelineOptions.class, args);
   }

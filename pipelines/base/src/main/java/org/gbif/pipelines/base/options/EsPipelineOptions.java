@@ -4,7 +4,7 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
-/** TODO: DOC */
+/** Main pipeline options necessary for Elasticsearch index properties */
 public interface EsPipelineOptions extends PipelineOptions {
 
   @Description("Target ES Max Batch Size bytes")
