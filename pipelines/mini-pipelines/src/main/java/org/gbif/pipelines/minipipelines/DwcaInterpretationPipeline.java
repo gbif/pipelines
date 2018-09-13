@@ -28,14 +28,25 @@ import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.core.RecordType.TAXONOMY;
 import static org.gbif.pipelines.core.RecordType.TEMPORAL;
 
-/** TODO: DOC! */
+/**
+ * Pipeline sequence:
+ *
+ * <pre>
+ *    1) Reads DwCA arhcive and converst to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
+ *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file
+ *        to {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link
+ *        org.gbif.pipelines.io.avro.BasicRecord}, {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *        {@link org.gbif.pipelines.io.avro.MultimediaRecord}, {@link
+ *        org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    3) Writes data to independent files
+ * </pre>
+ */
 class DwcaInterpretationPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaInterpretationPipeline.class);
 
   private DwcaInterpretationPipeline() {}
 
-  /** TODO: DOC! */
   static void createAndRun(DwcaPipelineOptions options) {
 
     WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());

@@ -35,14 +35,27 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** TODO: DOC! */
+/**
+ * Pipeline sequence:
+ *
+ * <pre>
+ *    1) Reads DwCA arhcive and converst to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
+ *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file
+ *        to {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link
+ *        org.gbif.pipelines.io.avro.BasicRecord}, {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *        {@link org.gbif.pipelines.io.avro.MultimediaRecord}, {@link
+ *        org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    3) Joins objects
+ *    4) Converts to json model (resources/elasticsearch/es-occurrence-shcema.json)
+ *    5) Pushes data to Elasticsearch instance
+ * </pre>
+ */
 class DwcaIndexingPipeline {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaIndexingPipeline.class);
 
   private DwcaIndexingPipeline() {}
 
-  /** TODO: DOC! */
   static void createAndRun(DwcaPipelineOptions options) {
     IndexingUtils.createIndex(options);
 
@@ -51,7 +64,6 @@ class DwcaIndexingPipeline {
     FsUtils.removeTmpDirecrory(options);
   }
 
-  /** TODO: DOC! */
   private static void createAndRunPipeline(DwcaPipelineOptions options) {
 
     LOG.info("Adding step 1: Options");
