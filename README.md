@@ -1,6 +1,6 @@
 # Table of Contents
 
-- [**About the project**](https://github.com/gbif/artery#ingestion-platform-to-orchestrate-the-parsing-and-interpretation-of-biodiversity-data)
+- [**About the project**](https://github.com/gbif/artery#фbout-the-project)
 - [**Architecture**](https://github.com/gbif/artery#architecture)
     - [**Ingress**](https://github.com/gbif/artery#ingress)
     - [**Interpretation**](https://github.com/gbif/artery#interpretation)
@@ -9,7 +9,9 @@
 - [**How to build the project**](https://github.com/gbif/artery#how-to-build-the-project)
 - [**Codestyle and tools**](https://github.com/gbif/artery#codestyle-and-tools)
 
-# Ingestion platform to orchestrate the parsing and interpretation of biodiversity data
+# About the project
+
+**Pipelines for data processing and indexing of biodiversity data**
 
 _Status: early development_
 
@@ -89,6 +91,9 @@ The project uses [Apache Maven](https://maven.apache.org/) tool for building. Pr
 Please read [Apache Maven how-to](https://maven.apache.org/run.html).
 
 # Codestyle and tools
+### IntelliJ IDEA
+- The simplest way to have uniform code style is to use the [Google Java Format plugin](https://plugins.jetbrains.com/plugin/8527-google-java-format).
+- Because project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during building process, to avoid issues please install [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and allows to build project using [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to File | Settings | Compiler | `Java Compiler` and select `Javac with error-prone` in `Use compiler` box.
 
 
 
