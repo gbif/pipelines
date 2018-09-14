@@ -1,6 +1,6 @@
 # Table of Contents
 
-- [**About the project**](https://github.com/gbif/artery#фbout-the-project)
+- [**About the project**](https://github.com/gbif/artery#about-the-project)
 - [**Architecture**](https://github.com/gbif/artery#architecture)
     - [**Ingress**](https://github.com/gbif/artery#ingress)
     - [**Interpretation**](https://github.com/gbif/artery#interpretation)
