@@ -13,7 +13,7 @@
 
 **Pipelines for data processing and indexing of biodiversity data**
 
-_Status: early development_
+_Status: WIP_
 
 Vision: Consistent data processing pipelines (parsing, interpretation and quality flagging) for use in GBIF, the Living Atlases project and beyond.
 Built to scale from laptop to GBIF volumes. Deployable on JVM, Spark, Google Cloud, <insert your favourite cloud provider here>.
