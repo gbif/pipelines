@@ -1,3 +1,14 @@
+# Table of Contents
+
+- [**About the project**](https://github.com/gbif/artery#ingestion-platform-to-orchestrate-the-parsing-and-interpretation-of-biodiversity-data)
+- [**Architecture**](https://github.com/gbif/artery#architecture)
+    - [**Ingress**](https://github.com/gbif/artery#ingress)
+    - [**Interpretation**](https://github.com/gbif/artery#interpretation)
+    - [**Indexing**](https://github.com/gbif/artery#indexing)
+- [**Structure**](https://github.com/gbif/artery#structure)
+- [**How to build the project**](https://github.com/gbif/artery#how-to-build-the-project)
+- [**Codestyle and tools**](https://github.com/gbif/artery#codestyle-and-tools)
+
 # Ingestion platform to orchestrate the parsing and interpretation of biodiversity data
 
 _Status: early development_
@@ -69,13 +80,15 @@ The project is structured as:
     - [**elasticsearch-tools**](https://github.com/gbif/artery/tree/master/tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
     - [**pipelines-maven-plugin**](https://github.com/gbif/artery/tree/master/tools/pipelines-maven-plugin) - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
 
-# How to build the project?
+# How to build the project
 
 The project uses [Apache Maven](https://maven.apache.org/) tool for building. Project contains maven wrapper and script for Linux and MacOS systems, you just can run **build.sh** script:
 
 ```./build.sh``` or ```source build.sh```
 
 Please read [Apache Maven how-to](https://maven.apache.org/run.html).
+
+# Codestyle and tools
 
 
 
