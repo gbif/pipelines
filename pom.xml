@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.artery</groupId>
   <artifactId>artery-parent</artifactId>
-  <version>0.1</version>
+  <version>0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -28,7 +28,7 @@
     <connection>scm:git:git@github.com:gbif/artery.git</connection>
     <url>https://github.com/gbif/artery</url>
     <developerConnection>scm:git:git@github.com:gbif/artery.git</developerConnection>
-    <tag>artery-parent-0.1</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <distributionManagement>
