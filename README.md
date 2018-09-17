@@ -94,8 +94,3 @@ Please read [Apache Maven how-to](https://maven.apache.org/run.html).
 ### IntelliJ IDEA
 - The simplest way to have uniform code style is to use the [Google Java Format plugin](https://plugins.jetbrains.com/plugin/8527-google-java-format).
 - Because project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during building process from IDEA, to avoid issues please install [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and allows to build project using [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to File | Settings | Compiler | `Java Compiler` and select `Javac with error-prone` in `Use compiler` box.
-
-
-
-
-
