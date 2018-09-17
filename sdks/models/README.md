@@ -1,6 +1,6 @@
 # Models
 
-Data models represented in [Apache Avro](https://avro.apache.org/docs/current/) binary format, generated from Avro schemas
+Data models represented in [Apache Avro](https://avro.apache.org/docs/current/) binary format, generated from Avro schemas.
 
 ## Generate Avro Schema from a Java class using Avro Tools
 

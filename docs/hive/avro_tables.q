@@ -1,3 +1,7 @@
+--
+-- A script to set up Hive tables in the pipelines database, backed by avro files.
+--
+
 USE pipelines;
 
 SET hive.variable.substitute=true;

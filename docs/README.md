@@ -1,3 +1,3 @@
 # Docs
 
-Documents related to the project
+Documents related to the project.
