@@ -13,7 +13,7 @@
   <packaging>jar</packaging>
 
   <name>Artery :: Pipelines :: Mini-pipeline</name>
-  <description>Independed GBIF pipelines for ingestion biodiversity data</description>
+  <description>Simple pipelines for interpreting and indexing biodiversity data</description>
 
   <build>
     <plugins>

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * Pipeline sequence:
  *
  * <pre>
- *    1) Reads DwCA arhcive and converst to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
+ *    1) Reads DwCA archive and converts to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
  *    2) Writes data to verbatim.avro file
  * </pre>
  *

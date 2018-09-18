@@ -72,7 +72,7 @@ The project is structured as:
 - [**pipelines**](https://github.com/gbif/artery/tree/master/pipelines) - Main pipelines module
     - [**base**](https://github.com/gbif/artery/tree/master/pipelines/base) - Main transformations and pipelines for ingestion biodiversity data
     - [**beam-common**](https://github.com/gbif/artery/tree/master/pipelines/beam-common) - Classes and API for using with Apache Beam
-    - [**mini-pipelines**](https://github.com/gbif/artery/tree/master/pipelines/mini-pipelines) - Independed GBIF pipelines for ingestion biodiversity data
+    - [**mini-pipelines**](https://github.com/gbif/artery/tree/master/pipelines/mini-pipelines) - Independent GBIF pipelines for ingestion biodiversity data
 - [**sdks**](https://github.com/gbif/artery/tree/master/sdks) - Main module contains common classes, such as data models, data format iterpretations, parsers, web services clients ant etc.
     - [**core**](https://github.com/gbif/artery/tree/master/sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader and etc
     - [**models**](https://github.com/gbif/artery/tree/master/sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
