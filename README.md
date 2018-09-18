@@ -1,13 +1,13 @@
 # Table of Contents
 
-- [**About the project**](https://github.com/gbif/artery#about-the-project)
-- [**Architecture**](https://github.com/gbif/artery#architecture)
-    - [**Ingress**](https://github.com/gbif/artery#ingress)
-    - [**Interpretation**](https://github.com/gbif/artery#interpretation)
-    - [**Indexing**](https://github.com/gbif/artery#indexing)
-- [**Structure**](https://github.com/gbif/artery#structure)
-- [**How to build the project**](https://github.com/gbif/artery#how-to-build-the-project)
-- [**Codestyle and tools**](https://github.com/gbif/artery#codestyle-and-tools)
+- [**About the project**](.#about-the-project)
+- [**Architecture**](.#architecture)
+    - [**Ingress**](.#ingress)
+    - [**Interpretation**](.#interpretation)
+    - [**Indexing**](.#indexing)
+- [**Structure**](.#structure)
+- [**How to build the project**](.#how-to-build-the-project)
+- [**Codestyle and tools**](.#codestyle-and-tools)
 
 # About the project
 
