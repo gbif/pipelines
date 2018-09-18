@@ -1,6 +1,6 @@
 # Table of Contents
 
-- [**About the project**](.#about-the-project)
+- [**About the project**](#about-the-project)
 - [**Architecture**](.#architecture)
     - [**Ingress**](.#ingress)
     - [**Interpretation**](.#interpretation)
