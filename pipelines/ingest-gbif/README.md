@@ -1,6 +1,6 @@
 # Ingest-GBIF
 
-Base [Apache Beam](https://beam.apache.org/get-started/beam-overview/) transformations and pipelines for ingestion biodiversity data.
+Base [Apache Beam](https://beam.apache.org/get-started/beam-overview/) pipelines for ingestion biodiversity data.
 
 ## Main API classes:
 - [options](./src/main/java/org/gbif/pipelines/ingest/options)
