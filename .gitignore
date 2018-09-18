@@ -7,3 +7,5 @@ output
 java-generated
 bin
 .DS_Store
+logs
+log
