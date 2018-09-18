@@ -19,4 +19,4 @@ Base [Apache Beam](https://beam.apache.org/get-started/beam-overview/) pipelines
     - [IngestToEsIndexExtendedPipeline.java](./src/main/java/org/gbif/pipelines/ingest/pipelines/IngestToEsIndexExtendedPipeline.java)
 - [utils](./src/main/java/org/gbif/pipelines/ingest/utils)
     - [FsUtils.java](./src/main/java/org/gbif/pipelines/ingest/utils/FsUtils.java)
-    - [IndexingUtils.java](./src/main/java/org/gbif/pipelines/ingest/utils/IndexingUtils.java)
+    - [EsIndexUtils.java](./src/main/java/org/gbif/pipelines/ingest/utils/EsIndexUtils.java)
