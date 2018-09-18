@@ -1,13 +1,13 @@
 # Table of Contents
 
 - [**About the project**](#about-the-project)
-- [**Architecture**](.#architecture)
-    - [**Ingress**](.#ingress)
-    - [**Interpretation**](.#interpretation)
-    - [**Indexing**](.#indexing)
-- [**Structure**](.#structure)
-- [**How to build the project**](.#how-to-build-the-project)
-- [**Codestyle and tools**](.#codestyle-and-tools)
+- [**Architecture**](#architecture)
+    - [**Ingress**](#ingress)
+    - [**Interpretation**](#interpretation)
+    - [**Indexing**](#indexing)
+- [**Structure**](#structure)
+- [**How to build the project**](#how-to-build-the-project)
+- [**Codestyle and tools**](#codestyle-and-tools)
 
 # About the project
 
