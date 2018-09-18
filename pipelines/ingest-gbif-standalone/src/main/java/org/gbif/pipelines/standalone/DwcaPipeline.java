@@ -22,7 +22,16 @@ import org.apache.beam.runners.spark.SparkRunner;
  * How to run:
  *
  * <pre>{@code
- * java -jar target/ingest-gbif-standalone-0.1-SNAPSHOT-shaded.jar examples/configs/mini.dwca2avro.properties(or mini.indexing.properties/mini.interpretation.properties/mini.interpretation2es.properties)
+ * java -jar target/ingest-gbif-standalone-0.1-SNAPSHOT-shaded.jar  --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
+ *  --attempt=1
+ *  --pipelineStep=DWCA_TO_AVRO
+ *  --targetPath=/some/path/to/output/
+ *  --inputPath=/some/path/to/input/dwca/dwca.zip
+ *
+ * or
+ *
+ * java -jar target/ingest-gbif-standalone-0.1-SNAPSHOT-shaded.jar dwca2avro.properties
+ *
  * }</pre>
  */
 public class DwcaPipeline {

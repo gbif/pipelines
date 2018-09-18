@@ -23,12 +23,14 @@ import org.slf4j.LoggerFactory;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.DwcaToAvroPipeline examples/configs/dwca2avro.properties
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToAvroPipeline dwca2avro.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.DwcaToAvroPipeline
- * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82 --attempt=1 --runner=DirectRunner
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToAvroPipeline
+ * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
+ * --attempt=1
+ * --runner=DirectRunner
  * --targetPath=/path/GBIF/output/
  * --inputPath=/path/GBIF/input/dwca/9f747cff-839f-4485-83a1-f10317a92a82.dwca
  *
