@@ -1,6 +1,6 @@
 # Transform example
 
-Examples of using project API and base classes
+Transform example demonstrates how to create [Apache Beam](https://beam.apache.org/documentation/programming-guide/) pipeline, create the new transformation and use it together with GBIF [transforms](./../pipelines/ingest-transforms) and [core](./../sdks/core) classes
 
 1) [Avro](https://avro.apache.org/docs/current/) schema - [example-record.avsc](./src/main/resources/example-record.avsc) is used to generate target data class.
 2) Interpretation [ExampleInterpreter.java](./src/main/java/org/gbif/pipelines/examples/ExampleInterpreter.java) class uses source data object to apply some logic and sets data to the target object.
