@@ -142,7 +142,11 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.artery</groupId>
-      <artifactId>base</artifactId>
+      <artifactId>ingest-transforms</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.artery</groupId>
+      <artifactId>ingest-gbif</artifactId>
     </dependency>
 
     <!-- GBIF -->

@@ -1,12 +1,12 @@
 package org.gbif.pipelines.examples;
 
 import org.gbif.example.io.avro.ExampleRecord;
-import org.gbif.pipelines.base.options.BasePipelineOptions;
-import org.gbif.pipelines.base.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.base.transforms.RecordTransforms;
-import org.gbif.pipelines.base.transforms.WriteTransforms;
-import org.gbif.pipelines.base.utils.FsUtils;
 import org.gbif.pipelines.common.beam.DwcaIO;
+import org.gbif.pipelines.ingest.options.BasePipelineOptions;
+import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.transforms.RecordTransforms;
+import org.gbif.pipelines.transforms.WriteTransforms;
 
 import org.apache.beam.sdk.Pipeline;
 import org.slf4j.Logger;

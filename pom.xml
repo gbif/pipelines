@@ -226,12 +226,17 @@
       </dependency>
       <dependency>
         <groupId>org.gbif.artery</groupId>
+        <artifactId>ingest-transforms</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.artery</groupId>
         <artifactId>elasticsearch-tools</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif.artery</groupId>
-        <artifactId>base</artifactId>
+        <artifactId>ingest-gbif</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

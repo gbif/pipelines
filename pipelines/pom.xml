@@ -17,8 +17,9 @@
 
   <modules>
     <module>beam-common</module>
-    <module>base</module>
-    <module>mini-pipelines</module>
+    <module>ingest-transforms</module>
+    <module>ingest-gbif</module>
+    <module>ingest-gbif-standalone</module>
   </modules>
 
 </project>
