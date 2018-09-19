@@ -65,7 +65,7 @@ public class UniquenessValidator implements AutoCloseable {
   public boolean isUnique(String id) {
     Objects.requireNonNull(id, "ID is required");
     // this set returns false when a value is inserted
-    return !setOnDisk.add(id);
+    return setOnDisk.add(id);
   }
 
   @Override
