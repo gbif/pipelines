@@ -18,6 +18,7 @@ public class DwcaReaderTest {
 
     // When
     try (DwcaReader dwCAReader = DwcaReader.fromLocation(fileName)) {
+      dwCAReader.advance();
       ExtendedRecord current = dwCAReader.getCurrent();
       // Should
       assertNotNull(current);
@@ -34,6 +35,7 @@ public class DwcaReaderTest {
 
     // When
     try (DwcaReader dwCAReader = DwcaReader.fromCompressed(fileName, fileOut)) {
+      dwCAReader.advance();
       ExtendedRecord current = dwCAReader.getCurrent();
       // Should
       assertNotNull(current);

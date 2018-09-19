@@ -15,8 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in
- * Avro.
+ * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in Avro.
  */
 public class DwcaReader implements Closeable {
 
