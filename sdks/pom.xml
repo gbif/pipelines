@@ -3,16 +3,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.gbif.artery</groupId>
-    <artifactId>artery-parent</artifactId>
-    <version>0.2</version>
+    <groupId>org.gbif.pipelines</groupId>
+    <artifactId>pipelines-parent</artifactId>
+    <version>2.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>sdks</artifactId>
   <packaging>pom</packaging>
 
-  <name>Artery :: Sdks</name>
+  <name>Pipelines :: Sdks</name>
   <description>Main module contains common classes, such as data models, data format iterpretations, parsers, web
     services clients ant etc.
   </description>

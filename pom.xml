@@ -8,9 +8,9 @@
     <version>37</version>
   </parent>
 
-  <groupId>org.gbif.artery</groupId>
-  <artifactId>artery-parent</artifactId>
-  <version>0.2</version>
+  <groupId>org.gbif.pipelines</groupId>
+  <artifactId>pipelines-parent</artifactId>
+  <version>2.0.0</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -20,21 +20,21 @@
     <module>examples</module>
   </modules>
 
-  <name>Artery :: Parent</name>
+  <name>Pipelines :: Parent</name>
   <description>Ingestion platform to orchestrate the parsing and interpretation of biodiversity data</description>
-  <url>http://github.com/gbif/artery</url>
+  <url>http://github.com/gbif/pipelines</url>
 
   <scm>
-    <connection>scm:git:git@github.com:gbif/artery.git</connection>
-    <url>https://github.com/gbif/artery</url>
-    <developerConnection>scm:git:git@github.com:gbif/artery.git</developerConnection>
-    <tag>artery-parent-0.2</tag>
+    <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
+    <url>https://github.com/gbif/pipelines</url>
+    <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
+    <tag>pipelines-parent-0.2</tag>
   </scm>
 
   <distributionManagement>
     <site>
       <id>gh-pages</id>
-      <url>http://gbif.github.io/artery/</url>
+      <url>http://gbif.github.io/pipelines/</url>
     </site>
   </distributionManagement>
 
@@ -134,7 +134,7 @@
           <version>${avro.version}</version>
         </plugin>
         <plugin>
-          <groupId>org.gbif.artery</groupId>
+          <groupId>org.gbif.pipelines</groupId>
           <artifactId>pipelines-maven-plugin</artifactId>
           <version>${project.version}</version>
         </plugin>
@@ -210,37 +210,37 @@
 
       <!-- This project -->
       <dependency>
-        <groupId>org.gbif.artery</groupId>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>models</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.artery</groupId>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>parsers</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.artery</groupId>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>core</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.artery</groupId>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingest-transforms</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.artery</groupId>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>elasticsearch-tools</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.artery</groupId>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingest-gbif</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.artery</groupId>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>beam-common</artifactId>
         <version>${project.version}</version>
       </dependency>

@@ -5,16 +5,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>artery-parent</artifactId>
-    <groupId>org.gbif.artery</groupId>
-    <version>0.2</version>
+    <artifactId>pipelines-parent</artifactId>
+    <groupId>org.gbif.pipelines</groupId>
+    <version>2.0.0</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <artifactId>examples-transform</artifactId>
   <packaging>jar</packaging>
 
-  <name>Artery :: Examples :: Transform</name>
+  <name>Pipelines :: Examples :: Transform</name>
   <description>Transform example demonstrates how to create Apache Beam pipeline, create the new transformation and use it together with GBIF transforms and core classes</description>
 
   <properties>
@@ -47,7 +47,7 @@
       </plugin>
       <!-- Change generated avros, add GBIF features -->
       <plugin>
-        <groupId>org.gbif.artery</groupId>
+        <groupId>org.gbif.pipelines</groupId>
         <artifactId>pipelines-maven-plugin</artifactId>
         <executions>
           <execution>
@@ -134,19 +134,19 @@
 
     <!-- This project -->
     <dependency>
-      <groupId>org.gbif.artery</groupId>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.artery</groupId>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>beam-common</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.artery</groupId>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-transforms</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.artery</groupId>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-gbif</artifactId>
     </dependency>
 

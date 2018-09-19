@@ -41,7 +41,7 @@ The pipelines make use of an embedded Spark instance to run.
  --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  --attempt=1
  --pipelineStep=INTERPRET_TO_INDEX
- --inputPath=/some/path/to/input/artery/
+ --inputPath=/some/path/to/input/pipelines/
  --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200
  --esIndexName=pipeline
  ```

@@ -10,7 +10,7 @@ avro-namespace - the namespace used in Avro schemas
 
 <!-- Change generated avros, add GBIF features -->
 <plugin>
-<groupId>org.gbif.artery</groupId>
+<groupId>org.gbif.pipelines</groupId>
 <artifactId>pipelines-maven-plugin</artifactId>
 <executions>
   <execution>

@@ -2,8 +2,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <artifactId>pipelines</artifactId>
-    <groupId>org.gbif.artery</groupId>
-    <version>0.2</version>
+    <groupId>org.gbif.pipelines</groupId>
+    <version>2.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -11,18 +11,18 @@
   <artifactId>beam-common</artifactId>
   <packaging>jar</packaging>
 
-  <name>Artery :: Pipelines :: Beam-common</name>
+  <name>Pipelines :: Pipelines :: Beam-common</name>
   <description>Classes and API for use with Apache Beam</description>
 
   <dependencies>
 
     <!-- This project -->
     <dependency>
-      <groupId>org.gbif.artery</groupId>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>models</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.artery</groupId>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
     </dependency>
 

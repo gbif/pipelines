@@ -3,16 +3,16 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.gbif.artery</groupId>
+    <groupId>org.gbif.pipelines</groupId>
     <artifactId>tools</artifactId>
-    <version>0.2</version>
+    <version>2.0.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>archives-converters</artifactId>
   <packaging>jar</packaging>
 
-  <name>Artery :: Tools :: Archives converters</name>
+  <name>Pipelines :: Tools :: Archives converters</name>
   <description>Converters from DwCA/DWC 1.0/DWC 1.4/ABCD 1.2/ABCD 2.06 to *.avro format</description>
 
   <build>
@@ -57,7 +57,7 @@
 
     <!-- This project -->
     <dependency>
-      <groupId>org.gbif.artery</groupId>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>core</artifactId>
     </dependency>
 
