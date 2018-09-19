@@ -53,7 +53,7 @@ import static org.gbif.pipelines.core.RecordType.TEMPORAL;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline indexing.properties
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline some.properties
  *
  * or pass all parameters:
  *

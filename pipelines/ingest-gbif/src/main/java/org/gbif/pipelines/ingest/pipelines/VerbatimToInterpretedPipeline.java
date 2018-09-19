@@ -45,7 +45,7 @@ import static org.gbif.pipelines.core.RecordType.TEMPORAL;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline examples/configs/interpretation.properties
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline some.properties
  *
  * or pass all parameters:
  *

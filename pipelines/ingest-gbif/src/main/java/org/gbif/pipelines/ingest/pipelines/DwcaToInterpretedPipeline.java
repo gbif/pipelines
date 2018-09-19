@@ -42,6 +42,21 @@ import static org.gbif.pipelines.core.RecordType.TEMPORAL;
  *        org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
  * </pre>
+ *
+ * <p>How to run:
+ *
+ * <pre>{@code
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline some.properties
+ *
+ * or pass all parameters:
+ *
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline
+ * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
+ * --attempt=1
+ * --targetPath=/some/path/to/output/
+ * --inputPath=/some/path/to/input/dwca/dwca.zip
+ *
+ * }</pre>
  */
 public class DwcaToInterpretedPipeline {
 
