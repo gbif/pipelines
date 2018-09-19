@@ -31,10 +31,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -109,128 +113,91 @@ public class OccurrenceParser {
     }
   }
 
+  private ParsedSearchResponse read(File gzipFile, Charset charset) {
+    ParsedSearchResponse responseBody = null;
+    LOG.debug("Trying charset [{}]", charset);
+    try (FileInputStream fis = new FileInputStream(gzipFile);
+         GZIPInputStream inputStream = new GZIPInputStream(fis);
+         BufferedReader inputReader = new BufferedReader(new XmlSanitizingReader(
+                 new InputStreamReader(inputStream, charset)))) {
+      responseBody = new ParsedSearchResponse();
+      parse(new InputSource(inputReader), responseBody);
+      LOG.debug("Success with charset [{}] - skipping any others", charset);
+      return responseBody;
+    } catch (SAXException e) {
+      LOG.debug("SAX exception when parsing gzipFile [{}] using encoding [{}] - trying another charset",
+              gzipFile.getAbsolutePath(), charset, e);
+    } catch (MalformedByteSequenceException e) {
+      LOG.debug("Malformed utf-8 byte when parsing with encoding [{}] - trying another charset", charset);
+    } catch (IOException ex) {
+      LOG.warn("Error reading input files", ex);
+    } catch (ParserConfigurationException e) {
+      LOG.warn( "Failed to pull raw parsing from response gzipFile [{}] - skipping gzipFile",
+              gzipFile.getAbsolutePath(), e);
+    } catch (TransformerException e) {
+      LOG.warn("Could not create parsing transformer for [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
+    }
+    return responseBody;
+  }
+
   /** Parses a single response gzipFile and returns a List of the contained RawXmlOccurrences. */
   public List<RawXmlOccurrence> parseResponseFileToRawXml(File gzipFile) {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug(">> parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
-    }
-    ParsedSearchResponse responseBody = null;
+
+    LOG.debug(">> parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
     try {
-      responseBody = new ParsedSearchResponse();
-      List<String> charsets = getCharsets(gzipFile);
-      String goodCharset = null;
-      boolean encodingError = false;
-      for (String charsetName : charsets) {
-        LOG.debug("Trying charset [{}]", charsetName);
-        try (FileInputStream fis = new FileInputStream(gzipFile);
-            GZIPInputStream inputStream = new GZIPInputStream(fis);
-            BufferedReader inputReader =
-                new BufferedReader(
-                    new XmlSanitizingReader(new InputStreamReader(inputStream, charsetName)))) {
-
-          parse(new InputSource(inputReader), responseBody);
-
-          LOG.debug("Success with charset [{}] - skipping any others", charsetName);
-          goodCharset = charsetName;
-          break;
-        } catch (SAXException e) {
-          String msg =
-              "SAX exception when parsing parsing from response gzipFile ["
-                  + gzipFile.getAbsolutePath()
-                  + "] using encoding ["
-                  + charsetName
-                  + "] - trying another charset";
-          LOG.debug(msg, e);
-        } catch (MalformedByteSequenceException e) {
-          LOG.debug(
-              "Malformed utf-8 byte when parsing with encoding [{}] - trying another charset",
-              charsetName);
-          encodingError = true;
-        } catch (IOException ex) {
-          LOG.warn("Error reading input files", ex);
-        }
+      Optional<ParsedSearchResponse> responseBody = getCharsets(gzipFile).stream().map(charset -> read(gzipFile,charset))
+              .filter(Objects::nonNull).findFirst();
+      if (!responseBody.isPresent()) {
+        LOG.warn("Could not parse gzipFile (malformed parsing) - skipping gzipFile [{}]", gzipFile.getAbsolutePath());
       }
-
-      if (goodCharset == null) {
-        if (encodingError) {
-          LOG.warn(
-              "Could not parse gzipFile - all encoding attempts failed  with malformed utf8 - skipping gzipFile [{}]",
-              gzipFile.getAbsolutePath());
-        } else {
-          LOG.warn(
-              "Could not parse gzipFile (malformed parsing) - skipping gzipFile [{}]",
-              gzipFile.getAbsolutePath());
-        }
-      }
-
-    } catch (IOException e) {
-      LOG.warn(
-          "Could not find response gzipFile [{}] - skipping gzipFile",
-          gzipFile.getAbsolutePath(),
-          e);
-    } catch (TransformerException e) {
-      LOG.warn(
-          "Could not create parsing transformer for [{}] - skipping gzipFile",
-          gzipFile.getAbsolutePath(),
-          e);
-    } catch (ParserConfigurationException e) {
-      LOG.warn(
-          "Failed to pull raw parsing from response gzipFile [{}] - skipping gzipFile",
-          gzipFile.getAbsolutePath(),
-          e);
-    }
-
-    if (LOG.isDebugEnabled()) {
       LOG.debug("<< parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
+      return responseBody.map(ParsedSearchResponse::getRecords).orElse(Collections.emptyList());
+    } catch (IOException e) {
+      LOG.warn("Could not find response gzipFile [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
     }
-    return (responseBody == null) ? null : responseBody.getRecords();
+    return Collections.emptyList();
   }
 
   /**
-   * Utility method to extract character encondings from a gzip file. Charsets are a nightmare and
+   * Utility method to extract character encodings from a gzip file. Charsets are a nightmare and
    * users can't be trusted, so strategy is try these encodings in order until one of them
    * (hopefully) works (note the last two could be repeats of the first two): - utf-8 - latin1
    * (iso-8859-1) - the declared encoding from the parsing itself - a guess at detecting the charset
    * from the raw gzipFile bytes
    */
-  private static List<String> getCharsets(File gzipFile) throws IOException {
-    List<String> charsets = new ArrayList<>();
-    charsets.add("UTF-8");
-    charsets.add("ISO-8859-1");
+  private static List<Charset> getCharsets(File gzipFile) throws IOException {
+    List<Charset> charsets = Stream.of(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1).collect(Collectors.toList());
 
     // read parsing declaration
-
     try (FileInputStream fis = new FileInputStream(gzipFile);
-        GZIPInputStream inputStream = new GZIPInputStream(fis);
-        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+         GZIPInputStream inputStream = new GZIPInputStream(fis);
+         InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.defaultCharset());
+         BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
       boolean gotEncoding = false;
-      String encoding;
       int lineCount = 0;
       while (bufferedReader.ready() && !gotEncoding && lineCount < 5) {
         String line = bufferedReader.readLine();
         lineCount++;
         if (line != null && line.contains(ENCONDING_EQ)) {
-          encoding = ENCODING_PATTERN.split(line, 0)[1];
+          String encoding = ENCODING_PATTERN.split(line, 0)[1];
           // drop trailing ?>
           encoding = encoding.substring(0, encoding.length() - 2);
           // drop quotes
           encoding = REPLACE_QUOTES_PAT.matcher(encoding).replaceAll("").trim();
           LOG.debug("Found encoding [{}] in parsing declaration", encoding);
           try {
-            Charset.forName(encoding);
-            charsets.add(encoding);
+            charsets.add(Charset.forName(encoding));
           } catch (Exception e) {
             LOG.debug(
-                "Could not find supported charset matching detected encoding of [{}] - trying other guesses instead",
-                encoding);
+                    "Could not find supported charset matching detected encoding of [{}] - trying other guesses instead",
+                    encoding);
           }
           gotEncoding = true;
         }
       }
     }
     // attempt detection from bytes
-    charsets.add(CharsetDetection.detectEncoding(gzipFile).name());
+    charsets.add(CharsetDetection.detectEncoding(gzipFile));
     return charsets;
   }
 
@@ -241,7 +208,7 @@ public class OccurrenceParser {
    * @param responseBody storage for Digester
    */
   private void parse(InputSource inputSource, ParsedSearchResponse responseBody)
-      throws ParserConfigurationException, SAXException, IOException {
+          throws ParserConfigurationException, SAXException, IOException {
 
     Digester digester = new Digester();
     digester.setNamespaceAware(true);
@@ -273,12 +240,8 @@ public class OccurrenceParser {
     digester.parse(inputSource);
   }
 
-  public List<RawOccurrenceRecord> parseRawXmlToRor(List<RawXmlOccurrence> raws) {
-    List<RawOccurrenceRecord> rors = new ArrayList<>();
-    for (RawXmlOccurrence raw : raws) {
-      List<RawOccurrenceRecord> innerRors = XmlFragmentParser.parseRecord(raw);
-      rors.addAll(innerRors);
-    }
-    return rors;
+  private List<RawOccurrenceRecord> parseRawXmlToRor(List<RawXmlOccurrence> rawRecords) {
+    return rawRecords.stream().map(XmlFragmentParser::parseRecord).flatMap(List::stream).collect(Collectors.toList());
   }
+
 }
