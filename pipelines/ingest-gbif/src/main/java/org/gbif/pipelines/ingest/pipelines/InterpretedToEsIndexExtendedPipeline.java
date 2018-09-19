@@ -23,11 +23,11 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.IndexingWithCreationPipeline examples/configs/indexing.creation.properties
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.IndexingWithCreationPipeline
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
@@ -39,20 +39,20 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
  *
  * }</pre>
  */
-public class IngestToEsIndexExtendedPipeline {
+public class InterpretedToEsIndexExtendedPipeline {
 
-  private IngestToEsIndexExtendedPipeline() {}
+  private InterpretedToEsIndexExtendedPipeline() {}
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
-    IngestToEsIndexExtendedPipeline.createAndRun(options);
+    InterpretedToEsIndexExtendedPipeline.createAndRun(options);
   }
 
   public static void createAndRun(EsIndexingPipelineOptions options) {
 
     EsIndexUtils.createIndex(options);
 
-    IngestToEsIndexPipeline.createAndRun(options);
+    InterpretedToEsIndexPipeline.createAndRun(options);
 
     EsIndexUtils.swapIndex(options);
 

@@ -296,10 +296,9 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     public abstract DestinationT getDefaultDestination();
 
     /**
-     * Returns the coder for DestinationT. If this is not overridden, then the coder
-     * registry will be use to find a suitable coder. This must be a deterministic coder, as {@link
-     * DestinationT} will be used as a key type in a {@link
-     * org.apache.beam.sdk.transforms.GroupByKey}.
+     * Returns the coder for DestinationT. If this is not overridden, then the coder registry will
+     * be use to find a suitable coder. This must be a deterministic coder, as {@link DestinationT}
+     * will be used as a key type in a {@link org.apache.beam.sdk.transforms.GroupByKey}.
      */
     @Nullable
     public Coder<DestinationT> getDestinationCoder() {

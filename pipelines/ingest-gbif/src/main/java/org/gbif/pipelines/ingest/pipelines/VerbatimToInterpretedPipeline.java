@@ -45,11 +45,11 @@ import static org.gbif.pipelines.core.RecordType.TEMPORAL;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretationPipeline examples/configs/interpretation.properties
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretationPipeline
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline
  * --wsProperties=/some/path/to/output/ws.properties
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
@@ -60,11 +60,11 @@ import static org.gbif.pipelines.core.RecordType.TEMPORAL;
  *
  * }</pre>
  */
-public class AvroToIngestPipeline {
+public class VerbatimToInterpretedPipeline {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AvroToIngestPipeline.class);
+  private static final Logger LOG = LoggerFactory.getLogger(VerbatimToInterpretedPipeline.class);
 
-  private AvroToIngestPipeline() {}
+  private VerbatimToInterpretedPipeline() {}
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -73,7 +73,7 @@ public class AvroToIngestPipeline {
 
   public static void createAndRun(InterpretationPipelineOptions options) {
     LOG.info("Running interpretation pipeline");
-    AvroToIngestPipeline.create(options).run().waitUntilFinish();
+    VerbatimToInterpretedPipeline.create(options).run().waitUntilFinish();
     LOG.info("Interpretation pipeline has been finished");
   }
 

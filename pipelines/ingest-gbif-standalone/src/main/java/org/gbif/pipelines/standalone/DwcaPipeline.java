@@ -2,10 +2,10 @@ package org.gbif.pipelines.standalone;
 
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.pipelines.DwcaToAvroPipeline;
+import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline;
-import org.gbif.pipelines.ingest.pipelines.DwcaToIngestPipeline;
-import org.gbif.pipelines.ingest.pipelines.IngestToEsIndexExtendedPipeline;
+import org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline;
+import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
 
 import org.apache.beam.runners.spark.SparkRunner;
 
@@ -44,16 +44,16 @@ public class DwcaPipeline {
 
     switch (options.getPipelineStep()) {
       case DWCA_TO_AVRO:
-        DwcaToAvroPipeline.createAndRun(options);
+        DwcaToVerbatimPipeline.createAndRun(options);
         break;
       case INTERPRET:
-        DwcaToIngestPipeline.createAndRun(options);
+        DwcaToInterpretedPipeline.createAndRun(options);
         break;
       case INDEX_TO_ES:
         DwcaToEsIndexPipeline.createAndRun(options);
         break;
       case INTERPRET_TO_INDEX:
-        IngestToEsIndexExtendedPipeline.createAndRun(options);
+        InterpretedToEsIndexExtendedPipeline.createAndRun(options);
         break;
       default:
         break;

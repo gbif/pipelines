@@ -53,11 +53,11 @@ import static org.gbif.pipelines.core.RecordType.TEMPORAL;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar indexing.properties
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.IndexingPipeline
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
@@ -69,11 +69,11 @@ import static org.gbif.pipelines.core.RecordType.TEMPORAL;
  *
  * }</pre>
  */
-public class IngestToEsIndexPipeline {
+public class InterpretedToEsIndexPipeline {
 
-  private static final Logger LOG = LoggerFactory.getLogger(IngestToEsIndexPipeline.class);
+  private static final Logger LOG = LoggerFactory.getLogger(InterpretedToEsIndexPipeline.class);
 
-  private IngestToEsIndexPipeline() {}
+  private InterpretedToEsIndexPipeline() {}
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
@@ -82,7 +82,7 @@ public class IngestToEsIndexPipeline {
 
   public static void createAndRun(EsIndexingPipelineOptions options) {
     LOG.info("Running indexing pipeline");
-    IngestToEsIndexPipeline.create(options).run().waitUntilFinish();
+    InterpretedToEsIndexPipeline.create(options).run().waitUntilFinish();
     LOG.info("Indexing pipeline has been finished");
   }
 

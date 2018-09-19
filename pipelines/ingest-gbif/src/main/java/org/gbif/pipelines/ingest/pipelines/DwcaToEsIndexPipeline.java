@@ -51,6 +51,22 @@ import org.slf4j.LoggerFactory;
  *    4) Converts to json model (resources/elasticsearch/es-occurrence-shcema.json)
  *    5) Pushes data to Elasticsearch instance
  * </pre>
+ *
+ * <p>How to run:
+ *
+ * <pre>{@code
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline some.properties
+ *
+ * or pass all parameters:
+ *
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline
+ * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
+ * --attempt=1
+ * --inputPath=/some/path/to/input/dwca.zip
+ * --esHosts=http://ADDRESS,http://ADDRESS,http://ADDRESS:9200
+ * --esIndexName=pipeline
+ *
+ * }</pre>
  */
 public class DwcaToEsIndexPipeline {
 

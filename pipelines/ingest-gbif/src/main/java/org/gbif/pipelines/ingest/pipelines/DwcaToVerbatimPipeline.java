@@ -23,11 +23,11 @@ import org.slf4j.LoggerFactory;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToAvroPipeline dwca2avro.properties
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToAvroPipeline
+ * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=DirectRunner
@@ -36,15 +36,15 @@ import org.slf4j.LoggerFactory;
  *
  * }</pre>
  */
-public class DwcaToAvroPipeline {
+public class DwcaToVerbatimPipeline {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaToAvroPipeline.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DwcaToVerbatimPipeline.class);
 
-  private DwcaToAvroPipeline() {}
+  private DwcaToVerbatimPipeline() {}
 
   public static void main(String[] args) {
     BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
-    DwcaToAvroPipeline.createAndRun(options);
+    DwcaToVerbatimPipeline.createAndRun(options);
   }
 
   public static void createAndRun(BasePipelineOptions options) {
