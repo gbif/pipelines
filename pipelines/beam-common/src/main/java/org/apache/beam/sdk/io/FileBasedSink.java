@@ -95,7 +95,7 @@ import static org.apache.beam.sdk.values.TypeDescriptors.extractFromTypeParamete
  * etc.).
  *
  * <p>At pipeline construction time, the methods of FileBasedSink are called to validate the sink
- * and to create a {@link WriteOperation} that manages the process of writing to the sink.
+ * and to create a  WriteOperation} that manages the process of writing to the sink.
  *
  * <p>The process of writing to file-based sink is as follows:
  *
@@ -107,7 +107,7 @@ import static org.apache.beam.sdk.values.TypeDescriptors.extractFromTypeParamete
  *
  * <p>In order to ensure fault-tolerance, a bundle may be executed multiple times (e.g., in the
  * event of failure/retry or for redundancy). However, exactly one of these executions will have its
- * result passed to the finalize method. Each call to {@link Writer#open} is passed a unique
+ * result passed to the finalize method. Each call to  Writer#open} is passed a unique
  * <i>bundle id</i> when it is called by the WriteFiles transform, so even redundant or retried
  * bundles will have a unique way of identifying their output.
  *
@@ -115,12 +115,12 @@ import static org.apache.beam.sdk.values.TypeDescriptors.extractFromTypeParamete
  * guarantee is important; if a bundle is to be output to a file, for example, the name of the file
  * will encode the unique bundle id to avoid conflicts with other writers.
  *
- * <p>{@link FileBasedSink} can take a custom {@link FilenamePolicy} object to determine output
+ * <p> FileBasedSink} can take a custom  FilenamePolicy} object to determine output
  * filenames, and this policy object can be used to write windowed or triggered PCollections into
  * separate files per window pane. This allows file output from unbounded PCollections, and also
  * works for bounded PCollecctions.
  *
- * <p>Supported file systems are those registered with {@link FileSystems}.
+ * <p>Supported file systems are those registered with  FileSystems}.
  *
  * @param <OutputT> the type of values written to the sink.
  */
@@ -130,7 +130,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
   private static final Logger LOG = LoggerFactory.getLogger(FileBasedSink.class);
   static final String TEMP_DIRECTORY_PREFIX = ".temp-beam";
 
-  /** @deprecated use {@link Compression}. */
+  /** @deprecated use  Compression}. */
   @Deprecated
   public enum CompressionType implements WritableByteChannelFactory {
     /** @see Compression#UNCOMPRESSED */
@@ -195,16 +195,16 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
 
   /**
    * This is a helper function for turning a user-provided output filename prefix and converting it
-   * into a {@link ResourceId} for writing output files. See {@link TextIO.Write#to(String)} for an
+   * into a  ResourceId} for writing output files. See  TextIO.Write#to(String)} for an
    * example use case.
    *
    * <p>Typically, the input prefix will be something like {@code /tmp/foo/bar}, and the user would
    * like output files to be named as {@code /tmp/foo/bar-0-of-3.txt}. Thus, this function tries to
-   * interpret the provided string as a file {@link ResourceId} path.
+   * interpret the provided string as a file  ResourceId} path.
    *
    * <p>However, this may fail, for example if the user gives a prefix that is a directory. E.g.,
    * {@code /}, {@code gs://my-bucket}, or {@code c://}. In that case, interpreting the string as a
-   * file will fail and this function will return a directory {@link ResourceId} instead.
+   * file will fail and this function will return a directory  ResourceId} instead.
    */
   @Experimental(Kind.FILESYSTEM)
   public static ResourceId convertToFileResourceIfPossible(String outputPrefix) {
@@ -218,17 +218,17 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
   private final DynamicDestinations<?, DestinationT, OutputT> dynamicDestinations;
 
   /**
-   * The {@link WritableByteChannelFactory} that is used to wrap the raw data output to the
-   * underlying channel. The default is to not compress the output using {@link
+   * The  WritableByteChannelFactory} that is used to wrap the raw data output to the
+   * underlying channel. The default is to not compress the output using
    * Compression#UNCOMPRESSED}.
    */
   private final WritableByteChannelFactory writableByteChannelFactory;
 
   /**
-   * A class that allows value-dependent writes in {@link FileBasedSink}.
+   * A class that allows value-dependent writes in  FileBasedSink}.
    *
    * <p>Users can define a custom type to represent destinations, and provide a mapping to turn this
-   * destination type into an instance of {@link FilenamePolicy}.
+   * destination type into an instance of  FilenamePolicy}.
    */
   @Experimental(Kind.FILESYSTEM)
   public abstract static class DynamicDestinations<UserT, DestinationT, OutputT>
@@ -261,7 +261,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     }
 
     /**
-     * Returns the value of a given side input. The view must be present in {@link
+     * Returns the value of a given side input. The view must be present in
      * #getSideInputs()}.
      */
     protected final <SideInputT> SideInputT sideInput(PCollectionView<SideInputT> view) {
@@ -297,8 +297,8 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
 
     /**
      * Returns the coder for DestinationT. If this is not overridden, then the coder
-     * registry will be use to find a suitable coder. This must be a deterministic coder, as {@link
-     * DestinationT} will be used as a key type in a {@link
+     * registry will be use to find a suitable coder. This must be a deterministic coder, as
+     * DestinationT} will be used as a key type in a
      * org.apache.beam.sdk.transforms.GroupByKey}.
      */
     @Nullable
@@ -306,7 +306,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
       return null;
     }
 
-    /** Converts a destination into a {@link FilenamePolicy}. May not return null. */
+    /** Converts a destination into a  FilenamePolicy}. May not return null. */
     public abstract FilenamePolicy getFilenamePolicy(DestinationT destination);
 
     /** Populates the display data. */
@@ -346,9 +346,9 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
   public abstract static class FilenamePolicy implements Serializable {
     /**
      * When a sink has requested windowed or triggered output, this method will be invoked to return
-     * the file {@link ResourceId resource} to be created given the base output directory and a
-     * {@link OutputFileHints} containing information about the file, including a suggested
-     * extension (e.g. coming from {@link Compression}).
+     * the file  ResourceId resource} to be created given the base output directory and a
+     *  OutputFileHints} containing information about the file, including a suggested
+     * extension (e.g. coming from  Compression}).
      *
      * <p>The policy must return unique and consistent filenames for different windows and panes.
      */
@@ -362,9 +362,9 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
 
     /**
      * When a sink has not requested windowed or triggered output, this method will be invoked to
-     * return the file {@link ResourceId resource} to be created given the base output directory and
-     * a {@link OutputFileHints} containing information about the file, including a suggested (e.g.
-     * coming from {@link Compression}).
+     * return the file  ResourceId resource} to be created given the base output directory and
+     * a  OutputFileHints} containing information about the file, including a suggested (e.g.
+     * coming from  Compression}).
      *
      * <p>The shardNumber and numShards parameters, should be used by the policy to generate unique
      * and consistent filenames.
@@ -389,7 +389,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
   }
 
   /**
-   * Construct a {@link FileBasedSink} with the given temp directory, producing uncompressed files.
+   * Construct a  FileBasedSink} with the given temp directory, producing uncompressed files.
    */
   @Experimental(Kind.FILESYSTEM)
   public FileBasedSink(
@@ -398,7 +398,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     this(tempDirectoryProvider, dynamicDestinations, Compression.UNCOMPRESSED);
   }
 
-  /** Construct a {@link FileBasedSink} with the given temp directory and output channel type. */
+  /** Construct a  FileBasedSink} with the given temp directory and output channel type. */
   @Experimental(Kind.FILESYSTEM)
   public FileBasedSink(
       ValueProvider<ResourceId> tempDirectoryProvider,
@@ -410,7 +410,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     this.writableByteChannelFactory = writableByteChannelFactory;
   }
 
-  /** Construct a {@link FileBasedSink} with the given temp directory and output channel type. */
+  /** Construct a  FileBasedSink} with the given temp directory and output channel type. */
   @Experimental(Kind.FILESYSTEM)
   public FileBasedSink(
       ValueProvider<ResourceId> tempDirectoryProvider,
@@ -419,7 +419,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     this(tempDirectoryProvider, dynamicDestinations, CompressionType.fromCanonical(compression));
   }
 
-  /** Return the {@link DynamicDestinations} used. */
+  /** Return the  DynamicDestinations} used. */
   @SuppressWarnings("unchecked")
   public DynamicDestinations<UserT, DestinationT, OutputT> getDynamicDestinations() {
     return (DynamicDestinations<UserT, DestinationT, OutputT>) dynamicDestinations;
@@ -427,7 +427,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
 
   /**
    * Returns the directory inside which temprary files will be written according to the configured
-   * {@link FilenamePolicy}.
+   *  FilenamePolicy}.
    */
   @Experimental(Kind.FILESYSTEM)
   public ValueProvider<ResourceId> getTempDirectoryProvider() {
@@ -436,7 +436,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
 
   public void validate(PipelineOptions options) {}
 
-  /** Return a subclass of {@link WriteOperation} that will manage the write to the sink. */
+  /** Return a subclass of  WriteOperation} that will manage the write to the sink. */
   public abstract WriteOperation<DestinationT, OutputT> createWriteOperation();
 
   @Override
@@ -445,21 +445,21 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
   }
 
   /**
-   * Abstract operation that manages the process of writing to {@link FileBasedSink}.
+   * Abstract operation that manages the process of writing to  FileBasedSink}.
    *
    * <p>The primary responsibilities of the WriteOperation is the management of output files. During
-   * a write, {@link Writer}s write bundles to temporary file locations. After the bundles have been
+   * a write,  Writer}s write bundles to temporary file locations. After the bundles have been
    * written,
    *
    * <ol>
-   *   <li>{@link WriteOperation#finalizeDestination} is given a list of the temporary files
+   *   <li> WriteOperation#finalizeDestination} is given a list of the temporary files
    *       containing the output bundles.
    *   <li>During finalize, these temporary files are copied to final output locations and named
    *       according to a file naming template.
    *   <li>Finally, any temporary files that were created during the write are removed.
    * </ol>
    *
-   * <p>Subclass implementations of WriteOperation must implement {@link
+   * <p>Subclass implementations of WriteOperation must implement
    * WriteOperation#createWriter} to return a concrete FileBasedSinkWriter.
    *
    * <h2>Temporary and Output File Naming:</h2>
@@ -470,9 +470,9 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
    * tempDirectory is "gs://my-bucket/my_temp_output", the output for a bundle with bundle id 15723
    * will be "gs://my-bucket/my_temp_output/15723".
    *
-   * <p>Final output files are written to the location specified by the {@link FilenamePolicy}. If
-   * no filename policy is specified, then the {@link DefaultFilenamePolicy} will be used. The
-   * directory that the files are written to is determined by the {@link FilenamePolicy} instance.
+   * <p>Final output files are written to the location specified by the  FilenamePolicy}. If
+   * no filename policy is specified, then the  DefaultFilenamePolicy} will be used. The
+   * directory that the files are written to is determined by the  FilenamePolicy} instance.
    *
    * <p>Note that in the case of permanent failure of a bundle's write, no clean up of temporary
    * files will occur.
@@ -556,7 +556,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     }
 
     /**
-     * Clients must implement to return a subclass of {@link Writer}. This method must not mutate
+     * Clients must implement to return a subclass of  Writer}. This method must not mutate
      * the state of the object.
      */
     public abstract Writer<DestinationT, OutputT> createWriter() throws Exception;
@@ -579,7 +579,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
      * <p>When windows or triggers are specified, files are generated incrementally so deleting the
      * entire directory in finalize is incorrect. If windowedWrites is true, we instead delete the
      * files individually. This means that some temporary files generated by failed bundles might
-     * not be cleaned up. Note that {@link WriteFiles} does attempt clean up files if exceptions
+     * not be cleaned up. Note that  WriteFiles} does attempt clean up files if exceptions
      * are thrown, however there are still some scenarios where temporary files might be left.
      */
     public void removeTemporaryFiles(Collection<ResourceId> filenames) throws IOException {
@@ -733,11 +733,11 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     /**
      * Copy temporary files to final output filenames using the file naming template.
      *
-     * <p>Can be called from subclasses that override {@link WriteOperation#finalizeDestination}.
+     * <p>Can be called from subclasses that override  WriteOperation#finalizeDestination}.
      *
-     * <p>Files will be named according to the {@link FilenamePolicy}. The order of the output files
+     * <p>Files will be named according to the  FilenamePolicy}. The order of the output files
      * will be the same as the sorted order of the input filenames. In other words (when using
-     * {@link DefaultFilenamePolicy}), if the input filenames are ["C", "A", "B"], baseFilename (int
+     *  DefaultFilenamePolicy}), if the input filenames are ["C", "A", "B"], baseFilename (int
      * the policy) is "dir/file", the extension is ".txt", and the fileNamingTemplate is
      * "-SSS-of-NNN", the contents of A will be copied to dir/file-000-of-003.txt, the contents of B
      * will be copied to dir/file-001-of-003.txt, etc.
@@ -766,7 +766,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     /**
      * Removes temporary output files. Uses the temporary directory to find files to remove.
      *
-     * <p>Can be called from subclasses that override {@link WriteOperation#finalizeDestination}.
+     * <p>Can be called from subclasses that override  WriteOperation#finalizeDestination}.
      * <b>Note:</b>If finalize is overridden and does <b>not</b> rename or otherwise finalize
      * temporary files, this method will remove them.
      */
@@ -835,20 +835,20 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     }
   }
 
-  /** Returns the {@link WritableByteChannelFactory} used. */
+  /** Returns the  WritableByteChannelFactory} used. */
   protected final WritableByteChannelFactory getWritableByteChannelFactory() {
     return writableByteChannelFactory;
   }
 
   /**
-   * Abstract writer that writes a bundle to a {@link FileBasedSink}. Subclass implementations
-   * provide a method that can write a single value to a {@link WritableByteChannel}.
+   * Abstract writer that writes a bundle to a  FileBasedSink}. Subclass implementations
+   * provide a method that can write a single value to a  WritableByteChannel}.
    *
    * <p>Subclass implementations may also override methods that write headers and footers before and
    * after the values in a bundle, respectively, as well as provide a MIME type for the output
    * channel.
    *
-   * <p>Multiple {@link Writer} instances may be created on the same worker, and therefore any
+   * <p>Multiple  Writer} instances may be created on the same worker, and therefore any
    * access to static members or methods should be thread safe.
    *
    * @param <OutputT> the type of values to write.
@@ -872,14 +872,14 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     /**
      * The MIME type used in the creation of the output channel (if the file system supports it).
      *
-     * <p>This is the default for the sink, but it may be overridden by a supplied {@link
-     * WritableByteChannelFactory}. For example, {@link TextIO.Write} uses {@link MimeTypes#TEXT} by
-     * default but if {@link Compression#BZIP2} is set then the MIME type will be overridden to
-     * {@link MimeTypes#BINARY}.
+     * <p>This is the default for the sink, but it may be overridden by a supplied
+     * WritableByteChannelFactory}. For example,  TextIO.Write} uses  MimeTypes#TEXT} by
+     * default but if  Compression#BZIP2} is set then the MIME type will be overridden to
+     *  MimeTypes#BINARY}.
      */
     @Nullable private final String mimeType;
 
-    /** Construct a new {@link Writer} that will produce files of the given MIME type. */
+    /** Construct a new  Writer} that will produce files of the given MIME type. */
     public Writer(WriteOperation<DestinationT, OutputT> writeOperation, String mimeType) {
       checkNotNull(writeOperation);
       this.writeOperation = writeOperation;
@@ -904,13 +904,13 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     protected void writeFooter() throws Exception {}
 
     /**
-     * Called after all calls to {@link #writeHeader}, {@link #write} and {@link #writeFooter}. If
+     * Called after all calls to  #writeHeader},  #write} and  #writeFooter}. If
      * any resources opened in the write processes need to be flushed, flush them here.
      */
     protected void finishWrite() throws Exception {}
 
     /**
-     * Opens a uniquely named temporary file and initializes the writer using {@link #prepareWrite}.
+     * Opens a uniquely named temporary file and initializes the writer using  #prepareWrite}.
      *
      * <p>The unique id that is given to open should be used to ensure that the writer's output does
      * not interfere with the output of other Writers, as a bundle may be executed many times for
@@ -1108,7 +1108,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     }
   }
 
-  /** A coder for {@link FileResult} objects. */
+  /** A coder for  FileResult} objects. */
   public static final class FileResultCoder<DestinationT>
       extends StructuredCoder<FileResult<DestinationT>> {
     private static final Coder<String> FILENAME_CODER = StringUtf8Coder.of();
@@ -1178,7 +1178,7 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     /**
      * Returns the MIME type that should be used for the files that will hold the output data. May
      * return {@code null} if this {@code WritableByteChannelFactory} does not meaningfully change
-     * the MIME type (e.g., for {@link Compression#UNCOMPRESSED}).
+     * the MIME type (e.g., for  Compression#UNCOMPRESSED}).
      *
      * @see MimeTypes
      * @see <a href=
@@ -1187,24 +1187,24 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     @Nullable
     String getMimeType();
 
-    /** @return an optional filename suffix, eg, ".gz" is returned for {@link Compression#GZIP} */
+    /** @return an optional filename suffix, eg, ".gz" is returned for  Compression#GZIP} */
     @Nullable
     String getSuggestedFilenameSuffix();
   }
 
   /**
-   * Implementations create instances of {@link WritableByteChannel} used by {@link FileBasedSink}
+   * Implementations create instances of  WritableByteChannel} used by  FileBasedSink}
    * and related classes to allow <em>decorating</em>, or otherwise transforming, the raw data that
-   * would normally be written directly to the {@link WritableByteChannel} passed into {@link
+   * would normally be written directly to the  WritableByteChannel} passed into
    * WritableByteChannelFactory#create(WritableByteChannel)}.
    *
-   * <p>Subclasses should override {@link #toString()} with something meaningful, as it is used when
-   * building {@link DisplayData}.
+   * <p>Subclasses should override  #toString()} with something meaningful, as it is used when
+   * building  DisplayData}.
    */
   public interface WritableByteChannelFactory extends OutputFileHints {
     /**
-     * @param channel the {@link WritableByteChannel} to wrap
-     * @return the {@link WritableByteChannel} to be used during output
+     * @param channel the  WritableByteChannel} to wrap
+     * @return the  WritableByteChannel} to be used during output
      */
     WritableByteChannel create(WritableByteChannel channel) throws IOException;
   }
