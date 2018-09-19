@@ -63,11 +63,11 @@
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.32</gbif-parsers.version>
-    <dwca-io.version>2.0-RC1</dwca-io.version>
-    <gbif-api.version>0.61</gbif-api.version>
-    <gbif-common.version>0.38</gbif-common.version>
-    <dwc-api.version>1.18</dwc-api.version>
+    <gbif-parsers.version>0.36</gbif-parsers.version>
+    <dwca-io.version>2.2</dwca-io.version>
+    <gbif-api.version>0.70</gbif-api.version>
+    <gbif-common.version>0.41</gbif-common.version>
+    <dwc-api.version>1.19</dwc-api.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
@@ -83,33 +83,33 @@
     <elasticsearch.version>5.6.3</elasticsearch.version>
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
 
-    <jackson.version>2.9.5</jackson.version>
+    <jackson.version>2.9.6</jackson.version>
 
     <retrofit.version>2.4.0</retrofit.version>
-    <okhttp.version>3.10.0</okhttp.version>
-    <okio.version>1.14.0</okio.version>
+    <okhttp.version>3.11.0</okhttp.version>
+    <okio.version>2.0.0</okio.version>
 
-    <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
+    <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
     <joda-time.version>2.4</joda-time.version>
 
     <commons-compress.version>1.16.1</commons-compress.version>
     <commons-digester.version>2.1</commons-digester.version>
-    <mapdb.version>3.0.5</mapdb.version>
-    <commons-beanutils.version>1.9.2</commons-beanutils.version>
+    <mapdb.version>3.0.6</mapdb.version>
+    <commons-beanutils.version>1.9.3</commons-beanutils.version>
 
     <spark.embedded.version>2.3.1</spark.embedded.version>
     <lz4.version>1.3.0</lz4.version>
 
     <!-- Test -->
     <junit.version>4.12</junit.version>
-    <mockwebserver.version>3.10.0</mockwebserver.version>
+    <mockwebserver.version>3.11.0</mockwebserver.version>
     <hamcrest-core.version>1.3</hamcrest-core.version>
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
     <embedded.elasticsearch.version>2.5.1</embedded.elasticsearch.version>
 
     <!-- Maven plugin -->
-    <maven-plugin-api.version>3.5.0</maven-plugin-api.version>
-    <maven-plugin-annotations.version>3.5</maven-plugin-annotations.version>
+    <maven-plugin-api.version>3.5.4</maven-plugin-api.version>
+    <maven-plugin-annotations.version>3.5.2</maven-plugin-annotations.version>
 
     <!-- Plugins -->
     <build-helper-maven.version>3.0.0</build-helper-maven.version>
