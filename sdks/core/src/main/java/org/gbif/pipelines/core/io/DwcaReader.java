@@ -1,14 +1,13 @@
 package org.gbif.pipelines.core.io;
 
-import org.gbif.dwc.Archive;
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.utils.file.ClosableIterator;
 
+import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.NoSuchElementException;
 
@@ -19,41 +18,47 @@ import org.slf4j.LoggerFactory;
  * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in
  * Avro.
  */
-public class DwcaReader {
-
-  private static final String UNCOMPRESSED = "UNCOMPRESSED";
+public class DwcaReader implements Closeable {
 
   private static final Logger LOG = LoggerFactory.getLogger(DwcaReader.class);
-  private final String source;
-  private final String workingDir;
-  private ClosableIterator<StarRecord> starRecordsIt;
+
+  private final ClosableIterator<StarRecord> starRecordsIt;
   private long recordsReturned;
   private ExtendedRecord current;
 
-  public DwcaReader(String workingDir) {
-    this(UNCOMPRESSED, workingDir);
+  /**
+   * Creates a DwcaReader of a expanded archive.
+   */
+  public static DwcaReader fromLocation(String path) throws IOException {
+    return new DwcaReader(DwcFiles.fromLocation(Paths.get(path)).iterator());
   }
 
-  public DwcaReader(String source, String workingDir) {
-    this.source = source;
-    this.workingDir = workingDir;
+  /**
+   * Creates a DwcaReader for a compressed archive that it will be expanded in a working directory.
+   */
+  public static DwcaReader fromCompressed(String source, String workingDir) throws IOException {
+    return new DwcaReader(DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir)).iterator());
   }
 
-  public boolean init() throws IOException {
-    LOG.info("Opening DwC-A from[{}] with working directory[{}]", source, workingDir);
-    Path extractToFolder = Paths.get(workingDir);
 
-    Archive dwcArchive;
-    if (UNCOMPRESSED.equals(source)) {
-      dwcArchive = DwcFiles.fromLocation(Paths.get(workingDir));
-    } else {
-      dwcArchive = DwcFiles.fromCompressed(Paths.get(source), extractToFolder);
-    }
-
-    starRecordsIt = dwcArchive.iterator();
-    return advance();
+  /**
+   * Creates and DwcaReader using a StarRecord iterator.
+   */
+  private DwcaReader(ClosableIterator<StarRecord> starRecordsIt)  {
+    this.starRecordsIt = starRecordsIt;
   }
 
+
+  /**
+   * Has the archive more records?.
+   */
+  public boolean hasNext() {
+    return starRecordsIt.hasNext();
+  }
+
+  /**
+   * Read next element.
+   */
   public boolean advance() {
     if (!starRecordsIt.hasNext()) {
       return false;
@@ -67,6 +72,9 @@ public class DwcaReader {
     return true;
   }
 
+  /**
+   * Gets the current extended record.
+   */
   public ExtendedRecord getCurrent() {
     if (current == null) {
       throw new NoSuchElementException(
@@ -75,6 +83,7 @@ public class DwcaReader {
     return current;
   }
 
+  @Override
   public void close() throws IOException {
     if (starRecordsIt == null) {
       return;

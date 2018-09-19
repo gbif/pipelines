@@ -61,7 +61,7 @@ public class DwcaToAvroPipeline {
     String tmpPath = FsUtils.getTempDir(options);
 
     boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
-    Read reader = isDirectory ? Read.withPaths(inputPath) : Read.withPaths(inputPath, tmpPath);
+    Read reader = isDirectory ? Read.fromLocation(inputPath) : Read.fromCompressed(inputPath, tmpPath);
 
     LOG.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);

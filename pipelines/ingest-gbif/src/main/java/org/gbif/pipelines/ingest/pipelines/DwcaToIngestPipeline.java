@@ -68,7 +68,7 @@ public class DwcaToIngestPipeline {
     String tmpDir = FsUtils.getTempDir(options);
 
     DwcaIO.Read reader =
-        isDirectory ? DwcaIO.Read.withPaths(inputPath) : DwcaIO.Read.withPaths(inputPath, tmpDir);
+        isDirectory ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
 
     LOG.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);

@@ -11,11 +11,11 @@ import org.apache.commons.digester.RuleSet;
 
 public class Dwc10RuleSet extends AbstractDwcRuleSet implements RuleSet {
 
-  private final String mappingFile = "mapping/indexMapping_dwc_1_0.properties";
+  private static final String MAPPING_FILE = "mapping/indexMapping_dwc_1_0.properties";
 
   public Dwc10RuleSet() throws IOException {
     mappingProps = new Properties();
-    URL url = ClassLoader.getSystemResource(mappingFile);
+    URL url = ClassLoader.getSystemResource(MAPPING_FILE);
     mappingProps.load(url.openStream());
   }
 

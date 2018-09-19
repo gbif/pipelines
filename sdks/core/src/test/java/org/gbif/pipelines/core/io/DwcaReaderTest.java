@@ -17,14 +17,13 @@ public class DwcaReaderTest {
     String fileName = getClass().getResource("/dwca/plants_dwca").getFile();
 
     // When
-    DwcaReader dwCAReader = new DwcaReader(fileName);
-    dwCAReader.init();
-    ExtendedRecord current = dwCAReader.getCurrent();
-    dwCAReader.close();
+    try (DwcaReader dwCAReader = DwcaReader.fromLocation(fileName)) {
+      ExtendedRecord current = dwCAReader.getCurrent();
+      // Should
+      assertNotNull(current);
+      assertNotNull(current.getId());
+    }
 
-    // Should
-    assertNotNull(current);
-    assertNotNull(current.getId());
   }
 
   @Test
@@ -34,13 +33,11 @@ public class DwcaReaderTest {
     String fileOut = new File("target/tmp").getAbsolutePath();
 
     // When
-    DwcaReader dwCAReader = new DwcaReader(fileName, fileOut);
-    dwCAReader.init();
-    ExtendedRecord current = dwCAReader.getCurrent();
-    dwCAReader.close();
-
-    // Should
-    assertNotNull(current);
-    assertNotNull(current.getId());
+    try (DwcaReader dwCAReader = DwcaReader.fromCompressed(fileName, fileOut)) {
+      ExtendedRecord current = dwCAReader.getCurrent();
+      // Should
+      assertNotNull(current);
+      assertNotNull(current.getId());
+    }
   }
 }

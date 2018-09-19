@@ -21,6 +21,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This is mostly cut and paste from synchronizer-gbif, intended as a place holder until this
@@ -102,20 +103,13 @@ public class RawOccurrenceRecord implements Serializable {
             : dwcr.value(DwcTerm.country);
     this.county = dwcr.value(DwcTerm.county);
     this.dateIdentified = dwcr.value(DwcTerm.dateIdentified);
-    this.latitude =
-        dwcr.value(DwcTerm.verbatimLatitude) == null
-            ? dwcr.value(DwcTerm.decimalLatitude)
-            : dwcr.value(DwcTerm.verbatimLatitude);
-    this.longitude =
-        dwcr.value(DwcTerm.verbatimLongitude) == null
-            ? dwcr.value(DwcTerm.decimalLongitude)
-            : dwcr.value(DwcTerm.verbatimLongitude);
+    this.latitude = Optional.ofNullable(dwcr.value(DwcTerm.verbatimLatitude))
+            .orElse(dwcr.value(DwcTerm.decimalLatitude));
+    this.longitude = Optional.ofNullable(dwcr.value(DwcTerm.verbatimLongitude))
+            .orElse(dwcr.value(DwcTerm.decimalLongitude));
     this.geodeticDatum = dwcr.value(DwcTerm.geodeticDatum);
     this.family = dwcr.value(DwcTerm.family);
-    this.scientificName =
-        dwcr.value(DwcTerm.scientificName) == null || dwcr.value(DwcTerm.scientificName).isEmpty()
-            ? dwcr.value(DwcTerm.scientificName)
-            : dwcr.value(DwcTerm.scientificName);
+    this.scientificName = dwcr.value(DwcTerm.scientificName);
     this.genus = dwcr.value(DwcTerm.genus);
     this.identifierName = dwcr.value(DwcTerm.identifiedBy);
     this.institutionCode = dwcr.value(DwcTerm.institutionCode);

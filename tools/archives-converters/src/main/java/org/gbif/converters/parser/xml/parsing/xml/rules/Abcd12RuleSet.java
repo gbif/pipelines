@@ -28,11 +28,11 @@ import org.apache.commons.digester.Digester;
 
 public class Abcd12RuleSet extends AbstractRuleSet {
 
-  private final String mappingFile = "mapping/indexMapping_abcd_1_2.properties";
+  private static final String MAPPING_FILE = "mapping/indexMapping_abcd_1_2.properties";
 
   public Abcd12RuleSet() throws IOException {
     mappingProps = new Properties();
-    URL url = ClassLoader.getSystemResource(mappingFile);
+    URL url = ClassLoader.getSystemResource(MAPPING_FILE);
     mappingProps.load(url.openStream());
   }
 

@@ -45,7 +45,7 @@ public class ExamplePipeline {
     Pipeline p = Pipeline.create(options);
 
     // Reads DwCA archive and convert to ExtendedRecord
-    p.apply("Read DwCA zip archive", DwcaIO.Read.withPaths(inputPath, tmpDir))
+    p.apply("Read DwCA zip archive", DwcaIO.Read.fromCompressed(inputPath, tmpDir))
         // Interprets and transforms from ExtendedRecord to TemporalRerord using GBIF TemporalInterpreter
         .apply("Interpret TemporalRerord", RecordTransforms.temporal())
         // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter

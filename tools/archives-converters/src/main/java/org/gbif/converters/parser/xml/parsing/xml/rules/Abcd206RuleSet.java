@@ -14,11 +14,11 @@ import org.apache.commons.digester.Digester;
 
 public class Abcd206RuleSet extends AbstractRuleSet {
 
-  private final String mappingFile = "mapping/indexMapping_abcd_2_0_6.properties";
+  private static final String MAPPING_FILE = "mapping/indexMapping_abcd_2_0_6.properties";
 
   public Abcd206RuleSet() throws IOException {
     mappingProps = new Properties();
-    URL url = ClassLoader.getSystemResource(mappingFile);
+    URL url = ClassLoader.getSystemResource(MAPPING_FILE);
     mappingProps.load(url.openStream());
   }
 

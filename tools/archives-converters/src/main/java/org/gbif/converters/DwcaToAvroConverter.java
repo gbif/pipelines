@@ -34,13 +34,10 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
 
   /** TODO: DOC */
   @Override
-  protected void convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter)
-      throws IOException {
-    DwcaReader reader = new DwcaReader(inputPath.toString());
-    reader.init();
-    LOG.info("Exporting the DwC Archive to avro {} started");
-    // Read first record
-    dataFileWriter.append(reader.getCurrent());
+  protected void convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) throws IOException {
+    DwcaReader reader = DwcaReader.fromLocation(inputPath.toString());
+    LOG.info("Exporting the DwC Archive to Avro started {}", inputPath);
+
     // Read all records
     while (reader.advance()) {
       dataFileWriter.append(reader.getCurrent());

@@ -4,7 +4,7 @@ import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.beam.sdk.coders.AvroCoder;
@@ -28,7 +28,7 @@ import org.apache.beam.sdk.values.PCollection;
  *
  * <pre>{@code
  * p.apply("read",
- *     DwcaIO.Read.withPaths("/tmp/my-dwca.zip", "/tmp/working")
+ *     DwcaIO.Read.fromCompressed("/tmp/my-dwca.zip", "/tmp/working")
  *     ...;
  * }</pre>
  */
@@ -38,17 +38,16 @@ public class DwcaIO {
 
   public static class Read extends PTransform<PBegin, PCollection<ExtendedRecord>> {
 
-    private static final String UNCOMPRESSED = "UNCOMPRESSED";
-
     private final String path;
     private final String workingPath;
+    private final boolean unCompressed;
 
     /**
      * Reads an expanded/uncompressed DwCA content
      *
      * @param working path to an expanded/uncompressed DwCA content
      */
-    public static Read withPaths(String working) {
+    public static Read fromLocation(String working) {
       return new Read(working);
     }
 
@@ -58,8 +57,8 @@ public class DwcaIO {
      * @param file path to a DwCA archive
      * @param working path to a directory for storing uncompressed DwCA content
      */
-    public static Read withPaths(String file, String working) {
-      return new Read(file, working);
+    public static Read fromCompressed(String file, String working) {
+      return new Read(file, working, false);
     }
 
     /**
@@ -68,7 +67,7 @@ public class DwcaIO {
      * @param workingPath path to an expanded/uncompressed DwCA content
      */
     private Read(String workingPath) {
-      this(UNCOMPRESSED, workingPath);
+      this(null, workingPath, true);
     }
 
     /**
@@ -76,10 +75,12 @@ public class DwcaIO {
      *
      * @param filePath path to a DwCA archive
      * @param workingPath path to a directory for storing uncompressed DwCA content
+     * @param unCompressed flag that determines if the source is compressed or expanded.
      */
-    private Read(String filePath, String workingPath) {
+    private Read(String filePath, String workingPath, boolean unCompressed) {
       path = filePath;
       this.workingPath = workingPath;
+      this.unCompressed = unCompressed;
     }
 
     @Override
@@ -111,11 +112,8 @@ public class DwcaIO {
 
     /** Will always return a single entry list of just ourselves. This is not splittable. */
     @Override
-    public List<? extends BoundedSource<ExtendedRecord>> split(
-        long desiredBundleSizeBytes, PipelineOptions options) {
-      List<DwCASource> readers = new ArrayList<>();
-      readers.add(this);
-      return readers;
+    public List<? extends BoundedSource<ExtendedRecord>> split(long desiredBundleSizeBytes, PipelineOptions options) {
+      return Collections.singletonList(this);
     }
 
     @Override
@@ -141,13 +139,9 @@ public class DwcaIO {
 
     @Override
     public boolean start() throws IOException {
-      if (Read.UNCOMPRESSED.equals(source.read.path)) {
-        reader = new DwcaReader(source.read.workingPath);
-      } else {
-        reader = new DwcaReader(source.read.path, source.read.workingPath);
-      }
-
-      return reader.init();
+      reader = source.read.unCompressed ? DwcaReader.fromLocation(source.read.workingPath) :
+                                          DwcaReader.fromCompressed(source.read.path, source.read.workingPath);
+      return reader.hasNext();
     }
 
     @Override

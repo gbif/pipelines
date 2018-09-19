@@ -90,7 +90,7 @@ public class DwcaToEsIndexPipeline {
     boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
 
     DwcaIO.Read reader =
-        isDirectory ? DwcaIO.Read.withPaths(inputPath) : DwcaIO.Read.withPaths(inputPath, tmpDir);
+        isDirectory ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
 
     Pipeline p = Pipeline.create(options);
 
