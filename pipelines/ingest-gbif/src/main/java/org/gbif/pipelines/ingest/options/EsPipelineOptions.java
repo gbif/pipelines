@@ -19,7 +19,7 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   void setEsMaxBatchSize(long esBatchSize);
 
-  @Description("List of Elasticsearch hosts. Required for the INDEX_TO_ES step.")
+  @Description("List of Elasticsearch hosts. Required for the DWCA_TO_ES_INDEX step.")
   String[] getEsHosts();
 
   void setEsHosts(String[] esHosts);
