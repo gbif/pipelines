@@ -24,7 +24,7 @@ import org.apache.beam.runners.spark.SparkRunner;
  * <pre>{@code
  * java -jar target/ingest-gbif-standalone-0.1-SNAPSHOT-shaded.jar  --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  *  --attempt=1
- *  --pipelineStep=DWCA_TO_AVRO
+ *  --pipelineStep=DWCA_TO_VERBATIM
  *  --targetPath=/some/path/to/output/
  *  --inputPath=/some/path/to/input/dwca/dwca.zip
  *
@@ -43,16 +43,16 @@ public class DwcaPipeline {
     options.setRunner(SparkRunner.class);
 
     switch (options.getPipelineStep()) {
-      case DWCA_TO_AVRO:
+      case DWCA_TO_VERBATIM:
         DwcaToVerbatimPipeline.createAndRun(options);
         break;
-      case INTERPRET:
+      case DWCA_TO_INTERPRETED:
         DwcaToInterpretedPipeline.createAndRun(options);
         break;
-      case INDEX_TO_ES:
+      case DWCA_TO_ES_INDEX:
         DwcaToEsIndexPipeline.createAndRun(options);
         break;
-      case INTERPRET_TO_INDEX:
+      case INTERPRETED_TO_ES_INDEX:
         InterpretedToEsIndexExtendedPipeline.createAndRun(options);
         break;
       default:

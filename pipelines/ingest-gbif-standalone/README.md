@@ -12,7 +12,7 @@ The pipelines make use of an embedded Spark instance to run.
 ```
  --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  --attempt=1
- --pipelineStep=DWCA_TO_AVRO
+ --pipelineStep=DWCA_TO_VERBATIM
  --targetPath=/some/path/to/output/
  --inputPath=/some/path/to/input/dwca/dwca.zip
 ```
@@ -21,7 +21,7 @@ The pipelines make use of an embedded Spark instance to run.
 ```
  --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  --attempt=1
- --pipelineStep=INTERPRET
+ --pipelineStep=DWCA_TO_INTERPRETED
  --targetPath=/some/path/to/output/
  --inputPath=/some/path/to/input/dwca/dwca.zip
 ```
@@ -30,7 +30,7 @@ The pipelines make use of an embedded Spark instance to run.
 ```
  --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  --attempt=1
- --pipelineStep=INDEX_TO_ES
+ --pipelineStep=DWCA_TO_ES_INDEX
  --inputPath=/some/path/to/input/dwca.zip
  --esHosts=http://ADDRESS,http://ADDRESS,http://ADDRESS:9200
  --esIndexName=pipeline
@@ -40,7 +40,7 @@ The pipelines make use of an embedded Spark instance to run.
 ```
  --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  --attempt=1
- --pipelineStep=INTERPRET_TO_INDEX
+ --pipelineStep=INTERPRETED_TO_ES_INDEX
  --inputPath=/some/path/to/input/pipelines/
  --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200
  --esIndexName=pipeline

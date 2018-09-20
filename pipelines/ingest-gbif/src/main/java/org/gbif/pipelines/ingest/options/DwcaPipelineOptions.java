@@ -9,10 +9,10 @@ import org.apache.beam.sdk.options.Validation;
 public interface DwcaPipelineOptions extends EsIndexingPipelineOptions, SparkPipelineOptions {
 
   enum PipelineStep {
-    DWCA_TO_AVRO, // only reads a Dwca and converts it to an avro file
-    INTERPRET, // reads a Dwca and interprets it
-    INDEX_TO_ES, // reads a Dwca, interprets it and indexes it to ES
-    INTERPRET_TO_INDEX // reads interpreted avro files and indexes them to ES
+    DWCA_TO_VERBATIM, // only reads a Dwca and converts it to an avro file
+    DWCA_TO_INTERPRETED, // reads a Dwca and interprets it
+    DWCA_TO_ES_INDEX, // reads a Dwca, interprets it and indexes it to ES
+    INTERPRETED_TO_ES_INDEX // reads interpreted avro files and indexes them to ES
   }
 
   @Override
@@ -41,13 +41,13 @@ public interface DwcaPipelineOptions extends EsIndexingPipelineOptions, SparkPip
 
   @Description(
       "The pipeline can be configured to run all the steps or only a few of them."
-          + "DWCA_TO_AVRO reads a Dwc-A and converts it to an Avro file;"
-          + "INTERPRET reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;"
-          + "INDEX_TO_ES reads a Dwc-A, interprets it and index the interpeted data in a ES index."
+          + "DWCA_TO_VERBATIM reads a Dwc-A and converts it to an Avro file;"
+          + "DWCA_TO_INTERPRETED reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;"
+          + "DWCA_TO_ES_INDEX reads a Dwc-A, interprets it and index the interpeted data in a ES index."
           + "All the steps generate an output. If only the final output is desired, "
           + "the intermediate outputs can be ignored by setting the ignoreIntermediateOutputs option to true."
           + " Required.")
-  @Default.Enum("INDEX_TO_ES")
+  @Default.Enum("DWCA_TO_ES_INDEX")
   PipelineStep getPipelineStep();
 
   void setPipelineStep(PipelineStep step);
