@@ -2,10 +2,11 @@ package org.gbif.pipelines.standalone;
 
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline;
 import org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline;
+import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
+import org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline;
 
 import org.apache.beam.runners.spark.SparkRunner;
 
@@ -54,6 +55,9 @@ public class DwcaPipeline {
         break;
       case INTERPRETED_TO_ES_INDEX:
         InterpretedToEsIndexExtendedPipeline.createAndRun(options);
+        break;
+      case VERBATIM_TO_INTERPRETED:
+        VerbatimToInterpretedPipeline.createAndRun(options);
         break;
       default:
         break;
