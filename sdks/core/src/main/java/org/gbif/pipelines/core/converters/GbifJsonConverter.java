@@ -39,9 +39,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 public class GbifJsonConverter extends JsonConverter {
 
   private static final String[] SKIP_KEYS = {"id", "decimalLatitude", "decimalLongitude"};
-  private static final String[] REPLACE_KEYS = {
-    "http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"
-  };
+  private static final String[] REPLACE_KEYS = {"http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"};
 
   private GbifJsonConverter(SpecificRecordBase[] bases) {
     this.setSpecificRecordBase(bases)
@@ -60,7 +58,7 @@ public class GbifJsonConverter extends JsonConverter {
   @Override
   public ObjectNode buildJson() {
     ObjectNode mainNode = super.buildJson();
-    ArrayNode arrayNode = mapper.createArrayNode();
+    ArrayNode arrayNode = MAPPER.createArrayNode();
     Arrays.stream(getBases())
         .filter(Issues.class::isInstance)
         .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
@@ -109,7 +107,7 @@ public class GbifJsonConverter extends JsonConverter {
       LocationRecord location = (LocationRecord) record;
 
       if (location.getDecimalLongitude() != null && location.getDecimalLatitude() != null) {
-        ObjectNode node = mapper.createObjectNode();
+        ObjectNode node = MAPPER.createObjectNode();
         node.put("lon", location.getDecimalLongitude().toString());
         node.put("lat", location.getDecimalLatitude().toString());
         this.addJsonObject("location", node);
@@ -179,12 +177,11 @@ public class GbifJsonConverter extends JsonConverter {
       }
 
       // Other Gbif fields
-      RankedName usage = taxon.getUsage();
-      if (usage != null) {
-        this.addJsonField("gbifTaxonKey", usage.getKey().toString())
-            .addJsonField("gbifScientificName", usage.getName())
-            .addJsonField("gbifTaxonRank", usage.getRank().name());
-      }
+      Optional.ofNullable(taxon.getUsage()).ifPresent(usage ->
+              this.addJsonField("gbifTaxonKey", usage.getKey().toString())
+                      .addJsonField("gbifScientificName", usage.getName())
+                      .addJsonField("gbifTaxonRank", usage.getRank().name())
+      );
       // Fields as a common view - "key": "value"
       this.addCommonFields(record);
     };
