@@ -14,3 +14,7 @@ Please change ***BUILD_VERSION*** to the current project version
 ```java -cp target/examples-BUILD_VERSION-shaded.jar org.gbif.pipelines.examples.ExamplePipeline src/main/resources/example.properties```
 
 You can find output files in the ```output``` directory
+
+## Spark standalone:
+
+The example uses DirectRunner, in case when your dataset contains more than 1000 records, please use [Spark standalone instance](https://beam.apache.org/documentation/runners/spark/)
