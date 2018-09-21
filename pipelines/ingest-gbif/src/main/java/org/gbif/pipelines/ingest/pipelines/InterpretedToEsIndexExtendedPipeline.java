@@ -23,11 +23,11 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline some.properties
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner

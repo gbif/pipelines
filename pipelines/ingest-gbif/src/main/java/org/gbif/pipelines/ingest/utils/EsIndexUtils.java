@@ -39,7 +39,7 @@ public class EsIndexUtils {
     }
     LOG.info("ES index {} created", idx);
 
-    Optional.of(idx).ifPresent(options::setEsIndexName);
+    Optional.ofNullable(idx).ifPresent(options::setEsIndexName);
   }
 
   /** Connects to Elasticsearch instace and swaps an index and an alias */

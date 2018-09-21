@@ -23,11 +23,11 @@ import org.slf4j.LoggerFactory;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline some.properties
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=DirectRunner

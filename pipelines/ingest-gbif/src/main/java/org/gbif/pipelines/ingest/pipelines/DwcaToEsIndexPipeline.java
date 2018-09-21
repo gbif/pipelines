@@ -55,11 +55,11 @@ import org.slf4j.LoggerFactory;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline some.properties
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
  * --inputPath=/some/path/to/input/dwca.zip

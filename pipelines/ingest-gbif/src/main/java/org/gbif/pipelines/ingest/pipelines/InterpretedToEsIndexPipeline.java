@@ -53,11 +53,11 @@ import static org.gbif.pipelines.core.RecordType.TEMPORAL;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline some.properties
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
