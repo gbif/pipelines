@@ -16,14 +16,14 @@ import org.slf4j.LoggerFactory;
  * Example of using @see <a href="https://beam.apache.org/contribute/runner-guide/">Apache Beam</a>
  * pipeline.
  *
- * <p>You can run pipeline:
+ * <p>You can run pipeline (Please change BUILD_VERSION to the current project version):
  *
  * <pre>{@code
- * java -cp target/examples-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.examples.ExamplePipeline src/main/resources/example.properties
+ * java -cp target/examples-BUILD_VERSION-shaded.jar org.gbif.pipelines.examples.ExamplePipeline src/main/resources/example.properties
  *
  * or pass all parameters:
  *
- * java -cp target/examples-0.1-SNAPSHOT-shaded.jar org.gbif.pipelines.examples.ExamplePipeline --runner=DirectRunner --targetPath=target/example-record --inputPath=example.zip
+ * java -cp target/examples-BUILD_VERSION-shaded.jar org.gbif.pipelines.examples.ExamplePipeline --runner=DirectRunner --targetPath=target/example-record --inputPath=example.zip
  *
  * }</pre>
  */

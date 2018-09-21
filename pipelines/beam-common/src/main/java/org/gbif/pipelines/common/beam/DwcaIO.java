@@ -112,7 +112,8 @@ public class DwcaIO {
 
     /** Will always return a single entry list of just ourselves. This is not splittable. */
     @Override
-    public List<? extends BoundedSource<ExtendedRecord>> split(long desiredBundleSizeBytes, PipelineOptions options) {
+    public List<? extends BoundedSource<ExtendedRecord>> split(
+        long desiredBundleSizeBytes, PipelineOptions options) {
       return Collections.singletonList(this);
     }
 
@@ -139,9 +140,11 @@ public class DwcaIO {
 
     @Override
     public boolean start() throws IOException {
-      reader = source.read.unCompressed ? DwcaReader.fromLocation(source.read.workingPath) :
-                                          DwcaReader.fromCompressed(source.read.path, source.read.workingPath);
-      return reader.hasNext();
+      reader =
+          source.read.unCompressed
+              ? DwcaReader.fromLocation(source.read.workingPath)
+              : DwcaReader.fromCompressed(source.read.path, source.read.workingPath);
+      return reader.advance();
     }
 
     @Override
