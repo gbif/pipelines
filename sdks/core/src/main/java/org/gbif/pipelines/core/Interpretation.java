@@ -70,7 +70,7 @@ public class Interpretation<S> {
 
     /**
      * @param func BiConsumer for applying an interpretation function, where S as a source data
-     *     object and T as a target data objcet
+     *     object and T as a target data object
      */
     public Handler<T> via(BiConsumer<S, T> func) {
       func.accept(source, target);
@@ -79,7 +79,7 @@ public class Interpretation<S> {
 
     /**
      * @param func Consumer for applying an interpretation function, where T as a source data object
-     *     and as a target data objcet
+     *     and as a target data object
      */
     public Handler<T> via(Consumer<T> func) {
       func.accept(target);

@@ -5,12 +5,20 @@ import java.io.IOException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonValidationUtils {
+/**
+ * Utility class to validate Json objects.
+ */
+class JsonValidationUtils {
+
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private JsonValidationUtils() {}
 
-  public static boolean isValid(String json) {
-    try (JsonParser parser = new ObjectMapper().getFactory().createParser(json)) {
+  /**
+   * Is the string json parameter a valid JSON object.
+   */
+  static boolean isValid(String json) {
+    try (JsonParser parser = OBJECT_MAPPER.getFactory().createParser(json)) {
       while (parser.nextToken() != null) {
         // NOP
       }

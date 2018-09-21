@@ -32,8 +32,7 @@ public class TemporalInterpreter {
     String rawEventDate = extractValue(er, DwcTerm.eventDate);
 
     // Call temporal parser
-    ParsedTemporal temporalDates =
-        TemporalParser.parse(rawYear, rawMonth, rawDay, rawEventDate);
+    ParsedTemporal temporalDates = TemporalParser.parse(rawYear, rawMonth, rawDay, rawEventDate);
 
     // Get all parsed values and set
     EventDate eventDate = new EventDate();

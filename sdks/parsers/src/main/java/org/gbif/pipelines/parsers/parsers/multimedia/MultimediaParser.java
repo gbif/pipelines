@@ -18,6 +18,7 @@ import java.net.URI;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
@@ -45,8 +45,8 @@ public class MultimediaParser {
 
   // Order is important in case more than one extension is provided. The order will define the
   // precedence.
-  private static final ImmutableSet<Extension> SUPPORTED_MEDIA_EXTENSIONS =
-      ImmutableSet.of(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE);
+  private static final EnumSet<Extension> SUPPORTED_MEDIA_EXTENSIONS =
+          EnumSet.of(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE);
 
   private MultimediaParser() {}
 
