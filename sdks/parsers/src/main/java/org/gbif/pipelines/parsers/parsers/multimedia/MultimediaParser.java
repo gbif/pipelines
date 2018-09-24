@@ -18,8 +18,8 @@ import java.net.URI;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,8 +45,8 @@ public class MultimediaParser {
 
   // Order is important in case more than one extension is provided. The order will define the
   // precedence.
-  private static final EnumSet<Extension> SUPPORTED_MEDIA_EXTENSIONS =
-          EnumSet.of(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE);
+  private static final List<Extension> SUPPORTED_MEDIA_EXTENSIONS =
+          new LinkedList<>(Arrays.asList(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE));
 
   private MultimediaParser() {}
 
