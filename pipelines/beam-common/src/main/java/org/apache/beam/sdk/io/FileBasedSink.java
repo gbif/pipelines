@@ -17,6 +17,22 @@
  */
 package org.apache.beam.sdk.io;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Verify.verifyNotNull;
+import static org.apache.beam.sdk.io.WriteFiles.UNKNOWN_SHARDNUM;
+import static org.apache.beam.sdk.values.TypeDescriptors.extractFromTypeParameters;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,15 +50,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.apache.beam.sdk.annotations.Experimental;
 import org.apache.beam.sdk.annotations.Experimental.Kind;
 import org.apache.beam.sdk.coders.CannotProvideCoderException;
@@ -80,14 +87,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Verify.verifyNotNull;
-import static org.apache.beam.sdk.io.WriteFiles.UNKNOWN_SHARDNUM;
-import static org.apache.beam.sdk.values.TypeDescriptors.extractFromTypeParameters;
 
 /**
  * Abstract class for file-based output. An implementation of FileBasedSink writes file-based output
@@ -296,9 +295,10 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
     public abstract DestinationT getDefaultDestination();
 
     /**
-     * Returns the coder for DestinationT. If this is not overridden, then the coder registry will
-     * be use to find a suitable coder. This must be a deterministic coder, as {@link DestinationT}
-     * will be used as a key type in a {@link org.apache.beam.sdk.transforms.GroupByKey}.
+     * Returns the coder for {@link DestinationT}. If this is not overridden, then the coder
+     * registry will be use to find a suitable coder. This must be a deterministic coder, as {@link
+     * DestinationT} will be used as a key type in a {@link
+     * org.apache.beam.sdk.transforms.GroupByKey}.
      */
     @Nullable
     public Coder<DestinationT> getDestinationCoder() {
@@ -757,9 +757,13 @@ public abstract class FileBasedSink<UserT, DestinationT, OutputT>
             "Will copy temporary file {} to final location {}", entry.getKey(), entry.getValue());
       }
       // During a failure case, files may have been deleted in an earlier step. Thus
-      // we ignore missing files here.
-      FileSystems.rename(srcFiles, dstFiles, StandardMoveOptions.IGNORE_MISSING_FILES);
-      removeTemporaryFiles(srcFiles); // defensive coding
+      // we ignore missing files here. It is possible that files already exist in the
+      // destination and we wish to replace them (e.g. a previous job run)
+      FileSystems.rename(
+          srcFiles,
+          dstFiles,
+          StandardMoveOptions.IGNORE_MISSING_FILES,
+          StandardMoveOptions.REPLACE_EXISTING);
     }
 
     /**
