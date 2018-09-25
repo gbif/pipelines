@@ -59,7 +59,7 @@
 
                 <relocation>
                   <pattern>retrofit2</pattern>
-                  <shadedPattern>gbif.retrofit2</shadedPattern>
+                  <shadedPattern>r240.retrofit2</shadedPattern>
                 </relocation>
 
                 <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
@@ -71,8 +71,14 @@
                 <!-- Transient from core: conflicts with Hadoop on Spark -->
                 <relocation>
                   <pattern>org.hsqldb</pattern>
-                  <shadedPattern>gbif.hsqldb</shadedPattern>
+                  <shadedPattern>h228.org.hsqldb</shadedPattern>
                 </relocation>
+
+                <relocation>
+                  <pattern>com.google.common</pattern>
+                  <shadedPattern>g20.com.google.common</shadedPattern>
+                </relocation>
+
               </relocations>
             </configuration>
           </execution>
@@ -111,6 +117,10 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
     </dependency>
 
     <!-- Spark -->
