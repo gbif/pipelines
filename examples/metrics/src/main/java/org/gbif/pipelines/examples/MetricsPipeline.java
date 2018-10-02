@@ -36,7 +36,7 @@ public class MetricsPipeline {
 
   public static void main(String[] args) {
 
-    // Passing custom value to logger
+    // Passing custom value to the logger
     MDC.put("uuid", UUID.randomUUID().toString());
 
     InterpretationPipelineOptions options =

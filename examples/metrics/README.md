@@ -1,6 +1,7 @@
-# The example demonstrates how to send Apache Beam SparkRunner metrics to [ELK](https://www.elastic.co/elk-stack) and use result for Kibana dashboards
+# The example demonstrates how to send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
 
 ## Main objective
+[ELK](https://www.elastic.co/elk-stack)
 
 ### 1. Add SLF4J realisation for Spark
 
@@ -40,14 +41,66 @@ public class Slf4jSink extends org.apache.spark.metrics.sink.Slf4jSink {
 ### 2. Provide Spark metrics and logger configurations
 
 #### 2.1 Spark metrics configuration
+[metrics.properties](./src/resources/metrics.properties)
+```
+```
 
 #### 2.2 Spark log4j configuration
+[log4j.properties](./src/resources/log4j.properties)
+```
+```
 
-### 3. Logstash configuration and templates
+### 3. Logstash main configuration
 
-#### 3.1 Logstash main configuration
+```
+input {
+    gelf {
+        host=>"127.0.0.1"
+        port=>"12201"
+    }
+}
 
-#### 3.2 Logging index template
+filter {
+    kv {
+        source => "message"
+        target => "messageKv"
+        field_split => ","
+        trim_key => " "
+    }
+}
 
-### 4. Create Kibana dashboard
+output {
+    stdout {
+        codec=>"rubydebug"
+    }
+    elasticsearch {
+        hosts=>"localhost:9200"
+        index=>"examples-metrics-%{+YYYY.MM.dd}"
+    }
+}
+```
+
+### 4. How to run the examaple
+
+
+```
+elasticsearch/bin/elasticsearch
+```
+
+```
+kibana/bin/kibana
+```
+
+```
+logstash/bin/logstash -f examples-metrics.config
+```
+
+```
+java -jar target/examples-metrics-BUILD_VERSION-shaded.jar src/main/resources/example.properties
+```
+
+### 5. Change logging template index
+[Logstash mapping](https://www.elastic.co/blog/logstash_lesson_elasticsearch_mapping)
+
+### 6. Create Kibana dashboard
 
