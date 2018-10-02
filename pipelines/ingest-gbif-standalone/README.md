@@ -19,7 +19,7 @@ Please change:
 
 #### From DwCA to ExtendedRecord *.avro file:
 ```
-java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar org.gbif.pipelines.standalone.DwcaPipeline \
+java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --runner=SparkRunner \
  --pipelineStep=DWCA_TO_VERBATIM \
  --datasetId=DATASET_ID \
@@ -31,7 +31,7 @@ java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar org.gbif.pipelin
 
 #### From DwCA to GBIF interpreted *.avro files:
 ```
-java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar org.gbif.pipelines.standalone.DwcaPipeline \
+java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --runner=SparkRunner \
  --pipelineStep=DWCA_TO_INTERPRETED \
  --datasetId=DATASET_ID \
@@ -43,7 +43,7 @@ java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar org.gbif.pipelin
 
 #### From DwCA to Elasticsearch index:
 ```
-java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar org.gbif.pipelines.standalone.DwcaPipeline \
+java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --runner=SparkRunner \
  --pipelineStep=DWCA_TO_ES_INDEX \
  --datasetId=DATASET_ID \
@@ -56,7 +56,7 @@ java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar org.gbif.pipelin
 
 #### From GBIF interpreted *.avro files to Elasticsearch index:
 ```
-java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar org.gbif.pipelines.standalone.DwcaPipeline \
+java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --runner=SparkRunner \
  --pipelineStep=INTERPRETED_TO_ES_INDEX \
  --datasetId=DATASET_ID \

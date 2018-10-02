@@ -1,13 +1,12 @@
 package org.gbif.pipelines.ingest.options;
 
-import org.apache.beam.runners.spark.SparkPipelineOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.Hidden;
 import org.apache.beam.sdk.options.Validation;
 
 public interface DwcaPipelineOptions
-    extends EsIndexingPipelineOptions, InterpretationPipelineOptions, SparkPipelineOptions {
+    extends EsIndexingPipelineOptions, InterpretationPipelineOptions {
 
   enum PipelineStep {
     DWCA_TO_VERBATIM, // only reads a Dwca and converts it to an avro file

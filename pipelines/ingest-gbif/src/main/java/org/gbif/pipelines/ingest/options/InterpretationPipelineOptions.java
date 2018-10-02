@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.beam.runners.spark.SparkPipelineOptions;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
@@ -15,7 +16,7 @@ import org.apache.beam.sdk.options.PipelineOptions;
  * a {@link HadoopFileSystemOptions} when exporting/reading files.
  */
 public interface InterpretationPipelineOptions
-    extends BasePipelineOptions, HadoopFileSystemOptions {
+    extends BasePipelineOptions, HadoopFileSystemOptions, SparkPipelineOptions {
 
   @Override
   @Description(

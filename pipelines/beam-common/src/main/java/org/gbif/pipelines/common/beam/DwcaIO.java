@@ -10,6 +10,8 @@ import java.util.List;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.io.BoundedSource;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.display.DisplayData;
@@ -85,7 +87,7 @@ public class DwcaIO {
 
     @Override
     public PCollection<ExtendedRecord> expand(PBegin input) {
-      DwCASource source = new DwCASource(this);
+      DwcaSource source = new DwcaSource(this);
       return input.getPipeline().apply(org.apache.beam.sdk.io.Read.from(source));
     }
 
@@ -97,11 +99,11 @@ public class DwcaIO {
   }
 
   /** A non-splittable bounded source. */
-  private static class DwCASource extends BoundedSource<ExtendedRecord> {
+  private static class DwcaSource extends BoundedSource<ExtendedRecord> {
 
     private final Read read;
 
-    DwCASource(Read read) {
+    DwcaSource(Read read) {
       this.read = read;
     }
 
@@ -131,10 +133,12 @@ public class DwcaIO {
   /** A wrapper around the standard DwC-IO provided NormalizedDwcArchive. */
   private static class BoundedDwCAReader extends BoundedSource.BoundedReader<ExtendedRecord> {
 
-    private final DwCASource source;
+    private final Counter dwcaCount = Metrics.counter("DwcaIO", "dwcaCount");
+
+    private final DwcaSource source;
     private DwcaReader reader;
 
-    private BoundedDwCAReader(DwCASource source) {
+    private BoundedDwCAReader(DwcaSource source) {
       this.source = source;
     }
 
@@ -149,6 +153,7 @@ public class DwcaIO {
 
     @Override
     public boolean advance() {
+      dwcaCount.inc();
       return reader.advance();
     }
 
