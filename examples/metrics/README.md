@@ -5,9 +5,9 @@
 
 ### 1. Add SLF4J realisation for Spark
 
-#### 1.1 Depencies:
+#### 1.1 Dependencies:
 
-#### 1.2 Slf4J class reaslisation:
+#### 1.2 Slf4J class realisation:
 
 [Slf4jSink.java](./src/main/java/org/gbif/pipelines/common/beam/Slf4jSink.java)
 
@@ -40,17 +40,23 @@ public class Slf4jSink extends org.apache.spark.metrics.sink.Slf4jSink {
 
 ### 2. Provide Spark metrics and logger configurations
 
-#### 2.1 Spark metrics configuration
+#### 2.1 Create Spark metrics configuration file
+
+Please read about [Spark metrics](https://spark.apache.org/docs/latest/monitoring.html#metrics)
+
 [metrics.properties](./src/resources/metrics.properties)
 ```
+executor.sink.slf4j.class=org.apache.spark.metrics.sink.Slf4jSink
+driver.sink.slf4j.class=org.gbif.pipelines.common.beam.Slf4jSink
 ```
 
-#### 2.2 Spark log4j configuration
+#### 2.2 Create Spark log4j configuration file
 [log4j.properties](./src/resources/log4j.properties)
 ```
 ```
 
-### 3. Logstash main configuration
+### 3. Create Logstash main configuration
+Let's create a simple Logstash configuration file and call it ```examples-metrics.config```
 
 ```
 input {
@@ -80,8 +86,9 @@ output {
 }
 ```
 
-### 4. How to run the examaple
+For more detailed information please read articles [Logstash configuration file structure](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html) and [more complex examples](https://www.elastic.co/guide/en/logstash/current/config-examples.html)
 
+### 4. How to run the example
 
 ```
 elasticsearch/bin/elasticsearch
