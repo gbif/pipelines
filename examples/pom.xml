@@ -17,6 +17,7 @@
 
   <modules>
     <module>transform</module>
+    <module>metrics</module>
   </modules>
 
 </project>
