@@ -11,7 +11,7 @@ Transform example demonstrates how to create [Apache Beam](https://beam.apache.o
 
 Please change ***BUILD_VERSION*** to the current project version
 
-```java -cp target/examples-BUILD_VERSION-shaded.jar org.gbif.pipelines.examples.ExamplePipeline src/main/resources/example.properties```
+```java -jar target/examples-BUILD_VERSION-shaded.jar src/main/resources/example.properties```
 
 You can find output files in the ```output``` directory
 

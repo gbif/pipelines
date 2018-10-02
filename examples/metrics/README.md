@@ -1,4 +1,4 @@
-# The example demonstrates how to send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
+# The example demonstrates how to create and send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
 
 ## Main objective
 [ELK](https://www.elastic.co/elk-stack)

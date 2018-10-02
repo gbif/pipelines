@@ -69,6 +69,8 @@ The project is structured as:
 - [**.buildSrc**](./buildSrc) - Tools for building the project
 - [**docs**](./docs) - Documents related to the project
 - [**examples**](./examples) - Examples of using project API and base classes
+    - [**transform**](./examples/transform) - Transform example demonstrates how to create Apache Beam pipeline, create the new transformation and use it together with GBIF transforms and core classes
+    - [**metrics**](./examples/metrics) - The example demonstrates how to create and send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
 - [**pipelines**](./pipelines) - Main pipelines module
     - [**beam-common**](./pipelines/beam-common) - Classes and API for using with Apache Beam
     - [**ingest-gbif**](./pipelines/ingest-gbif) - Main GBIF pipelines for ingestion biodiversity data
