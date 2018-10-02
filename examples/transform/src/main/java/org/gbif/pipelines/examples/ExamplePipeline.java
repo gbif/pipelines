@@ -19,11 +19,11 @@ import org.slf4j.LoggerFactory;
  * <p>You can run pipeline (Please change BUILD_VERSION to the current project version):
  *
  * <pre>{@code
- * java -cp target/examples-BUILD_VERSION-shaded.jar org.gbif.pipelines.examples.ExamplePipeline src/main/resources/example.properties
+ * java -jar target/examples-transform-BUILD_VERSION-shaded.jar src/main/resources/example.properties
  *
  * or pass all parameters:
  *
- * java -cp target/examples-BUILD_VERSION-shaded.jar org.gbif.pipelines.examples.ExamplePipeline --runner=DirectRunner --targetPath=target/example-record --inputPath=example.zip
+ * java -jar target/examples-transform-BUILD_VERSION-shaded.jar --runner=DirectRunner --targetPath=target/example-record --inputPath=example.zip
  *
  * }</pre>
  */
