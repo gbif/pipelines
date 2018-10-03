@@ -42,7 +42,7 @@ public class Slf4jSink extends org.apache.spark.metrics.sink.Slf4jSink {
 
 ### 2. Provide Spark metrics and logger configurations
 
-#### 2.1 Create Spark metrics configuration file
+#### 2.1 Spark metrics configuration file
 
 Please read about [Spark metrics](https://spark.apache.org/docs/latest/monitoring.html#metrics)
 
@@ -52,14 +52,14 @@ executor.sink.slf4j.class=org.apache.spark.metrics.sink.Slf4jSink
 driver.sink.slf4j.class=org.gbif.pipelines.common.beam.Slf4jSink
 ```
 
-#### 2.2 Create Spark log4j configuration file
+#### 2.2 Spark log4j configuration file
 [log4j.properties](./src/main/resources/log4j.properties)
 ```properties
 ```
 ---
 
-### 3. Create Logstash main configuration
-Create a simple Logstash configuration file and call it ```examples-metrics.config```. For more detailed information please read articles [Logstash configuration file structure](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html) and [more complex examples](https://www.elastic.co/guide/en/logstash/current/config-examples.html)
+### 3. Logstash main configuration
+Create a simple Logstash configuration file and call it `examples-metrics.config`. For more detailed information please read articles [Logstash configuration file structure](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html) and [more complex examples](https://www.elastic.co/guide/en/logstash/current/config-examples.html)
 
 #### 3.1 Input section
 Add input section to listen the host and port for [GELF(The Graylog Extended Log Format)](http://docs.graylog.org/en/2.4/pages/gelf.html) messages
@@ -73,7 +73,7 @@ input {
 ```
 
 #### 3.1 Filter section
-In our case necessary information about metrics is stored in ```message``` field.
+In our case necessary information about metrics is stored in `message` field.
 We can add filter section with [kv](https://www.elastic.co/guide/en/logstash/current/plugins-filters-kv.html#plugins-filters-kv), kv helps automatically parse messages and convert from string to json.
 
 Before kv filter:
@@ -90,10 +90,10 @@ After kv filter:
 }
 ```
 
-- ```source``` - a field for parsing
-- ```target``` - a new field for parsed result
-- ```field_split``` - split characters, in our case it is a comma
-- ```trim_key``` - to remove spaces in a key
+- `source` - a field for parsing
+- `target` - a new field for parsed result
+- `field_split` - split characters, in our case it is a comma
+- `trim_key` - to remove spaces in a key
 ```
 filter {
     kv {
@@ -106,7 +106,7 @@ filter {
 ```
 
 #### 3.2 Output section
-To output in
+For output logs to console and elasticsearch add output section:
 ```
 output {
     stdout {
@@ -114,7 +114,7 @@ output {
     }
     elasticsearch {
         hosts => "localhost:9200"
-        index => "examples-metrics-%{+YYYY.MM.dd}"
+        index => "examples-metrics"
     }
 }
 ```
@@ -143,7 +143,7 @@ output {
     }
     elasticsearch {
         hosts => "localhost:9200"
-        index => "examples-metrics-%{+YYYY.MM.dd}"
+        index => "examples-metrics"
     }
 }
 ```
@@ -151,14 +151,19 @@ output {
 
 ### 4. How to run the example
 
+If you don't have an [ELK](https://www.elastic.co/elk-stack) instance, you can:
+
+[Download and run Elasticsearch](https://www.elastic.co/downloads/elasticsearch)
 ```shell
 elasticsearch/bin/elasticsearch
 ```
 
+[Download and run Kibana](https://www.elastic.co/downloads/kibana)
 ```shell
 kibana/bin/kibana
 ```
 
+[Download and run Logstash](https://www.elastic.co/downloads/logstash) using `examples-metrics.config` configuration created in step 3.2
 ```shell
 logstash/bin/logstash -f examples-metrics.config
 ```
