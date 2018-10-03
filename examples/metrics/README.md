@@ -163,19 +163,19 @@ elasticsearch/bin/elasticsearch
 kibana/bin/kibana
 ```
 
-[Download and run Logstash](https://www.elastic.co/downloads/logstash) using `examples-metrics.config` configuration created in step [3.2](#3-logstash-main-configuration)
+[Download and run Logstash](https://www.elastic.co/downloads/logstash) using `examples-metrics.config` configuration created in step [3](#3-logstash-main-configuration)
 ```shell
 logstash/bin/logstash -f examples-metrics.config
 ```
 
-Standalone Spark
+Standalone Spark, [build the project](./../../) and run:
 ```shell
 java -jar target/examples-metrics-BUILD_VERSION-shaded.jar src/main/resources/example.properties
 ```
 
 Cluster Spark
 ```shell
-sudo -u hdfs spark2-submit --conf spark.metrics.conf=metrics.properties  --conf "spark.driver.extraClassPath=/home/crap/logstash-gelf-1.11.2.jar" --driver-java-options "-Dlog4j.configuration=file:/log4j.properties" --class org.gbif.pipelines.examples.MetricsPipeline --master yarn examples-metrics-BUILD_VERSION-shaded.jar src/main/resources/example.properties
+sudo -u hdfs spark2-submit --conf spark.metrics.conf=metrics.properties  --conf "spark.driver.extraClassPath=logstash-gelf-1.11.2.jar" --driver-java-options "-Dlog4j.configuration=file:/log4j.properties" --class org.gbif.pipelines.examples.MetricsPipeline --master yarn examples-metrics-BUILD_VERSION-shaded.jar src/main/resources/example.properties
 ```
 ---
 
