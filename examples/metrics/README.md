@@ -44,14 +44,14 @@ public class Slf4jSink extends org.apache.spark.metrics.sink.Slf4jSink {
 
 Please read about [Spark metrics](https://spark.apache.org/docs/latest/monitoring.html#metrics)
 
-[metrics.properties](./src/resources/metrics.properties)
+[metrics.properties](./src/main/resources/metrics.properties)
 ```properties
 executor.sink.slf4j.class=org.apache.spark.metrics.sink.Slf4jSink
 driver.sink.slf4j.class=org.gbif.pipelines.common.beam.Slf4jSink
 ```
 
 #### 2.2 Create Spark log4j configuration file
-[log4j.properties](./src/resources/log4j.properties)
+[log4j.properties](./src/main/resources/log4j.properties)
 ```properties
 ```
 
