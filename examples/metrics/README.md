@@ -5,25 +5,25 @@
 
 ### Base sequence of actions to get the result:
  - 1 [Java project level:](#1-java-project-level)
-    - 1.1 [Add all necessary dependencies to the project](#11-dependencies)
-    - 1.2 [Create Apache Beam pipeline class](#12-create-a-pipeline-class)
-    - 1.3 [Add ParDo function with Apache Beam Counter to the class](#13-create-dofn-with-apache-beam-counter)
-    - 1.4 [Add additional information to the logger](#)
-    - 1.5 [Create Spark Slf4j adapter for Apache Beam](#)
- - 2 [Spark level:](#spark-level)
-    - 2.1 [Create metrics properties](#)
-    - 2.2 [Create log4j properties](#)
- - 3 [Logstash level:](#)
-    - 3.1 [Create Logstash configuration](#create-logstash-configuration)
- - 4 [How to run:](#how-to-run)
-    - 4.1 [Run ELK](#run-elk)
-    - 4.2 [Run Spark standalone](#run-spark-standalone)
-    - 4.3 [Run Spark cluster](#run-spark-cluster)
- - 5 [Elasticsearch level:](#)
-    - 5.1 [Change index template](#)
- - 6 [Kibana level:](#)
-    - 6.1 [Update index patterns](#)
-    - 6.2 [Create visualization and dashboard](#)
+    - 1.1 [Add all necessary dependencies to the project](#11-add-all-necessary-dependencies-to-the-project)
+    - 1.2 [Create Apache Beam pipeline class](#12-create-apache-beam-pipeline-class)
+    - 1.3 [Add ParDo function with Apache Beam Counter to the class](#13-add-pardo-function-with-apache-beam-counter-to-the-class)
+    - 1.4 [Add additional information to the logger](#14-add-additional-information-to-the-logger)
+    - 1.5 [Create Spark Slf4j adapter for Apache Beam](#15-create-spark-slf4j-adapter-for-apache-beam)
+ - 2 [Spark level:](#2-spark-level)
+    - 2.1 [Create metrics properties](#21-create-metrics-properties)
+    - 2.2 [Create log4j properties](#22-create-log4j-properties)
+ - 3 [Logstash level:](#3-logstash-level)
+    - 3.1 [Create Logstash configuration](#31-create-logstash-configuration)
+ - 4 [How to run:](#4-how-to-run)
+    - 4.1 [Run ELK](#41-run-elk)
+    - 4.2 [Run Spark standalone](#42-run-spark-standalone)
+    - 4.3 [Run Spark cluster](#42-run-spark-cluster)
+ - 5 [Elasticsearch level:](#5-elasticsearch-level)
+    - 5.1 [Change index template](#51-run-spark-cluster)
+ - 6 [Kibana level:](#6-kibana-level)
+    - 6.1 [Update index patterns](#61-update-index-patterns)
+    - 6.2 [Create visualization and dashboard](#62-create-visualization-and-dashboard)
 
 ---
 ### 1. Java project level
@@ -277,7 +277,8 @@ output {
 
 ### 4. How to run
 
-#### 4.1 Run Spark standalone
+#### 4.1 Run ELK
+
 If you don't have an [ELK](https://www.elastic.co/elk-stack) instance, you can:
 
 [Download and run Elasticsearch](https://www.elastic.co/downloads/elasticsearch)
@@ -295,14 +296,15 @@ kibana/bin/kibana
 logstash/bin/logstash -f examples-metrics.config
 ```
 
-#### 4.2 Run Spark cluster
+#### 4.2 Run Spark standalone
 
 Standalone Spark, [build the project](https://github.com/gbif/pipelines#how-to-build-the-project) and run:
 ```shell
 java -jar target/examples-metrics-BUILD_VERSION-shaded.jar src/main/resources/example.properties
 ```
 
-Or run in a Spark cluster:
+#### 4.3 Run Spark cluster
+
 - Remove Spark section in the project [pom.xml](./pom.xml)
 - Download [logstash-gelf-1.11.2.jar](http://central.maven.org/maven2/biz/paluch/logging/logstash-gelf/1.12.0/logstash-gelf-1.12.0.jar) library
 - [Build the project](https://github.com/gbif/pipelines#how-to-build-the-project)
