@@ -168,7 +168,7 @@ kibana/bin/kibana
 logstash/bin/logstash -f examples-metrics.config
 ```
 
-Standalone Spark, [build the project](./../../../) and run:
+Standalone Spark, [build the project](https://github.com/gbif/pipelines#how-to-build-the-project) and run:
 ```shell
 java -jar target/examples-metrics-BUILD_VERSION-shaded.jar src/main/resources/example.properties
 ```
