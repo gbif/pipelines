@@ -89,7 +89,13 @@ The project is structured as:
 
 The project uses [Apache Maven](https://maven.apache.org/) tool for building. Project contains maven wrapper and script for Linux and MacOS systems, you just can run **build.sh** script:
 
-```./build.sh``` or ```source build.sh```
+```shell
+./build.sh
+```
+or
+```shell
+source build.sh
+```
 
 Please read [Apache Maven how-to](https://maven.apache.org/run.html).
 

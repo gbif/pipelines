@@ -58,7 +58,7 @@ driver.sink.slf4j.class=org.gbif.pipelines.common.beam.Slf4jSink
 ### 3. Create Logstash main configuration
 Let's create a simple Logstash configuration file and call it ```examples-metrics.config```
 
-```
+```ruby
 input {
     gelf {
         host=>"127.0.0.1"
@@ -90,19 +90,19 @@ For more detailed information please read articles [Logstash configuration file 
 
 ### 4. How to run the example
 
-```
+```shell
 elasticsearch/bin/elasticsearch
 ```
 
-```
+```shell
 kibana/bin/kibana
 ```
 
-```
+```shell
 logstash/bin/logstash -f examples-metrics.config
 ```
 
-```
+```shell
 java -jar target/examples-metrics-BUILD_VERSION-shaded.jar src/main/resources/example.properties
 ```
 

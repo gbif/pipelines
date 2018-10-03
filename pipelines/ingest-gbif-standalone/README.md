@@ -18,7 +18,7 @@ Please change:
 - **ES_INDEX_NAME** - Elasticsearch index name
 
 #### From DwCA to ExtendedRecord *.avro file:
-```
+```shell
 java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --runner=SparkRunner \
  --pipelineStep=DWCA_TO_VERBATIM \
@@ -30,7 +30,7 @@ java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
 ```
 
 #### From DwCA to GBIF interpreted *.avro files:
-```
+```shell
 java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --runner=SparkRunner \
  --pipelineStep=DWCA_TO_INTERPRETED \
@@ -42,7 +42,7 @@ java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
 ```
 
 #### From DwCA to Elasticsearch index:
-```
+```shell
 java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --runner=SparkRunner \
  --pipelineStep=DWCA_TO_ES_INDEX \
@@ -55,7 +55,7 @@ java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
 ```
 
 #### From GBIF interpreted *.avro files to Elasticsearch index:
-```
+```shell
 java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --runner=SparkRunner \
  --pipelineStep=INTERPRETED_TO_ES_INDEX \
