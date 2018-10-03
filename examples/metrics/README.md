@@ -4,10 +4,10 @@
 [ELK](https://www.elastic.co/elk-stack)
 
 ### Base sequence of actions to get the result:
- - 1 [Java project level:](#java-project-level)
-    - 1.1 [Add all necessary dependencies to the project](#dependencies)
-    - 1.2 [Create Apache Beam pipeline class](#)
-    - 1.3 [Add ParDo function with Apache Beam to the class](#)
+ - 1 [Java project level:](#1-java-project-level)
+    - 1.1 [Add all necessary dependencies to the project](#11-dependencies)
+    - 1.2 [Create Apache Beam pipeline class](#12-create-a-pipeline-class)
+    - 1.3 [Add ParDo function with Apache Beam Counter to the class](#13-create-dofn-with-apache-beam-counter)
     - 1.4 [Add additional information to the logger](#)
     - 1.5 [Create Spark Slf4j adapter for Apache Beam](#)
  - 2 [Spark level:](#spark-level)
@@ -28,12 +28,12 @@
 ---
 ### 1. Java project level
 
-#### 1.1 Dependencies
+#### 1.1 Add all necessary dependencies to the project
 Please check [pom.xml](./pom.xml) to find out dependencies and plugins, remember if you use Spark cluster, you must delete Spark section
 
 [](http://logging.paluch.biz/)
 
-#### 1.2 Create a pipeline class
+#### 1.2 Create Apache Beam pipeline class
 
 Read more about [Apache Beam pipelines](https://beam.apache.org/get-started/wordcount-example/)
 
@@ -75,7 +75,7 @@ public class MetricsPipeline {
 }
 ```
 
-#### 1.3 Create DoFn with Apache Beam Counter
+#### 1.3 Add ParDo function with Apache Beam Counter to the class
 
 Read more about [Apache Beam Metrics](https://beam.apache.org/documentation/sdks/javadoc/2.0.0/org/apache/beam/sdk/metrics/Metrics.html)
 
@@ -104,7 +104,7 @@ Example[1]:
   }
 ```
 
-#### 1.4 Add an additional information to the logger
+#### 1.4 Add additional information to the logger
 
 Call MDC put information after main method
 
@@ -114,7 +114,7 @@ Example[1]:
 MDC.put("uuid", UUID.randomUUID().toString());
 ```
 
-#### 1.5 Slf4J class realisation
+#### 1.5 Create Spark Slf4j adapter for Apache Beam
 
 [Slf4jSink.java](./src/main/java/org/gbif/pipelines/common/beam/Slf4jSink.java)
 
@@ -147,7 +147,7 @@ public class Slf4jSink extends org.apache.spark.metrics.sink.Slf4jSink {
 
 ### 2 Spark level
 
-#### 2.1 Spark metrics configuration file
+#### 2.1 Create metrics properties
 
 Create metrics.properties file, necessary for Spark monitoring, please read about [Spark metrics](https://spark.apache.org/docs/latest/monitoring.html#metrics)
 
@@ -157,7 +157,7 @@ driver.sink.slf4j.class=org.gbif.pipelines.common.beam.Slf4jSink
 ```
 Find the final example [metrics.properties](./src/main/resources/metrics.properties) file.
 
-#### 2.2 Spark log4j configuration file
+#### 2.2 Create log4j properties
 
 Add ELK appender part to Spark log4j properties, please read about [Logstash/Gelf Loggers](http://logging.paluch.biz/examples/log4j-1.2.x.html)
 
@@ -178,6 +178,7 @@ log4j.appender.gelf.MdcFields=uuid
 log4j.appender.gelf.IncludeFullMdc=true
 ```
 Find the final example [log4j.properties](./src/main/resources/log4j.properties) file.
+
 ---
 
 ### 3 Logstash level
@@ -311,9 +312,12 @@ spark2-submit --conf spark.metrics.conf=metrics.properties --conf "spark.driver.
 ```
 ---
 
-### 5. Change logging index template
+### 5. Elasticsearch level
 [Logstash mapping](https://www.elastic.co/blog/logstash_lesson_elasticsearch_mapping)
+#### 5.1 Run Spark cluster
 
 ---
-### 6. Create Kibana dashboard
+### 6. Kibana level
+#### 6.1 Update index patterns
+#### 6.2 Create visualization and dashboard
 
