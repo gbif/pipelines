@@ -1,7 +1,7 @@
 # The example demonstrates how to create and send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
 
 ## Main objective
-[ELK](https://www.elastic.co/elk-stack)
+The main goal is getting some metrics (number of records, failures and etc.) during the ingestion process to collect and analyze metrics after. Because our main distributed system is [Apache Spark](http://spark.apache.org/) and we use [ELK](https://www.elastic.co/elk-stack) for logging, and Spark supports [several sinks](https://spark.apache.org/docs/latest/monitoring.html#metrics), we will try to use Spark Slf4J sink and log all Apache Beam metrics to [ELK](https://www.elastic.co/elk-stack) stack, and create a visual dashboard in Kibana.
 
 ### Base sequence of actions to get the result:
  - 1 [Java project level:](#1-java-project-level)
