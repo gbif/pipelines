@@ -163,7 +163,7 @@ elasticsearch/bin/elasticsearch
 kibana/bin/kibana
 ```
 
-[Download and run Logstash](https://www.elastic.co/downloads/logstash) using `examples-metrics.config` configuration created in step (3.2)[#3-logstash-main-configuration]
+[Download and run Logstash](https://www.elastic.co/downloads/logstash) using `examples-metrics.config` configuration created in step [3.2](#3-logstash-main-configuration)
 ```shell
 logstash/bin/logstash -f examples-metrics.config
 ```
