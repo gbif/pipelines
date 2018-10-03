@@ -18,7 +18,7 @@
  - 4 [How to run:](#4-how-to-run)
     - 4.1 [Run ELK](#41-run-elk)
     - 4.2 [Run Spark standalone](#42-run-spark-standalone)
-    - 4.3 [Run Spark cluster](#42-run-spark-cluster)
+    - 4.3 [Run Spark cluster](#43-run-spark-cluster)
  - 5 [Elasticsearch level:](#5-elasticsearch-level)
     - 5.1 [Change index template](#51-run-spark-cluster)
  - 6 [Kibana level:](#6-kibana-level)
