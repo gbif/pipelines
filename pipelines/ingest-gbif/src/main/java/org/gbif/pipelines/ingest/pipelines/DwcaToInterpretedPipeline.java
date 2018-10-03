@@ -22,6 +22,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import static org.gbif.pipelines.core.RecordType.BASIC;
 import static org.gbif.pipelines.core.RecordType.LOCATION;
@@ -66,10 +67,13 @@ public class DwcaToInterpretedPipeline {
 
   public static void main(String[] args) {
     DwcaPipelineOptions options = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, args);
-    DwcaToInterpretedPipeline.createAndRun(options);
+    run(options);
   }
 
-  public static void createAndRun(DwcaPipelineOptions options) {
+  public static void run(DwcaPipelineOptions options) {
+
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
 
     WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
@@ -119,8 +123,8 @@ public class DwcaToInterpretedPipeline {
         .apply("Interpret location", RecordTransforms.location(wsConfig))
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
-    LOG.info("Running interpretation pipeline");
+    LOG.info("Running the pipeline");
     p.run().waitUntilFinish();
-    LOG.info("Interpretation pipeline has been finished");
+    LOG.info("Pipeline has been finished");
   }
 }

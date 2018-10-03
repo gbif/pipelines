@@ -31,6 +31,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import static org.gbif.pipelines.core.RecordType.BASIC;
 import static org.gbif.pipelines.core.RecordType.LOCATION;
@@ -77,16 +78,13 @@ public class InterpretedToEsIndexPipeline {
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
-    createAndRun(options);
+    run(options);
   }
 
-  public static void createAndRun(EsIndexingPipelineOptions options) {
-    LOG.info("Running indexing pipeline");
-    InterpretedToEsIndexPipeline.create(options).run().waitUntilFinish();
-    LOG.info("Indexing pipeline has been finished");
-  }
+  public static void run(EsIndexingPipelineOptions options) {
 
-  public static Pipeline create(EsIndexingPipelineOptions options) {
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
 
     LOG.info("Adding step 1: Options");
     Function<String, String> pathFn = s -> FsUtils.buildPath(options, s + "*.avro");
@@ -175,6 +173,8 @@ public class InterpretedToEsIndexPipeline {
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize()));
 
-    return p;
+    LOG.info("Running the pipeline");
+    p.run().waitUntilFinish();
+    LOG.info("Pipeline has been finished");
   }
 }

@@ -36,6 +36,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * Pipeline sequence:
@@ -76,21 +77,17 @@ public class DwcaToEsIndexPipeline {
 
   public static void main(String[] args) {
     DwcaPipelineOptions options = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, args);
-    DwcaToEsIndexPipeline.createAndRun(options);
+    run(options);
   }
 
-  public static void createAndRun(DwcaPipelineOptions options) {
+  public static void run(DwcaPipelineOptions options) {
+
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
+
     EsIndexUtils.createIndex(options);
 
-    createAndRunPipeline(options);
-
-    FsUtils.removeTmpDirecrory(options);
-  }
-
-  private static void createAndRunPipeline(DwcaPipelineOptions options) {
-
     LOG.info("Adding step 1: Options");
-
     WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
 
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
@@ -106,7 +103,9 @@ public class DwcaToEsIndexPipeline {
     boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
 
     DwcaIO.Read reader =
-        isDirectory ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
+        isDirectory
+            ? DwcaIO.Read.fromLocation(inputPath)
+            : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
 
     Pipeline p = Pipeline.create(options);
 
@@ -194,7 +193,10 @@ public class DwcaToEsIndexPipeline {
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize()));
 
-    LOG.info("Running indexing pipeline");
+    LOG.info("Running the pipeline");
     p.run().waitUntilFinish();
+    LOG.info("Pipeline has been finished");
+
+    FsUtils.removeTmpDirecrory(options);
   }
 }

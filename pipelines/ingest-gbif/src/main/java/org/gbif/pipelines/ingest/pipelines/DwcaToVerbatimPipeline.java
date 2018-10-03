@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import org.apache.beam.sdk.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * Pipeline sequence:
@@ -44,16 +45,13 @@ public class DwcaToVerbatimPipeline {
 
   public static void main(String[] args) {
     BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
-    DwcaToVerbatimPipeline.createAndRun(options);
+    run(options);
   }
 
-  public static void createAndRun(BasePipelineOptions options) {
-    LOG.info("Running the pipeline");
-    create(options).run().waitUntilFinish();
-    LOG.info("Pipeline has been finished");
-  }
+  public static void run(BasePipelineOptions options) {
 
-  public static Pipeline create(BasePipelineOptions options) {
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
 
     LOG.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
@@ -61,7 +59,8 @@ public class DwcaToVerbatimPipeline {
     String tmpPath = FsUtils.getTempDir(options);
 
     boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
-    Read reader = isDirectory ? Read.fromLocation(inputPath) : Read.fromCompressed(inputPath, tmpPath);
+    Read reader =
+        isDirectory ? Read.fromLocation(inputPath) : Read.fromCompressed(inputPath, tmpPath);
 
     LOG.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);
@@ -69,6 +68,8 @@ public class DwcaToVerbatimPipeline {
     p.apply("Read from Darwin Core Archive", reader)
         .apply("Write to avro", WriteTransforms.extended(targetPath).withoutSharding());
 
-    return p;
+    LOG.info("Running the pipeline");
+    p.run().waitUntilFinish();
+    LOG.info("Pipeline has been finished");
   }
 }

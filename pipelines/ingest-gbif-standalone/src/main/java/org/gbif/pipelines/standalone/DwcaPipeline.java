@@ -29,20 +29,20 @@ public class DwcaPipeline {
 
     switch (options.getPipelineStep()) {
       case DWCA_TO_VERBATIM:
-        DwcaToVerbatimPipeline.createAndRun(options);
+        DwcaToVerbatimPipeline.run(options);
         break;
       case DWCA_TO_INTERPRETED:
-        DwcaToInterpretedPipeline.createAndRun(options);
+        DwcaToInterpretedPipeline.run(options);
         break;
       case DWCA_TO_ES_INDEX:
-        DwcaToEsIndexPipeline.createAndRun(options);
+        DwcaToEsIndexPipeline.run(options);
         break;
       case INTERPRETED_TO_ES_INDEX:
         options.setTargetPath(options.getInputPath());
-        InterpretedToEsIndexExtendedPipeline.createAndRun(options);
+        InterpretedToEsIndexExtendedPipeline.run(options);
         break;
       case VERBATIM_TO_INTERPRETED:
-        VerbatimToInterpretedPipeline.createAndRun(options);
+        VerbatimToInterpretedPipeline.run(options);
         break;
       default:
         break;

@@ -21,6 +21,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import static org.gbif.pipelines.core.RecordType.BASIC;
 import static org.gbif.pipelines.core.RecordType.LOCATION;
@@ -68,16 +69,13 @@ public class VerbatimToInterpretedPipeline {
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
-    createAndRun(options);
+    run(options);
   }
 
-  public static void createAndRun(InterpretationPipelineOptions options) {
-    LOG.info("Running interpretation pipeline");
-    VerbatimToInterpretedPipeline.create(options).run().waitUntilFinish();
-    LOG.info("Interpretation pipeline has been finished");
-  }
+  public static void run(InterpretationPipelineOptions options) {
 
-  public static Pipeline create(InterpretationPipelineOptions options) {
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
 
     List<String> types = options.getInterpretationTypes();
     String wsProperties = options.getWsProperties();
@@ -126,6 +124,8 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret location", RecordTransforms.location(wsProperties))
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
-    return p;
+    LOG.info("Running the pipeline");
+    p.run().waitUntilFinish();
+    LOG.info("Pipeline has been finished");
   }
 }

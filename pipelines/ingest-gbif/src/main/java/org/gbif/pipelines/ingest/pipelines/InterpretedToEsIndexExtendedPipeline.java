@@ -5,6 +5,8 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 
+import org.slf4j.MDC;
+
 /**
  * Pipeline sequence:
  *
@@ -45,14 +47,17 @@ public class InterpretedToEsIndexExtendedPipeline {
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
-    InterpretedToEsIndexExtendedPipeline.createAndRun(options);
+    InterpretedToEsIndexExtendedPipeline.run(options);
   }
 
-  public static void createAndRun(EsIndexingPipelineOptions options) {
+  public static void run(EsIndexingPipelineOptions options) {
+
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
 
     EsIndexUtils.createIndex(options);
 
-    InterpretedToEsIndexPipeline.createAndRun(options);
+    InterpretedToEsIndexPipeline.run(options);
 
     EsIndexUtils.swapIndex(options);
 
