@@ -295,12 +295,12 @@ curl -XGET http://localhost:9200/examples-metrics/_mapping?pretty
 ```
 We will find that `messageKv.value` is a text value. If we want to build a visual chart, we must change `messageKv.value` type form `text` to `long`, to do this we can create predefined index mapping.
 
-1. Save current template to file for future improvements
+##### 5.1.1 Save current template to file for future improvements
 ```shel
 curl -XGET http://localhost:9200/examples-metrics/_mapping?pretty > examples-metrics.json
 ```
 
-2. Open the document and find `messageKv.value` element description:
+##### 5.1.2 Open the document and find `messageKv.value` element description:
 ```json
 "value" : {
     "type" : "text",
@@ -321,7 +321,7 @@ And change it from `text` to `long`:
 }
 ```
 
-3. Create new index template file `new-examples-metrics.json` with root json elements and copy mappings root element from `examples-metrics.json`:
+##### 5.1.3 Create new index template file `new-examples-metrics.json` with root json elements and copy mappings root element from `examples-metrics.json`:
 ```json
 {
   "template": "examples-metrics",
@@ -335,7 +335,7 @@ And change it from `text` to `long`:
 
 Find the final template - [metrics.properties](./src/main/resources/new-examples-metrics.json)
 
-4. Delete old index and push the new template file
+##### 5.1.4 Delete old index and push the new template file
 ```shel
 curl -XDELETE http://localhost:9200/examples-metrics?pretty
 ```
@@ -344,7 +344,7 @@ curl -XDELETE http://localhost:9200/examples-metrics?pretty
 curl --header "Content-Type: application/json" -XPUT http://localhost:9200/_template/examples_metrics_template?pretty -d @new-examples-metrics.json
 ```
 
-5. [Run pipeline again](#42-run-spark-standalone)
+##### 5.1.5 [Run pipeline again](#42-run-spark-standalone)
 
 Please read the article - [Logstash mapping](https://www.elastic.co/blog/logstash_lesson_elasticsearch_mapping)
 
@@ -359,7 +359,7 @@ Go to `Kibana`->`Management`->`Index Patterns` and click the button "Refresh fie
 
 #### 6.2 Create visualization and dashboard
 
-1. Create a new query
+##### 6.2.1 Create a new query
 
 Go to `Kibana`->`Discovery`, create and save the query:
 
@@ -397,14 +397,14 @@ Go to `Kibana`->`Discovery`, create and save the query:
 ```
 
 The query returns result where:
-1. Field `LoggerName` equals `metrics`
-2. Field `Thread` equals `main`
-3. Field `messageKv.name` contains `MetricsPipeline.foo` line
-4. Sort by `@timestamp`
+- Field `LoggerName` equals `metrics`
+- Field `Thread` equals `main`
+- Field `messageKv.name` contains `MetricsPipeline.foo` line
+- Sort by `@timestamp`
 
 Read more about [Elasticsearch query language](https://www.elastic.co/guide/en/elasticsearch/reference/current/_introducing_the_query_language.html)
 
-2. Create the visualization
+##### 6.2.2 Create the visualization
 
 Go to `Kibana`->`Visualize`, click `Create a visualization`, select `Line` and choose your query:
 
