@@ -396,6 +396,14 @@ Go to `Kibana`->`Discovery`, create and save the query:
 }
 ```
 
+The query returns result where:
+1. Field `LoggerName` equals `metrics`
+2. Field `Thread` equals `main`
+3. Field `messageKv.name` contains `MetricsPipeline.foo` line
+4. Sort by `@timestamp`
+
+Read more about [Elasticsearch query language](https://www.elastic.co/guide/en/elasticsearch/reference/current/_introducing_the_query_language.html)
+
 2. Create the visualization
 
 Go to `Kibana`->`Visualize`, click `Create a visualization`, select `Line` and choose your query:
