@@ -12,7 +12,7 @@ This example demonstrates how to set up a processing pipeline that can read a te
     - 1.2 [Create Apache Beam pipeline class](#12-create-apache-beam-pipeline-class)
     - 1.3 [Add ParDo function with Apache Beam Counter to the class](#13-add-pardo-function-with-apache-beam-counter-to-the-class)
     - 1.4 [Add additional information to the logger](#14-add-additional-information-to-the-logger)
-    - 1.5 [Create Spark Slf4j adapter for Apache Beam](#15-create-spark-slf4j-adapter-for-apache-beam)
+    - 1.5 [Create Apache Beam adapter for Spark Slf4j sink](#15-create-apache-beam-adapter-for-spark-slf4j-sink)
  - 2 [Spark level:](#2-spark-level)
     - 2.1 [Create metrics properties](#21-create-metrics-properties)
     - 2.2 [Create log4j properties](#22-create-log4j-properties)
@@ -104,7 +104,7 @@ Add custom [DoFn with Counters](./src/org/gbif/pipelines/examples/MetricsPipelin
 MDC.put("uuid", UUID.randomUUID().toString());
 ```
 
-#### 1.5 Use Spark Slf4j adapter for Apache Beam
+#### 1.5 Create Apache Beam adapter for Spark Slf4j sink
 
 Basically [Slf4jSink.java](./src/main/java/org/gbif/pipelines/common/beam/Slf4jSink.java) is adapter for Spark Slf4J sink, which is absent in Apache Beam Spark runner (used v2.7.0).
 
@@ -173,7 +173,7 @@ Find the final configuration - [log4j.properties](./src/main/resources/log4j.pro
 
 ### 3 Logstash level
 
-We must add/change Logstash coniguration to add new listener for gelf input, add filter for message value and output result to Elasticsearch
+We must add/change Logstash configuration to add new listener for gelf input, add filter for message value and output result to Elasticsearch
 
 #### 3.1 Create Logstash configuration
 
@@ -287,11 +287,119 @@ This request will return first 10 records:
 curl -XGET http://localhost:9200/examples-metrics/_search?pretty
 ```
 
-[Logstash mapping](https://www.elastic.co/blog/logstash_lesson_elasticsearch_mapping)
 #### 5.1 Change index template
+
+If we check index mapping:
+```shel
+curl -XGET http://localhost:9200/examples-metrics/_mapping?pretty
+```
+We will find that `messageKv.value` is a text value. If we want to build a visual chart, we must change `messageKv.value` type form `text` to `long`, to do this we can create predefined index mapping.
+
+1. Save current template to file for future improvements
+```shel
+curl -XGET http://localhost:9200/examples-metrics/_mapping?pretty > examples-metrics.json
+```
+
+2. Open the document and find `messageKv.value` element description:
+```json
+"value" : {
+    "type" : "text",
+    "fields" : {
+      "keyword" : {
+        "type" : "keyword",
+        "ignore_above" : 256
+      }
+    }
+}
+```
+
+And change it from `text` to `long`:
+
+```json
+"value" : {
+    "type" : "long"
+}
+```
+
+3. Create new index template file `new-examples-metrics.json` with root json elements and copy mappings root element from `examples-metrics.json`:
+```json
+{
+  "template": "examples-metrics",
+  "version": 50001,
+  "settings": {
+    "index.refresh_interval": "5s"
+  },
+  COPY YOUR MAPPINGS SECTION FROM examples-metrics.json
+}
+```
+
+Find the final template - [metrics.properties](./src/main/resources/new-examples-metrics.json)
+
+4. Delete old index and push the new template file
+```shel
+curl -XDELETE http://localhost:9200/examples-metrics?pretty
+```
+
+```shel
+curl --header "Content-Type: application/json" -XPUT http://localhost:9200/_template/examples_metrics_template?pretty -d @new-examples-metrics.json
+```
+
+5. [Run pipeline again](#42-run-spark-standalone)
+
+Please read the article - [Logstash mapping](https://www.elastic.co/blog/logstash_lesson_elasticsearch_mapping)
 
 ---
 ### 6. Kibana level
+
+Time to create a visual chart, but before we must Kibana update index patterns to use we new predefined types.
+
 #### 6.1 Update index patterns
+
+Go to `Kibana`->`Management`->`Index Patterns` and click the button "Refresh field list" in the right corner.
+
 #### 6.2 Create visualization and dashboard
+
+1. Create a new query
+
+Go to `Kibana`->`Discovery`, create and save the query:
+
+```json
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "LoggerName": "metrics"
+          }
+        },
+        {
+          "match": {
+            "Thread": "main"
+          }
+        },
+        {
+          "query_string": {
+            "query": "message:*.Beam.Metrics*"
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "@timestamp": {
+        "order": "asc"
+      }
+    }
+  ]
+}
+```
+
+2. Create the visualization
+
+Go to `Kibana`->`Visualize`, click `Create a visualization`, select `Line` and choose your query:
+
+![Line](./src/main/resources/chart.png)
+
 
