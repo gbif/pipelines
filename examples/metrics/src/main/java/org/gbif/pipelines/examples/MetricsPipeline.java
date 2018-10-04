@@ -52,7 +52,7 @@ public class MetricsPipeline {
   }
 
   /**
-   * Simple DoFn filters non-foo words. Using {@link Counter} we can find out how many records were
+   * Simple DoFn filters non-foo words. Using {@link Counter} we can count how many records were
    * filtered
    */
   private static class FilterTextFn extends DoFn<String, String> {

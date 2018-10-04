@@ -51,6 +51,7 @@
                 </transformer>
               </transformers>
               <relocations>
+                <!-- To avoid guava problem in Spark cluster mode -->
                 <relocation>
                   <pattern>com.google.common</pattern>
                   <shadedPattern>g20.com.google.common</shadedPattern>
@@ -66,14 +67,17 @@
   <dependencies>
 
     <!-- This project -->
+    <!-- Dependency to custom Beam Slf4J sink -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>beam-common</artifactId>
     </dependency>
+    <!-- Dependency to custom Beam Options -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>ingest-gbif</artifactId>
       <exclusions>
+        <!-- Excluded to avoid problem with Spark standalone mode and Log4j logger -->
         <exclusion>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
@@ -109,11 +113,22 @@
       <scope>compile</scope>
     </dependency>
 
+    <!-- Spark -->
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_2.11</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-streaming_2.11</artifactId>
+    </dependency>
+
     <!-- Logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+    <!-- GELF adapter for Spark to send logs to ELK -->
     <dependency>
       <groupId>biz.paluch.logging</groupId>
       <artifactId>logstash-gelf</artifactId>

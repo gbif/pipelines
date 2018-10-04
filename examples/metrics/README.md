@@ -1,7 +1,10 @@
 # The example demonstrates how to create and send Apache Beam SparkRunner metrics to ELK and use the result for Kibana dashboards
 
 ## Main objective
-The main goal is getting some metrics (number of records, failures and etc.) during the ingestion process to collect and analyze metrics after. Because our main distributed system is [Apache Spark](http://spark.apache.org/) and we use [ELK](https://www.elastic.co/elk-stack) for logging, and Spark supports [several sinks](https://spark.apache.org/docs/latest/monitoring.html#metrics), we will try to use Spark Slf4J sink and log all Apache Beam metrics to [ELK](https://www.elastic.co/elk-stack) stack, and create a visual dashboard in Kibana.
+The main goal is getting metrics (number of records, failures and etc.) during the ingestion process, collect and analyze them after. Because our main distributed system is [Apache Spark](http://spark.apache.org/) and we use [ELK](https://www.elastic.co/elk-stack) for logging, and Spark supports [several sinks](https://spark.apache.org/docs/latest/monitoring.html#metrics), we will try to use Spark Slf4J sink and log all Apache Beam metrics to [ELK](https://www.elastic.co/elk-stack) stack, and create a visual dashboard in Kibana.
+
+## The example
+This example demonstrates how to set up a processing pipeline that can read a text file, filter only `foo` words and count number of `foo` and `non-foo` words as metrics, log them to ELK and create a visual chart.
 
 ### Base sequence of actions to get the result:
  - 1 [Java project level:](#1-java-project-level)
@@ -20,72 +23,61 @@ The main goal is getting some metrics (number of records, failures and etc.) dur
     - 4.2 [Run Spark standalone](#42-run-spark-standalone)
     - 4.3 [Run Spark cluster](#43-run-spark-cluster)
  - 5 [Elasticsearch level:](#5-elasticsearch-level)
-    - 5.1 [Change index template](#51-run-spark-cluster)
+    - 5.1 [Change index template](#51-change-index-template)
  - 6 [Kibana level:](#6-kibana-level)
     - 6.1 [Update index patterns](#61-update-index-patterns)
     - 6.2 [Create visualization and dashboard](#62-create-visualization-and-dashboard)
 
 ---
+
 ### 1. Java project level
 
-#### 1.1 Add all necessary dependencies to the project
-Please check [pom.xml](./pom.xml) to find out dependencies and plugins, remember if you use Spark cluster, you must delete Spark section
+- Dependencies:
+    - [pom.xml](./pom.xml)
+- Java classes:
+    - [MetricsPipeline.java](./src/main/java/org/gbif/pipelines/examples/MetricsPipeline.java)
+- Resources:
+    - [log4j.properties](./src/main/resources/log4j.properties)
+    - [metrics.properties](./src/main/resources/metrics.properties)
 
-[](http://logging.paluch.biz/)
+
+#### 1.1 Add all necessary dependencies to the project
+In our case we run Spark as a standalone instance, please check [pom.xml](./pom.xml) to find out dependencies and plugins (if you use Spark cluster, you must delete Spark section in pom.xml and change hadoop dependencies scopes from **compile** to **provided** and also you must [add GELF library to Spark classpath](#43-run-spark-cluster)).
+
+You can find more about [Beam Spark runner](https://beam.apache.org/documentation/runners/spark/).
 
 #### 1.2 Create Apache Beam pipeline class
 
-Read more about [Apache Beam pipelines](https://beam.apache.org/get-started/wordcount-example/)
-
-Example[1]:
+Create simple [Apache Beam pipeline class](./src/org/gbif/pipelines/examples/MetricsPipeline#L33), where we:
+1. Create pipeline from custom options
 
 ```java
-package org.gbif.pipelines.examples;
+InterpretationPipelineOptions options =
+    PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
+Pipeline p = Pipeline.create(options);
+}
+```
+2. Read the source file and apply custom ParDo function for filtering `foo` words
 
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+```java
+p.apply("Reads file", TextIO.read().from(options.getInputPath()))
+    .apply("Filters words", ParDo.of(new FilterTextFn()));
+}
+```
+3. Run the pipeline
 
-import java.util.UUID;
-
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.io.TextIO;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-public class MetricsPipeline {
-
-  private static final Logger LOG = LoggerFactory.getLogger(MetricsPipeline.class);
-
-  public static void main(String[] args) {
-
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
-    Pipeline p = Pipeline.create(options);
-
-    p.apply("Reads file", TextIO.read().from(options.getInputPath()))
-        .apply("Filters words", ParDo.of(new FilterTextFn()));
-
-    LOG.info("Running the pipeline");
-    p.run().waitUntilFinish();
-    LOG.info("Pipeline has been finished");
-  }
+```java
+LOG.info("Running the pipeline");
+p.run().waitUntilFinish();
+LOG.info("Pipeline has been finished");
 }
 ```
 
 #### 1.3 Add ParDo function with Apache Beam Counter to the class
 
-Read more about [Apache Beam Metrics](https://beam.apache.org/documentation/sdks/javadoc/2.0.0/org/apache/beam/sdk/metrics/Metrics.html)
-
-Example[1]:
+Add custom [DoFn with Counters](./src/org/gbif/pipelines/examples/MetricsPipeline#L58) (Read more about [Apache Beam Metrics](https://beam.apache.org/documentation/sdks/javadoc/2.0.0/org/apache/beam/sdk/metrics/Metrics.html)), where we:
 
 ```java
-  /**
-   * Simple DoFn filters non-foo words. Using {@link Counter} we can find out how many records were
-   * filtered
-   */
   private static class FilterTextFn extends DoFn<String, String> {
 
     private final Counter fooCounter = Metrics.counter(MetricsPipeline.class, "foo");
@@ -106,17 +98,15 @@ Example[1]:
 
 #### 1.4 Add additional information to the logger
 
-Call MDC put information after main method
-
-Example[1]:
+[Call MDC.put after main method](./src/org/gbif/pipelines/examples/MetricsPipeline#L40) to add id for each logger message:
 
 ```java
 MDC.put("uuid", UUID.randomUUID().toString());
 ```
 
-#### 1.5 Create Spark Slf4j adapter for Apache Beam
+#### 1.5 Use Spark Slf4j adapter for Apache Beam
 
-[Slf4jSink.java](./src/main/java/org/gbif/pipelines/common/beam/Slf4jSink.java)
+Basically [Slf4jSink.java](./src/main/java/org/gbif/pipelines/common/beam/Slf4jSink.java) is adapter for Spark Slf4J sink, which is absent in Apache Beam Spark runner (used v2.7.0).
 
 ```java
 package org.gbif.pipelines.common.beam;
@@ -141,11 +131,11 @@ public class Slf4jSink extends org.apache.spark.metrics.sink.Slf4jSink {
 }
 ```
 
-[1] Find the final example [MetricsPipeline](./src/org/gbif/pipelines/examples/MetricsPipeline) class.
-
 ---
 
 ### 2 Spark level
+
+To turn on metrics support in Spark we must provide metrics.properties and for sending logs to ELK we must change Spark logger properties.
 
 #### 2.1 Create metrics properties
 
@@ -155,11 +145,11 @@ Create metrics.properties file, necessary for Spark monitoring, please read abou
 executor.sink.slf4j.class=org.apache.spark.metrics.sink.Slf4jSink
 driver.sink.slf4j.class=org.gbif.pipelines.common.beam.Slf4jSink
 ```
-Find the final example [metrics.properties](./src/main/resources/metrics.properties) file.
+Find the final configuration - [metrics.properties](./src/main/resources/metrics.properties)
 
 #### 2.2 Create log4j properties
 
-Add ELK appender part to Spark log4j properties, please read about [Logstash/Gelf Loggers](http://logging.paluch.biz/examples/log4j-1.2.x.html)
+Add ELK appender part to Spark log4j properties, please read about all [Logstash/Gelf Loggers](http://logging.paluch.biz/examples/log4j-1.2.x.html) settings.
 
 ```properties
 # ELK appender
@@ -177,11 +167,13 @@ log4j.appender.gelf.MaximumMessageSize=8192
 log4j.appender.gelf.MdcFields=uuid
 log4j.appender.gelf.IncludeFullMdc=true
 ```
-Find the final example [log4j.properties](./src/main/resources/log4j.properties) file.
+Find the final configuration - [log4j.properties](./src/main/resources/log4j.properties)
 
 ---
 
 ### 3 Logstash level
+
+We must add/change Logstash coniguration to add new listener for gelf input, add filter for message value and output result to Elasticsearch
 
 #### 3.1 Create Logstash configuration
 
@@ -245,35 +237,7 @@ output {
 }
 ```
 
-#### Completed configuration:
-```
-input {
-    gelf {
-        host => "127.0.0.1"
-        port => "12201"
-    }
-}
-
-filter {
-    kv {
-        source => "message"
-        target => "messageKv"
-        field_split => ","
-        trim_key => " "
-    }
-}
-
-output {
-    stdout {
-        codec => "rubydebug"
-    }
-    elasticsearch {
-        hosts => "localhost:9200"
-        index => "examples-metrics"
-    }
-}
-```
----
+Find the final configuration - [metrics.properties](./src/main/resources/examples-metrics.config)
 
 ### 4. How to run
 
@@ -312,11 +276,19 @@ java -jar target/examples-metrics-BUILD_VERSION-shaded.jar src/main/resources/ex
 ```shell
 spark2-submit --conf spark.metrics.conf=metrics.properties --conf "spark.driver.extraClassPath=logstash-gelf-1.11.2.jar" --driver-java-options "-Dlog4j.configuration=file:log4j.properties" --class org.gbif.pipelines.examples.MetricsPipeline --master yarn examples-metrics-BUILD_VERSION-shaded.jar --runner=SparkRunner --inputPath=foobar.txt
 ```
+
 ---
 
 ### 5. Elasticsearch level
+After first run, you will find the new index `examples-metrics` in Elasticserach.
+
+This request will return first 10 records:
+```shel
+curl -XGET http://localhost:9200/examples-metrics/_search?pretty
+```
+
 [Logstash mapping](https://www.elastic.co/blog/logstash_lesson_elasticsearch_mapping)
-#### 5.1 Run Spark cluster
+#### 5.1 Change index template
 
 ---
 ### 6. Kibana level
