@@ -380,7 +380,7 @@ Go to `Kibana`->`Discovery`, create and save the query:
         },
         {
           "query_string": {
-            "query": "message:*.Beam.Metrics*"
+            "query": "messageKv.name:*MetricsPipeline.foo"
           }
         }
       ]
@@ -400,6 +400,6 @@ Go to `Kibana`->`Discovery`, create and save the query:
 
 Go to `Kibana`->`Visualize`, click `Create a visualization`, select `Line` and choose your query:
 
-![Line](./src/main/resources/chart.png)
+![Line](./src/main/resources/line.png)
 
 
