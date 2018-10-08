@@ -1,5 +1,11 @@
 package org.gbif.pipelines.estools.service;
 
+import org.apache.http.Header;
+import org.apache.http.entity.ContentType;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.protocol.HTTP;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.RequestOptions;
 import org.gbif.pipelines.estools.service.EsConstants.Constant;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
@@ -44,8 +50,7 @@ public abstract class EsApiIntegration {
     String endpoint = buildEndpoint(idxName, "_settings");
     try {
       RestClient client = ES_SERVER.getRestClient();
-      Response response =
-          client.performRequest(HttpGet.METHOD_NAME, endpoint, Collections.emptyMap());
+      Response response = client.performRequest(new Request(HttpGet.METHOD_NAME, endpoint));
 
       // parse response and return
       return JsonHandler.readTree(response.getEntity());
@@ -111,7 +116,15 @@ public abstract class EsApiIntegration {
     try {
       String endpoint = buildEndpoint("_aliases");
       RestClient client = ES_SERVER.getRestClient();
-      client.performRequest(HttpPost.METHOD_NAME, endpoint, Collections.emptyMap(), entityBody);
+
+      Request request = new Request(HttpPost.METHOD_NAME, endpoint);
+      request.setEntity(entityBody);
+      // header
+      RequestOptions.Builder optionsBuilder = RequestOptions.DEFAULT.toBuilder();
+      optionsBuilder.addHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+      request.setOptions(optionsBuilder);
+
+      client.performRequest(request);
     } catch (IOException e) {
       throw new AssertionError("Could not add indexes to alias", e);
     }
@@ -123,8 +136,7 @@ public abstract class EsApiIntegration {
     String endpoint = buildEndpoint(idxName, "_mapping");
     try {
       RestClient client = ES_SERVER.getRestClient();
-      Response response =
-          client.performRequest(HttpGet.METHOD_NAME, endpoint, Collections.emptyMap());
+      Response response = client.performRequest(new Request(HttpGet.METHOD_NAME, endpoint));
 
       // parse response and return
       return JsonHandler.readTree(response.getEntity());

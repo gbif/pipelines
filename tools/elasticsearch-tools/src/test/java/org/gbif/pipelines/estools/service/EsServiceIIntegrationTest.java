@@ -1,5 +1,6 @@
 package org.gbif.pipelines.estools.service;
 
+import org.elasticsearch.client.Request;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 
 import java.io.IOException;
@@ -44,7 +45,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     // When
     String idx = EsService.createIndex(ES_SERVER.getEsClient(), "idx", INDEXING);
 
-    Response response = ES_SERVER.getRestClient().performRequest(HttpGet.METHOD_NAME, "/" + idx);
+    Response response =
+        ES_SERVER.getRestClient().performRequest(new Request(HttpGet.METHOD_NAME, "/" + idx));
 
     // Should
     assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());

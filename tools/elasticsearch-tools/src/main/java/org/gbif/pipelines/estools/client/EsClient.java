@@ -17,9 +17,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HTTP;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,21 +108,23 @@ public class EsClient implements AutoCloseable {
   private Response performRequest(
       String method, String endpoint, Map<String, String> params, HttpEntity body)
       throws ResponseException {
+    // create request
+    Request request = new Request(method, endpoint);
+    request.setEntity(body);
+    // add header to options
+    RequestOptions.Builder optionsBuilder = RequestOptions.DEFAULT.toBuilder();
+    optionsBuilder.addHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+    request.setOptions(optionsBuilder);
+    // add parameters
+    params.forEach(request::addParameter);
     try {
-      return restClient.performRequest(
-          method, endpoint, params, body, createJsonContentTypeHeader());
+      return restClient.performRequest(request);
     } catch (ResponseException exc) {
       throw exc;
     } catch (IOException exc) {
       LOG.error("Error when calling ES", exc);
       throw new IllegalStateException(exc.getMessage(), exc);
     }
-  }
-
-  private Header[] createJsonContentTypeHeader() {
-    return new Header[] {
-      new BasicHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-    };
   }
 
   @Override
