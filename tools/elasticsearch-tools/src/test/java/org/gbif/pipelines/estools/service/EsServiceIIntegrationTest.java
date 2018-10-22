@@ -1,6 +1,5 @@
 package org.gbif.pipelines.estools.service;
 
-import org.elasticsearch.client.Request;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 
 import java.io.IOException;
@@ -12,6 +11,7 @@ import java.util.Set;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;

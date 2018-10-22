@@ -1,11 +1,5 @@
 package org.gbif.pipelines.estools.service;
 
-import org.apache.http.Header;
-import org.apache.http.entity.ContentType;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.protocol.HTTP;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.RequestOptions;
 import org.gbif.pipelines.estools.service.EsConstants.Constant;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
@@ -21,6 +15,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.protocol.HTTP;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.junit.ClassRule;
