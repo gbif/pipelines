@@ -68,7 +68,7 @@
       <artifactId>joda-time</artifactId>
     </dependency>
 
-    <!-- temp till beam releases ES6 support -->
+    <!-- TODO START: temp till beam releases ES6 support -->
     <dependency>
       <groupId>com.google.auto.value</groupId>
       <artifactId>auto-value-annotations</artifactId>
@@ -82,8 +82,8 @@
     <dependency>
       <groupId>org.elasticsearch.client</groupId>
       <artifactId>elasticsearch-rest-client</artifactId>
-      <version>6.4.1</version>
     </dependency>
+    <!-- TODO END: temp till beam releases ES6 support -->
 
   </dependencies>
 
