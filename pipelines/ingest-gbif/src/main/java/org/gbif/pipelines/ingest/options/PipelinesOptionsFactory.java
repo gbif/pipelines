@@ -29,16 +29,9 @@ public final class PipelinesOptionsFactory {
   }
 
   /**
-   * Creates pipeline options object extended {@link InterpretationPipelineOptions} from args or
-   * file, adds hdfs configuration to options
-   *
-   * @param clazz class extended {@link InterpretationPipelineOptions}
-   * @param args string arguments or file
+   * Register hdfs configs for options extended {@link InterpretationPipelineOptions}
    */
-  private static <T extends InterpretationPipelineOptions> T createWithHdfs(
-      Class<T> clazz, String[] args) {
-    T options = create(clazz, args);
-
+  public static void registerHdfs(InterpretationPipelineOptions options) {
     String hdfsPath = options.getHdfsSiteConfig();
     String corePath = options.getCoreSiteConfig();
     boolean isHdfsExist = !Strings.isNullOrEmpty(hdfsPath) && new File(hdfsPath).exists();
@@ -49,8 +42,6 @@ public final class PipelinesOptionsFactory {
       conf.addResource(new Path(corePath));
       options.setHdfsConfiguration(Collections.singletonList(conf));
     }
-
-    return options;
   }
 
   /**
@@ -59,7 +50,9 @@ public final class PipelinesOptionsFactory {
    * @param args string arguments or file
    */
   public static InterpretationPipelineOptions createInterpretation(String[] args) {
-    return createWithHdfs(InterpretationPipelineOptions.class, args);
+    InterpretationPipelineOptions options = create(InterpretationPipelineOptions.class, args);
+    registerHdfs(options);
+    return options;
   }
 
   /**
@@ -68,6 +61,8 @@ public final class PipelinesOptionsFactory {
    * @param args string arguments or file
    */
   public static EsIndexingPipelineOptions createIndexing(String[] args) {
-    return createWithHdfs(EsIndexingPipelineOptions.class, args);
+    EsIndexingPipelineOptions options = create(EsIndexingPipelineOptions.class, args);
+    registerHdfs(options);
+    return options;
   }
 }

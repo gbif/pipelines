@@ -39,9 +39,11 @@ public class DwcaPipeline {
         break;
       case INTERPRETED_TO_ES_INDEX:
         options.setTargetPath(options.getInputPath());
+        PipelinesOptionsFactory.registerHdfs(options);
         InterpretedToEsIndexExtendedPipeline.run(options);
         break;
       case VERBATIM_TO_INTERPRETED:
+        PipelinesOptionsFactory.registerHdfs(options);
         VerbatimToInterpretedPipeline.run(options);
         break;
       default:
