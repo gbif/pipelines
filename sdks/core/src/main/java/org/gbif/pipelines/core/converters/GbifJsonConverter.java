@@ -96,7 +96,7 @@ public class GbifJsonConverter extends JsonConverter {
       Optional.ofNullable(terms.get(DwcTerm.recordedBy.qualifiedName()))
         .ifPresent(x -> this.addJsonField("recordedBy", x));
       Optional.ofNullable(terms.get(DwcTerm.organismID.qualifiedName()))
-        .ifPresent(x -> this.addJsonField("organismID", x));
+        .ifPresent(x -> this.addJsonField("organismId", x));
 
       this.addJsonObject("verbatim", terms);
     };

@@ -19,7 +19,7 @@
       "typeStatus": {"type": "text", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
       "recordedBy": {"type": "keyword", "copy_to": "all"},
-      "organismID": {"type": "keyword"},
+      "organismId": {"type": "keyword"},
 
       "continent": {"type":"keyword"},
       "waterBody": {"type":"text", "copy_to": "all"},
