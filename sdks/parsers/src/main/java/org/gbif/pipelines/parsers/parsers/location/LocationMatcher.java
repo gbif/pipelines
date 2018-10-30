@@ -4,7 +4,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.legacy.CountryMaps;
+import org.gbif.pipelines.parsers.parsers.location.legacy.CountryMaps;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;

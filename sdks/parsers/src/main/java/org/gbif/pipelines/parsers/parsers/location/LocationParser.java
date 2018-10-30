@@ -7,7 +7,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.legacy.Wgs84Projection;
+import org.gbif.pipelines.parsers.parsers.location.legacy.Wgs84Projection;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 

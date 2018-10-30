@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.parsers.legacy;
+package org.gbif.pipelines.parsers.parsers.location.legacy;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.pipelines.parsers.exception.IORuntimeException;

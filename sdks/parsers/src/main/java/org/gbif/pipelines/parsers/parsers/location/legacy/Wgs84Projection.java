@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.parsers.legacy;
+package org.gbif.pipelines.parsers.parsers.location.legacy;
 
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.DatumParser;
