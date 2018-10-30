@@ -14,6 +14,8 @@ public class Organization implements Serializable {
 
   private String country;
 
+  private String title;
+
   public String getEndorsingNodeKey() {
     return endorsingNodeKey;
   }
@@ -28,5 +30,13 @@ public class Organization implements Serializable {
 
   public void setCountry(String country) {
     this.country = country;
+  }
+
+  public String getTitle() {
+    return title;
+  }
+
+  public void setTitle(String title) {
+    this.title = title;
   }
 }

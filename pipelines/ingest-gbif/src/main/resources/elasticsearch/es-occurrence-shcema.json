@@ -2,11 +2,12 @@
   "record": {
     "properties": {
 
-      "id": {"type": "keyword"},
-      "datasetId": {"type": "keyword"},
+      "datasetKey": {"type": "keyword"},
+      "datasetTitle": {"type": "keyword", "copy_to": true},
       "installationKey": {"type": "keyword"},
       "publishingOrganizationKey": {"type": "keyword"},
       "endorsingNodeKey": {"type": "keyword"},
+      "publisherTitle": {"type": "keyword", "copy_to": true},
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "text"},
@@ -15,11 +16,12 @@
       "individualCount": {"type": "integer"},
       "typeStatus": {"type": "text"},
       "references": {"type":"text"},
+      "recordedBy": {"type": "keyword", "copy_to": true},
+      "organismID": {"type": "keyword"},
 
-      "continent": {"type":"text"},
+      "continent": {"type":"keyword"},
       "waterBody": {"type":"text"},
-      "country": {"type":"text"},
-      "countryCode": {"type":"text"},
+      "countryCode": {"type":"keyword"},
       "stateProvince": {"type":"text"},
       "minimumElevationInMeters": {"type":"double"},
       "maximumElevationInMeters": {"type":"double"},
@@ -29,7 +31,7 @@
       "maximumDistanceAboveSurfaceInMeters": {"type":"double"},
       "coordinateUncertaintyInMeters": {"type":"double"},
       "coordinatePrecision": {"type":"double"},
-      "location": {"type": "geo_point"},
+      "coordinatePoints": {"type": "geo_point"},
 
       "year": {"type": "integer"},
       "month": {"type": "integer"},
@@ -39,6 +41,7 @@
       "endDayOfYear": {"type": "integer"},
       "modified": {"type": "date"},
       "dateIdentified": {"type": "date"},
+      "startDate": {"type": "date"},
 
       "gbifScientificName": {"type": "text", "boost": 100},
       "gbifSpeciesKey": {"type": "keyword", "copy_to": false},

@@ -7,8 +7,11 @@
   "type":"record",
   "doc":"Additional information",
   "fields":[
-    {"name": "datasetId","type":"string"},
+    {"name": "id","type":"string"},
+    {"name": "datasetKey","type":["null","string"],"default":null},
+    {"name": "datasetTitle","type":["null","string"],"default":null},
     {"name": "installationKey","type":["null","string"],"default":null},
+    {"name": "publisherTitle","type":["null","string"],"default":null},
     {"name": "publishingOrganizationKey","type":["null","string"],"default":null},
     {"name": "organizationKey","type":["null","string"],"default":null},
     {"name": "endorsingNodeKey","type":["null","string"],"default":null},

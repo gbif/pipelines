@@ -143,7 +143,7 @@ public class RecordTransforms {
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context::element)
-                .to(id -> MetadataRecord.newBuilder().setDatasetId(id).build())
+                .to(id -> MetadataRecord.newBuilder().setId(id).build())
                 .via(MetadataInterpreter.interpret(wsConfig))
                 .consume(context::output);
           }

@@ -3,8 +3,12 @@ package org.gbif.pipelines.core.converters;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,15 +52,27 @@ public class GbifJsonConverterTest {
             .build();
     locationRecord.getIssues().getIssueList().add("ISSUE_2");
 
+    List<RankedName> rankedNameList = new ArrayList<>();
+    RankedName name =
+        RankedName.newBuilder().setKey(1).setName("Name").setRank(Rank.CHEMOFORM).build();
+    RankedName name2 =
+        RankedName.newBuilder().setKey(2).setName("Name2").setRank(Rank.ABERRATION).build();
+    rankedNameList.add(name);
+    rankedNameList.add(name2);
+
+    TaxonRecord taxonRecord =
+        TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
+
     String expected =
-        "{\"id\":\"777\",\"verbatim\":{\"locality\":\"something:{something}\"},\"year\":\"2000\",\"day\":\"1\","
-            + "\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},\"startDayOfYear\":\"1\","
-            + "\"issues\":[\"ISSUE_1\",\"ISSUE_2\"],\"location\":{\"lon\":\"2.0\",\"lat\":\"1.0\"},\"continent\":\"something{something}\","
-            + "\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\"}";
+        "{\"verbatim\":{\"locality\":\"something:{something}\"},\"startDate\":\"01-01-2011\",\"year\":\"2000\","
+            + "\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},\"startDayOfYear\":\"1\","
+            + "\"issues\":[\"ISSUE_1\",\"ISSUE_2\"],\"coordinatePoints\":{\"lon\":\"2.0\",\"lat\":\"1.0\"},\"continent\":\"something{something}\","
+            + "\"countryCode\":\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,"
+            + "\"rank\":\"CHEMOFORM\"},{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}]}";
 
     // When
     String result =
-        GbifJsonConverter.create(extendedRecord, temporalRecord, locationRecord)
+        GbifJsonConverter.create(extendedRecord, temporalRecord, locationRecord, taxonRecord)
             .buildJson()
             .toString();
 
@@ -77,8 +93,6 @@ public class GbifJsonConverterTest {
     String result = GbifJsonConverter.create(extendedRecord, temporalRecord).buildJson().toString();
 
     // Should
-    List<String> ids = Splitter.on("id").splitToList(result);
     Assert.assertTrue(JsonValidationUtils.isValid(result));
-    Assert.assertEquals(2, ids.size());
   }
 }

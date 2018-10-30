@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.POJONode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -144,6 +145,12 @@ public class JsonConverter {
     return this;
   }
 
+  JsonConverter addJsonArray(String key, List<ObjectNode> values) {
+    ArrayNode node = mainNode.putArray(key);
+    node.addAll(values);
+    return this;
+  }
+
   /** Check field in skipKeys and convert - "key":"value" */
   JsonConverter addJsonField(ObjectNode node, String key, String value) {
     return skipKeys.contains(key) ? this : addJsonFieldNoCheck(node, key, value);
@@ -164,6 +171,10 @@ public class JsonConverter {
   /** Convert - "key":"value" and check some incorrect symbols for json */
   JsonConverter addJsonFieldNoCheck(String key, String value) {
     return addJsonFieldNoCheck(mainNode, key, value);
+  }
+
+  ObjectNode createNode() {
+    return MAPPER.createObjectNode();
   }
 
   SpecificRecordBase[] getBases() {

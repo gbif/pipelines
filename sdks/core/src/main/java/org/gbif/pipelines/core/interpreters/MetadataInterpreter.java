@@ -17,8 +17,10 @@ public class MetadataInterpreter {
   public static BiConsumer<String, MetadataRecord> interpret(WsConfig wsConfig) {
     return (datasetId, mdr) -> {
       MetadataServiceClient client = MetadataServiceClient.create(wsConfig);
+      mdr.setDatasetKey(datasetId);
 
       Dataset dataset = client.getDataset(datasetId);
+      mdr.setDatasetTitle(dataset.getTitle());
       mdr.setInstallationKey(dataset.getInstallationKey());
       mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
       mdr.setLicense(dataset.getLicense());
@@ -29,6 +31,7 @@ public class MetadataInterpreter {
 
       Organization organization = client.getOrganization(mdr.getOrganizationKey());
       mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
+      mdr.setPublisherTitle(organization.getTitle());
     };
   }
 }

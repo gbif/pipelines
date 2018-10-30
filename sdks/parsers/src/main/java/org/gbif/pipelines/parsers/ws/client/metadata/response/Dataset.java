@@ -8,11 +8,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Dataset implements Serializable {
 
-  private static final long serialVersionUID = 4190160247363021997L;
+  private static final long serialVersionUID = 4190160247363021998L;
 
   private String installationKey;
   private String publishingOrganizationKey;
   private String license;
+  private String title;
 
   public String getInstallationKey() {
     return installationKey;
@@ -30,11 +31,19 @@ public class Dataset implements Serializable {
     this.publishingOrganizationKey = publishingOrganizationKey;
   }
 
-    public String getLicense() {
-        return license;
-    }
+  public String getLicense() {
+    return license;
+  }
 
-    public void setLicense(String license) {
-        this.license = license;
-    }
+  public void setLicense(String license) {
+    this.license = license;
+  }
+
+  public String getTitle() {
+    return title;
+  }
+
+  public void setTitle(String title) {
+    this.title = title;
+  }
 }

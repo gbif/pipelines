@@ -1,18 +1,20 @@
 package org.gbif.pipelines.core.converters;
 
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,8 +40,12 @@ import org.apache.avro.specific.SpecificRecordBase;
  */
 public class GbifJsonConverter extends JsonConverter {
 
-  private static final String[] SKIP_KEYS = {"id", "decimalLatitude", "decimalLongitude"};
-  private static final String[] REPLACE_KEYS = {"http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"};
+  private static final String[] SKIP_KEYS = {
+    "id", "decimalLatitude", "decimalLongitude", "country"
+  };
+  private static final String[] REPLACE_KEYS = {
+    "http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"
+  };
 
   private GbifJsonConverter(SpecificRecordBase[] bases) {
     this.setSpecificRecordBase(bases)
@@ -47,6 +53,7 @@ public class GbifJsonConverter extends JsonConverter {
         .setReplaceKeys(REPLACE_KEYS)
         .addSpecificConverter(ExtendedRecord.class, getExtendedRecordConverter())
         .addSpecificConverter(LocationRecord.class, getLocationRecordConverter())
+        .addSpecificConverter(TemporalRecord.class, getTemporalRecordConverter())
         .addSpecificConverter(TaxonRecord.class, getTaxonomyRecordConverter());
   }
 
@@ -85,7 +92,13 @@ public class GbifJsonConverter extends JsonConverter {
   private Consumer<SpecificRecordBase> getExtendedRecordConverter() {
     return record -> {
       Map<String, String> terms = ((ExtendedRecord) record).getCoreTerms();
-      this.addJsonFieldNoCheck("id", record.get(0).toString()).addJsonObject("verbatim", terms);
+
+      Optional.ofNullable(terms.get(DwcTerm.recordedBy.qualifiedName()))
+        .ifPresent(x -> this.addJsonField("recordedBy", x));
+      Optional.ofNullable(terms.get(DwcTerm.organismID.qualifiedName()))
+        .ifPresent(x -> this.addJsonField("organismID", x));
+
+      this.addJsonObject("verbatim", terms);
     };
   }
 
@@ -110,8 +123,32 @@ public class GbifJsonConverter extends JsonConverter {
         ObjectNode node = MAPPER.createObjectNode();
         node.put("lon", location.getDecimalLongitude().toString());
         node.put("lat", location.getDecimalLatitude().toString());
-        this.addJsonObject("location", node);
+        this.addJsonObject("coordinatePoints", node);
       }
+      // Fields as a common view - "key": "value"
+      this.addCommonFields(record);
+    };
+  }
+
+  /**
+   * String converter for {@link TemporalRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * "startDate": "10/10/2010",
+   *  //.....more fields
+   *
+   * }</pre>
+   */
+  private Consumer<SpecificRecordBase> getTemporalRecordConverter() {
+    return record -> {
+      TemporalRecord temporal = (TemporalRecord) record;
+
+      Optional.ofNullable(temporal.getEventDate())
+          .map(EventDate::getGte)
+          .ifPresent(x -> this.addJsonField("startDate", x));
+
       // Fields as a common view - "key": "value"
       this.addCommonFields(record);
     };
@@ -149,41 +186,27 @@ public class GbifJsonConverter extends JsonConverter {
 
       List<RankedName> classifications = taxon.getClassification();
       if (classifications != null && !classifications.isEmpty()) {
-
-        Map<Rank, String> map =
-            classifications
-                .stream()
-                .collect(
-                    Collectors.toMap(
-                        RankedName::getRank, rankedName -> rankedName.getKey().toString()));
-
-        // Gbif fields from map
-        Optional.ofNullable(map.get(Rank.KINGDOM))
-            .ifPresent(v -> this.addJsonField("gbifKingdomKey", v));
-        Optional.ofNullable(map.get(Rank.PHYLUM))
-            .ifPresent(v -> this.addJsonField("gbifPhylumKey", v));
-        Optional.ofNullable(map.get(Rank.CLASS))
-            .ifPresent(v -> this.addJsonField("gbifClassKey", v));
-        Optional.ofNullable(map.get(Rank.ORDER))
-            .ifPresent(v -> this.addJsonField("gbifOrderKey", v));
-        Optional.ofNullable(map.get(Rank.FAMILY))
-            .ifPresent(v -> this.addJsonField("gbifFamilyKey", v));
-        Optional.ofNullable(map.get(Rank.GENUS))
-            .ifPresent(v -> this.addJsonField("gbifGenusKey", v));
-        Optional.ofNullable(map.get(Rank.SUBGENUS))
-            .ifPresent(v -> this.addJsonField("gbifSubgenusKey", v));
-        Optional.ofNullable(map.get(Rank.SPECIES))
-            .ifPresent(v -> this.addJsonField("gbifSpeciesKey", v));
+        List<ObjectNode> nodes = new ArrayList<>(classifications.size());
+        for (int i = 0; i < classifications.size(); i++) {
+          RankedName name = classifications.get(i);
+          ObjectNode node = this.createNode();
+          node.put("taxonKey", name.getKey());
+          node.put("name", name.getName());
+          node.put("depthKey_" + i, name.getKey());
+          node.put("kingdomKey", name.getKey());
+          node.put("rank", name.getRank().name());
+          nodes.add(node);
+        }
+        this.addJsonArray("backbone", nodes);
       }
 
       // Other Gbif fields
-      Optional.ofNullable(taxon.getUsage()).ifPresent(usage ->
-              this.addJsonField("gbifTaxonKey", usage.getKey().toString())
+      Optional.ofNullable(taxon.getUsage())
+          .ifPresent(
+              usage ->
+                  this.addJsonField("gbifTaxonKey", usage.getKey().toString())
                       .addJsonField("gbifScientificName", usage.getName())
-                      .addJsonField("gbifTaxonRank", usage.getRank().name())
-      );
-      // Fields as a common view - "key": "value"
-      this.addCommonFields(record);
+                      .addJsonField("gbifTaxonRank", usage.getRank().name()));
     };
   }
 }
