@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -14,7 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -65,12 +68,29 @@ public class GbifJsonConverter extends JsonConverter {
   @Override
   public ObjectNode buildJson() {
     ObjectNode mainNode = super.buildJson();
-    ArrayNode arrayNode = MAPPER.createArrayNode();
-    Arrays.stream(getBases())
-        .filter(Issues.class::isInstance)
-        .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
-        .forEach(arrayNode::add);
-    mainNode.set("issues", arrayNode);
+
+    // Issues
+    Set<String> issues =
+        Arrays.stream(getBases())
+            .filter(Issues.class::isInstance)
+            .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
+            .collect(Collectors.toSet());
+
+    ArrayNode arrayIssueNode = MAPPER.createArrayNode();
+    issues.forEach(arrayIssueNode::add);
+    mainNode.set("issues", arrayIssueNode);
+
+    // Not issues
+    Set<String> notIssues =
+        Arrays.stream(OccurrenceIssue.values())
+            .map(Enum::name)
+            .filter(x -> !issues.contains(x))
+            .collect(Collectors.toSet());
+
+    ArrayNode arrayNotIssuesNode = MAPPER.createArrayNode();
+    notIssues.forEach(arrayNotIssuesNode::add);
+    mainNode.set("notIssues", arrayNotIssuesNode);
+
     return mainNode;
   }
 
@@ -94,9 +114,9 @@ public class GbifJsonConverter extends JsonConverter {
       Map<String, String> terms = ((ExtendedRecord) record).getCoreTerms();
 
       Optional.ofNullable(terms.get(DwcTerm.recordedBy.qualifiedName()))
-        .ifPresent(x -> this.addJsonField("recordedBy", x));
+          .ifPresent(x -> this.addJsonField("recordedBy", x));
       Optional.ofNullable(terms.get(DwcTerm.organismID.qualifiedName()))
-        .ifPresent(x -> this.addJsonField("organismId", x));
+          .ifPresent(x -> this.addJsonField("organismId", x));
 
       this.addJsonObject("verbatim", terms);
     };
@@ -189,7 +209,7 @@ public class GbifJsonConverter extends JsonConverter {
         List<ObjectNode> nodes = new ArrayList<>(classifications.size());
         for (int i = 0; i < classifications.size(); i++) {
           RankedName name = classifications.get(i);
-          ObjectNode node = this.createNode();
+          ObjectNode node = MAPPER.createObjectNode();
           node.put("taxonKey", name.getKey());
           node.put("name", name.getName());
           node.put("depthKey_" + i, name.getKey());

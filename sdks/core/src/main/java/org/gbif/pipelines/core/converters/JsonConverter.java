@@ -173,10 +173,6 @@ public class JsonConverter {
     return addJsonFieldNoCheck(mainNode, key, value);
   }
 
-  ObjectNode createNode() {
-    return MAPPER.createObjectNode();
-  }
-
   SpecificRecordBase[] getBases() {
     return bases;
   }

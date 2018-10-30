@@ -92,7 +92,7 @@ public class TemporalParser {
       Temporal tmp = fromTemporal;
       fromTemporal = toTemporal;
       toTemporal = tmp;
-      issueList.add("DAY_OUT_OF_RANGE");
+      issueList.add(RECORDED_DATE_INVALID.name());
     }
 
     temporalDates.setFromDate(fromTemporal);
