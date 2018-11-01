@@ -204,6 +204,45 @@ public class EsIndex {
   }
 
   /**
+   * Swaps an index in a aliases.
+   *
+   * <p>The index received will be the only index associated to the alias after performing this
+   * call. All the indexes that were associated to this alias before will be removed from the ES
+   * instance.
+   *
+   * @param config configuration of the ES instance.
+   * @param aliases aliases that will be modified.
+   * @param index index to add to the alias that will become the only index of the alias.
+   */
+  public static void swapIndexInAliases(EsConfig config, String[] aliases, String index) {
+    Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
+
+    LOG.info("Swapping index {} in alias {}", index, aliases);
+
+    // get dataset id
+    String datasetId = getDatasetIdFromIndex(index);
+
+    try (EsClient esClient = EsClient.from(config)) {
+
+      Arrays.stream(aliases)
+          .forEach(
+              alias -> {
+                // check if there are indexes to remove
+                Set<String> idxToRemove =
+                    getIndexesByAliasAndIndexPattern(
+                        esClient, getDatasetIndexesPattern(datasetId), alias);
+
+                // swap the indexes
+                swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
+              });
+
+      // change index settings to search settings
+      updateIndexSettings(esClient, index, SettingsType.SEARCH);
+    }
+  }
+
+  /**
    * Counts the number of documents of an index.
    *
    * @param config configuration of the ES instance.

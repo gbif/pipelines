@@ -46,14 +46,14 @@ public class EsIndexUtils {
   public static void swapIndex(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
-    String alias = options.getEsAlias();
+    String[] aliases = options.getEsAlias();
     String index = options.getEsIndexName();
 
-    EsIndex.swapIndexInAlias(config, alias, index);
-    LOG.info("ES index {} added to alias {}", index, alias);
+    EsIndex.swapIndexInAliases(config, aliases, index);
+    LOG.info("ES index {} added to alias {}", index, aliases);
 
     EsIndex.refresh(config, index);
     long count = EsIndex.countDocuments(config, index);
-    LOG.info("Index name - {}, Alias - {}, Number of records -  {}", index, alias, count);
+    LOG.info("Index name - {}, Alias - {}, Number of records -  {}", index, aliases, count);
   }
 }

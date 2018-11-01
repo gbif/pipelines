@@ -29,10 +29,10 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   void setEsIndexName(String esIndexName);
 
-  @Description("Name of the Elasticsearch alias. The index created will be added to this alias.")
-  String getEsAlias();
+  @Description("Name of the Elasticsearch aliases. The index created will be added to this aliases.")
+  String[] getEsAlias();
 
-  void setEsAlias(String esAlias);
+  void setEsAlias(String[] esAlias);
 
   @Description("Path to an occurrence indexing schema")
   @Default.String("elasticsearch/es-occurrence-shcema.json")
