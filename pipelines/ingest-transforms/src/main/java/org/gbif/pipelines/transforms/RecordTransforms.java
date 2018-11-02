@@ -20,6 +20,8 @@ import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
@@ -48,12 +50,18 @@ public class RecordTransforms {
   public static SingleOutput<ExtendedRecord, MultimediaRecord> multimedia() {
     return ParDo.of(
         new DoFn<ExtendedRecord, MultimediaRecord>() {
+
+          private final Counter counter =
+              Metrics.counter(RecordTransforms.class, "MultimediaRecord");
+
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context::element)
                 .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).build())
                 .via(MultimediaInterpreter::interpretMultimedia)
                 .consume(context::output);
+
+            counter.inc();
           }
         });
   }
@@ -65,6 +73,9 @@ public class RecordTransforms {
   public static SingleOutput<ExtendedRecord, TemporalRecord> temporal() {
     return ParDo.of(
         new DoFn<ExtendedRecord, TemporalRecord>() {
+
+          private final Counter counter = Metrics.counter(RecordTransforms.class, "TemporalRecord");
+
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context::element)
@@ -74,6 +85,8 @@ public class RecordTransforms {
                 .via(TemporalInterpreter::interpretModifiedDate)
                 .via(TemporalInterpreter::interpretDayOfYear)
                 .consume(context::output);
+
+            counter.inc();
           }
         });
   }
@@ -85,6 +98,9 @@ public class RecordTransforms {
   public static SingleOutput<ExtendedRecord, BasicRecord> basic() {
     return ParDo.of(
         new DoFn<ExtendedRecord, BasicRecord>() {
+
+          private final Counter counter = Metrics.counter(RecordTransforms.class, "BasicRecord");
+
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context::element)
@@ -97,6 +113,8 @@ public class RecordTransforms {
                 .via(BasicInterpreter::interpretIndividualCount)
                 .via(BasicInterpreter::interpretReferences)
                 .consume(context::output);
+
+            counter.inc();
           }
         });
   }
@@ -110,6 +128,9 @@ public class RecordTransforms {
   public static SingleOutput<ExtendedRecord, LocationRecord> location(WsConfig wsConfig) {
     return ParDo.of(
         new DoFn<ExtendedRecord, LocationRecord>() {
+
+          private final Counter counter = Metrics.counter(RecordTransforms.class, "LocationRecord");
+
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context::element)
@@ -127,6 +148,8 @@ public class RecordTransforms {
                 .via(LocationInterpreter::interpretCoordinatePrecision)
                 .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
                 .consume(context::output);
+
+            counter.inc();
           }
         });
   }
@@ -140,12 +163,17 @@ public class RecordTransforms {
   public static SingleOutput<String, MetadataRecord> metadata(WsConfig wsConfig) {
     return ParDo.of(
         new DoFn<String, MetadataRecord>() {
+
+          private final Counter counter = Metrics.counter(RecordTransforms.class, "MetadataRecord");
+
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context::element)
                 .to(id -> MetadataRecord.newBuilder().setId(id).build())
                 .via(MetadataInterpreter.interpret(wsConfig))
                 .consume(context::output);
+
+            counter.inc();
           }
         });
   }
@@ -159,6 +187,9 @@ public class RecordTransforms {
   public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(WsConfig wsConfig) {
     return ParDo.of(
         new DoFn<ExtendedRecord, TaxonRecord>() {
+
+          private final Counter counter = Metrics.counter(RecordTransforms.class, "TaxonRecord");
+
           @ProcessElement
           public void processElement(ProcessContext context) {
             Interpretation.from(context::element)
@@ -167,6 +198,8 @@ public class RecordTransforms {
                 // the id is null when there is an error in the interpretation. In these
                 // cases we do not write the taxonRecord because it is totally empty.
                 .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));
+
+            counter.inc();
           }
         });
   }

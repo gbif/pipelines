@@ -4,6 +4,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import java.util.Iterator;
 
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -39,6 +41,12 @@ public class UniqueIdTransform
         "Filtering duplicates",
         ParDo.of(
             new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
+
+              private final Counter uniqueCounter =
+                  Metrics.counter(UniqueIdTransform.class, "UniqueRecords");
+              private final Counter duplicateCounter =
+                  Metrics.counter(UniqueIdTransform.class, "DuplicateRecords");
+
               @ProcessElement
               public void processElement(ProcessContext c) {
                 KV<String, Iterable<ExtendedRecord>> element = c.element();
@@ -46,8 +54,10 @@ public class UniqueIdTransform
                 ExtendedRecord record = iterator.next();
                 if (!iterator.hasNext()) {
                   c.output(record);
+                  uniqueCounter.inc();
                 } else {
                   LOG.warn("occurrenceId = {}, duplicates were found", element.getKey());
+                  duplicateCounter.inc();
                 }
               }
             }));
