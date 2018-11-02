@@ -114,9 +114,9 @@ public class GbifJsonConverter extends JsonConverter {
       Map<String, String> terms = ((ExtendedRecord) record).getCoreTerms();
 
       Optional.ofNullable(terms.get(DwcTerm.recordedBy.qualifiedName()))
-          .ifPresent(x -> this.addJsonField("recordedBy", x));
+          .ifPresent(x -> this.addJsonTextFieldNoCheck("recordedBy", x));
       Optional.ofNullable(terms.get(DwcTerm.organismID.qualifiedName()))
-          .ifPresent(x -> this.addJsonField("organismId", x));
+          .ifPresent(x -> this.addJsonTextFieldNoCheck("organismId", x));
 
       this.addJsonObject("verbatim", terms);
     };
@@ -167,7 +167,7 @@ public class GbifJsonConverter extends JsonConverter {
 
       Optional.ofNullable(temporal.getEventDate())
           .map(EventDate::getGte)
-          .ifPresent(x -> this.addJsonField("startDate", x));
+          .ifPresent(x -> this.addJsonTextFieldNoCheck("startDate", x));
 
       // Fields as a common view - "key": "value"
       this.addCommonFields(record);
@@ -224,9 +224,9 @@ public class GbifJsonConverter extends JsonConverter {
       Optional.ofNullable(taxon.getUsage())
           .ifPresent(
               usage ->
-                  this.addJsonField("gbifTaxonKey", usage.getKey().toString())
-                      .addJsonField("gbifScientificName", usage.getName())
-                      .addJsonField("gbifTaxonRank", usage.getRank().name()));
+                  this.addJsonTextFieldNoCheck("gbifTaxonKey", usage.getKey().toString())
+                      .addJsonTextFieldNoCheck("gbifScientificName", usage.getName())
+                      .addJsonTextFieldNoCheck("gbifTaxonRank", usage.getRank().name()));
     };
   }
 }

@@ -166,6 +166,12 @@ public class JsonConverter {
     return addJsonField(mainNode, key, value);
   }
 
+  /** Add text field without any skip checks */
+  JsonConverter addJsonTextFieldNoCheck(String key, String value) {
+    mainNode.set(sanitizeValue(key), new TextNode(value));
+    return this;
+  }
+
   /** Convert - "key":"value" and check some incorrect symbols for json */
   JsonConverter addJsonFieldNoCheck(ObjectNode node, String key, String value) {
     // Can be a json  or a string
