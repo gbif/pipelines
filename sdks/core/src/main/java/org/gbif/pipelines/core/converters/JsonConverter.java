@@ -13,12 +13,15 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.POJONode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Common converter, to convert any {@link SpecificRecordBase} object to json string
@@ -32,6 +35,8 @@ import org.apache.avro.specific.SpecificRecordBase;
  * }</pre>
  */
 public class JsonConverter {
+
+  private static final Logger LOG = LoggerFactory.getLogger(JsonConverter.class);
 
   static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -164,7 +169,8 @@ public class JsonConverter {
   /** Convert - "key":"value" and check some incorrect symbols for json */
   JsonConverter addJsonFieldNoCheck(ObjectNode node, String key, String value) {
     // Can be a json  or a string
-    node.set(sanitizeValue(key), IS_COMPLEX_OBJECT.test(value)? new POJONode(value) : new TextNode(value));
+    boolean isComplexObject = IS_COMPLEX_OBJECT.test(value) && isJsonValid(value);
+    node.set(sanitizeValue(key), isComplexObject ? new POJONode(value) : new TextNode(value));
     return this;
   }
 
@@ -175,5 +181,17 @@ public class JsonConverter {
 
   SpecificRecordBase[] getBases() {
     return bases;
+  }
+
+  private boolean isJsonValid(String json) {
+    try (JsonParser parser = MAPPER.getFactory().createParser(json)) {
+      while (parser.nextToken() != null) {
+        // NOP
+      }
+    } catch (Exception ex) {
+      LOG.warn("JSON is invalid - {}", json);
+      return false;
+    }
+    return true;
   }
 }
