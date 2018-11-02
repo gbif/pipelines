@@ -97,7 +97,7 @@
     <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
     <joda-time.version>2.4</joda-time.version>
 
-    <commons-compress.version>1.16.1</commons-compress.version>
+    <commons-compress.version>1.18</commons-compress.version>
     <commons-digester.version>2.1</commons-digester.version>
     <mapdb.version>3.0.6</mapdb.version>
     <commons-beanutils.version>1.9.3</commons-beanutils.version>
