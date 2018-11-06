@@ -9,6 +9,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
+import org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +24,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
@@ -72,7 +74,7 @@ public class TaxonRecordTransformTest {
 
     // When
     PCollection<TaxonRecord> recordCollection =
-        p.apply(Create.of(extendedRecord)).apply(RecordTransforms.taxonomy(wsConfig));
+        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new TaxonomyFn(wsConfig)));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());

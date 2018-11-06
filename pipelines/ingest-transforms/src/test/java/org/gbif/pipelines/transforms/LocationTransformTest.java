@@ -6,6 +6,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
+import org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +24,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -112,7 +114,7 @@ public class LocationTransformTest {
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(records)).apply(RecordTransforms.location(wsConfig));
+        p.apply(Create.of(records)).apply(ParDo.of(new LocationFn(wsConfig)));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(locations);

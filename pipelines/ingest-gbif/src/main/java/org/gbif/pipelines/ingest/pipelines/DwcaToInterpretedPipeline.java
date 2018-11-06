@@ -8,7 +8,6 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
-import org.gbif.pipelines.transforms.RecordTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.WriteTransforms;
 
@@ -19,6 +18,7 @@ import java.util.function.Function;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +30,12 @@ import static org.gbif.pipelines.core.RecordType.METADATA;
 import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.core.RecordType.TAXONOMY;
 import static org.gbif.pipelines.core.RecordType.TEMPORAL;
+import static org.gbif.pipelines.transforms.RecordTransforms.BasicFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.MetadataFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
 
 /**
  * Pipeline sequence:
@@ -100,27 +106,27 @@ public class DwcaToInterpretedPipeline {
     LOG.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Interpret metadata", RecordTransforms.metadata(wsConfig))
+        .apply("Interpret metadata", ParDo.of(new MetadataFn(wsConfig)))
         .apply("Write metadata to avro", WriteTransforms.metadata(metaPathFn.apply(METADATA)));
 
     uniqueRecords
-        .apply("Interpret basic", RecordTransforms.basic())
+        .apply("Interpret basic", ParDo.of(new BasicFn()))
         .apply("Write basic to avro", WriteTransforms.basic(pathFn.apply(BASIC)));
 
     uniqueRecords
-        .apply("Interpret temporal", RecordTransforms.temporal())
+        .apply("Interpret temporal", ParDo.of(new TemporalFn()))
         .apply("Write temporal to avro", WriteTransforms.temporal(pathFn.apply(TEMPORAL)));
 
     uniqueRecords
-        .apply("Interpret multimedia", RecordTransforms.multimedia())
+        .apply("Interpret multimedia", ParDo.of(new MultimediaFn()))
         .apply("Write multimedia to avro", WriteTransforms.multimedia(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply("Interpret taxonomy", RecordTransforms.taxonomy(wsConfig))
+        .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(wsConfig)))
         .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply("Interpret location", RecordTransforms.location(wsConfig))
+        .apply("Interpret location", ParDo.of(new LocationFn(wsConfig)))
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
     LOG.info("Running the pipeline");

@@ -9,6 +9,7 @@ import org.gbif.pipelines.transforms.RecordTransforms;
 import org.gbif.pipelines.transforms.WriteTransforms;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ public class ExamplePipeline {
     // Reads DwCA archive and convert to ExtendedRecord
     p.apply("Read DwCA zip archive", DwcaIO.Read.fromCompressed(inputPath, tmpDir))
         // Interprets and transforms from ExtendedRecord to TemporalRerord using GBIF TemporalInterpreter
-        .apply("Interpret TemporalRerord", RecordTransforms.temporal())
+        .apply("Interpret TemporalRerord", ParDo.of(new RecordTransforms.TemporalFn()))
         // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter
         .apply("Intertret ExampleRecord", ExampleTransform.exampleOne())
         // Write ExampleRecords as avro files using AvroIO.Write

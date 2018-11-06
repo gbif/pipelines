@@ -20,12 +20,15 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
 
 @RunWith(JUnit4.class)
 public class TemporalRecordTransformTest {
@@ -67,7 +70,7 @@ public class TemporalRecordTransformTest {
 
     // When
     PCollection<TemporalRecord> dataStream =
-        p.apply(Create.of(input)).apply(RecordTransforms.temporal());
+        p.apply(Create.of(input)).apply(ParDo.of(new TemporalFn()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);

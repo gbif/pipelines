@@ -5,6 +5,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
 
 import java.util.Collections;
 import java.util.Map;
@@ -13,6 +14,7 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,7 +65,7 @@ public class MultimediaRecordTransformTest {
 
     // When
     PCollection<MultimediaRecord> dataStream =
-        p.apply(Create.of(extendedRecord)).apply(RecordTransforms.multimedia());
+        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new MultimediaFn()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(createExpectedMultimedia());

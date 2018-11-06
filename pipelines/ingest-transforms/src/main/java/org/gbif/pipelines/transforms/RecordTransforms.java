@@ -23,8 +23,6 @@ import java.util.Optional;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 
 /**
  * Contains ParDo functions for Beam, each method returns GBIF transformation (basic, temporal,
@@ -35,7 +33,7 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
  *
  * <pre>{@code
  * PCollection<ExtendedRecord> records = ...
- * PCollection<TemporalRecord> t = records.apply(Transforms.temporal());
+ * PCollection<TemporalRecord> t = records.apply(ParDo.of(new BasicFn()));
  *
  * }</pre>
  */
@@ -47,193 +45,165 @@ public class RecordTransforms {
    * ParDo runs sequence of interpretations for {@link MultimediaRecord} using {@link
    * ExtendedRecord} as a source and {@link MultimediaInterpreter} as interpretation steps
    */
-  public static SingleOutput<ExtendedRecord, MultimediaRecord> multimedia() {
-    return ParDo.of(
-        new DoFn<ExtendedRecord, MultimediaRecord>() {
+  public static class MultimediaFn extends DoFn<ExtendedRecord, MultimediaRecord> {
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "MultimediaRecord");
 
-          private final Counter counter =
-              Metrics.counter(RecordTransforms.class, "MultimediaRecord");
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      Interpretation.from(context::element)
+          .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).build())
+          .via(MultimediaInterpreter::interpretMultimedia)
+          .consume(context::output);
 
-          @ProcessElement
-          public void processElement(ProcessContext context) {
-            Interpretation.from(context::element)
-                .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).build())
-                .via(MultimediaInterpreter::interpretMultimedia)
-                .consume(context::output);
-
-            counter.inc();
-          }
-        });
+      counter.inc();
+    }
   }
 
   /**
    * ParDo runs sequence of interpretations for {@link TemporalRecord} using {@link ExtendedRecord}
    * as a source and {@link TemporalInterpreter} as interpretation steps
    */
-  public static SingleOutput<ExtendedRecord, TemporalRecord> temporal() {
-    return ParDo.of(
-        new DoFn<ExtendedRecord, TemporalRecord>() {
+  public static class TemporalFn extends DoFn<ExtendedRecord, TemporalRecord> {
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "TemporalRecord");
 
-          private final Counter counter = Metrics.counter(RecordTransforms.class, "TemporalRecord");
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      Interpretation.from(context::element)
+          .to(er -> TemporalRecord.newBuilder().setId(er.getId()).build())
+          .via(TemporalInterpreter::interpretEventDate)
+          .via(TemporalInterpreter::interpretDateIdentified)
+          .via(TemporalInterpreter::interpretModifiedDate)
+          .via(TemporalInterpreter::interpretDayOfYear)
+          .consume(context::output);
 
-          @ProcessElement
-          public void processElement(ProcessContext context) {
-            Interpretation.from(context::element)
-                .to(er -> TemporalRecord.newBuilder().setId(er.getId()).build())
-                .via(TemporalInterpreter::interpretEventDate)
-                .via(TemporalInterpreter::interpretDateIdentified)
-                .via(TemporalInterpreter::interpretModifiedDate)
-                .via(TemporalInterpreter::interpretDayOfYear)
-                .consume(context::output);
-
-            counter.inc();
-          }
-        });
+      counter.inc();
+    }
   }
 
   /**
    * ParDo runs sequence of interpretations for {@link BasicRecord} using {@link ExtendedRecord} as
    * a source and {@link BasicInterpreter} as interpretation steps
    */
-  public static SingleOutput<ExtendedRecord, BasicRecord> basic() {
-    return ParDo.of(
-        new DoFn<ExtendedRecord, BasicRecord>() {
+  public static class BasicFn extends DoFn<ExtendedRecord, BasicRecord> {
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "BasicRecord");
 
-          private final Counter counter = Metrics.counter(RecordTransforms.class, "BasicRecord");
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      Interpretation.from(context::element)
+          .to(er -> BasicRecord.newBuilder().setId(er.getId()).build())
+          .via(BasicInterpreter::interpretBasisOfRecord)
+          .via(BasicInterpreter::interpretSex)
+          .via(BasicInterpreter::interpretEstablishmentMeans)
+          .via(BasicInterpreter::interpretLifeStage)
+          .via(BasicInterpreter::interpretTypeStatus)
+          .via(BasicInterpreter::interpretIndividualCount)
+          .via(BasicInterpreter::interpretReferences)
+          .consume(context::output);
 
-          @ProcessElement
-          public void processElement(ProcessContext context) {
-            Interpretation.from(context::element)
-                .to(er -> BasicRecord.newBuilder().setId(er.getId()).build())
-                .via(BasicInterpreter::interpretBasisOfRecord)
-                .via(BasicInterpreter::interpretSex)
-                .via(BasicInterpreter::interpretEstablishmentMeans)
-                .via(BasicInterpreter::interpretLifeStage)
-                .via(BasicInterpreter::interpretTypeStatus)
-                .via(BasicInterpreter::interpretIndividualCount)
-                .via(BasicInterpreter::interpretReferences)
-                .consume(context::output);
-
-            counter.inc();
-          }
-        });
+      counter.inc();
+    }
   }
 
   /**
    * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
    * as a source and {@link LocationInterpreter} as interpretation steps
    *
-   * @param wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
+   * <p>wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> location(WsConfig wsConfig) {
-    return ParDo.of(
-        new DoFn<ExtendedRecord, LocationRecord>() {
+  public static class LocationFn extends DoFn<ExtendedRecord, LocationRecord> {
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "LocationRecord");
 
-          private final Counter counter = Metrics.counter(RecordTransforms.class, "LocationRecord");
+    private final WsConfig wsConfig;
 
-          @ProcessElement
-          public void processElement(ProcessContext context) {
-            Interpretation.from(context::element)
-                .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-                .via(LocationInterpreter.interpretCountryAndCoordinates(wsConfig))
-                .via(LocationInterpreter::interpretContinent)
-                .via(LocationInterpreter::interpretWaterBody)
-                .via(LocationInterpreter::interpretStateProvince)
-                .via(LocationInterpreter::interpretMinimumElevationInMeters)
-                .via(LocationInterpreter::interpretMaximumElevationInMeters)
-                .via(LocationInterpreter::interpretMinimumDepthInMeters)
-                .via(LocationInterpreter::interpretMaximumDepthInMeters)
-                .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
-                .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
-                .via(LocationInterpreter::interpretCoordinatePrecision)
-                .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
-                .consume(context::output);
+    public LocationFn(WsConfig wsConfig) {
+      this.wsConfig = wsConfig;
+    }
 
-            counter.inc();
-          }
-        });
+    public LocationFn(String properties) {
+      this.wsConfig = WsConfigFactory.create("geocode", Paths.get(properties));
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      Interpretation.from(context::element)
+          .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
+          .via(LocationInterpreter.interpretCountryAndCoordinates(wsConfig))
+          .via(LocationInterpreter::interpretContinent)
+          .via(LocationInterpreter::interpretWaterBody)
+          .via(LocationInterpreter::interpretStateProvince)
+          .via(LocationInterpreter::interpretMinimumElevationInMeters)
+          .via(LocationInterpreter::interpretMaximumElevationInMeters)
+          .via(LocationInterpreter::interpretMinimumDepthInMeters)
+          .via(LocationInterpreter::interpretMaximumDepthInMeters)
+          .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
+          .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
+          .via(LocationInterpreter::interpretCoordinatePrecision)
+          .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+          .consume(context::output);
+
+      counter.inc();
+    }
   }
 
   /**
    * ParDo runs sequence of interpretations for {@link MetadataRecord} using {@link ExtendedRecord}
    * as a source and {@link MetadataInterpreter} as interpretation steps
    *
-   * @param wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
+   * <p>wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
-  public static SingleOutput<String, MetadataRecord> metadata(WsConfig wsConfig) {
-    return ParDo.of(
-        new DoFn<String, MetadataRecord>() {
+  public static class MetadataFn extends DoFn<String, MetadataRecord> {
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "MetadataRecord");
 
-          private final Counter counter = Metrics.counter(RecordTransforms.class, "MetadataRecord");
+    private final WsConfig wsConfig;
 
-          @ProcessElement
-          public void processElement(ProcessContext context) {
-            Interpretation.from(context::element)
-                .to(id -> MetadataRecord.newBuilder().setId(id).build())
-                .via(MetadataInterpreter.interpret(wsConfig))
-                .consume(context::output);
+    public MetadataFn(WsConfig wsConfig) {
+      this.wsConfig = wsConfig;
+    }
 
-            counter.inc();
-          }
-        });
+    public MetadataFn(String properties) {
+      this.wsConfig = WsConfigFactory.create("metadata", Paths.get(properties));
+    }
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      Interpretation.from(context::element)
+          .to(id -> MetadataRecord.newBuilder().setId(id).build())
+          .via(MetadataInterpreter.interpret(wsConfig))
+          .consume(context::output);
+
+      counter.inc();
+    }
   }
 
   /**
    * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
    * a source and {@link TaxonomyInterpreter} as interpretation steps
    *
-   * @param wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
+   * <p>wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
-  public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(WsConfig wsConfig) {
-    return ParDo.of(
-        new DoFn<ExtendedRecord, TaxonRecord>() {
+  public static class TaxonomyFn extends DoFn<ExtendedRecord, TaxonRecord> {
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "TaxonRecord");
 
-          private final Counter counter = Metrics.counter(RecordTransforms.class, "TaxonRecord");
+    private final WsConfig wsConfig;
 
-          @ProcessElement
-          public void processElement(ProcessContext context) {
-            Interpretation.from(context::element)
-                .to(TaxonRecord.newBuilder()::build)
-                .via(TaxonomyInterpreter.taxonomyInterpreter(wsConfig))
-                // the id is null when there is an error in the interpretation. In these
-                // cases we do not write the taxonRecord because it is totally empty.
-                .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));
+    public TaxonomyFn(WsConfig wsConfig) {
+      this.wsConfig = wsConfig;
+    }
 
-            counter.inc();
-          }
-        });
-  }
+    public TaxonomyFn(String properties) {
+      this.wsConfig = WsConfigFactory.create("match", Paths.get(properties));
+    }
 
-  /**
-   * ParDo runs sequence of interpretations for {@link MetadataRecord} using {@link ExtendedRecord}
-   * as a source and {@link MetadataInterpreter} as interpretation steps
-   *
-   * @param properties path to a properties file
-   */
-  public static SingleOutput<String, MetadataRecord> metadata(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create("metadata", Paths.get(properties));
-    return metadata(wsConfig);
-  }
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      Interpretation.from(context::element)
+          .to(TaxonRecord.newBuilder()::build)
+          .via(TaxonomyInterpreter.taxonomyInterpreter(wsConfig))
+          // the id is null when there is an error in the interpretation. In these
+          // cases we do not write the taxonRecord because it is totally empty.
+          .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));
 
-  /**
-   * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
-   * a source and {@link TaxonomyInterpreter} as interpretation steps
-   *
-   * @param properties path to a properties file
-   */
-  public static SingleOutput<ExtendedRecord, TaxonRecord> taxonomy(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create("match", Paths.get(properties));
-    return taxonomy(wsConfig);
-  }
-
-  /**
-   * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
-   * as a source and {@link LocationInterpreter} as interpretation steps
-   *
-   * @param properties path to a properties file
-   */
-  public static SingleOutput<ExtendedRecord, LocationRecord> location(String properties) {
-    WsConfig wsConfig = WsConfigFactory.create("geocode", Paths.get(properties));
-    return location(wsConfig);
+      counter.inc();
+    }
   }
 }

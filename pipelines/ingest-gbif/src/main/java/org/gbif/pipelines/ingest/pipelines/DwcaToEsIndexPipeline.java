@@ -16,13 +16,14 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.MapTransforms;
-import org.gbif.pipelines.transforms.RecordTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 
 import java.nio.file.Paths;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -37,6 +38,13 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import static org.gbif.pipelines.transforms.RecordTransforms.BasicFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.MetadataFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
+import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
 
 /**
  * Pipeline sequence:
@@ -117,7 +125,7 @@ public class DwcaToEsIndexPipeline {
     LOG.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", RecordTransforms.metadata(wsConfig))
+            .apply("Interpret metadata", ParDo.of(new MetadataFn(wsConfig)))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
@@ -125,32 +133,35 @@ public class DwcaToEsIndexPipeline {
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", RecordTransforms.basic())
+            .apply("Interpret basic", ParDo.of(new BasicFn()))
             .apply("Map Basic to KV", MapTransforms.basicToKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
         uniqueRecords
-            .apply("Interpret temporal", RecordTransforms.temporal())
+            .apply("Interpret temporal", ParDo.of(new TemporalFn()))
             .apply("Map Temporal to KV", MapTransforms.temporalToKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
         uniqueRecords
-            .apply("Interpret location", RecordTransforms.location(wsConfig))
+            .apply("Interpret location", ParDo.of(new LocationFn(wsConfig)))
             .apply("Map Location to KV", MapTransforms.locationToKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         uniqueRecords
-            .apply("Interpret taxonomy", RecordTransforms.taxonomy(wsConfig))
+            .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(wsConfig)))
             .apply("Map Taxon to KV", MapTransforms.taxonToKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         uniqueRecords
-            .apply("Interpret multimedia", RecordTransforms.multimedia())
+            .apply("Interpret multimedia", ParDo.of(new MultimediaFn()))
             .apply("Map Multimedia to KV", MapTransforms.multimediaToKv());
 
     LOG.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
+
+          private final Counter counter = Metrics.counter(GbifJsonConverter.class, "JsonConverter");
+
           @DoFn.ProcessElement
           public void processElement(ProcessContext c) {
             CoGbkResult v = c.element().getValue();
@@ -168,6 +179,8 @@ public class DwcaToEsIndexPipeline {
                 GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
 
             c.output(json);
+
+            counter.inc();
           }
         };
 

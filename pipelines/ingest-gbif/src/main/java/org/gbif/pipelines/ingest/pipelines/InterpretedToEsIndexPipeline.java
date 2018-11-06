@@ -19,6 +19,8 @@ import java.util.function.Function;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
@@ -132,6 +134,9 @@ public class InterpretedToEsIndexPipeline {
     LOG.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
+
+          private final Counter counter = Metrics.counter(GbifJsonConverter.class, "JsonConverter");
+
           @ProcessElement
           public void processElement(ProcessContext c) {
             CoGbkResult v = c.element().getValue();
@@ -149,6 +154,8 @@ public class InterpretedToEsIndexPipeline {
                 GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
 
             c.output(json);
+
+            counter.inc();
           }
         };
 
