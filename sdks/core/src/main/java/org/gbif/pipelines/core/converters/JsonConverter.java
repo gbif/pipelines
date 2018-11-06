@@ -40,12 +40,28 @@ public class JsonConverter {
 
   static final ObjectMapper MAPPER = new ObjectMapper();
 
-  //Utility predicates to check if a node is a complex element
-  private static final Predicate<String> IS_OBJECT = nodeValue -> nodeValue.startsWith("{\"") && nodeValue.endsWith("}");
-  private static final Predicate<String> IS_ARRAY_ONE = nodeValue -> nodeValue.startsWith("[\"") && nodeValue.endsWith("]");
-  private static final Predicate<String> IS_ARRAY_TWO = nodeValue -> nodeValue.startsWith("[{") && nodeValue.endsWith("}]");
+  // Utility predicates to check if a node is a complex element
+  private static final Predicate<String> IS_OBJECT =
+      nodeValue -> nodeValue.startsWith("{\"") && nodeValue.endsWith("}");
+  private static final Predicate<String> IS_ARRAY_ONE =
+      nodeValue -> nodeValue.startsWith("[\"") && nodeValue.endsWith("]");
+  private static final Predicate<String> IS_ARRAY_TWO =
+      nodeValue -> nodeValue.startsWith("[{") && nodeValue.endsWith("}]");
+  private static final Predicate<String> IS_VALID_JSON =
+      nodeValue -> {
+        try (JsonParser parser = MAPPER.getFactory().createParser(nodeValue)) {
+          while (parser.nextToken() != null) {
+            // NOP
+          }
+        } catch (Exception ex) {
+          LOG.warn("JSON is invalid - {}", nodeValue);
+          return false;
+        }
+        return true;
+      };
 
-  private static final Predicate<String> IS_COMPLEX_OBJECT = IS_OBJECT.or(IS_ARRAY_ONE.or(IS_ARRAY_TWO));
+  private static final Predicate<String> IS_COMPLEX_OBJECT =
+      IS_OBJECT.or(IS_ARRAY_ONE).or(IS_ARRAY_TWO).and(IS_VALID_JSON);
 
   private final ObjectNode mainNode = MAPPER.createObjectNode();
 
@@ -71,7 +87,8 @@ public class JsonConverter {
   }
 
   JsonConverter setReplaceKeys(String... replaceKeys) {
-    this.replaceKeys = Arrays.stream(replaceKeys).map(Pattern::compile).collect(Collectors.toList());
+    this.replaceKeys =
+        Arrays.stream(replaceKeys).map(Pattern::compile).collect(Collectors.toList());
     return this;
   }
 
@@ -81,16 +98,13 @@ public class JsonConverter {
     return this;
   }
 
-  /**
-   * Applies all the replaceKeys to the value to remove all undesired patterns.
-   */
+  /** Applies all the replaceKeys to the value to remove all undesired patterns. */
   private String sanitizeValue(String value) {
     for (Pattern rule : replaceKeys) {
       value = rule.matcher(value).replaceAll("");
     }
     return value;
   }
-
 
   /**
    * You want to use another way how to process a specific class, you can use your appender for this
@@ -106,8 +120,8 @@ public class JsonConverter {
    *     };
    * }</pre>
    */
-  JsonConverter addSpecificConverter(Class<? extends SpecificRecordBase> type,
-                                     Consumer<SpecificRecordBase> consumer) {
+  JsonConverter addSpecificConverter(
+      Class<? extends SpecificRecordBase> type, Consumer<SpecificRecordBase> consumer) {
     customConvertersMap.put(type, consumer);
     return this;
   }
@@ -175,8 +189,9 @@ public class JsonConverter {
   /** Convert - "key":"value" and check some incorrect symbols for json */
   JsonConverter addJsonFieldNoCheck(ObjectNode node, String key, String value) {
     // Can be a json  or a string
-    boolean isComplexObject = IS_COMPLEX_OBJECT.test(value) && isJsonValid(value);
-    node.set(sanitizeValue(key), isComplexObject ? new POJONode(value) : new TextNode(value));
+    node.set(
+        sanitizeValue(key),
+        IS_COMPLEX_OBJECT.test(value) ? new POJONode(value) : new TextNode(value));
     return this;
   }
 
@@ -187,17 +202,5 @@ public class JsonConverter {
 
   SpecificRecordBase[] getBases() {
     return bases;
-  }
-
-  private boolean isJsonValid(String json) {
-    try (JsonParser parser = MAPPER.getFactory().createParser(json)) {
-      while (parser.nextToken() != null) {
-        // NOP
-      }
-    } catch (Exception ex) {
-      LOG.warn("JSON is invalid - {}", json);
-      return false;
-    }
-    return true;
   }
 }
