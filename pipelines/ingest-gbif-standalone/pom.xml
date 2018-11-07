@@ -86,6 +86,10 @@
     <!-- This project -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
+      <artifactId>log4j-http-appender</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>beam-common</artifactId>
     </dependency>
     <dependency>
