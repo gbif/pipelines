@@ -16,7 +16,6 @@
   <description>The example demonstrates how to send Apache Beam SparkRunner metrics to ELK</description>
 
   <build>
-
     <plugins>
       <!-- Shade the project into an uber jar to send to Spark -->
       <plugin>
@@ -105,14 +104,6 @@
           <groupId>io.netty</groupId>
           <artifactId>netty</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -136,23 +127,10 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-
+    <!-- GELF adapter for Spark to send logs to ELK -->
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>log4j-over-slf4j</artifactId>
-    </dependency>
-
-
-    <!-- Your project must also directly depend on either logback-classic or logback-access.  For example: -->
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>${logback.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>${logback.version}</version>
+      <groupId>biz.paluch.logging</groupId>
+      <artifactId>logstash-gelf</artifactId>
     </dependency>
 
   </dependencies>
