@@ -50,15 +50,22 @@ public final class FsUtils {
   }
 
   /**
-   * Uses pattern for path - "{targetPath}/{datasetId}/{attempt}/{directory}/interpret-{uniqueId}"
+   * Uses pattern for path -
+   * "{targetPath}/{datasetId}/{attempt}/interpreted/{name}/interpret-{uniqueId}"
    *
    * @return string path to interpretation
    */
   public static String buildPathInterpret(
-      BasePipelineOptions options, String directory, String uniqueId) {
-    String mainPath = buildPath(options, directory);
-    String fileName = "interpret-" + uniqueId;
-    return FsUtils.buildPath(mainPath, fileName).toString();
+      BasePipelineOptions options, String name, String uniqueId) {
+
+    return FsUtils.buildPath(
+            options.getTargetPath(),
+            options.getDatasetId(),
+            options.getAttempt().toString(),
+            "interpreted",
+            name.toLowerCase(),
+            "interpret-" + uniqueId)
+        .toString();
   }
 
   /**

@@ -87,7 +87,6 @@ public class VerbatimToInterpretedPipeline {
     String wsProperties = options.getWsProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    Function<RecordType, String> metaPathFn = t -> FsUtils.buildPath(options, t.name());
     Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
 
     LOG.info("Creating a pipeline from options");
@@ -103,7 +102,7 @@ public class VerbatimToInterpretedPipeline {
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
         .apply("Check metadata transform condition", CheckTransforms.metadata(types))
         .apply("Interpret metadata", ParDo.of(new MetadataFn(wsProperties)))
-        .apply("Write metadata to avro", WriteTransforms.metadata(metaPathFn.apply(METADATA)));
+        .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
 
     uniqueRecords
         .apply("Check basic transform condition", CheckTransforms.basic(types))

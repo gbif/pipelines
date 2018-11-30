@@ -84,7 +84,6 @@ public class DwcaToInterpretedPipeline {
     WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    Function<RecordType, String> metaPathFn = t -> FsUtils.buildPath(options, t.name());
     Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
 
     String inputPath = options.getInputPath();
@@ -107,7 +106,7 @@ public class DwcaToInterpretedPipeline {
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
         .apply("Interpret metadata", ParDo.of(new MetadataFn(wsConfig)))
-        .apply("Write metadata to avro", WriteTransforms.metadata(metaPathFn.apply(METADATA)));
+        .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
 
     uniqueRecords
         .apply("Interpret basic", ParDo.of(new BasicFn()))

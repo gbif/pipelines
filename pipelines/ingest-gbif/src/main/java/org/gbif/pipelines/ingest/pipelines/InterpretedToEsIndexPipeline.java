@@ -16,6 +16,7 @@ import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.ReadTransforms;
 
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
@@ -37,6 +38,7 @@ import org.slf4j.MDC;
 
 import static org.gbif.pipelines.core.RecordType.BASIC;
 import static org.gbif.pipelines.core.RecordType.LOCATION;
+import static org.gbif.pipelines.core.RecordType.METADATA;
 import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.core.RecordType.TAXONOMY;
 import static org.gbif.pipelines.core.RecordType.TEMPORAL;
@@ -89,7 +91,7 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     LOG.info("Adding step 1: Options");
-    Function<String, String> pathFn = s -> FsUtils.buildPath(options, s + "*.avro");
+    UnaryOperator<String> pathFn = s -> FsUtils.buildPath(options, s + "*.avro");
     Function<RecordType, String> pathInterFn =
         t -> FsUtils.buildPathInterpret(options, t.name().toLowerCase(), "*.avro");
 
@@ -104,7 +106,7 @@ public class InterpretedToEsIndexPipeline {
 
     LOG.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", ReadTransforms.metadata(pathFn.apply("metadata")))
+        p.apply("Read Metadata", ReadTransforms.metadata(pathInterFn.apply(METADATA)))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
