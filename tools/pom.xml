@@ -19,7 +19,6 @@
     <module>pipelines-maven-plugin</module>
     <module>elasticsearch-tools</module>
     <module>archives-converters</module>
-    <module>log4j-http-appender</module>
   </modules>
 
 </project>
