@@ -62,5 +62,8 @@ public class InterpretedToEsIndexExtendedPipeline {
     EsIndexUtils.swapIndex(options);
 
     FsUtils.removeTmpDirecrory(options);
+
+    // To call shutdown hook
+    System.exit(0);
   }
 }
