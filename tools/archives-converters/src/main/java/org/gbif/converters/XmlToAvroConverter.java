@@ -1,10 +1,10 @@
 package org.gbif.converters;
 
+import java.nio.file.Path;
+
 import org.gbif.converters.converter.ConverterToVerbatim;
 import org.gbif.converters.parser.xml.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import java.nio.file.Path;
 
 import org.apache.avro.file.DataFileWriter;
 import org.slf4j.Logger;
@@ -41,7 +41,6 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
   /** TODO: DOC */
   @Override
   public void convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
-    ExtendedRecordConverter.crete(xmlReaderParallelism)
-        .toAvro(inputPath.toString(), dataFileWriter);
+    ExtendedRecordConverter.crete(xmlReaderParallelism).toAvro(inputPath.toString(), dataFileWriter);
   }
 }

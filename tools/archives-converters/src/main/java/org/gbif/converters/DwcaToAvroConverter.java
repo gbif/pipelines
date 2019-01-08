@@ -42,5 +42,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     while (reader.advance()) {
       dataFileWriter.append(reader.getCurrent());
     }
+
+    reader.close();
   }
 }
