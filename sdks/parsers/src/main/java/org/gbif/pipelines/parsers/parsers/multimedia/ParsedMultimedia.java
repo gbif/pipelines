@@ -1,9 +1,9 @@
 package org.gbif.pipelines.parsers.parsers.multimedia;
 
-import org.gbif.pipelines.io.avro.MediaType;
-
 import java.net.URI;
 import java.time.temporal.Temporal;
+
+import org.gbif.pipelines.io.avro.MediaType;
 
 /** Models a parsed multimedia record. */
 public class ParsedMultimedia {

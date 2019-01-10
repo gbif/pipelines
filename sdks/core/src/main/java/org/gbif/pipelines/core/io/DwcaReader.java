@@ -1,15 +1,15 @@
 package org.gbif.pipelines.core.io;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.NoSuchElementException;
+
 import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.utils.file.ClosableIterator;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

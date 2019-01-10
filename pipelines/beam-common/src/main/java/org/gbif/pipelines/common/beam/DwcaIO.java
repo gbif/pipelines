@@ -1,11 +1,11 @@
 package org.gbif.pipelines.common.beam;
 
-import org.gbif.pipelines.core.io.DwcaReader;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+
+import org.gbif.pipelines.core.io.DwcaReader;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.Coder;

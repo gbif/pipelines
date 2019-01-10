@@ -15,15 +15,15 @@
  */
 package org.gbif.converters.parser.xml.parsing.response.file;
 
-import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.converters.parser.xml.constants.ExtractionSimpleXPaths;
-import org.gbif.converters.parser.xml.constants.ResponseElementEnum;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+
+import org.gbif.api.vocabulary.OccurrenceSchemaType;
+import org.gbif.converters.parser.xml.constants.ExtractionSimpleXPaths;
+import org.gbif.converters.parser.xml.constants.ResponseElementEnum;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

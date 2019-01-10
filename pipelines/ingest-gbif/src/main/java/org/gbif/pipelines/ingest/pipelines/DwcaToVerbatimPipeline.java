@@ -1,12 +1,12 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.nio.file.Paths;
+
 import org.gbif.pipelines.common.beam.DwcaIO.Read;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.transforms.WriteTransforms;
-
-import java.nio.file.Paths;
 
 import org.apache.beam.sdk.Pipeline;
 import org.slf4j.Logger;

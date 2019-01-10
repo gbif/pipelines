@@ -1,5 +1,12 @@
 package org.gbif.pipelines.core.interpreters;
 
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.Year;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAdjusters;
+import java.util.Optional;
+
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -7,13 +14,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
-
-import java.time.LocalDate;
-import java.time.Month;
-import java.time.Year;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAdjusters;
-import java.util.Optional;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 

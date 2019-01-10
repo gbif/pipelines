@@ -1,12 +1,13 @@
 package org.gbif.pipelines.parsers.ws.client;
 
-import org.gbif.pipelines.parsers.ws.HttpResponse;
-
 import java.io.IOException;
 import java.util.Map;
 
+import org.gbif.pipelines.parsers.ws.HttpResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import retrofit2.Call;
 import retrofit2.Response;
 

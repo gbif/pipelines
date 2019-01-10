@@ -1,7 +1,5 @@
 package org.gbif.pipelines.parsers.parsers.temporal.accumulator;
 
-import org.gbif.pipelines.parsers.parsers.temporal.utils.ParsedUnitUtils;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -15,8 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_UNLIKELY;
+import org.gbif.pipelines.parsers.parsers.temporal.utils.ParsedUnitUtils;
 
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
@@ -24,6 +21,9 @@ import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
+
+import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_UNLIKELY;
 
 /** The main function convert ChronoAccumulator to Temporal in approrative way */
 public class ChronoAccumulatorConverter {

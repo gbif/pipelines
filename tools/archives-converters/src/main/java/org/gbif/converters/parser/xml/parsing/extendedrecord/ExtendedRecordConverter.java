@@ -1,12 +1,12 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
-import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
+
+import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import com.google.common.base.Strings;
 

@@ -1,11 +1,11 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
+import java.io.IOException;
+
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
-
-import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Test;

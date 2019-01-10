@@ -1,18 +1,19 @@
 package org.gbif.pipelines.parsers.ws;
 
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
+
+import org.junit.ClassRule;
+import org.junit.rules.ExternalResource;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.BufferedSource;
 import okio.Okio;
-import org.junit.ClassRule;
-import org.junit.rules.ExternalResource;
 
 /** Base class for tests that need a {@link MockWebServer}. */
 public abstract class BaseMockServerTest {

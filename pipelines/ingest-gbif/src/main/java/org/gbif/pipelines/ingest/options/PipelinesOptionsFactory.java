@@ -1,15 +1,16 @@
 package org.gbif.pipelines.ingest.options;
 
-import org.gbif.pipelines.ingest.utils.FsUtils;
-
 import java.io.File;
 import java.util.Collections;
 
-import com.google.common.base.Strings;
+import org.gbif.pipelines.ingest.utils.FsUtils;
+
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+
+import com.google.common.base.Strings;
 
 /** Factory parsres arguments or file, registers and produces {@link PipelineOptions} */
 public final class PipelinesOptionsFactory {

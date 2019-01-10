@@ -1,12 +1,12 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.ParsingException;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
-
-import java.io.File;
-import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

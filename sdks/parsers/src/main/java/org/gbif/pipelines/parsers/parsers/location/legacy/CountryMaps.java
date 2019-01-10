@@ -1,8 +1,5 @@
 package org.gbif.pipelines.parsers.parsers.location.legacy;
 
-import org.gbif.api.vocabulary.Country;
-import org.gbif.pipelines.parsers.exception.IORuntimeException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +9,9 @@ import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.gbif.api.vocabulary.Country;
+import org.gbif.pipelines.parsers.exception.IORuntimeException;
 
 /** Maps of countries that are commonly confused, or are considered equivalent. */
 public class CountryMaps {

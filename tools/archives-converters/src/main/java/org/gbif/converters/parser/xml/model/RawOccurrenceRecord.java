@@ -15,13 +15,13 @@
  */
 package org.gbif.converters.parser.xml.model;
 
-import org.gbif.dwc.record.Record;
-import org.gbif.dwc.terms.DwcTerm;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import org.gbif.dwc.record.Record;
+import org.gbif.dwc.terms.DwcTerm;
 
 /**
  * This is mostly cut and paste from synchronizer-gbif, intended as a place holder until this

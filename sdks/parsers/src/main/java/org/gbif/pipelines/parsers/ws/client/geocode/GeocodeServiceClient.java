@@ -1,11 +1,5 @@
 package org.gbif.pipelines.parsers.ws.client.geocode;
 
-import org.gbif.api.vocabulary.Country;
-import org.gbif.common.parsers.geospatial.LatLng;
-import org.gbif.pipelines.parsers.ws.HttpResponse;
-import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,10 +8,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.gbif.api.vocabulary.Country;
+import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.pipelines.parsers.ws.HttpResponse;
+import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+
 import retrofit2.Call;
 
-public class GeocodeServiceClient
-    extends BaseServiceClient<Collection<GeocodeResponse>, List<Country>> {
+public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeResponse>, List<Country>> {
 
   private final GeocodeServiceRest geocodeServiceRest;
 

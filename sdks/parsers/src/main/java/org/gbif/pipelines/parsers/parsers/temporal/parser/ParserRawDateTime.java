@@ -1,10 +1,10 @@
 package org.gbif.pipelines.parsers.parsers.temporal.parser;
 
-import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
-import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
-
 import java.time.temporal.ChronoField;
 import java.util.regex.Pattern;
+
+import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
+import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 

@@ -1,5 +1,10 @@
 package org.gbif.pipelines.parsers.ws.client.match2;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
@@ -8,14 +13,10 @@ import org.gbif.pipelines.parsers.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import okhttp3.mockwebserver.MockResponse;
 import org.junit.Assert;
 import org.junit.Test;
+
+import okhttp3.mockwebserver.MockResponse;
 import retrofit2.Call;
 import retrofit2.Response;
 

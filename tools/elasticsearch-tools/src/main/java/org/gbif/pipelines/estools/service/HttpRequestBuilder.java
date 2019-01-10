@@ -1,7 +1,5 @@
 package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.estools.common.SettingsType;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -11,13 +9,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.gbif.pipelines.estools.common.SettingsType;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.nio.entity.NStringEntity;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import org.apache.http.HttpEntity;
-import org.apache.http.nio.entity.NStringEntity;
 
 import static org.gbif.pipelines.estools.service.EsConstants.Action;
 import static org.gbif.pipelines.estools.service.EsConstants.Constant;

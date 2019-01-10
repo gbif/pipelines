@@ -15,15 +15,6 @@
  */
 package org.gbif.converters.parser.xml;
 
-import org.gbif.api.exception.ServiceUnavailableException;
-import org.gbif.converters.parser.xml.constants.ExtractionSimpleXPaths;
-import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
-import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
-import org.gbif.converters.parser.xml.parsing.response.file.ParsedSearchResponse;
-import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
-import org.gbif.converters.parser.xml.util.XmlSanitizingReader;
-import org.gbif.utils.file.CharsetDetection;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,16 +31,26 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 
-import com.sun.org.apache.xerces.internal.impl.io.MalformedByteSequenceException;
+import org.gbif.api.exception.ServiceUnavailableException;
+import org.gbif.converters.parser.xml.constants.ExtractionSimpleXPaths;
+import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
+import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
+import org.gbif.converters.parser.xml.parsing.response.file.ParsedSearchResponse;
+import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
+import org.gbif.converters.parser.xml.util.XmlSanitizingReader;
+import org.gbif.utils.file.CharsetDetection;
+
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.NodeCreateRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import com.sun.org.apache.xerces.internal.impl.io.MalformedByteSequenceException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
 /**
  * Entry point into the parsing of raw occurrence records as retrieved from publishers. Will attempt

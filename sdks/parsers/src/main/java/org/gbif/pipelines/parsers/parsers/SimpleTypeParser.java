@@ -1,14 +1,14 @@
 package org.gbif.pipelines.parsers.parsers;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.gbif.common.parsers.BooleanParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 

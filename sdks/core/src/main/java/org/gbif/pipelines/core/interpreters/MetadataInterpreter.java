@@ -1,22 +1,20 @@
 package org.gbif.pipelines.core.interpreters;
 
+import java.util.function.BiConsumer;
+
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-
-import java.util.function.BiConsumer;
 
 /** Interprets GBIF metadata by datasetId */
 public class MetadataInterpreter {
 
   private MetadataInterpreter() {}
 
-  public static BiConsumer<String, MetadataRecord> interpret(WsConfig wsConfig) {
+  public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {
-      MetadataServiceClient client = MetadataServiceClient.create(wsConfig);
       mdr.setDatasetKey(datasetId);
 
       Dataset dataset = client.getDataset(datasetId);

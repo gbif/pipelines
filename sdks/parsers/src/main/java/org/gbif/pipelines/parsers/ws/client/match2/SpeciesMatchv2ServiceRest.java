@@ -1,13 +1,14 @@
 package org.gbif.pipelines.parsers.ws.client.match2;
 
+import java.io.IOException;
+
 import org.gbif.pipelines.parsers.ws.HttpClientFactory;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
-import java.io.IOException;
-
-import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 

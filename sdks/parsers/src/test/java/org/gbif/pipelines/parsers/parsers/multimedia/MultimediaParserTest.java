@@ -1,18 +1,17 @@
 package org.gbif.pipelines.parsers.parsers.multimedia;
 
+import java.util.List;
+import java.util.Map;
+
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.utils.ExtendedRecordBuilder;
 
-import java.util.List;
-import java.util.Map;
-
 import org.junit.Test;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;

@@ -15,13 +15,13 @@
  */
 package org.gbif.converters.parser.xml.model;
 
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
-import org.gbif.converters.parser.xml.parsing.xml.HigherTaxonParser;
-import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.parsing.xml.HigherTaxonParser;
+import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

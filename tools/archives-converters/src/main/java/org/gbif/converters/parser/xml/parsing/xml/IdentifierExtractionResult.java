@@ -1,11 +1,11 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import java.util.Set;
+
 import org.gbif.converters.parser.xml.identifier.UniqueIdentifier;
 
-import java.util.Set;
-import javax.annotation.Nullable;
-
 import com.google.common.base.Objects;
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

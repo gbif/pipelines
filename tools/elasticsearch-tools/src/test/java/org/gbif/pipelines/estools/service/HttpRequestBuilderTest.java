@@ -1,12 +1,5 @@
 package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.estools.common.SettingsType;
-import org.gbif.pipelines.estools.service.EsConstants.Action;
-import org.gbif.pipelines.estools.service.EsConstants.Constant;
-import org.gbif.pipelines.estools.service.EsConstants.Field;
-import org.gbif.pipelines.estools.service.EsConstants.Indexing;
-import org.gbif.pipelines.estools.service.EsConstants.Searching;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -17,15 +10,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.service.EsConstants.Action;
+import org.gbif.pipelines.estools.service.EsConstants.Constant;
+import org.gbif.pipelines.estools.service.EsConstants.Field;
+import org.gbif.pipelines.estools.service.EsConstants.Indexing;
+import org.gbif.pipelines.estools.service.EsConstants.Searching;
+
 import org.apache.http.HttpEntity;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import static org.gbif.pipelines.estools.service.HttpRequestBuilder.loadFile;
 import static org.gbif.pipelines.estools.service.JsonHandler.readTree;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

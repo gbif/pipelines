@@ -1,8 +1,8 @@
 package org.gbif.pipelines.parsers.ws.config;
 
-import org.gbif.pipelines.parsers.exception.IORuntimeException;
-
 import java.nio.file.Paths;
+
+import org.gbif.pipelines.parsers.exception.IORuntimeException;
 
 import org.junit.Assert;
 import org.junit.Rule;

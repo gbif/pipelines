@@ -1,14 +1,14 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+
 import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 

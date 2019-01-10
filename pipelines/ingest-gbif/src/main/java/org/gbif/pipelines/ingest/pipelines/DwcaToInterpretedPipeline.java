@@ -1,5 +1,10 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.function.Function;
+
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -10,11 +15,6 @@ import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.WriteTransforms;
-
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.function.Function;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Create;

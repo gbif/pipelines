@@ -1,5 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.nio.file.Paths;
+
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -17,8 +19,6 @@ import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
-
-import java.nio.file.Paths;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;

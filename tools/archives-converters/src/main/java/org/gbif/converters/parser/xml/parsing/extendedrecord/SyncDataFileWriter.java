@@ -1,8 +1,8 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.io.IOException;
+
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.DataFileWriter;
 

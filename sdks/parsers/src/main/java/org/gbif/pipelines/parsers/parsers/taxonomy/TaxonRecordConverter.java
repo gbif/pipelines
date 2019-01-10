@@ -1,5 +1,9 @@
 package org.gbif.pipelines.parsers.parsers.taxonomy;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.MatchType;
@@ -8,10 +12,6 @@ import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /** Adapts a {@link NameUsageMatch2} into a {@link TaxonRecord} */
 public class TaxonRecordConverter {

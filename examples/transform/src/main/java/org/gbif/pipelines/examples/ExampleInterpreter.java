@@ -1,10 +1,10 @@
 package org.gbif.pipelines.examples;
 
-import org.gbif.example.io.avro.ExampleRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+import org.gbif.example.io.avro.ExampleRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /**
  * Set of interpretation steps, uses {@link org.gbif.pipelines.io.avro.TemporalRecord} as a source

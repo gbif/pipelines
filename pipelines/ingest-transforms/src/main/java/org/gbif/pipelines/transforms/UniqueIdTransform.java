@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transforms;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.util.Iterator;
+
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;

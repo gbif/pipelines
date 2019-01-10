@@ -15,16 +15,17 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml;
 
-import org.gbif.converters.parser.xml.constants.TaxonRankEnum;
-import org.gbif.converters.parser.xml.model.Taxon;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import com.google.common.base.Strings;
+import org.gbif.converters.parser.xml.constants.TaxonRankEnum;
+import org.gbif.converters.parser.xml.model.Taxon;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 public class HigherTaxonParser {
 

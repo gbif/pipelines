@@ -1,14 +1,13 @@
 package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.estools.service.EsConstants.Field;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.gbif.pipelines.estools.service.EsConstants.Field;
+
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.elasticsearch.client.Request;
@@ -19,9 +18,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.gbif.pipelines.estools.common.SettingsType.SEARCH;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

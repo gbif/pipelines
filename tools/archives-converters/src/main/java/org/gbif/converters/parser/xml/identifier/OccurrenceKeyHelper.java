@@ -3,6 +3,7 @@ package org.gbif.converters.parser.xml.identifier;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.StringJoiner;
+
 import javax.annotation.Nullable;
 
 /**

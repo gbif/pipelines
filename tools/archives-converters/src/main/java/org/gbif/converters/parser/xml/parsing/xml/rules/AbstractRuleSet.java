@@ -1,9 +1,9 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import java.util.Properties;
+
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
-
-import java.util.Properties;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;

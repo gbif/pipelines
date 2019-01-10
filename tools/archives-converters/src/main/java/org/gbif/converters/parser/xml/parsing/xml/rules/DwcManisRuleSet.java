@@ -1,11 +1,11 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
-import org.gbif.api.vocabulary.OccurrenceSchemaType;
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
+
+import org.gbif.api.vocabulary.OccurrenceSchemaType;
+import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;

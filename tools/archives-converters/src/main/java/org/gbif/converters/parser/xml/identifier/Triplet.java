@@ -2,9 +2,9 @@ package org.gbif.converters.parser.xml.identifier;
 
 import java.util.Objects;
 import java.util.UUID;
-import javax.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
+import javax.annotation.Nullable;
 
 /**
  * The original and still heavily used unique identifier for occurrence records, consisting of

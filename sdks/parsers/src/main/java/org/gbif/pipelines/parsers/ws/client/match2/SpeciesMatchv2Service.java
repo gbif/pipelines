@@ -1,8 +1,8 @@
 package org.gbif.pipelines.parsers.ws.client.match2;
 
-import org.gbif.api.v2.NameUsageMatch2;
-
 import java.util.Map;
+
+import org.gbif.api.v2.NameUsageMatch2;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

@@ -1,5 +1,10 @@
 package org.gbif.pipelines.core.interpreters;
 
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
@@ -11,15 +16,11 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
 
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Strings;
-import org.apache.commons.lang3.StringUtils;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
@@ -45,11 +46,10 @@ public class LocationInterpreter {
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
-  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      WsConfig wsConfig) {
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(GeocodeServiceClient client) {
     return (er, lr) -> {
       // parse the terms
-      ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, wsConfig);
+      ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, client);
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();

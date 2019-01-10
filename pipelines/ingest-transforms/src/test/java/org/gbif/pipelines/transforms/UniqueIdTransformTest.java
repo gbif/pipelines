@@ -1,10 +1,10 @@
 package org.gbif.pipelines.transforms;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;

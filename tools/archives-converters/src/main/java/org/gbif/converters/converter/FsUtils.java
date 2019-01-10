@@ -1,12 +1,11 @@
 package org.gbif.converters.converter;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
-import com.google.common.base.Strings;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.hadoop.conf.Configuration;
@@ -15,6 +14,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 public class FsUtils {
 

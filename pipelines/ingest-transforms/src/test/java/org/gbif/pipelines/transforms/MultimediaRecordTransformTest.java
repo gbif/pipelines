@@ -1,14 +1,14 @@
 package org.gbif.pipelines.transforms;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
-
-import java.util.Collections;
-import java.util.Map;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;

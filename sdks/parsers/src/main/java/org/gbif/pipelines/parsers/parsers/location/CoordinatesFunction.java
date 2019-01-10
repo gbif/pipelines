@@ -1,11 +1,11 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import org.gbif.common.parsers.geospatial.LatLng;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+
+import org.gbif.common.parsers.geospatial.LatLng;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LATITUDE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LONGITUDE;

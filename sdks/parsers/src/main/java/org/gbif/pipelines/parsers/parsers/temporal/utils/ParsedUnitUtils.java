@@ -5,8 +5,9 @@ import java.time.Year;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 /** Util class for parsing values */
 public class ParsedUnitUtils {

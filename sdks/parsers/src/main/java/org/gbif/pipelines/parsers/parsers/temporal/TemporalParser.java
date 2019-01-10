@@ -1,10 +1,5 @@
 package org.gbif.pipelines.parsers.parsers.temporal;
 
-import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
-import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulatorConverter;
-import org.gbif.pipelines.parsers.parsers.temporal.parser.ParserRawDateTime;
-import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -17,6 +12,11 @@ import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
+
+import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
+import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulatorConverter;
+import org.gbif.pipelines.parsers.parsers.temporal.parser.ParserRawDateTime;
+import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
 

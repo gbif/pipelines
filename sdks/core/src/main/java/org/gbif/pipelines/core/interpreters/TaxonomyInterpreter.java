@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreters;
 
+import java.util.function.BiConsumer;
+
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -8,9 +10,6 @@ import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.match2.SpeciesMatchv2Client;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-
-import java.util.function.BiConsumer;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.INTERPRETATION_ERROR;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
@@ -32,12 +31,12 @@ public class TaxonomyInterpreter {
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.
    */
-  public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(WsConfig wsConfig) {
+  public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(SpeciesMatchv2Client client) {
     return (er, tr) -> {
       ModelUtils.checkNullOrEmpty(er);
 
       // get match from WS
-      HttpResponse<NameUsageMatch2> response = SpeciesMatchv2Client.create(wsConfig).getMatch(er);
+      HttpResponse<NameUsageMatch2> response = client.getMatch(er);
 
       if (response.isError()) {
         addIssue(tr, INTERPRETATION_ERROR);

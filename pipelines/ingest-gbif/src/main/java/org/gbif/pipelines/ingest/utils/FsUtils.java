@@ -1,8 +1,5 @@
 package org.gbif.pipelines.ingest.utils;
 
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
-import org.gbif.pipelines.parsers.exception.IORuntimeException;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,11 +7,15 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.StringJoiner;
 
-import com.google.common.base.Strings;
+import org.gbif.pipelines.ingest.options.BasePipelineOptions;
+import org.gbif.pipelines.parsers.exception.IORuntimeException;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 /** Utility class to work with file system. */
 public final class FsUtils {

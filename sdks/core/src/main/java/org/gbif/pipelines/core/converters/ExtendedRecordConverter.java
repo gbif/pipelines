@@ -1,14 +1,14 @@
 package org.gbif.pipelines.core.converters;
 
-import org.gbif.dwc.record.Record;
-import org.gbif.dwc.record.StarRecord;
-import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.gbif.dwc.record.Record;
+import org.gbif.dwc.record.StarRecord;
+import org.gbif.dwc.terms.Term;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Converters from *.class to {@link ExtendedRecord} */
 public class ExtendedRecordConverter {

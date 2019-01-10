@@ -15,6 +15,9 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import java.io.File;
+import java.util.List;
+
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.ImageRecord;
@@ -22,9 +25,6 @@ import org.gbif.converters.parser.xml.model.LinkRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.model.TypificationRecord;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
-
-import java.io.File;
-import java.util.List;
 
 import org.junit.Before;
 

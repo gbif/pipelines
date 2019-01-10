@@ -1,13 +1,13 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
+
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.model.ImageRecord;
 import org.gbif.converters.parser.xml.model.LinkRecord;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Properties;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;

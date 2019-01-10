@@ -1,15 +1,13 @@
 package org.gbif.pipelines.parsers.parsers.location.legacy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.DatumParser;
 import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import org.geotools.factory.BasicFactories;
 import org.geotools.factory.FactoryRegistryException;
 import org.geotools.referencing.CRS;
@@ -22,6 +20,9 @@ import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.operation.MathTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTED;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTION_FAILED;

@@ -1,11 +1,11 @@
 package org.gbif.pipelines.parsers.ws.client.metadata;
 
+import java.util.List;
+
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
-
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

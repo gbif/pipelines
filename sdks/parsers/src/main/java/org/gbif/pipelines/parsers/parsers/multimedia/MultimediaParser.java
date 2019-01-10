@@ -1,5 +1,18 @@
 package org.gbif.pipelines.parsers.parsers.multimedia;
 
+import java.net.URI;
+import java.time.temporal.Temporal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
@@ -13,19 +26,6 @@ import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
-
-import java.net.URI;
-import java.time.temporal.Temporal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;

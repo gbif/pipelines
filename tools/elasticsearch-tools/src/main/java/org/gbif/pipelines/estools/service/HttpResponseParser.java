@@ -1,12 +1,13 @@
 package org.gbif.pipelines.estools.service;
 
+import java.util.Set;
+
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.common.SettingsType;
 
-import java.util.Set;
+import org.apache.http.HttpEntity;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.http.HttpEntity;
 
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
 

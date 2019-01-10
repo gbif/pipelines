@@ -1,8 +1,5 @@
 package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.estools.client.EsClient;
-import org.gbif.pipelines.estools.common.SettingsType;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -11,6 +8,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
+
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.common.SettingsType;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;

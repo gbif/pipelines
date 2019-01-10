@@ -1,7 +1,5 @@
 package org.gbif.pipelines.parsers.ws.config;
 
-import org.gbif.pipelines.parsers.exception.IORuntimeException;
-
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -9,6 +7,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
+
+import org.gbif.pipelines.parsers.exception.IORuntimeException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

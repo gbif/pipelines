@@ -1,5 +1,10 @@
 package org.gbif.pipelines.transforms;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+
 import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.api.v2.RankedName;
@@ -11,15 +16,6 @@ import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okio.BufferedSource;
-import okio.Okio;
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -34,6 +30,11 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okio.BufferedSource;
+import okio.Okio;
 
 import static org.gbif.api.vocabulary.TaxonomicStatus.ACCEPTED;
 

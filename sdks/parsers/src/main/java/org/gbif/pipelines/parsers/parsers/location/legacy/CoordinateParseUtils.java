@@ -1,16 +1,17 @@
 package org.gbif.pipelines.parsers.parsers.location.legacy;
 
-import org.gbif.common.parsers.NumberParser;
-import org.gbif.common.parsers.geospatial.LatLng;
-import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Strings;
+import org.gbif.common.parsers.NumberParser;
+import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+
 import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.Strings;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;

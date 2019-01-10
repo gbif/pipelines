@@ -1,15 +1,16 @@
 package org.gbif.pipelines.parsers.ws.client.geocode;
 
-import org.gbif.api.vocabulary.Country;
-import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Collection;
 
-import com.google.common.collect.Iterables;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
+
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.common.collect.Iterables;
 import retrofit2.Call;
 import retrofit2.Response;
 

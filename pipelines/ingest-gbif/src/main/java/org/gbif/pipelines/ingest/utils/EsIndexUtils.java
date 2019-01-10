@@ -1,19 +1,20 @@
 package org.gbif.pipelines.ingest.utils;
 
-import org.gbif.pipelines.estools.EsIndex;
-import org.gbif.pipelines.estools.client.EsConfig;
-import org.gbif.pipelines.estools.service.EsConstants;
-import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.google.common.base.Strings;
+import org.gbif.pipelines.estools.EsIndex;
+import org.gbif.pipelines.estools.client.EsConfig;
+import org.gbif.pipelines.estools.service.EsConstants;
+import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 public class EsIndexUtils {
 

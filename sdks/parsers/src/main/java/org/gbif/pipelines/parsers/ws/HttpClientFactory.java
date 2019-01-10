@@ -1,16 +1,17 @@
 package org.gbif.pipelines.parsers.ws;
 
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.Cache;
-import okhttp3.OkHttpClient;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import okhttp3.Cache;
+import okhttp3.OkHttpClient;
 
 /** Factory class for http client. */
 public final class HttpClientFactory {

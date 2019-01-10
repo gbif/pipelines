@@ -1,8 +1,8 @@
 package org.gbif.pipelines.parsers.ws.client.metadata;
 
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-
 import java.util.concurrent.TimeUnit;
+
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;

@@ -1,10 +1,10 @@
 package org.gbif.converters.converter;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;

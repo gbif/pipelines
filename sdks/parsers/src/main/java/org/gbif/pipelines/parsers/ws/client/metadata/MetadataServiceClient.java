@@ -1,16 +1,16 @@
 package org.gbif.pipelines.parsers.ws.client.metadata;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
 import javax.xml.ws.WebServiceException;
-
 import retrofit2.Call;
 import retrofit2.HttpException;
 import retrofit2.Response;

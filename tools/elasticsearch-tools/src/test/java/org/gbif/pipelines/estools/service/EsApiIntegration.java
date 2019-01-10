@@ -1,17 +1,16 @@
 package org.gbif.pipelines.estools.service;
 
-import org.gbif.pipelines.estools.service.EsConstants.Constant;
-import org.gbif.pipelines.estools.service.EsConstants.Field;
-import org.gbif.pipelines.estools.service.EsConstants.Indexing;
-import org.gbif.pipelines.estools.service.EsConstants.Searching;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.gbif.pipelines.estools.service.EsConstants.Constant;
+import org.gbif.pipelines.estools.service.EsConstants.Field;
+import org.gbif.pipelines.estools.service.EsConstants.Indexing;
+import org.gbif.pipelines.estools.service.EsConstants.Searching;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -23,8 +22,9 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.junit.ClassRule;
 
-import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
+import com.fasterxml.jackson.databind.JsonNode;
 
+import static org.gbif.pipelines.estools.service.EsService.buildEndpoint;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

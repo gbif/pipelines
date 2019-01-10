@@ -1,5 +1,8 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
+
 import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
@@ -14,9 +17,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.ReadTransforms;
-
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;

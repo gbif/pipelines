@@ -1,13 +1,13 @@
 package org.gbif.pipelines.parsers.utils;
 
+import java.util.List;
+import java.util.Objects;
+
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
-
-import java.util.List;
-import java.util.Objects;
 
 /** Helps to work with org.gbif.pipelines.io.avro models */
 public class ModelUtils {

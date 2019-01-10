@@ -1,8 +1,5 @@
 package org.gbif.converters.parser.xml;
 
-import org.gbif.converters.converter.DataFileWriteBuilder;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +7,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.concurrent.ForkJoinPool;
 import java.util.zip.Deflater;
+
+import org.gbif.converters.converter.DataFileWriteBuilder;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;

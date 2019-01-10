@@ -1,13 +1,5 @@
 package org.gbif.pipelines.transforms;
 
-import org.gbif.api.vocabulary.Country;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
-import org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -16,10 +8,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okio.BufferedSource;
-import okio.Okio;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
+import org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
+
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
@@ -36,6 +32,11 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okio.BufferedSource;
+import okio.Okio;
 
 @Ignore
 @RunWith(JUnit4.class)
@@ -186,8 +187,7 @@ public class LocationTransformTest {
               BufferedSource source = Okio.buffer(Okio.source(is));
               MockResponse mockResponse = new MockResponse();
               try {
-                MOCK_SERVER.enqueue(
-                    mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
+                MOCK_SERVER.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
               } catch (IOException e) {
                 Assert.fail(e.getMessage());
               }

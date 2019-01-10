@@ -1,9 +1,9 @@
 package org.gbif.pipelines.transforms;
 
+import java.util.List;
+
 import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import java.util.List;
 
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.PTransform;

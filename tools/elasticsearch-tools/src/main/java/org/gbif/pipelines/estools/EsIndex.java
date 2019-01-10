@@ -1,10 +1,5 @@
 package org.gbif.pipelines.estools;
 
-import org.gbif.pipelines.estools.client.EsClient;
-import org.gbif.pipelines.estools.client.EsConfig;
-import org.gbif.pipelines.estools.common.SettingsType;
-import org.gbif.pipelines.estools.service.EsService;
-
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,10 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.client.EsConfig;
+import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.service.EsService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import static org.gbif.pipelines.estools.service.EsService.getIndexesByAliasAndIndexPattern;
 import static org.gbif.pipelines.estools.service.EsService.swapIndexes;

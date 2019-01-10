@@ -1,9 +1,9 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
-import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
-
 import java.io.File;
 import java.util.List;
+
+import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 
 import org.junit.Test;
 

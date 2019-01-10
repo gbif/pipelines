@@ -1,5 +1,9 @@
 package org.gbif.pipelines.parsers.ws.client.match2;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
 import org.gbif.api.model.checklistbank.ParsedName;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.common.parsers.core.ParseResult;
@@ -7,10 +11,6 @@ import org.gbif.common.parsers.utils.ClassificationUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
-
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;

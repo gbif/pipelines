@@ -1,12 +1,5 @@
 package org.gbif.converters.parser.xml;
 
-import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
-import org.gbif.converters.parser.xml.parsing.extendedrecord.ExecutorPool;
-import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
-import org.gbif.converters.parser.xml.parsing.extendedrecord.SyncDataFileWriter;
-import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,10 +7,18 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
-import com.google.common.base.Strings;
+import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
+import org.gbif.converters.parser.xml.parsing.extendedrecord.ExecutorPool;
+import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
+import org.gbif.converters.parser.xml.parsing.extendedrecord.SyncDataFileWriter;
+import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import org.apache.avro.file.DataFileWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 /** Parsing xml response files or tar.xz archive and convert to ExtendedRecord avro file */
 public class ExtendedRecordConverter {

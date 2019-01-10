@@ -1,5 +1,10 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.function.Function;
+
 import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -9,11 +14,6 @@ import org.gbif.pipelines.transforms.CheckTransforms;
 import org.gbif.pipelines.transforms.ReadTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.WriteTransforms;
-
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.function.Function;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Create;

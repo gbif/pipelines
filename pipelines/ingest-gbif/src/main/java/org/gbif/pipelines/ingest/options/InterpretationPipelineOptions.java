@@ -3,13 +3,14 @@ package org.gbif.pipelines.ingest.options;
 import java.io.File;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.beam.runners.spark.SparkPipelineOptions;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Pipeline options (configuration) for GBIF based data interpretation pipelines. Optionally can use

@@ -1,11 +1,11 @@
 package org.gbif.converters;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 import org.gbif.converters.converter.ConverterToVerbatim;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import java.io.IOException;
-import java.nio.file.Path;
 
 import org.apache.avro.file.DataFileWriter;
 import org.slf4j.Logger;

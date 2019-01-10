@@ -1,5 +1,9 @@
 package org.gbif.pipelines.core.converters;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -8,10 +12,6 @@ import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;

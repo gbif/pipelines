@@ -15,6 +15,16 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.identifier.OccurrenceKeyHelper;
 import org.gbif.converters.parser.xml.identifier.PublisherProvidedUniqueIdentifier;
@@ -30,25 +40,16 @@ import org.gbif.converters.parser.xml.parsing.xml.rules.Dwc14RuleSet;
 import org.gbif.converters.parser.xml.parsing.xml.rules.Dwc2009RuleSet;
 import org.gbif.converters.parser.xml.parsing.xml.rules.DwcManisRuleSet;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Methods for parsing {@link RawXmlOccurrence}s and {@link UniqueIdentifier}s from xml fragments.

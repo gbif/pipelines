@@ -1,12 +1,5 @@
 package org.gbif.pipelines.transforms;
 
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
-
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
@@ -15,6 +8,13 @@ import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.EventDate;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;

@@ -1,9 +1,9 @@
 package org.gbif.pipelines.examples;
 
+import java.util.UUID;
+
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-
-import java.util.UUID;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;

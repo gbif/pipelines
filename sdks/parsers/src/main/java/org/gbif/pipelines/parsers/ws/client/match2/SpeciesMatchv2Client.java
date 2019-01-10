@@ -1,5 +1,11 @@
 package org.gbif.pipelines.parsers.ws.client.match2;
 
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
@@ -11,14 +17,9 @@ import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import retrofit2.Call;
 
 /** Handles the calls to the species match WS. */

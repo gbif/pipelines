@@ -2,9 +2,10 @@ package org.gbif.pipelines.common.beam;
 
 import java.util.Properties;
 
-import com.codahale.metrics.MetricRegistry;
 import org.apache.beam.runners.spark.metrics.AggregatorMetric;
 import org.apache.beam.runners.spark.metrics.WithMetricsSupport;
+
+import com.codahale.metrics.MetricRegistry;
 
 /**
  * A Spark {@link org.apache.spark.metrics.sink.Sink} that is tailored to report {@link

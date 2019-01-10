@@ -1,5 +1,10 @@
 package org.gbif.pipelines.core.interpreters;
 
+import java.net.URI;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.LifeStage;
@@ -13,11 +18,6 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
-
-import java.net.URI;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import com.google.common.base.Strings;
 

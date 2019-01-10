@@ -1,9 +1,10 @@
 package org.gbif.converters.parser.xml.parsing.xml.rules;
 
-import com.google.common.base.MoreObjects;
 import org.apache.commons.beanutils.MethodUtils;
 import org.apache.commons.digester.Rule;
 import org.xml.sax.SAXException;
+
+import com.google.common.base.MoreObjects;
 
 public class SetLiteralRule extends Rule {
 

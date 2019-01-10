@@ -1,11 +1,11 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
-import org.gbif.converters.parser.xml.ParsingException;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.function.BiFunction;
+
+import org.gbif.converters.parser.xml.ParsingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

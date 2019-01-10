@@ -1,10 +1,10 @@
 package org.gbif.pipelines.parsers.parsers.temporal.parser;
 
-import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
-import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
-
 import java.time.temporal.ChronoField;
 import java.util.function.Predicate;
+
+import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
+import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
 
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;

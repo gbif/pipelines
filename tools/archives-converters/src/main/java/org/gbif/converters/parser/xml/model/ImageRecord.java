@@ -15,16 +15,17 @@
  */
 package org.gbif.converters.parser.xml.model;
 
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
-import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
-
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Strings;
+import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 /** Holds a single image for a RawOccurrenceRecord. */
 public class ImageRecord extends PropertyPrioritizer implements Serializable {
