@@ -1,5 +1,10 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.LatLng;
@@ -9,11 +14,8 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.Wgs84Projection;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
+import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
@@ -29,7 +31,12 @@ public class LocationParser {
   private LocationParser() {}
 
   public static ParsedField<ParsedLocation> parse(ExtendedRecord er, WsConfig wsConfig) {
+    return parse(er, GeocodeServiceClient.create(wsConfig));
+  }
+
+  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, GeocodeServiceClient client) {
     ModelUtils.checkNullOrEmpty(er);
+    Objects.requireNonNull(client, "WS client is required");
 
     List<String> issues = new ArrayList<>();
 
@@ -69,7 +76,7 @@ public class LocationParser {
 
     // If the coords parsing was succesful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), wsConfig)
+        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), client)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -94,8 +101,7 @@ public class LocationParser {
         .build();
   }
 
-  private static ParsedField<Country> parseCountry(
-      ExtendedRecord er, VocabularyParsers<Country> parser, String issue) {
+  private static ParsedField<Country> parseCountry(ExtendedRecord er, VocabularyParsers<Country> parser, String issue) {
     Optional<ParseResult<Country>> parseResultOpt = parser.map(er, parseRes -> parseRes);
 
     if (!parseResultOpt.isPresent()) {

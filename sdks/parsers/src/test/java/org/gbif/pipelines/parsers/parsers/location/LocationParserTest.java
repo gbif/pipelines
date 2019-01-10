@@ -1,13 +1,14 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.gbif.api.vocabulary.Country;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
-
-import java.io.IOException;
-import java.util.Arrays;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -217,13 +218,19 @@ public class LocationParserTest extends BaseMockServerTest {
 
   @Test(expected = NullPointerException.class)
   public void nullArgs() {
+    // State
+    WsConfig wsConfig = null;
+
     // When
-    LocationParser.parse(null, null);
+    LocationParser.parse(null, wsConfig);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void invalidArgs() {
+    // State
+    WsConfig wsConfig = null;
+
     // When
-    LocationParser.parse(new ExtendedRecord(), null);
+    LocationParser.parse(new ExtendedRecord(), wsConfig);
   }
 }

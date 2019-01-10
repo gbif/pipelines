@@ -1,5 +1,8 @@
 package org.gbif.pipelines.transforms;
 
+import java.nio.file.Paths;
+import java.util.Optional;
+
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.LocationInterpreter;
@@ -14,11 +17,11 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
+import org.gbif.pipelines.parsers.ws.client.match2.SpeciesMatchv2Client;
+import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
-
-import java.nio.file.Paths;
-import java.util.Optional;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -46,6 +49,7 @@ public class RecordTransforms {
    * ExtendedRecord} as a source and {@link MultimediaInterpreter} as interpretation steps
    */
   public static class MultimediaFn extends DoFn<ExtendedRecord, MultimediaRecord> {
+
     private final Counter counter = Metrics.counter(RecordTransforms.class, "MultimediaRecord");
 
     @ProcessElement
@@ -64,6 +68,7 @@ public class RecordTransforms {
    * as a source and {@link TemporalInterpreter} as interpretation steps
    */
   public static class TemporalFn extends DoFn<ExtendedRecord, TemporalRecord> {
+
     private final Counter counter = Metrics.counter(RecordTransforms.class, "TemporalRecord");
 
     @ProcessElement
@@ -85,6 +90,7 @@ public class RecordTransforms {
    * a source and {@link BasicInterpreter} as interpretation steps
    */
   public static class BasicFn extends DoFn<ExtendedRecord, BasicRecord> {
+
     private final Counter counter = Metrics.counter(RecordTransforms.class, "BasicRecord");
 
     @ProcessElement
@@ -111,9 +117,11 @@ public class RecordTransforms {
    * <p>wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
   public static class LocationFn extends DoFn<ExtendedRecord, LocationRecord> {
+
     private final Counter counter = Metrics.counter(RecordTransforms.class, "LocationRecord");
 
     private final WsConfig wsConfig;
+    private GeocodeServiceClient client;
 
     public LocationFn(WsConfig wsConfig) {
       this.wsConfig = wsConfig;
@@ -123,11 +131,16 @@ public class RecordTransforms {
       this.wsConfig = WsConfigFactory.create("geocode", Paths.get(properties));
     }
 
+    @Setup
+    public void setup() {
+      client = GeocodeServiceClient.create(wsConfig);
+    }
+
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-          .via(LocationInterpreter.interpretCountryAndCoordinates(wsConfig))
+          .via(LocationInterpreter.interpretCountryAndCoordinates(client))
           .via(LocationInterpreter::interpretContinent)
           .via(LocationInterpreter::interpretWaterBody)
           .via(LocationInterpreter::interpretStateProvince)
@@ -152,9 +165,11 @@ public class RecordTransforms {
    * <p>wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
   public static class MetadataFn extends DoFn<String, MetadataRecord> {
+
     private final Counter counter = Metrics.counter(RecordTransforms.class, "MetadataRecord");
 
     private final WsConfig wsConfig;
+    private MetadataServiceClient client;
 
     public MetadataFn(WsConfig wsConfig) {
       this.wsConfig = wsConfig;
@@ -164,11 +179,16 @@ public class RecordTransforms {
       this.wsConfig = WsConfigFactory.create("metadata", Paths.get(properties));
     }
 
+    @Setup
+    public void setup() {
+      client = MetadataServiceClient.create(wsConfig);
+    }
+
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(id -> MetadataRecord.newBuilder().setId(id).build())
-          .via(MetadataInterpreter.interpret(wsConfig))
+          .via(MetadataInterpreter.interpret(client))
           .consume(context::output);
 
       counter.inc();
@@ -182,9 +202,11 @@ public class RecordTransforms {
    * <p>wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
   public static class TaxonomyFn extends DoFn<ExtendedRecord, TaxonRecord> {
+
     private final Counter counter = Metrics.counter(RecordTransforms.class, "TaxonRecord");
 
     private final WsConfig wsConfig;
+    private SpeciesMatchv2Client client;
 
     public TaxonomyFn(WsConfig wsConfig) {
       this.wsConfig = wsConfig;
@@ -194,11 +216,16 @@ public class RecordTransforms {
       this.wsConfig = WsConfigFactory.create("match", Paths.get(properties));
     }
 
+    @Setup
+    public void setup() {
+      client = SpeciesMatchv2Client.create(wsConfig);
+    }
+
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(TaxonRecord.newBuilder()::build)
-          .via(TaxonomyInterpreter.taxonomyInterpreter(wsConfig))
+          .via(TaxonomyInterpreter.taxonomyInterpreter(client))
           // the id is null when there is an error in the interpretation. In these
           // cases we do not write the taxonRecord because it is totally empty.
           .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));

@@ -1,14 +1,5 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.geospatial.LatLng;
-import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.legacy.CountryMaps;
-import org.gbif.pipelines.parsers.ws.HttpResponse;
-import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +8,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+import org.gbif.pipelines.parsers.parsers.location.legacy.CountryMaps;
+import org.gbif.pipelines.parsers.ws.HttpResponse;
+import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,17 +35,21 @@ class LocationMatcher {
 
   private final LatLng latLng;
   private final Country country;
-  private final GeocodeServiceClient geocodeServiceClient;
+  private final GeocodeServiceClient client;
   private final List<Function<LatLng, LatLng>> alternativeTransformations = new ArrayList<>();
 
-  private LocationMatcher(LatLng latLng, Country country, WsConfig wsConfig) {
+  private LocationMatcher(LatLng latLng, Country country, GeocodeServiceClient client) {
     this.latLng = latLng;
     this.country = country;
-    this.geocodeServiceClient = GeocodeServiceClient.create(wsConfig);
+    this.client = client;
   }
 
   static LocationMatcher create(LatLng latLng, Country country, WsConfig wsConfig) {
-    return new LocationMatcher(latLng, country, wsConfig);
+    return new LocationMatcher(latLng, country, GeocodeServiceClient.create(wsConfig));
+  }
+
+  static LocationMatcher create(LatLng latLng, Country country, GeocodeServiceClient client) {
+    return new LocationMatcher(latLng, country, client);
   }
 
   LocationMatcher additionalTransform(Function<LatLng, LatLng> transormation) {
@@ -122,7 +126,7 @@ class LocationMatcher {
   }
 
   private List<Country> getCountriesFromCoordinates(LatLng latLng) {
-    HttpResponse<List<Country>> response = geocodeServiceClient.getCountriesFromLatLng(latLng);
+    HttpResponse<List<Country>> response = client.getCountriesFromLatLng(latLng);
 
     if (response.isError()) {
       LOG.info("Error calling the geocode WS: {}", response.getErrorMessage());
