@@ -16,8 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Transformation for filtering all duplicate records with the same {@link ExtendedRecord#getId} */
-public class UniqueIdTransform
-    extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
+public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
 
   private static final Logger LOG = LoggerFactory.getLogger(UniqueIdTransform.class);
 
@@ -42,10 +41,8 @@ public class UniqueIdTransform
         ParDo.of(
             new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
 
-              private final Counter uniqueCounter =
-                  Metrics.counter(UniqueIdTransform.class, "UniqueRecords");
-              private final Counter duplicateCounter =
-                  Metrics.counter(UniqueIdTransform.class, "DuplicateRecords");
+              private final Counter uniqueCounter = Metrics.counter(UniqueIdTransform.class, "UniqueRecords");
+              private final Counter duplicateCounter = Metrics.counter(UniqueIdTransform.class, "DuplicateRecords");
 
               @ProcessElement
               public void processElement(ProcessContext c) {

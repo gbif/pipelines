@@ -116,8 +116,7 @@ public class WriteTransforms {
    * @param tmpPath path to temporal files
    * @param codec Avro compression codec
    */
-  public static <T> AvroIO.Write<T> create(
-      Class<T> clazz, String toPath, String tmpPath, CodecFactory codec) {
+  public static <T> AvroIO.Write<T> create(Class<T> clazz, String toPath, String tmpPath, CodecFactory codec) {
     return create(clazz, toPath, codec)
         .withTempDirectory(FileSystems.matchNewResource(tmpPath, true));
   }

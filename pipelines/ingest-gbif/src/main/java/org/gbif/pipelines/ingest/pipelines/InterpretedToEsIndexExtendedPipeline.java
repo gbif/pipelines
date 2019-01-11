@@ -55,11 +55,11 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
 
-    EsIndexUtils.createIndex(options);
+    EsIndexUtils.createIndexIfNotExist(options);
 
     InterpretedToEsIndexPipeline.run(options);
 
-    EsIndexUtils.swapIndex(options);
+    EsIndexUtils.swapIndexIfAliasExists(options);
 
     FsUtils.removeTmpDirecrory(options);
 

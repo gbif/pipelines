@@ -43,6 +43,14 @@ public class EsIndexUtils {
     Optional.ofNullable(idx).ifPresent(options::setEsIndexName);
   }
 
+  /** Connects to Elasticsearch instace and creates an index, if index doesn't exist */
+  public static void createIndexIfNotExist(EsIndexingPipelineOptions options) {
+    EsConfig config = EsConfig.from(options.getEsHosts());
+    if (!EsIndex.indexExists(config, options.getEsIndexName())) {
+      createIndex(options);
+    }
+  }
+
   /** Connects to Elasticsearch instace and swaps an index and an alias */
   public static void swapIndex(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
@@ -56,5 +64,13 @@ public class EsIndexUtils {
     EsIndex.refresh(config, index);
     long count = EsIndex.countDocuments(config, index);
     LOG.info("Index name - {}, Alias - {}, Number of records -  {}", index, aliases, count);
+  }
+
+  /** Connects to Elasticsearch instace and swaps an index and an alias, if alias exists */
+  public static void swapIndexIfAliasExists(EsIndexingPipelineOptions options) {
+    String[] aliases = options.getEsAlias();
+    if (aliases != null && aliases.length > 0) {
+      swapIndex(options);
+    }
   }
 }

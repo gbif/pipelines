@@ -276,6 +276,20 @@ public class EsIndex {
     }
   }
 
+  /**
+   * Checks if an index exists in the ES instance.
+   *
+   * @param config configuration of the ES instance.
+   * @param index name of the index to refresh.
+   */
+  public static boolean indexExists(EsConfig config, String index) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
+
+    try (EsClient esClient = EsClient.from(config)) {
+      return EsService.existsIndex(esClient, index);
+    }
+  }
+
   private static String getDatasetIndexesPattern(String datasetId) {
     return datasetId + INDEX_SEPARATOR + "*";
   }
@@ -285,8 +299,7 @@ public class EsIndex {
 
     if (pieces.size() != 2) {
       LOG.error("Index {} doesn't follow the pattern \"{datasetId}_{attempt}\"", index);
-      throw new IllegalArgumentException(
-          "index has to follow the pattern \"{datasetId}_{attempt}\"");
+      throw new IllegalArgumentException("index has to follow the pattern \"{datasetId}_{attempt}\"");
     }
 
     return pieces.get(0);
