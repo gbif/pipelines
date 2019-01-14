@@ -8,6 +8,7 @@ import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -21,6 +22,7 @@ import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -160,7 +162,7 @@ public class DwcaToEsIndexPipeline {
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
 
-          private final Counter counter = Metrics.counter(GbifJsonConverter.class, "JsonConverter");
+          private final Counter counter = Metrics.counter(GbifJsonConverter.class, "avroToJsonCount");
 
           @DoFn.ProcessElement
           public void processElement(ProcessContext c) {
@@ -175,8 +177,7 @@ public class DwcaToEsIndexPipeline {
             TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
             MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
 
-            String json =
-                GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
+            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
 
             c.output(json);
 
@@ -207,7 +208,10 @@ public class DwcaToEsIndexPipeline {
             .withMaxBatchSize(options.getEsMaxBatchSize()));
 
     LOG.info("Running the pipeline");
-    p.run().waitUntilFinish();
+    PipelineResult result = p.run();
+    result.waitUntilFinish();
+
+    MetricsHandler.saveCountersToFile(result, options.getTargetMetaPath());
     LOG.info("Pipeline has been finished");
 
     FsUtils.removeTmpDirecrory(options);

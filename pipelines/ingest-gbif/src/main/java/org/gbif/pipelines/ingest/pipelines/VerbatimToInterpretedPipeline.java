@@ -9,6 +9,7 @@ import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.CheckTransforms;
 import org.gbif.pipelines.transforms.ReadTransforms;
@@ -16,6 +17,7 @@ import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.WriteTransforms;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
@@ -130,7 +132,10 @@ public class VerbatimToInterpretedPipeline {
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
     LOG.info("Running the pipeline");
-    p.run().waitUntilFinish();
+    PipelineResult result = p.run();
+    result.waitUntilFinish();
+
+    MetricsHandler.saveCountersToFile(result, options.getTargetMetaPath());
     LOG.info("Pipeline has been finished");
   }
 }

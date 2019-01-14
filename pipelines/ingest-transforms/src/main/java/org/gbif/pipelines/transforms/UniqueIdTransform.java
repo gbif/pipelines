@@ -41,8 +41,8 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
         ParDo.of(
             new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
 
-              private final Counter uniqueCounter = Metrics.counter(UniqueIdTransform.class, "UniqueRecords");
-              private final Counter duplicateCounter = Metrics.counter(UniqueIdTransform.class, "DuplicateRecords");
+              private final Counter uniqueCounter = Metrics.counter(UniqueIdTransform.class, "uniqueRecordsCount");
+              private final Counter duplicateCounter = Metrics.counter(UniqueIdTransform.class, "duplicateRecordsCount");
 
               @ProcessElement
               public void processElement(ProcessContext c) {

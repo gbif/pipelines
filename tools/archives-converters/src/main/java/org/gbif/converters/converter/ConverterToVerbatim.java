@@ -3,6 +3,7 @@ package org.gbif.converters.converter;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -21,6 +22,10 @@ public abstract class ConverterToVerbatim {
   private int syncInterval = 2 * 1024 * 1024;
   private CodecFactory codecFactory = CodecFactory.snappyCodec();
 
+  private java.nio.file.Path inputPath;
+  private Path outputPath;
+  private Path metaPath;
+
   public ConverterToVerbatim hdfsSiteConfig(String hdfsSiteConfig) {
     this.hdfsSiteConfig = hdfsSiteConfig;
     return this;
@@ -36,11 +41,40 @@ public abstract class ConverterToVerbatim {
     return this;
   }
 
-  public boolean convert(String inputPath, String outputPath) {
-    return convert(Paths.get(inputPath), new Path(outputPath));
+  public ConverterToVerbatim outputPath(Path outputPath) {
+    this.outputPath = outputPath;
+    return this;
   }
 
-  public boolean convert(java.nio.file.Path inputPath, Path outputPath) {
+  public ConverterToVerbatim inputPath(java.nio.file.Path inputPath) {
+    this.inputPath = inputPath;
+    return this;
+  }
+
+  public ConverterToVerbatim metaPath(Path metaPath) {
+    this.metaPath = metaPath;
+    return this;
+  }
+
+  public ConverterToVerbatim outputPath(String outputPath) {
+    this.outputPath = new Path(outputPath);
+    return this;
+  }
+
+  public ConverterToVerbatim inputPath(String inputPath) {
+    this.inputPath = Paths.get(inputPath);
+    return this;
+  }
+
+  public ConverterToVerbatim metaPath(String metaPath) {
+    this.metaPath = new Path(metaPath);
+    return this;
+  }
+
+  public boolean convert() {
+
+    Objects.requireNonNull(inputPath, "inputPath cannot be null");
+    Objects.requireNonNull(outputPath, "outputPath cannot be null");
 
     boolean isConverted;
 
@@ -59,7 +93,9 @@ public abstract class ConverterToVerbatim {
                 .syncInterval(syncInterval)
                 .build()) {
 
-      convert(inputPath, dataFileWriter);
+      long numberOfRecords = convert(inputPath, dataFileWriter);
+
+      createMetafile(fs, metaPath, numberOfRecords);
 
     } catch (IOException e) {
       LOG.error("Failed performing conversion on {}", inputPath, e);
@@ -71,7 +107,13 @@ public abstract class ConverterToVerbatim {
     return !isConverted;
   }
 
-  protected abstract void convert(
-      java.nio.file.Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter)
+  private void createMetafile(FileSystem fs, Path metaPath, long numberOfRecords) throws IOException {
+    if (metaPath != null) {
+      String info = "dwcaToAvroCount: " + numberOfRecords + "\n";
+      FsUtils.createFile(fs, metaPath, info);
+    }
+  }
+
+  protected abstract long convert(java.nio.file.Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException;
 }

@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
@@ -38,7 +39,7 @@ public class ExtendedRecordConverter {
   }
 
   /** @param inputPath path to directory with response files or a tar.xz archive */
-  public void toAvro(String inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
+  public long toAvro(String inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
     if (Strings.isNullOrEmpty(inputPath)) {
       throw new ParsingException("Input or output stream must not be empty or null!");
     }
@@ -49,21 +50,22 @@ public class ExtendedRecordConverter {
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
       // Class with sync method to avoid problem with writing
-      SyncDataFileWriter syncWriter = new SyncDataFileWriter(dataFileWriter);
+      SyncDataFileWriter writer = new SyncDataFileWriter(dataFileWriter);
+
+      AtomicLong counter = new AtomicLong(0);
 
       // Run async process - read a file, convert to ExtendedRecord and write to avro
       CompletableFuture[] futures =
           walk.filter(x -> x.toFile().isFile() && x.toString().endsWith(FILE_PREFIX))
               .map(Path::toFile)
-              .map(
-                  file ->
-                      CompletableFuture.runAsync(
-                          new ConverterTask(file, syncWriter, validator), executor))
+              .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writer, validator, counter), executor))
               .toArray(CompletableFuture[]::new);
 
       // Wait all threads
       CompletableFuture.allOf(futures).get();
       dataFileWriter.flush();
+
+      return counter.get();
 
     } catch (Exception ex) {
       LOG.error(ex.getMessage(), ex);

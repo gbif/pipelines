@@ -133,7 +133,7 @@ public class DwcaIO {
   /** A wrapper around the standard DwC-IO provided NormalizedDwcArchive. */
   private static class BoundedDwCAReader extends BoundedSource.BoundedReader<ExtendedRecord> {
 
-    private final Counter dwcaCount = Metrics.counter("DwcaIO", "dwcaCount");
+    private final Counter dwcaCount = Metrics.counter("DwcaIO", "dwcaToAvroCount");
 
     private final DwcaSource source;
     private DwcaReader reader;

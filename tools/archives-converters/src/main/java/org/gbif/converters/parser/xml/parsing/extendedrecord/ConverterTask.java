@@ -2,6 +2,7 @@ package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.ParsingException;
@@ -22,12 +23,13 @@ public class ConverterTask implements Runnable {
   private final File inputFile;
   private final SyncDataFileWriter dataFileWriter;
   private final UniquenessValidator validator;
+  private final AtomicLong counter;
 
-  public ConverterTask(
-      File inputFile, SyncDataFileWriter dataFileWriter, UniquenessValidator validator) {
+  public ConverterTask(File inputFile, SyncDataFileWriter writer, UniquenessValidator validator, AtomicLong counter) {
     this.inputFile = inputFile;
-    this.dataFileWriter = dataFileWriter;
+    this.dataFileWriter = writer;
     this.validator = validator;
+    this.counter = counter;
   }
 
   @Override
@@ -46,6 +48,7 @@ public class ConverterTask implements Runnable {
                         extendedRecord -> {
                           try {
                             dataFileWriter.append(extendedRecord);
+                            counter.incrementAndGet();
                           } catch (IOException ex) {
                             LOG.error(ex.getMessage(), ex);
                             throw new ParsingException("Parsing failed", ex);

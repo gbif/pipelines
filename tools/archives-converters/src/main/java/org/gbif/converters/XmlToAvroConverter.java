@@ -34,13 +34,13 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
     }
     String inputPath = args[0];
     String outputPath = args[1];
-    boolean isFileCreated = XmlToAvroConverter.create().convert(inputPath, outputPath);
+    boolean isFileCreated = XmlToAvroConverter.create().inputPath(inputPath).outputPath(outputPath).convert();
     LOG.info("Verbatim avro file has been created - {}", isFileCreated);
   }
 
   /** TODO: DOC */
   @Override
-  public void convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
-    ExtendedRecordConverter.crete(xmlReaderParallelism).toAvro(inputPath.toString(), dataFileWriter);
+  public long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
+    return ExtendedRecordConverter.crete(xmlReaderParallelism).toAvro(inputPath.toString(), dataFileWriter);
   }
 }

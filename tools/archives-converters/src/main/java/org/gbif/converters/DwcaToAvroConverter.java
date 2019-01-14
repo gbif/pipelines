@@ -28,13 +28,13 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     }
     String inputPath = args[0];
     String outputPath = args[1];
-    boolean isFileCreated = DwcaToAvroConverter.create().convert(inputPath, outputPath);
+    boolean isFileCreated = DwcaToAvroConverter.create().inputPath(inputPath).outputPath(outputPath).convert();
     LOG.info("Verbatim avro file has been created - {}", isFileCreated);
   }
 
   /** TODO: DOC */
   @Override
-  protected void convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) throws IOException {
+  protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) throws IOException {
     DwcaReader reader = DwcaReader.fromLocation(inputPath.toString());
     LOG.info("Exporting the DwC Archive to Avro started {}", inputPath);
 
@@ -42,7 +42,8 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     while (reader.advance()) {
       dataFileWriter.append(reader.getCurrent());
     }
-
     reader.close();
+
+    return reader.getRecordsReturned();
   }
 }

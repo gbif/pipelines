@@ -10,6 +10,7 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.AvroFSInput;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -78,7 +79,7 @@ public class FsUtils {
       }
       SpecificDatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
       try (AvroFSInput input = new AvroFSInput(fs.open(path), fs.getFileStatus(path).getLen());
-           DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(input, datumReader)) {
+          DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(input, datumReader)) {
         if (!dataFileReader.hasNext()) {
           LOG.warn("File is empty - {}", path);
           Path parent = path.getParent();
@@ -101,6 +102,12 @@ public class FsUtils {
   public static long fileSize(URI file, String hdfsSiteConfig) throws IOException {
     FileSystem fs = getFileSystem(file.toString(), hdfsSiteConfig);
     return fs.getFileStatus(new Path(file)).getLen();
+  }
+
+  public static void createFile(FileSystem fs, Path path, String body) throws IOException {
+    try (FSDataOutputStream stream = fs.create(path, false)) {
+      stream.writeChars(body);
+    }
   }
 
 }

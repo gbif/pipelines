@@ -6,9 +6,11 @@ import org.gbif.pipelines.common.beam.DwcaIO.Read;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.transforms.WriteTransforms;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -69,7 +71,10 @@ public class DwcaToVerbatimPipeline {
         .apply("Write to avro", WriteTransforms.extended(targetPath).withoutSharding());
 
     LOG.info("Running the pipeline");
-    p.run().waitUntilFinish();
+    PipelineResult result = p.run();
+    result.waitUntilFinish();
+
+    MetricsHandler.saveCountersToFile(result, options.getTargetMetaPath());
     LOG.info("Pipeline has been finished");
   }
 }

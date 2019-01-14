@@ -43,7 +43,7 @@ public class DwcaReader implements Closeable {
   /**
    * Creates and DwcaReader using a StarRecord iterator.
    */
-  private DwcaReader(ClosableIterator<StarRecord> starRecordsIt)  {
+  private DwcaReader(ClosableIterator<StarRecord> starRecordsIt) {
     this.starRecordsIt = starRecordsIt;
   }
 
@@ -76,10 +76,13 @@ public class DwcaReader implements Closeable {
    */
   public ExtendedRecord getCurrent() {
     if (current == null) {
-      throw new NoSuchElementException(
-          "No current record found (Hint: did you init() the reader?)");
+      throw new NoSuchElementException( "No current record found (Hint: did you init() the reader?)");
     }
     return current;
+  }
+
+  public long getRecordsReturned() {
+    return recordsReturned;
   }
 
   @Override

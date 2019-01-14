@@ -50,7 +50,7 @@ public class RecordTransforms {
    */
   public static class MultimediaFn extends DoFn<ExtendedRecord, MultimediaRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "MultimediaRecord");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "multimediaRecordsCount");
 
     @ProcessElement
     public void processElement(ProcessContext context) {
@@ -69,7 +69,7 @@ public class RecordTransforms {
    */
   public static class TemporalFn extends DoFn<ExtendedRecord, TemporalRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "TemporalRecord");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "temporalRecordsCount");
 
     @ProcessElement
     public void processElement(ProcessContext context) {
@@ -91,7 +91,7 @@ public class RecordTransforms {
    */
   public static class BasicFn extends DoFn<ExtendedRecord, BasicRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "BasicRecord");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "basicRecordsCount");
 
     @ProcessElement
     public void processElement(ProcessContext context) {
@@ -118,7 +118,7 @@ public class RecordTransforms {
    */
   public static class LocationFn extends DoFn<ExtendedRecord, LocationRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "LocationRecord");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "locationRecordsCount");
 
     private final WsConfig wsConfig;
     private GeocodeServiceClient client;
@@ -166,7 +166,7 @@ public class RecordTransforms {
    */
   public static class MetadataFn extends DoFn<String, MetadataRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "MetadataRecord");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "metadataRecordsCount");
 
     private final WsConfig wsConfig;
     private MetadataServiceClient client;
@@ -203,7 +203,7 @@ public class RecordTransforms {
    */
   public static class TaxonomyFn extends DoFn<ExtendedRecord, TaxonRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "TaxonRecord");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, "taxonRecordsCount");
 
     private final WsConfig wsConfig;
     private SpeciesMatchv2Client client;

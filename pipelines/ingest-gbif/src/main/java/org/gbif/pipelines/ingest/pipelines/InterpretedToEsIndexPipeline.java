@@ -8,6 +8,7 @@ import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -19,6 +20,7 @@ import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.ReadTransforms;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -137,7 +139,7 @@ public class InterpretedToEsIndexPipeline {
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
 
-          private final Counter counter = Metrics.counter(GbifJsonConverter.class, "JsonConverter");
+          private final Counter counter = Metrics.counter(GbifJsonConverter.class, "avroToJsonCount");
 
           @ProcessElement
           public void processElement(ProcessContext c) {
@@ -183,7 +185,10 @@ public class InterpretedToEsIndexPipeline {
             .withMaxBatchSize(options.getEsMaxBatchSize()));
 
     LOG.info("Running the pipeline");
-    p.run().waitUntilFinish();
+    PipelineResult result = p.run();
+    result.waitUntilFinish();
+
+    MetricsHandler.saveCountersToFile(result, options.getTargetMetaPath());
     LOG.info("Pipeline has been finished");
   }
 }
