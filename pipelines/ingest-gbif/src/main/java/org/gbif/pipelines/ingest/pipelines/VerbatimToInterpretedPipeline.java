@@ -135,7 +135,7 @@ public class VerbatimToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(result, options.getTargetMetaPath());
+    MetricsHandler.saveCountersToFile(result, FsUtils.buildPath(options, options.getMetaFileName()));
     LOG.info("Pipeline has been finished");
   }
 }

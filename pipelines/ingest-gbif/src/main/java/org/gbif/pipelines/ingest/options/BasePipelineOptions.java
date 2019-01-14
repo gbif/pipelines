@@ -37,10 +37,10 @@ public interface BasePipelineOptions extends PipelineOptions {
 
   void setTargetPath(String targetPath);
 
-  @Description("Target metadata path where the outputs of the pipeline metrics results will be written to.")
-  String getTargetMetaPath();
+  @Description("Target metadata file name where the outputs of the pipeline metrics results will be written to.")
+  String getMetaFileName();
 
-  void setTargetMetaPath(String targetMetaPath);
+  void setMetaFileName(String metaFileName);
 
   @Description("If set to true it writes the outputs of every step of the pipeline")
   @Default.Boolean(false)
