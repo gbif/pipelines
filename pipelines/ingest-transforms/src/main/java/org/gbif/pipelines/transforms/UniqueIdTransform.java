@@ -15,6 +15,9 @@ import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_RECORDS_COUNT;
+
 /** Transformation for filtering all duplicate records with the same {@link ExtendedRecord#getId} */
 public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
 
@@ -41,8 +44,8 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
         ParDo.of(
             new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
 
-              private final Counter uniqueCounter = Metrics.counter(UniqueIdTransform.class, "uniqueRecordsCount");
-              private final Counter duplicateCounter = Metrics.counter(UniqueIdTransform.class, "duplicateRecordsCount");
+              private final Counter uniqueCounter = Metrics.counter(UniqueIdTransform.class, UNIQUE_RECORDS_COUNT);
+              private final Counter duplicateCounter = Metrics.counter(UniqueIdTransform.class, DUPLICATE_RECORDS_COUNT);
 
               @ProcessElement
               public void processElement(ProcessContext c) {

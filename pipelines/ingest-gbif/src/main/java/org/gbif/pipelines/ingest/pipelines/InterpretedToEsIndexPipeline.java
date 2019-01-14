@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.core.RecordType.BASIC;
 import static org.gbif.pipelines.core.RecordType.LOCATION;
 import static org.gbif.pipelines.core.RecordType.METADATA;
@@ -139,7 +140,7 @@ public class InterpretedToEsIndexPipeline {
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
 
-          private final Counter counter = Metrics.counter(GbifJsonConverter.class, "avroToJsonCount");
+          private final Counter counter = Metrics.counter(GbifJsonConverter.class, AVRO_TO_JSON_COUNT);
 
           @ProcessElement
           public void processElement(ProcessContext c) {

@@ -27,6 +27,13 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
+
 /**
  * Contains ParDo functions for Beam, each method returns GBIF transformation (basic, temporal,
  * multimedia, location, metadata, taxonomy). Transformation uses {@link
@@ -50,7 +57,7 @@ public class RecordTransforms {
    */
   public static class MultimediaFn extends DoFn<ExtendedRecord, MultimediaRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "multimediaRecordsCount");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, MULTIMEDIA_RECORDS_COUNT);
 
     @ProcessElement
     public void processElement(ProcessContext context) {
@@ -69,7 +76,7 @@ public class RecordTransforms {
    */
   public static class TemporalFn extends DoFn<ExtendedRecord, TemporalRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "temporalRecordsCount");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, TEMPORAL_RECORDS_COUNT);
 
     @ProcessElement
     public void processElement(ProcessContext context) {
@@ -91,7 +98,7 @@ public class RecordTransforms {
    */
   public static class BasicFn extends DoFn<ExtendedRecord, BasicRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "basicRecordsCount");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, BASIC_RECORDS_COUNT);
 
     @ProcessElement
     public void processElement(ProcessContext context) {
@@ -118,7 +125,7 @@ public class RecordTransforms {
    */
   public static class LocationFn extends DoFn<ExtendedRecord, LocationRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "locationRecordsCount");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, LOCATION_RECORDS_COUNT);
 
     private final WsConfig wsConfig;
     private GeocodeServiceClient client;
@@ -166,7 +173,7 @@ public class RecordTransforms {
    */
   public static class MetadataFn extends DoFn<String, MetadataRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "metadataRecordsCount");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, METADATA_RECORDS_COUNT);
 
     private final WsConfig wsConfig;
     private MetadataServiceClient client;
@@ -203,7 +210,7 @@ public class RecordTransforms {
    */
   public static class TaxonomyFn extends DoFn<ExtendedRecord, TaxonRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, "taxonRecordsCount");
+    private final Counter counter = Metrics.counter(RecordTransforms.class, TAXON_RECORDS_COUNT);
 
     private final WsConfig wsConfig;
     private SpeciesMatchv2Client client;

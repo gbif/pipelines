@@ -18,6 +18,8 @@ import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DWCA_TO_AVRO_COUNT;
+
 /**
  * IO operations for DwC-A formats.
  *
@@ -133,7 +135,7 @@ public class DwcaIO {
   /** A wrapper around the standard DwC-IO provided NormalizedDwcArchive. */
   private static class BoundedDwCAReader extends BoundedSource.BoundedReader<ExtendedRecord> {
 
-    private final Counter dwcaCount = Metrics.counter("DwcaIO", "dwcaToAvroCount");
+    private final Counter dwcaCount = Metrics.counter("DwcaIO", DWCA_TO_AVRO_COUNT);
 
     private final DwcaSource source;
     private DwcaReader reader;
