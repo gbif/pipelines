@@ -56,7 +56,7 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   @Description(
       "The value of this setting determines the number of replica shards per primary shard in the target index. The default value is 0.")
-  @Default.Integer(0)
+  @Default.Integer(1)
   Integer getIndexNumberReplicas();
 
   void setIndexNumberReplicas(Integer indexNumberReplicas);

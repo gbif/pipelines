@@ -56,14 +56,12 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     EsIndexUtils.createIndexIfNotExist(options);
+    EsIndexUtils.deleteRecordsByDatasetId(options);
 
     InterpretedToEsIndexPipeline.run(options);
 
     EsIndexUtils.swapIndexIfAliasExists(options);
 
     FsUtils.removeTmpDirecrory(options);
-
-    // To call shutdown hook
-    System.exit(0);
   }
 }

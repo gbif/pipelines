@@ -153,7 +153,7 @@ public final class FsUtils {
    * TODO:DOC
    */
   public static void createFile(FileSystem fs, String path, String body) throws IOException {
-    try (FSDataOutputStream stream = fs.create(new Path(path), false)) {
+    try (FSDataOutputStream stream = fs.create(new Path(path), true)) {
       stream.writeChars(body);
     }
   }

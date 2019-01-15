@@ -46,7 +46,7 @@ public class EsClient implements AutoCloseable {
       hosts[i] = new HttpHost(urlHost.getHost(), urlHost.getPort(), urlHost.getProtocol());
     }
 
-    restClient = RestClient.builder(hosts).build();
+    restClient = RestClient.builder(hosts).setMaxRetryTimeoutMillis(60_000).build();
   }
 
   /**

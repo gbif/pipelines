@@ -64,8 +64,7 @@ public class EsService {
    * @param mappings path of the file with the mappings.
    * @return name of the index created.
    */
-  public static String createIndex(
-      EsClient esClient, String idxName, SettingsType settingsType, Path mappings) {
+  public static String createIndex(EsClient esClient, String idxName, SettingsType settingsType, Path mappings) {
     Objects.requireNonNull(esClient);
 
     // create entity body
@@ -87,8 +86,7 @@ public class EsService {
    * @param mappings mappings as json.
    * @return name of the index created.
    */
-  public static String createIndex(
-      EsClient esClient, String idxName, SettingsType settingsType, String mappings) {
+  public static String createIndex(EsClient esClient, String idxName, SettingsType settingsType, String mappings) {
     Objects.requireNonNull(esClient);
 
     // create entity body
@@ -139,8 +137,7 @@ public class EsService {
    * @param mappings path of the file with the mappings.
    * @return name of the index created.
    */
-  public static String createIndex(
-      EsClient esClient, String idxName, Map<String, String> settings, Path mappings) {
+  public static String createIndex(EsClient esClient, String idxName, Map<String, String> settings, Path mappings) {
     Objects.requireNonNull(esClient);
 
     // create entity body
@@ -192,11 +189,11 @@ public class EsService {
    *
    * @param esClient client to call ES. It is required.
    * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a
-   *     single index, or a pattern using wildcards. For example, "idx*" matches with all the
-   *     indexes whose name starts with "idx".
+   * single index, or a pattern using wildcards. For example, "idx*" matches with all the
+   * indexes whose name starts with "idx".
    * @param alias alias that has to be associated to the indexes retrieved.
    * @return {@link Set} with all the indexes that are in the alias specified and match with the
-   *     pattern received.
+   * pattern received.
    */
   public static Set<String> getIndexesByAliasAndIndexPattern(
       EsClient esClient, String idxPattern, String alias) {
@@ -224,8 +221,7 @@ public class EsService {
    * @param idxToAdd indexes to add to the alias.
    * @param idxToRemove indexes to remove from the alias.
    */
-  public static void swapIndexes(
-      EsClient esClient, String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
+  public static void swapIndexes(EsClient esClient, String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
     Objects.requireNonNull(esClient);
 
     HttpEntity body =
@@ -268,8 +264,7 @@ public class EsService {
    * @param id id of the doucment.
    * @param document document to index.
    */
-  public static void indexDocument(
-      EsClient esClient, String idxName, String type, long id, String document) {
+  public static void indexDocument(EsClient esClient, String idxName, String type, long id, String document) {
     Objects.requireNonNull(esClient);
 
     String endpoint = buildEndpoint(idxName, type, id);
@@ -358,6 +353,22 @@ public class EsService {
       throw new IllegalStateException("Error retreiving index", e);
     }
     return true;
+  }
+
+  /**
+   * TODO:DOC
+   */
+  public static void deleteRecordsByQuery(EsClient esClient, String idxName, String query) {
+    Objects.requireNonNull(esClient);
+
+    String endpoint = buildEndpoint(idxName, "_delete_by_query?scroll_size=5000");
+    HttpEntity body = createBodyFromString(query);
+    try {
+      esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
+    } catch (ResponseException exc) {
+      LOG.error("Could not delete records");
+      throw new IllegalStateException("Could not delete records", exc);
+    }
   }
 
   static String buildEndpoint(Object... strings) {

@@ -290,6 +290,17 @@ public class EsIndex {
     }
   }
 
+  /**
+   * TODO:DOC
+   **/
+  public static void deleteRecordsByQuery(EsConfig config, String index, String query) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
+
+    try (EsClient esClient = EsClient.from(config)) {
+      EsService.deleteRecordsByQuery(esClient, index, query);
+    }
+  }
+
   private static String getDatasetIndexesPattern(String datasetId) {
     return datasetId + INDEX_SEPARATOR + "*";
   }

@@ -105,7 +105,7 @@ public class FsUtils {
   }
 
   public static void createFile(FileSystem fs, Path path, String body) throws IOException {
-    try (FSDataOutputStream stream = fs.create(path, false)) {
+    try (FSDataOutputStream stream = fs.create(path, true)) {
       stream.writeChars(body);
     }
   }

@@ -221,8 +221,5 @@ public class DwcaToEsIndexPipeline {
     LOG.info("Pipeline has been finished");
 
     FsUtils.removeTmpDirecrory(options);
-
-    // To call shutdown hook
-    System.exit(0);
   }
 }

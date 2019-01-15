@@ -73,4 +73,21 @@ public class EsIndexUtils {
       swapIndex(options);
     }
   }
+
+  /**
+   * TODO:DOC
+   */
+  public static void deleteRecordsByDatasetId(EsIndexingPipelineOptions options) {
+    String[] aliases = options.getEsAlias();
+    if (aliases != null && aliases.length > 0) {
+      return;
+    }
+
+    EsConfig config = EsConfig.from(options.getEsHosts());
+    String index = options.getEsIndexName();
+    String query = "{\"query\":{\"match\":{\"datasetKey\":\"" + options.getDatasetId() + "\"}}}";
+
+    LOG.info("ES index {} delete records by query {}", index, query);
+    EsIndex.deleteRecordsByQuery(config, index, query);
+  }
 }
