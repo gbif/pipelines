@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.gbif.pipelines.core.RecordType;
@@ -135,7 +136,11 @@ public class VerbatimToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(result, FsUtils.buildPath(options, options.getMetaFileName()));
+    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
+      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
+      MetricsHandler.saveCountersToFile(result, metadataPath);
+    });
+
     LOG.info("Pipeline has been finished");
   }
 }

@@ -32,9 +32,7 @@ public class MetricsHandler {
 
     MetricQueryResults queryResults = result.metrics().queryMetrics(MetricsFilter.builder().build());
 
-    Function<MetricResult<Long>, String> convert =
-        mr -> mr.getName().getName() + "Attempted: " + mr.getAttempted() + "\n"
-            + mr.getName().getName() + "Commited: " + mr.getCommitted() + "\n";
+    Function<MetricResult<Long>, String> convert = mr -> mr.getName().getName() + "Attempted: " + mr.getAttempted() + "\n";
 
     List<String> lines = new ArrayList<>();
     queryResults.getCounters().forEach(x -> {

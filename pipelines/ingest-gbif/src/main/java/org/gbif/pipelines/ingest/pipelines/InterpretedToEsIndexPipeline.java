@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
@@ -189,7 +190,11 @@ public class InterpretedToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(result, FsUtils.buildPath(options, options.getMetaFileName()));
+    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
+      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
+      MetricsHandler.saveCountersToFile(result, metadataPath);
+    });
+
     LOG.info("Pipeline has been finished");
   }
 }
