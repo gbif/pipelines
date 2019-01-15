@@ -30,7 +30,7 @@ public class FsUtils {
   /**
    * Helper method to get file system based on provided configuration.
    */
-  public static FileSystem getFileSystem(String extendedRecordRepository, String hdfsSiteConfig) {
+  public static FileSystem getFileSystem(String path, String hdfsSiteConfig) {
     try {
       Configuration config = new Configuration();
 
@@ -45,9 +45,9 @@ public class FsUtils {
         }
       }
 
-      return FileSystem.get(URI.create(extendedRecordRepository), config);
+      return FileSystem.get(URI.create(path), config);
     } catch (IOException ex) {
-      throw new IllegalStateException("Can't get a valid filesystem from provided uri " + extendedRecordRepository, ex);
+      throw new IllegalStateException("Can't get a valid filesystem from provided uri " + path, ex);
     }
   }
 
@@ -56,12 +56,12 @@ public class FsUtils {
    *
    * @return filesystem
    */
-  public static FileSystem createParentDirectories(Path extendedRepoPath, String hdfsSite) {
-    FileSystem fs = getFileSystem(extendedRepoPath.toString(), hdfsSite);
+  public static FileSystem createParentDirectories(Path path, String hdfsSite) {
+    FileSystem fs = getFileSystem(path.toString(), hdfsSite);
     try {
-      fs.mkdirs(extendedRepoPath.getParent());
+      fs.mkdirs(path.getParent());
     } catch (IOException e) {
-      throw new IllegalStateException("Error creating parent directories for extendedRepoPath: " + extendedRepoPath, e);
+      throw new IllegalStateException("Error creating parent directories for path: " + path, e);
     }
     return fs;
   }

@@ -138,7 +138,7 @@ public class VerbatimToInterpretedPipeline {
 
     Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
       String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile(result, metadataPath);
+      MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
     });
 
     LOG.info("Pipeline has been finished");

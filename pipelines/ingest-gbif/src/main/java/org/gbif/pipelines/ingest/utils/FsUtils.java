@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -11,6 +12,9 @@ import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.parsers.exception.IORuntimeException;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,10 +47,10 @@ public final class FsUtils {
    */
   public static String buildPath(BasePipelineOptions options, String name) {
     return FsUtils.buildPath(
-            options.getTargetPath(),
-            options.getDatasetId(),
-            options.getAttempt().toString(),
-            name.toLowerCase())
+        options.getTargetPath(),
+        options.getDatasetId(),
+        options.getAttempt().toString(),
+        name.toLowerCase())
         .toString();
   }
 
@@ -60,12 +64,12 @@ public final class FsUtils {
       BasePipelineOptions options, String name, String uniqueId) {
 
     return FsUtils.buildPath(
-            options.getTargetPath(),
-            options.getDatasetId(),
-            options.getAttempt().toString(),
-            "interpreted",
-            name.toLowerCase(),
-            "interpret-" + uniqueId)
+        options.getTargetPath(),
+        options.getDatasetId(),
+        options.getAttempt().toString(),
+        "interpreted",
+        name.toLowerCase(),
+        "interpret-" + uniqueId)
         .toString();
   }
 
@@ -119,5 +123,38 @@ public final class FsUtils {
         };
 
     Runtime.getRuntime().addShutdownHook(new Thread(runnable));
+  }
+
+  /**
+   * Helper method to get file system based on provided configuration.
+   */
+  public static FileSystem getFileSystem(String hdfsSiteConfig, String path) {
+    try {
+      Configuration config = new Configuration();
+
+      // check if the hdfs-site.xml is provided
+      if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+        File hdfsSite = new File(hdfsSiteConfig);
+        if (hdfsSite.exists() && hdfsSite.isFile()) {
+          LOG.info("using hdfs-site.xml");
+          config.addResource(hdfsSite.toURI().toURL());
+        } else {
+          LOG.warn("hdfs-site.xml does not exist");
+        }
+      }
+
+      return FileSystem.get(URI.create(path), config);
+    } catch (IOException ex) {
+      throw new IllegalStateException("Can't get a valid filesystem from provided uri " + path, ex);
+    }
+  }
+
+  /**
+   * TODO:DOC
+   */
+  public static void createFile(FileSystem fs, String path, String body) throws IOException {
+    try (FSDataOutputStream stream = fs.create(new Path(path), false)) {
+      stream.writeChars(body);
+    }
   }
 }

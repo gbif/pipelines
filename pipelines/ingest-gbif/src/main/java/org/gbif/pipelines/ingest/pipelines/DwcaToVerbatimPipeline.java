@@ -62,8 +62,7 @@ public class DwcaToVerbatimPipeline {
     String tmpPath = FsUtils.getTempDir(options);
 
     boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
-    Read reader =
-        isDirectory ? Read.fromLocation(inputPath) : Read.fromCompressed(inputPath, tmpPath);
+    Read reader = isDirectory ? Read.fromLocation(inputPath) : Read.fromCompressed(inputPath, tmpPath);
 
     LOG.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);
@@ -77,7 +76,7 @@ public class DwcaToVerbatimPipeline {
 
     Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
       String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile(result, metadataPath);
+      MetricsHandler.saveCountersToFile("", metadataPath, result);
     });
 
     LOG.info("Pipeline has been finished");
