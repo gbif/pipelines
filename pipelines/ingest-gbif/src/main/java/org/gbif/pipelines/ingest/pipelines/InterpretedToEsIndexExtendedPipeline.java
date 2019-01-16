@@ -5,6 +5,8 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 /**
@@ -43,6 +45,8 @@ import org.slf4j.MDC;
  */
 public class InterpretedToEsIndexExtendedPipeline {
 
+  private static final Logger LOG = LoggerFactory.getLogger(InterpretedToEsIndexExtendedPipeline.class);
+
   private InterpretedToEsIndexExtendedPipeline() {}
 
   public static void main(String[] args) {
@@ -63,5 +67,9 @@ public class InterpretedToEsIndexExtendedPipeline {
     EsIndexUtils.swapIndexIfAliasExists(options);
 
     FsUtils.removeTmpDirecrory(options);
+    LOG.info("Finished main indexing pipeline");
+
+    LOG.info("Call - System.exit(0)"); // Workaround for a bug with stuck job
+    System.exit(0);
   }
 }
