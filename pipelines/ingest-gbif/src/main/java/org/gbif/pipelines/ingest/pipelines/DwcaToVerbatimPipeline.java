@@ -3,7 +3,6 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.DwcaIO.Read;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
