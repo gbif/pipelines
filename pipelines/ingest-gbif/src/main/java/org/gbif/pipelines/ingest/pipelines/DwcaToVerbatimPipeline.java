@@ -3,6 +3,8 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.DwcaIO.Read;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -58,7 +60,7 @@ public class DwcaToVerbatimPipeline {
 
     LOG.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
-    String targetPath = FsUtils.buildPath(options, "verbatim");
+    String targetPath = FsUtils.buildPath(options, Conversion.FILE_NAME);
     String tmpPath = FsUtils.getTempDir(options);
 
     boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();

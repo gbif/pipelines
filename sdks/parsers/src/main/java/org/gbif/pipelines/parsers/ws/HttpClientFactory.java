@@ -26,13 +26,12 @@ public final class HttpClientFactory {
     File httpCacheDirectory;
     try {
       // use a new file cache for the current session
-      String cacheName = String.valueOf(System.currentTimeMillis()) + "-wsCache";
+      String cacheName = System.currentTimeMillis() + "-wsCache";
       httpCacheDirectory = Files.createTempDirectory(cacheName).toFile();
       httpCacheDirectory.deleteOnExit();
       LOG.info("Cache file created - {}", httpCacheDirectory.getAbsolutePath());
     } catch (IOException e) {
-      throw new IllegalStateException(
-          "Cannot run without the ability to create temporary cache directory", e);
+      throw new IllegalStateException("Cannot run without the ability to create temporary cache directory", e);
     }
 
     // create cache

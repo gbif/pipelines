@@ -66,9 +66,7 @@ public class TemporalInterpreter {
   /** {@link DwcTerm#startDayOfYear} and {@link DwcTerm#endDayOfYear} interpretation. */
   public static void interpretDayOfYear(TemporalRecord tr) {
     Optional<LocalDate> year = Optional.ofNullable(tr.getYear()).map(y -> LocalDate.of(y, 1, 1));
-    year.map(x -> x.with(TemporalAdjusters.lastDayOfYear()))
-        .ifPresent(x -> tr.setEndDayOfYear(x.getDayOfYear()));
-    year.map(x -> x.with(TemporalAdjusters.firstDayOfYear()))
-        .ifPresent(x -> tr.setStartDayOfYear(x.getDayOfYear()));
+    year.map(x -> x.with(TemporalAdjusters.lastDayOfYear())).ifPresent(x -> tr.setEndDayOfYear(x.getDayOfYear()));
+    year.map(x -> x.with(TemporalAdjusters.firstDayOfYear())).ifPresent(x -> tr.setStartDayOfYear(x.getDayOfYear()));
   }
 }

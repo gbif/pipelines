@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.StringJoiner;
 
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.parsers.exception.IORuntimeException;
 
@@ -67,9 +68,9 @@ public final class FsUtils {
         options.getTargetPath(),
         options.getDatasetId(),
         options.getAttempt().toString(),
-        "interpreted",
+        Interpretation.DIRECTORY_NAME,
         name.toLowerCase(),
-        "interpret-" + uniqueId)
+        Interpretation.FILE_NAME + uniqueId)
         .toString();
   }
 

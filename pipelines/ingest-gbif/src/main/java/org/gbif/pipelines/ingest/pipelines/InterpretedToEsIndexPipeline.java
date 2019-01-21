@@ -4,6 +4,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.RecordType;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
@@ -40,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.core.RecordType.BASIC;
 import static org.gbif.pipelines.core.RecordType.LOCATION;
 import static org.gbif.pipelines.core.RecordType.METADATA;
@@ -95,9 +99,9 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     LOG.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn = s -> FsUtils.buildPath(options, s + "*.avro");
+    UnaryOperator<String> pathFn = s -> FsUtils.buildPath(options, s + "*" + AVRO_EXTENSION);
     Function<RecordType, String> pathInterFn =
-        t -> FsUtils.buildPathInterpret(options, t.name().toLowerCase(), "*.avro");
+        t -> FsUtils.buildPathInterpret(options, t.name().toLowerCase(), "*" + AVRO_EXTENSION);
 
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
     final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
@@ -114,7 +118,7 @@ public class InterpretedToEsIndexPipeline {
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        p.apply("Read Verbatim", ReadTransforms.extended(pathFn.apply("verbatim")))
+        p.apply("Read Verbatim", ReadTransforms.extended(pathFn.apply(Conversion.FILE_NAME)))
             .apply("Map Verbatim to KV", MapTransforms.extendedToKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
@@ -178,7 +182,7 @@ public class InterpretedToEsIndexPipeline {
     LOG.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
-            options.getEsHosts(), options.getEsIndexName(), "record");
+            options.getEsHosts(), options.getEsIndexName(), Indexing.INDEX_TYPE);
 
     jsonCollection.apply(
         ElasticsearchIO.write()

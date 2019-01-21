@@ -63,12 +63,9 @@ public class MultimediaInterpreter {
             .build();
 
     // check against NP
-    Optional.ofNullable(parsedMultimedia.getReferences())
-        .ifPresent(v -> multimedia.setReferences(v.toString()));
-    Optional.ofNullable(parsedMultimedia.getCreated())
-        .ifPresent(v -> multimedia.setCreated(v.toString()));
-    Optional.ofNullable(parsedMultimedia.getIdentifier())
-        .ifPresent(v -> multimedia.setIdentifier(v.toString()));
+    Optional.ofNullable(parsedMultimedia.getReferences()).ifPresent(v -> multimedia.setReferences(v.toString()));
+    Optional.ofNullable(parsedMultimedia.getCreated()).ifPresent(v -> multimedia.setCreated(v.toString()));
+    Optional.ofNullable(parsedMultimedia.getIdentifier()).ifPresent(v -> multimedia.setIdentifier(v.toString()));
 
     return multimedia;
   }

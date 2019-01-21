@@ -8,9 +8,36 @@ public class PipelinesVariables {
 
     private Pipeline() {}
 
+    public static final String AVRO_EXTENSION = ".avro";
+
     public static final String DWCA_TO_VERBATIM = "dwca-to-verbatim";
     public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
+
+    public static class Conversion {
+
+      private Conversion() {}
+
+      public static final String FILE_NAME = "verbatim";
+
+    }
+
+    public static class Interpretation {
+
+      private Interpretation() {}
+
+      public static final String DIRECTORY_NAME = "interpreted";
+      public static final String FILE_NAME = "interpret-";
+
+    }
+
+    public static class Indexing {
+
+      private Indexing() {}
+
+      public static final String INDEX_TYPE = "record";
+
+    }
 
   }
 

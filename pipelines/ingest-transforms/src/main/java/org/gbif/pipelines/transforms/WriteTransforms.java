@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms;
 
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -129,6 +130,6 @@ public class WriteTransforms {
    * @param codec Avro compression codec
    */
   public static <T> AvroIO.Write<T> create(Class<T> clazz, String toPath, CodecFactory codec) {
-    return AvroIO.write(clazz).to(toPath).withSuffix(".avro").withCodec(codec);
+    return AvroIO.write(clazz).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(codec);
   }
 }

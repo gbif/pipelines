@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -201,7 +202,7 @@ public class DwcaToEsIndexPipeline {
     LOG.info("Adding step 5: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
-            options.getEsHosts(), options.getEsIndexName(), "record");
+            options.getEsHosts(), options.getEsIndexName(), Indexing.INDEX_TYPE);
 
     jsonCollection.apply(
         ElasticsearchIO.write()

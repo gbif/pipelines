@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
@@ -119,7 +121,7 @@ public class GbifJsonConverter extends JsonConverter {
       Optional.ofNullable(terms.get(DwcTerm.organismID.qualifiedName()))
           .ifPresent(x -> this.addJsonTextFieldNoCheck("organismId", x));
 
-      this.addJsonObject("verbatim", terms);
+      this.addJsonObject(Conversion.FILE_NAME, terms);
     };
   }
 
