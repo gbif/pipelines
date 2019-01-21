@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.gbif.pipelines.core.RecordType;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -26,12 +26,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import static org.gbif.pipelines.core.RecordType.BASIC;
-import static org.gbif.pipelines.core.RecordType.LOCATION;
-import static org.gbif.pipelines.core.RecordType.METADATA;
-import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
-import static org.gbif.pipelines.core.RecordType.TAXONOMY;
-import static org.gbif.pipelines.core.RecordType.TEMPORAL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 import static org.gbif.pipelines.transforms.RecordTransforms.BasicFn;
 import static org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
 import static org.gbif.pipelines.transforms.RecordTransforms.MetadataFn;

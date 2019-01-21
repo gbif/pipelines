@@ -2,7 +2,7 @@ package org.gbif.pipelines.transforms;
 
 import java.util.List;
 
-import org.gbif.pipelines.core.RecordType;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.beam.sdk.transforms.Create;
@@ -11,13 +11,13 @@ import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
-import static org.gbif.pipelines.core.RecordType.ALL;
-import static org.gbif.pipelines.core.RecordType.BASIC;
-import static org.gbif.pipelines.core.RecordType.LOCATION;
-import static org.gbif.pipelines.core.RecordType.METADATA;
-import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
-import static org.gbif.pipelines.core.RecordType.TAXONOMY;
-import static org.gbif.pipelines.core.RecordType.TEMPORAL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 
 /**
  * Set of different predicate functions. Each function checks predicate and returns {@link

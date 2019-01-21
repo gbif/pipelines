@@ -6,7 +6,7 @@ import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
-import org.gbif.pipelines.core.RecordType;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -43,12 +43,12 @@ import org.slf4j.MDC;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.core.RecordType.BASIC;
-import static org.gbif.pipelines.core.RecordType.LOCATION;
-import static org.gbif.pipelines.core.RecordType.METADATA;
-import static org.gbif.pipelines.core.RecordType.MULTIMEDIA;
-import static org.gbif.pipelines.core.RecordType.TAXONOMY;
-import static org.gbif.pipelines.core.RecordType.TEMPORAL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 
 /**
  * Pipeline sequence:

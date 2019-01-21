@@ -29,6 +29,16 @@ public class PipelinesVariables {
       public static final String DIRECTORY_NAME = "interpreted";
       public static final String FILE_NAME = "interpret-";
 
+      public enum RecordType {
+        ALL,
+        METADATA,
+        BASIC,
+        TEMPORAL,
+        MULTIMEDIA,
+        LOCATION,
+        TAXONOMY
+      }
+
     }
 
     public static class Indexing {
