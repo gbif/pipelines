@@ -33,7 +33,7 @@
       "maximumDistanceAboveSurfaceInMeters": {"type":"double"},
       "coordinateUncertaintyInMeters": {"type":"double"},
       "coordinatePrecision": {"type":"double"},
-      "coordinatePoints": {"type": "geo_point"},
+      "coordinates": {"type": "geo_point"},
 
       "year": {"type": "integer"},
       "month": {"type": "integer"},
