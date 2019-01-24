@@ -145,7 +145,7 @@ public class GbifJsonConverter extends JsonConverter {
         ObjectNode node = MAPPER.createObjectNode();
         node.put("lon", location.getDecimalLongitude().toString());
         node.put("lat", location.getDecimalLatitude().toString());
-        this.addJsonObject("coordinatePoints", node);
+        this.addJsonObject("coordinates", node);
       }
       // Fields as a common view - "key": "value"
       this.addCommonFields(record);
