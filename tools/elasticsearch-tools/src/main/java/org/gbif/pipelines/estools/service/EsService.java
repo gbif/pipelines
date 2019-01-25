@@ -167,8 +167,7 @@ public class EsService {
    * @param idxName name of the index to update.
    * @param settingsType settings that will be set to the index.
    */
-  public static void updateIndexSettings(
-      EsClient esClient, String idxName, SettingsType settingsType) {
+  public static void updateIndexSettings(EsClient esClient, String idxName, SettingsType settingsType) {
     Objects.requireNonNull(esClient);
 
     // create entity body with settings
@@ -195,8 +194,7 @@ public class EsService {
    * @return {@link Set} with all the indexes that are in the alias specified and match with the
    * pattern received.
    */
-  public static Set<String> getIndexesByAliasAndIndexPattern(
-      EsClient esClient, String idxPattern, String alias) {
+  public static Set<String> getIndexesByAliasAndIndexPattern(EsClient esClient, String idxPattern, String alias) {
     Objects.requireNonNull(esClient);
 
     String endpoint = buildEndpoint(idxPattern, "_alias", alias);
