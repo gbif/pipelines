@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -159,8 +160,7 @@ public class InterpretedToEsIndexPipeline {
             TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
             MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
 
-            String json =
-                GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
+            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
 
             c.output(json);
 

@@ -121,8 +121,7 @@ public class JsonConverter {
    *     };
    * }</pre>
    */
-  JsonConverter addSpecificConverter(
-      Class<? extends SpecificRecordBase> type, Consumer<SpecificRecordBase> consumer) {
+  JsonConverter addSpecificConverter(Class<? extends SpecificRecordBase> type, Consumer<SpecificRecordBase> consumer) {
     customConvertersMap.put(type, consumer);
     return this;
   }
@@ -158,9 +157,16 @@ public class JsonConverter {
     return this;
   }
 
-  JsonConverter addJsonObject(String key, Map<String, String> fields) {
+  JsonConverter addJsonComplexObject(String key, Map<String, String> fields) {
     ObjectNode node = MAPPER.createObjectNode();
     fields.forEach((k, v) -> addJsonField(node, k, v));
+    mainNode.set(key, node);
+    return this;
+  }
+
+  JsonConverter addJsonRawObject(String key, Map<String, String> fields) {
+    ObjectNode node = MAPPER.createObjectNode();
+    fields.forEach((k, v) -> addJsonRawField(node, k, v));
     mainNode.set(key, node);
     return this;
   }
@@ -177,6 +183,11 @@ public class JsonConverter {
   }
 
   /** Check field in skipKeys and convert - "key":"value" */
+  JsonConverter addJsonRawField(ObjectNode node, String key, String value) {
+    return skipKeys.contains(key) ? this : addJsonRawFieldNoCheck(node, key, value);
+  }
+
+  /** Check field in skipKeys and convert - "key":"value" */
   JsonConverter addJsonField(String key, String value) {
     return addJsonField(mainNode, key, value);
   }
@@ -190,9 +201,14 @@ public class JsonConverter {
   /** Convert - "key":"value" and check some incorrect symbols for json */
   JsonConverter addJsonFieldNoCheck(ObjectNode node, String key, String value) {
     // Can be a json  or a string
-    node.set(
-        sanitizeValue(key),
-        IS_COMPLEX_OBJECT.test(value) ? new POJONode(value) : new TextNode(value));
+    node.set(sanitizeValue(key), IS_COMPLEX_OBJECT.test(value) ? new POJONode(value) : new TextNode(value));
+    return this;
+  }
+
+  /** Convert - "key":"value" and check some incorrect symbols for json */
+  JsonConverter addJsonRawFieldNoCheck(ObjectNode node, String key, String value) {
+    // Can be a json  or a string
+    node.set(sanitizeValue(key), new TextNode(value));
     return this;
   }
 

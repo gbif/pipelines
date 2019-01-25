@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
@@ -45,12 +44,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class GbifJsonConverter extends JsonConverter {
 
-  private static final String[] SKIP_KEYS = {
-    "id", "decimalLatitude", "decimalLongitude", "country"
-  };
-  private static final String[] REPLACE_KEYS = {
-    "http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"
-  };
+  private static final String[] SKIP_KEYS = {"id", "decimalLatitude", "decimalLongitude", "country"};
+  private static final String[] REPLACE_KEYS = {"http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"};
 
   private GbifJsonConverter(SpecificRecordBase[] bases) {
     this.setSpecificRecordBase(bases)
@@ -120,7 +115,7 @@ public class GbifJsonConverter extends JsonConverter {
       Optional.ofNullable(terms.get(DwcTerm.organismID.qualifiedName()))
           .ifPresent(x -> this.addJsonTextFieldNoCheck("organismId", x));
 
-      this.addJsonObject(Conversion.FILE_NAME, terms);
+      this.addJsonRawObject("verbatim", terms);
     };
   }
 
