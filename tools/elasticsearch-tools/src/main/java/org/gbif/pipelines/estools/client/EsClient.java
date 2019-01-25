@@ -108,8 +108,7 @@ public class EsClient implements AutoCloseable {
     return performRequest(HttpDelete.METHOD_NAME, endpoint, Collections.emptyMap(), null);
   }
 
-  private Response performRequest(
-      String method, String endpoint, Map<String, String> params, HttpEntity body)
+  private Response performRequest(String method, String endpoint, Map<String, String> params, HttpEntity body)
       throws ResponseException {
     // create request
     Request request = new Request(method, endpoint);

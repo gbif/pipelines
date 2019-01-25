@@ -66,7 +66,7 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     EsIndexUtils.swapIndexIfAliasExists(options);
 
-    FsUtils.removeTmpDirecrory(options);
+    FsUtils.removeTmpDirectory(options);
     LOG.info("Finished main indexing pipeline");
 
     LOG.info("Call - System.exit(0)"); // Workaround for a bug with stuck job

@@ -109,7 +109,7 @@ public final class FsUtils {
   }
 
   /** Removes temporal directory, before closing Main thread */
-  public static void removeTmpDirecrory(BasePipelineOptions options) {
+  public static void removeTmpDirectory(BasePipelineOptions options) {
     Runnable runnable =
         () -> {
           File tmp = Paths.get(getTempDir(options)).toFile();

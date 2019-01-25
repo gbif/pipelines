@@ -269,7 +269,7 @@ public class EsIndex {
   public static void refresh(EsConfig config, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
-    LOG.info("Refresing index {}", index);
+    LOG.info("Refreshing index {}", index);
 
     try (EsClient esClient = EsClient.from(config)) {
       EsService.refreshIndex(esClient, index);

@@ -22,7 +22,7 @@ public class EsIndexUtils {
 
   private EsIndexUtils() {}
 
-  /** Connects to Elasticsearch instace and creates an index */
+  /** Connects to Elasticsearch instance and creates an index */
   public static void createIndex(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
     Path path = Paths.get(options.getEsSchemaPath());
@@ -43,7 +43,7 @@ public class EsIndexUtils {
     Optional.ofNullable(idx).ifPresent(options::setEsIndexName);
   }
 
-  /** Connects to Elasticsearch instace and creates an index, if index doesn't exist */
+  /** Connects to Elasticsearch instance and creates an index, if index doesn't exist */
   public static void createIndexIfNotExist(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
     if (!EsIndex.indexExists(config, options.getEsIndexName())) {
@@ -51,7 +51,7 @@ public class EsIndexUtils {
     }
   }
 
-  /** Connects to Elasticsearch instace and swaps an index and an alias */
+  /** Connects to Elasticsearch instance and swaps an index and an alias */
   public static void swapIndex(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
@@ -66,7 +66,7 @@ public class EsIndexUtils {
     LOG.info("Index name - {}, Alias - {}, Number of records -  {}", index, aliases, count);
   }
 
-  /** Connects to Elasticsearch instace and swaps an index and an alias, if alias exists */
+  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists */
   public static void swapIndexIfAliasExists(EsIndexingPipelineOptions options) {
     String[] aliases = options.getEsAlias();
     if (aliases != null && aliases.length > 0) {
