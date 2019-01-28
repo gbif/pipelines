@@ -1,5 +1,6 @@
 package org.gbif.pipelines.common;
 
+/**TODO:DOC!*/
 public class PipelinesVariables {
 
   private PipelinesVariables() {}

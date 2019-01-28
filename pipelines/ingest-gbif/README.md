@@ -20,3 +20,4 @@ Base [Apache Beam](https://beam.apache.org/get-started/beam-overview/) pipelines
 - [utils](./src/main/java/org/gbif/pipelines/ingest/utils)
     - [FsUtils.java](./src/main/java/org/gbif/pipelines/ingest/utils/FsUtils.java)
     - [EsIndexUtils.java](./src/main/java/org/gbif/pipelines/ingest/utils/EsIndexUtils.java)
+    - [MetricsHandler.java](./src/main/java/org/gbif/pipelines/ingest/utils/MetricsHandler.java)
