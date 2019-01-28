@@ -65,7 +65,7 @@ public class LocationParser {
     // Add issues from coordinates parsing
     issues.addAll(coordsParsed.getIssues());
 
-    // Eeturn if coordinates parsing failed
+    // Return if coordinates parsing failed
     if (!coordsParsed.isSuccessful()) {
       ParsedLocation parsedLocation = new ParsedLocation(countryMatched, null);
       return ParsedField.fail(parsedLocation, issues);
@@ -74,7 +74,7 @@ public class LocationParser {
     // Set current parsed values
     ParsedLocation parsedLocation = new ParsedLocation(countryMatched, coordsParsed.getResult());
 
-    // If the coords parsing was succesful we try to do a country match with the coordinates
+    // If the coords parsing was successful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
         LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), client)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)

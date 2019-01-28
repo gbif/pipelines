@@ -36,7 +36,6 @@ public final class HttpClientFactory {
 
     // create cache
     Cache cache = new Cache(httpCacheDirectory, config.getCacheSize());
-
     // create the client and return it
     return new OkHttpClient.Builder()
         .connectTimeout(config.getTimeout(), TimeUnit.SECONDS)
@@ -44,4 +43,5 @@ public final class HttpClientFactory {
         .cache(cache)
         .build();
   }
+
 }

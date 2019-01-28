@@ -52,8 +52,8 @@ class LocationMatcher {
     return new LocationMatcher(latLng, country, client);
   }
 
-  LocationMatcher additionalTransform(Function<LatLng, LatLng> transormation) {
-    alternativeTransformations.add(transormation);
+  LocationMatcher additionalTransform(Function<LatLng, LatLng> transformation) {
+    alternativeTransformations.add(transformation);
     return this;
   }
 

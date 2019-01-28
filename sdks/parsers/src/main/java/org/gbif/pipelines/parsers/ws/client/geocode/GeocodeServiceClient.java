@@ -6,10 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.pipelines.parsers.utils.Memoizer;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
@@ -20,8 +22,12 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
 
   private final GeocodeServiceRest geocodeServiceRest;
 
+  private final Memoizer<LatLng, HttpResponse<List<Country>>> memoizer;
+
   private GeocodeServiceClient(WsConfig wsConfig) {
     geocodeServiceRest = GeocodeServiceRest.getInstance(wsConfig);
+    memoizer = new Memoizer<>(this::performCountriesFromLatLng, 100_000,
+                              TimeUnit.MINUTES.toMillis(120));
   }
 
   /**
@@ -34,13 +40,16 @@ public class GeocodeServiceClient extends BaseServiceClient<Collection<GeocodeRe
   }
 
   public HttpResponse<List<Country>> getCountriesFromLatLng(LatLng latLng) {
+    return memoizer.get(latLng);
+  }
 
+  private HttpResponse<List<Country>> performCountriesFromLatLng(LatLng latLng) {
     // Check range
     boolean isInRange =
-        Double.compare(latLng.getLat(), 90) <= 0
-            && Double.compare(latLng.getLat(), -90) >= 0
-            && Double.compare(latLng.getLng(), 180) <= 0
-            && Double.compare(latLng.getLng(), -180) >= 0;
+            Double.compare(latLng.getLat(), 90) <= 0
+                    && Double.compare(latLng.getLat(), -90) >= 0
+                    && Double.compare(latLng.getLng(), 180) <= 0
+                    && Double.compare(latLng.getLng(), -180) >= 0;
 
     if (!isInRange) {
       return HttpResponse.fail("lat and lng out of range", HttpResponse.ErrorCode.ABORTED);
