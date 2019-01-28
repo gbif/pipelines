@@ -63,8 +63,8 @@ public class PipelinesVariables {
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
-    public static final String UNIQUE_RECORDS_COUNT = "uniqueRecordsCount";
-    public static final String DUPLICATE_RECORDS_COUNT = "duplicateRecordsCount";
+    public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
+    public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
 
   }
 
