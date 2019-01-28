@@ -22,6 +22,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.ReadTransforms;
+import org.gbif.pipelines.transforms.UniqueIdTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -119,6 +120,7 @@ public class InterpretedToEsIndexPipeline {
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", ReadTransforms.extended(pathFn.apply(Conversion.FILE_NAME)))
+            .apply("Filter duplicates", UniqueIdTransform.create())
             .apply("Map Verbatim to KV", MapTransforms.extendedToKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
