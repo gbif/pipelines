@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,27 +21,48 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class UniqueIdTransformTest {
 
-  @Rule public final transient TestPipeline p = TestPipeline.create();
+  @Rule
+  public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   @Category(NeedsRunner.class)
-  public void filterDuplicateObjectsByOccurrenceIdTest() {
+  public void filterDuplicateDifferentTest() {
     // State
-    final List<ExtendedRecord> input = createCollection("0001", "0001", "0002", "0003", "0004");
-    final List<ExtendedRecord> expected = createCollection("0002", "0003", "0004");
+    final List<ExtendedRecord> input = createCollection("0001_1", "0001_1", "0001_2", "0002_1", "0003_1", "0004_1");
+    final List<ExtendedRecord> expected = createCollection("0002_1", "0003_1", "0004_1");
 
     // When
-    PCollection<ExtendedRecord> result =
-        p.apply(Create.of(input)).apply(UniqueIdTransform.create());
+    PCollection<ExtendedRecord> result = p.apply(Create.of(input)).apply(UniqueIdTransform.create());
 
     // Should
     PAssert.that(result).containsInAnyOrder(expected);
     p.run();
   }
 
-  private List<ExtendedRecord> createCollection(String... occurrenceIds) {
-    return Arrays.stream(occurrenceIds)
-        .map(x -> ExtendedRecord.newBuilder().setId(x).build())
+  @Test
+  @Category(NeedsRunner.class)
+  public void filterDuplicateIdenticalTest() {
+    // State
+    final List<ExtendedRecord> input = createCollection("0001_1", "0001_1", "0001_1", "0002_1", "0003_1", "0004_1");
+    final List<ExtendedRecord> expected = createCollection("0001_1", "0002_1", "0003_1", "0004_1");
+
+    // When
+    PCollection<ExtendedRecord> result = p.apply(Create.of(input)).apply(UniqueIdTransform.create());
+
+    // Should
+    PAssert.that(result).containsInAnyOrder(expected);
+    p.run();
+  }
+
+  private List<ExtendedRecord> createCollection(String... idName) {
+    return Arrays.stream(idName)
+        .map(x -> {
+          String[] array = x.split("_");
+          return ExtendedRecord.newBuilder()
+              .setId(array[0])
+              .setCoreTerms(Collections.singletonMap("key", array[1]))
+              .build();
+        })
         .collect(Collectors.toList());
   }
 }
