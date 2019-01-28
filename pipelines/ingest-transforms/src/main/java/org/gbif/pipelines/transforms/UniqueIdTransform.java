@@ -53,11 +53,22 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
                 Iterator<ExtendedRecord> iterator = element.getValue().iterator();
                 ExtendedRecord record = iterator.next();
                 if (!iterator.hasNext()) {
+                  // No duplicates were found
                   c.output(record);
                   uniqueCounter.inc();
                 } else {
-                  LOG.warn("occurrenceId = {}, duplicates were found", element.getKey());
-                  duplicateCounter.inc();
+                  // Found duplicates, compare all duplicate records, maybe they are identical
+                  boolean areEqual = true;
+                  while (iterator.hasNext() && areEqual) {
+                    if (!record.equals(iterator.next())) {
+                      areEqual = false;
+                      LOG.warn("occurrenceId = {}, duplicates were found", element.getKey());
+                      duplicateCounter.inc();
+                    }
+                  }
+                  if (areEqual) {
+                    c.output(record);
+                  }
                 }
               }
             }));
