@@ -62,13 +62,14 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
                   while (iterator.hasNext() && areEqual) {
                     if (!record.equals(iterator.next())) {
                       areEqual = false;
-                      LOG.warn("occurrenceId = {}, duplicates were found", element.getKey());
-                      duplicateCounter.inc();
                     }
                   }
                   if (areEqual) {
                     c.output(record);
                   }
+                  // Log duplicate and metric
+                  LOG.warn("occurrenceId = {}, duplicates were found", element.getKey());
+                  duplicateCounter.inc();
                 }
               }
             }));
