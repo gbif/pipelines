@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
@@ -13,6 +14,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
+import org.gbif.pipelines.parsers.utils.Memoizer;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
@@ -29,8 +31,11 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
 
   private final SpeciesMatchv2ServiceRest speciesMatchv2ServiceRest;
 
+  private final Memoizer<SpeciesMatchRequest,HttpResponse<NameUsageMatch2>> memoizer;
+
   private SpeciesMatchv2Client(WsConfig wsConfig) {
     speciesMatchv2ServiceRest = SpeciesMatchv2ServiceRest.getInstance(wsConfig);
+    memoizer = new Memoizer<>(this::performNameMatch, 10_000, TimeUnit.MINUTES.toMillis(120));
   }
 
   /**
@@ -98,7 +103,11 @@ public class SpeciesMatchv2Client extends BaseServiceClient<NameUsageMatch2, Nam
   }
 
   private HttpResponse<NameUsageMatch2> tryNameMatch(Map<String, String> terms) {
-    Map<String, String> params = MatchQueryConverter.convert(terms);
+    return memoizer.get(MatchQueryConverter.convert(terms));
+  }
+
+  private HttpResponse<NameUsageMatch2> performNameMatch(SpeciesMatchRequest request) {
+    Map<String, String> params =  MatchQueryConverter.convert(request);
 
     return performCall(params);
   }

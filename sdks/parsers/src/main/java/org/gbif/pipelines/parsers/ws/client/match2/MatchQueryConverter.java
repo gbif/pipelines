@@ -42,21 +42,45 @@ class MatchQueryConverter {
     }
   }
 
+
   /**
    * Converts a {@link Map} of terms to {@link Map} with the params needed to call the {@link
    * SpeciesMatchv2Service}.
    */
-  static Map<String, String> convert(final Map<String, String> terms) {
+  static Map<String, String> convert(final SpeciesMatchRequest request) {
 
     ImmutableMap.Builder<String, String> map = ImmutableMap.builder();
 
     // Interpret common
-    getTaxonValue(terms, DwcTerm.kingdom).ifPresent(v -> map.put("kingdom", v));
-    getTaxonValue(terms, DwcTerm.phylum).ifPresent(v -> map.put("phylum", v));
-    getTaxonValue(terms, DwcTerm.class_).ifPresent(v -> map.put("class", v));
-    getTaxonValue(terms, DwcTerm.order).ifPresent(v -> map.put("order", v));
-    getTaxonValue(terms, DwcTerm.family).ifPresent(v -> map.put("family", v));
-    getTaxonValue(terms, DwcTerm.genus).ifPresent(v -> map.put("genus", v));
+    Optional.ofNullable(request.getKingdom()).ifPresent(v -> map.put("kingdom", v));
+    Optional.ofNullable(request.getPhylum()).ifPresent(v -> map.put("phylum", v));
+    Optional.ofNullable(request.getClass_()).ifPresent(v -> map.put("class", v));
+    Optional.ofNullable(request.getOrder()).ifPresent(v -> map.put("order", v));
+    Optional.ofNullable(request.getFamily()).ifPresent(v -> map.put("family", v));
+    Optional.ofNullable(request.getGenus()).ifPresent(v -> map.put("genus", v));
+
+    Optional.ofNullable(request.getRank()).ifPresent(v -> map.put("rank", v.name()));
+    Optional.ofNullable(request.getScientificName()).ifPresent(v -> map.put("name", v));
+
+    map.put("strict", Boolean.FALSE.toString());
+    map.put("verbose", Boolean.FALSE.toString());
+    return map.build();
+  }
+
+  /**
+   * Converts a {@link Map} of terms to {@link SpeciesMatchRequest}.
+   */
+  static SpeciesMatchRequest convert(final Map<String, String> terms) {
+
+    SpeciesMatchRequest.Builder builder = new SpeciesMatchRequest.Builder();
+
+    // Interpret common
+    getTaxonValue(terms, DwcTerm.kingdom).ifPresent(builder::setKingdom);
+    getTaxonValue(terms, DwcTerm.phylum).ifPresent(builder::setPhylum);
+    getTaxonValue(terms, DwcTerm.class_).ifPresent(builder::setClass_);
+    getTaxonValue(terms, DwcTerm.order).ifPresent(builder::setOrder);
+    getTaxonValue(terms, DwcTerm.family).ifPresent(builder::setFamily);
+    getTaxonValue(terms, DwcTerm.genus).ifPresent(builder::setGenus);
 
     Fields fields = new Fields();
     getTaxonValue(terms, DwcTerm.specificEpithet).ifPresent(fields::setSpecificEpithet);
@@ -65,15 +89,14 @@ class MatchQueryConverter {
 
     // Interpret rank
     Rank interpretRank = interpretRank(terms, fields);
-    Optional.ofNullable(interpretRank).ifPresent(rank -> map.put("rank", rank.name()));
+    Optional.ofNullable(interpretRank).ifPresent(builder::setRank);
 
     // Interpret scientificName
     String scientificName = interpretScientificName(terms, fields);
-    Optional.ofNullable(scientificName).ifPresent(v -> map.put("name", v));
+    Optional.ofNullable(scientificName).ifPresent(builder::setScientificName);
 
-    map.put("strict", Boolean.FALSE.toString());
-    map.put("verbose", Boolean.FALSE.toString());
-    return map.build();
+
+    return builder.build();
   }
 
   /** Gets a clean version of taxa parameter. */
