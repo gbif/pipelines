@@ -2,9 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
@@ -19,10 +17,8 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.EsTransforms;
 import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.ReadTransforms;
-import org.gbif.pipelines.transforms.UniqueIdTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -51,6 +47,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 
 /**
  * Pipeline sequence:
@@ -100,7 +97,6 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     LOG.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn = s -> FsUtils.buildPath(options, s + "*" + AVRO_EXTENSION);
     Function<RecordType, String> pathInterFn =
         t -> FsUtils.buildPathInterpret(options, t.name().toLowerCase(), "*" + AVRO_EXTENSION);
 
@@ -119,8 +115,7 @@ public class InterpretedToEsIndexPipeline {
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        p.apply("Read Verbatim", ReadTransforms.extended(pathFn.apply(Conversion.FILE_NAME)))
-            .apply("Filter duplicates", UniqueIdTransform.create())
+        p.apply("Read Verbatim", ReadTransforms.extended(pathInterFn.apply(VERBATIM)))
             .apply("Map Verbatim to KV", MapTransforms.extendedToKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
@@ -190,7 +185,7 @@ public class InterpretedToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(EsTransforms.getEsTripletIdFn()));
+            .withIdFn(input -> input.get("id").asText()));
 
     LOG.info("Running the pipeline");
     PipelineResult result = p.run();

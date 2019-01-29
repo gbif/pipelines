@@ -20,7 +20,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.ws.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
-import org.gbif.pipelines.transforms.EsTransforms;
 import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 
@@ -210,7 +209,7 @@ public class DwcaToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(EsTransforms.getEsTripletIdFn()));
+            .withIdFn(input -> input.get("id").asText()));
 
     LOG.info("Running the pipeline");
     PipelineResult result = p.run();

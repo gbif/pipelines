@@ -29,13 +29,19 @@ public class ExtendedRecordConverter {
   private static final String FILE_PREFIX = ".response";
 
   private final Executor executor;
+  private final String idHashPrefix;
 
-  private ExtendedRecordConverter(int parallelism) {
+  private ExtendedRecordConverter(int parallelism, String idHashPrefix) {
     this.executor = ExecutorPool.getInstance(parallelism);
+    this.idHashPrefix = idHashPrefix;
   }
 
   public static ExtendedRecordConverter crete(int parallelism) {
-    return new ExtendedRecordConverter(parallelism);
+    return new ExtendedRecordConverter(parallelism, null);
+  }
+
+  public static ExtendedRecordConverter crete(int parallelism, String idHashPrefix) {
+    return new ExtendedRecordConverter(parallelism, idHashPrefix);
   }
 
   /** @param inputPath path to directory with response files or a tar.xz archive */
@@ -58,7 +64,7 @@ public class ExtendedRecordConverter {
       CompletableFuture[] futures =
           walk.filter(x -> x.toFile().isFile() && x.toString().endsWith(FILE_PREFIX))
               .map(Path::toFile)
-              .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writer, validator, counter), executor))
+              .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writer, validator, counter, idHashPrefix), executor))
               .toArray(CompletableFuture[]::new);
 
       // Wait all threads

@@ -9,6 +9,7 @@ Main module contains API like classes, such as data interpretations, converters,
     - [JsonConverter.java](./core/src/main/java/org/gbif/pipelines/core/converters/JsonConverter.java)
 - [interpreters](./core/src/main/java/org/gbif/pipelines/core/interpreters)
     - [BasicInterpreter.java](./core/src/main/java/org/gbif/pipelines/core/interpreters/BasicInterpreter.java)
+    - [ExtendedInterpreter.java](./core/src/main/java/org/gbif/pipelines/core/interpreters/ExtendedInterpreter.java)
     - [LocationInterpreter.java](./core/src/main/java/org/gbif/pipelines/core/interpreters/LocationInterpreter.java)
     - [MetadataInterpreter.java](./core/src/main/java/org/gbif/pipelines/core/interpreters/MetadataInterpreter.java)
     - [MultimediaInterpreter.java](./core/src/main/java/org/gbif/pipelines/core/interpreters/MultimediaInterpreter.java)

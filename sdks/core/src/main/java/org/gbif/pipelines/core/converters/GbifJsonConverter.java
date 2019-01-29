@@ -111,7 +111,7 @@ public class GbifJsonConverter extends JsonConverter {
 
       ExtendedRecord er = (ExtendedRecord) record;
 
-      this.addJsonTextFieldNoCheck("occurrenceId", er.getId());
+      this.addJsonTextFieldNoCheck("id", er.getId());
 
       Map<String, String> terms = er.getCoreTerms();
 

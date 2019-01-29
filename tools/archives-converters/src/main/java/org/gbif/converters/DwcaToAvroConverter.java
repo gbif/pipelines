@@ -2,6 +2,7 @@ package org.gbif.converters;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import org.gbif.converters.converter.ConverterToVerbatim;
 import org.gbif.pipelines.core.io.DwcaReader;
@@ -10,6 +11,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.apache.avro.file.DataFileWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.gbif.converters.converter.HashUtils.getSha1;
 
 public class DwcaToAvroConverter extends ConverterToVerbatim {
 
@@ -35,12 +38,21 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
   /** TODO: DOC */
   @Override
   protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) throws IOException {
+    return convert(inputPath, dataFileWriter, null);
+  }
+
+  /** TODO: DOC */
+  @Override
+  protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter, String idHashPrefix)
+      throws IOException {
     DwcaReader reader = DwcaReader.fromLocation(inputPath.toString());
     LOG.info("Exporting the DwC Archive to Avro started {}", inputPath);
 
     // Read all records
     while (reader.advance()) {
-      dataFileWriter.append(reader.getCurrent());
+      ExtendedRecord record = reader.getCurrent();
+      Optional.ofNullable(idHashPrefix).ifPresent(x -> record.setId(getSha1(idHashPrefix, record.getId())));
+      dataFileWriter.append(record);
     }
     reader.close();
 

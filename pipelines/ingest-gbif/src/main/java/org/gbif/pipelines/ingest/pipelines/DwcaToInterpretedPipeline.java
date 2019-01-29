@@ -6,8 +6,8 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -33,6 +33,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 import static org.gbif.pipelines.transforms.RecordTransforms.BasicFn;
 import static org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
 import static org.gbif.pipelines.transforms.RecordTransforms.MetadataFn;
@@ -110,6 +111,9 @@ public class DwcaToInterpretedPipeline {
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
         .apply("Interpret metadata", ParDo.of(new MetadataFn(wsConfig)))
         .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
+
+    uniqueRecords
+        .apply("Write unique verbatim to avro", WriteTransforms.extended(pathFn.apply(VERBATIM)));
 
     uniqueRecords
         .apply("Interpret basic", ParDo.of(new BasicFn()))

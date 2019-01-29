@@ -43,4 +43,10 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
   public long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
     return ExtendedRecordConverter.crete(xmlReaderParallelism).toAvro(inputPath.toString(), dataFileWriter);
   }
+
+  /** TODO: DOC */
+  @Override
+  public long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter, String idHashPrefix) {
+    return ExtendedRecordConverter.crete(xmlReaderParallelism, idHashPrefix).toAvro(inputPath.toString(), dataFileWriter);
+  }
 }

@@ -1,8 +1,8 @@
 package org.gbif.pipelines.parsers.ws.client.match2;
 
-import org.gbif.api.vocabulary.Rank;
-
 import java.util.Objects;
+
+import org.gbif.api.vocabulary.Rank;
 
 import com.google.common.base.MoreObjects;
 

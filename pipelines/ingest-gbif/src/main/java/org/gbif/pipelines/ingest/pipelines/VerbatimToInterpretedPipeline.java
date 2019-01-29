@@ -32,6 +32,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 import static org.gbif.pipelines.transforms.RecordTransforms.BasicFn;
 import static org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
 import static org.gbif.pipelines.transforms.RecordTransforms.MetadataFn;
@@ -106,6 +107,10 @@ public class VerbatimToInterpretedPipeline {
         .apply("Check metadata transform condition", CheckTransforms.metadata(types))
         .apply("Interpret metadata", ParDo.of(new MetadataFn(wsProperties)))
         .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
+
+    uniqueRecords
+        .apply("Check verbatim transform condition", CheckTransforms.verbatim(types))
+        .apply("Write verbatim to avro", WriteTransforms.extended(pathFn.apply(VERBATIM)));
 
     uniqueRecords
         .apply("Check basic transform condition", CheckTransforms.basic(types))

@@ -18,6 +18,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 
 /**
  * Set of different predicate functions. Each function checks predicate and returns {@link
@@ -51,6 +52,14 @@ public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T
    */
   public static CheckTransforms<String> metadata(List<String> types) {
     return create(String.class, checkRecordType(types, METADATA));
+  }
+
+  /**
+   * Checks if list contains {@link RecordType#VERBATIM}, else returns empty {@link
+   * PCollection<ExtendedRecord>}
+   */
+  public static CheckTransforms<ExtendedRecord> verbatim(List<String> types) {
+    return create(ExtendedRecord.class, checkRecordType(types, VERBATIM));
   }
 
   /**

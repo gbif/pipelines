@@ -37,7 +37,8 @@ public class PipelinesVariables {
         TEMPORAL,
         MULTIMEDIA,
         LOCATION,
-        TAXONOMY
+        TAXONOMY,
+        VERBATIM
       }
 
     }
@@ -64,6 +65,7 @@ public class PipelinesVariables {
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
+    public static final String VERBATIM_RECORDS_COUNT = "verbatimRecordsCount";
     public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
 
