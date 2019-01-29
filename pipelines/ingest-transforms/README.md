@@ -4,6 +4,7 @@ Base [Apache Beam](https://beam.apache.org/get-started/beam-overview/) transform
 
 ## Main API classes:
 - [CheckTransforms.java](./src/main/java/org/gbif/pipelines/transforms/CheckTransforms.java)
+- [EsTransforms.java](./src/main/java/org/gbif/pipelines/transforms/EsTransforms.java)
 - [MapTransforms.java](./src/main/java/org/gbif/pipelines/transforms/MapTransforms.java)
 - [ReadTransforms.java](./src/main/java/org/gbif/pipelines/transforms/ReadTransforms.java)
 - [RecordTransforms.java](./src/main/java/org/gbif/pipelines/transforms/RecordTransforms.java)

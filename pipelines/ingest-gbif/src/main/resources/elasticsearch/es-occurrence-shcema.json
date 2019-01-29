@@ -5,6 +5,7 @@
       "all": {"type": "text"},
 
       "datasetKey": {"type": "keyword"},
+      "occurrenceId": {"type": "keyword"},
       "datasetTitle": {"type": "keyword", "copy_to": "all"},
       "installationKey": {"type": "keyword"},
       "publishingOrganizationKey": {"type": "keyword"},

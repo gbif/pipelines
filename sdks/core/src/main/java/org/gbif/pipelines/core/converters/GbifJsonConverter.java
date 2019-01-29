@@ -108,7 +108,12 @@ public class GbifJsonConverter extends JsonConverter {
    */
   private Consumer<SpecificRecordBase> getExtendedRecordConverter() {
     return record -> {
-      Map<String, String> terms = ((ExtendedRecord) record).getCoreTerms();
+
+      ExtendedRecord er = (ExtendedRecord) record;
+
+      this.addJsonTextFieldNoCheck("occurrenceId", er.getId());
+
+      Map<String, String> terms = er.getCoreTerms();
 
       Optional.ofNullable(terms.get(DwcTerm.recordedBy.qualifiedName()))
           .ifPresent(x -> this.addJsonTextFieldNoCheck("recordedBy", x));

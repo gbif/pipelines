@@ -66,7 +66,7 @@ public class GbifJsonConverterTest {
         TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
 
     String expected =
-        "{\"verbatim\":{\"remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"locality\":\"something:{something}\"},"
+        "{\"occurrenceId\":\"777\",\"verbatim\":{\"remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"locality\":\"something:{something}\"},"
             + "\"startDate\":\"01-01-2011\",\"year\":\"2000\",\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},"
             + "\"startDayOfYear\":\"1\",\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":\"2.0\","
             + "\"lat\":\"1.0\"},\"continent\":\"something{something}\",\"countryCode\":\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,"

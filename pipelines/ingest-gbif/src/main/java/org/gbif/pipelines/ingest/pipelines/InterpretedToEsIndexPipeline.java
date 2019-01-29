@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -20,6 +19,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.EsTransforms;
 import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.ReadTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
@@ -189,7 +189,8 @@ public class InterpretedToEsIndexPipeline {
         ElasticsearchIO.write()
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
-            .withMaxBatchSize(options.getEsMaxBatchSize()));
+            .withMaxBatchSize(options.getEsMaxBatchSize())
+            .withIdFn(EsTransforms.getEsTripletIdFn()));
 
     LOG.info("Running the pipeline");
     PipelineResult result = p.run();
