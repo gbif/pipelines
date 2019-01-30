@@ -354,7 +354,11 @@ public class EsService {
   }
 
   /**
-   * TODO:DOC
+   * Deletes records in an index by some ES DSL query
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxName name of the index to delete records.
+   * @param query ES DSL query
    */
   public static void deleteRecordsByQuery(EsClient esClient, String idxName, String query) {
     Objects.requireNonNull(esClient);

@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO: DOC
- **/
+ * Class to work with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string format
+ */
 public class MetricsHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetricsHandler.class);
@@ -22,9 +22,10 @@ public class MetricsHandler {
   }
 
   /**
-   * TODO: DOC
+   * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string
+   * format
    * SparkRunner doesn't support committed
-   **/
+   */
   public static String getCountersInfo(PipelineResult pr) {
 
     MetricQueryResults queryResults = pr.metrics().queryMetrics(MetricsFilter.builder().build());
@@ -44,8 +45,9 @@ public class MetricsHandler {
   }
 
   /**
-   * TODO: DOC
-   **/
+   * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml file and
+   * save it
+   */
   public static void saveCountersToFile(String hdfsSiteConfig, String path, PipelineResult result) {
 
     if (path == null || path.isEmpty()) {

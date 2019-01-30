@@ -74,9 +74,7 @@ public class EsIndexUtils {
     }
   }
 
-  /**
-   * TODO:DOC
-   */
+  /** Connects to Elasticsearch instance and deletes records in an index by datasetId */
   public static void deleteRecordsByDatasetId(EsIndexingPipelineOptions options) {
     String[] aliases = options.getEsAlias();
     if (aliases != null && aliases.length > 0) {
