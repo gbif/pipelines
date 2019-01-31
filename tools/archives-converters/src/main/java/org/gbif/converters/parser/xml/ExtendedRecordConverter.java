@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
@@ -26,7 +28,8 @@ public class ExtendedRecordConverter {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExtendedRecordConverter.class);
 
-  private static final String FILE_PREFIX = ".response";
+  private static final String FILE_PREFIX_RESPONSE = ".response";
+  private static final String FILE_PREFIX_XML = ".xml";
 
   private final Executor executor;
   private final String idHashPrefix;
@@ -60,11 +63,14 @@ public class ExtendedRecordConverter {
 
       AtomicLong counter = new AtomicLong(0);
 
+      Predicate<Path> prefixPr = x -> x.toString().endsWith(FILE_PREFIX_RESPONSE) || x.toString().endsWith(FILE_PREFIX_XML);
+      Function<File, ConverterTask> taskFn = f -> new ConverterTask(f, writer, validator, counter, idHashPrefix);
+
       // Run async process - read a file, convert to ExtendedRecord and write to avro
       CompletableFuture[] futures =
-          walk.filter(x -> x.toFile().isFile() && x.toString().endsWith(FILE_PREFIX))
+          walk.filter(x -> x.toFile().isFile() && prefixPr.test(x))
               .map(Path::toFile)
-              .map(file -> CompletableFuture.runAsync(new ConverterTask(file, writer, validator, counter, idHashPrefix), executor))
+              .map(file -> CompletableFuture.runAsync(taskFn.apply(file), executor))
               .toArray(CompletableFuture[]::new);
 
       // Wait all threads

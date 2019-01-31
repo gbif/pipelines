@@ -1,10 +1,14 @@
 package org.gbif.pipelines.parsers.parsers.temporal;
 
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
+
+import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
