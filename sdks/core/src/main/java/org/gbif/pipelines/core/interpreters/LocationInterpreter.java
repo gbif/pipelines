@@ -75,7 +75,6 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#continent} interpretation. */
   public static void interpretContinent(ExtendedRecord er, LocationRecord lr) {
-
     Function<ParseResult<Continent>, LocationRecord> fn =
         parseResult -> {
           if (parseResult.isSuccessful()) {
@@ -85,7 +84,6 @@ public class LocationInterpreter {
           }
           return lr;
         };
-
     VocabularyParsers.continentParser().map(er, fn);
   }
 
@@ -108,99 +106,110 @@ public class LocationInterpreter {
   /** {@link DwcTerm#minimumElevationInMeters} interpretation. */
   public static void interpretMinimumElevationInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.minimumElevationInMeters);
-    ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
-    if (parseResult.isSuccessful()) {
-      lr.setMinimumElevationInMeters(parseResult.getPayload());
-    } else {
-      addIssue(lr, "MIN_ELEVATION_INVALID");
+    if (!Strings.isNullOrEmpty(value)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+      if (parseResult.isSuccessful()) {
+        lr.setMinimumElevationInMeters(parseResult.getPayload());
+      } else {
+        addIssue(lr, "MIN_ELEVATION_INVALID");
+      }
     }
   }
 
   /** {@link DwcTerm#maximumElevationInMeters} interpretation. */
   public static void interpretMaximumElevationInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.maximumElevationInMeters);
-    ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
-    if (parseResult.isSuccessful()) {
-      lr.setMaximumElevationInMeters(parseResult.getPayload());
-    } else {
-      addIssue(lr, "MAX_ELEVATION_INVALID");
+    if (!Strings.isNullOrEmpty(value)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+      if (parseResult.isSuccessful()) {
+        lr.setMaximumElevationInMeters(parseResult.getPayload());
+      } else {
+        addIssue(lr, "MAX_ELEVATION_INVALID");
+      }
     }
   }
 
   /** {@link DwcTerm#minimumDepthInMeters} interpretation. */
   public static void interpretMinimumDepthInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.minimumDepthInMeters);
-    ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
-    if (parseResult.isSuccessful()) {
-      lr.setMinimumDepthInMeters(parseResult.getPayload());
-    } else {
-      addIssue(lr, "MIN_DEPTH_INVALID");
+    if (!Strings.isNullOrEmpty(value)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+      if (parseResult.isSuccessful()) {
+        lr.setMinimumDepthInMeters(parseResult.getPayload());
+      } else {
+        addIssue(lr, "MIN_DEPTH_INVALID");
+      }
     }
   }
 
   /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
   public static void interpretMaximumDepthInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.maximumDepthInMeters);
-    ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
-    if (parseResult.isSuccessful()) {
-      lr.setMaximumDepthInMeters(parseResult.getPayload());
-    } else {
-      addIssue(lr, "MAX_DEPTH_INVALID");
+    if (!Strings.isNullOrEmpty(value)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+      if (parseResult.isSuccessful()) {
+        lr.setMaximumDepthInMeters(parseResult.getPayload());
+      } else {
+        addIssue(lr, "MAX_DEPTH_INVALID");
+      }
     }
   }
 
   /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
-  public static void interpretMinimumDistanceAboveSurfaceInMeters(
-      ExtendedRecord er, LocationRecord lr) {
+  public static void interpretMinimumDistanceAboveSurfaceInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.minimumDistanceAboveSurfaceInMeters);
-    ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
-    if (parseResult.isSuccessful()) {
-      lr.setMinimumDistanceAboveSurfaceInMeters(parseResult.getPayload());
-    } else {
-      addIssue(lr, "MIN_DISTANCE_ABOVE_SURFACE_INVALID");
+    if (!Strings.isNullOrEmpty(value)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+      if (parseResult.isSuccessful()) {
+        lr.setMinimumDistanceAboveSurfaceInMeters(parseResult.getPayload());
+      } else {
+        addIssue(lr, "MIN_DISTANCE_ABOVE_SURFACE_INVALID");
+      }
     }
   }
 
   /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
-  public static void interpretMaximumDistanceAboveSurfaceInMeters(
-      ExtendedRecord er, LocationRecord lr) {
+  public static void interpretMaximumDistanceAboveSurfaceInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.maximumDistanceAboveSurfaceInMeters);
-    ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
-    if (parseResult.isSuccessful()) {
-      lr.setMaximumDistanceAboveSurfaceInMeters(parseResult.getPayload());
-    } else {
-      addIssue(lr, "MAX_DISTANCE_ABOVE_SURFACE_INVALID");
+    if (!Strings.isNullOrEmpty(value)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+      if (parseResult.isSuccessful()) {
+        lr.setMaximumDistanceAboveSurfaceInMeters(parseResult.getPayload());
+      } else {
+        addIssue(lr, "MAX_DISTANCE_ABOVE_SURFACE_INVALID");
+      }
     }
   }
 
   /** {@link DwcTerm#coordinateUncertaintyInMeters} interpretation. */
   public static void interpretCoordinateUncertaintyInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.coordinateUncertaintyInMeters);
-    ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
-    Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
-    if (result != null
-        && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
-        && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
-      lr.setCoordinateUncertaintyInMeters(result);
-    } else {
-      addIssue(lr, COORDINATE_UNCERTAINTY_METERS_INVALID);
+    if (!Strings.isNullOrEmpty(value)) {
+      ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
+      Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
+      if (result != null
+          && result > COORDINATE_UNCERTAINTY_METERS_LOWER_BOUND
+          && result < COORDINATE_UNCERTAINTY_METERS_UPPER_BOUND) {
+        lr.setCoordinateUncertaintyInMeters(result);
+      } else {
+        addIssue(lr, COORDINATE_UNCERTAINTY_METERS_INVALID);
+      }
     }
   }
 
   /** {@link DwcTerm#coordinatePrecision} interpretation. */
   public static void interpretCoordinatePrecision(ExtendedRecord er, LocationRecord lr) {
 
-    Consumer<Optional<Double>> fn =
-        parseResult -> {
-          Double result = parseResult.orElse(null);
-          if (result != null
-              && result >= COORDINATE_PRECISION_LOWER_BOUND
-              && result <= COORDINATE_PRECISION_UPPER_BOUND) {
-            lr.setCoordinatePrecision(result);
-          } else {
-            addIssue(lr, COORDINATE_PRECISION_INVALID);
-          }
-        };
+    Consumer<Optional<Double>> fn = parseResult -> {
+      Double result = parseResult.orElse(null);
+      if (result != null
+          && result >= COORDINATE_PRECISION_LOWER_BOUND
+          && result <= COORDINATE_PRECISION_UPPER_BOUND) {
+        lr.setCoordinatePrecision(result);
+      } else {
+        addIssue(lr, COORDINATE_PRECISION_INVALID);
+      }
+    };
 
     SimpleTypeParser.parseDouble(er, DwcTerm.coordinatePrecision, fn);
   }
