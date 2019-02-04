@@ -12,13 +12,17 @@ import com.google.common.base.Strings;
 
 public class ExtendedRecordConverter {
 
+  public static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
+
   private ExtendedRecordConverter() {
     // NOP
   }
 
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
-    ExtendedRecord record = ExtendedRecord.newBuilder().setId(rawRecord.getId()).build();
+    String id = Optional.ofNullable(rawRecord.getId()).orElse(RECORD_ID_ERROR);
+
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId(id).build();
 
     final BiConsumer<DwcTerm, String> setter =
         (term, value) ->

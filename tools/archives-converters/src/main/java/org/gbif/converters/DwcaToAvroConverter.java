@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.gbif.converters.converter.HashUtils.getSha1;
+import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
 
 public class DwcaToAvroConverter extends ConverterToVerbatim {
 
@@ -51,8 +52,11 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     // Read all records
     while (reader.advance()) {
       ExtendedRecord record = reader.getCurrent();
-      Optional.ofNullable(idHashPrefix).ifPresent(x -> record.setId(getSha1(idHashPrefix, record.getId())));
-      dataFileWriter.append(record);
+      String id = record.getId();
+      if (!id.equals(RECORD_ID_ERROR)) {
+        Optional.ofNullable(idHashPrefix).ifPresent(x -> record.setId(getSha1(idHashPrefix, id)));
+        dataFileWriter.append(record);
+      }
     }
     reader.close();
 

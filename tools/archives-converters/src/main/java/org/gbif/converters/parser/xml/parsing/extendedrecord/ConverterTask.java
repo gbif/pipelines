@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.gbif.converters.converter.HashUtils.getSha1;
+import static org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter.RECORD_ID_ERROR;
 
 /**
  * The task for CompletableFuture which reads a xml response file, parses and converts to
@@ -32,7 +33,8 @@ public class ConverterTask implements Runnable {
   private final AtomicLong counter;
   private final String idHashPrefix;
 
-  public ConverterTask(File inputFile, SyncDataFileWriter writer, UniquenessValidator validator, AtomicLong counter, String idHashPrefix) {
+  public ConverterTask(File inputFile, SyncDataFileWriter writer, UniquenessValidator validator, AtomicLong counter,
+      String idHashPrefix) {
     this.inputFile = inputFile;
     this.dataFileWriter = writer;
     this.validator = validator;
@@ -61,9 +63,12 @@ public class ConverterTask implements Runnable {
   /*TODO:DOC*/
   private void appendExtendedRecord(ExtendedRecord record) {
     try {
-      Optional.ofNullable(idHashPrefix).ifPresent(x -> record.setId(getSha1(idHashPrefix, record.getId())));
-      dataFileWriter.append(record);
-      counter.incrementAndGet();
+      String id = record.getId();
+      if (!id.equals(RECORD_ID_ERROR)) {
+        Optional.ofNullable(idHashPrefix).ifPresent(x -> record.setId(getSha1(idHashPrefix, id)));
+        dataFileWriter.append(record);
+        counter.incrementAndGet();
+      }
     } catch (IOException ex) {
       LOG.error(ex.getMessage(), ex);
       throw new ParsingException("Parsing failed", ex);
