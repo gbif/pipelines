@@ -6,7 +6,9 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
@@ -15,6 +17,7 @@ import org.gbif.pipelines.parsers.exception.IORuntimeException;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
@@ -157,5 +160,40 @@ public final class FsUtils {
     try (FSDataOutputStream stream = fs.create(new Path(path), true)) {
       stream.writeChars(body);
     }
+  }
+
+  /**
+   * Deletes all directories and subdirectories(recursively) by file prefix name.
+   * <p>
+   * Example: all directories with '.temp-' prefix in direcory '89aad0bb-654f-483c-8711-2c00551033ae/3'
+   *
+   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param directoryPath to a directory
+   * @param filePrefix file name prefix
+   */
+  public static void deleteDirectoryByPrefix(String hdfsSiteConfig, String directoryPath, String filePrefix) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, directoryPath);
+    try {
+      deleteDirectoryByPrefix(fs, new Path(directoryPath), filePrefix);
+    } catch (IOException e) {
+      LOG.warn("Can't delete folder - {}, prefix - {}", directoryPath, filePrefix);
+    }
+  }
+
+  private static void deleteDirectoryByPrefix(FileSystem fs, Path directoryPath, String filePrefix) throws IOException {
+    FileStatus[] status = fs.listStatus(directoryPath);
+    List<Path> list = Arrays.stream(status)
+        .filter(FileStatus::isDirectory)
+        .map(FileStatus::getPath)
+        .collect(Collectors.toList());
+
+    for (Path dir : list) {
+      if (dir.getName().startsWith(filePrefix)) {
+        fs.delete(dir, true);
+      } else {
+        deleteDirectoryByPrefix(fs, dir, filePrefix);
+      }
+    }
+
   }
 }

@@ -84,8 +84,11 @@ public class VerbatimToInterpretedPipeline {
 
   public static void run(InterpretationPipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
-    MDC.put("attempt", options.getAttempt().toString());
+    String datasetId = options.getDatasetId();
+    String attempt = options.getAttempt().toString();
+
+    MDC.put("datasetId", datasetId);
+    MDC.put("attempt", attempt);
 
     List<String> types = options.getInterpretationTypes();
     String wsProperties = options.getWsProperties();
@@ -103,7 +106,7 @@ public class VerbatimToInterpretedPipeline {
 
     LOG.info("Adding interpretations");
 
-    p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+    p.apply("Create metadata collection", Create.of(datasetId))
         .apply("Check metadata transform condition", CheckTransforms.metadata(types))
         .apply("Interpret metadata", ParDo.of(new MetadataFn(wsProperties)))
         .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
@@ -145,6 +148,10 @@ public class VerbatimToInterpretedPipeline {
       String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
       MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
     });
+
+    LOG.info("Deleting beam temporal folders");
+    String tempPath = String.join("/", options.getTargetPath(), datasetId, attempt);
+    FsUtils.deleteDirectoryByPrefix(options.getHdfsSiteConfig(), tempPath, ".temp-beam");
 
     LOG.info("Pipeline has been finished");
   }
