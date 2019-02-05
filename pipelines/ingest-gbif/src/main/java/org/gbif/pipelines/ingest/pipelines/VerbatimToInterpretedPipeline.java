@@ -87,6 +87,8 @@ public class VerbatimToInterpretedPipeline {
     String datasetId = options.getDatasetId();
     String attempt = options.getAttempt().toString();
 
+    FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), datasetId, attempt, options.getInterpretationTypes());
+
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt);
 

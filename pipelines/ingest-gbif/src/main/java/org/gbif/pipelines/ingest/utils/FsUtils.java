@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+
 /** Utility class to work with file system. */
 public final class FsUtils {
 
@@ -195,5 +197,40 @@ public final class FsUtils {
       }
     }
 
+  }
+
+  /**
+   * Removes a directory with content if the folder exists
+   *
+   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param directoryPath path to some directory
+   */
+  public static boolean deleteIfExist(String hdfsSiteConfig, String directoryPath) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, directoryPath);
+
+    Path path = new Path(directoryPath);
+    try {
+      return fs.exists(path) && fs.delete(path, true);
+    } catch (IOException e) {
+      return false;
+    }
+  }
+
+  /**
+   * Deletes directories if a dataset with the same attempt was interpreted before
+   */
+  public static void deleteInterpretIfExist(String hdfsSiteConfig, String datasetId, String attempt, List<String> steps) {
+    if (steps != null && !steps.isEmpty()) {
+
+      String path = String.join("/", hdfsSiteConfig, datasetId, attempt, Interpretation.DIRECTORY_NAME);
+
+      if (steps.contains(ALL.name())) {
+        deleteIfExist(hdfsSiteConfig, path);
+      } else {
+        for (String step : steps) {
+          deleteIfExist(hdfsSiteConfig, String.join("/", path, step.toLowerCase()));
+        }
+      }
+    }
   }
 }
