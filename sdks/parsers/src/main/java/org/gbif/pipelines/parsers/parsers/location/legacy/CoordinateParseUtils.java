@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.gbif.common.parsers.NumberParser;
-import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 
 import org.apache.commons.lang3.StringUtils;
@@ -160,7 +160,7 @@ public class CoordinateParseUtils {
     // 0,0 is too suspicious
     if (Double.compare(lat, 0) == 0 && Double.compare(lon, 0) == 0) {
       issues.add(ZERO_COORDINATE.name());
-      return ParsedField.success(new LatLng(0, 0), issues);
+      return ParsedField.success(new LatLng(0.0d, 0.0d), issues);
     }
 
     // if everything falls in range

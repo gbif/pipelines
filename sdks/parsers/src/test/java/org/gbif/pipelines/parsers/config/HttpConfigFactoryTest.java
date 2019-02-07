@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.ws.config;
+package org.gbif.pipelines.parsers.config;
 
 import java.nio.file.Paths;
 

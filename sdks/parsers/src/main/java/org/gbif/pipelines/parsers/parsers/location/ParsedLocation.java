@@ -1,7 +1,7 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
 import org.gbif.api.vocabulary.Country;
-import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.kvs.geocode.LatLng;
 
 /** Models a parsed location. */
 public class ParsedLocation {

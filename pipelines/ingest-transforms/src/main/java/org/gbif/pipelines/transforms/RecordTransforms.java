@@ -1,8 +1,14 @@
 package org.gbif.pipelines.transforms;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
+import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.LocationInterpreter;
@@ -17,11 +23,13 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
+import org.gbif.pipelines.parsers.config.KvConfig;
+import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.match2.SpeciesMatchv2Client;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
+import org.gbif.pipelines.parsers.config.WsConfig;
+import org.gbif.pipelines.parsers.config.WsConfigFactory;
+import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -127,27 +135,45 @@ public class RecordTransforms {
 
     private final Counter counter = Metrics.counter(RecordTransforms.class, LOCATION_RECORDS_COUNT);
 
-    private final WsConfig wsConfig;
-    private GeocodeServiceClient client;
+    private final KvConfig kvConfig;
+    private KeyValueStore<LatLng, String> kvStore;
 
-    public LocationFn(WsConfig wsConfig) {
-      this.wsConfig = wsConfig;
+    public LocationFn(KvConfig kvConfig) {
+      this.kvConfig = kvConfig;
     }
 
     public LocationFn(String properties) {
-      this.wsConfig = WsConfigFactory.create("geocode", Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
     }
 
     @Setup
-    public void setup() {
-      client = GeocodeServiceClient.create(wsConfig);
+    public void setup() throws IOException {
+      HBaseKVStoreConfiguration hBaseKvStoreConfig = HBaseKVStoreConfiguration.builder()
+          .withTableName("geocode_kv") //Geocode KV HBase table
+          .withColumnFamily("v") //Column in which qualifiers are stored
+          .withNumOfKeyBuckets(10) //Buckets for salted key generations == to # of region servers
+          .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
+          .build();
+
+      GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
+          .withJsonColumnQualifier("j") //stores JSON data
+          .withCountryCodeColumnQualifier("c") //stores ISO country code
+          .withHBaseKVStoreConfiguration(hBaseKvStoreConfig).build();
+
+      ClientConfiguration clientConfig = ClientConfiguration.builder()
+          .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
+          .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
+          .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+          .build();
+
+      kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
     }
 
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-          .via(LocationInterpreter.interpretCountryAndCoordinates(client))
+          .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore))
           .via(LocationInterpreter::interpretContinent)
           .via(LocationInterpreter::interpretWaterBody)
           .via(LocationInterpreter::interpretStateProvince)

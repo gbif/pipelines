@@ -17,7 +17,7 @@ import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.parsers.utils.Memoizer;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.config.WsConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -9,6 +9,8 @@ import org.gbif.api.vocabulary.Continent;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
@@ -16,7 +18,6 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
-import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -46,27 +47,25 @@ public class LocationInterpreter {
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
-  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(GeocodeServiceClient client) {
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(KeyValueStore<LatLng, String> kvStore) {
     return (er, lr) -> {
       // parse the terms
-      ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, client);
+      ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, kvStore);
 
       // set values in the location record
       ParsedLocation parsedLocation = parsedResult.getResult();
 
       Optional.ofNullable(parsedLocation.getCountry())
-          .ifPresent(
-              country -> {
-                lr.setCountry(country.getTitle());
-                lr.setCountryCode(country.getIso2LetterCode());
-              });
+          .ifPresent(country -> {
+            lr.setCountry(country.getTitle());
+            lr.setCountryCode(country.getIso2LetterCode());
+          });
 
       Optional.ofNullable(parsedLocation.getLatLng())
-          .ifPresent(
-              latLng -> {
-                lr.setDecimalLatitude(latLng.getLat());
-                lr.setDecimalLongitude(latLng.getLng());
-              });
+          .ifPresent(latLng -> {
+            lr.setDecimalLatitude(latLng.getLatitude());
+            lr.setDecimalLongitude(latLng.getLongitude());
+          });
 
       // set the issues to the interpretation
       addIssue(lr, parsedResult.getIssues());

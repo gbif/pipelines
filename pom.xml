@@ -68,6 +68,7 @@
     <gbif-api.version>0.70</gbif-api.version>
     <gbif-common.version>0.44</gbif-common.version>
     <dwc-api.version>1.19</dwc-api.version>
+    <kvs.version>1.0-SNAPSHOT</kvs.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
@@ -77,7 +78,7 @@
 
     <geotools.version>12.1</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
-    <guava.version>18.0</guava.version>
+    <guava.version>20.0</guava.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.5</slf4j.version>
@@ -287,6 +288,16 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-common</artifactId>
         <version>${gbif-common.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.kvs</groupId>
+        <artifactId>kvs-gbif</artifactId>
+        <version>${kvs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.kvs</groupId>
+        <artifactId>kvs-core</artifactId>
+        <version>${kvs.version}</version>
       </dependency>
 
       <!-- Avro -->

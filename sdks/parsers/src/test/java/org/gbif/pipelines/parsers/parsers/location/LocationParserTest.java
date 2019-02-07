@@ -8,7 +8,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
+import org.gbif.pipelines.parsers.config.WsConfig;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class LocationParserTest extends BaseMockServerTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("Spain").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -45,7 +45,7 @@ public class LocationParserTest extends BaseMockServerTest {
         ExtendedRecordBuilder.create().id(TEST_ID).countryCode("ES").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -59,7 +59,7 @@ public class LocationParserTest extends BaseMockServerTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -74,7 +74,7 @@ public class LocationParserTest extends BaseMockServerTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("foo").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -90,7 +90,7 @@ public class LocationParserTest extends BaseMockServerTest {
         ExtendedRecordBuilder.create().id(TEST_ID).countryCode("foo").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -112,13 +112,13 @@ public class LocationParserTest extends BaseMockServerTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
-    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
-    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLatitude(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLongitude(), 0);
     Assert.assertTrue(
         result
             .getIssues()
@@ -144,13 +144,13 @@ public class LocationParserTest extends BaseMockServerTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
-    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
-    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLatitude(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLongitude(), 0);
     Assert.assertTrue(
         result
             .getIssues()
@@ -171,13 +171,13 @@ public class LocationParserTest extends BaseMockServerTest {
         ExtendedRecordBuilder.create().id(TEST_ID).verbatimCoords("30.2, 100.2344349").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
     Assert.assertEquals(Country.CHINA, result.getResult().getCountry());
-    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLat(), 0);
-    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLng(), 0);
+    Assert.assertEquals(30.2d, result.getResult().getLatLng().getLatitude(), 0);
+    Assert.assertEquals(100.234435d, result.getResult().getLatLng().getLongitude(), 0);
     Assert.assertTrue(
         result
             .getIssues()
@@ -205,32 +205,26 @@ public class LocationParserTest extends BaseMockServerTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getWsConfig());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
 
     // Should
     Assert.assertTrue(result.isSuccessful());
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
-    Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLat(), 0);
-    Assert.assertEquals(LONGITUDE_CANADA, result.getResult().getLatLng().getLng(), 0);
+    Assert.assertEquals(LATITUDE_CANADA, result.getResult().getLatLng().getLatitude(), 0);
+    Assert.assertEquals(LONGITUDE_CANADA, result.getResult().getLatLng().getLongitude(), 0);
     Assert.assertEquals(1, result.getIssues().size());
     Assert.assertTrue(result.getIssues().contains(GEODETIC_DATUM_ASSUMED_WGS84.name()));
   }
 
   @Test(expected = NullPointerException.class)
   public void nullArgs() {
-    // State
-    WsConfig wsConfig = null;
-
     // When
-    LocationParser.parse(null, wsConfig);
+    LocationParser.parse(null, null);
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void invalidArgs() {
-    // State
-    WsConfig wsConfig = null;
-
     // When
-    LocationParser.parse(new ExtendedRecord(), wsConfig);
+    LocationParser.parse(new ExtendedRecord(), null);
   }
 }

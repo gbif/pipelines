@@ -33,6 +33,14 @@
       <groupId>org.gbif</groupId>
       <artifactId>dwc-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.kvs</groupId>
+      <artifactId>kvs-gbif</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.kvs</groupId>
+      <artifactId>kvs-core</artifactId>
+    </dependency>
 
     <!-- Geotools -->
     <dependency>

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.ws.config;
+package org.gbif.pipelines.parsers.config;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -10,29 +10,21 @@ import java.util.function.Function;
 
 import org.gbif.pipelines.parsers.exception.IORuntimeException;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-
-/**
- * Creates the configuration to use a specific WS.
- *
- * <p>By default it reads the configurarion from the "http.properties" file.
- */
-public class WsConfigFactory {
+public class KvConfigFactory {
 
   // property suffixes
   private static final String WS_BASE_PATH_PROP = "gbif.api.url";
-  private static final String WS_TIMEOUT_PROP = ".timeout";
-  private static final String CACHE_SIZE_PROP = ".cache.size";
+  private static final String WS_TIMEOUT_PROP = "ws.timeout";
+  private static final String CACHE_SIZE_PROP = "ws.cache.sizeMb";
+  private static final String ZOOKEEPER_PROP = "zookeeper.url";
 
   // property defaults
   private static final String DEFAULT_TIMEOUT = "60";
   private static final String DEFAULT_CACHE_SIZE_MB = "64";
 
-  private WsConfigFactory() {}
+  private KvConfigFactory() {}
 
-  public static WsConfig create(String wsName, Path propertiesPath) {
-    Objects.requireNonNull(wsName);
+  public static KvConfig create(Path propertiesPath) {
     Objects.requireNonNull(propertiesPath);
     // load properties or throw exception if cannot be loaded
     Properties props = loadProperties(propertiesPath);
@@ -41,29 +33,18 @@ public class WsConfigFactory {
     String basePath =
         Optional.ofNullable(props.getProperty(WS_BASE_PATH_PROP))
             .filter(prop -> !prop.isEmpty())
+            .map(value -> value + "/v1/")
             .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
 
-    String cacheSize = props.getProperty(wsName + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB);
-    String timeout = props.getProperty(wsName + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT);
+    String zookeeperUrl =
+        Optional.ofNullable(props.getProperty(ZOOKEEPER_PROP))
+            .filter(prop -> !prop.isEmpty())
+            .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
 
-    return new WsConfig(basePath, timeout, cacheSize);
-  }
+    long cacheSize = Long.valueOf(props.getProperty(CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB));
+    long timeout = Long.valueOf(props.getProperty(WS_TIMEOUT_PROP, DEFAULT_TIMEOUT));
 
-  /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
-  public static WsConfig create(String url) {
-    return create(url, DEFAULT_TIMEOUT, DEFAULT_CACHE_SIZE_MB);
-  }
-
-  /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
-  public static WsConfig create(String url, String timeout, String cacheSize) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
-    return new WsConfig(url, timeout, cacheSize);
-  }
-
-  /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
-  public static WsConfig create(String url, long timeout, long cacheSize) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
-    return new WsConfig(url, timeout, cacheSize);
+    return new KvConfig(basePath, timeout, cacheSize, zookeeperUrl);
   }
 
   /** */
@@ -94,4 +75,5 @@ public class WsConfigFactory {
 
     return props;
   }
+
 }

@@ -4,8 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
-import org.gbif.pipelines.parsers.ws.config.WsConfigFactory;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
+import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
+import org.gbif.pipelines.parsers.config.WsConfig;
+import org.gbif.pipelines.parsers.config.WsConfigFactory;
+import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
@@ -60,6 +66,8 @@ public abstract class BaseMockServerTest {
 
   private static WsConfig wsConfig;
 
+  private static KeyValueStore<LatLng, String> kvStore;
+
   /**
    * Public field because {@link ClassRule} requires it.
    *
@@ -72,13 +80,33 @@ public abstract class BaseMockServerTest {
       new ExternalResource() {
 
         @Override
-        protected void before() {
+        protected void before() throws IOException{
           wsConfig = WsConfigFactory.create(MOCK_SERVER.url("/").toString());
+
+          kvStore =
+              GeocodeKVStoreFactory.simpleGeocodeKVStore(GeocodeKVStoreConfiguration.builder()
+                      .withJsonColumnQualifier("j") //stores JSON data
+                      .withCountryCodeColumnQualifier("c") //stores ISO country code
+                      .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
+                          .withTableName("geocode_kv") //Geocode KV HBase table
+                          .withColumnFamily("v") //Column in which qualifiers are stored
+                          .withNumOfKeyBuckets(10) //Buckets for salted key generations == to # of region servers
+                          .withHBaseZk("c5zk1.gbif.org,c5zk2.gbif.org,c5zk3.gbif.org") //HBase Zookeeper ensemble
+                          .build()).build(),
+                  ClientConfiguration.builder()
+                      .withBaseApiUrl("https://api.gbif.org/v1/") //GBIF base API url
+                      .withFileCacheMaxSizeMb(64L) //Max file cache size
+                      .withTimeOut(60L) //Geocode service connection time-out
+                      .build());
         }
       };
 
   protected WsConfig getWsConfig() {
     return wsConfig;
+  }
+
+  protected KeyValueStore<LatLng, String> getkvStore() {
+    return kvStore;
   }
 
   protected static void enqueueResponse(String fileName) throws IOException {

@@ -7,15 +7,14 @@ import java.util.Optional;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.common.parsers.geospatial.LatLng;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.Wgs84Projection;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
-import org.gbif.pipelines.parsers.ws.client.geocode.GeocodeServiceClient;
-import org.gbif.pipelines.parsers.ws.config.WsConfig;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
@@ -30,24 +29,18 @@ public class LocationParser {
 
   private LocationParser() {}
 
-  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, WsConfig wsConfig) {
-    return parse(er, GeocodeServiceClient.create(wsConfig));
-  }
-
-  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, GeocodeServiceClient client) {
+  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, KeyValueStore<LatLng, String> kvStore) {
     ModelUtils.checkNullOrEmpty(er);
-    Objects.requireNonNull(client, "WS client is required");
+    Objects.requireNonNull(kvStore, "Geolookup kvStore is required");
 
     List<String> issues = new ArrayList<>();
 
     // Parse country
-    ParsedField<Country> parsedCountry =
-        parseCountry(er, VocabularyParsers.countryParser(), COUNTRY_INVALID.name());
+    ParsedField<Country> parsedCountry = parseCountry(er, VocabularyParsers.countryParser(), COUNTRY_INVALID.name());
     Optional<Country> countryName = getResult(parsedCountry, issues);
 
     // Parse country code
-    ParsedField<Country> parsedCountryCode =
-        parseCountry(er, VocabularyParsers.countryCodeParser(), COUNTRY_INVALID.name());
+    ParsedField<Country> parsedCountryCode = parseCountry(er, VocabularyParsers.countryCodeParser(), COUNTRY_INVALID.name());
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
@@ -76,7 +69,7 @@ public class LocationParser {
 
     // If the coords parsing was successful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), client)
+        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), kvStore)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -143,8 +136,8 @@ public class LocationParser {
     // interpret geodetic datum and reproject if needed
     // the reprojection will keep the original values even if it failed with issues
     String datumVerbatim = extractValue(er, DwcTerm.geodeticDatum);
-    Double lat = parsedLatLon.getResult().getLat();
-    Double lng = parsedLatLon.getResult().getLng();
+    Double lat = parsedLatLon.getResult().getLatitude();
+    Double lng = parsedLatLon.getResult().getLongitude();
 
     ParsedField<LatLng> projectedLatLng = Wgs84Projection.reproject(lat, lng, datumVerbatim);
 

@@ -3,7 +3,7 @@ package org.gbif.pipelines.parsers.parsers.location;
 import java.io.IOException;
 
 import org.gbif.api.vocabulary.Country;
-import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
 
@@ -26,7 +26,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coordsCanada, canada, getWsConfig()).apply();
+        LocationMatcher.create(coordsCanada, canada, getkvStore()).apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -46,7 +46,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coordsCanada, canada, getWsConfig())
+        LocationMatcher.create(coordsCanada, canada, getkvStore())
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -70,7 +70,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coordsCanada, null, getWsConfig()).apply();
+        LocationMatcher.create(coordsCanada, null, getkvStore()).apply();
 
     // Should
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
@@ -85,11 +85,11 @@ public class LocationMatcherTest extends BaseMockServerTest {
     // State
     enqueueEmptyResponse();
 
-    LatLng wrongCoords = new LatLng(-50, 100);
+    LatLng wrongCoords = new LatLng(-50d, 100d);
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(wrongCoords, null, getWsConfig())
+        LocationMatcher.create(wrongCoords, null, getkvStore())
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -107,11 +107,11 @@ public class LocationMatcherTest extends BaseMockServerTest {
     // State
     enqueueEmptyResponse();
 
-    LatLng antarcticaEdgeCoords = new LatLng(-61, -130);
+    LatLng antarcticaEdgeCoords = new LatLng(-61d, -130d);
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(antarcticaEdgeCoords, null, getWsConfig()).apply();
+        LocationMatcher.create(antarcticaEdgeCoords, null, getkvStore()).apply();
 
     // Should
     Assert.assertTrue(result.isSuccessful());
@@ -129,7 +129,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedLatCoords, canada, getWsConfig()).apply();
+        LocationMatcher.create(negatedLatCoords, canada, getkvStore()).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -148,7 +148,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedLatCoords, canada, getWsConfig())
+        LocationMatcher.create(negatedLatCoords, canada, getkvStore())
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .apply();
 
@@ -175,7 +175,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedLngCoords, canada, getWsConfig())
+        LocationMatcher.create(negatedLngCoords, canada, getkvStore())
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .apply();
 
@@ -202,7 +202,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedCoords, canada, getWsConfig())
+        LocationMatcher.create(negatedCoords, canada, getkvStore())
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
             .apply();
 
@@ -228,7 +228,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(swappedCoords, canada, getWsConfig())
+        LocationMatcher.create(swappedCoords, canada, getkvStore())
             .additionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
             .apply();
 
@@ -252,7 +252,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coords, Country.WESTERN_SAHARA, getWsConfig()).apply();
+        LocationMatcher.create(coords, Country.WESTERN_SAHARA, getkvStore()).apply();
 
     // Should
     Assert.assertEquals(Country.MOROCCO, result.getResult().getCountry());
@@ -271,7 +271,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coords, Country.FRANCE, getWsConfig()).apply();
+        LocationMatcher.create(coords, Country.FRANCE, getkvStore()).apply();
 
     // Should
     Assert.assertEquals(Country.FRENCH_POLYNESIA, result.getResult().getCountry());
@@ -290,7 +290,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
 
     // When
     ParsedField<ParsedLocation> match =
-        LocationMatcher.create(coords, Country.DENMARK, getWsConfig()).apply();
+        LocationMatcher.create(coords, Country.DENMARK, getkvStore()).apply();
 
     // Should
     Assert.assertEquals(Country.GREENLAND, match.getResult().getCountry());
@@ -302,20 +302,14 @@ public class LocationMatcherTest extends BaseMockServerTest {
   @Test(expected = NullPointerException.class)
   public void nullValuesTest() {
     // When
-    LocationMatcher.create(null, null, getWsConfig()).apply();
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void emptyCoordinatesTest() {
-    // When
-    LocationMatcher.create(new LatLng(), null, getWsConfig()).apply();
+    LocationMatcher.create(null, null, getkvStore()).apply();
   }
 
   @Test
   public void outOfRangeCoordinatesTest() {
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(new LatLng(200, 200), null, getWsConfig()).apply();
+        LocationMatcher.create(new LatLng(200d, 200d), null, getkvStore()).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());

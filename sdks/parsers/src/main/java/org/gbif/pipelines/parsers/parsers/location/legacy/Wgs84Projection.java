@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.DatumParser;
-import org.gbif.common.parsers.geospatial.LatLng;
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 
 import org.geotools.factory.BasicFactories;
