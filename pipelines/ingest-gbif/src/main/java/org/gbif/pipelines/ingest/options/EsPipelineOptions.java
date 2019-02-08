@@ -8,13 +8,13 @@ import org.apache.beam.sdk.options.PipelineOptions;
 public interface EsPipelineOptions extends PipelineOptions {
 
   @Description("Target ES Max Batch Size bytes")
-  @Default.Long(10_242_880L) // 10mb
+  @Default.Long(8_388_608L) // 10mb
   Long getEsMaxBatchSizeBytes();
 
   void setEsMaxBatchSizeBytes(Long batchSize);
 
   @Description("Es max batch size")
-  @Default.Long(10_000L)
+  @Default.Long(8_000L)
   long getEsMaxBatchSize();
 
   void setEsMaxBatchSize(long esBatchSize);
@@ -40,15 +40,13 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   void setEsSchemaPath(String esSchemaPath);
 
-  @Description(
-      "How often to perform a refresh operation, which makes recent changes to the index visible to search. Defaults to 30s")
+  @Description("How often to perform a refresh operation, which makes recent changes to the index visible to search. Defaults to 30s")
   @Default.String("30s")
   String getIndexRefreshInterval();
 
   void setIndexRefreshInterval(String indexRefreshInterval);
 
-  @Description(
-      "The value of this setting determines the number of primary shards in the target index. The default value is 3.")
+  @Description("The value of this setting determines the number of primary shards in the target index. The default value is 3.")
   @Default.Integer(3)
   Integer getIndexNumberShards();
 

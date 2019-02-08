@@ -13,6 +13,8 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.config.KvConfig;
+import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
@@ -86,6 +88,7 @@ public class DwcaToInterpretedPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
+    KvConfig kvConfig = KvConfigFactory.create(options.getGbifApiUrl(), options.getZookeeperUrl());
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
@@ -132,7 +135,7 @@ public class DwcaToInterpretedPipeline {
         .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply("Interpret location", ParDo.of(new LocationFn(wsConfig)))
+        .apply("Interpret location", ParDo.of(new LocationFn(kvConfig)))
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
     LOG.info("Running the pipeline");

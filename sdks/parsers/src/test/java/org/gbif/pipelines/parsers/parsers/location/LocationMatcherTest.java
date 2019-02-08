@@ -1,7 +1,5 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import java.io.IOException;
-
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
@@ -16,11 +14,9 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 public class LocationMatcherTest extends BaseMockServerTest {
 
   @Test
-  public void countryAndCoordsMatchIdentityTest() throws IOException {
+  public void countryAndCoordsMatchIdentityTest() {
 
     // State
-    enqueueResponse(CANADA_REVERSE_RESPONSE);
-
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
 
@@ -36,11 +32,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void countryAndCoordsMatchIdentityAdditionalMatcherTest() throws IOException {
+  public void countryAndCoordsMatchIdentityAdditionalMatcherTest() {
 
     // State
-    enqueueResponse(CANADA_REVERSE_RESPONSE);
-
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
 
@@ -61,16 +55,13 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void coordsIdentityCountryFoundTest() throws IOException {
+  public void coordsIdentityCountryFoundTest() {
 
     // State
-    enqueueResponse(CANADA_REVERSE_RESPONSE);
-
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
-    ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coordsCanada, null, getkvStore()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(coordsCanada, null, getkvStore()).apply();
 
     // Should
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
@@ -83,8 +74,6 @@ public class LocationMatcherTest extends BaseMockServerTest {
   public void wrongCoordsWhenMatchWithAlternativesCountryNotFoundTest() {
 
     // State
-    enqueueEmptyResponse();
-
     LatLng wrongCoords = new LatLng(-50d, 100d);
 
     // When
@@ -105,13 +94,10 @@ public class LocationMatcherTest extends BaseMockServerTest {
   public void coordsAntarcticaFoundEmptyTest() {
 
     // State
-    enqueueEmptyResponse();
-
     LatLng antarcticaEdgeCoords = new LatLng(-61d, -130d);
 
     // When
-    ParsedField<ParsedLocation> result =
-        LocationMatcher.create(antarcticaEdgeCoords, null, getkvStore()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(antarcticaEdgeCoords, null, getkvStore()).apply();
 
     // Should
     Assert.assertTrue(result.isSuccessful());
@@ -122,25 +108,20 @@ public class LocationMatcherTest extends BaseMockServerTest {
   public void countryAndNegatedIdentityFailTest() {
 
     // State
-    enqueueEmptyResponse();
-
     Country canada = Country.CANADA;
     LatLng negatedLatCoords = new LatLng(-LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
-    ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedLatCoords, canada, getkvStore()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(negatedLatCoords, canada, getkvStore()).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());
   }
 
   @Test
-  public void countryAndNegatedLatTest() throws IOException {
+  public void countryAndNegatedLatTest() {
 
     // State
-    enqueueEmptyResponse();
-    enqueueResponse(CANADA_REVERSE_RESPONSE);
 
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
@@ -163,12 +144,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void countryAndNegatedLngTest() throws IOException {
+  public void countryAndNegatedLngTest() {
 
     // State
-    enqueueEmptyResponse();
-    enqueueResponse(CANADA_REVERSE_RESPONSE);
-
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
     LatLng negatedLngCoords = new LatLng(LATITUDE_CANADA, -LONGITUDE_CANADA);
@@ -190,12 +168,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void countryAndNegatedCoordsTest() throws IOException {
+  public void countryAndNegatedCoordsTest() {
 
     // State
-    enqueueEmptyResponse();
-    enqueueResponse(CANADA_REVERSE_RESPONSE);
-
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
     LatLng negatedCoords = new LatLng(-LATITUDE_CANADA, -LONGITUDE_CANADA);
@@ -217,11 +192,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void countryAndSwappedTest() throws IOException {
+  public void countryAndSwappedTest() {
 
     // State
-    enqueueResponse(CANADA_REVERSE_RESPONSE);
-
     Country canada = Country.CANADA;
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
     LatLng swappedCoords = new LatLng(LONGITUDE_CANADA, LATITUDE_CANADA);
@@ -243,16 +216,13 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void matchReturnEquivalentTest() throws IOException {
+  public void matchReturnEquivalentTest() {
 
     // State
-    enqueueResponse(MOROCCO_WESTERN_SAHARA_REVERSE_RESPONSE);
-
     LatLng coords = new LatLng(27.15, -13.20);
 
     // When
-    ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coords, Country.WESTERN_SAHARA, getkvStore()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(coords, Country.WESTERN_SAHARA, getkvStore()).apply();
 
     // Should
     Assert.assertEquals(Country.MOROCCO, result.getResult().getCountry());
@@ -262,11 +232,9 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void matchConfusedEquivalentTest() throws IOException {
+  public void matchConfusedEquivalentTest() {
 
     // State
-    enqueueResponse(FRENCH_POLYNESIA_REVERSE_RESPONSE);
-
     LatLng coords = new LatLng(-17.65, -149.46);
 
     // When
@@ -281,16 +249,13 @@ public class LocationMatcherTest extends BaseMockServerTest {
   }
 
   @Test
-  public void matchConfusedReturnConfusedTest() throws IOException {
+  public void matchConfusedReturnConfusedTest() {
 
     // State
-    enqueueResponse(GREENLAND_REVERSE_RESPONSE);
-
-    LatLng coords = new LatLng(71.7, -42.6);
+    LatLng coords = new LatLng(71.7d, -42.6d);
 
     // When
-    ParsedField<ParsedLocation> match =
-        LocationMatcher.create(coords, Country.DENMARK, getkvStore()).apply();
+    ParsedField<ParsedLocation> match = LocationMatcher.create(coords, Country.DENMARK, getkvStore()).apply();
 
     // Should
     Assert.assertEquals(Country.GREENLAND, match.getResult().getCountry());
@@ -308,8 +273,7 @@ public class LocationMatcherTest extends BaseMockServerTest {
   @Test
   public void outOfRangeCoordinatesTest() {
     // When
-    ParsedField<ParsedLocation> result =
-        LocationMatcher.create(new LatLng(200d, 200d), null, getkvStore()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(new LatLng(200d, 200d), null, getkvStore()).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());

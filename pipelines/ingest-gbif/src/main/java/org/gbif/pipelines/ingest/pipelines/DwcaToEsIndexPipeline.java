@@ -18,6 +18,8 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.config.KvConfig;
+import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.MapTransforms;
@@ -102,6 +104,7 @@ public class DwcaToEsIndexPipeline {
 
     LOG.info("Adding step 1: Options");
     WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
+    KvConfig kvConfig = KvConfigFactory.create(options.getGbifApiUrl(), options.getZookeeperUrl());
 
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
     final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
@@ -148,7 +151,7 @@ public class DwcaToEsIndexPipeline {
 
     PCollection<KV<String, LocationRecord>> locationCollection =
         uniqueRecords
-            .apply("Interpret location", ParDo.of(new LocationFn(wsConfig)))
+            .apply("Interpret location", ParDo.of(new LocationFn(kvConfig)))
             .apply("Map Location to KV", MapTransforms.locationToKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =

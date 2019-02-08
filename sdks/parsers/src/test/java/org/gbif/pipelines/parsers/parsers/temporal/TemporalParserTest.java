@@ -6,9 +6,6 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
-import org.gbif.pipelines.parsers.config.WsConfig;
-import org.gbif.pipelines.parsers.config.WsConfigFactory;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;

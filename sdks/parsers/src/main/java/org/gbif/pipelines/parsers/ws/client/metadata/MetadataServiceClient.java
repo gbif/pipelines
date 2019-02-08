@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
+import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
-import org.gbif.pipelines.parsers.config.WsConfig;
 
 import javax.xml.ws.WebServiceException;
 import retrofit2.Call;

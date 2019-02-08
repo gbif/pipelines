@@ -19,7 +19,7 @@ public class KvConfigFactory {
   private static final String ZOOKEEPER_PROP = "zookeeper.url";
 
   // property defaults
-  private static final String DEFAULT_TIMEOUT = "60";
+  private static final String DEFAULT_TIMEOUT_SEC = "60";
   private static final String DEFAULT_CACHE_SIZE_MB = "64";
 
   private KvConfigFactory() {}
@@ -39,25 +39,34 @@ public class KvConfigFactory {
     String zookeeperUrl =
         Optional.ofNullable(props.getProperty(ZOOKEEPER_PROP))
             .filter(prop -> !prop.isEmpty())
-            .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
+            .orElseThrow(() -> new IllegalArgumentException("ws base path is required"));
 
     long cacheSize = Long.valueOf(props.getProperty(CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB));
-    long timeout = Long.valueOf(props.getProperty(WS_TIMEOUT_PROP, DEFAULT_TIMEOUT));
+    long timeout = Long.valueOf(props.getProperty(WS_TIMEOUT_PROP, DEFAULT_TIMEOUT_SEC));
 
     return new KvConfig(basePath, timeout, cacheSize, zookeeperUrl);
   }
 
-  /** */
+  public static KvConfig create(String basePath, String zookeeperUrl) {
+    return new KvConfig(basePath, Long.valueOf(DEFAULT_TIMEOUT_SEC), Long.valueOf(DEFAULT_CACHE_SIZE_MB), zookeeperUrl);
+  }
+
+  public static KvConfig create(String basePath, long timeoutInSec, long cacheInMb, String zookeeperUrl) {
+    return new KvConfig(basePath, timeoutInSec, cacheInMb, zookeeperUrl);
+  }
+
+  /**
+   *
+   */
   private static Properties loadProperties(Path propertiesPath) {
-    Function<Path, InputStream> absolute =
-        path -> {
-          try {
-            return new FileInputStream(path.toFile());
-          } catch (Exception ex) {
-            String msg = "Properties with absolute path could not be read from " + propertiesPath;
-            throw new IORuntimeException(msg, ex);
-          }
-        };
+    Function<Path, InputStream> absolute = path -> {
+      try {
+        return new FileInputStream(path.toFile());
+      } catch (Exception ex) {
+        String msg = "Properties with absolute path could not be read from " + propertiesPath;
+        throw new IORuntimeException(msg, ex);
+      }
+    };
 
     Function<Path, InputStream> resource =
         path -> Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());

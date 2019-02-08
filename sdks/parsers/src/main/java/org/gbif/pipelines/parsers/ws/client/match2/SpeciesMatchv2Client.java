@@ -12,12 +12,12 @@ import org.gbif.api.v2.NameUsageMatch2;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.parsers.utils.Memoizer;
 import org.gbif.pipelines.parsers.ws.HttpResponse;
 import org.gbif.pipelines.parsers.ws.client.BaseServiceClient;
-import org.gbif.pipelines.parsers.config.WsConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

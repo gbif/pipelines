@@ -11,9 +11,9 @@ import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
+import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
 
 import org.apache.beam.sdk.testing.NeedsRunner;

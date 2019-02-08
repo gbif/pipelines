@@ -1,6 +1,5 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import org.gbif.api.vocabulary.Country;
@@ -8,7 +7,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.utils.ExtendedRecordBuilder;
 import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
-import org.gbif.pipelines.parsers.config.WsConfig;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -99,11 +97,9 @@ public class LocationParserTest extends BaseMockServerTest {
   }
 
   @Test
-  public void coordsWithDerivedCountryTest() throws IOException {
+  public void coordsWithDerivedCountryTest() {
 
     // State
-    enqueueResponse(CHINA_REVERSE_RESPONSE);
-
     ExtendedRecord extendedRecord =
         ExtendedRecordBuilder.create()
             .id(TEST_ID)
@@ -131,11 +127,9 @@ public class LocationParserTest extends BaseMockServerTest {
   }
 
   @Test
-  public void verbatimLtnLngWithDerivedCountryTest() throws IOException {
+  public void verbatimLtnLngWithDerivedCountryTest() {
 
     // State
-    enqueueResponse(CHINA_REVERSE_RESPONSE);
-
     ExtendedRecord extendedRecord =
         ExtendedRecordBuilder.create()
             .id(TEST_ID)
@@ -163,10 +157,9 @@ public class LocationParserTest extends BaseMockServerTest {
   }
 
   @Test
-  public void verbatimCoordsWithDerivedCountryTest() throws IOException {
+  public void verbatimCoordsWithDerivedCountryTest() {
 
     // State
-    enqueueResponse(CHINA_REVERSE_RESPONSE);
     ExtendedRecord extendedRecord =
         ExtendedRecordBuilder.create().id(TEST_ID).verbatimCoords("30.2, 100.2344349").build();
 
@@ -190,11 +183,9 @@ public class LocationParserTest extends BaseMockServerTest {
   }
 
   @Test
-  public void coordsAndCountryWhenParsedThenReturnCoordsAndCountry() throws IOException {
+  public void coordsAndCountryWhenParsedThenReturnCoordsAndCountry() {
 
     // State
-    enqueueResponse(CANADA_REVERSE_RESPONSE);
-
     ExtendedRecord extendedRecord =
         ExtendedRecordBuilder.create()
             .id(TEST_ID)

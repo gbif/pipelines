@@ -25,10 +25,10 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
-import org.gbif.pipelines.parsers.ws.client.match2.SpeciesMatchv2Client;
-import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
+import org.gbif.pipelines.parsers.ws.client.match2.SpeciesMatchv2Client;
+import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import org.apache.beam.sdk.metrics.Counter;
@@ -142,31 +142,38 @@ public class RecordTransforms {
       this.kvConfig = kvConfig;
     }
 
+    public LocationFn(KeyValueStore<LatLng, String> kvStore) {
+      this.kvStore = kvStore;
+      this.kvConfig = null;
+    }
+
     public LocationFn(String properties) {
       this.kvConfig = KvConfigFactory.create(Paths.get(properties));
     }
 
     @Setup
     public void setup() throws IOException {
-      HBaseKVStoreConfiguration hBaseKvStoreConfig = HBaseKVStoreConfiguration.builder()
-          .withTableName("geocode_kv") //Geocode KV HBase table
-          .withColumnFamily("v") //Column in which qualifiers are stored
-          .withNumOfKeyBuckets(10) //Buckets for salted key generations == to # of region servers
-          .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-          .build();
+      if (kvConfig != null) {
+        HBaseKVStoreConfiguration hBaseKvStoreConfig = HBaseKVStoreConfiguration.builder()
+            .withTableName("geocode_kv") //Geocode KV HBase table
+            .withColumnFamily("v") //Column in which qualifiers are stored
+            .withNumOfKeyBuckets(10) //Buckets for salted key generations == to # of region servers
+            .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
+            .build();
 
-      GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
-          .withJsonColumnQualifier("j") //stores JSON data
-          .withCountryCodeColumnQualifier("c") //stores ISO country code
-          .withHBaseKVStoreConfiguration(hBaseKvStoreConfig).build();
+        GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
+            .withJsonColumnQualifier("j") //stores JSON data
+            .withCountryCodeColumnQualifier("c") //stores ISO country code
+            .withHBaseKVStoreConfiguration(hBaseKvStoreConfig).build();
 
-      ClientConfiguration clientConfig = ClientConfiguration.builder()
-          .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
-          .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
-          .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-          .build();
+        ClientConfiguration clientConfig = ClientConfiguration.builder()
+            .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
+            .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
+            .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+            .build();
 
-      kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
+        kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
+      }
     }
 
     @ProcessElement

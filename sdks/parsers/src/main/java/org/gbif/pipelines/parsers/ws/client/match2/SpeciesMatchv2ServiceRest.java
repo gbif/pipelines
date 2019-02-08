@@ -2,8 +2,8 @@ package org.gbif.pipelines.parsers.ws.client.match2;
 
 import java.io.IOException;
 
-import org.gbif.pipelines.parsers.ws.HttpClientFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.HttpClientFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
