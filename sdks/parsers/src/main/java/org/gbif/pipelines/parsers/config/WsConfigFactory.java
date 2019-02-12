@@ -24,8 +24,8 @@ public class WsConfigFactory {
 
   // property suffixes
   private static final String WS_BASE_PATH_PROP = "gbif.api.url";
-  private static final String WS_TIMEOUT_PROP = ".timeout";
-  private static final String CACHE_SIZE_PROP = ".cache.size";
+  private static final String WS_TIMEOUT_PROP = ".ws.timeout";
+  private static final String CACHE_SIZE_PROP = ".ws.cache.sizeMb";
 
   // property defaults
   private static final String DEFAULT_TIMEOUT = "60";
