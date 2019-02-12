@@ -5,9 +5,11 @@ import java.util.Collections;
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
+import org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -25,7 +27,7 @@ import org.junit.runners.JUnit4;
 
 import static org.gbif.api.vocabulary.TaxonomicStatus.ACCEPTED;
 
-@Ignore
+@Ignore("java.io.NotSerializableException: org.gbif.rest.client.species.NameUsageMatch")
 @RunWith(JUnit4.class)
 public class TaxonRecordTransformTest {
 
@@ -36,13 +38,16 @@ public class TaxonRecordTransformTest {
   @Category(NeedsRunner.class)
   public void transformationTest() {
 
+    KeyValueTestStore<SpeciesMatchRequest, NameUsageMatch> kvStore = new KeyValueTestStore<>();
+    kvStore.put(SpeciesMatchRequest.builder().withScientificName("foo").build(), createDummyNameUsageMatch());
+
     // State
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create().id("1").name("foo").build();
 
     // When
     PCollection<TaxonRecord> recordCollection =
-        p.apply(Create.of(extendedRecord)).apply(ParDo.of(null));
+        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new TaxonomyFn(kvStore)));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());
@@ -57,7 +62,6 @@ public class TaxonRecordTransformTest {
     return taxonRecord;
   }
 
-  /** Sets the same values as in DUMMY_RESPONSE (dummy-response.json) */
   private NameUsageMatch createDummyNameUsageMatch() {
     NameUsageMatch nameUsageMatch = new NameUsageMatch();
 

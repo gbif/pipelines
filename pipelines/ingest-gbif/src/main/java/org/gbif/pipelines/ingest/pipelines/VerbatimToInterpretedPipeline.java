@@ -93,7 +93,7 @@ public class VerbatimToInterpretedPipeline {
     MDC.put("attempt", attempt);
 
     List<String> types = options.getInterpretationTypes();
-    String wsProperties = options.getWsProperties();
+    String wsPropertiesPath = options.getWsProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
@@ -110,7 +110,7 @@ public class VerbatimToInterpretedPipeline {
 
     p.apply("Create metadata collection", Create.of(datasetId))
         .apply("Check metadata transform condition", CheckTransforms.metadata(types))
-        .apply("Interpret metadata", ParDo.of(new MetadataFn(wsProperties)))
+        .apply("Interpret metadata", ParDo.of(new MetadataFn(wsPropertiesPath)))
         .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
 
     uniqueRecords
@@ -134,12 +134,12 @@ public class VerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check taxonomy transform condition", CheckTransforms.taxon(types))
-        .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(wsProperties)))
+        .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(wsPropertiesPath)))
         .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
         .apply("Check location transform condition", CheckTransforms.location(types))
-        .apply("Interpret location", ParDo.of(new LocationFn(wsProperties)))
+        .apply("Interpret location", ParDo.of(new LocationFn(wsPropertiesPath)))
         .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
 
     LOG.info("Running the pipeline");

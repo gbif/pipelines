@@ -20,6 +20,8 @@ import com.google.common.base.Strings;
  */
 public class WsConfigFactory {
 
+  public static final String METADATA_PREFIX = "metadata";
+
   // property suffixes
   private static final String WS_BASE_PATH_PROP = "gbif.api.url";
   private static final String WS_TIMEOUT_PROP = ".timeout";

@@ -132,8 +132,6 @@ public class RecordTransforms {
   /**
    * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
    * as a source and {@link LocationInterpreter} as interpretation steps
-   *
-   * <p>wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
   public static class LocationFn extends DoFn<ExtendedRecord, LocationRecord> {
 
@@ -152,7 +150,7 @@ public class RecordTransforms {
     }
 
     public LocationFn(String properties) {
-      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(KvConfigFactory.GEOCODE_PREFIX, Paths.get(properties));
     }
 
     @Setup
@@ -161,14 +159,16 @@ public class RecordTransforms {
         HBaseKVStoreConfiguration hBaseKvStoreConfig = HBaseKVStoreConfiguration.builder()
             .withTableName("geocode_kv") //Geocode KV HBase table
             .withColumnFamily("v") //Column in which qualifiers are stored
-            .withNumOfKeyBuckets(10) //Buckets for salted key generations == to # of region servers
+            .withNumOfKeyBuckets(
+                kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
             .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
             .build();
 
         GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
             .withJsonColumnQualifier("j") //stores JSON data
             .withCountryCodeColumnQualifier("c") //stores ISO country code
-            .withHBaseKVStoreConfiguration(hBaseKvStoreConfig).build();
+            .withHBaseKVStoreConfiguration(hBaseKvStoreConfig)
+            .build();
 
         ClientConfiguration clientConfig = ClientConfiguration.builder()
             .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
@@ -220,7 +220,7 @@ public class RecordTransforms {
     }
 
     public MetadataFn(String properties) {
-      this.wsConfig = WsConfigFactory.create("metadata", Paths.get(properties));
+      this.wsConfig = WsConfigFactory.create(WsConfigFactory.METADATA_PREFIX, Paths.get(properties));
     }
 
     @Setup
@@ -242,8 +242,6 @@ public class RecordTransforms {
   /**
    * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
    * a source and {@link TaxonomyInterpreter} as interpretation steps
-   *
-   * <p>wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
    */
   public static class TaxonomyFn extends DoFn<ExtendedRecord, TaxonRecord> {
 
@@ -262,7 +260,7 @@ public class RecordTransforms {
     }
 
     public TaxonomyFn(String properties) {
-      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(KvConfigFactory.TAXONOMY_PREFIX, Paths.get(properties));
     }
 
     @Setup
@@ -271,14 +269,14 @@ public class RecordTransforms {
         HBaseKVStoreConfiguration storeConfig = HBaseKVStoreConfiguration.builder()
             .withTableName("name_usage_kv") //Geocode KV HBase table
             .withColumnFamily("v") //Column in which qualifiers are stored
-            .withNumOfKeyBuckets(5) //Buckets for salted key generations
-            .withHBaseZk("c3zk1.gbif-dev.org,c3zk2.gbif-dev.org,c3zk3.gbif-dev.org") //HBase Zookeeper ensemble
+            .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
+            .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
             .build();
 
         NameMatchServiceSyncClient nameMatchClient = new NameMatchServiceSyncClient(ClientConfiguration.builder()
-            .withBaseApiUrl("https://api.gbif.org/v1/") //GBIF base API url
-            .withFileCacheMaxSizeMb(64L) //Max file cache size
-            .withTimeOut(60L) //Geocode service connection time-out
+            .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
+            .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
+            .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
             .build());
 
         NameUsageMatchKVConfiguration matchConfig = NameUsageMatchKVConfiguration.builder()

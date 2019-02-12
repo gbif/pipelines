@@ -212,6 +212,7 @@ public final class FsUtils {
     try {
       return fs.exists(path) && fs.delete(path, true);
     } catch (IOException e) {
+      LOG.error("Can't delete {} directory, cause - {}", directoryPath, e.getCause());
       return false;
     }
   }
@@ -219,16 +220,21 @@ public final class FsUtils {
   /**
    * Deletes directories if a dataset with the same attempt was interpreted before
    */
-  public static void deleteInterpretIfExist(String hdfsSiteConfig, String datasetId, String attempt, List<String> steps) {
+  public static void deleteInterpretIfExist(String hdfsSiteConfig, String datasetId, String attempt,
+      List<String> steps) {
     if (steps != null && !steps.isEmpty()) {
 
       String path = String.join("/", hdfsSiteConfig, datasetId, attempt, Interpretation.DIRECTORY_NAME);
 
       if (steps.contains(ALL.name())) {
-        deleteIfExist(hdfsSiteConfig, path);
+        LOG.info("Delete interpretation directory - {}", path);
+        boolean isDeleted = deleteIfExist(hdfsSiteConfig, path);
+        LOG.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
       } else {
         for (String step : steps) {
-          deleteIfExist(hdfsSiteConfig, String.join("/", path, step.toLowerCase()));
+          LOG.info("Delete interpretation/{} directory", step);
+          boolean isDeleted = deleteIfExist(hdfsSiteConfig, String.join("/", path, step.toLowerCase()));
+          LOG.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
         }
       }
     }

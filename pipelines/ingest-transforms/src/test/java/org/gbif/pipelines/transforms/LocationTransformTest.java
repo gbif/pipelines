@@ -1,16 +1,12 @@
 package org.gbif.pipelines.transforms;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -39,7 +35,7 @@ public class LocationTransformTest {
   public void transformationTest() {
 
     // State
-    KeyValueTestStore kvStore = new KeyValueTestStore();
+    KeyValueTestStore<LatLng, String> kvStore = new KeyValueTestStore<>();
     kvStore.put(new LatLng(56.26d, 9.51d), Country.DENMARK.getIso2LetterCode());
     kvStore.put(new LatLng(36.21d, 138.25d), Country.JAPAN.getIso2LetterCode());
 
@@ -149,23 +145,5 @@ public class LocationTransformTest {
               return record;
             })
         .collect(Collectors.toList());
-  }
-
-  public static class KeyValueTestStore implements KeyValueStore<LatLng, String>, Serializable {
-
-    private final Map<LatLng, String> map = new HashMap<>();
-
-    @Override
-    public String get(LatLng latLng) {
-      return map.get(latLng);
-    }
-
-    @Override
-    public void close() throws IOException {
-    }
-
-    public void put(LatLng latLng, String value) {
-      map.put(latLng, value);
-    }
   }
 }
