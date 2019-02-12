@@ -15,9 +15,9 @@ public class KvConfigFactory {
 
   // property suffixes
   private static final String WS_BASE_PATH_PROP = "gbif.api.url";
+  private static final String ZOOKEEPER_PROP = "zookeeper.url";
   private static final String WS_TIMEOUT_PROP = "geocode.ws.timeout";
   private static final String CACHE_SIZE_PROP = "geocode.ws.cache.sizeMb";
-  private static final String ZOOKEEPER_PROP = "geocode.zookeeper.url";
 
   // property defaults
   private static final String DEFAULT_TIMEOUT_SEC = "60";
