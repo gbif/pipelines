@@ -9,6 +9,9 @@ import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
+import org.gbif.kvs.species.NameUsageMatchKVConfiguration;
+import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
+import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.LocationInterpreter;
@@ -27,9 +30,10 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
-import org.gbif.pipelines.parsers.ws.client.match2.SpeciesMatchv2Client;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.species.NameUsageMatch;
+import org.gbif.rest.client.species.retrofit.NameMatchServiceSyncClient;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -245,27 +249,51 @@ public class RecordTransforms {
 
     private final Counter counter = Metrics.counter(RecordTransforms.class, TAXON_RECORDS_COUNT);
 
-    private final WsConfig wsConfig;
-    private SpeciesMatchv2Client client;
+    private final KvConfig kvConfig;
+    private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
 
-    public TaxonomyFn(WsConfig wsConfig) {
-      this.wsConfig = wsConfig;
+    public TaxonomyFn(KvConfig kvConfig) {
+      this.kvConfig = kvConfig;
+    }
+
+    public TaxonomyFn(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
+      this.kvStore = kvStore;
+      this.kvConfig = null;
     }
 
     public TaxonomyFn(String properties) {
-      this.wsConfig = WsConfigFactory.create("match", Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
     }
 
     @Setup
-    public void setup() {
-      client = SpeciesMatchv2Client.create(wsConfig);
+    public void setup() throws IOException {
+      if (kvConfig != null) {
+        HBaseKVStoreConfiguration storeConfig = HBaseKVStoreConfiguration.builder()
+            .withTableName("name_usage_kv") //Geocode KV HBase table
+            .withColumnFamily("v") //Column in which qualifiers are stored
+            .withNumOfKeyBuckets(5) //Buckets for salted key generations
+            .withHBaseZk("c3zk1.gbif-dev.org,c3zk2.gbif-dev.org,c3zk3.gbif-dev.org") //HBase Zookeeper ensemble
+            .build();
+
+        NameMatchServiceSyncClient nameMatchClient = new NameMatchServiceSyncClient(ClientConfiguration.builder()
+            .withBaseApiUrl("https://api.gbif.org/v1/") //GBIF base API url
+            .withFileCacheMaxSizeMb(64L) //Max file cache size
+            .withTimeOut(60L) //Geocode service connection time-out
+            .build());
+
+        NameUsageMatchKVConfiguration matchConfig = NameUsageMatchKVConfiguration.builder()
+            .withJsonColumnQualifier("j") //stores JSON data
+            .withHBaseKVStoreConfiguration(storeConfig).build();
+
+        kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, nameMatchClient);
+      }
     }
 
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(TaxonRecord.newBuilder()::build)
-          .via(TaxonomyInterpreter.taxonomyInterpreter(client))
+          .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore))
           // the id is null when there is an error in the interpretation. In these
           // cases we do not write the taxonRecord because it is totally empty.
           .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));
