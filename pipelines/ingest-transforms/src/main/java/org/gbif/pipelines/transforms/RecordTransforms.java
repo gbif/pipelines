@@ -41,6 +41,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
+import static org.gbif.pipelines.parsers.config.WsConfigFactory.METADATA_PREFIX;
+import static org.gbif.pipelines.parsers.config.WsConfigFactory.TAXONOMY_PREFIX;
 
 /**
  * Contains ParDo functions for Beam, each method returns GBIF transformation (basic, temporal,
@@ -216,7 +218,7 @@ public class RecordTransforms {
     }
 
     public MetadataFn(String properties) {
-      this.wsConfig = WsConfigFactory.create("metadata", Paths.get(properties));
+      this.wsConfig = WsConfigFactory.create(METADATA_PREFIX, Paths.get(properties));
     }
 
     @Setup
@@ -253,7 +255,7 @@ public class RecordTransforms {
     }
 
     public TaxonomyFn(String properties) {
-      this.wsConfig = WsConfigFactory.create("taxonomy", Paths.get(properties));
+      this.wsConfig = WsConfigFactory.create(TAXONOMY_PREFIX, Paths.get(properties));
     }
 
     @Setup
