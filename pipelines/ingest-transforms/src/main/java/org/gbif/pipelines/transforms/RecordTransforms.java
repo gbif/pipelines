@@ -253,7 +253,7 @@ public class RecordTransforms {
     }
 
     public TaxonomyFn(String properties) {
-      this.wsConfig = WsConfigFactory.create("match", Paths.get(properties));
+      this.wsConfig = WsConfigFactory.create("taxonomy", Paths.get(properties));
     }
 
     @Setup
