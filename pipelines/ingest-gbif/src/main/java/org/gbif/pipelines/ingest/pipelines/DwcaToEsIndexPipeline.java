@@ -156,7 +156,7 @@ public class DwcaToEsIndexPipeline {
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         uniqueRecords
-            .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(wsConfig)))
+            .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(kvConfig)))
             .apply("Map Taxon to KV", MapTransforms.taxonToKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =

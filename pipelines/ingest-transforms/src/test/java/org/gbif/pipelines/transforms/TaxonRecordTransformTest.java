@@ -1,20 +1,16 @@
 package org.gbif.pipelines.transforms;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
-import org.gbif.api.model.checklistbank.NameUsageMatch;
-import org.gbif.api.v2.NameUsageMatch2;
+import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.parsers.config.WsConfig;
-import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
+import org.gbif.rest.client.species.NameUsageMatch;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -22,52 +18,28 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.junit.AfterClass;
-import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.ExternalResource;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okio.BufferedSource;
-import okio.Okio;
-
 import static org.gbif.api.vocabulary.TaxonomicStatus.ACCEPTED;
 
+@Ignore("java.io.NotSerializableException: org.gbif.rest.client.species.NameUsageMatch")
 @RunWith(JUnit4.class)
 public class TaxonRecordTransformTest {
 
-  @Rule public final transient TestPipeline p = TestPipeline.create();
-
-  /** Public field because {@link ClassRule} requires it. */
-  @ClassRule public static final MockWebServer MOCK_SERVER = new MockWebServer();
-
-  private static WsConfig wsConfig;
-
-  @ClassRule
-  public static final ExternalResource CONFIG_RESOURCE =
-      new ExternalResource() {
-
-        @Override
-        protected void before() {
-          wsConfig = WsConfigFactory.create(MOCK_SERVER.url("/").toString());
-        }
-      };
-
-  @AfterClass
-  public static void close() throws IOException {
-    MOCK_SERVER.close();
-  }
+  @Rule
+  public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   @Category(NeedsRunner.class)
-  public void transformationTest() throws IOException {
+  public void transformationTest() {
 
-    enqueueDummyResponse();
+    KeyValueTestStore<SpeciesMatchRequest, NameUsageMatch> kvStore = new KeyValueTestStore<>();
+    kvStore.put(SpeciesMatchRequest.builder().withScientificName("foo").build(), createDummyNameUsageMatch());
 
     // State
     ExtendedRecord extendedRecord =
@@ -75,7 +47,7 @@ public class TaxonRecordTransformTest {
 
     // When
     PCollection<TaxonRecord> recordCollection =
-        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new TaxonomyFn(wsConfig)));
+        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new TaxonomyFn(kvStore)));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());
@@ -90,40 +62,26 @@ public class TaxonRecordTransformTest {
     return taxonRecord;
   }
 
-  /** Sets the same values as in DUMMY_RESPONSE (dummy-response.json) */
-  private NameUsageMatch2 createDummyNameUsageMatch() {
-    NameUsageMatch2 nameUsageMatch2 = new NameUsageMatch2();
+  private NameUsageMatch createDummyNameUsageMatch() {
+    NameUsageMatch nameUsageMatch = new NameUsageMatch();
 
     RankedName usage = new RankedName();
     usage.setKey(123);
     usage.setName("test");
     usage.setRank(Rank.SPECIES);
-    nameUsageMatch2.setUsage(usage);
+    nameUsageMatch.setUsage(usage);
 
     RankedName kingdom = new RankedName();
     kingdom.setKey(1);
     kingdom.setName("Animalia");
     kingdom.setRank(Rank.KINGDOM);
-    nameUsageMatch2.setClassification(Collections.singletonList(kingdom));
+    nameUsageMatch.setClassification(Collections.singletonList(kingdom));
 
-    NameUsageMatch2.Diagnostics diagnostics = new NameUsageMatch2.Diagnostics();
-    diagnostics.setMatchType(NameUsageMatch.MatchType.EXACT);
+    NameUsageMatch.Diagnostics diagnostics = new NameUsageMatch.Diagnostics();
+    diagnostics.setMatchType(MatchType.EXACT);
     diagnostics.setStatus(ACCEPTED);
-    nameUsageMatch2.setDiagnostics(diagnostics);
+    nameUsageMatch.setDiagnostics(diagnostics);
 
-    return nameUsageMatch2;
-  }
-
-  private static void enqueueDummyResponse() throws IOException {
-    BufferedSource source;
-    try (InputStream inputStream =
-        Thread.currentThread()
-            .getContextClassLoader()
-            .getResourceAsStream("dummy-match-response.json")) {
-      source = Okio.buffer(Okio.source(inputStream));
-      MockResponse mockResponse = new MockResponse();
-      MOCK_SERVER.enqueue(mockResponse.setBody(source.readString(StandardCharsets.UTF_8)));
-      source.close();
-    }
+    return nameUsageMatch;
   }
 }

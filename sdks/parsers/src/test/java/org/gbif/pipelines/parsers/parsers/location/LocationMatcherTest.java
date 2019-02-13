@@ -3,7 +3,6 @@ package org.gbif.pipelines.parsers.parsers.location;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.ws.BaseMockServerTest;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,7 +10,25 @@ import org.junit.Test;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
-public class LocationMatcherTest extends BaseMockServerTest {
+public class LocationMatcherTest {
+
+  private static final Double LATITUDE_CANADA = 60.4;
+  private static final Double LONGITUDE_CANADA = -131.3;
+
+  private static final KeyValueTestStore TEST_STORE = new KeyValueTestStore();
+
+  static {
+    TEST_STORE.put(new LatLng(60.4d, -131.3d), Country.CANADA.getIso2LetterCode());
+    TEST_STORE.put(new LatLng(30.2d, 100.2344349d), Country.CHINA.getIso2LetterCode());
+    TEST_STORE.put(new LatLng(30.2d, 100.234435d), Country.CHINA.getIso2LetterCode());
+    TEST_STORE.put(new LatLng(71.7d, -42.6d), Country.GREENLAND.getIso2LetterCode());
+    TEST_STORE.put(new LatLng(-17.65, -149.46), Country.FRENCH_POLYNESIA.getIso2LetterCode());
+    TEST_STORE.put(new LatLng(27.15, -13.20), Country.MOROCCO.getIso2LetterCode());
+  }
+
+  private KeyValueTestStore getkvStore() {
+    return TEST_STORE;
+  }
 
   @Test
   public void countryAndCoordsMatchIdentityTest() {

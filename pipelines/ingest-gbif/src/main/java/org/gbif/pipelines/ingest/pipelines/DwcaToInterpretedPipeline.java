@@ -131,7 +131,7 @@ public class DwcaToInterpretedPipeline {
         .apply("Write multimedia to avro", WriteTransforms.multimedia(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(wsConfig)))
+        .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(kvConfig)))
         .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
 
     uniqueRecords

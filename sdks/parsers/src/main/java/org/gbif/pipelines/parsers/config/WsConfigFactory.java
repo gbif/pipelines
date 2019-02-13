@@ -21,7 +21,6 @@ import com.google.common.base.Strings;
 public class WsConfigFactory {
 
   public static final String METADATA_PREFIX = "metadata";
-  public static final String TAXONOMY_PREFIX = "taxonomy";
 
   // property suffixes
   private static final String WS_BASE_PATH_PROP = "gbif.api.url";

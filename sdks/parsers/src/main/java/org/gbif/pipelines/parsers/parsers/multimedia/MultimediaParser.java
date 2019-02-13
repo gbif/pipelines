@@ -5,7 +5,6 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,7 +45,7 @@ public class MultimediaParser {
   // Order is important in case more than one extension is provided. The order will define the
   // precedence.
   private static final List<Extension> SUPPORTED_MEDIA_EXTENSIONS =
-          new LinkedList<>(Arrays.asList(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE));
+          new ArrayList<>(Arrays.asList(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE));
 
   private MultimediaParser() {}
 
@@ -120,6 +119,7 @@ public class MultimediaParser {
       // find the first multimedia extension supported and parse the records
       SUPPORTED_MEDIA_EXTENSIONS
           .stream()
+          .sequential()
           .filter(ext -> er.getExtensions().containsKey(ext.getRowType()))
           .findFirst()
           .ifPresent(consumer);

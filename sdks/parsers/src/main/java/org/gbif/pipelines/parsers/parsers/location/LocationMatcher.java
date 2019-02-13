@@ -119,11 +119,11 @@ class LocationMatcher {
 
   private Optional<Country> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
-      String countryKv;
+      String countryKv = "";
       try {
         countryKv = kvStore.get(latLng);
-      } catch (NoSuchElementException | NullPointerException e) {
-        countryKv = "";
+      } catch (NoSuchElementException | NullPointerException ex) {
+        LOG.error(ex.getMessage(), ex);
       }
       if (!Strings.isNullOrEmpty(countryKv)) {
         return Optional.of(Country.fromIsoCode(countryKv));

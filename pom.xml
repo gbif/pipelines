@@ -68,7 +68,7 @@
     <gbif-api.version>0.70</gbif-api.version>
     <gbif-common.version>0.44</gbif-common.version>
     <dwc-api.version>1.19</dwc-api.version>
-    <kvs.version>1.0-SNAPSHOT</kvs.version>
+    <kvs.version>1.0</kvs.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
@@ -293,6 +293,12 @@
         <groupId>org.gbif.kvs</groupId>
         <artifactId>kvs-gbif</artifactId>
         <version>${kvs.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.gbif.kvs</groupId>

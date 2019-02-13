@@ -14,11 +14,14 @@ public final class KvConfig implements Serializable {
 
   private final String zookeeperUrl;
 
-  public KvConfig(String basePath, long timeout, long cacheSizeMb, String zookeeperUrl) {
+  private final int numOfKeyBuckets;
+
+  public KvConfig(String basePath, long timeout, long cacheSizeMb, String zookeeperUrl, int numOfKeyBuckets) {
     this.basePath = basePath;
     this.timeout = timeout;
     this.cacheSizeMb = cacheSizeMb;
     this.zookeeperUrl = zookeeperUrl;
+    this.numOfKeyBuckets = numOfKeyBuckets;
   }
 
   public String getBasePath() {
@@ -35,5 +38,9 @@ public final class KvConfig implements Serializable {
 
   public String getZookeeperUrl() {
     return zookeeperUrl;
+  }
+
+  public int getNumOfKeyBuckets() {
+    return numOfKeyBuckets;
   }
 }
