@@ -14,7 +14,7 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
-import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
+import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
@@ -83,7 +83,7 @@ public class LocationInterpreter {
           }
           return lr;
         };
-    VocabularyParsers.continentParser().map(er, fn);
+    VocabularyParser.continentParser().map(er, fn);
   }
 
   /** {@link DwcTerm#waterBody} interpretation. */

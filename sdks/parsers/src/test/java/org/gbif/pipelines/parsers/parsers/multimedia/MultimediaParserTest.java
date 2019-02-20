@@ -6,6 +6,7 @@ import java.util.Map;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.utils.ExtendedRecordBuilder;
 
@@ -50,16 +51,16 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
-    ParsedMultimedia multimediaResult = result.getResult().get(0);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    Multimedia multimedia = result.getResult().get(0);
 
     // Should
     assertTrue(result.isSuccessful());
     assertEquals(0, result.getIssues().size());
     assertEquals(1, result.getResult().size());
-    assertEquals("description", multimediaResult.getDescription());
-    assertEquals("source", multimediaResult.getSource());
-    assertEquals(MediaType.StillImage, multimediaResult.getType());
+    assertEquals("description", multimedia.getDescription());
+    assertEquals("source", multimedia.getSource());
+    assertEquals(MediaType.StillImage, multimedia.getType());
   }
 
   @Test
@@ -90,7 +91,7 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
     // Should
     assertTrue(result.isSuccessful());
@@ -118,7 +119,7 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
     // Should
     assertTrue(result.isSuccessful());
@@ -138,7 +139,7 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
     // Should
     assertTrue(result.isSuccessful());
@@ -162,7 +163,7 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
     // Should
     assertFalse(result.isSuccessful());
@@ -182,11 +183,11 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
     // Should
     assertEquals(2, result.getResult().size());
-    for (ParsedMultimedia media : result.getResult()) {
+    for (Multimedia media : result.getResult()) {
       assertEquals(MediaType.StillImage, media.getType());
       assertTrue(media.getFormat().startsWith("image/"));
       assertNotNull(media.getIdentifier());
@@ -222,12 +223,12 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
-    ParsedMultimedia multimediaResult = result.getResult().get(0);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    Multimedia multimediaResult = result.getResult().get(0);
 
     // Should
     assertEquals(2, result.getResult().size());
-    for (ParsedMultimedia media : result.getResult()) {
+    for (Multimedia media : result.getResult()) {
       assertEquals(MediaType.StillImage, media.getType());
       assertNotNull(media.getIdentifier());
     }
@@ -276,12 +277,12 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
-    ParsedMultimedia multimedia = result.getResult().get(1);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    Multimedia multimedia = result.getResult().get(1);
 
     // Should
     assertEquals(2, result.getResult().size());
-    for (ParsedMultimedia media : result.getResult()) {
+    for (Multimedia media : result.getResult()) {
       assertEquals(MediaType.StillImage, media.getType());
       assertNotNull(media.getIdentifier());
     }
@@ -326,7 +327,7 @@ public class MultimediaParserTest {
             .build();
 
     // When
-    ParsedField<List<ParsedMultimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
+    ParsedField<List<Multimedia>> result = MultimediaParser.parseMultimedia(extendedRecord);
 
     // Should
     assertEquals(2, result.getResult().size());

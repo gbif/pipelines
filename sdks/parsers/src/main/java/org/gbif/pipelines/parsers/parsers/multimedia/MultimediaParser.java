@@ -22,6 +22,8 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.Terms;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.Multimedia.Builder;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
@@ -53,12 +55,12 @@ public class MultimediaParser {
    * Parses the multimedia terms of a {@link ExtendedRecord}.
    *
    * @param extendedRecord record to be parsed
-   * @return {@link ParsedField} for a list of {@link ParsedMultimedia}.
+   * @return {@link ParsedField} for a list of {@link Multimedia}.
    */
-  public static ParsedField<List<ParsedMultimedia>> parseMultimedia(ExtendedRecord extendedRecord) {
+  public static ParsedField<List<Multimedia>> parseMultimedia(ExtendedRecord extendedRecord) {
     Objects.requireNonNull(extendedRecord);
 
-    Map<URI, ParsedMultimedia> parsedMultimediaMap = new HashMap<>();
+    Map<URI, Multimedia> parsedMultimediaMap = new HashMap<>();
     List<String> issues = new ArrayList<>();
 
     parseExtensions(extendedRecord, parsedMultimediaMap, issues);
@@ -72,7 +74,7 @@ public class MultimediaParser {
   /**
    *
    */
-  private static void parseCoreTerm(ExtendedRecord er, Map<URI, ParsedMultimedia> multimediaMap, List<String> issues) {
+  private static void parseCoreTerm(ExtendedRecord er, Map<URI, Multimedia> multimediaMap, List<String> issues) {
     String associatedMedia = getTermValue(er.getCoreTerms(), DwcTerm.associatedMedia);
     if (!Strings.isNullOrEmpty(associatedMedia)) {
       UrlParser.parseUriList(associatedMedia).forEach(uri -> parseCoreTermMedia(er, multimediaMap, issues, uri));
@@ -83,7 +85,7 @@ public class MultimediaParser {
    *
    */
   private static void parseCoreTermMedia(
-      ExtendedRecord er, Map<URI, ParsedMultimedia> multimediaMap, List<String> issues, URI uri) {
+      ExtendedRecord er, Map<URI, Multimedia> multimediaMap, List<String> issues, URI uri) {
 
     if (uri == null) {
       issues.add(MULTIMEDIA_URI_INVALID.name());
@@ -94,14 +96,13 @@ public class MultimediaParser {
     Fields fields = parseFields(er.getCoreTerms(), uri, null);
 
     // create multimedia from core
-    Function<URI, ParsedMultimedia> fn =
-        u ->
-            ParsedMultimedia.newBuilder()
-                .identifier(fields.identifier)
-                .references(fields.references)
-                .format(fields.format)
-                .type(detectType(fields.format))
-                .build();
+    Function<URI, Multimedia> fn =
+        u -> {
+          Builder b = Multimedia.newBuilder().setFormat(fields.format).setType(detectType(fields.format));
+          Optional.ofNullable(fields.references).map(URI::toString).ifPresent(b::setReferences);
+          Optional.ofNullable(fields.identifier).map(URI::toString).ifPresent(b::setIdentifier);
+          return b.build();
+        };
 
     multimediaMap.computeIfAbsent(getPreferredIdentifier(fields), fn);
   }
@@ -109,8 +110,7 @@ public class MultimediaParser {
   /**
    *
    */
-  private static void parseExtensions(
-      ExtendedRecord er, Map<URI, ParsedMultimedia> multimediaMap, List<String> issues) {
+  private static void parseExtensions(ExtendedRecord er, Map<URI, Multimedia> multimediaMap, List<String> issues) {
     // check multimedia extensions first
     if (er.getExtensions() != null) {
 
@@ -133,9 +133,7 @@ public class MultimediaParser {
   /**
    *
    */
-  private static void parseExtensionsMedia(
-      Map<String, String> recordsMap,
-      Map<URI, ParsedMultimedia> multimediaMap,
+  private static void parseExtensionsMedia(Map<String, String> recordsMap, Map<URI, Multimedia> multimediaMap,
       List<String> issues) {
 
     // For AUDUBON, we use accessURI over identifier
@@ -153,24 +151,25 @@ public class MultimediaParser {
     // parse the fields at once
     Fields fields = parseFields(recordsMap, uri, link);
 
-    Function<URI, ParsedMultimedia> fn =
-        u ->
-            ParsedMultimedia.newBuilder()
-                .identifier(fields.identifier)
-                .references(fields.references)
-                .title(getTermValue(recordsMap, DcTerm.title))
-                .description(getValueOfFirst(recordsMap, DcTerm.description, AcTerm.caption))
-                .license(getValueOfFirst(recordsMap, DcTerm.license, DcTerm.rights))
-                .publisher(getTermValue(recordsMap, DcTerm.publisher))
-                .contributor(getTermValue(recordsMap, DcTerm.contributor))
-                .source(getValueOfFirst(recordsMap, DcTerm.source, AcTerm.derivedFrom))
-                .audience(getTermValue(recordsMap, DcTerm.audience))
-                .rightsHolder(getTermValue(recordsMap, DcTerm.rightsHolder))
-                .creator(getTermValue(recordsMap, DcTerm.creator))
-                .format(fields.format)
-                .type(detectType(fields.format))
-                .created(parseCreatedDate(recordsMap, issues))
-                .build();
+    Function<URI, Multimedia> fn =
+        u -> {
+          Builder b = Multimedia.newBuilder()
+              .setTitle(getTermValue(recordsMap, DcTerm.title))
+              .setDescription(getValueOfFirst(recordsMap, DcTerm.description, AcTerm.caption))
+              .setLicense(getValueOfFirst(recordsMap, DcTerm.license, DcTerm.rights))
+              .setPublisher(getTermValue(recordsMap, DcTerm.publisher))
+              .setContributor(getTermValue(recordsMap, DcTerm.contributor))
+              .setSource(getValueOfFirst(recordsMap, DcTerm.source, AcTerm.derivedFrom))
+              .setAudience(getTermValue(recordsMap, DcTerm.audience))
+              .setRightsHolder(getTermValue(recordsMap, DcTerm.rightsHolder))
+              .setCreator(getTermValue(recordsMap, DcTerm.creator))
+              .setFormat(fields.format)
+              .setType(detectType(fields.format))
+              .setCreated(parseCreatedDate(recordsMap, issues));
+          Optional.ofNullable(fields.references).map(URI::toString).ifPresent(b::setReferences);
+          Optional.ofNullable(fields.identifier).map(URI::toString).ifPresent(b::setIdentifier);
+          return b.build();
+        };
 
     // create multimedia from extension
     multimediaMap.computeIfAbsent(getPreferredIdentifier(fields), fn);
@@ -203,15 +202,14 @@ public class MultimediaParser {
   /**
    *
    */
-  private static Temporal parseCreatedDate(Map<String, String> recordsMap, List<String> issues) {
-    ParsedTemporal temporalDate =
-        TemporalParser.parse(getTermValue(recordsMap, DcTerm.created));
+  private static String parseCreatedDate(Map<String, String> recordsMap, List<String> issues) {
+    ParsedTemporal temporalDate = TemporalParser.parse(getTermValue(recordsMap, DcTerm.created));
 
     if (temporalDate.getIssueList() != null) {
       issues.addAll(temporalDate.getIssueList());
     }
 
-    return temporalDate.getFrom().orElse(null);
+    return temporalDate.getFrom().map(Temporal::toString).orElse(null);
   }
 
   /**
@@ -256,14 +254,13 @@ public class MultimediaParser {
    *
    */
   private static URI getFirstUri(Map<String, String> record, Term... terms) {
-    String result =
-        Arrays.stream(terms)
-            .filter(term -> record.containsKey(term.qualifiedName()))
-            .map(term -> new TermWithValue(term, cleanTerm(getTermValue(record, term))).value)
-            .filter(Objects::nonNull)
-            .findFirst()
-            .orElse(null);
-    return UrlParser.parse(result);
+    return Arrays.stream(terms)
+        .filter(term -> record.containsKey(term.qualifiedName()))
+        .map(term -> new TermWithValue(term, cleanTerm(getTermValue(record, term))).value)
+        .filter(Objects::nonNull)
+        .findFirst()
+        .map(UrlParser::parse)
+        .orElse(null);
   }
 
   /**
@@ -294,7 +291,6 @@ public class MultimediaParser {
 
   /** Fields that have to be parsed at once. */
   private static class Fields {
-
     String format;
     URI identifier;
     URI references;

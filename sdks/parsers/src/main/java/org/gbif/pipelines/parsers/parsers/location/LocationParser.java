@@ -11,7 +11,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.parsers.VocabularyParsers;
+import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.Wgs84Projection;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
@@ -36,11 +36,11 @@ public class LocationParser {
     List<String> issues = new ArrayList<>();
 
     // Parse country
-    ParsedField<Country> parsedCountry = parseCountry(er, VocabularyParsers.countryParser(), COUNTRY_INVALID.name());
+    ParsedField<Country> parsedCountry = parseCountry(er, VocabularyParser.countryParser(), COUNTRY_INVALID.name());
     Optional<Country> countryName = getResult(parsedCountry, issues);
 
     // Parse country code
-    ParsedField<Country> parsedCountryCode = parseCountry(er, VocabularyParsers.countryCodeParser(), COUNTRY_INVALID.name());
+    ParsedField<Country> parsedCountryCode = parseCountry(er, VocabularyParser.countryCodeParser(), COUNTRY_INVALID.name());
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
@@ -94,7 +94,7 @@ public class LocationParser {
         .build();
   }
 
-  private static ParsedField<Country> parseCountry(ExtendedRecord er, VocabularyParsers<Country> parser, String issue) {
+  private static ParsedField<Country> parseCountry(ExtendedRecord er, VocabularyParser<Country> parser, String issue) {
     Optional<ParseResult<Country>> parseResultOpt = parser.map(er, parseRes -> parseRes);
 
     if (!parseResultOpt.isPresent()) {
