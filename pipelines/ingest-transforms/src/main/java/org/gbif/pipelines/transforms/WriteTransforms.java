@@ -16,6 +16,8 @@ import org.apache.beam.sdk.io.FileSystems;
 /** Set of different write functions */
 public class WriteTransforms {
 
+  private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
   private WriteTransforms() {}
 
   /**
@@ -95,7 +97,7 @@ public class WriteTransforms {
    * @param toPath path with name to output files, like - directory/name
    */
   public static <T> AvroIO.Write<T> create(Class<T> clazz, String toPath) {
-    return create(clazz, toPath, CodecFactory.snappyCodec());
+    return create(clazz, toPath, BASE_CODEC);
   }
 
   /**
@@ -106,7 +108,7 @@ public class WriteTransforms {
    * @param tmpPath path to temporal files
    */
   public static <T> AvroIO.Write<T> create(Class<T> clazz, String toPath, String tmpPath) {
-    return create(clazz, toPath, tmpPath, CodecFactory.snappyCodec());
+    return create(clazz, toPath, tmpPath, BASE_CODEC);
   }
 
   /**
@@ -118,8 +120,7 @@ public class WriteTransforms {
    * @param codec Avro compression codec
    */
   public static <T> AvroIO.Write<T> create(Class<T> clazz, String toPath, String tmpPath, CodecFactory codec) {
-    return create(clazz, toPath, codec)
-        .withTempDirectory(FileSystems.matchNewResource(tmpPath, true));
+    return create(clazz, toPath, codec).withTempDirectory(FileSystems.matchNewResource(tmpPath, true));
   }
 
   /**

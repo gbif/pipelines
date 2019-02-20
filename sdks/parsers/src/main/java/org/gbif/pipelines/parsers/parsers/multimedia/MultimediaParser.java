@@ -45,7 +45,7 @@ public class MultimediaParser {
   // Order is important in case more than one extension is provided. The order will define the
   // precedence.
   private static final List<Extension> SUPPORTED_MEDIA_EXTENSIONS =
-          new ArrayList<>(Arrays.asList(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE));
+      Arrays.asList(Extension.MULTIMEDIA, Extension.AUDUBON, Extension.IMAGE);
 
   private MultimediaParser() {}
 
@@ -69,17 +69,19 @@ public class MultimediaParser {
         : ParsedField.fail(issues);
   }
 
-  /** */
-  private static void parseCoreTerm(
-      ExtendedRecord er, Map<URI, ParsedMultimedia> multimediaMap, List<String> issues) {
+  /**
+   *
+   */
+  private static void parseCoreTerm(ExtendedRecord er, Map<URI, ParsedMultimedia> multimediaMap, List<String> issues) {
     String associatedMedia = getTermValue(er.getCoreTerms(), DwcTerm.associatedMedia);
     if (!Strings.isNullOrEmpty(associatedMedia)) {
-      UrlParser.parseUriList(associatedMedia)
-          .forEach(uri -> parseCoreTermMedia(er, multimediaMap, issues, uri));
+      UrlParser.parseUriList(associatedMedia).forEach(uri -> parseCoreTermMedia(er, multimediaMap, issues, uri));
     }
   }
 
-  /** */
+  /**
+   *
+   */
   private static void parseCoreTermMedia(
       ExtendedRecord er, Map<URI, ParsedMultimedia> multimediaMap, List<String> issues, URI uri) {
 
@@ -104,7 +106,9 @@ public class MultimediaParser {
     multimediaMap.computeIfAbsent(getPreferredIdentifier(fields), fn);
   }
 
-  /** */
+  /**
+   *
+   */
   private static void parseExtensions(
       ExtendedRecord er, Map<URI, ParsedMultimedia> multimediaMap, List<String> issues) {
     // check multimedia extensions first
@@ -126,7 +130,9 @@ public class MultimediaParser {
     }
   }
 
-  /** */
+  /**
+   *
+   */
   private static void parseExtensionsMedia(
       Map<String, String> recordsMap,
       Map<URI, ParsedMultimedia> multimediaMap,
@@ -170,7 +176,9 @@ public class MultimediaParser {
     multimediaMap.computeIfAbsent(getPreferredIdentifier(fields), fn);
   }
 
-  /** */
+  /**
+   *
+   */
   private static Fields parseFields(Map<String, String> recordsMap, URI identifier, URI link) {
     // get format
     String mimeType = MEDIA_PARSER.parseMimeType(getTermValue(recordsMap, DcTerm.format));
@@ -192,7 +200,9 @@ public class MultimediaParser {
     return fields;
   }
 
-  /** */
+  /**
+   *
+   */
   private static Temporal parseCreatedDate(Map<String, String> recordsMap, List<String> issues) {
     ParsedTemporal temporalDate =
         TemporalParser.parse(getTermValue(recordsMap, DcTerm.created));
@@ -204,7 +214,9 @@ public class MultimediaParser {
     return temporalDate.getFrom().orElse(null);
   }
 
-  /** */
+  /**
+   *
+   */
   private static MediaType detectType(String format) {
     if (!Strings.isNullOrEmpty(format)) {
       if (format.toLowerCase().startsWith(IMAGE_FORMAT_PREFIX)) {
@@ -221,12 +233,16 @@ public class MultimediaParser {
     return null;
   }
 
-  /** */
+  /**
+   *
+   */
   private static String getTermValue(Map<String, String> recordsMap, Term term) {
     return recordsMap.get(term.qualifiedName());
   }
 
-  /** */
+  /**
+   *
+   */
   private static String getValueOfFirst(Map<String, String> record, Term... terms) {
     return Arrays.stream(terms)
         .filter(term -> record.containsKey(term.qualifiedName()))
@@ -236,7 +252,9 @@ public class MultimediaParser {
         .orElse(null);
   }
 
-  /** */
+  /**
+   *
+   */
   private static URI getFirstUri(Map<String, String> record, Term... terms) {
     String result =
         Arrays.stream(terms)
@@ -248,12 +266,16 @@ public class MultimediaParser {
     return UrlParser.parse(result);
   }
 
-  /** */
+  /**
+   *
+   */
   private static String cleanTerm(String str) {
     return Terms.isTermValueBlank(str) ? null : Strings.emptyToNull(str.trim());
   }
 
-  /** */
+  /**
+   *
+   */
   private static URI getPreferredIdentifier(Fields fields) {
     return fields.identifier != null ? fields.identifier : fields.references;
   }

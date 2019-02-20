@@ -19,6 +19,7 @@ import org.gbif.pipelines.core.interpreters.MetadataInterpreter;
 import org.gbif.pipelines.core.interpreters.MultimediaInterpreter;
 import org.gbif.pipelines.core.interpreters.TaxonomyInterpreter;
 import org.gbif.pipelines.core.interpreters.TemporalInterpreter;
+import org.gbif.pipelines.core.predicates.ExtensionPredicates;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -75,6 +76,7 @@ public class RecordTransforms {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).build())
+          .when(ExtensionPredicates.multimediaPr())
           .via(MultimediaInterpreter::interpretMultimedia)
           .consume(context::output);
 

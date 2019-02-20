@@ -1,8 +1,10 @@
 package org.gbif.pipelines.core;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -46,18 +48,40 @@ public class Interpretation<S> {
   }
 
   /** @param target target data object */
-  public <T> Handler<T> to(T target) {
-    return new Handler<>(target);
+  public <T> Condition<T> to(T target) {
+    return new Condition<>(target);
   }
 
   /** @param func Function converts source data object to target data object */
-  public <T> Handler<T> to(Function<S, T> func) {
-    return new Handler<>(func.apply(source));
+  public <T> Condition<T> to(Function<S, T> func) {
+    return new Condition<>(func.apply(source));
   }
 
   /** @param func Supplier produces target data object */
-  public <T> Handler<T> to(Supplier<T> func) {
-    return new Handler<>(func.get());
+  public <T> Condition<T> to(Supplier<T> func) {
+    return new Condition<>(func.get());
+  }
+
+  public class Condition<T> {
+
+    private final T target;
+
+    private Condition(T target) {
+      this.target = target;
+    }
+
+    public Condition<T> when(Predicate<S> predicate) {
+      return target != null && predicate.test(source) ? this : new Condition<>(null);
+    }
+
+    public Handler<T> via(BiConsumer<S, T> func) {
+      return new Handler<>(target).via(func);
+    }
+
+    public Handler<T> via(Consumer<T> func) {
+      return new Handler<>(target).via(func);
+    }
+
   }
 
   public class Handler<T> {
@@ -70,30 +94,30 @@ public class Interpretation<S> {
 
     /**
      * @param func BiConsumer for applying an interpretation function, where S as a source data
-     *     object and T as a target data object
+     * object and T as a target data object
      */
     public Handler<T> via(BiConsumer<S, T> func) {
-      func.accept(source, target);
+      Optional.ofNullable(target).ifPresent(t -> func.accept(source, t));
       return this;
     }
 
     /**
      * @param func Consumer for applying an interpretation function, where T as a source data object
-     *     and as a target data object
+     * and as a target data object
      */
     public Handler<T> via(Consumer<T> func) {
-      func.accept(target);
+      Optional.ofNullable(target).ifPresent(func);
       return this;
     }
 
     /** @return target data object */
-    public T get() {
-      return target;
+    public Optional<T> get() {
+      return Optional.ofNullable(target);
     }
 
     /** @param consumer Consumer for consuming target data object */
     public void consume(Consumer<T> consumer) {
-      consumer.accept(target);
+      Optional.ofNullable(target).ifPresent(consumer);
     }
   }
 }
