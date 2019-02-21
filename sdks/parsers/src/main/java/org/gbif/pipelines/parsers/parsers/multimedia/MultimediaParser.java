@@ -58,7 +58,6 @@ public class MultimediaParser {
    * @return {@link ParsedField} for a list of {@link Multimedia}.
    */
   public static ParsedField<List<Multimedia>> parseMultimedia(ExtendedRecord extendedRecord) {
-    Objects.requireNonNull(extendedRecord);
 
     Map<URI, Multimedia> parsedMultimediaMap = new HashMap<>();
     List<String> issues = new ArrayList<>();
@@ -93,7 +92,7 @@ public class MultimediaParser {
     }
 
     // parse the fields at once
-    Fields fields = parseFields(er.getCoreTerms(), uri, null);
+    Fields fields = parseFields(er.getCoreTerms(), uri);
 
     // create multimedia from core
     Function<URI, Multimedia> fn =
@@ -149,7 +148,7 @@ public class MultimediaParser {
     }
 
     // parse the fields at once
-    Fields fields = parseFields(recordsMap, uri, link);
+    Fields fields = parseFields(recordsMap, uri);
 
     Function<URI, Multimedia> fn =
         u -> {
@@ -166,7 +165,7 @@ public class MultimediaParser {
               .setFormat(fields.format)
               .setType(detectType(fields.format))
               .setCreated(parseCreatedDate(recordsMap, issues));
-          Optional.ofNullable(fields.references).map(URI::toString).ifPresent(b::setReferences);
+          Optional.ofNullable(link).map(URI::toString).ifPresent(b::setReferences);
           Optional.ofNullable(fields.identifier).map(URI::toString).ifPresent(b::setIdentifier);
           return b.build();
         };
@@ -178,7 +177,7 @@ public class MultimediaParser {
   /**
    *
    */
-  private static Fields parseFields(Map<String, String> recordsMap, URI identifier, URI link) {
+  private static Fields parseFields(Map<String, String> recordsMap, URI identifier) {
     // get format
     String mimeType = MEDIA_PARSER.parseMimeType(getTermValue(recordsMap, DcTerm.format));
     String format =
@@ -192,7 +191,6 @@ public class MultimediaParser {
       return fields;
     }
 
-    fields.references = link;
     fields.identifier = identifier;
     fields.format = format;
 

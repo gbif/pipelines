@@ -1,14 +1,14 @@
-package org.gbif.pipelines.core.interpreters;
+package org.gbif.pipelines.core.interpreters.extension;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.multimedia.MultimediaParser;
-
-import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
+import org.gbif.pipelines.parsers.utils.ModelUtils;
 
 /** Interprets the multimedia terms of a {@link ExtendedRecord}. */
 public class MultimediaInterpreter {
@@ -20,6 +20,8 @@ public class MultimediaInterpreter {
    * with the interpreted values.
    */
   public static void interpretMultimedia(ExtendedRecord er, MultimediaRecord mr) {
+    Objects.requireNonNull(er);
+    Objects.requireNonNull(mr);
 
     // parse the multimedia fields of the ExtendedRecord
     ParsedField<List<Multimedia>> parsedResult = MultimediaParser.parseMultimedia(er);
@@ -30,6 +32,6 @@ public class MultimediaInterpreter {
     }
 
     // add issues
-    addIssue(mr, parsedResult.getIssues());
+    ModelUtils.addIssue(mr, parsedResult.getIssues());
   }
 }

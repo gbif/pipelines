@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpreters;
+package org.gbif.pipelines.core.interpreters.core;
 
 import java.net.URI;
 import java.util.Optional;

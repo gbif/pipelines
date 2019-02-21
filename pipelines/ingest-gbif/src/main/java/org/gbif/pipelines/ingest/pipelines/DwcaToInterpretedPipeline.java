@@ -20,6 +20,7 @@ import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.WriteTransforms;
 
+import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
@@ -78,7 +79,18 @@ public class DwcaToInterpretedPipeline {
   private DwcaToInterpretedPipeline() {}
 
   public static void main(String[] args) {
-    DwcaPipelineOptions options = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, args);
+
+    String[] opts = {
+//        "--datasetId=5e4a4046-2946-465d-b15a-29ad9d70238d",
+        "--datasetId=94687f6b-6723-46a3-90d8-5a06b843291c",
+        "--attempt=1",
+        "--targetPath=/home/nvolik/Project/GBIF/datasets/out/",
+//        "--inputPath=/home/nvolik/Project/GBIF/datasets/5e4a4046-2946-465d-b15a-29ad9d70238d.zip"
+        "--inputPath=/home/nvolik/Project/GBIF/datasets/94687f6b-6723-46a3-90d8-5a06b843291c.zip"
+    };
+
+    DwcaPipelineOptions options = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, opts);
+    options.setRunner(DirectRunner.class);
     run(options);
   }
 

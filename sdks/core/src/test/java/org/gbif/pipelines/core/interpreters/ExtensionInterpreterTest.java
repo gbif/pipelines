@@ -36,10 +36,9 @@ public class ExtensionInterpreterTest {
 
     ///////////////////////////////////////
     List<Multimedia> multimedia2 = ExtensionInterpretation.extenstion(Extension.MULTIMEDIA)
-        .from(record)
         .to(Multimedia::new)
         .map(DcTerm.title, Multimedia::setTitle)
-        .convert()
+        .convert(record)
         .getList();
 
     System.out.println(multimedia2);

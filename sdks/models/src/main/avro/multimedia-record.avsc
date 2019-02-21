@@ -28,7 +28,8 @@
       {"name": "contributor", "type": ["null", "string"], "default" : null },
       {"name": "publisher", "type": ["null", "string"], "default" : null },
       {"name": "license", "type": ["null", "string"], "default" : null },
-      {"name": "rightsHolder", "type": ["null", "string"], "default" : null }
+      {"name": "rightsHolder", "type": ["null", "string"], "default" : null },
+      {"name": "datasetId", "type": ["null", "string"], "default" : null }
     ]
   },
   {

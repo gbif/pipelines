@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpreters;
+package org.gbif.pipelines.core.interpreters.core;
 
 import java.time.LocalDate;
 import java.time.Month;
