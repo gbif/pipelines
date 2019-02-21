@@ -3,11 +3,14 @@ package org.gbif.pipelines.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.gbif.api.vocabulary.Extension;
@@ -40,6 +43,8 @@ public class ExtensionInterpretation {
 
     private final Supplier<T> supplier;
 
+    private Function<T, Optional<String>> checker;
+
     private Map<String, BiFunction<T, String, List<String>>> mapperMap = new HashMap<>();
 
     private TargetHandler(Supplier<T> supplier) {
@@ -58,7 +63,7 @@ public class ExtensionInterpretation {
       return this;
     }
 
-    public TargetHandler<T> mapIssue(Term key, BiFunction<T, String, String> function) {
+    public TargetHandler<T> mapFn(Term key, BiFunction<T, String, String> function) {
       mapperMap.put(key.qualifiedName(), (t, v) -> {
         String r = function.apply(t, v);
         return Strings.isNullOrEmpty(r) ? Collections.emptyList() : Collections.singletonList(r);
@@ -66,34 +71,47 @@ public class ExtensionInterpretation {
       return this;
     }
 
-    public TargetHandler<T> mapIssues(Term key, BiFunction<T, String, List<String>> function) {
+    public TargetHandler<T> map(Term key, BiFunction<T, String, List<String>> function) {
       mapperMap.put(key.qualifiedName(), function);
       return this;
     }
 
-    public TargetHandler<T> mapIssues(String key, BiFunction<T, String, List<String>> function) {
+    public TargetHandler<T> map(String key, BiFunction<T, String, List<String>> function) {
       mapperMap.put(key, function);
       return this;
     }
 
-    public TargetHandler<T> mapIssues(Map<String, BiFunction<T, String, List<String>>> mapperMap) {
+    public TargetHandler<T> map(Map<String, BiFunction<T, String, List<String>>> mapperMap) {
       this.mapperMap.putAll(mapperMap);
+      return this;
+    }
+
+    public TargetHandler<T> skipIf(Function<T, Optional<String>> checker) {
+      this.checker = checker;
       return this;
     }
 
     public Result<T> convert(ExtendedRecord record) {
       List<T> result = new ArrayList<>();
-      List<String> issues = new ArrayList<>();
+      Set<String> issues = new HashSet<>();
 
       List<Map<String, String>> exts = record.getExtensions().get(extenstion);
       Optional.ofNullable(exts).filter(e -> !e.isEmpty()).ifPresent(listExt ->
           listExt.forEach(ext -> {
+            //
             T t = supplier.get();
+            //
             ext.forEach((k, v) -> {
               BiFunction<T, String, List<String>> fn = mapperMap.get(k);
               Optional.ofNullable(fn).map(c -> fn.apply(t, v)).ifPresent(issues::addAll);
             });
-            result.add(t);
+            //
+            Optional<String> skipIssue = checker.apply(t);
+            skipIssue.ifPresent(issues::add);
+            if (!skipIssue.isPresent()) {
+              result.add(t);
+            }
+
           }));
 
       return new Result<>(result, issues);
@@ -103,24 +121,28 @@ public class ExtensionInterpretation {
 
   public class Result<T> {
 
-    private final List<T> result;
-    private final List<String> issues;
+    private final List<T> items;
+    private final Set<String> issues;
 
-    public Result(List<T> result, List<String> issues) {
-      this.result = result;
+    public Result(List<T> items, Set<String> issues) {
+      this.items = items;
       this.issues = issues;
     }
 
     public List<T> getList() {
-      return result;
+      return items;
     }
 
     public Optional<T> get() {
-      return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+      return items.isEmpty() ? Optional.empty() : Optional.of(items.get(0));
     }
 
-    public List<String> getIssues() {
+    public Set<String> getIssues() {
       return issues;
+    }
+
+    public List<String> getIssuesAsList() {
+      return new ArrayList<>(issues);
     }
   }
 

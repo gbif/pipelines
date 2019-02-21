@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
@@ -19,7 +20,6 @@ import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
-import org.gbif.pipelines.parsers.utils.ModelUtils;
 
 import com.google.common.base.Strings;
 
@@ -27,25 +27,27 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 
 public class MultimediaInterpreter2 {
 
+  private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
+
   private static final TargetHandler<Multimedia> HANDLER =
       ExtensionInterpretation.extenstion(Extension.MULTIMEDIA)
           .to(Multimedia::new)
-          .map(DcTerm.format, Multimedia::setFormat)
-          .map(DcTerm.identifier, Multimedia::setIdentifier)
+          .map(DcTerm.references, MultimediaInterpreter2::parseAndsetReferences)
+          .map(DcTerm.identifier, MultimediaInterpreter2::parseAndsetIdentifier)
+          .map(DcTerm.type, MultimediaInterpreter2::parseAndSetType)
+          .map(DcTerm.format, MultimediaInterpreter2::parseAndSetFormat)
+          .map(DcTerm.created, MultimediaInterpreter2::parseAndSetCreated)
           .map(DcTerm.title, Multimedia::setTitle)
           .map(DcTerm.description, Multimedia::setDescription)
           .map(DcTerm.contributor, Multimedia::setContributor)
           .map(DcTerm.publisher, Multimedia::setPublisher)
-          .map(DcTerm.audience, Multimedia::setSource)
+          .map(DcTerm.audience, Multimedia::setAudience)
+          .map(DcTerm.creator, Multimedia::setCreator)
           .map(DcTerm.license, Multimedia::setLicense)
           .map(DcTerm.rightsHolder, Multimedia::setRightsHolder)
+          .map(DcTerm.source, Multimedia::setSource)
           .map(DwcTerm.datasetID, Multimedia::setDatasetId)
-          .map(DcTerm.type, MultimediaInterpreter2::parseAndSetType)
-          .mapIssue(DcTerm.references, MultimediaInterpreter2::parseAndsetReferences)
-          .mapIssues(DcTerm.created, MultimediaInterpreter2::parseAndSetCreated);
-
-  //                  .setFormat(fields.format)
-  //    Optional.ofNullable(fields.identifier).map(URI::toString).ifPresent(b::setIdentifier);
+          .skipIf(MultimediaInterpreter2::checkLinks);
 
   private MultimediaInterpreter2() {}
 
@@ -56,16 +58,23 @@ public class MultimediaInterpreter2 {
     Result<Multimedia> result = HANDLER.convert(er);
 
     mr.setMultimediaItems(result.getList());
-    ModelUtils.addIssue(mr, result.getIssues());
+    mr.getIssues().setIssueList(result.getIssuesAsList());
   }
 
   /**
    *
    */
-  private static String parseAndsetReferences(Multimedia m, String v) {
+  private static void parseAndsetReferences(Multimedia m, String v) {
     URI uri = UrlParser.parse(v);
     Optional.ofNullable(uri).map(URI::toString).ifPresent(m::setReferences);
-    return uri == null ? MULTIMEDIA_URI_INVALID.name() : null;
+  }
+
+  /**
+   *
+   */
+  private static void parseAndsetIdentifier(Multimedia m, String v) {
+    URI uri = UrlParser.parse(v);
+    Optional.ofNullable(uri).map(URI::toString).ifPresent(m::setIdentifier);
   }
 
   /**
@@ -91,5 +100,26 @@ public class MultimediaInterpreter2 {
     parsed.getFrom().map(Temporal::toString).ifPresent(m::setCreated);
 
     return parsed.getIssueList();
+  }
+
+  /**
+   *
+   */
+  private static void parseAndSetFormat(Multimedia m, String v) {
+    String mimeType = MEDIA_PARSER.parseMimeType(v);
+    if (Strings.isNullOrEmpty(mimeType)) {
+      mimeType = MEDIA_PARSER.parseMimeType(m.getIdentifier());
+    }
+    m.setFormat(mimeType);
+  }
+
+  /**
+   *
+   */
+  private static Optional<String> checkLinks(Multimedia m) {
+    if (m.getReferences() == null && m.getIdentifier() == null) {
+      return Optional.of(MULTIMEDIA_URI_INVALID.name());
+    }
+    return Optional.empty();
   }
 }
