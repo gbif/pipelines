@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
@@ -33,9 +32,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
  * @see <a href="http://rs.gbif.org/extension/gbif/1.0/images.xml</a>
  */
 public class ImageInterpreter {
-
-
-  private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
 
   //
   private static final TargetHandler<Image> HANDLER =
