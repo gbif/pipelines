@@ -14,7 +14,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class MultimediaInterpreter2Test {
+public class MultimediaInterpreterTest {
 
   @Test
   public void multimediaTest() {
@@ -80,7 +80,7 @@ public class MultimediaInterpreter2Test {
     MultimediaRecord mr = MultimediaRecord.newBuilder().setId(record.getId()).build();
 
     // When
-    MultimediaInterpreter2.interpret(record, mr);
+    MultimediaInterpreter.interpret(record, mr);
 
     //Should
     Assert.assertEquals(result, mr.toString());
