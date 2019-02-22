@@ -188,6 +188,13 @@
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
+    <!-- Hadoop -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
     <!--Logging-->
     <dependency>
       <groupId>org.slf4j</groupId>

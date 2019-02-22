@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  *
  * or pass all parameters:
  *
- * java -jar target/examples-transform-BUILD_VERSION-shaded.jar --runner=DirectRunner --targetPath=target/example-record --inputPath=example.zip
+ * java -jar target/examples-transform-BUILD_VERSION-shaded.jar --runner=DirectRunner --targetPath=target/example-record --inputPath=src/main/resources/example.zip
  *
  * }</pre>
  */
