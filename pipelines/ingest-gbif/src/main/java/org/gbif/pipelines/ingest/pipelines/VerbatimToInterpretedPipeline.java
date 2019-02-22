@@ -33,12 +33,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
-import static org.gbif.pipelines.transforms.RecordTransforms.BasicFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.MetadataFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
+import static org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
+import static org.gbif.pipelines.transforms.CoreTransforms.LocationFn;
+import static org.gbif.pipelines.transforms.CoreTransforms.MetadataFn;
+import static org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
+import static org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
+import static org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
 
 /**
  * Pipeline sequence:

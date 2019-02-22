@@ -10,6 +10,7 @@ import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.multimedia.MultimediaParser;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 
+@Deprecated
 /** Interprets the multimedia terms of a {@link ExtendedRecord}. */
 public class MultimediaInterpreter {
 

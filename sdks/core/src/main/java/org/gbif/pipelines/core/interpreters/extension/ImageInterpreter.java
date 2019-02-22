@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.interpreters.extension;
 
 import java.net.URI;
 import java.time.temporal.Temporal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -121,8 +122,14 @@ public class ImageInterpreter {
    *
    */
   private static List<String> parseAndSetLatLng(Image i) {
-    String lat = i.getLatitude().toString();
-    String lng = i.getLongitude().toString();
+
+    if (i.getLatitude() == null && i.getLongitude() == null) {
+      return Collections.emptyList();
+    }
+
+    String lat = Optional.ofNullable(i.getLatitude()).map(Object::toString).orElse(null);
+    String lng = Optional.ofNullable(i.getLongitude()).map(Object::toString).orElse(null);
+
     ParsedField<LatLng> latLng = CoordinateParseUtils.parseLatLng(lat, lng);
     if (latLng.isSuccessful()) {
       LatLng result = latLng.getResult();

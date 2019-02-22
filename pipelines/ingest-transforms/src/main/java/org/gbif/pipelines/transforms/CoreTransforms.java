@@ -16,15 +16,12 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.core.interpreters.core.MetadataInterpreter;
-import org.gbif.pipelines.core.interpreters.core.MultimediaInterpreter;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
-import org.gbif.pipelines.core.predicates.ExtensionPredicates;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
@@ -43,7 +40,6 @@ import org.apache.beam.sdk.transforms.DoFn;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
 
@@ -60,29 +56,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECO
  *
  * }</pre>
  */
-public class RecordTransforms {
+public class CoreTransforms {
 
-  private RecordTransforms() {}
-
-  /**
-   * ParDo runs sequence of interpretations for {@link MultimediaRecord} using {@link
-   * ExtendedRecord} as a source and {@link MultimediaInterpreter} as interpretation steps
-   */
-  public static class MultimediaFn extends DoFn<ExtendedRecord, MultimediaRecord> {
-
-    private final Counter counter = Metrics.counter(RecordTransforms.class, MULTIMEDIA_RECORDS_COUNT);
-
-    @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
-          .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).build())
-          .when(ExtensionPredicates.multimediaPr())
-          .via(MultimediaInterpreter::interpretMultimedia)
-          .consume(context::output);
-
-      counter.inc();
-    }
-  }
+  private CoreTransforms() {}
 
   /**
    * ParDo runs sequence of interpretations for {@link TemporalRecord} using {@link ExtendedRecord}
@@ -90,7 +66,7 @@ public class RecordTransforms {
    */
   public static class TemporalFn extends DoFn<ExtendedRecord, TemporalRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, TEMPORAL_RECORDS_COUNT);
+    private final Counter counter = Metrics.counter(CoreTransforms.class, TEMPORAL_RECORDS_COUNT);
 
     @ProcessElement
     public void processElement(ProcessContext context) {
@@ -112,7 +88,7 @@ public class RecordTransforms {
    */
   public static class BasicFn extends DoFn<ExtendedRecord, BasicRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, BASIC_RECORDS_COUNT);
+    private final Counter counter = Metrics.counter(CoreTransforms.class, BASIC_RECORDS_COUNT);
 
     @ProcessElement
     public void processElement(ProcessContext context) {
@@ -137,7 +113,7 @@ public class RecordTransforms {
    */
   public static class LocationFn extends DoFn<ExtendedRecord, LocationRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, LOCATION_RECORDS_COUNT);
+    private final Counter counter = Metrics.counter(CoreTransforms.class, LOCATION_RECORDS_COUNT);
 
     private final KvConfig kvConfig;
     private KeyValueStore<LatLng, String> kvStore;
@@ -161,7 +137,8 @@ public class RecordTransforms {
         HBaseKVStoreConfiguration hBaseKvStoreConfig = HBaseKVStoreConfiguration.builder()
             .withTableName("geocode_kv") //Geocode KV HBase table
             .withColumnFamily("v") //Column in which qualifiers are stored
-            .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+            .withNumOfKeyBuckets(
+                kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
             .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
             .build();
 
@@ -211,7 +188,7 @@ public class RecordTransforms {
    */
   public static class MetadataFn extends DoFn<String, MetadataRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, METADATA_RECORDS_COUNT);
+    private final Counter counter = Metrics.counter(CoreTransforms.class, METADATA_RECORDS_COUNT);
 
     private final WsConfig wsConfig;
     private MetadataServiceClient client;
@@ -246,7 +223,7 @@ public class RecordTransforms {
    */
   public static class TaxonomyFn extends DoFn<ExtendedRecord, TaxonRecord> {
 
-    private final Counter counter = Metrics.counter(RecordTransforms.class, TAXON_RECORDS_COUNT);
+    private final Counter counter = Metrics.counter(CoreTransforms.class, TAXON_RECORDS_COUNT);
 
     private final KvConfig kvConfig;
     private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;

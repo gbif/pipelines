@@ -28,7 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
+import static org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
 
 @RunWith(JUnit4.class)
 public class TemporalRecordTransformTest {

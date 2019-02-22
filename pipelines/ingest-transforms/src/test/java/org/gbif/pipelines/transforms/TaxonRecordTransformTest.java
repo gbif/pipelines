@@ -9,7 +9,7 @@ import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
-import org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
+import org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 import org.apache.beam.sdk.testing.NeedsRunner;

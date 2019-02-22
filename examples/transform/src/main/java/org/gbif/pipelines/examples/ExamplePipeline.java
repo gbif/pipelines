@@ -5,7 +5,7 @@ import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.transforms.RecordTransforms;
+import org.gbif.pipelines.transforms.CoreTransforms;
 import org.gbif.pipelines.transforms.WriteTransforms;
 
 import org.apache.beam.sdk.Pipeline;
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  *
  * or pass all parameters:
  *
- * java -jar target/examples-transform-BUILD_VERSION-shaded.jar --runner=DirectRunner --targetPath=target/example-record --inputPath=example.zip
+ * java -jar target/examples-transform-BUILD_VERSION-shaded.jar --runner=DirectRunner --targetPath=target/example-record --inputPath=src/main/resources/example.zip
  *
  * }</pre>
  */
@@ -48,7 +48,7 @@ public class ExamplePipeline {
     // Reads DwCA archive and convert to ExtendedRecord
     p.apply("Read DwCA zip archive", DwcaIO.Read.fromCompressed(inputPath, tmpDir))
         // Interprets and transforms from ExtendedRecord to TemporalRerord using GBIF TemporalInterpreter
-        .apply("Interpret TemporalRerord", ParDo.of(new RecordTransforms.TemporalFn()))
+        .apply("Interpret TemporalRerord", ParDo.of(new CoreTransforms.TemporalFn()))
         // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter
         .apply("Intertret ExampleRecord", ExampleTransform.exampleOne())
         // Write ExampleRecords as avro files using AvroIO.Write

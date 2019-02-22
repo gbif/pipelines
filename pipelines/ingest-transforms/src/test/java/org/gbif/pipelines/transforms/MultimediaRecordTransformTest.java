@@ -8,7 +8,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
+import org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests the {@link RecordTransforms}. */
+/** Tests the {@link CoreTransforms}. */
 @RunWith(JUnit4.class)
 public class MultimediaRecordTransformTest {
 
