@@ -22,6 +22,12 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
+import org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
+import org.gbif.pipelines.transforms.CoreTransforms.LocationFn;
+import org.gbif.pipelines.transforms.CoreTransforms.MetadataFn;
+import org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
+import org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
+import org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
 import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 
@@ -46,12 +52,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
-import static org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
-import static org.gbif.pipelines.transforms.CoreTransforms.LocationFn;
-import static org.gbif.pipelines.transforms.CoreTransforms.MetadataFn;
-import static org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
-import static org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
-import static org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
 
 /**
  * Pipeline sequence:

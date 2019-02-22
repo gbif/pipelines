@@ -13,6 +13,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
@@ -84,6 +85,14 @@ public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T
    */
   public static CheckTransforms<ExtendedRecord> multimedia(List<String> types) {
     return create(ExtendedRecord.class, checkRecordType(types, MULTIMEDIA));
+  }
+
+  /**
+   * Checks if list contains {@link RecordType#IMAGE}, else returns empty {@link
+   * PCollection<ExtendedRecord>}
+   */
+  public static CheckTransforms<ExtendedRecord> image(List<String> types) {
+    return create(ExtendedRecord.class, checkRecordType(types, IMAGE));
   }
 
   /**

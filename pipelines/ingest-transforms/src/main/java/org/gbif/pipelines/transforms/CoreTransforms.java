@@ -44,8 +44,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
 
 /**
- * Contains ParDo functions for Beam, each method returns GBIF transformation (basic, temporal,
- * multimedia, location, metadata, taxonomy). Transformation uses {@link
+ * Contains ParDo functions for Beam, each method returns GBIF core transformation (basic, temporal,
+ * location, metadata, taxonomy). Transformation uses {@link
  * org.gbif.pipelines.core.interpreters} to interpret and convert source data to target data
  *
  * <p>You can apply this functions to your Beam pipeline:

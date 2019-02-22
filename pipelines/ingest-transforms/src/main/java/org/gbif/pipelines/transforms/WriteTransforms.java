@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -69,6 +70,17 @@ public class WriteTransforms {
   public static AvroIO.Write<MultimediaRecord> multimedia(String toPath) {
     return create(MultimediaRecord.class, toPath);
   }
+
+  /**
+   * Writes {@link ImageRecord} *.avro files to path, data will be split into several files,
+   * uses Snappy compression codec by default
+   *
+   * @param toPath path with name to output files, like - directory/name
+   */
+  public static AvroIO.Write<ImageRecord> image(String toPath) {
+    return create(ImageRecord.class, toPath);
+  }
+
 
   /**
    * Writes {@link LocationRecord} *.avro files to path, data will be split into several files, uses

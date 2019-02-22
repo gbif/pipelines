@@ -38,6 +38,7 @@ public class PipelinesVariables {
         BASIC,
         TEMPORAL,
         MULTIMEDIA,
+        IMAGE,
         LOCATION,
         TAXONOMY,
         VERBATIM
@@ -62,6 +63,7 @@ public class PipelinesVariables {
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
     public static final String DWCA_TO_AVRO_COUNT = "dwcaToAvroCount";
     public static final String MULTIMEDIA_RECORDS_COUNT = "multimediaRecordsCount";
+    public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
     public static final String TEMPORAL_RECORDS_COUNT = "temporalRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";

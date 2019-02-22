@@ -17,6 +17,12 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
+import org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
+import org.gbif.pipelines.transforms.CoreTransforms.LocationFn;
+import org.gbif.pipelines.transforms.CoreTransforms.MetadataFn;
+import org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
+import org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
+import org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.WriteTransforms;
 
@@ -37,12 +43,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
-import static org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
-import static org.gbif.pipelines.transforms.CoreTransforms.LocationFn;
-import static org.gbif.pipelines.transforms.CoreTransforms.MetadataFn;
-import static org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
-import static org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
-import static org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
 
 /**
  * Pipeline sequence:
@@ -81,11 +81,11 @@ public class DwcaToInterpretedPipeline {
   public static void main(String[] args) {
 
     String[] opts = {
-//        "--datasetId=5e4a4046-2946-465d-b15a-29ad9d70238d",
+        //        "--datasetId=5e4a4046-2946-465d-b15a-29ad9d70238d",
         "--datasetId=94687f6b-6723-46a3-90d8-5a06b843291c",
         "--attempt=1",
         "--targetPath=/home/nvolik/Project/GBIF/datasets/out/",
-//        "--inputPath=/home/nvolik/Project/GBIF/datasets/5e4a4046-2946-465d-b15a-29ad9d70238d.zip"
+        //        "--inputPath=/home/nvolik/Project/GBIF/datasets/5e4a4046-2946-465d-b15a-29ad9d70238d.zip"
         "--inputPath=/home/nvolik/Project/GBIF/datasets/94687f6b-6723-46a3-90d8-5a06b843291c.zip"
     };
 

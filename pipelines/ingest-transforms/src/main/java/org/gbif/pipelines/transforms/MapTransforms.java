@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms;
 
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -50,5 +51,11 @@ public class MapTransforms {
   public static MapElements<MultimediaRecord, KV<String, MultimediaRecord>> multimediaToKv() {
     return MapElements.into(new TypeDescriptor<KV<String, MultimediaRecord>>() {})
         .via((MultimediaRecord mr) -> KV.of(mr.getId(), mr));
+  }
+
+  /** Maps {@link ImageRecord} to key value, where key is {@link ImageRecord#getId} */
+  public static MapElements<ImageRecord, KV<String, ImageRecord>> imageToKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})
+        .via((ImageRecord ir) -> KV.of(ir.getId(), ir));
   }
 }

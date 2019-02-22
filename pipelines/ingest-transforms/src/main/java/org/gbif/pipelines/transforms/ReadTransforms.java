@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms;
 
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
@@ -58,6 +59,16 @@ public class ReadTransforms {
    */
   public static AvroIO.Read<MultimediaRecord> multimedia(String path) {
     return AvroIO.read(MultimediaRecord.class).from(path);
+  }
+
+
+  /**
+   * Reads avro files from path, which contains {@link ImageRecord}
+   *
+   * @param path path to source files
+   */
+  public static AvroIO.Read<ImageRecord> image(String path) {
+    return AvroIO.read(ImageRecord.class).from(path);
   }
 
   /**
