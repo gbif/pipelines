@@ -38,7 +38,7 @@ public class ExamplePipeline {
     BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
 
     // Pipeline properties
-    String inputPath = options.getInputPath(); // Path to DwCA zip arhive
+    String inputPath = options.getInputPath(); // Path to DwCA zip archive
     String tmpDir = FsUtils.getTempDir(options); // Path to temporal directory or creates new
     String outPath = options.getTargetPath(); // Path to output *.avro files
 
@@ -47,12 +47,12 @@ public class ExamplePipeline {
 
     // Reads DwCA archive and convert to ExtendedRecord
     p.apply("Read DwCA zip archive", DwcaIO.Read.fromCompressed(inputPath, tmpDir))
-        // Interprets and transforms from ExtendedRecord to TemporalRerord using GBIF TemporalInterpreter
-        .apply("Interpret TemporalRerord", ParDo.of(new CoreTransforms.TemporalFn()))
+        // Interprets and transforms from ExtendedRecord to TemporalRecord using GBIF TemporalInterpreter
+        .apply("Interpret TemporalRecord", ParDo.of(new CoreTransforms.TemporalFn()))
         // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter
-        .apply("Intertret ExampleRecord", ExampleTransform.exampleOne())
-        // Write ExampleRecords as avro files using AvroIO.Write
-        .apply("Write as avro files", WriteTransforms.create(ExampleRecord.class, outPath));
+        .apply("Interpret ExampleRecord", ExampleTransform.exampleOne())
+        // Write ExampleRecords as Avro files using AvroIO.Write
+        .apply("Write as Avro files", WriteTransforms.create(ExampleRecord.class, outPath));
 
     LOG.info("Running the pipeline");
     p.run().waitUntilFinish();

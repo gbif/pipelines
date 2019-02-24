@@ -68,7 +68,7 @@
     <gbif-api.version>0.70</gbif-api.version>
     <gbif-common.version>0.44</gbif-common.version>
     <dwc-api.version>1.19</dwc-api.version>
-    <kvs.version>1.0</kvs.version>
+    <kvs.version>1.1-SNAPSHOT</kvs.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
@@ -297,6 +297,14 @@
           <exclusion>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
