@@ -46,7 +46,7 @@ public class PipelinesVariables {
         IMAGE,
         MULTIMEDIA,
         AUDUBON,
-        MEASUREMEN_OR_FACT,
+        MEASUREMENT_OR_FACT,
         AMPLIFICATION
       }
 

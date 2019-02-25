@@ -4,7 +4,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
-import org.gbif.pipelines.common.beam.DwcaIO.Read;
+import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -62,8 +62,9 @@ public class DwcaToVerbatimPipeline {
     String targetPath = FsUtils.buildPath(options, Conversion.FILE_NAME);
     String tmpPath = FsUtils.getTempDir(options);
 
-    boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
-    Read reader = isDirectory ? Read.fromLocation(inputPath) : Read.fromCompressed(inputPath, tmpPath);
+    boolean isDir = Paths.get(inputPath).toFile().isDirectory();
+
+    DwcaIO.Read reader = isDir ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpPath);
 
     LOG.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);

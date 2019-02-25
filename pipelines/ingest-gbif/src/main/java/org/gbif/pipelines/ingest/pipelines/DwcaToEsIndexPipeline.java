@@ -14,6 +14,7 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -29,6 +30,7 @@ import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
 import org.apache.beam.sdk.Pipeline;
@@ -112,16 +114,14 @@ public class DwcaToEsIndexPipeline {
     final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
     final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
     final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
+    final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
 
     String tmpDir = FsUtils.getTempDir(options);
 
     String inputPath = options.getInputPath();
-    boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
+    boolean isDir = Paths.get(inputPath).toFile().isDirectory();
 
-    DwcaIO.Read reader =
-        isDirectory
-            ? DwcaIO.Read.fromLocation(inputPath)
-            : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
+    DwcaIO.Read reader = isDir ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
 
     Pipeline p = Pipeline.create(options);
 
@@ -164,6 +164,11 @@ public class DwcaToEsIndexPipeline {
             .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
             .apply("Map Multimedia to KV", MultimediaTransform.toKv());
 
+    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
+        uniqueRecords
+            .apply("Interpret multimedia", ParDo.of(new MeasurementOrFactTransform.Interpreter()))
+            .apply("Map MeasurementOrFact to KV", MeasurementOrFactTransform.toKv());
+
     LOG.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
@@ -182,8 +187,9 @@ public class DwcaToEsIndexPipeline {
             LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
             MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
+            MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
-            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
+            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, mfr, er).buildJson().toString();
 
             c.output(json);
 
@@ -198,6 +204,7 @@ public class DwcaToEsIndexPipeline {
             .and(lrTag, locationCollection)
             .and(txrTag, taxonCollection)
             .and(mrTag, multimediaCollection)
+            .and(mfrTag, measurementCollection)
             .and(erTag, verbatimCollection)
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", ParDo.of(doFn).withSideInputs(metadataView));

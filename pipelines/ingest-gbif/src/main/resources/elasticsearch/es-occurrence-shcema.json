@@ -54,7 +54,10 @@
       "classification": {"type": "object", "enabled": false},
       "acceptedUsage":{"type": "object", "enabled": false},
       "nomenclature":{"type": "text", "copy_to": "all"},
+
       "multimediaItems":{"type": "nested", "enabled": false},
+      "measurementOrFactItems":{"type": "nested", "enabled": false},
+      "amplificationItems":{"type": "nested", "enabled": false},
 
       "verbatim": {"type": "object", "enabled": false}
     }

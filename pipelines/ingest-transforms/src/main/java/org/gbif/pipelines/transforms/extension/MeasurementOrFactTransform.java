@@ -23,7 +23,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMEN_OR_FACT_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMEN_OR_FACT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 public class MeasurementOrFactTransform {
@@ -34,11 +34,11 @@ public class MeasurementOrFactTransform {
   }
 
   /**
-   * Checks if list contains {@link RecordType#MEASUREMEN_OR_FACT}, else returns empty {@link
+   * Checks if list contains {@link RecordType#MEASUREMENT_OR_FACT}, else returns empty {@link
    * PCollection <ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
-    return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, MEASUREMEN_OR_FACT));
+    return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, MEASUREMENT_OR_FACT));
   }
 
   /** Maps {@link MeasurementOrFactRecord} to key value, where key is {@link ImageRecord#getId} */
