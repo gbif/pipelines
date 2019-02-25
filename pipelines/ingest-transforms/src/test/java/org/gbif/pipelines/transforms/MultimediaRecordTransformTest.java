@@ -91,7 +91,7 @@ public class MultimediaRecordTransformTest {
 
     return MultimediaRecord.newBuilder()
         .setId(RECORD_ID)
-        .setMultimediaItems(Collections.singletonList(multimedia))
+        .setItems(Collections.singletonList(multimedia))
         .build();
   }
 }

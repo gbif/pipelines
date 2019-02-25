@@ -1,9 +1,12 @@
 package org.gbif.pipelines.transforms;
 
+import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -57,5 +60,23 @@ public class MapTransforms {
   public static MapElements<ImageRecord, KV<String, ImageRecord>> imageToKv() {
     return MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})
         .via((ImageRecord ir) -> KV.of(ir.getId(), ir));
+  }
+
+  /** Maps {@link AudubonRecord} to key value, where key is {@link AudubonRecord#getId} */
+  public static MapElements<AudubonRecord, KV<String, AudubonRecord>> audubonToKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, AudubonRecord>>() {})
+        .via((AudubonRecord ar) -> KV.of(ar.getId(), ar));
+  }
+
+  /** Maps {@link MeasurementOrFactRecord} to key value, where key is {@link ImageRecord#getId} */
+  public static MapElements<MeasurementOrFactRecord, KV<String, MeasurementOrFactRecord>> measurementOrFactToKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, MeasurementOrFactRecord>>() {})
+        .via((MeasurementOrFactRecord mfr) -> KV.of(mfr.getId(), mfr));
+  }
+
+  /** Maps {@link AmplificationRecord} to key value, where key is {@link AmplificationRecord#getId} */
+  public static MapElements<AmplificationRecord, KV<String, AmplificationRecord>> amplificationToKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, AmplificationRecord>>() {})
+        .via((AmplificationRecord ar) -> KV.of(ar.getId(), ar));
   }
 }

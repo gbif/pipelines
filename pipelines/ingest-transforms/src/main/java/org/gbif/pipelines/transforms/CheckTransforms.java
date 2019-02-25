@@ -12,9 +12,12 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMEN_OR_FACT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
@@ -80,6 +83,22 @@ public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T
   }
 
   /**
+   * Checks if list contains {@link RecordType#TAXONOMY}, else returns empty {@link
+   * PCollection<ExtendedRecord>}
+   */
+  public static CheckTransforms<ExtendedRecord> taxon(List<String> types) {
+    return create(ExtendedRecord.class, checkRecordType(types, TAXONOMY));
+  }
+
+  /**
+   * Checks if list contains {@link RecordType#LOCATION}, else returns empty {@link
+   * PCollection<ExtendedRecord>}
+   */
+  public static CheckTransforms<ExtendedRecord> location(List<String> types) {
+    return create(ExtendedRecord.class, checkRecordType(types, LOCATION));
+  }
+
+  /**
    * Checks if list contains {@link RecordType#MULTIMEDIA}, else returns empty {@link
    * PCollection<ExtendedRecord>}
    */
@@ -96,19 +115,27 @@ public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T
   }
 
   /**
-   * Checks if list contains {@link RecordType#TAXONOMY}, else returns empty {@link
+   * Checks if list contains {@link RecordType#AUDUBON}, else returns empty {@link
    * PCollection<ExtendedRecord>}
    */
-  public static CheckTransforms<ExtendedRecord> taxon(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, TAXONOMY));
+  public static CheckTransforms<ExtendedRecord> audubon(List<String> types) {
+    return create(ExtendedRecord.class, checkRecordType(types, AUDUBON));
   }
 
   /**
-   * Checks if list contains {@link RecordType#LOCATION}, else returns empty {@link
+   * Checks if list contains {@link RecordType#MEASUREMEN_OR_FACT}, else returns empty {@link
    * PCollection<ExtendedRecord>}
    */
-  public static CheckTransforms<ExtendedRecord> location(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, LOCATION));
+  public static CheckTransforms<ExtendedRecord> measuremenOrFact(List<String> types) {
+    return create(ExtendedRecord.class, checkRecordType(types, MEASUREMEN_OR_FACT));
+  }
+
+  /**
+   * Checks if list contains {@link RecordType#AMPLIFICATION}, else returns empty {@link
+   * PCollection<ExtendedRecord>}
+   */
+  public static CheckTransforms<ExtendedRecord> amplification(List<String> types) {
+    return create(ExtendedRecord.class, checkRecordType(types, AMPLIFICATION));
   }
 
   private static boolean checkRecordType(List<String> types, RecordType type) {

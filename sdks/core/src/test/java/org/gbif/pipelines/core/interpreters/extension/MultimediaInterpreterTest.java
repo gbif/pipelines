@@ -66,7 +66,7 @@ public class MultimediaInterpreterTest {
         .build();
 
     String result =
-        "{\"id\": \"id\", \"multimediaItems\": [{\"type\": \"StillImage\", \"format\": \"text/plain\", \"identifier\": "
+        "{\"id\": \"id\", \"items\": [{\"type\": \"StillImage\", \"format\": \"text/plain\", \"identifier\": "
             + "\"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": \"Title1\", "
             + "\"description\": \"Desc1\", \"source\": \"Sr1\", \"audience\": \"Audi1\", \"created\": \"2000-11-21\", "
             + "\"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Publ1\", \"license\": \"Lice1\", "

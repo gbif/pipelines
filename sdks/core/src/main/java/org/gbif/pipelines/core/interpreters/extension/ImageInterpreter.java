@@ -69,7 +69,7 @@ public class ImageInterpreter {
 
     Result<Image> result = HANDLER.convert(er);
 
-    mr.setImageItems(result.getList());
+    mr.setItems(result.getList());
     mr.getIssues().setIssueList(result.getIssuesAsList());
   }
 

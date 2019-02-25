@@ -1,10 +1,13 @@
 package org.gbif.pipelines.transforms;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
+import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -20,6 +23,16 @@ public class WriteTransforms {
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
   private WriteTransforms() {}
+
+  /**
+   * Writes {@link ExtendedRecord} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param toPath path with name to output files, like - directory/name
+   */
+  public static AvroIO.Write<ExtendedRecord> extended(String toPath) {
+    return create(ExtendedRecord.class, toPath);
+  }
 
   /**
    * Writes {@link MetadataRecord} *.avro files to path, without splitting the file, uses Snappy
@@ -62,6 +75,16 @@ public class WriteTransforms {
   }
 
   /**
+   * Writes {@link LocationRecord} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param toPath path with name to output files, like - directory/name
+   */
+  public static AvroIO.Write<LocationRecord> location(String toPath) {
+    return create(LocationRecord.class, toPath);
+  }
+
+  /**
    * Writes {@link MultimediaRecord} *.avro files to path, data will be split into several files,
    * uses Snappy compression codec by default
    *
@@ -81,25 +104,34 @@ public class WriteTransforms {
     return create(ImageRecord.class, toPath);
   }
 
-
   /**
-   * Writes {@link LocationRecord} *.avro files to path, data will be split into several files, uses
-   * Snappy compression codec by default
+   * Writes {@link AudubonRecord} *.avro files to path, data will be split into several files,
+   * uses Snappy compression codec by default
    *
    * @param toPath path with name to output files, like - directory/name
    */
-  public static AvroIO.Write<LocationRecord> location(String toPath) {
-    return create(LocationRecord.class, toPath);
+  public static AvroIO.Write<AudubonRecord> audubon(String toPath) {
+    return create(AudubonRecord.class, toPath);
   }
 
   /**
-   * Writes {@link ExtendedRecord} *.avro files to path, data will be split into several files, uses
-   * Snappy compression codec by default
+   * Writes {@link MeasurementOrFactRecord} *.avro files to path, data will be split into several files,
+   * uses Snappy compression codec by default
    *
    * @param toPath path with name to output files, like - directory/name
    */
-  public static AvroIO.Write<ExtendedRecord> extended(String toPath) {
-    return create(ExtendedRecord.class, toPath);
+  public static AvroIO.Write<MeasurementOrFactRecord> measurementOrFact(String toPath) {
+    return create(MeasurementOrFactRecord.class, toPath);
+  }
+
+  /**
+   * Writes {@link ImageRecord} *.avro files to path, data will be split into several files,
+   * uses Snappy AmplificationRecord codec by default
+   *
+   * @param toPath path with name to output files, like - directory/name
+   */
+  public static AvroIO.Write<AmplificationRecord> amplification(String toPath) {
+    return create(AmplificationRecord.class, toPath);
   }
 
   /**
