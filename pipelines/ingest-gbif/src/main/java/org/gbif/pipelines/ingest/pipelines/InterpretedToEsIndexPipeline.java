@@ -17,8 +17,13 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.MapTransforms;
-import org.gbif.pipelines.transforms.ReadTransforms;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -111,32 +116,32 @@ public class InterpretedToEsIndexPipeline {
 
     LOG.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", ReadTransforms.metadata(pathInterFn.apply(METADATA)))
+        p.apply("Read Metadata", MetadataTransform.read(pathInterFn.apply(METADATA)))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        p.apply("Read Verbatim", ReadTransforms.extended(pathInterFn.apply(VERBATIM)))
-            .apply("Map Verbatim to KV", MapTransforms.extendedToKv());
+        p.apply("Read Verbatim", VerbatimTransform.read(pathInterFn.apply(VERBATIM)))
+            .apply("Map Verbatim to KV", VerbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
-        p.apply("Read Basic", ReadTransforms.basic(pathInterFn.apply(BASIC)))
-            .apply("Map Basic to KV", MapTransforms.basicToKv());
+        p.apply("Read Basic", BasicTransform.read(pathInterFn.apply(BASIC)))
+            .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
-        p.apply("Read Temporal", ReadTransforms.temporal(pathInterFn.apply(TEMPORAL)))
-            .apply("Map Temporal to KV", MapTransforms.temporalToKv());
+        p.apply("Read Temporal", TemporalTransform.read(pathInterFn.apply(TEMPORAL)))
+            .apply("Map Temporal to KV", TemporalTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
-        p.apply("Read Location", ReadTransforms.location(pathInterFn.apply(LOCATION)))
-            .apply("Map Location to KV", MapTransforms.locationToKv());
+        p.apply("Read Location", LocationTransform.read(pathInterFn.apply(LOCATION)))
+            .apply("Map Location to KV", LocationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read Taxon", ReadTransforms.taxon(pathInterFn.apply(TAXONOMY)))
-            .apply("Map Taxon to KV", MapTransforms.taxonToKv());
+        p.apply("Read Taxon", TaxonomyTransform.read(pathInterFn.apply(TAXONOMY)))
+            .apply("Map Taxon to KV", TaxonomyTransform.toKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
-        p.apply("Read Multimedia", ReadTransforms.multimedia(pathInterFn.apply(MULTIMEDIA)))
-            .apply("Map Multimedia to KV", MapTransforms.multimediaToKv());
+        p.apply("Read Multimedia", MultimediaTransform.read(pathInterFn.apply(MULTIMEDIA)))
+            .apply("Map Multimedia to KV", MultimediaTransform.toKv());
 
     LOG.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =

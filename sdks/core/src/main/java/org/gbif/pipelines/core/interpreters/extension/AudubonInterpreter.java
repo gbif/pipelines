@@ -10,7 +10,11 @@ import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-
+/**
+ * Interpreter for the Audubon extension, Interprets form {@link ExtendedRecord} to {@link AudubonRecord}.
+ *
+ * @see <a href="http://rs.gbif.org/extension/ac/audubon.xml</a>
+ */
 public class AudubonInterpreter {
 
   private static final TargetHandler<Audubon> HANDLER =
@@ -19,13 +23,17 @@ public class AudubonInterpreter {
 
   private AudubonInterpreter() {}
 
+  /**
+   * Interprets audubons of a {@link ExtendedRecord} and populates a {@link AudubonRecord}
+   * with the interpreted values.
+   */
   public static void interpret(ExtendedRecord er, AudubonRecord ar) {
     Objects.requireNonNull(er);
     Objects.requireNonNull(ar);
 
     Result<Audubon> result = HANDLER.convert(er);
 
-    ar.setItems(result.getList());
+    ar.setAudubonItems(result.getList());
     ar.getIssues().setIssueList(result.getIssuesAsList());
   }
 }

@@ -22,14 +22,14 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
-import org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
-import org.gbif.pipelines.transforms.CoreTransforms.LocationFn;
-import org.gbif.pipelines.transforms.CoreTransforms.MetadataFn;
-import org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
-import org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
-import org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
-import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -133,36 +133,36 @@ public class DwcaToEsIndexPipeline {
     LOG.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", ParDo.of(new MetadataFn(wsConfig)))
+            .apply("Interpret metadata", ParDo.of(new MetadataTransform.Interpreter(wsConfig)))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        uniqueRecords.apply("Map Verbatim to KV", MapTransforms.extendedToKv());
+        uniqueRecords.apply("Map Verbatim to KV", VerbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", ParDo.of(new BasicFn()))
-            .apply("Map Basic to KV", MapTransforms.basicToKv());
+            .apply("Interpret basic", ParDo.of(new BasicTransform.Interpreter()))
+            .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
         uniqueRecords
-            .apply("Interpret temporal", ParDo.of(new TemporalFn()))
-            .apply("Map Temporal to KV", MapTransforms.temporalToKv());
+            .apply("Interpret temporal", ParDo.of(new TemporalTransform.Interpreter()))
+            .apply("Map Temporal to KV", TemporalTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
         uniqueRecords
-            .apply("Interpret location", ParDo.of(new LocationFn(kvConfig)))
-            .apply("Map Location to KV", MapTransforms.locationToKv());
+            .apply("Interpret location", ParDo.of(new LocationTransform.Interpreter(kvConfig)))
+            .apply("Map Location to KV", LocationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         uniqueRecords
-            .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(kvConfig)))
-            .apply("Map Taxon to KV", MapTransforms.taxonToKv());
+            .apply("Interpret taxonomy", ParDo.of(new TaxonomyTransform.Interpreter(kvConfig)))
+            .apply("Map Taxon to KV", TaxonomyTransform.toKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         uniqueRecords
-            .apply("Interpret multimedia", ParDo.of(new MultimediaFn()))
-            .apply("Map Multimedia to KV", MapTransforms.multimediaToKv());
+            .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
+            .apply("Map Multimedia to KV", MultimediaTransform.toKv());
 
     LOG.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =

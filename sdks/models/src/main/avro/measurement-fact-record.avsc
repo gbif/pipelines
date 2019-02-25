@@ -18,7 +18,7 @@
     "doc": "A container for interpreted MeasurementOrFact fields.",
     "fields": [
       {"name": "id", "type": "string", "doc": "http://rs.tdwg.org/dwc/terms/occurrenceID"},
-      {"name": "items", "type": ["null", {"type" : "array", "items" : "MeasurementOrFact"}], "default" : null },
+      {"name": "measurementOrFactItems", "type": ["null", {"type" : "array", "items" : "MeasurementOrFact"}], "default" : null },
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

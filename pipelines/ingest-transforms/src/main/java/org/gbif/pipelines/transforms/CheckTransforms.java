@@ -3,7 +3,6 @@ package org.gbif.pipelines.transforms;
 import java.util.List;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -12,17 +11,6 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMEN_OR_FACT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 
 /**
  * Set of different predicate functions. Each function checks predicate and returns {@link
@@ -50,95 +38,7 @@ public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T
     return Create.empty(TypeDescriptor.of(clazz)).expand(PBegin.in(input.getPipeline()));
   }
 
-  /**
-   * Checks if list contains {@link RecordType#METADATA}, else returns empty {@link
-   * PCollection<String>}
-   */
-  public static CheckTransforms<String> metadata(List<String> types) {
-    return create(String.class, checkRecordType(types, METADATA));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#VERBATIM}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> verbatim(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, VERBATIM));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#BASIC}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> basic(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, BASIC));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#TEMPORAL}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> temporal(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, TEMPORAL));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#TAXONOMY}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> taxon(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, TAXONOMY));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#LOCATION}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> location(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, LOCATION));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#MULTIMEDIA}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> multimedia(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, MULTIMEDIA));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#IMAGE}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> image(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, IMAGE));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#AUDUBON}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> audubon(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, AUDUBON));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#MEASUREMEN_OR_FACT}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> measuremenOrFact(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, MEASUREMEN_OR_FACT));
-  }
-
-  /**
-   * Checks if list contains {@link RecordType#AMPLIFICATION}, else returns empty {@link
-   * PCollection<ExtendedRecord>}
-   */
-  public static CheckTransforms<ExtendedRecord> amplification(List<String> types) {
-    return create(ExtendedRecord.class, checkRecordType(types, AMPLIFICATION));
-  }
-
-  private static boolean checkRecordType(List<String> types, RecordType type) {
+  public static boolean checkRecordType(List<String> types, RecordType type) {
     return types.contains(ALL.name()) || types.contains(type.name());
   }
 }

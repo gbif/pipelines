@@ -17,7 +17,7 @@ import org.junit.Test;
 public class ImageInterpreterTest {
 
   @Test
-  public void multimediaTest() {
+  public void imageTest() {
     // State
     Map<String, String> ext1 = new HashMap<>();
     ext1.put(DcTerm.identifier.qualifiedName(), "http://www.gbif.org/tmp.jpg");
@@ -67,7 +67,7 @@ public class ImageInterpreterTest {
         .build();
 
     String result =
-        "{\"id\": \"id\", \"items\": [{\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
+        "{\"id\": \"id\", \"imageItems\": [{\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
             + "\"http://www.gbif.org/tmp.jpg\", \"title\": \"Tt1\", \"description\": \"Desc1\", \"spatial\": \"Sp1\", "
             + "\"latitude\": -131.3, \"longitude\": 60.4, \"format\": \"jpeg\", \"created\": \"2010\", \"creator\": "
             + "\"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Pub1\", \"audience\": \"Aud1\", \"license\": "

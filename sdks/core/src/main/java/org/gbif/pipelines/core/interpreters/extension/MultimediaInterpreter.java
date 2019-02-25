@@ -67,7 +67,7 @@ public class MultimediaInterpreter {
 
     Result<Multimedia> result = HANDLER.convert(er);
 
-    mr.setItems(result.getList());
+    mr.setMultimediaItems(result.getList());
     mr.getIssues().setIssueList(result.getIssuesAsList());
   }
 

@@ -9,6 +9,11 @@ import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+/**
+ * Interpreter for the Amplification extension, Interprets form {@link ExtendedRecord} to {@link AmplificationRecord}.
+ *
+ * @see <a href="http://rs.gbif.org/extension/ggbn/amplification.xml</a>
+ */
 public class AmplificationInterpreter {
 
   public static final String EXTENSION_ROW_TYPE = "http://rs.gbif.org/extension/ggbn/amplification.xml";
@@ -19,13 +24,17 @@ public class AmplificationInterpreter {
 
   private AmplificationInterpreter() {}
 
+  /**
+   * Interprets amplifications of a {@link ExtendedRecord} and populates a {@link AmplificationRecord}
+   * with the interpreted values.
+   */
   public static void interpret(ExtendedRecord er, AmplificationRecord ar) {
     Objects.requireNonNull(er);
     Objects.requireNonNull(ar);
 
     Result<Amplification> result = HANDLER.convert(er);
 
-    ar.setItems(result.getList());
+    ar.setAmplificationItems(result.getList());
     ar.getIssues().setIssueList(result.getIssuesAsList());
   }
 

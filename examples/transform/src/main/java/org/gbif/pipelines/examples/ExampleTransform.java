@@ -3,7 +3,6 @@ package org.gbif.pipelines.examples;
 import org.gbif.example.io.avro.ExampleRecord;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.CoreTransforms;
 
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -13,7 +12,7 @@ import org.apache.beam.sdk.transforms.ParDo;
  * interpretations and wrap it into Apache Beam {@link org.apache.beam.sdk.transforms.ParDo} and use
  * it after in a {@link org.apache.beam.sdk.Pipeline}
  *
- * <p>See source code - {@link CoreTransforms}
+ * <p>See source code - {@link org.gbif.pipelines.transforms}
  */
 class ExampleTransform {
 

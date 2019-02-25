@@ -8,7 +8,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -23,7 +23,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests the {@link CoreTransforms}. */
 @RunWith(JUnit4.class)
 @Ignore
 public class MultimediaRecordTransformTest {
@@ -39,7 +38,8 @@ public class MultimediaRecordTransformTest {
   private static final String CREATOR = "Moayed Bahajjaj";
   private static final String CREATED = "2012-03-29";
 
-  @Rule public final transient TestPipeline p = TestPipeline.create();
+  @Rule
+  public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   @Category(NeedsRunner.class)
@@ -67,7 +67,7 @@ public class MultimediaRecordTransformTest {
 
     // When
     PCollection<MultimediaRecord> dataStream =
-        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new MultimediaFn()));
+        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new Interpreter()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(createExpectedMultimedia());
@@ -91,7 +91,7 @@ public class MultimediaRecordTransformTest {
 
     return MultimediaRecord.newBuilder()
         .setId(RECORD_ID)
-        .setItems(Collections.singletonList(multimedia))
+        .setMultimediaItems(Collections.singletonList(multimedia))
         .build();
   }
 }

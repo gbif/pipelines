@@ -12,16 +12,14 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.CheckTransforms;
-import org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
-import org.gbif.pipelines.transforms.CoreTransforms.LocationFn;
-import org.gbif.pipelines.transforms.CoreTransforms.MetadataFn;
-import org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
-import org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
-import org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
-import org.gbif.pipelines.transforms.ReadTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
-import org.gbif.pipelines.transforms.WriteTransforms;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -103,44 +101,44 @@ public class VerbatimToInterpretedPipeline {
 
     LOG.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
-        p.apply("Read ExtendedRecords", ReadTransforms.extended(options.getInputPath()))
+        p.apply("Read ExtendedRecords", VerbatimTransform.read(options.getInputPath()))
             .apply("Filter duplicates", UniqueIdTransform.create());
 
     LOG.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(datasetId))
-        .apply("Check metadata transform condition", CheckTransforms.metadata(types))
-        .apply("Interpret metadata", ParDo.of(new MetadataFn(wsPropertiesPath)))
-        .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
+        .apply("Check metadata transform condition", MetadataTransform.check(types))
+        .apply("Interpret metadata", ParDo.of(new MetadataTransform.Interpreter(wsPropertiesPath)))
+        .apply("Write metadata to avro", MetadataTransform.write(pathFn.apply(METADATA)));
 
     uniqueRecords
-        .apply("Check verbatim transform condition", CheckTransforms.verbatim(types))
-        .apply("Write verbatim to avro", WriteTransforms.extended(pathFn.apply(VERBATIM)));
+        .apply("Check verbatim transform condition", VerbatimTransform.check(types))
+        .apply("Write verbatim to avro", VerbatimTransform.write(pathFn.apply(VERBATIM)));
 
     uniqueRecords
-        .apply("Check basic transform condition", CheckTransforms.basic(types))
-        .apply("Interpret basic", ParDo.of(new BasicFn()))
-        .apply("Write basic to avro", WriteTransforms.basic(pathFn.apply(BASIC)));
+        .apply("Check basic transform condition", BasicTransform.check(types))
+        .apply("Interpret basic", ParDo.of(new BasicTransform.Interpreter()))
+        .apply("Write basic to avro", BasicTransform.write(pathFn.apply(BASIC)));
 
     uniqueRecords
-        .apply("Check temporal transform condition", CheckTransforms.temporal(types))
-        .apply("Interpret temporal", ParDo.of(new TemporalFn()))
-        .apply("Write temporal to avro", WriteTransforms.temporal(pathFn.apply(TEMPORAL)));
+        .apply("Check temporal transform condition", TemporalTransform.check(types))
+        .apply("Interpret temporal", ParDo.of(new TemporalTransform.Interpreter()))
+        .apply("Write temporal to avro", TemporalTransform.write(pathFn.apply(TEMPORAL)));
 
     uniqueRecords
-        .apply("Check multimedia transform condition", CheckTransforms.multimedia(types))
-        .apply("Interpret multimedia", ParDo.of(new MultimediaFn()))
-        .apply("Write multimedia to avro", WriteTransforms.multimedia(pathFn.apply(MULTIMEDIA)));
+        .apply("Check multimedia transform condition", MultimediaTransform.check(types))
+        .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
+        .apply("Write multimedia to avro", MultimediaTransform.write(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply("Check taxonomy transform condition", CheckTransforms.taxon(types))
-        .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(wsPropertiesPath)))
-        .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
+        .apply("Check taxonomy transform condition", TaxonomyTransform.check(types))
+        .apply("Interpret taxonomy", ParDo.of(new TaxonomyTransform.Interpreter(wsPropertiesPath)))
+        .apply("Write taxon to avro", TaxonomyTransform.write(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply("Check location transform condition", CheckTransforms.location(types))
-        .apply("Interpret location", ParDo.of(new LocationFn(wsPropertiesPath)))
-        .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
+        .apply("Check location transform condition", LocationTransform.check(types))
+        .apply("Interpret location", ParDo.of(new LocationTransform.Interpreter(wsPropertiesPath)))
+        .apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
 
     LOG.info("Running the pipeline");
     PipelineResult result = p.run();

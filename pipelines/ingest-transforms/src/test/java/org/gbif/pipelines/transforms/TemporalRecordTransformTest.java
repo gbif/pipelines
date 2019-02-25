@@ -15,6 +15,7 @@ import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
+import org.gbif.pipelines.transforms.core.TemporalTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -28,12 +29,11 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
-
 @RunWith(JUnit4.class)
 public class TemporalRecordTransformTest {
 
-  @Rule public final transient TestPipeline p = TestPipeline.create();
+  @Rule
+  public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   @Category(NeedsRunner.class)
@@ -65,12 +65,10 @@ public class TemporalRecordTransformTest {
     periodThree.setMonth(Month.of(10));
     periodThree.setDay(1);
 
-    final List<TemporalRecord> dataExpected =
-        createTemporalRecordList(periodOne, periodTwo, periodThree);
+    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, periodTwo, periodThree);
 
     // When
-    PCollection<TemporalRecord> dataStream =
-        p.apply(Create.of(input)).apply(ParDo.of(new TemporalFn()));
+    PCollection<TemporalRecord> dataStream = p.apply(Create.of(input)).apply(ParDo.of(new Interpreter()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);

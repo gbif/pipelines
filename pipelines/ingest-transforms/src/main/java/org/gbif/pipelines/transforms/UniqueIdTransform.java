@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms;
 import java.util.Iterator;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -35,7 +36,7 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
     // Convert from list to map where, key - occurrenceId, value - object instance and group by key
     PCollection<KV<String, Iterable<ExtendedRecord>>> groupedCollection =
         input
-            .apply("Mapping to KV", MapTransforms.extendedToKv())
+            .apply("Mapping to KV", VerbatimTransform.toKv())
             .apply("Grouping by occurrenceId", GroupByKey.create());
 
     // Filter duplicate occurrenceIds, all groups where value size != 1

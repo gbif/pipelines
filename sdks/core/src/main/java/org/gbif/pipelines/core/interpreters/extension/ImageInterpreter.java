@@ -28,7 +28,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 
 /**
- * Interpreter for the multimedia extension, Interprets form {@link ExtendedRecord} to {@link ImageRecord}.
+ * Interpreter for the Image extension, Interprets form {@link ExtendedRecord} to {@link ImageRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/gbif/1.0/images.xml</a>
  */
@@ -60,7 +60,7 @@ public class ImageInterpreter {
   private ImageInterpreter() {}
 
   /**
-   * Interprets the multimedia of a {@link ExtendedRecord} and populates a {@link ImageRecord}
+   * Interprets images of a {@link ExtendedRecord} and populates a {@link ImageRecord}
    * with the interpreted values.
    */
   public static void interpret(ExtendedRecord er, ImageRecord mr) {
@@ -69,7 +69,7 @@ public class ImageInterpreter {
 
     Result<Image> result = HANDLER.convert(er);
 
-    mr.setItems(result.getList());
+    mr.setImageItems(result.getList());
     mr.getIssues().setIssueList(result.getIssuesAsList());
   }
 

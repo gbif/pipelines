@@ -9,7 +9,7 @@ import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
-import org.gbif.pipelines.transforms.WriteTransforms;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -69,7 +69,7 @@ public class DwcaToVerbatimPipeline {
     Pipeline p = Pipeline.create(options);
 
     p.apply("Read from Darwin Core Archive", reader)
-        .apply("Write to avro", WriteTransforms.extended(targetPath).withoutSharding());
+        .apply("Write to avro", VerbatimTransform.write(targetPath).withoutSharding());
 
     LOG.info("Running the pipeline");
     PipelineResult result = p.run();

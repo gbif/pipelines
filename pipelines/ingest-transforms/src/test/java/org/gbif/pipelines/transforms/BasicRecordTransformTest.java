@@ -8,7 +8,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
+import org.gbif.pipelines.transforms.core.BasicTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -45,7 +45,7 @@ public class BasicRecordTransformTest {
 
     // When
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(records)).apply(ParDo.of(new BasicFn()));
+        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter()));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(basicRecords);

@@ -17,14 +17,14 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
-import org.gbif.pipelines.transforms.CoreTransforms.BasicFn;
-import org.gbif.pipelines.transforms.CoreTransforms.LocationFn;
-import org.gbif.pipelines.transforms.CoreTransforms.MetadataFn;
-import org.gbif.pipelines.transforms.CoreTransforms.TaxonomyFn;
-import org.gbif.pipelines.transforms.CoreTransforms.TemporalFn;
-import org.gbif.pipelines.transforms.ExtensionTransforms.MultimediaFn;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
-import org.gbif.pipelines.transforms.WriteTransforms;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
@@ -124,31 +124,31 @@ public class DwcaToInterpretedPipeline {
     LOG.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Interpret metadata", ParDo.of(new MetadataFn(wsConfig)))
-        .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
+        .apply("Interpret metadata", ParDo.of(new MetadataTransform.Interpreter(wsConfig)))
+        .apply("Write metadata to avro", MetadataTransform.write(pathFn.apply(METADATA)));
 
     uniqueRecords
-        .apply("Write unique verbatim to avro", WriteTransforms.extended(pathFn.apply(VERBATIM)));
+        .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn.apply(VERBATIM)));
 
     uniqueRecords
-        .apply("Interpret basic", ParDo.of(new BasicFn()))
-        .apply("Write basic to avro", WriteTransforms.basic(pathFn.apply(BASIC)));
+        .apply("Interpret basic", ParDo.of(new BasicTransform.Interpreter()))
+        .apply("Write basic to avro", BasicTransform.write(pathFn.apply(BASIC)));
 
     uniqueRecords
-        .apply("Interpret temporal", ParDo.of(new TemporalFn()))
-        .apply("Write temporal to avro", WriteTransforms.temporal(pathFn.apply(TEMPORAL)));
+        .apply("Interpret temporal", ParDo.of(new TemporalTransform.Interpreter()))
+        .apply("Write temporal to avro", TemporalTransform.write(pathFn.apply(TEMPORAL)));
 
     uniqueRecords
-        .apply("Interpret multimedia", ParDo.of(new MultimediaFn()))
-        .apply("Write multimedia to avro", WriteTransforms.multimedia(pathFn.apply(MULTIMEDIA)));
+        .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
+        .apply("Write multimedia to avro", MultimediaTransform.write(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(kvConfig)))
-        .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
+        .apply("Interpret taxonomy", ParDo.of(new TaxonomyTransform.Interpreter(kvConfig)))
+        .apply("Write taxon to avro", TaxonomyTransform.write(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply("Interpret location", ParDo.of(new LocationFn(kvConfig)))
-        .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
+        .apply("Interpret location", ParDo.of(new LocationTransform.Interpreter(kvConfig)))
+        .apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
 
     LOG.info("Running the pipeline");
     PipelineResult result = p.run();
