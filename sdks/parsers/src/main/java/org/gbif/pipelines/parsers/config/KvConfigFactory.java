@@ -61,6 +61,13 @@ public class KvConfigFactory {
     return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, zookeeperUrl, numOfKeyBuckets);
   }
 
+  public static KvConfig create(String baseApiPath) {
+    long timeoutInSec = Long.valueOf(DEFAULT_TIMEOUT_SEC);
+    long cacheInMb = Long.valueOf(DEFAULT_CACHE_SIZE_MB);
+    int numOfKeyBuckets = Integer.valueOf(DEFAULT_NUM_OF_KEY_BUCKETS);
+    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, null, numOfKeyBuckets);
+  }
+
   public static KvConfig create(String baseApiPath, long timeoutInSec, long cacheInMb, String zookeeperUrl, int numOfKeyBuckets) {
     return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, zookeeperUrl, numOfKeyBuckets);
   }

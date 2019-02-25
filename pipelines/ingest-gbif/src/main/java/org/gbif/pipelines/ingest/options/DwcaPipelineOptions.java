@@ -41,7 +41,6 @@ public interface DwcaPipelineOptions
   void setGbifApiUrl(String path);
 
   @Description("HBase client zookeeper service urls")
-  @Default.String("c5zk1.gbif.org,c5zk2.gbif.org,c5zk3.gbif.org")
   String getZookeeperUrl();
 
   void setZookeeperUrl(String path);
