@@ -26,11 +26,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMEN_OR
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMEN_OR_FACT;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
-public class MeasuremenOrFactTransform {
+public class MeasurementOrFactTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  private MeasuremenOrFactTransform() {
+  private MeasurementOrFactTransform() {
   }
 
   /**
@@ -75,7 +75,7 @@ public class MeasuremenOrFactTransform {
    */
   public static class Interpreter extends DoFn<ExtendedRecord, MeasurementOrFactRecord> {
 
-    private final Counter counter = Metrics.counter(MeasuremenOrFactTransform.class, MEASUREMEN_OR_FACT_RECORDS_COUNT);
+    private final Counter counter = Metrics.counter(MeasurementOrFactTransform.class, MEASUREMEN_OR_FACT_RECORDS_COUNT);
 
     @ProcessElement
     public void processElement(ProcessContext context) {

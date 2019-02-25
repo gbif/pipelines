@@ -71,7 +71,7 @@ public class MultimediaTransform {
    */
   public static class Interpreter extends DoFn<ExtendedRecord, MultimediaRecord> {
 
-    private final Counter counter = Metrics.counter(MeasuremenOrFactTransform.class, MULTIMEDIA_RECORDS_COUNT);
+    private final Counter counter = Metrics.counter(MultimediaTransform.class, MULTIMEDIA_RECORDS_COUNT);
 
     @ProcessElement
     public void processElement(ProcessContext context) {
