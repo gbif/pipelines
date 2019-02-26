@@ -16,7 +16,6 @@ import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -24,14 +23,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-@Ignore
 public class MultimediaRecordTransformTest {
 
   private static final String RECORD_ID = "123";
-  private static final String URI =
-      "http://specify-attachments-saiab.saiab.ac.za/originals/sp6-3853933608872243693.att.JPG";
-  private static final String SOURCE =
-      "http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg";
+  private static final String URI = "http://specify-attachments-saiab.saiab.ac.za/originals/att.JPG";
+  private static final String SOURCE = "http://farm8.staticflickr.com/7093/7039524065_8.jpg";
   private static final String TITLE = "Geranium Plume Moth 0032";
   private static final String DESCRIPTION = "Geranium Plume Moth 0032 description";
   private static final String LICENSE = "BY-NC-SA 2.0";
@@ -46,23 +42,23 @@ public class MultimediaRecordTransformTest {
   public void transformationTest() {
 
     // State
-    Map<String, String> audubonExtension =
+    Map<String, String> extension =
         ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
-            .accessURI(URI)
-            .identifier("d79633d3-0967-40fa-9557-d6915e4d1353")
-            .format("jpg")
+            .identifier(URI)
+            .format("image/jpeg")
             .title(TITLE)
             .description(DESCRIPTION)
-            .derivedFrom(SOURCE)
             .license(LICENSE)
             .creator(CREATOR)
             .created(CREATED)
+            .source(SOURCE)
+            .type("image")
             .build();
 
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id(RECORD_ID)
-            .addExtensionRecord(Extension.AUDUBON, audubonExtension)
+            .addExtensionRecord(Extension.MULTIMEDIA, extension)
             .build();
 
     // When
