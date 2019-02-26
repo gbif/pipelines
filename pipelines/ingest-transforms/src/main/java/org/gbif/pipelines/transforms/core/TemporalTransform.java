@@ -28,12 +28,10 @@ public class TemporalTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  private TemporalTransform() {
-  }
+  private TemporalTransform() {}
 
   /**
-   * Checks if list contains {@link RecordType#TEMPORAL}, else returns empty {@link
-   * PCollection <ExtendedRecord>}
+   * Checks if list contains {@link RecordType#TEMPORAL}, else returns empty {@link PCollection<ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, TEMPORAL));

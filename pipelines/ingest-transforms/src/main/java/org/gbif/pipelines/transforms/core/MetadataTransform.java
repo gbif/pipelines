@@ -33,8 +33,7 @@ public class MetadataTransform {
   }
 
   /**
-   * Checks if list contains {@link RecordType#METADATA}, else returns empty {@link
-   * PCollection <String>}
+   * Checks if list contains {@link RecordType#METADATA}, else returns empty {@link PCollection<String>}
    */
   public static CheckTransforms<String> check(List<String> types) {
     return CheckTransforms.create(String.class, checkRecordType(types, METADATA));

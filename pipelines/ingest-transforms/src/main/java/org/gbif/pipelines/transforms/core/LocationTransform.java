@@ -39,12 +39,10 @@ public class LocationTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  private LocationTransform() {
-  }
+  private LocationTransform() {}
 
   /**
-   * Checks if list contains {@link RecordType#LOCATION}, else returns empty {@link
-   * PCollection <ExtendedRecord>}
+   * Checks if list contains {@link RecordType#LOCATION}, else returns empty {@link PCollection<ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, LOCATION));

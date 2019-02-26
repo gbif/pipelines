@@ -40,8 +40,7 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
             .apply("Grouping by occurrenceId", GroupByKey.create());
 
     // Filter duplicate occurrenceIds, all groups where value size != 1
-    return groupedCollection.apply(
-        "Filtering duplicates",
+    return groupedCollection.apply("Filtering duplicates",
         ParDo.of(
             new DoFn<KV<String, Iterable<ExtendedRecord>>, ExtendedRecord>() {
 

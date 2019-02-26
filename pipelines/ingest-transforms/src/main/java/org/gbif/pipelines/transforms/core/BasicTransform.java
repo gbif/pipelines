@@ -31,8 +31,7 @@ public class BasicTransform {
   private BasicTransform() {}
 
   /**
-   * Checks if list contains {@link RecordType#BASIC}, else returns empty {@link
-   * PCollection <ExtendedRecord>}
+   * Checks if list contains {@link RecordType#BASIC}, else returns empty {@link PCollection<ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, BASIC));

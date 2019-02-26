@@ -21,12 +21,10 @@ public class VerbatimTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  private VerbatimTransform() {
-  }
+  private VerbatimTransform() {}
 
   /**
-   * Checks if list contains {@link RecordType#VERBATIM}, else returns empty {@link
-   * PCollection < ExtendedRecord >}
+   * Checks if list contains {@link RecordType#VERBATIM}, else returns empty {@link PCollection<ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, VERBATIM));

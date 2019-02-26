@@ -13,8 +13,8 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
- * Set of different predicate functions. Each function checks predicate and returns {@link
- * PCollection}, else returns empty {@link PCollection}
+ * Set of different predicate functions. Each function checks predicate and returns {@link  PCollection},
+ * else returns empty {@link PCollection}
  */
 public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T>> {
 
