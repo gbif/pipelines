@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.extension;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -29,12 +30,10 @@ public class ImageTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  private ImageTransform() {
-  }
+  private ImageTransform() {}
 
   /**
-   * Checks if list contains {@link RecordType#IMAGE}, else returns empty {@link
-   * PCollection <ExtendedRecord>}
+   * Checks if list contains {@link RecordType#IMAGE}, else returns empty {@link PCollection <ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, IMAGE));
@@ -77,7 +76,9 @@ public class ImageTransform {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> ImageRecord.newBuilder().setId(er.getId()).build())
-          .when(er -> er.getExtensions().containsKey(Extension.IMAGE.getRowType()))
+          .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.IMAGE.getRowType()))
+              .filter(l -> !l.isEmpty())
+              .isPresent())
           .via(ImageInterpreter::interpret)
           .consume(context::output);
 

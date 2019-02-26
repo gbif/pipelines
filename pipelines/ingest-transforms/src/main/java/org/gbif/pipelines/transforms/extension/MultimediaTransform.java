@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.extension;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -29,12 +30,10 @@ public class MultimediaTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  private MultimediaTransform() {
-  }
+  private MultimediaTransform() {}
 
   /**
-   * Checks if list contains {@link RecordType#MULTIMEDIA}, else returns empty {@link
-   * PCollection <ExtendedRecord>}
+   * Checks if list contains {@link RecordType#MULTIMEDIA}, else returns empty {@link PCollection<ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, MULTIMEDIA));
@@ -77,7 +76,9 @@ public class MultimediaTransform {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).build())
-          .when(er -> er.getExtensions().containsKey(Extension.MULTIMEDIA.getRowType()))
+          .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.MULTIMEDIA.getRowType()))
+              .filter(l -> !l.isEmpty())
+              .isPresent())
           .via(MultimediaInterpreter::interpret)
           .consume(context::output);
 

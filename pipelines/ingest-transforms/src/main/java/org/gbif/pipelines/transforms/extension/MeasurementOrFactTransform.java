@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.extension;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -30,12 +31,11 @@ public class MeasurementOrFactTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  private MeasurementOrFactTransform() {
-  }
+  private MeasurementOrFactTransform() {}
 
   /**
    * Checks if list contains {@link RecordType#MEASUREMENT_OR_FACT}, else returns empty {@link
-   * PCollection <ExtendedRecord>}
+   * PCollection<ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, MEASUREMENT_OR_FACT));
@@ -81,7 +81,9 @@ public class MeasurementOrFactTransform {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> MeasurementOrFactRecord.newBuilder().setId(er.getId()).build())
-          .when(er -> er.getExtensions().containsKey(Extension.MEASUREMENT_OR_FACT.getRowType()))
+          .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()))
+              .filter(l -> !l.isEmpty())
+              .isPresent())
           .via(MeasurementOrFactInterpreter::interpret)
           .consume(context::output);
 

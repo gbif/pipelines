@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.extension;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -22,22 +23,19 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 public class AudubonTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
-  private AudubonTransform() {
-  }
+  private AudubonTransform() {}
 
   /**
-   * Checks if list contains {@link RecordType#AUDUBON}, else returns empty {@link
-   * PCollection <ExtendedRecord>}
+   * Checks if list contains {@link RecordType#AUDUBON}, else returns empty {@link PCollection<ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
-    return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, AUDUBON));
+    return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, RecordType.AUDUBON));
   }
 
   /** Maps {@link AudubonRecord} to key value, where key is {@link AudubonRecord#getId} */
@@ -77,7 +75,9 @@ public class AudubonTransform {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> AudubonRecord.newBuilder().setId(er.getId()).build())
-          .when(er -> er.getExtensions().containsKey(Extension.AUDUBON.getRowType()))
+          .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.AUDUBON.getRowType()))
+              .filter(l -> !l.isEmpty())
+              .isPresent())
           .via(AudubonInterpreter::interpret)
           .consume(context::output);
 
