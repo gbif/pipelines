@@ -6,12 +6,15 @@ import java.util.function.Function;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
+import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
@@ -24,6 +27,8 @@ import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
@@ -48,7 +53,9 @@ import org.slf4j.MDC;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
@@ -108,12 +115,17 @@ public class InterpretedToEsIndexPipeline {
     Function<RecordType, String> pathInterFn =
         t -> FsUtils.buildPathInterpret(options, t.name().toLowerCase(), "*" + AVRO_EXTENSION);
 
+    // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
     final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
     final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
     final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
     final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
+
+    // Extension
     final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
+    final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
+    final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
     final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
 
     Pipeline p = Pipeline.create(options);
@@ -147,6 +159,14 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Multimedia", MultimediaTransform.read(pathInterFn.apply(MULTIMEDIA)))
             .apply("Map Multimedia to KV", MultimediaTransform.toKv());
 
+    PCollection<KV<String, ImageRecord>> imageCollection =
+        p.apply("Read Image", ImageTransform.read(pathInterFn.apply(IMAGE)))
+            .apply("Map Image to KV", ImageTransform.toKv());
+
+    PCollection<KV<String, AudubonRecord>> audubonCollection =
+        p.apply("Read Audubon", AudubonTransform.read(pathInterFn.apply(AUDUBON)))
+            .apply("Map Audubon to KV", AudubonTransform.toKv());
+
     PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
         p.apply("Read Measurement", MeasurementOrFactTransform.read(pathInterFn.apply(MEASUREMENT_OR_FACT)))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
@@ -162,16 +182,22 @@ public class InterpretedToEsIndexPipeline {
             CoGbkResult v = c.element().getValue();
             String k = c.element().getKey();
 
+            // Core
             MetadataRecord mdr = c.sideInput(metadataView);
             ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
             BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
             TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
+
+            // Extension
             MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
+            ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
+            AudubonRecord ar = v.getOnly(arTag, AudubonRecord.newBuilder().setId(k).build());
             MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
-            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, mfr, er).buildJson().toString();
+            MultimediaRecord mergedMr = MultimediaConverter.merge(mr, ir, ar);
+            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mergedMr, mfr, er).buildJson().toString();
 
             c.output(json);
 
@@ -180,13 +206,20 @@ public class InterpretedToEsIndexPipeline {
         };
 
     PCollection<String> jsonCollection =
-        KeyedPCollectionTuple.of(brTag, basicCollection)
+        KeyedPCollectionTuple
+            // Core
+            .of(brTag, basicCollection)
             .and(trTag, temporalCollection)
             .and(lrTag, locationCollection)
             .and(txrTag, taxonCollection)
+            // Extension
             .and(mrTag, multimediaCollection)
+            .and(irTag, imageCollection)
+            .and(arTag, audubonCollection)
             .and(mfrTag, measurementCollection)
+            // Raw
             .and(erTag, verbatimCollection)
+            // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", ParDo.of(doFn).withSideInputs(metadataView));
 

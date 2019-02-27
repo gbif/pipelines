@@ -24,6 +24,8 @@ import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
@@ -37,7 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
@@ -51,11 +55,16 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  *
  * <pre>
  *    1) Reads DwCA archive and converts to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
- *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file
- *        to {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link
- *        org.gbif.pipelines.io.avro.BasicRecord}, {@link org.gbif.pipelines.io.avro.TemporalRecord},
- *        {@link org.gbif.pipelines.io.avro.MultimediaRecord}, {@link
- *        org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file to:
+ *      {@link org.gbif.pipelines.io.avro.MetadataRecord},
+ *      {@link org.gbif.pipelines.io.avro.BasicRecord},
+ *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *      {@link  org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.LocationRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord}
  *    3) Writes data to independent files
  * </pre>
  *
@@ -132,6 +141,14 @@ public class DwcaToInterpretedPipeline {
     uniqueRecords
         .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
         .apply("Write multimedia to avro", MultimediaTransform.write(pathFn.apply(MULTIMEDIA)));
+
+    uniqueRecords
+        .apply("Interpret image", ParDo.of(new ImageTransform.Interpreter()))
+        .apply("Write image to avro", ImageTransform.write(pathFn.apply(IMAGE)));
+
+    uniqueRecords
+        .apply("Interpret audubon", ParDo.of(new AudubonTransform.Interpreter()))
+        .apply("Write audubon to avro", AudubonTransform.write(pathFn.apply(AUDUBON)));
 
     uniqueRecords
         .apply("Interpret measurement", ParDo.of(new MeasurementOrFactTransform.Interpreter()))

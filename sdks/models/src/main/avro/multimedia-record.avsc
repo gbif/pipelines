@@ -16,7 +16,7 @@
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
-      {"name":"type","type":[ "null", "MediaType"], "default":null, "doc": "http://purl.org/dc/terms/type"},
+      {"name": "type", "type":[ "null", "MediaType"], "default":null, "doc": "http://purl.org/dc/terms/type"},
       {"name": "format", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/format"},
       {"name": "identifier", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/identifier"},
       {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},

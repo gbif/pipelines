@@ -1,8 +1,12 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
+import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.common.parsers.MediaParser;
+import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.AcTerm;
 import org.gbif.dwc.terms.DcElement;
 import org.gbif.dwc.terms.DcTerm;
@@ -16,12 +20,16 @@ import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import com.google.common.base.Strings;
+
 /**
  * Interpreter for the Audubon extension, Interprets form {@link ExtendedRecord} to {@link AudubonRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/ac/audubon.xml</a>
  */
 public class AudubonInterpreter {
+
+  private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
 
   private static final String IPTC = "http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
 
@@ -43,7 +51,6 @@ public class AudubonInterpreter {
           .map(XmpRightsTerm.WebStatement, Audubon::setWebStatement)
           .map(AcTerm.licenseLogoURL, Audubon::setLicenseLogoUrl)
           .map(AcTerm.attributionLogoURL, Audubon::setAttributionLogoUrl)
-          .map(AcTerm.attributionLinkURL, Audubon::setAttributionLinkUrl)
           .map(AcTerm.fundingAttribution, Audubon::setFundingAttribution)
           .map(DcElement.source, Audubon::setSource)
           .map(DcTerm.source, Audubon::setSourceUri)
@@ -56,7 +63,6 @@ public class AudubonInterpreter {
           .map(AcTerm.tag, Audubon::setTag)
           .map(DcTerm.identifier, Audubon::setIdentifier)
           .map(DcElement.type, Audubon::setType)
-          .map(DcTerm.type, Audubon::setTypeUri)
           .map(AcTerm.subtypeLiteral, Audubon::setSubtypeLiteral)
           .map(AcTerm.subtype, Audubon::setSubtype)
           .map(DcTerm.title, Audubon::setTitle)
@@ -81,13 +87,10 @@ public class AudubonInterpreter {
           .map(AcTerm.digitizationDate, Audubon::setDigitizationDate)
           .map(AcTerm.captureDevice, Audubon::setCaptureDevice)
           .map(AcTerm.resourceCreationTechnique, Audubon::setResourceCreationTechnique)
-          .map(AcTerm.accessURI, Audubon::setAccessUri)
           .map(DcElement.format, Audubon::setFormat)
-          .map(DcTerm.format, Audubon::setFormatUri)
           .map(AcTerm.variantLiteral, Audubon::setVariantLiteral)
           .map(AcTerm.variant, Audubon::setVariant)
           .map(AcTerm.variantDescription, Audubon::setVariantDescription)
-          .map(AcTerm.furtherInformationURL, Audubon::setFurtherInformationUrl)
           .map(AcTerm.licensingException, Audubon::setLicensingException)
           .map(AcTerm.serviceExpectation, Audubon::setServiceExpectation)
           .map(AcTerm.hashFunction, Audubon::setHashFunction)
@@ -123,7 +126,12 @@ public class AudubonInterpreter {
           .map("http://rs.tdwg.org/ac/terms/relatedResourceID", Audubon::setRelatedResourceId)
           .map("http://ns.adobe.com/exif/1.0/PixelXDimension", Audubon::setPixelXDimension)
           .map("http://ns.adobe.com/exif/1.0/PixelYDimension", Audubon::setPixelYDimension)
-          .map("http://ns.adobe.com/photoshop/1.0/Credit", Audubon::setCredit);
+          .map("http://ns.adobe.com/photoshop/1.0/Credit", Audubon::setCredit)
+          .map(DcTerm.type, Audubon::setTypeUri)
+          .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndsetFurtherInformationUrl)
+          .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndsetAttributionLinkUrl)
+          .map(AcTerm.accessURI, AudubonInterpreter::parseAndsetAccessUri)
+          .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat);
 
   private AudubonInterpreter() {}
 
@@ -139,5 +147,40 @@ public class AudubonInterpreter {
 
     ar.setAudubonItems(result.getList());
     ar.getIssues().setIssueList(result.getIssuesAsList());
+  }
+
+  /**
+   *
+   */
+  private static void parseAndsetAccessUri(Audubon a, String v) {
+    URI uri = UrlParser.parse(v);
+    Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setAccessUri);
+  }
+
+  /**
+   *
+   */
+  private static void parseAndsetFurtherInformationUrl(Audubon a, String v) {
+    URI uri = UrlParser.parse(v);
+    Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setFurtherInformationUrl);
+  }
+
+  /**
+   *
+   */
+  private static void parseAndsetAttributionLinkUrl(Audubon a, String v) {
+    URI uri = UrlParser.parse(v);
+    Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setAttributionLinkUrl);
+  }
+
+  /**
+   *
+   */
+  private static void parseAndSetFormat(Audubon a, String v) {
+    String mimeType = MEDIA_PARSER.parseMimeType(v);
+    if (Strings.isNullOrEmpty(mimeType)) {
+      mimeType = MEDIA_PARSER.parseMimeType(a.getIdentifier());
+    }
+    a.setFormat(mimeType);
   }
 }
