@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,6 +21,10 @@ public class MultimediaConverter {
   private MultimediaConverter() {}
 
   public static MultimediaRecord merge(MultimediaRecord mr, ImageRecord ir, AudubonRecord ar) {
+    Objects.requireNonNull(mr);
+    Objects.requireNonNull(ir);
+    Objects.requireNonNull(ar);
+
     MultimediaRecord record = MultimediaRecord.newBuilder().setId(mr.getId()).build();
 
     boolean isMrEmpty = mr.getMultimediaItems() == null && mr.getIssues().getIssueList().isEmpty();
