@@ -68,9 +68,16 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * Pipeline sequence:
  *
  * <pre>
- *    1) Reads {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link org.gbif.pipelines.io.avro.BasicRecord},
- *        {@link org.gbif.pipelines.io.avro.TemporalRecord}, {@link org.gbif.pipelines.io.avro.MultimediaRecord},
- *        {@link org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord} avro files
+ *    1) Reads avro files:
+ *      {@link org.gbif.pipelines.io.avro.MetadataRecord},
+ *      {@link org.gbif.pipelines.io.avro.BasicRecord},
+ *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
+ *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    2) Joins avro files
  *    3) Converts to json model (resources/elasticsearch/es-occurrence-shcema.json)
  *    4) Pushes data to Elasticsearch instance
