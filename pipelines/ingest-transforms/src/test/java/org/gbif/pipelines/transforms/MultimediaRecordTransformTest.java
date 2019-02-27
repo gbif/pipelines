@@ -82,7 +82,7 @@ public class MultimediaRecordTransformTest {
             .setCreator(CREATOR)
             .setCreated(CREATED)
             .setSource(SOURCE)
-            .setType(MediaType.StillImage)
+            .setType(MediaType.StillImage.name())
             .build();
 
     return MultimediaRecord.newBuilder()

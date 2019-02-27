@@ -93,11 +93,11 @@ public class MultimediaInterpreter {
   private static void parseAndSetType(Multimedia m, String v) {
     if (!Strings.isNullOrEmpty(v)) {
       if (v.toLowerCase().startsWith("image")) {
-        m.setType(MediaType.StillImage);
+        m.setType(MediaType.StillImage.name());
       } else if (v.toLowerCase().startsWith("audio")) {
-        m.setType(MediaType.Sound);
+        m.setType(MediaType.Sound.name());
       } else if (v.toLowerCase().startsWith("video")) {
-        m.setType(MediaType.MovingImage);
+        m.setType(MediaType.MovingImage.name());
       }
     }
   }
