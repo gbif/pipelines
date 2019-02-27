@@ -3,7 +3,6 @@ package org.gbif.pipelines.transforms.core;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.gbif.kvs.KeyValueStore;
@@ -104,28 +103,32 @@ public class TaxonomyTransform {
     @Setup
     public void setup() throws IOException {
       if (kvConfig != null) {
+
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
             .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
             .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
             .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
             .build();
-        if (Objects.nonNull(kvConfig.getZookeeperUrl())) {
+
+        if (kvConfig.getZookeeperUrl() != null) {
+
           NameMatchServiceSyncClient nameMatchClient = new NameMatchServiceSyncClient(clientConfiguration);
-          HBaseKVStoreConfiguration storeConfig = HBaseKVStoreConfiguration.builder()
-              .withTableName("name_usage_kv") //Geocode KV HBase table
-              .withColumnFamily("v") //Column in which qualifiers are stored
-              .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
-              .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-              .build();
 
           NameUsageMatchKVConfiguration matchConfig = NameUsageMatchKVConfiguration.builder()
               .withJsonColumnQualifier("j") //stores JSON data
-              .withHBaseKVStoreConfiguration(storeConfig).build();
+              .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
+                  .withTableName("name_usage_kv") //Geocode KV HBase table
+                  .withColumnFamily("v") //Column in which qualifiers are stored
+                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
+                  .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
+                  .build())
+              .build();
 
           kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, nameMatchClient);
         } else {
           kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
         }
+
       }
     }
 

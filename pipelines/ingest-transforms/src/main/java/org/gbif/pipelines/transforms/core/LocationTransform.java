@@ -3,7 +3,6 @@ package org.gbif.pipelines.transforms.core;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
@@ -100,29 +99,32 @@ public class LocationTransform {
     @Setup
     public void setup() throws IOException {
       if (kvConfig != null) {
+
         ClientConfiguration clientConfig = ClientConfiguration.builder()
             .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
             .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
             .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
             .build();
-        if (Objects.nonNull(kvConfig.getZookeeperUrl())) {
-          HBaseKVStoreConfiguration hBaseKvStoreConfig = HBaseKVStoreConfiguration.builder()
-              .withTableName("geocode_kv") //Geocode KV HBase table
-              .withColumnFamily("v") //Column in which qualifiers are stored
-              .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
-              .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-              .build();
+
+        if (kvConfig.getZookeeperUrl() != null) {
 
           GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
               .withJsonColumnQualifier("j") //stores JSON data
               .withCountryCodeColumnQualifier("c") //stores ISO country code
-              .withHBaseKVStoreConfiguration(hBaseKvStoreConfig)
+              .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
+                  .withTableName("geocode_kv") //Geocode KV HBase table
+                  .withColumnFamily("v") //Column in which qualifiers are stored
+                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                  .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
+                  .build())
+              .withCacheCapacity(15_000L)
               .build();
 
           kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
         } else {
           kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(clientConfig);
         }
+
       }
     }
 
