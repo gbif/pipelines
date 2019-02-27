@@ -55,7 +55,7 @@ public class MultimediaConverter {
     Optional.ofNullable(mr.getMultimediaItems())
         .filter(i -> !i.isEmpty())
         .ifPresent(c -> c.stream()
-            .filter(m -> Strings.isNullOrEmpty(m.getReferences()) || Strings.isNullOrEmpty(m.getIdentifier()))
+            .filter(m -> !Strings.isNullOrEmpty(m.getReferences()) || !Strings.isNullOrEmpty(m.getIdentifier()))
             .forEach(r -> {
               String key = Optional.ofNullable(r.getIdentifier()).orElse(r.getReferences());
               map.put(key, r);
@@ -66,7 +66,7 @@ public class MultimediaConverter {
     Optional.ofNullable(ir.getImageItems())
         .filter(i -> !i.isEmpty())
         .ifPresent(c -> c.stream()
-            .filter(m -> Strings.isNullOrEmpty(m.getReferences()) || Strings.isNullOrEmpty(m.getIdentifier()))
+            .filter(m -> !Strings.isNullOrEmpty(m.getReferences()) || !Strings.isNullOrEmpty(m.getIdentifier()))
             .forEach(r -> {
               String key = Optional.ofNullable(r.getIdentifier()).orElse(r.getReferences());
               Multimedia multimedia = Multimedia.newBuilder()
@@ -93,7 +93,7 @@ public class MultimediaConverter {
     Optional.ofNullable(ar.getAudubonItems())
         .filter(i -> !i.isEmpty())
         .ifPresent(c -> c.stream()
-            .filter(m -> Strings.isNullOrEmpty(m.getAccessUri()))
+            .filter(m -> !Strings.isNullOrEmpty(m.getAccessUri()))
             .forEach(r -> {
               String key = r.getAccessUri();
               Multimedia multimedia = Multimedia.newBuilder()
