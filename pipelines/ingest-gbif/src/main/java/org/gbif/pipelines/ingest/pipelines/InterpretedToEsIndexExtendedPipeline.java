@@ -7,6 +7,8 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 
 import org.slf4j.MDC;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,9 +46,8 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedToEsIndexExtendedPipeline {
-
-  private InterpretedToEsIndexExtendedPipeline() {}
 
   public static void main(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);

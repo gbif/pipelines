@@ -1,15 +1,16 @@
 package org.gbif.pipelines.common;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * Simple class with constants, general idea to have clean jar with constant only
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PipelinesVariables {
 
-  private PipelinesVariables() {}
-
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Pipeline {
-
-    private Pipeline() {}
 
     public static final String AVRO_EXTENSION = ".avro";
 
@@ -17,17 +18,15 @@ public class PipelinesVariables {
     public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {
-
-      private Conversion() {}
 
       public static final String FILE_NAME = "verbatim";
 
     }
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Interpretation {
-
-      private Interpretation() {}
 
       public static final String DIRECTORY_NAME = "interpreted";
       public static final String FILE_NAME = "interpret-";
@@ -52,9 +51,8 @@ public class PipelinesVariables {
 
     }
 
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Indexing {
-
-      private Indexing() {}
 
       public static final String INDEX_TYPE = "record";
 
@@ -62,9 +60,8 @@ public class PipelinesVariables {
 
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class Metrics {
-
-    private Metrics() {}
 
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
     public static final String DWCA_TO_AVRO_COUNT = "dwcaToAvroCount";

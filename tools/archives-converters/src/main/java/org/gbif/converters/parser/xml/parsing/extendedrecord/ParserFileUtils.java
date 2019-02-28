@@ -1,25 +1,24 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 
 import org.gbif.converters.parser.xml.ParsingException;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ParserFileUtils {
 
-  private static final BiFunction<String, String, String> UNCOMPRESS =
+  private static final BinaryOperator<String> UNCOMPRESS =
       (inPath, outPath) -> String.format("tar -xf %s -C %s", inPath, outPath);
   private static final String ARCHIVE_PREFIX = ".tar.xz";
   private static final String TMP_PATH = "/tmp/";
-
-  private ParserFileUtils() {
-    // NOP
-  }
 
   /**
    * @param inputPath path to a folder with xmls or a tar.xz archive
@@ -49,20 +48,16 @@ public class ParserFileUtils {
    * @param inputFile - *.tar.xz file
    * @return the new File object, path to uncompressed files folder
    */
+  @SneakyThrows
   public static File uncompress(File inputFile) {
-    try {
-      File parentFile = new File(inputFile.getParentFile(), TMP_PATH);
-      Files.createDirectories(parentFile.toPath());
-      String cmd = UNCOMPRESS.apply(inputFile.getAbsolutePath(), parentFile.getAbsolutePath());
+    File parentFile = new File(inputFile.getParentFile(), TMP_PATH);
+    Files.createDirectories(parentFile.toPath());
+    String cmd = UNCOMPRESS.apply(inputFile.getAbsolutePath(), parentFile.getAbsolutePath());
 
-      log.info("Uncompressing a tar.xz archive {}", cmd);
-      Runtime.getRuntime().exec(cmd).waitFor();
-      log.info("The archive has been uncompressed");
+    log.info("Uncompressing a tar.xz archive {}", cmd);
+    Runtime.getRuntime().exec(cmd).waitFor();
+    log.info("The archive has been uncompressed");
 
-      return parentFile;
-    } catch (InterruptedException | IOException ex) {
-      log.error("Directory or file {} does not exist", inputFile.getAbsolutePath());
-      throw new ParsingException(ex);
-    }
+    return parentFile;
   }
 }

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.gbif.pipelines.estools.EsIndex;
 
+import org.elasticsearch.client.ResponseException;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Rule;
@@ -51,8 +52,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void createIndexWithMappingsTest() {
     // create index
-    String idxCreated =
-        EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
+    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -113,8 +113,8 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
 
   @Test
   public void swapMissingIndexTest() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage(CoreMatchers.containsString("Error swapping index"));
+    thrown.expect(ResponseException.class);
+    thrown.expectMessage(CoreMatchers.containsString("URI [/_aliases], status line [HTTP/1.1 404 Not Found"));
 
     EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, "dummy_1");
   }
@@ -148,8 +148,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   }
 
   /** Utility mehtod to assert a newly created index. */
-  private static void assertIndexWithSettingsAndIndexName(
-      String idxCreated, String datasetId, int attempt) {
+  private static void assertIndexWithSettingsAndIndexName(String idxCreated, String datasetId, int attempt) {
     // assert index created
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxCreated));
     // assert index settings

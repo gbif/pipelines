@@ -15,6 +15,8 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.slf4j.MDC;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -42,9 +44,8 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DwcaToVerbatimPipeline {
-
-  private DwcaToVerbatimPipeline() {}
 
   public static void main(String[] args) {
     BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);

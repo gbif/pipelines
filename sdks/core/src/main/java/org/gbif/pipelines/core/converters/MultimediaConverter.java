@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -15,15 +14,15 @@ import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MultimediaConverter {
 
-  private MultimediaConverter() {}
-
-  public static MultimediaRecord merge(MultimediaRecord mr, ImageRecord ir, AudubonRecord ar) {
-    Objects.requireNonNull(mr);
-    Objects.requireNonNull(ir);
-    Objects.requireNonNull(ar);
+  public static MultimediaRecord merge(@NonNull MultimediaRecord mr, @NonNull ImageRecord ir,
+      @NonNull AudubonRecord ar) {
 
     MultimediaRecord record = MultimediaRecord.newBuilder().setId(mr.getId()).build();
 

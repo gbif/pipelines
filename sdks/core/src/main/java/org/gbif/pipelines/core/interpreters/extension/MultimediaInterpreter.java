@@ -22,6 +22,8 @@ import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 
@@ -30,6 +32,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
  *
  * @see <a href="http://rs.gbif.org/extension/gbif/1.0/multimedia.xml</a>
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MultimediaInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
@@ -54,8 +57,6 @@ public class MultimediaInterpreter {
           .map(DcTerm.source, Multimedia::setSource)
           .map(DwcTerm.datasetID, Multimedia::setDatasetId)
           .skipIf(MultimediaInterpreter::checkLinks);
-
-  private MultimediaInterpreter() {}
 
   /**
    * Interprets the multimedia of a {@link ExtendedRecord} and populates a {@link MultimediaRecord}

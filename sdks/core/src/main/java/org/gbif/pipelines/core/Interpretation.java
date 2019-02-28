@@ -7,6 +7,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+
 /**
  * The class is designed to simplify interpretation process:
  *
@@ -29,13 +32,10 @@ import java.util.function.Supplier;
  *     .consume(context::output);
  * }</pre>
  */
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Interpretation<S> {
 
   private final S source;
-
-  private Interpretation(S source) {
-    this.source = source;
-  }
 
   /** @param source source data object */
   public static <S> Interpretation<S> from(S source) {
@@ -84,13 +84,10 @@ public class Interpretation<S> {
 
   }
 
+  @AllArgsConstructor(access = AccessLevel.PRIVATE)
   public class Handler<T> {
 
     private final T target;
-
-    private Handler(T target) {
-      this.target = target;
-    }
 
     /**
      * @param func BiConsumer for applying an interpretation function, where S as a source data

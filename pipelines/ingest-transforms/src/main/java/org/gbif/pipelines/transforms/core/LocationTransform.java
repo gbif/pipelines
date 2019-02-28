@@ -30,15 +30,17 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
-
-  private LocationTransform() {}
 
   /**
    * Checks if list contains {@link RecordType#LOCATION}, else returns empty {@link PCollection<ExtendedRecord>}

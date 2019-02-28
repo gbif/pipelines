@@ -1,12 +1,14 @@
 package org.gbif.pipelines.estools.service;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /** Utility class to store ES-related constants. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class EsConstants {
 
-  private EsConstants() {}
-
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static final class Field {
-    private Field() {}
 
     public static final String INDEX = "index";
     public static final String SETTINGS = "settings";
@@ -27,36 +29,36 @@ public final class EsConstants {
         Util.INDEX_PREFIX + Field.TRANSLOG + Util.JSON_CONCATENATOR + Field.DURABILITY;
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static final class Action {
-    private Action() {}
 
     public static final String ADD = "add";
     public static final String REMOVE_INDEX = "remove_index";
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   private static final class Util {
-    private Util() {}
 
     private static final String JSON_CONCATENATOR = ".";
     private static final String INDEX_PREFIX = Field.INDEX + JSON_CONCATENATOR;
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static final class Indexing {
-    private Indexing() {}
 
     public static final String REFRESH_INTERVAL = "-1";
     public static final String NUMBER_REPLICAS = "0";
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static final class Searching {
-    private Searching() {}
 
     public static final String REFRESH_INTERVAL = "1s";
     public static final String NUMBER_REPLICAS = "1";
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static final class Constant {
-    private Constant() {}
 
     public static final String NUMBER_SHARDS = "3";
     public static final String TRANSLOG_DURABILITY = "async";

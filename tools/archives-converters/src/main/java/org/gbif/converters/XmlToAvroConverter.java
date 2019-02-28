@@ -8,18 +8,14 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.DataFileWriter;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@NoArgsConstructor(staticName = "create")
 public class XmlToAvroConverter extends ConverterToVerbatim {
 
   private int xmlReaderParallelism = Runtime.getRuntime().availableProcessors();
-
-  private XmlToAvroConverter() {}
-
-  public static XmlToAvroConverter create() {
-    return new XmlToAvroConverter();
-  }
 
   public XmlToAvroConverter xmlReaderParallelism(int xmlReaderParallelism) {
     this.xmlReaderParallelism = xmlReaderParallelism;

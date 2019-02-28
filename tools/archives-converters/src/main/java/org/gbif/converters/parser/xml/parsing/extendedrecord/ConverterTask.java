@@ -13,6 +13,7 @@ import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.HashUtils.getSha1;
@@ -23,6 +24,7 @@ import static org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedReco
  * ExtendedRecord avro file
  */
 @Slf4j
+@AllArgsConstructor
 public class ConverterTask implements Runnable {
 
   private final File inputFile;
@@ -30,15 +32,6 @@ public class ConverterTask implements Runnable {
   private final UniquenessValidator validator;
   private final AtomicLong counter;
   private final String idHashPrefix;
-
-  public ConverterTask(File inputFile, SyncDataFileWriter writer, UniquenessValidator validator, AtomicLong counter,
-      String idHashPrefix) {
-    this.inputFile = inputFile;
-    this.dataFileWriter = writer;
-    this.validator = validator;
-    this.counter = counter;
-    this.idHashPrefix = idHashPrefix;
-  }
 
   @Override
   public void run() {

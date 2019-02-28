@@ -21,12 +21,15 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /**
  * Interpreter for the Audubon extension, Interprets form {@link ExtendedRecord} to {@link AudubonRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/ac/audubon.xml</a>
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AudubonInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
@@ -132,8 +135,6 @@ public class AudubonInterpreter {
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndsetAttributionLinkUrl)
           .map(AcTerm.accessURI, AudubonInterpreter::parseAndsetAccessUri)
           .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat);
-
-  private AudubonInterpreter() {}
 
   /**
    * Interprets audubons of a {@link ExtendedRecord} and populates a {@link AudubonRecord}

@@ -23,15 +23,17 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMEN_OR_FACT_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MeasurementOrFactTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
-
-  private MeasurementOrFactTransform() {}
 
   /**
    * Checks if list contains {@link RecordType#MEASUREMENT_OR_FACT}, else returns empty {@link

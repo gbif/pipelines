@@ -5,16 +5,17 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 import javax.annotation.Nullable;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /**
  * A helper class for building the row keys used in the occurrence lookup table/process. TODO: this
  * is too similar to OccurrenceKeyBuilder - they should be merged
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceKeyHelper {
 
   private static final String DELIM = "|";
-
-  private OccurrenceKeyHelper() {}
 
   public static String buildKeyPrefix(String datasetKey) {
     return datasetKey + DELIM;
@@ -54,13 +55,8 @@ public class OccurrenceKeyHelper {
   }
 
   @Nullable
-  public static String buildUnscopedKey(
-      @Nullable PublisherProvidedUniqueIdentifier pubProvidedUniqueId) {
-    if (pubProvidedUniqueId == null) {
-      return null;
-    }
-
-    return pubProvidedUniqueId.getPublisherProvidedIdentifier();
+  public static String buildUnscopedKey(@Nullable PublisherProvidedUniqueIdentifier pubProvidedUniqueId) {
+    return pubProvidedUniqueId == null ? null : pubProvidedUniqueId.getPublisherProvidedIdentifier();
   }
 
   @Nullable
@@ -101,8 +97,7 @@ public class OccurrenceKeyHelper {
 
   private static String join(String delim, String... values) {
     StringJoiner joiner = new StringJoiner(delim);
-    Arrays.stream(values)
-        .forEach(x -> Optional.ofNullable(x).filter(f -> !f.isEmpty()).ifPresent(joiner::add));
+    Arrays.stream(values).forEach(x -> Optional.ofNullable(x).filter(f -> !f.isEmpty()).ifPresent(joiner::add));
     return joiner.toString();
   }
 }

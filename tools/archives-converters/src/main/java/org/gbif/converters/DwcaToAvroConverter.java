@@ -10,19 +10,17 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.DataFileWriter;
 
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.HashUtils.getSha1;
 import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
 
 @Slf4j
+@NoArgsConstructor(staticName = "create")
+@Builder
 public class DwcaToAvroConverter extends ConverterToVerbatim {
-
-  private DwcaToAvroConverter() {}
-
-  public static DwcaToAvroConverter create() {
-    return new DwcaToAvroConverter();
-  }
 
   /** TODO: DOC */
   public static void main(String... args) {

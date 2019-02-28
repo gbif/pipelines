@@ -9,11 +9,15 @@ import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * Interpreter for the Amplification extension, Interprets form {@link ExtendedRecord} to {@link AmplificationRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/ggbn/amplification.xml</a>
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AmplificationInterpreter {
 
   public static final String EXTENSION_ROW_TYPE = "http://rs.gbif.org/extension/ggbn/amplification.xml";
@@ -58,8 +62,6 @@ public class AmplificationInterpreter {
           .map(GENSC + "seq_quality_check", Amplification::setSeqQualityCheck)
           .map(GENSC + "adapters", Amplification::setAdapters)
           .map(GENSC + "mid", Amplification::setMid);
-
-  private AmplificationInterpreter() {}
 
   /**
    * Interprets amplifications of a {@link ExtendedRecord} and populates a {@link AmplificationRecord}

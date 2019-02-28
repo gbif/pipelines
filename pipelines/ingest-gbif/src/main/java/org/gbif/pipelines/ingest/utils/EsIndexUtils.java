@@ -12,12 +12,13 @@ import org.gbif.pipelines.estools.service.EsConstants;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsIndexUtils {
-
-  private EsIndexUtils() {}
 
   /** Connects to Elasticsearch instance and creates an index */
   public static void createIndex(EsIndexingPipelineOptions options) {

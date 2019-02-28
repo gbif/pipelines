@@ -20,15 +20,17 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
-
-  private TemporalTransform() {}
 
   /**
    * Checks if list contains {@link RecordType#TEMPORAL}, else returns empty {@link PCollection<ExtendedRecord>}

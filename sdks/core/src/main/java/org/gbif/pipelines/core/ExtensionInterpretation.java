@@ -19,14 +19,13 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtensionInterpretation {
 
   private final String extenstion;
-
-  private ExtensionInterpretation(String extenstion) {
-    this.extenstion = extenstion;
-  }
 
   public static ExtensionInterpretation extenstion(String extenstion) {
     return new ExtensionInterpretation(extenstion);
@@ -166,15 +165,11 @@ public class ExtensionInterpretation {
 
   }
 
+  @AllArgsConstructor
   public static class Result<T> {
 
     private final List<T> items;
     private final Set<String> issues;
-
-    public Result(List<T> items, Set<String> issues) {
-      this.items = items;
-      this.issues = issues;
-    }
 
     public List<T> getList() {
       return items;

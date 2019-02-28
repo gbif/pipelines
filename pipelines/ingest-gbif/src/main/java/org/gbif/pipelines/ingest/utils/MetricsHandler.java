@@ -9,16 +9,16 @@ import org.apache.beam.sdk.metrics.MetricResult;
 import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.hadoop.fs.FileSystem;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Class to work with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string format
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetricsHandler {
-
-  private MetricsHandler() {
-  }
 
   /**
    * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string
@@ -49,20 +49,19 @@ public class MetricsHandler {
    */
   public static void saveCountersToFile(String hdfsSiteConfig, String path, PipelineResult result) {
 
-    if (path == null || path.isEmpty()) {
-      return;
+    if (path != null && !path.isEmpty()) {
+      log.info("Trying to write pipeline's metadata to a file - {}", path);
+
+      String countersInfo = getCountersInfo(result);
+
+      try (FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path)) {
+        FsUtils.createFile(fs, path, countersInfo);
+        log.info("Metadata was written to a file - {}", path);
+      } catch (IOException ex) {
+        log.warn("Write pipelines metadata file", ex);
+      }
     }
 
-    log.info("Trying to write pipeline's metadata to a file - {}", path);
-
-    String countersInfo = getCountersInfo(result);
-
-    try (FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path)) {
-      FsUtils.createFile(fs, path, countersInfo);
-      log.info("Metadata was written to a file - {}", path);
-    } catch (IOException ex) {
-      log.warn("Write pipelines metadata file", ex);
-    }
   }
 
 }

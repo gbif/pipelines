@@ -8,10 +8,12 @@ import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 
-/** Interprets GBIF metadata by datasetId */
-public class MetadataInterpreter {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-  private MetadataInterpreter() {}
+/** Interprets GBIF metadata by datasetId */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class MetadataInterpreter {
 
   public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {

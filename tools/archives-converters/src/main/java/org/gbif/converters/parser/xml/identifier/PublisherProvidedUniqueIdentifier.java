@@ -1,23 +1,21 @@
 package org.gbif.converters.parser.xml.identifier;
 
-import java.util.Objects;
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+
+@EqualsAndHashCode
+@Getter
+@AllArgsConstructor
 public class PublisherProvidedUniqueIdentifier implements UniqueIdentifier {
 
+  @NonNull
   private final UUID datasetKey;
+  @NonNull
   private final String publisherProvidedIdentifier;
-
-  public PublisherProvidedUniqueIdentifier(UUID datasetKey, String publisherProvidedIdentifier) {
-    this.datasetKey = Objects.requireNonNull(datasetKey, "datasetKey can't be null");
-    this.publisherProvidedIdentifier =
-        Objects.requireNonNull(
-            publisherProvidedIdentifier, "publisherProvidedIdentifier can't be null");
-  }
-
-  public String getPublisherProvidedIdentifier() {
-    return publisherProvidedIdentifier;
-  }
 
   @Override
   public UUID getDatasetKey() {
@@ -34,22 +32,4 @@ public class PublisherProvidedUniqueIdentifier implements UniqueIdentifier {
     return OccurrenceKeyHelper.buildUnscopedKey(this);
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(datasetKey, publisherProvidedIdentifier);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    final PublisherProvidedUniqueIdentifier other = (PublisherProvidedUniqueIdentifier) obj;
-
-    return Objects.equals(this.datasetKey, other.datasetKey)
-        && Objects.equals(this.publisherProvidedIdentifier, other.publisherProvidedIdentifier);
-  }
 }

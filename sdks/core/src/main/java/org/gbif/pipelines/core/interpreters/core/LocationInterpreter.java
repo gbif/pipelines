@@ -22,6 +22,8 @@ import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
@@ -30,6 +32,7 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationInterpreter {
 
   // COORDINATE_UNCERTAINTY_METERS bounds are exclusive bounds
@@ -40,8 +43,6 @@ public class LocationInterpreter {
   private static final double COORDINATE_PRECISION_LOWER_BOUND = 0d;
   // 45 close to 5000 km
   private static final double COORDINATE_PRECISION_UPPER_BOUND = 45d;
-
-  private LocationInterpreter() {}
 
   /**
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link

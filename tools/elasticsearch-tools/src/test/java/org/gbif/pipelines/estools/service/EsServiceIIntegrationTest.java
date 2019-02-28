@@ -12,6 +12,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,7 +33,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   private static final String ALIAS_TEST = "alias";
 
   /** {@link Rule} requires this field to be public. */
-  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Before
   public void cleanIndexes() {
@@ -45,8 +47,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     // When
     String idx = EsService.createIndex(ES_SERVER.getEsClient(), "idx", INDEXING);
 
-    Response response =
-        ES_SERVER.getRestClient().performRequest(new Request(HttpGet.METHOD_NAME, "/" + idx));
+    Response response = ES_SERVER.getRestClient().performRequest(new Request(HttpGet.METHOD_NAME, "/" + idx));
 
     // Should
     assertEquals(HttpStatus.SC_OK, response.getStatusLine().getStatusCode());
@@ -56,9 +57,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void createIndexWithSettingsAndMappingsTest() {
 
     // When
-    String idx =
-        EsService.createIndex(
-            ES_SERVER.getEsClient(), "idx-settings", INDEXING, TEST_MAPPINGS_PATH);
+    String idx = EsService.createIndex(ES_SERVER.getEsClient(), "idx-settings", INDEXING, TEST_MAPPINGS_PATH);
 
     JsonNode mappings = getMappingsFromIndex(idx).path(idx).path(Field.MAPPINGS);
 
@@ -87,7 +86,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     assertSearchSettings(idx);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = ResponseException.class)
   public void updateMissingIndexTest() {
 
     // When
@@ -97,17 +96,17 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     thrown.expectMessage(CoreMatchers.containsString("Error updating index"));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = ResponseException.class)
   public void createWrongIndexTest() {
 
     // When
     EsService.createIndex(ES_SERVER.getEsClient(), "UPPERCASE", INDEXING);
 
     // Should
-    thrown.expectMessage(CoreMatchers.containsString("Error creating index"));
+    thrown.expectMessage(CoreMatchers.containsString("must be lowercase"));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = ResponseException.class)
   public void duplicatedIndexTest() {
 
     // State
@@ -117,7 +116,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     EsService.createIndex(ES_SERVER.getEsClient(), "idx", INDEXING);
 
     // Should
-    thrown.expectMessage(CoreMatchers.containsString("Error creating index"));
+    thrown.expectMessage(CoreMatchers.containsString("already exists"));
   }
 
   @Test
@@ -143,17 +142,13 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     assertTrue(indexes.containsAll(initialIndexes));
 
     // When
-    EsService.swapIndexes(
-        ES_SERVER.getEsClient(), ALIAS_TEST, Collections.singleton(idx4), initialIndexes);
+    EsService.swapIndexes(ES_SERVER.getEsClient(), ALIAS_TEST, Collections.singleton(idx4), initialIndexes);
 
     // Should
     assertSwapResults(idx4, "idx*", ALIAS_TEST, initialIndexes);
 
     // When
-    EsService.swapIndexes(
-        ES_SERVER.getEsClient(),
-        ALIAS_TEST,
-        Collections.singleton(idx5),
+    EsService.swapIndexes(ES_SERVER.getEsClient(), ALIAS_TEST, Collections.singleton(idx5),
         Collections.singleton(idx4));
 
     // Should
@@ -164,8 +159,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void getIndexesFromMissingAliasTest() {
 
     // When
-    Set<String> idx =
-        EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), "idx*", "fake-alias");
+    Set<String> idx = EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), "idx*", "fake-alias");
 
     // Should
     assertTrue(idx.isEmpty());
@@ -178,25 +172,21 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
 
     // When
-    EsService.swapIndexes(
-        ES_SERVER.getEsClient(), ALIAS_TEST, Collections.singleton(idx1), Collections.emptySet());
+    EsService.swapIndexes(ES_SERVER.getEsClient(), ALIAS_TEST, Collections.singleton(idx1), Collections.emptySet());
 
     // Should
     assertSwapResults(idx1, "idx*", ALIAS_TEST, Collections.emptySet());
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = ResponseException.class)
   public void swapMissingIndexTest() {
 
     // When
-    EsService.swapIndexes(
-        ES_SERVER.getEsClient(),
-        "fake-alias",
-        Collections.singleton("fake-index"),
+    EsService.swapIndexes(ES_SERVER.getEsClient(), "fake-alias", Collections.singleton("fake-index"),
         Collections.emptySet());
 
     // Should
-    thrown.expectMessage(CoreMatchers.containsString("Error swapping index"));
+    thrown.expectMessage(CoreMatchers.containsString("afwfawf"));
   }
 
   @Test
@@ -218,8 +208,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
 
     // State
     String idx =
-        EsService.createIndex(
-            ES_SERVER.getEsClient(), "idx_1", Collections.emptyMap(), TEST_MAPPINGS_PATH);
+        EsService.createIndex(ES_SERVER.getEsClient(), "idx_1", Collections.emptyMap(), TEST_MAPPINGS_PATH);
 
     // When
     // index some documents
@@ -250,14 +239,14 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     assertEquals(n - 1, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idx));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test(expected = ResponseException.class)
   public void countMissingIndexTest() {
 
     // When
     EsService.countIndexDocuments(ES_SERVER.getEsClient(), "fake");
 
     // Should
-    thrown.expectMessage(CoreMatchers.containsString("Could not get count from index"));
+    thrown.expectMessage(CoreMatchers.containsString("no such index"));
   }
 
   @Test

@@ -16,12 +16,16 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * Interpreter for the MeasurementsOrFacts extension, Interprets form {@link ExtendedRecord} to {@link
  * MeasurementOrFactRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/dwc/measurements_or_facts.xml</a>
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MeasurementOrFactInterpreter {
 
   private static final TargetHandler<MeasurementOrFact> HANDLER =
@@ -36,9 +40,6 @@ public class MeasurementOrFactInterpreter {
           .map(DwcTerm.measurementMethod, MeasurementOrFact::setMethod)
           .map(DwcTerm.measurementRemarks, MeasurementOrFact::setRemarks)
           .map(DwcTerm.measurementDeterminedDate, MeasurementOrFactInterpreter::parseAndsetDeterminedDate);
-
-  private MeasurementOrFactInterpreter() {}
-
   /**
    * Interprets measurements or facts of a {@link ExtendedRecord} and populates a {@link MeasurementOrFactRecord}
    * with the interpreted values.

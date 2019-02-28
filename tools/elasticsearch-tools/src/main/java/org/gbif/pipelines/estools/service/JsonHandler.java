@@ -1,19 +1,20 @@
 package org.gbif.pipelines.estools.service;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.http.HttpEntity;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 
 /**
  * Handler to work with JSON.
@@ -21,13 +22,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * <p>This class handles all the exceptions thrown when working with JSON and rethrows the checked
  * exceptions as unchecked.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class JsonHandler {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final ObjectWriter WRITER = MAPPER.writer();
   private static final ObjectReader READER = MAPPER.readerFor(Map.class);
-
-  private JsonHandler() {}
 
   /** Creates a {@link ObjectNode}. */
   static ObjectNode createObjectNode() {
@@ -40,59 +40,39 @@ final class JsonHandler {
   }
 
   /** Writes a {@link Object} to String. */
+  @SneakyThrows
   static String writeToString(Object obj) {
-    try {
-      return WRITER.writeValueAsString(obj);
-    } catch (JsonProcessingException exc) {
-      throw new IllegalStateException(exc.getMessage(), exc);
-    }
+    return WRITER.writeValueAsString(obj);
   }
 
   /** Writes a {@link InputStream} to String . */
+  @SneakyThrows
   static String writeToString(InputStream inputStream) {
-    try {
-      return writeToString(READER.readTree(inputStream));
-    } catch (IOException exc) {
-      throw new IllegalStateException(exc.getMessage(), exc);
-    }
+    return writeToString(READER.readTree(inputStream));
   }
 
   /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link Map}. */
-  static Map<String, String> readValue(HttpEntity entity) {
-    Objects.requireNonNull(entity);
-    try {
-      return READER.readValue(entity.getContent());
-    } catch (IOException exc) {
-      throw new IllegalStateException(exc.getMessage(), exc);
-    }
+  @SneakyThrows
+  static Map<String, String> readValue(@NonNull HttpEntity entity) {
+    return READER.readValue(entity.getContent());
   }
 
   /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link JsonNode}. */
-  static JsonNode readTree(HttpEntity entity) {
-    Objects.requireNonNull(entity);
-    try {
-      return READER.readTree(entity.getContent());
-    } catch (IOException exc) {
-      throw new IllegalStateException(exc.getMessage(), exc);
-    }
+  @SneakyThrows
+  static JsonNode readTree(@NonNull HttpEntity entity) {
+    return READER.readTree(entity.getContent());
   }
 
   /** Reads a {@link InputStream} with JSON content and returns it as a {@link JsonNode}. */
+  @SneakyThrows
   static JsonNode readTree(InputStream inputStream) {
-    try {
-      return READER.readTree(inputStream);
-    } catch (IOException exc) {
-      throw new IllegalStateException(exc.getMessage(), exc);
-    }
+    return READER.readTree(inputStream);
   }
 
   /** Reads a {@link String} with JSON content and returns it as a {@link JsonNode}. */
+  @SneakyThrows
   static JsonNode readTree(String jsonString) {
-    try {
-      return READER.readTree(jsonString);
-    } catch (IOException exc) {
-      throw new IllegalStateException(exc.getMessage(), exc);
-    }
+    return READER.readTree(jsonString);
   }
 
   /** Converts a {@link Map} into a {@link JsonNode}. */

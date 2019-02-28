@@ -3,13 +3,15 @@ package org.gbif.converters.parser.xml.parsing.extendedrecord;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /** Singleton class to create only one Executor instance */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExecutorPool {
 
   private static volatile Executor instance;
   private static final Object MUTEX = new Object();
-
-  private ExecutorPool() {}
 
   public static Executor getInstance(int parallelism) {
     if (instance == null) {

@@ -18,6 +18,10 @@ import org.apache.beam.sdk.transforms.display.DisplayData;
 import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DWCA_TO_AVRO_COUNT;
 
 /**
@@ -36,9 +40,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DWCA_TO_AVRO_
  *     ...;
  * }</pre>
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DwcaIO {
-
-  private DwcaIO() {}
 
   public static class Read extends PTransform<PBegin, PCollection<ExtendedRecord>> {
 
@@ -101,13 +104,10 @@ public class DwcaIO {
   }
 
   /** A non-splittable bounded source. */
+  @AllArgsConstructor(access = AccessLevel.PACKAGE)
   private static class DwcaSource extends BoundedSource<ExtendedRecord> {
 
     private final Read read;
-
-    DwcaSource(Read read) {
-      this.read = read;
-    }
 
     @Override
     public Coder<ExtendedRecord> getOutputCoder() {
@@ -116,8 +116,7 @@ public class DwcaIO {
 
     /** Will always return a single entry list of just ourselves. This is not splittable. */
     @Override
-    public List<? extends BoundedSource<ExtendedRecord>> split(
-        long desiredBundleSizeBytes, PipelineOptions options) {
+    public List<? extends BoundedSource<ExtendedRecord>> split(long desiredBundleSizeBytes, PipelineOptions options) {
       return Collections.singletonList(this);
     }
 

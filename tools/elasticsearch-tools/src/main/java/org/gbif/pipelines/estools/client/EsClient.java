@@ -21,6 +21,7 @@ import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
 
 import com.google.common.base.Preconditions;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -128,11 +129,8 @@ public class EsClient implements AutoCloseable {
   }
 
   @Override
+  @SneakyThrows
   public void close() {
-    try {
-      restClient.close();
-    } catch (IOException e) {
-      throw new IllegalStateException(e.getMessage());
-    }
+    restClient.close();
   }
 }

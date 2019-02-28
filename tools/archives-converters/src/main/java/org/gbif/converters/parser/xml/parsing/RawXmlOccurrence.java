@@ -21,9 +21,13 @@ import java.security.NoSuchAlgorithmException;
 
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Getter
+@Setter
 public class RawXmlOccurrence {
 
   private String resourceName;
@@ -45,53 +49,5 @@ public class RawXmlOccurrence {
     }
 
     return hash;
-  }
-
-  public String getInstitutionCode() {
-    return institutionCode;
-  }
-
-  public void setInstitutionCode(String institutionCode) {
-    this.institutionCode = institutionCode;
-  }
-
-  public String getCollectionCode() {
-    return collectionCode;
-  }
-
-  public void setCollectionCode(String collectionCode) {
-    this.collectionCode = collectionCode;
-  }
-
-  public String getCatalogNumber() {
-    return catalogNumber;
-  }
-
-  public void setCatalogNumber(String catalogNumber) {
-    this.catalogNumber = catalogNumber;
-  }
-
-  public String getXml() {
-    return xml;
-  }
-
-  public void setXml(String xml) {
-    this.xml = xml;
-  }
-
-  public String getResourceName() {
-    return resourceName;
-  }
-
-  public void setResourceName(String resourceName) {
-    this.resourceName = resourceName;
-  }
-
-  public OccurrenceSchemaType getSchemaType() {
-    return schemaType;
-  }
-
-  public void setSchemaType(OccurrenceSchemaType schemaType) {
-    this.schemaType = schemaType;
   }
 }

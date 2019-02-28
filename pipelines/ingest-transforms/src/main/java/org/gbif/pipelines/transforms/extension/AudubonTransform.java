@@ -22,14 +22,16 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AudubonTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
-
-  private AudubonTransform() {}
 
   /**
    * Checks if list contains {@link RecordType#AUDUBON}, else returns empty {@link PCollection<ExtendedRecord>}

@@ -20,6 +20,8 @@ import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
@@ -32,9 +34,8 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
  * it.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BasicInterpreter {
-
-  private BasicInterpreter() {}
 
   /** {@link DwcTerm#individualCount} interpretation. */
   public static void interpretIndividualCount(ExtendedRecord er, BasicRecord br) {

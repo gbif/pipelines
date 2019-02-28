@@ -14,6 +14,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
@@ -21,13 +22,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_IDS_CO
 
 /** Transformation for filtering all duplicate records with the same {@link ExtendedRecord#getId} */
 @Slf4j
+@NoArgsConstructor(staticName = "create")
 public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
-
-  private UniqueIdTransform() {}
-
-  public static UniqueIdTransform create() {
-    return new UniqueIdTransform();
-  }
 
   @Override
   public PCollection<ExtendedRecord> expand(PCollection<ExtendedRecord> input) {

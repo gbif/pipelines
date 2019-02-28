@@ -14,14 +14,16 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
-
-  private VerbatimTransform() {}
 
   /**
    * Checks if list contains {@link RecordType#VERBATIM}, else returns empty {@link PCollection<ExtendedRecord>}

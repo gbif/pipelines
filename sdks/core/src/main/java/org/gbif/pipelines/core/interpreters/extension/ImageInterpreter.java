@@ -24,6 +24,9 @@ import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 
@@ -32,6 +35,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
  *
  * @see <a href="http://rs.gbif.org/extension/gbif/1.0/images.xml</a>
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ImageInterpreter {
 
   //
@@ -56,8 +60,6 @@ public class ImageInterpreter {
           .mapOne("http://www.w3.org/2003/01/geo/wgs84_pos#latitude", ImageInterpreter::parseAndSetLatitude)
           .postMap(ImageInterpreter::parseAndSetLatLng)
           .skipIf(ImageInterpreter::checkLinks);
-
-  private ImageInterpreter() {}
 
   /**
    * Interprets images of a {@link ExtendedRecord} and populates a {@link ImageRecord}

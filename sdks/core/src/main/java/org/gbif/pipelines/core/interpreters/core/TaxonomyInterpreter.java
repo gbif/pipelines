@@ -13,6 +13,8 @@ import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.species.NameUsageMatch;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.INTERPRETATION_ERROR;
@@ -30,9 +32,8 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
  * specie.
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaxonomyInterpreter {
-
-  private TaxonomyInterpreter() {}
 
   /**
    * Interprets a utils from the taxonomic fields specified in the {@link ExtendedRecord} received.

@@ -9,20 +9,17 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtendedRecordConverter {
 
   public static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
 
-  private ExtendedRecordConverter() {
-    // NOP
-  }
-
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
-    String id = Optional.ofNullable(rawRecord.getId()).orElse(RECORD_ID_ERROR);
-
-    ExtendedRecord record = ExtendedRecord.newBuilder().setId(id).build();
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId(rawRecord.getId()).build();
 
     final BiConsumer<DwcTerm, String> setter =
         (term, value) ->

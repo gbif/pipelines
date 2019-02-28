@@ -1,14 +1,14 @@
 package org.gbif.converters.parser.xml.constants;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * These aren't all real XPaths but save setting up the full parse machinery in order to run real
  * XPaths when quick String searches for the goal strings are much faster.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtractionSimpleXPaths {
-
-  private ExtractionSimpleXPaths() {
-    // NOP
-  }
 
   public static final String ABCD_RECORD_XPATH = "*/Unit";
   public static final String ABCD_HEADER_XPATH = "*/OriginalSource";

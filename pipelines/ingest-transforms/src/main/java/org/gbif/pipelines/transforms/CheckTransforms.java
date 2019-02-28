@@ -10,25 +10,19 @@ import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.AllArgsConstructor;
+
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
  * Set of different predicate functions. Each function checks predicate and returns {@link  PCollection},
  * else returns empty {@link PCollection}
  */
+@AllArgsConstructor(staticName = "create")
 public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T>> {
 
   private final Class<T> clazz;
   private final boolean condition;
-
-  private CheckTransforms(Class<T> clazz, boolean condition) {
-    this.clazz = clazz;
-    this.condition = condition;
-  }
-
-  public static <T> CheckTransforms<T> create(Class<T> clazz, boolean condition) {
-    return new CheckTransforms<>(clazz, condition);
-  }
 
   @Override
   public PCollection<T> expand(PCollection<T> input) {
