@@ -13,9 +13,9 @@ import org.gbif.pipelines.transforms.core.VerbatimTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Pipeline sequence:
@@ -41,9 +41,8 @@ import org.slf4j.MDC;
  *
  * }</pre>
  */
+@Slf4j
 public class DwcaToVerbatimPipeline {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaToVerbatimPipeline.class);
 
   private DwcaToVerbatimPipeline() {}
 
@@ -57,7 +56,7 @@ public class DwcaToVerbatimPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
 
-    LOG.info("Adding step 1: Options");
+    log.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
     String targetPath = FsUtils.buildPath(options, Conversion.FILE_NAME);
     String tmpPath = FsUtils.getTempDir(options);
@@ -66,13 +65,13 @@ public class DwcaToVerbatimPipeline {
 
     DwcaIO.Read reader = isDir ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpPath);
 
-    LOG.info("Adding step 2: Pipeline steps");
+    log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);
 
     p.apply("Read from Darwin Core Archive", reader)
         .apply("Write to avro", VerbatimTransform.write(targetPath).withoutSharding());
 
-    LOG.info("Running the pipeline");
+    log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
@@ -81,6 +80,6 @@ public class DwcaToVerbatimPipeline {
       MetricsHandler.saveCountersToFile("", metadataPath, result);
     });
 
-    LOG.info("Pipeline has been finished");
+    log.info("Pipeline has been finished");
   }
 }

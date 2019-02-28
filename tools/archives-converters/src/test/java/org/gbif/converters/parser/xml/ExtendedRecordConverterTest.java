@@ -175,10 +175,11 @@ public class ExtendedRecordConverterTest {
   }
 
   private DataFileWriter<ExtendedRecord> createWriter(OutputStream output) throws IOException {
-    return DataFileWriteBuilder.create()
+    return DataFileWriteBuilder.builder()
         .schema(ExtendedRecord.getClassSchema())
         .codec(codec)
         .outputStream(output)
-        .build();
+        .build()
+        .createDataFileWriter();
   }
 }

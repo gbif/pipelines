@@ -13,8 +13,7 @@ import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.HashUtils.getSha1;
 import static org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter.RECORD_ID_ERROR;
@@ -23,9 +22,8 @@ import static org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedReco
  * The task for CompletableFuture which reads a xml response file, parses and converts to
  * ExtendedRecord avro file
  */
+@Slf4j
 public class ConverterTask implements Runnable {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ConverterTask.class);
 
   private final File inputFile;
   private final SyncDataFileWriter dataFileWriter;
@@ -70,7 +68,7 @@ public class ConverterTask implements Runnable {
         counter.incrementAndGet();
       }
     } catch (IOException ex) {
-      LOG.error(ex.getMessage(), ex);
+      log.error(ex.getMessage(), ex);
       throw new ParsingException("Parsing failed", ex);
     }
   }

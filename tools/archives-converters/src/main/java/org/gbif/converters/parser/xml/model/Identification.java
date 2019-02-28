@@ -23,8 +23,9 @@ import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.HigherTaxonParser;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class represents one of possibly many "identifications" in ABCD records. There are two
@@ -35,9 +36,10 @@ import org.slf4j.LoggerFactory;
  * each identification marked as "preferred", or for all given identifications if none are marked
  * preferred.
  */
+@Slf4j
+@Getter
+@Setter
 public class Identification extends PropertyPrioritizer {
-
-  private static final Logger LOG = LoggerFactory.getLogger(Identification.class);
 
   private final HigherTaxonParser taxonParser = new HigherTaxonParser();
   private boolean preferred;
@@ -54,8 +56,7 @@ public class Identification extends PropertyPrioritizer {
    */
   @Override
   public void resolvePriorities() {
-    for (Map.Entry<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> entry :
-        prioritizedProps.entrySet()) {
+    for (Map.Entry<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> entry : prioritizedProps.entrySet()) {
       PrioritizedPropertyNameEnum name = entry.getKey();
       String result = findHighestPriority(entry.getValue());
       switch (entry.getKey()) {
@@ -69,7 +70,7 @@ public class Identification extends PropertyPrioritizer {
           scientificName = result;
           break;
         default:
-          LOG.warn("Fell through priority resolution for [{}]", name);
+          log.warn("Fell through priority resolution for [{}]", name);
       }
     }
   }
@@ -114,63 +115,15 @@ public class Identification extends PropertyPrioritizer {
   public void addHigherTaxon(String rank, String name) {
     Taxon taxon = taxonParser.parseTaxon(rank, name);
     if (taxon != null) {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Adding taxon rank [{}]] name [{}]", taxon.getRank(), taxon.getName());
+      if (log.isDebugEnabled()) {
+        log.debug("Adding taxon rank [{}]] name [{}]", taxon.getRank(), taxon.getName());
       }
       higherTaxons.add(taxon);
     }
   }
 
-  public boolean isPreferred() {
-    return preferred;
-  }
-
   public void setPreferredAsString(String preferred) {
     this.preferred = "true".equals(preferred) || "1".equals(preferred);
-    LOG.debug("Raw preferred is [{}], setting preferred to [{}]", preferred, preferred);
-  }
-
-  public void setPreferred(boolean preferred) {
-    this.preferred = preferred;
-  }
-
-  public String getGenus() {
-    return genus;
-  }
-
-  public void setGenus(String genus) {
-    this.genus = genus;
-  }
-
-  public String getDateIdentified() {
-    return dateIdentified;
-  }
-
-  public void setDateIdentified(String dateIdentified) {
-    this.dateIdentified = dateIdentified;
-  }
-
-  public String getScientificName() {
-    return scientificName;
-  }
-
-  public void setScientificName(String scientificName) {
-    this.scientificName = scientificName;
-  }
-
-  public String getIdentifierName() {
-    return identifierName;
-  }
-
-  public void setIdentifierName(String identifierName) {
-    this.identifierName = identifierName;
-  }
-
-  public Set<Taxon> getHigherTaxons() {
-    return higherTaxons;
-  }
-
-  public void setHigherTaxons(Set<Taxon> higherTaxons) {
-    this.higherTaxons = higherTaxons;
+    log.debug("Raw preferred is [{}], setting preferred to [{}]", preferred, preferred);
   }
 }

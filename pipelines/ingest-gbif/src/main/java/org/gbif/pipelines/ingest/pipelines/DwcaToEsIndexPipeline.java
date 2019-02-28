@@ -54,9 +54,9 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
@@ -96,9 +96,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  *
  * }</pre>
  */
+@Slf4j
 public class DwcaToEsIndexPipeline {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaToEsIndexPipeline.class);
 
   private DwcaToEsIndexPipeline() {}
 
@@ -114,7 +113,7 @@ public class DwcaToEsIndexPipeline {
 
     EsIndexUtils.createIndex(options);
 
-    LOG.info("Adding step 1: Options");
+    log.info("Adding step 1: Options");
     WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
     KvConfig kvConfig = KvConfigFactory.create(options.getGbifApiUrl(), options.getZookeeperUrl());
 
@@ -140,12 +139,12 @@ public class DwcaToEsIndexPipeline {
 
     Pipeline p = Pipeline.create(options);
 
-    LOG.info("Reading avro files");
+    log.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", reader)
             .apply("Filter duplicates", UniqueIdTransform.create());
 
-    LOG.info("Adding step 2: Reading avros");
+    log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
             .apply("Interpret metadata", ParDo.of(new MetadataTransform.Interpreter(wsConfig)))
@@ -196,7 +195,7 @@ public class DwcaToEsIndexPipeline {
             .apply("Interpret multimedia", ParDo.of(new MeasurementOrFactTransform.Interpreter()))
             .apply("Map MeasurementOrFact to KV", MeasurementOrFactTransform.toKv());
 
-    LOG.info("Adding step 3: Converting to a json object");
+    log.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
 
@@ -230,7 +229,7 @@ public class DwcaToEsIndexPipeline {
           }
         };
 
-    LOG.info("Adding step 4: Converting to a json object");
+    log.info("Adding step 4: Converting to a json object");
     PCollection<String> jsonCollection =
         KeyedPCollectionTuple
             // Core
@@ -249,7 +248,7 @@ public class DwcaToEsIndexPipeline {
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", ParDo.of(doFn).withSideInputs(metadataView));
 
-    LOG.info("Adding step 5: Elasticsearch indexing");
+    log.info("Adding step 5: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
             options.getEsHosts(), options.getEsIndexName(), Indexing.INDEX_TYPE);
@@ -261,7 +260,7 @@ public class DwcaToEsIndexPipeline {
             .withMaxBatchSize(options.getEsMaxBatchSize())
             .withIdFn(input -> input.get("id").asText()));
 
-    LOG.info("Running the pipeline");
+    log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
@@ -270,7 +269,7 @@ public class DwcaToEsIndexPipeline {
       MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
     });
 
-    LOG.info("Pipeline has been finished");
+    log.info("Pipeline has been finished");
 
     FsUtils.removeTmpDirectory(options);
   }

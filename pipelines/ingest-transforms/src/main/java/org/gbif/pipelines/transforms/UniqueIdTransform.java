@@ -13,16 +13,15 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_IDS_COUNT;
 
 /** Transformation for filtering all duplicate records with the same {@link ExtendedRecord#getId} */
+@Slf4j
 public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(UniqueIdTransform.class);
 
   private UniqueIdTransform() {}
 
@@ -68,7 +67,7 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
                     c.output(record);
                   }
                   // Log duplicate and metric
-                  LOG.warn("occurrenceId = {}, duplicates were found", element.getKey());
+                  log.warn("occurrenceId = {}, duplicates were found", element.getKey());
                   duplicateCounter.inc();
                 }
               }

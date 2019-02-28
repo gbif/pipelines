@@ -10,9 +10,14 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.var;
+
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /** Parser for the Dwc Terms related to the coordinates. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 class CoordinatesParser {
 
   // parses decimal latitude and longitude fields
@@ -39,8 +44,6 @@ class CoordinatesParser {
   private static final List<Function<ExtendedRecord, ParsedField<LatLng>>> PARSING_FUNCTIONS =
       Arrays.asList(DECIMAL_LAT_LNG_FN, VERBATIM_LAT_LNG_FN, VERBATIM_COORDS_FN);
 
-  private CoordinatesParser() {}
-
   /**
    * Parses the coordinates fields of a {@link ExtendedRecord}.
    *
@@ -57,7 +60,7 @@ class CoordinatesParser {
    */
   static ParsedField<LatLng> parseCoords(ExtendedRecord extendedRecord) {
     ParsedField<LatLng> result = null;
-    for (Function<ExtendedRecord, ParsedField<LatLng>> parsingFunction : PARSING_FUNCTIONS) {
+    for (var parsingFunction : PARSING_FUNCTIONS) {
       result = parsingFunction.apply(extendedRecord);
 
       if (result.isSuccessful()) {

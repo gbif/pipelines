@@ -19,19 +19,17 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Client to communicate with the ES server.
  *
  * <p>It should be closed after using it. It implements {@link AutoCloseable}.
  */
+@Slf4j
 public class EsClient implements AutoCloseable {
-
-  private static final Logger LOG = LoggerFactory.getLogger(EsClient.class);
 
   private final RestClient restClient;
 
@@ -124,7 +122,7 @@ public class EsClient implements AutoCloseable {
     } catch (ResponseException exc) {
       throw exc;
     } catch (IOException exc) {
-      LOG.error("Error when calling ES", exc);
+      log.error("Error when calling ES", exc);
       throw new IllegalStateException(exc.getMessage(), exc);
     }
   }

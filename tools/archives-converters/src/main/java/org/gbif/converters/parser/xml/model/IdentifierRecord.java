@@ -17,34 +17,23 @@ package org.gbif.converters.parser.xml.model;
 
 import java.io.Serializable;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * This class represents an identifier for a RawOccurrenceRecord. For historical (ie old MySQL
  * schema) reasons the types have numbers. The only really interesting one is type 7: meant as a
  * guid, and usable as the occurrenceId.
  */
+@Getter
+@Setter
 public class IdentifierRecord implements Serializable {
 
   private static final long serialVersionUID = 7608063144083531629L;
+  public static final int OCCURRENCE_ID_TYPE = 7;
 
   // TODO: change this to int backed enum
   private Integer identifierType;
   private String identifier;
 
-  public static final int OCCURRENCE_ID_TYPE = 7;
-
-  public Integer getIdentifierType() {
-    return identifierType;
-  }
-
-  public void setIdentifierType(Integer identifierType) {
-    this.identifierType = identifierType;
-  }
-
-  public String getIdentifier() {
-    return identifier;
-  }
-
-  public void setIdentifier(String identifier) {
-    this.identifier = identifier;
-  }
 }

@@ -12,20 +12,17 @@ import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.service.EsService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.estools.service.EsService.getIndexesByAliasAndIndexPattern;
 import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
 import static org.gbif.pipelines.estools.service.EsService.updateIndexSettings;
 
 /** Exposes a public API to perform operations in a ES instance. */
+@Slf4j
 public class EsIndex {
-
-  private static final Logger LOG = LoggerFactory.getLogger(EsIndex.class);
 
   public static final String INDEX_SEPARATOR = "_";
 
@@ -39,7 +36,7 @@ public class EsIndex {
    * @return name of the index created.
    */
   public static String create(EsConfig config, String idxName) {
-    LOG.info("Creating index {}", idxName);
+    log.info("Creating index {}", idxName);
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.createIndex(esClient, idxName, SettingsType.INDEXING);
     }
@@ -72,7 +69,7 @@ public class EsIndex {
    * @return name of the index created.
    */
   public static String create(EsConfig config, String idxName, Path mappings) {
-    LOG.info("Creating index {}", idxName);
+    log.info("Creating index {}", idxName);
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
     }
@@ -106,7 +103,7 @@ public class EsIndex {
    * @return name of the index created.
    */
   public static String create(EsConfig config, String idxName, String mappings) {
-    LOG.info("Creating index {}", idxName);
+    log.info("Creating index {}", idxName);
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
     }
@@ -142,7 +139,7 @@ public class EsIndex {
    */
   public static String create(
       EsConfig config, String idxName, Path mappings, Map<String, String> settingMap) {
-    LOG.info("Creating index {}", idxName);
+    log.info("Creating index {}", idxName);
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings, settingMap);
     }
@@ -186,7 +183,7 @@ public class EsIndex {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
-    LOG.info("Swapping index {} in alias {}", index, alias);
+    log.info("Swapping index {} in alias {}", index, alias);
 
     // get dataset id
     String datasetId = getDatasetIdFromIndex(index);
@@ -219,7 +216,7 @@ public class EsIndex {
     Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
-    LOG.info("Swapping index {} in alias {}", index, aliases);
+    log.info("Swapping index {} in alias {}", index, aliases);
 
     // get dataset id
     String datasetId = getDatasetIdFromIndex(index);
@@ -253,7 +250,7 @@ public class EsIndex {
   public static long countDocuments(EsConfig config, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
-    LOG.info("Counting documents from index {}", index);
+    log.info("Counting documents from index {}", index);
 
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.countIndexDocuments(esClient, index);
@@ -269,7 +266,7 @@ public class EsIndex {
   public static void refresh(EsConfig config, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
-    LOG.info("Refreshing index {}", index);
+    log.info("Refreshing index {}", index);
 
     try (EsClient esClient = EsClient.from(config)) {
       EsService.refreshIndex(esClient, index);
@@ -309,7 +306,7 @@ public class EsIndex {
     List<String> pieces = Arrays.asList(index.split(INDEX_SEPARATOR));
 
     if (pieces.size() != 2) {
-      LOG.error("Index {} doesn't follow the pattern \"{datasetId}_{attempt}\"", index);
+      log.error("Index {} doesn't follow the pattern \"{datasetId}_{attempt}\"", index);
       throw new IllegalArgumentException("index has to follow the pattern \"{datasetId}_{attempt}\"");
     }
 

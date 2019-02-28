@@ -166,7 +166,7 @@ public class ExtensionInterpretation {
 
   }
 
-  public class Result<T> {
+  public static class Result<T> {
 
     private final List<T> items;
     private final Set<String> issues;

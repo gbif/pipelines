@@ -23,17 +23,15 @@ import java.util.Set;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * In schemas that have multiple representations of the same field (eg decimal latitude vs text
  * latitude) this class gives a framework for setting the order of preference of fields for
  * resolving cases where more than one of them is populated.
  */
+@Slf4j
 public abstract class PropertyPrioritizer {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PropertyPrioritizer.class);
 
   protected final Map<PrioritizedPropertyNameEnum, Set<PrioritizedProperty>> prioritizedProps =
       new EnumMap<>(PrioritizedPropertyNameEnum.class);
@@ -41,8 +39,8 @@ public abstract class PropertyPrioritizer {
   public abstract void resolvePriorities();
 
   public void addPrioritizedProperty(PrioritizedProperty prop) {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug(">> addPrioritizedProperty [{}]", prop.debugDump());
+    if (log.isDebugEnabled()) {
+      log.debug(">> addPrioritizedProperty [{}]", prop.debugDump());
     }
 
     if (prop.getName() != null) {
@@ -53,10 +51,10 @@ public abstract class PropertyPrioritizer {
       nameProps.add(prop);
       prioritizedProps.put(prop.getName(), nameProps);
     } else {
-      LOG.warn("Attempting add of null PrioritizedProperty");
+      log.warn("Attempting add of null PrioritizedProperty");
     }
 
-    LOG.debug("<< addPrioritizedProperty");
+    log.debug("<< addPrioritizedProperty");
   }
 
   /** Highest priority is 1. */

@@ -7,12 +7,11 @@ import org.gbif.converters.parser.xml.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.DataFileWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class XmlToAvroConverter extends ConverterToVerbatim {
-
-  private static final Logger LOG = LoggerFactory.getLogger(XmlToAvroConverter.class);
 
   private int xmlReaderParallelism = Runtime.getRuntime().availableProcessors();
 
@@ -35,7 +34,7 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
     String inputPath = args[0];
     String outputPath = args[1];
     boolean isFileCreated = XmlToAvroConverter.create().inputPath(inputPath).outputPath(outputPath).convert();
-    LOG.info("Verbatim avro file has been created - {}", isFileCreated);
+    log.info("Verbatim avro file has been created - {}", isFileCreated);
   }
 
   /** TODO: DOC */

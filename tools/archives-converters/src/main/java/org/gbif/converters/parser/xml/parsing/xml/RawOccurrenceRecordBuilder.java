@@ -28,11 +28,9 @@ import org.gbif.converters.parser.xml.model.PropertyPrioritizer;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.model.TypificationRecord;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This object is the one that gets populated by Digester when parsing raw xml records into
@@ -44,9 +42,8 @@ import com.google.common.collect.Lists;
  * populated we have to take the one with highest priority - a mechanism that is inherited from
  * PropertyPrioritizer.
  */
+@Slf4j
 public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RawOccurrenceRecordBuilder.class);
 
   private Integer dataProviderId;
   private Integer dataResourceId;
@@ -232,25 +229,24 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     this.identifications.add(ident);
   }
 
-  public void addTypification(
-      String scientificName, String publication, String typeStatus, String notes) {
-    LOG.debug(">> addTypification");
+  public void addTypification(String scientificName, String publication, String typeStatus, String notes) {
+    log.debug(">> addTypification");
 
     TypificationRecord typRec =
         new TypificationRecord(scientificName, publication, typeStatus, notes);
 
     if (typRec.isEmpty()) {
-      LOG.debug("Got all nulls for new type - ignoring");
+      log.debug("Got all nulls for new type - ignoring");
     } else {
-      LOG.debug("Got new typRec:\n {}", typRec.debugDump());
+      log.debug("Got new typRec:\n {}", typRec.debugDump());
       typificationRecords.add(typRec);
     }
 
-    LOG.debug("<< addTypification");
+    log.debug("<< addTypification");
   }
 
   private void addIdentifier(Integer identifierType, String identifier) {
-    LOG.debug(
+    log.debug(
         "Attempting add of Identifier record with type [{}] and body [{}]",
         identifierType,
         identifier);
@@ -307,7 +303,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
           this.longitude = result;
           break;
         default:
-          LOG.warn("Fell through priority resolution for [{}]", property.getKey());
+          log.warn("Fell through priority resolution for [{}]", property.getKey());
       }
     }
 

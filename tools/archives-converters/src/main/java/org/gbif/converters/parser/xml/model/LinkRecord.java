@@ -18,7 +18,11 @@ package org.gbif.converters.parser.xml.model;
 import java.io.Serializable;
 
 import com.google.common.base.Strings;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class LinkRecord implements Serializable {
 
   private static final long serialVersionUID = 4281236213527332610L;
@@ -27,38 +31,6 @@ public class LinkRecord implements Serializable {
   private Integer linkType;
   private String url;
   private String description;
-
-  public String getRawLinkType() {
-    return rawLinkType;
-  }
-
-  public void setRawLinkType(String rawLinkType) {
-    this.rawLinkType = rawLinkType;
-  }
-
-  public Integer getLinkType() {
-    return linkType;
-  }
-
-  public void setLinkType(Integer linkType) {
-    this.linkType = linkType;
-  }
-
-  public String getUrl() {
-    return url;
-  }
-
-  public void setUrl(String url) {
-    this.url = url;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
 
   public boolean isEmpty() {
     return Strings.isNullOrEmpty(rawLinkType)

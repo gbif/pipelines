@@ -7,12 +7,10 @@ import java.util.function.BiFunction;
 
 import org.gbif.converters.parser.xml.ParsingException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ParserFileUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ParserFileUtils.class);
 
   private static final BiFunction<String, String, String> UNCOMPRESS =
       (inPath, outPath) -> String.format("tar -xf %s -C %s", inPath, outPath);
@@ -31,8 +29,7 @@ public class ParserFileUtils {
     // Check directory
     File inputFile = new File(inputPath);
     if (!inputFile.exists()) {
-      throw new ParsingException(
-          "Directory or file " + inputFile.getAbsolutePath() + " does not exist");
+      throw new ParsingException("Directory or file " + inputFile.getAbsolutePath() + " does not exist");
     }
 
     // Uncompress if it is a tar.xz
@@ -58,13 +55,13 @@ public class ParserFileUtils {
       Files.createDirectories(parentFile.toPath());
       String cmd = UNCOMPRESS.apply(inputFile.getAbsolutePath(), parentFile.getAbsolutePath());
 
-      LOG.info("Uncompressing a tar.xz archive {}", cmd);
+      log.info("Uncompressing a tar.xz archive {}", cmd);
       Runtime.getRuntime().exec(cmd).waitFor();
-      LOG.info("The archive has been uncompressed");
+      log.info("The archive has been uncompressed");
 
       return parentFile;
     } catch (InterruptedException | IOException ex) {
-      LOG.error("Directory or file {} does not exist", inputFile.getAbsolutePath());
+      log.error("Directory or file {} does not exist", inputFile.getAbsolutePath());
       throw new ParsingException(ex);
     }
   }

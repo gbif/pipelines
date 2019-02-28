@@ -13,14 +13,12 @@ import org.apache.hadoop.fs.AvroFSInput;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class FsUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(FsUtils.class);
 
   private static final long FILE_LIMIT_SIZE = 3L * 1_024L; //3Kb
 
@@ -38,10 +36,10 @@ public class FsUtils {
       if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
         File hdfsSite = new File(hdfsSiteConfig);
         if (hdfsSite.exists() && hdfsSite.isFile()) {
-          LOG.info("using hdfs-site.xml");
+          log.info("using hdfs-site.xml");
           config.addResource(hdfsSite.toURI().toURL());
         } else {
-          LOG.warn("hdfs-site.xml does not exist");
+          log.warn("hdfs-site.xml does not exist");
         }
       }
 
@@ -81,7 +79,7 @@ public class FsUtils {
       try (AvroFSInput input = new AvroFSInput(fs.open(path), fs.getFileStatus(path).getLen());
           DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(input, datumReader)) {
         if (!dataFileReader.hasNext()) {
-          LOG.warn("File is empty - {}", path);
+          log.warn("File is empty - {}", path);
           Path parent = path.getParent();
           fs.delete(parent, true);
 
@@ -94,7 +92,7 @@ public class FsUtils {
       }
       return false;
     } catch (IOException ex) {
-      LOG.error("Error deleting an empty file", ex);
+      log.error("Error deleting an empty file", ex);
       throw new IllegalStateException("Error deleting an empty file", ex);
     }
   }

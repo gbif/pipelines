@@ -29,9 +29,9 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
@@ -80,9 +80,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  *
  * }</pre>
  */
+@Slf4j
 public class VerbatimToInterpretedPipeline {
-
-  private static final Logger LOG = LoggerFactory.getLogger(VerbatimToInterpretedPipeline.class);
 
   private VerbatimToInterpretedPipeline() {}
 
@@ -107,15 +106,15 @@ public class VerbatimToInterpretedPipeline {
 
     Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
 
-    LOG.info("Creating a pipeline from options");
+    log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
-    LOG.info("Reading avro files");
+    log.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", VerbatimTransform.read(options.getInputPath()))
             .apply("Filter duplicates", UniqueIdTransform.create());
 
-    LOG.info("Adding interpretations");
+    log.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(datasetId))
         .apply("Check metadata transform condition", MetadataTransform.check(types))
@@ -166,7 +165,7 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret location", ParDo.of(new LocationTransform.Interpreter(wsPropertiesPath)))
         .apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
 
-    LOG.info("Running the pipeline");
+    log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
@@ -175,10 +174,10 @@ public class VerbatimToInterpretedPipeline {
       MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
     });
 
-    LOG.info("Deleting beam temporal folders");
+    log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", options.getTargetPath(), datasetId, attempt);
     FsUtils.deleteDirectoryByPrefix(options.getHdfsSiteConfig(), tempPath, ".temp-beam");
 
-    LOG.info("Pipeline has been finished");
+    log.info("Pipeline has been finished");
   }
 }

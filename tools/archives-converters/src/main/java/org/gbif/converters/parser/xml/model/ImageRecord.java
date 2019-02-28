@@ -22,17 +22,18 @@ import java.util.Set;
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /** Holds a single image for a RawOccurrenceRecord. */
+@Slf4j
+@Getter
+@Setter
 public class ImageRecord extends PropertyPrioritizer implements Serializable {
 
   private static final long serialVersionUID = -4610903747490605198L;
-
-  private static final Logger LOG = LoggerFactory.getLogger(ImageRecord.class);
 
   private String rawImageType;
   private Integer imageType;
@@ -61,65 +62,9 @@ public class ImageRecord extends PropertyPrioritizer implements Serializable {
           rights = result;
           break;
         default:
-          LOG.warn("Fell through priority resolution for [{}]", name);
+          log.warn("Fell through priority resolution for [{}]", name);
       }
     }
-  }
-
-  public String getRawImageType() {
-    return rawImageType;
-  }
-
-  public void setRawImageType(String rawImageType) {
-    this.rawImageType = rawImageType;
-  }
-
-  public Integer getImageType() {
-    return imageType;
-  }
-
-  public void setImageType(Integer imageType) {
-    this.imageType = imageType;
-  }
-
-  public String getUrl() {
-    return url;
-  }
-
-  public void setUrl(String url) {
-    this.url = url;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  public String getRights() {
-    return rights;
-  }
-
-  public void setRights(String rights) {
-    this.rights = rights;
-  }
-
-  public String getHtmlForDisplay() {
-    return htmlForDisplay;
-  }
-
-  public void setHtmlForDisplay(String htmlForDisplay) {
-    this.htmlForDisplay = htmlForDisplay;
-  }
-
-  public String getPageUrl() {
-    return pageUrl;
-  }
-
-  public void setPageUrl(String pageUrl) {
-    this.pageUrl = pageUrl;
   }
 
   public boolean isEmpty() {

@@ -16,8 +16,8 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.estools.service.HttpRequestBuilder.createBodyFromString;
 
@@ -32,9 +32,8 @@ import static org.gbif.pipelines.estools.service.HttpRequestBuilder.createBodyFr
  * <p>This class is intended to be used internally within the same package, and <strong>never as a
  * public API</strong>. Therefore, the access modifiers should never be changed.
  */
+@Slf4j
 public class EsService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(EsService.class);
 
   private EsService() {}
 
@@ -141,8 +140,7 @@ public class EsService {
     Objects.requireNonNull(esClient);
 
     // create entity body
-    HttpEntity body =
-        HttpRequestBuilder.newInstance().withSettingsMap(settings).withMappings(mappings).build();
+    HttpEntity body = HttpRequestBuilder.newInstance().withSettingsMap(settings).withMappings(mappings).build();
 
     return createIndexInternal(esClient, idxName, body);
   }
@@ -155,7 +153,7 @@ public class EsService {
       // parse response and return
       return HttpResponseParser.parseCreatedIndexResponse(response.getEntity());
     } catch (ResponseException exc) {
-      LOG.error("Error creating index {} with body {}", idxName, body.toString(), exc);
+      log.error("Error creating index {} with body {}", idxName, body.toString(), exc);
       throw new IllegalStateException("Error creating index", exc);
     }
   }
@@ -177,7 +175,7 @@ public class EsService {
     try {
       esClient.performPutRequest(endpoint, Collections.emptyMap(), body);
     } catch (ResponseException exc) {
-      LOG.error("Error updating index {} to settings {}", idxName, settingsType, exc);
+      log.error("Error updating index {} to settings {}", idxName, settingsType, exc);
       throw new IllegalStateException("Error updating index", exc);
     }
   }
@@ -202,7 +200,7 @@ public class EsService {
       Response response = esClient.performGetRequest(endpoint);
       return HttpResponseParser.parseIndexesInAliasResponse(response.getEntity());
     } catch (ResponseException e) {
-      LOG.debug("No indexes with pattern {} found in alias {}", idxPattern, alias);
+      log.debug("No indexes with pattern {} found in alias {}", idxPattern, alias);
       return Collections.emptySet();
     }
   }
@@ -228,7 +226,7 @@ public class EsService {
     try {
       esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
     } catch (ResponseException exc) {
-      LOG.error("Error swapping index {} in alias {}", idxToAdd, alias, exc);
+      log.error("Error swapping index {} in alias {}", idxToAdd, alias, exc);
       throw new IllegalStateException("Error swapping indexes", exc);
     }
   }
@@ -248,7 +246,7 @@ public class EsService {
       Response response = esClient.performGetRequest(endpoint);
       return HttpResponseParser.parseIndexCountResponse(response.getEntity());
     } catch (ResponseException exc) {
-      LOG.error("Could not get count from index {}", idxName);
+      log.error("Could not get count from index {}", idxName);
       throw new IllegalStateException("Could not get count from index", exc);
     }
   }
@@ -272,7 +270,7 @@ public class EsService {
     try {
       esClient.performPutRequest(endpoint, Collections.emptyMap(), body);
     } catch (IOException exc) {
-      LOG.error("Could not index document with id {} and body {} in index {}", id, body, idxName);
+      log.error("Could not index document with id {} and body {} in index {}", id, body, idxName);
       throw new IllegalStateException("Could not index document", exc);
     }
   }
@@ -292,7 +290,7 @@ public class EsService {
     try {
       esClient.performDeleteRequest(endpoint);
     } catch (IOException exc) {
-      LOG.error("Could not delete document with id {} in index {}", id, idxName);
+      log.error("Could not delete document with id {} in index {}", id, idxName);
       throw new IllegalStateException("Could not delete document", exc);
     }
   }
@@ -310,7 +308,7 @@ public class EsService {
     try {
       esClient.performPostRequest(endpoint, Collections.emptyMap(), null);
     } catch (IOException exc) {
-      LOG.error("Could not refresh index {}", idxName);
+      log.error("Could not refresh index {}", idxName);
       throw new IllegalStateException("Could not refresh index", exc);
     }
   }
@@ -326,7 +324,7 @@ public class EsService {
     try {
       esClient.performDeleteRequest("_all");
     } catch (ResponseException exc) {
-      LOG.error("Could not delete all indexes");
+      log.error("Could not delete all indexes");
       throw new IllegalStateException("Could not delete all indexes", exc);
     }
   }
@@ -368,7 +366,7 @@ public class EsService {
     try {
       esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
     } catch (ResponseException exc) {
-      LOG.error("Could not delete records");
+      log.error("Could not delete records");
       throw new IllegalStateException("Could not delete records", exc);
     }
   }

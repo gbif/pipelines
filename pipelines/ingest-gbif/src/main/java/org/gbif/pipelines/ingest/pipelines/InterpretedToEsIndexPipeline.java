@@ -47,9 +47,9 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
@@ -102,9 +102,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  *
  * }</pre>
  */
+@Slf4j
 public class InterpretedToEsIndexPipeline {
-
-  private static final Logger LOG = LoggerFactory.getLogger(InterpretedToEsIndexPipeline.class);
 
   private InterpretedToEsIndexPipeline() {}
 
@@ -118,7 +117,7 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
 
-    LOG.info("Adding step 1: Options");
+    log.info("Adding step 1: Options");
     Function<RecordType, String> pathInterFn =
         t -> FsUtils.buildPathInterpret(options, t.name().toLowerCase(), "*" + AVRO_EXTENSION);
 
@@ -137,7 +136,7 @@ public class InterpretedToEsIndexPipeline {
 
     Pipeline p = Pipeline.create(options);
 
-    LOG.info("Adding step 2: Reading avros");
+    log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Read Metadata", MetadataTransform.read(pathInterFn.apply(METADATA)))
             .apply("Convert to view", View.asSingleton());
@@ -178,7 +177,7 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Measurement", MeasurementOrFactTransform.read(pathInterFn.apply(MEASUREMENT_OR_FACT)))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
 
-    LOG.info("Adding step 3: Converting to a json object");
+    log.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
 
@@ -230,7 +229,7 @@ public class InterpretedToEsIndexPipeline {
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", ParDo.of(doFn).withSideInputs(metadataView));
 
-    LOG.info("Adding step 4: Elasticsearch indexing");
+    log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
             options.getEsHosts(), options.getEsIndexName(), Indexing.INDEX_TYPE);
@@ -242,7 +241,7 @@ public class InterpretedToEsIndexPipeline {
             .withMaxBatchSize(options.getEsMaxBatchSize())
             .withIdFn(input -> input.get("id").asText()));
 
-    LOG.info("Running the pipeline");
+    log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
@@ -251,6 +250,6 @@ public class InterpretedToEsIndexPipeline {
       MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
     });
 
-    LOG.info("Pipeline has been finished");
+    log.info("Pipeline has been finished");
   }
 }

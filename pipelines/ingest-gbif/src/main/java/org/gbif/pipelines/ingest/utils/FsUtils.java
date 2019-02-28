@@ -20,17 +20,15 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /** Utility class to work with file system. */
+@Slf4j
 public final class FsUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(FsUtils.class);
 
   private FsUtils() {}
 
@@ -121,9 +119,9 @@ public final class FsUtils {
           if (tmp.exists()) {
             try {
               FileUtils.deleteDirectory(tmp);
-              LOG.info("temp directory {} deleted", tmp.getPath());
+              log.info("temp directory {} deleted", tmp.getPath());
             } catch (IOException e) {
-              LOG.error("Could not delete temp directory {}", tmp.getPath());
+              log.error("Could not delete temp directory {}", tmp.getPath());
             }
           }
         };
@@ -142,10 +140,10 @@ public final class FsUtils {
       if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
         File hdfsSite = new File(hdfsSiteConfig);
         if (hdfsSite.exists() && hdfsSite.isFile()) {
-          LOG.info("using hdfs-site.xml");
+          log.info("using hdfs-site.xml");
           config.addResource(hdfsSite.toURI().toURL());
         } else {
-          LOG.warn("hdfs-site.xml does not exist");
+          log.warn("hdfs-site.xml does not exist");
         }
       }
 
@@ -178,7 +176,7 @@ public final class FsUtils {
     try {
       deleteDirectoryByPrefix(fs, new Path(directoryPath), filePrefix);
     } catch (IOException e) {
-      LOG.warn("Can't delete folder - {}, prefix - {}", directoryPath, filePrefix);
+      log.warn("Can't delete folder - {}, prefix - {}", directoryPath, filePrefix);
     }
   }
 
@@ -212,7 +210,7 @@ public final class FsUtils {
     try {
       return fs.exists(path) && fs.delete(path, true);
     } catch (IOException e) {
-      LOG.error("Can't delete {} directory, cause - {}", directoryPath, e.getCause());
+      log.error("Can't delete {} directory, cause - {}", directoryPath, e.getCause());
       return false;
     }
   }
@@ -227,14 +225,14 @@ public final class FsUtils {
       String path = String.join("/", hdfsSiteConfig, datasetId, attempt, Interpretation.DIRECTORY_NAME);
 
       if (steps.contains(ALL.name())) {
-        LOG.info("Delete interpretation directory - {}", path);
+        log.info("Delete interpretation directory - {}", path);
         boolean isDeleted = deleteIfExist(hdfsSiteConfig, path);
-        LOG.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
+        log.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
       } else {
         for (String step : steps) {
-          LOG.info("Delete interpretation/{} directory", step);
+          log.info("Delete interpretation/{} directory", step);
           boolean isDeleted = deleteIfExist(hdfsSiteConfig, String.join("/", path, step.toLowerCase()));
-          LOG.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
+          log.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
         }
       }
     }

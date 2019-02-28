@@ -11,12 +11,11 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public abstract class ConverterToVerbatim {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ConverterToVerbatim.class);
 
   private String hdfsSiteConfig;
   private int syncInterval = 2 * 1024 * 1024;
@@ -92,19 +91,20 @@ public abstract class ConverterToVerbatim {
     FileSystem fs = FsUtils.createParentDirectories(outputPath, hdfsSiteConfig);
     try (BufferedOutputStream outputStream = new BufferedOutputStream(fs.create(outputPath));
         DataFileWriter<ExtendedRecord> dataFileWriter =
-            DataFileWriteBuilder.create()
+            DataFileWriteBuilder.builder()
                 .schema(ExtendedRecord.getClassSchema())
                 .codec(codecFactory)
                 .outputStream(outputStream)
                 .syncInterval(syncInterval)
-                .build()) {
+                .build()
+                .createDataFileWriter()) {
 
       long numberOfRecords = convert(inputPath, dataFileWriter, idHashPrefix);
 
       createMetafile(fs, metaPath, numberOfRecords);
 
     } catch (IOException e) {
-      LOG.error("Failed performing conversion on {}", inputPath, e);
+      log.error("Failed performing conversion on {}", inputPath, e);
       throw new IllegalStateException("Failed performing conversion on " + inputPath, e);
     } finally {
       isConverted = FsUtils.deleteAvroFileIfEmpty(fs, outputPath);
@@ -124,6 +124,7 @@ public abstract class ConverterToVerbatim {
       throws IOException;
 
 
-  protected abstract long convert(java.nio.file.Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter, String idHashPrefix)
+  protected abstract long convert(java.nio.file.Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter,
+      String idHashPrefix)
       throws IOException;
 }

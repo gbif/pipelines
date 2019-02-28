@@ -8,15 +8,14 @@ import org.apache.beam.sdk.metrics.MetricQueryResults;
 import org.apache.beam.sdk.metrics.MetricResult;
 import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.hadoop.fs.FileSystem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Class to work with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string format
  */
+@Slf4j
 public class MetricsHandler {
-
-  private static final Logger LOG = LoggerFactory.getLogger(MetricsHandler.class);
 
   private MetricsHandler() {
   }
@@ -40,7 +39,7 @@ public class MetricsHandler {
     });
 
     String result = builder.toString();
-    LOG.info("Added pipeline metadata - {}", result.replace("\n", ", "));
+    log.info("Added pipeline metadata - {}", result.replace("\n", ", "));
     return result;
   }
 
@@ -54,15 +53,15 @@ public class MetricsHandler {
       return;
     }
 
-    LOG.info("Trying to write pipeline's metadata to a file - {}", path);
+    log.info("Trying to write pipeline's metadata to a file - {}", path);
 
     String countersInfo = getCountersInfo(result);
 
     try (FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path)) {
       FsUtils.createFile(fs, path, countersInfo);
-      LOG.info("Metadata was written to a file - {}", path);
+      log.info("Metadata was written to a file - {}", path);
     } catch (IOException ex) {
-      LOG.warn("Write pipelines metadata file", ex);
+      log.warn("Write pipelines metadata file", ex);
     }
   }
 

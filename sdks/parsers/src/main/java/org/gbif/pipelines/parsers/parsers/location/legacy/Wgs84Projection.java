@@ -18,11 +18,12 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.datum.DatumAuthorityFactory;
 import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.operation.MathTransform;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTED;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_REPROJECTION_FAILED;
@@ -31,20 +32,19 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS
 import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_INVALID;
 
 /** Utils class that reprojects to WGS84 based on geotools transformations and SRS databases. */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Wgs84Projection {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Wgs84Projection.class);
   private static final DatumParser PARSER = DatumParser.getInstance();
   private static final double SUSPICIOUS_SHIFT = 0.1d;
   private static DatumAuthorityFactory datumFactory;
-
-  private Wgs84Projection() {}
 
   static {
     try {
       datumFactory = BasicFactories.getDefault().getDatumAuthorityFactory();
     } catch (FactoryRegistryException e) {
-      LOG.error("Failed to create geotools datum factory", e);
+      log.error("Failed to create geotools datum factory", e);
     }
   }
 
@@ -135,7 +135,7 @@ public class Wgs84Projection {
         } catch (FactoryException e1) {
           // also not a datum, no further ideas, log error
           // swallow anything and return null instead
-          LOG.info("No CRS or DATUM for given datum code >>{}<<: {}", datum, e1.getMessage());
+          log.info("No CRS or DATUM for given datum code >>{}<<: {}", datum, e1.getMessage());
         }
       }
     }

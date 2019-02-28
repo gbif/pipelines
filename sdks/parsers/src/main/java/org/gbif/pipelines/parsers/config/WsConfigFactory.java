@@ -3,21 +3,22 @@ package org.gbif.pipelines.parsers.config;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.gbif.pipelines.parsers.exception.IORuntimeException;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 /**
  * Creates the configuration to use a specific WS.
  *
  * <p>By default it reads the configurarion from the "http.properties" file.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WsConfigFactory {
 
   public static final String METADATA_PREFIX = "metadata";
@@ -31,11 +32,7 @@ public class WsConfigFactory {
   private static final String DEFAULT_TIMEOUT = "60";
   private static final String DEFAULT_CACHE_SIZE_MB = "64";
 
-  private WsConfigFactory() {}
-
-  public static WsConfig create(String wsName, Path propertiesPath) {
-    Objects.requireNonNull(wsName);
-    Objects.requireNonNull(propertiesPath);
+  public static WsConfig create(@NonNull String wsName, @NonNull Path propertiesPath) {
     // load properties or throw exception if cannot be loaded
     Properties props = loadProperties(propertiesPath);
 
@@ -76,7 +73,7 @@ public class WsConfigFactory {
             return new FileInputStream(path.toFile());
           } catch (Exception ex) {
             String msg = "Properties with absolute path could not be read from " + propertiesPath;
-            throw new IORuntimeException(msg, ex);
+            throw new IllegalArgumentException(msg, ex);
           }
         };
 
@@ -91,7 +88,7 @@ public class WsConfigFactory {
       props.load(in);
     } catch (Exception ex) {
       String msg = "Properties with absolute path could not be read from " + propertiesPath;
-      throw new IORuntimeException(msg, ex);
+      throw new IllegalArgumentException(msg, ex);
     }
 
     return props;

@@ -21,12 +21,10 @@ import java.security.NoSuchAlgorithmException;
 
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RawXmlOccurrence {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RawXmlOccurrence.class);
 
   private String resourceName;
   private String institutionCode;
@@ -43,7 +41,7 @@ public class RawXmlOccurrence {
       MessageDigest md = MessageDigest.getInstance("MD5");
       hash = md.digest(bytesOfMessage);
     } catch (NoSuchAlgorithmException e) {
-      LOG.error("Encoding error creating hash - must be JVM problem", e);
+      log.error("Encoding error creating hash - must be JVM problem", e);
     }
 
     return hash;

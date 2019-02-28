@@ -13,8 +13,7 @@ import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.species.NameUsageMatch;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.INTERPRETATION_ERROR;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
@@ -30,9 +29,8 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
  * <p>The interpretation uses the species match kv store to match the taxonomic fields to an existing
  * specie.
  */
+@Slf4j
 public class TaxonomyInterpreter {
-
-  private static final Logger LOG = LoggerFactory.getLogger(TaxonomyInterpreter.class);
 
   private TaxonomyInterpreter() {}
 
@@ -58,7 +56,7 @@ public class TaxonomyInterpreter {
       try {
         usageMatch = kvStore.get(matchRequest);
       } catch (NoSuchElementException | NullPointerException ex) {
-        LOG.error(ex.getMessage(), ex);
+        log.error(ex.getMessage(), ex);
       }
 
       if (usageMatch == null) {

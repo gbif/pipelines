@@ -4,8 +4,8 @@ import java.io.FilterReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Synchronized;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Extends FilterReader to clean character streams of invalid xml characters while streaming. The
@@ -14,24 +14,23 @@ import org.slf4j.LoggerFactory;
  * xml stream - the problem of illegal characters within elements/CDATA sections (e.g. < > & ) is
  * not handled by this reader. TODO: move to gbif-common project
  */
+@Slf4j
 public class XmlSanitizingReader extends FilterReader {
-
-  private static final Logger LOG = LoggerFactory.getLogger(XmlSanitizingReader.class);
 
   private boolean endOfStreamReached = false;
 
   public XmlSanitizingReader(Reader in) {
     super(in);
-    LOG.debug("Starting XmlSanitizingReader");
+    log.debug("Starting XmlSanitizingReader");
   }
 
+  @Synchronized
   @Override
   public int read() throws IOException {
-    synchronized (lock) {
-      int nextChar = nextValidXmlChar();
-      LOG.debug("call to read(), returning [{}]", nextChar);
-      return nextChar;
-    }
+    int nextChar = nextValidXmlChar();
+    log.debug("call to read(), returning [{}]", nextChar);
+    return nextChar;
+
   }
 
   /**
@@ -39,31 +38,31 @@ public class XmlSanitizingReader extends FilterReader {
    * cases except where end of stream is the first char read. This is something that BufferedReader
    * expects for its readLine() calls (and how it behaves for its implementation of this method).
    */
+  @Synchronized
   @Override
   public int read(char[] buffer, int offset, int length) throws IOException {
-    synchronized (lock) {
-      LOG.debug("call to read(b, o, l) with l [{}]", length);
-      /**
-       * TODO: careful here - I think char can only represent basic multilingual plane while int can
-       * represent anything, so the cast to char could fail
-       */
-      int charsRead = 0;
-      for (int i = offset; i < (offset + length); i++) {
-        int nextChar = nextValidXmlChar();
-        if (nextChar != -1) {
-          buffer[i] = (char) nextChar;
-          charsRead++;
-        } else if (charsRead == 0) {
-          LOG.debug("End of stream is first char read: returning -1");
-          return -1;
-        } else {
-          LOG.debug("At end of stream having read [{}] of requested [{}]", charsRead, length);
-          break;
-        }
+    log.debug("call to read(b, o, l) with l [{}]", length);
+    /**
+     * TODO: careful here - I think char can only represent basic multilingual plane while int can
+     * represent anything, so the cast to char could fail
+     */
+    int charsRead = 0;
+    for (int i = offset; i < (offset + length); i++) {
+      int nextChar = nextValidXmlChar();
+      if (nextChar != -1) {
+        buffer[i] = (char) nextChar;
+        charsRead++;
+      } else if (charsRead == 0) {
+        log.debug("End of stream is first char read: returning -1");
+        return -1;
+      } else {
+        log.debug("At end of stream having read [{}] of requested [{}]", charsRead, length);
+        break;
       }
-
-      return charsRead;
     }
+
+    return charsRead;
+
   }
 
   @Override
@@ -71,15 +70,14 @@ public class XmlSanitizingReader extends FilterReader {
     return (!endOfStreamReached && in.ready());
   }
 
+  @Synchronized
   @Override
   public void close() throws IOException {
-    synchronized (lock) {
-      if (in == null) {
-        return;
-      }
-      in.close();
-      in = null;
+    if (in == null) {
+      return;
     }
+    in.close();
+    in = null;
   }
 
   @Override
@@ -87,24 +85,23 @@ public class XmlSanitizingReader extends FilterReader {
     return false;
   }
 
+  @Synchronized
   private int nextValidXmlChar() throws IOException {
-    synchronized (lock) {
-      Integer validChar = null;
-      while (validChar == null) {
-        int nextChar = in.read();
-        // -1 means end of stream
-        if (nextChar == -1) {
-          endOfStreamReached = true;
-          return -1;
-        } else if (isValidXml(nextChar)) {
-          validChar = nextChar;
-        } else if (LOG.isDebugEnabled()) {
-          LOG.debug("Dropping invalid xml char [0x{}]", Integer.toHexString(nextChar));
-        }
+    Integer validChar = null;
+    while (validChar == null) {
+      int nextChar = in.read();
+      // -1 means end of stream
+      if (nextChar == -1) {
+        endOfStreamReached = true;
+        return -1;
+      } else if (isValidXml(nextChar)) {
+        validChar = nextChar;
+      } else if (log.isDebugEnabled()) {
+        log.debug("Dropping invalid xml char [0x{}]", Integer.toHexString(nextChar));
       }
-
-      return validChar;
     }
+
+    return validChar;
   }
 
   private boolean isValidXml(int charVal) {
