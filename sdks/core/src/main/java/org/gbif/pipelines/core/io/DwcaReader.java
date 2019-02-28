@@ -83,14 +83,13 @@ public class DwcaReader implements Closeable {
 
   @Override
   public void close() throws IOException {
-    if (starRecordsIt == null) {
-      return;
-    }
-    try {
-      log.info("Closing DwC-A reader having read [{}] records", recordsReturned);
-      starRecordsIt.close();
-    } catch (Exception e) {
-      throw new IOException(e);
+    if (starRecordsIt != null) {
+      try {
+        log.info("Closing DwC-A reader having read [{}] records", recordsReturned);
+        starRecordsIt.close();
+      } catch (Exception e) {
+        throw new IOException(e);
+      }
     }
   }
 }
