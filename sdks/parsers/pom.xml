@@ -14,6 +14,13 @@
   <description>Data parsers and converters, mainly for internal usage inside of interpretations</description>
 
   <dependencies>
+
+    <!-- Dev tools -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+
     <!-- This project -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

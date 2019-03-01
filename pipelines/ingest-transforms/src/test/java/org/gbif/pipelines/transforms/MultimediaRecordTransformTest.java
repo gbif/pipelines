@@ -8,7 +8,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -22,50 +22,48 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests the {@link RecordTransforms}. */
 @RunWith(JUnit4.class)
 public class MultimediaRecordTransformTest {
 
   private static final String RECORD_ID = "123";
-  private static final String URI =
-      "http://specify-attachments-saiab.saiab.ac.za/originals/sp6-3853933608872243693.att.JPG";
-  private static final String SOURCE =
-      "http://farm8.staticflickr.com/7093/7039524065_3ed0382368.jpg";
+  private static final String URI = "http://specify-attachments-saiab.saiab.ac.za/originals/att.JPG";
+  private static final String SOURCE = "http://farm8.staticflickr.com/7093/7039524065_8.jpg";
   private static final String TITLE = "Geranium Plume Moth 0032";
   private static final String DESCRIPTION = "Geranium Plume Moth 0032 description";
   private static final String LICENSE = "BY-NC-SA 2.0";
   private static final String CREATOR = "Moayed Bahajjaj";
   private static final String CREATED = "2012-03-29";
 
-  @Rule public final transient TestPipeline p = TestPipeline.create();
+  @Rule
+  public final transient TestPipeline p = TestPipeline.create();
 
   @Test
   @Category(NeedsRunner.class)
   public void transformationTest() {
 
     // State
-    Map<String, String> audubonExtension =
+    Map<String, String> extension =
         ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
-            .accessURI(URI)
-            .identifier("d79633d3-0967-40fa-9557-d6915e4d1353")
-            .format("jpg")
+            .identifier(URI)
+            .format("image/jpeg")
             .title(TITLE)
             .description(DESCRIPTION)
-            .derivedFrom(SOURCE)
             .license(LICENSE)
             .creator(CREATOR)
             .created(CREATED)
+            .source(SOURCE)
+            .type("image")
             .build();
 
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()
             .id(RECORD_ID)
-            .addExtensionRecord(Extension.AUDUBON, audubonExtension)
+            .addExtensionRecord(Extension.MULTIMEDIA, extension)
             .build();
 
     // When
     PCollection<MultimediaRecord> dataStream =
-        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new MultimediaFn()));
+        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new Interpreter()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(createExpectedMultimedia());
@@ -84,7 +82,7 @@ public class MultimediaRecordTransformTest {
             .setCreator(CREATOR)
             .setCreated(CREATED)
             .setSource(SOURCE)
-            .setType(MediaType.StillImage)
+            .setType(MediaType.StillImage.name())
             .build();
 
     return MultimediaRecord.newBuilder()

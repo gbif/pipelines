@@ -8,13 +8,14 @@ import org.gbif.pipelines.estools.common.SettingsType;
 import org.apache.http.HttpEntity;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
 
 /** Parser for the ES responses encapsulated in a {@link HttpEntity}. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 class HttpResponseParser {
-
-  private HttpResponseParser() {}
 
   /**
    * Parses the response from an index creation request.

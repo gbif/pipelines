@@ -18,7 +18,13 @@ package org.gbif.converters.parser.xml.model;
 import java.io.Serializable;
 
 import com.google.common.base.Strings;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class TypificationRecord implements Serializable {
 
   private static final long serialVersionUID = 9038478890028911433L;
@@ -28,10 +34,7 @@ public class TypificationRecord implements Serializable {
   private String typeStatus;
   private String notes;
 
-  public TypificationRecord() {}
-
-  public TypificationRecord(
-      String scientificName, String publication, String typeStatus, String notes) {
+  public TypificationRecord(String scientificName, String publication, String typeStatus, String notes) {
     if (!Strings.isNullOrEmpty(scientificName)) {
       this.scientificName = scientificName;
     }
@@ -66,37 +69,5 @@ public class TypificationRecord implements Serializable {
         + "Notes ["
         + notes
         + "]\n";
-  }
-
-  public String getScientificName() {
-    return scientificName;
-  }
-
-  public void setScientificName(String scientificName) {
-    this.scientificName = scientificName;
-  }
-
-  public String getPublication() {
-    return publication;
-  }
-
-  public void setPublication(String publication) {
-    this.publication = publication;
-  }
-
-  public String getTypeStatus() {
-    return typeStatus;
-  }
-
-  public void setTypeStatus(String typeStatus) {
-    this.typeStatus = typeStatus;
-  }
-
-  public String getNotes() {
-    return notes;
-  }
-
-  public void setNotes(String notes) {
-    this.notes = notes;
   }
 }

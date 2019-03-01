@@ -22,14 +22,11 @@ import java.util.Properties;
 import org.gbif.converters.parser.xml.constants.TaxonRankEnum;
 import org.gbif.converters.parser.xml.model.Taxon;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class HigherTaxonParser {
-
-  private static final Logger LOG = LoggerFactory.getLogger(HigherTaxonParser.class);
 
   private final Properties taxonRankMapping = new Properties();
   private final String taxonRankMappingFilename = "/taxonRankMapping.properties";
@@ -44,7 +41,7 @@ public class HigherTaxonParser {
       InputStream is = getClass().getResourceAsStream(taxonRankMappingFilename);
       taxonRankMapping.load(is);
     } catch (IOException e) {
-      LOG.error("Unable to load taxonRankMapping - parsing higher taxons will fail", e);
+      log.error("Unable to load taxonRankMapping - parsing higher taxons will fail", e);
     }
   }
 
@@ -59,10 +56,10 @@ public class HigherTaxonParser {
       processedTaxonRank = processedTaxonRank.replaceAll(" ", "").toUpperCase();
       String rawRank = taxonRankMapping.getProperty(processedTaxonRank);
       if (rawRank == null) {
-        LOG.info("Could not process taxon ranking of [{}], skipping.", processedTaxonRank);
+        log.info("Could not process taxon ranking of [{}], skipping.", processedTaxonRank);
       } else {
         int rank = Integer.parseInt(rawRank.trim());
-        LOG.debug("ProcessedTaxonRank [{}] gives numeric rank [{}]", processedTaxonRank, rank);
+        log.debug("ProcessedTaxonRank [{}] gives numeric rank [{}]", processedTaxonRank, rank);
         switch (rank) {
           case 1000:
             taxon = new Taxon(TaxonRankEnum.KINGDOM, taxonName);

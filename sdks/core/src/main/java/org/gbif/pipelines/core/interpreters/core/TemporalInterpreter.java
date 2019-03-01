@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpreters;
+package org.gbif.pipelines.core.interpreters.core;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -15,12 +15,14 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /** Interprets the date related terms of a {@link ExtendedRecord}. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalInterpreter {
-
-  private TemporalInterpreter() {}
 
   /** {@link DwcTerm#eventDate} interpretation. */
   public static void interpretEventDate(ExtendedRecord er, TemporalRecord tr) {

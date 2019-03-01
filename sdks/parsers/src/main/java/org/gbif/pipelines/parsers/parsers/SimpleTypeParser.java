@@ -24,46 +24,37 @@ public class SimpleTypeParser {
   }
 
   /** Parses an integer value and consumes its response (if any). */
-  public static void parseInt(
-      ExtendedRecord er, DwcTerm term, Consumer<Optional<Integer>> consumer) {
+  public static void parseInt(ExtendedRecord er, DwcTerm term, Consumer<Optional<Integer>> consumer) {
     Optional.ofNullable(extractValue(er, term))
-        .ifPresent(
-            termValue ->
-                consumer.accept(Optional.ofNullable(NumberParser.parseInteger(termValue))));
+        .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseInteger(termValue))));
   }
 
   /** Parses an integer value and applies a mapping function to its response (if any). */
-  public static <U> Optional<U> parseInt(
-      ExtendedRecord er, DwcTerm term, Function<Optional<Integer>, U> mapper) {
+  public static <U> Optional<U> parseInt(ExtendedRecord er, DwcTerm term, Function<Optional<Integer>, U> mapper) {
     return Optional.ofNullable(extractValue(er, term))
         .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseInteger(termValue))));
   }
 
   /** Parses a double value and consumes its response (if any). */
-  public static void parseDouble(
-      ExtendedRecord er, DwcTerm term, Consumer<Optional<Double>> consumer) {
+  public static void parseDouble(ExtendedRecord er, DwcTerm term, Consumer<Optional<Double>> consumer) {
     Optional.ofNullable(extractValue(er, term))
-        .ifPresent(
-            termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseDouble(termValue))));
+        .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseDouble(termValue))));
   }
 
   /** Parses a double value and applies a mapping function to its response (if any). */
-  public static <U> Optional<U> parseDouble(
-      ExtendedRecord er, DwcTerm term, Function<Optional<Double>, U> mapper) {
+  public static <U> Optional<U> parseDouble(ExtendedRecord er, DwcTerm term, Function<Optional<Double>, U> mapper) {
     return Optional.ofNullable(extractValue(er, term))
         .map(termValue -> mapper.apply(Optional.ofNullable(NumberParser.parseDouble(termValue))));
   }
 
   /** Parses a boolean value and consumes its response (if any). */
-  public static void parseBoolean(
-      ExtendedRecord er, DwcTerm term, Consumer<ParseResult<Boolean>> consumer) {
+  public static void parseBoolean(ExtendedRecord er, DwcTerm term, Consumer<ParseResult<Boolean>> consumer) {
     Optional.ofNullable(extractValue(er, term))
         .ifPresent(termValue -> consumer.accept(BOOLEAN_PARSER.parse(termValue)));
   }
 
   /** Parses a boolean value and applies mapping functions to its response (if any). */
-  public static <U> Optional<U> parseBoolean(
-      ExtendedRecord er, DwcTerm term, Function<ParseResult<Boolean>, U> mapper) {
+  public static <U> Optional<U> parseBoolean(ExtendedRecord er, DwcTerm term, Function<ParseResult<Boolean>, U> mapper) {
     return Optional.ofNullable(extractValue(er, term))
         .map(termValue -> mapper.apply(BOOLEAN_PARSER.parse(termValue)));
   }

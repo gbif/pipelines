@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpreters;
+package org.gbif.pipelines.core.interpreters.core;
 
 import java.util.function.BiConsumer;
 
@@ -8,11 +8,16 @@ import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /** Interprets GBIF metadata by datasetId */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataInterpreter {
 
-  private MetadataInterpreter() {}
-
+  /**
+   * Gets information from GBIF API by datasetId
+   */
   public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {
       mdr.setDatasetKey(datasetId);

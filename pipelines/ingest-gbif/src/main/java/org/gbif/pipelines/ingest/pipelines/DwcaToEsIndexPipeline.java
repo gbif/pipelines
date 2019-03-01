@@ -6,14 +6,18 @@ import java.util.Optional;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
+import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -22,8 +26,17 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
-import org.gbif.pipelines.transforms.MapTransforms;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -41,28 +54,29 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
-import static org.gbif.pipelines.transforms.RecordTransforms.BasicFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.MetadataFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
 
 /**
  * Pipeline sequence:
  *
  * <pre>
  *    1) Reads DwCA archive and converts to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
- *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file
- *        to {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link
- *        org.gbif.pipelines.io.avro.BasicRecord}, {@link org.gbif.pipelines.io.avro.TemporalRecord},
- *        {@link org.gbif.pipelines.io.avro.MultimediaRecord}, {@link
- *        org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file to:
+ *      {@link org.gbif.pipelines.io.avro.MetadataRecord},
+ *      {@link org.gbif.pipelines.io.avro.BasicRecord},
+ *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
+ *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Joins objects
  *    4) Converts to json model (resources/elasticsearch/es-occurrence-shcema.json)
  *    5) Pushes data to Elasticsearch instance
@@ -84,11 +98,9 @@ import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
  *
  * }</pre>
  */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DwcaToEsIndexPipeline {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaToEsIndexPipeline.class);
-
-  private DwcaToEsIndexPipeline() {}
 
   public static void main(String[] args) {
     DwcaPipelineOptions options = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, args);
@@ -102,69 +114,89 @@ public class DwcaToEsIndexPipeline {
 
     EsIndexUtils.createIndex(options);
 
-    LOG.info("Adding step 1: Options");
+    log.info("Adding step 1: Options");
     WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
     KvConfig kvConfig = KvConfigFactory.create(options.getGbifApiUrl(), options.getZookeeperUrl());
 
+    // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
     final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
     final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
     final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
     final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
+
+    // Extension
     final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
+    final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
+    final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
+    final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
 
     String tmpDir = FsUtils.getTempDir(options);
 
     String inputPath = options.getInputPath();
-    boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
+    boolean isDir = Paths.get(inputPath).toFile().isDirectory();
 
-    DwcaIO.Read reader =
-        isDirectory
-            ? DwcaIO.Read.fromLocation(inputPath)
-            : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
+    DwcaIO.Read reader = isDir ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
 
     Pipeline p = Pipeline.create(options);
 
-    LOG.info("Reading avro files");
+    log.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", reader)
             .apply("Filter duplicates", UniqueIdTransform.create());
 
-    LOG.info("Adding step 2: Reading avros");
+    log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", ParDo.of(new MetadataFn(wsConfig)))
+            .apply("Interpret metadata", ParDo.of(new MetadataTransform.Interpreter(wsConfig)))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        uniqueRecords.apply("Map Verbatim to KV", MapTransforms.extendedToKv());
+        uniqueRecords.apply("Map Verbatim to KV", VerbatimTransform.toKv());
 
+    // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", ParDo.of(new BasicFn()))
-            .apply("Map Basic to KV", MapTransforms.basicToKv());
+            .apply("Interpret basic", ParDo.of(new BasicTransform.Interpreter()))
+            .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
         uniqueRecords
-            .apply("Interpret temporal", ParDo.of(new TemporalFn()))
-            .apply("Map Temporal to KV", MapTransforms.temporalToKv());
+            .apply("Interpret temporal", ParDo.of(new TemporalTransform.Interpreter()))
+            .apply("Map Temporal to KV", TemporalTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
         uniqueRecords
-            .apply("Interpret location", ParDo.of(new LocationFn(kvConfig)))
-            .apply("Map Location to KV", MapTransforms.locationToKv());
+            .apply("Interpret location", ParDo.of(new LocationTransform.Interpreter(kvConfig)))
+            .apply("Map Location to KV", LocationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         uniqueRecords
-            .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(kvConfig)))
-            .apply("Map Taxon to KV", MapTransforms.taxonToKv());
+            .apply("Interpret taxonomy", ParDo.of(new TaxonomyTransform.Interpreter(kvConfig)))
+            .apply("Map Taxon to KV", TaxonomyTransform.toKv());
 
+    // Extension
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         uniqueRecords
-            .apply("Interpret multimedia", ParDo.of(new MultimediaFn()))
-            .apply("Map Multimedia to KV", MapTransforms.multimediaToKv());
+            .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
+            .apply("Map Multimedia to KV", MultimediaTransform.toKv());
 
-    LOG.info("Adding step 3: Converting to a json object");
+    PCollection<KV<String, ImageRecord>> imageCollection =
+        uniqueRecords
+            .apply("Interpret image", ParDo.of(new ImageTransform.Interpreter()))
+            .apply("Map Image to KV", ImageTransform.toKv());
+
+    PCollection<KV<String, AudubonRecord>> audubonCollection =
+        uniqueRecords
+            .apply("Interpret audubon", ParDo.of(new AudubonTransform.Interpreter()))
+            .apply("Map Audubon to KV", AudubonTransform.toKv());
+
+    PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
+        uniqueRecords
+            .apply("Interpret multimedia", ParDo.of(new MeasurementOrFactTransform.Interpreter()))
+            .apply("Map MeasurementOrFact to KV", MeasurementOrFactTransform.toKv());
+
+    log.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
 
@@ -175,15 +207,22 @@ public class DwcaToEsIndexPipeline {
             CoGbkResult v = c.element().getValue();
             String k = c.element().getKey();
 
+            // Core
             MetadataRecord mdr = c.sideInput(metadataView);
             ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
             BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
             TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
-            MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
 
-            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mr, er).buildJson().toString();
+            // Extension
+            MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
+            ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
+            AudubonRecord ar = v.getOnly(arTag, AudubonRecord.newBuilder().setId(k).build());
+            MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
+
+            MultimediaRecord mergedMr = MultimediaConverter.merge(mr, ir, ar);
+            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mergedMr, mfr, er).buildJson().toString();
 
             c.output(json);
 
@@ -191,18 +230,26 @@ public class DwcaToEsIndexPipeline {
           }
         };
 
-    LOG.info("Adding step 4: Converting to a json object");
+    log.info("Adding step 4: Converting to a json object");
     PCollection<String> jsonCollection =
-        KeyedPCollectionTuple.of(brTag, basicCollection)
+        KeyedPCollectionTuple
+            // Core
+            .of(brTag, basicCollection)
             .and(trTag, temporalCollection)
             .and(lrTag, locationCollection)
             .and(txrTag, taxonCollection)
+            // Extension
             .and(mrTag, multimediaCollection)
+            .and(irTag, imageCollection)
+            .and(arTag, audubonCollection)
+            .and(mfrTag, measurementCollection)
+            // Raw
             .and(erTag, verbatimCollection)
+            // Apply
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to json", ParDo.of(doFn).withSideInputs(metadataView));
 
-    LOG.info("Adding step 5: Elasticsearch indexing");
+    log.info("Adding step 5: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
         ElasticsearchIO.ConnectionConfiguration.create(
             options.getEsHosts(), options.getEsIndexName(), Indexing.INDEX_TYPE);
@@ -214,7 +261,7 @@ public class DwcaToEsIndexPipeline {
             .withMaxBatchSize(options.getEsMaxBatchSize())
             .withIdFn(input -> input.get("id").asText()));
 
-    LOG.info("Running the pipeline");
+    log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
@@ -223,7 +270,7 @@ public class DwcaToEsIndexPipeline {
       MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
     });
 
-    LOG.info("Pipeline has been finished");
+    log.info("Pipeline has been finished");
 
     FsUtils.removeTmpDirectory(options);
   }

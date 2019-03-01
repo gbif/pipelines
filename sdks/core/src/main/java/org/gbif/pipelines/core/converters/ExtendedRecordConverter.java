@@ -11,7 +11,11 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /** Converters from *.class to {@link ExtendedRecord} */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtendedRecordConverter {
 
   public static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
@@ -23,8 +27,6 @@ public class ExtendedRecordConverter {
               .stream()
               .filter(term -> term.qualifiedName() != null && record.value(term) != null)
               .collect(Collectors.toMap(Term::qualifiedName, record::value, (a, b) -> b));
-
-  private ExtendedRecordConverter() {}
 
   /** Converts {@link StarRecord} to {@link ExtendedRecord} */
   public static ExtendedRecord from(StarRecord record) {

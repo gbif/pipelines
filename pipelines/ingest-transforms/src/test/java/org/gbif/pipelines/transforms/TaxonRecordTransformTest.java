@@ -9,7 +9,7 @@ import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
-import org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform.Interpreter;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -42,12 +42,11 @@ public class TaxonRecordTransformTest {
     kvStore.put(SpeciesMatchRequest.builder().withScientificName("foo").build(), createDummyNameUsageMatch());
 
     // State
-    ExtendedRecord extendedRecord =
-        ExtendedRecordCustomBuilder.create().id("1").name("foo").build();
+    ExtendedRecord extendedRecord = ExtendedRecordCustomBuilder.create().id("1").name("foo").build();
 
     // When
     PCollection<TaxonRecord> recordCollection =
-        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new TaxonomyFn(kvStore)));
+        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new Interpreter(kvStore)));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(createTaxonRecordExpected());

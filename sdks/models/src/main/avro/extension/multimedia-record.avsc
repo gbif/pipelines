@@ -1,0 +1,48 @@
+/**
+ * Represents the interpreted fields of terms related to multimedia extension.
+ * http://rs.gbif.org/extension/gbif/1.0/multimedia.xml
+ */
+[
+  {
+    "name" : "MediaType",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type" : "enum",
+    "symbols" : [
+      "StillImage", "MovingImage", "Sound"
+    ]
+  },
+  {
+    "name":"Multimedia",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "type", "type":[ "null", "string"], "default":null, "doc": "http://purl.org/dc/terms/type"},
+      {"name": "format", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/format"},
+      {"name": "identifier", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/identifier"},
+      {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
+      {"name": "title", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/title"},
+      {"name": "description", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/description"},
+      {"name": "source", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/source"},
+      {"name": "audience", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/audience"},
+      {"name": "created", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/created"},
+      {"name": "creator", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/creator"},
+      {"name": "contributor", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/contributor"},
+      {"name": "publisher", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/publisher"},
+      {"name": "license", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/license"},
+      {"name": "rightsHolder", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/rightsHolder"},
+      {"name": "datasetId", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/datasetID"}
+    ]
+  },
+  {
+    "name": "MultimediaRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for interpreted multimedia fields.",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "http://rs.tdwg.org/dwc/terms/occurrenceID"},
+      {"name": "multimediaItems", "type": ["null", {"type" : "array", "items" : "Multimedia"}], "default" : null },
+      {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
+]
+

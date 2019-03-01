@@ -9,21 +9,18 @@ import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.DataFileWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.HashUtils.getSha1;
 import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
 
+@Slf4j
+@NoArgsConstructor(staticName = "create")
+@Builder
 public class DwcaToAvroConverter extends ConverterToVerbatim {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaToAvroConverter.class);
-
-  private DwcaToAvroConverter() {}
-
-  public static DwcaToAvroConverter create() {
-    return new DwcaToAvroConverter();
-  }
 
   /** TODO: DOC */
   public static void main(String... args) {
@@ -33,7 +30,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     String inputPath = args[0];
     String outputPath = args[1];
     boolean isFileCreated = DwcaToAvroConverter.create().inputPath(inputPath).outputPath(outputPath).convert();
-    LOG.info("Verbatim avro file has been created - {}", isFileCreated);
+    log.info("Verbatim avro file has been created - {}", isFileCreated);
   }
 
   /** TODO: DOC */
@@ -47,7 +44,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
   protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter, String idHashPrefix)
       throws IOException {
     DwcaReader reader = DwcaReader.fromLocation(inputPath.toString());
-    LOG.info("Exporting the DwC Archive to Avro started {}", inputPath);
+    log.info("Exporting the DwC Archive to Avro started {}", inputPath);
 
     // Read all records
     while (reader.advance()) {

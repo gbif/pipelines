@@ -18,41 +18,54 @@ import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
-import org.gbif.pipelines.transforms.WriteTransforms;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.LocationTransform;
+import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaxonomyTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
-import static org.gbif.pipelines.transforms.RecordTransforms.BasicFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.LocationFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.MetadataFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.MultimediaFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.TaxonomyFn;
-import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
 
 /**
  * Pipeline sequence:
  *
  * <pre>
  *    1) Reads DwCA archive and converts to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
- *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file
- *        to {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link
- *        org.gbif.pipelines.io.avro.BasicRecord}, {@link org.gbif.pipelines.io.avro.TemporalRecord},
- *        {@link org.gbif.pipelines.io.avro.MultimediaRecord}, {@link
- *        org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file to:
+ *      {@link org.gbif.pipelines.io.avro.MetadataRecord},
+ *      {@link org.gbif.pipelines.io.avro.BasicRecord},
+ *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *      {@link  org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.LocationRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord}
  *    3) Writes data to independent files
  * </pre>
  *
@@ -71,11 +84,9 @@ import static org.gbif.pipelines.transforms.RecordTransforms.TemporalFn;
  *
  * }</pre>
  */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DwcaToInterpretedPipeline {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaToInterpretedPipeline.class);
-
-  private DwcaToInterpretedPipeline() {}
 
   public static void main(String[] args) {
     DwcaPipelineOptions options = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, args);
@@ -94,51 +105,62 @@ public class DwcaToInterpretedPipeline {
     Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
 
     String inputPath = options.getInputPath();
-    boolean isDirectory = Paths.get(inputPath).toFile().isDirectory();
+    boolean isDir = Paths.get(inputPath).toFile().isDirectory();
 
     String tmpDir = FsUtils.getTempDir(options);
 
-    DwcaIO.Read reader =
-        isDirectory ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
+    DwcaIO.Read reader = isDir ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
 
-    LOG.info("Creating a pipeline from options");
+    log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
-    LOG.info("Reading avro files");
+    log.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", reader)
             .apply("Filter duplicates", UniqueIdTransform.create());
 
-    LOG.info("Adding interpretations");
+    log.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Interpret metadata", ParDo.of(new MetadataFn(wsConfig)))
-        .apply("Write metadata to avro", WriteTransforms.metadata(pathFn.apply(METADATA)));
+        .apply("Interpret metadata", ParDo.of(new MetadataTransform.Interpreter(wsConfig)))
+        .apply("Write metadata to avro", MetadataTransform.write(pathFn.apply(METADATA)));
 
     uniqueRecords
-        .apply("Write unique verbatim to avro", WriteTransforms.extended(pathFn.apply(VERBATIM)));
+        .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn.apply(VERBATIM)));
 
     uniqueRecords
-        .apply("Interpret basic", ParDo.of(new BasicFn()))
-        .apply("Write basic to avro", WriteTransforms.basic(pathFn.apply(BASIC)));
+        .apply("Interpret basic", ParDo.of(new BasicTransform.Interpreter()))
+        .apply("Write basic to avro", BasicTransform.write(pathFn.apply(BASIC)));
 
     uniqueRecords
-        .apply("Interpret temporal", ParDo.of(new TemporalFn()))
-        .apply("Write temporal to avro", WriteTransforms.temporal(pathFn.apply(TEMPORAL)));
+        .apply("Interpret temporal", ParDo.of(new TemporalTransform.Interpreter()))
+        .apply("Write temporal to avro", TemporalTransform.write(pathFn.apply(TEMPORAL)));
 
     uniqueRecords
-        .apply("Interpret multimedia", ParDo.of(new MultimediaFn()))
-        .apply("Write multimedia to avro", WriteTransforms.multimedia(pathFn.apply(MULTIMEDIA)));
+        .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
+        .apply("Write multimedia to avro", MultimediaTransform.write(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply("Interpret taxonomy", ParDo.of(new TaxonomyFn(kvConfig)))
-        .apply("Write taxon to avro", WriteTransforms.taxon(pathFn.apply(TAXONOMY)));
+        .apply("Interpret image", ParDo.of(new ImageTransform.Interpreter()))
+        .apply("Write image to avro", ImageTransform.write(pathFn.apply(IMAGE)));
 
     uniqueRecords
-        .apply("Interpret location", ParDo.of(new LocationFn(kvConfig)))
-        .apply("Write location to avro", WriteTransforms.location(pathFn.apply(LOCATION)));
+        .apply("Interpret audubon", ParDo.of(new AudubonTransform.Interpreter()))
+        .apply("Write audubon to avro", AudubonTransform.write(pathFn.apply(AUDUBON)));
 
-    LOG.info("Running the pipeline");
+    uniqueRecords
+        .apply("Interpret measurement", ParDo.of(new MeasurementOrFactTransform.Interpreter()))
+        .apply("Write measurement to avro", MeasurementOrFactTransform.write(pathFn.apply(MEASUREMENT_OR_FACT)));
+
+    uniqueRecords
+        .apply("Interpret taxonomy", ParDo.of(new TaxonomyTransform.Interpreter(kvConfig)))
+        .apply("Write taxon to avro", TaxonomyTransform.write(pathFn.apply(TAXONOMY)));
+
+    uniqueRecords
+        .apply("Interpret location", ParDo.of(new LocationTransform.Interpreter(kvConfig)))
+        .apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
+
+    log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
@@ -147,6 +169,6 @@ public class DwcaToInterpretedPipeline {
       MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
     });
 
-    LOG.info("Pipeline has been finished");
+    log.info("Pipeline has been finished");
   }
 }

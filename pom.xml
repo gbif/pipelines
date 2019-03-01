@@ -62,12 +62,15 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
+    <!-- Tools-->
+    <lombok.version>1.18.6</lombok.version>
+
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.40</gbif-parsers.version>
     <dwca-io.version>2.5</dwca-io.version>
     <gbif-api.version>0.70</gbif-api.version>
     <gbif-common.version>0.44</gbif-common.version>
-    <dwc-api.version>1.19</dwc-api.version>
+    <dwc-api.version>1.21</dwc-api.version>
     <kvs.version>1.1-SNAPSHOT</kvs.version>
 
     <!-- Common libraries -->
@@ -128,7 +131,7 @@
 
     <!-- Checkstyle -->
     <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
-    <error_prone_core.version>2.3.1</error_prone_core.version>
+    <error_prone_core.version>2.3.2</error_prone_core.version>
 
   </properties>
 
@@ -186,6 +189,7 @@
               <arg>-XepExcludedPaths:.*/src/main/java-generated/.*</arg>
               <arg>-XepDisableWarningsInGeneratedCode</arg>
               <arg>-Xep:MissingOverride:ERROR</arg>
+              <arg>-Xep:ParameterName:OFF</arg>
             </compilerArgs>
           </configuration>
           <dependencies>
@@ -214,6 +218,14 @@
 -->
   <dependencyManagement>
     <dependencies>
+
+      <!-- Tools -->
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+        <scope>provided</scope>
+      </dependency>
 
       <!-- This project -->
       <dependency>
@@ -297,6 +309,14 @@
           <exclusion>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

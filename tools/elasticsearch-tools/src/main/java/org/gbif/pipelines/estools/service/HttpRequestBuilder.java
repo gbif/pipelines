@@ -1,12 +1,9 @@
 package org.gbif.pipelines.estools.service;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.gbif.pipelines.estools.common.SettingsType;
@@ -19,6 +16,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 
 import static org.gbif.pipelines.estools.service.EsConstants.Action;
 import static org.gbif.pipelines.estools.service.EsConstants.Constant;
@@ -30,6 +31,7 @@ import static org.gbif.pipelines.estools.service.JsonHandler.createObjectNode;
 import static org.gbif.pipelines.estools.service.JsonHandler.writeToString;
 
 /** Class that builds {@link HttpEntity} instances with JSON content. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 class HttpRequestBuilder {
 
   // pre-defined settings
@@ -50,8 +52,6 @@ class HttpRequestBuilder {
     SEARCH_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
   }
 
-  private HttpRequestBuilder() {}
-
   /** Creates a new {@link HttpRequestBuilder}. */
   static HttpRequestBuilder newInstance() {
     return new HttpRequestBuilder();
@@ -63,8 +63,7 @@ class HttpRequestBuilder {
   }
 
   /** Adds a {@link SettingsType} to the body. */
-  HttpRequestBuilder withSettingsType(SettingsType settingsType) {
-    Objects.requireNonNull(settingsType);
+  HttpRequestBuilder withSettingsType(@NonNull SettingsType settingsType) {
     this.settings = (settingsType == SettingsType.INDEXING) ? INDEXING_SETTINGS : SEARCH_SETTINGS;
     return this;
   }
@@ -84,8 +83,7 @@ class HttpRequestBuilder {
   }
 
   /** Adds ES mappings from a file in JSON format to the body. */
-  HttpRequestBuilder withMappings(Path mappingsPath) {
-    Objects.requireNonNull(mappingsPath, "The path of the mappings cannot be null");
+  HttpRequestBuilder withMappings(@NonNull Path mappingsPath) {
     this.mappings = JsonHandler.readTree(loadFile(mappingsPath));
     return this;
   }
@@ -176,12 +174,9 @@ class HttpRequestBuilder {
     return createEntity(writeToString(entityNode));
   }
 
+  @SneakyThrows
   private static HttpEntity createEntity(String body) {
-    try {
-      return new NStringEntity(body);
-    } catch (UnsupportedEncodingException exc) {
-      throw new IllegalStateException(exc.getMessage(), exc);
-    }
+    return new NStringEntity(body);
   }
 
   private static class IndexAliasAction {
@@ -197,13 +192,10 @@ class HttpRequestBuilder {
     }
   }
 
+  @SneakyThrows
   static InputStream loadFile(Path path) {
     if (path.isAbsolute()) {
-      try {
-        return new FileInputStream(path.toFile());
-      } catch (FileNotFoundException exc) {
-        throw new IllegalArgumentException(exc.getMessage(), exc);
-      }
+      return new FileInputStream(path.toFile());
     } else {
       return Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
     }

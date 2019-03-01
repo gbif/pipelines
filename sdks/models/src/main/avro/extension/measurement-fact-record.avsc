@@ -1,0 +1,43 @@
+/**
+ * Represents the interpreted fields of terms related to MeasurementOrFact extension.
+ * http://rs.gbif.org/extension/dwc/measurements_or_facts.xml
+ */
+[
+  {
+    "name":"DeterminedDate",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate",
+    "fields":[
+      {"name":"gte","type":["null","string"],"default":null},
+      {"name":"lte","type":["null","string"],"default":null}
+    ]
+  },
+  {
+    "name":"MeasurementOrFact",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "id", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementID"},
+      {"name": "type", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementType"},
+      {"name": "value", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementValue"},
+      {"name": "accuracy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementAccuracy"},
+      {"name": "unit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementUnit"},
+      {"name": "determinedDate", "type": ["null", "DeterminedDate"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate"},
+      {"name": "determinedBy", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementDeterminedBy"},
+      {"name": "method", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementMethod"},
+      {"name": "remarks", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/measurementRemarks"}
+    ]
+  },
+  {
+    "name": "MeasurementOrFactRecord",
+    "namespace": "org.gbif.pipelines.io.avro",
+    "type": "record",
+    "doc": "A container for interpreted MeasurementOrFact fields.",
+    "fields": [
+      {"name": "id", "type": "string", "doc": "http://rs.tdwg.org/dwc/terms/occurrenceID"},
+      {"name": "measurementOrFactItems", "type": ["null", {"type" : "array", "items" : "MeasurementOrFact"}], "default" : null },
+      {"name": "issues", "type": "IssueRecord", "default":{}}
+    ]
+  }
+]

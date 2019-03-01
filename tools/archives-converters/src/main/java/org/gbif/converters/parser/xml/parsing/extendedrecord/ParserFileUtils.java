@@ -1,27 +1,24 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 
 import org.gbif.converters.parser.xml.ParsingException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ParserFileUtils {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ParserFileUtils.class);
-
-  private static final BiFunction<String, String, String> UNCOMPRESS =
+  private static final BinaryOperator<String> UNCOMPRESS =
       (inPath, outPath) -> String.format("tar -xf %s -C %s", inPath, outPath);
   private static final String ARCHIVE_PREFIX = ".tar.xz";
   private static final String TMP_PATH = "/tmp/";
-
-  private ParserFileUtils() {
-    // NOP
-  }
 
   /**
    * @param inputPath path to a folder with xmls or a tar.xz archive
@@ -31,8 +28,7 @@ public class ParserFileUtils {
     // Check directory
     File inputFile = new File(inputPath);
     if (!inputFile.exists()) {
-      throw new ParsingException(
-          "Directory or file " + inputFile.getAbsolutePath() + " does not exist");
+      throw new ParsingException("Directory or file " + inputFile.getAbsolutePath() + " does not exist");
     }
 
     // Uncompress if it is a tar.xz
@@ -52,20 +48,16 @@ public class ParserFileUtils {
    * @param inputFile - *.tar.xz file
    * @return the new File object, path to uncompressed files folder
    */
+  @SneakyThrows
   public static File uncompress(File inputFile) {
-    try {
-      File parentFile = new File(inputFile.getParentFile(), TMP_PATH);
-      Files.createDirectories(parentFile.toPath());
-      String cmd = UNCOMPRESS.apply(inputFile.getAbsolutePath(), parentFile.getAbsolutePath());
+    File parentFile = new File(inputFile.getParentFile(), TMP_PATH);
+    Files.createDirectories(parentFile.toPath());
+    String cmd = UNCOMPRESS.apply(inputFile.getAbsolutePath(), parentFile.getAbsolutePath());
 
-      LOG.info("Uncompressing a tar.xz archive {}", cmd);
-      Runtime.getRuntime().exec(cmd).waitFor();
-      LOG.info("The archive has been uncompressed");
+    log.info("Uncompressing a tar.xz archive {}", cmd);
+    Runtime.getRuntime().exec(cmd).waitFor();
+    log.info("The archive has been uncompressed");
 
-      return parentFile;
-    } catch (InterruptedException | IOException ex) {
-      LOG.error("Directory or file {} does not exist", inputFile.getAbsolutePath());
-      throw new ParsingException(ex);
-    }
+    return parentFile;
   }
 }

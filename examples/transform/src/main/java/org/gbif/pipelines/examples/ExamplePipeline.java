@@ -5,13 +5,15 @@ import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.transforms.RecordTransforms;
-import org.gbif.pipelines.transforms.WriteTransforms;
+import org.gbif.pipelines.transforms.core.TemporalTransform.Interpreter;
 
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
  * Example of using @see <a href="https://beam.apache.org/contribute/runner-guide/">Apache Beam</a>
@@ -38,7 +40,7 @@ public class ExamplePipeline {
     BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
 
     // Pipeline properties
-    String inputPath = options.getInputPath(); // Path to DwCA zip arhive
+    String inputPath = options.getInputPath(); // Path to DwCA zip archive
     String tmpDir = FsUtils.getTempDir(options); // Path to temporal directory or creates new
     String outPath = options.getTargetPath(); // Path to output *.avro files
 
@@ -48,11 +50,11 @@ public class ExamplePipeline {
     // Reads DwCA archive and convert to ExtendedRecord
     p.apply("Read DwCA zip archive", DwcaIO.Read.fromCompressed(inputPath, tmpDir))
         // Interprets and transforms from ExtendedRecord to TemporalRecord using GBIF TemporalInterpreter
-        .apply("Interpret TemporalRerord", ParDo.of(new RecordTransforms.TemporalFn()))
+        .apply("Interpret TemporalRecord", ParDo.of(new Interpreter()))
         // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter
         .apply("Interpret ExampleRecord", ExampleTransform.exampleOne())
-        // Write ExampleRecords as avro files using AvroIO.Write
-        .apply("Write as Avro files", WriteTransforms.create(ExampleRecord.class, outPath));
+        // Write ExampleRecords as Avro files using AvroIO.Write
+        .apply("Write as Avro files", AvroIO.write(ExampleRecord.class).to(outPath).withSuffix(AVRO_EXTENSION));
 
     LOG.info("Running the pipeline");
     p.run().waitUntilFinish();

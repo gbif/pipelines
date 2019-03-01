@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -16,26 +16,23 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.CountryMaps;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
 /** Matches the location fields related to Country and Coordinates to find possible mismatches. */
+@Slf4j
 class LocationMatcher {
-
-  private static final Logger LOG = LoggerFactory.getLogger(LocationMatcher.class);
 
   // Antarctica: "Territories south of 60° south latitude"
   private static final double ANTARCTICA_LATITUDE = -60d;
 
   private final LatLng latLng;
   private final Country country;
-  private final KeyValueStore<org.gbif.kvs.geocode.LatLng, String> kvStore;
-  private final List<Function<LatLng, LatLng>> alternativeTransformations = new ArrayList<>();
+  private final KeyValueStore<LatLng, String> kvStore;
+  private final List<UnaryOperator<LatLng>> alternativeTransformations = new ArrayList<>();
 
   private LocationMatcher(LatLng latLng, Country country, KeyValueStore<org.gbif.kvs.geocode.LatLng, String> kvStore) {
     this.latLng = latLng;
@@ -47,7 +44,7 @@ class LocationMatcher {
     return new LocationMatcher(latLng, country, kvStore);
   }
 
-  LocationMatcher additionalTransform(Function<LatLng, LatLng> transformation) {
+  LocationMatcher additionalTransform(UnaryOperator<LatLng> transformation) {
     alternativeTransformations.add(transformation);
     return this;
   }
@@ -93,7 +90,7 @@ class LocationMatcher {
     }
 
     // if still not found, try alternatives
-    for (Function<LatLng, LatLng> transformation : alternativeTransformations) {
+    for (UnaryOperator<LatLng> transformation : alternativeTransformations) {
       // transform location
       LatLng latLngTransformed = transformation.apply(latLng);
 
@@ -123,7 +120,7 @@ class LocationMatcher {
       try {
         countryKv = kvStore.get(latLng);
       } catch (NoSuchElementException | NullPointerException ex) {
-        LOG.error(ex.getMessage(), ex);
+        log.error(ex.getMessage(), ex);
       }
       if (!Strings.isNullOrEmpty(countryKv)) {
         return Optional.of(Country.fromIsoCode(countryKv));

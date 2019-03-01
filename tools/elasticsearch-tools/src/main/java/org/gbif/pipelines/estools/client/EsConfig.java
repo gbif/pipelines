@@ -4,16 +4,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
+
+import lombok.NonNull;
 
 /** ES configuration. */
 public class EsConfig {
 
   private final List<URL> hosts;
 
-  private EsConfig(String[] hostsAddresses) {
-    Objects.requireNonNull(hostsAddresses);
+  private EsConfig(@NonNull String[] hostsAddresses) {
 
     hosts =
         Arrays.stream(hostsAddresses)

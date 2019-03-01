@@ -43,23 +43,22 @@ import org.gbif.utils.file.CharsetDetection;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.NodeCreateRule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.sun.org.apache.xerces.internal.impl.io.MalformedByteSequenceException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Entry point into the parsing of raw occurrence records as retrieved from publishers. Will attempt
  * to determine both XML encodings and schema type. Parse happens in two steps - first extracts each
  * record element into a RawXmlOccurrence, and then parses each of those into RawOccurrenceRecords.
  */
+@Slf4j
 public class OccurrenceParser {
 
-  private static final Logger LOG = LoggerFactory.getLogger(OccurrenceParser.class);
   private static final String ENCONDING_EQ = "encoding=";
   private static final Pattern ENCODING_PATTERN = Pattern.compile(ENCONDING_EQ);
   private static final Pattern REPLACE_QUOTES_PAT = Pattern.compile("[\"']");
@@ -116,27 +115,27 @@ public class OccurrenceParser {
 
   private ParsedSearchResponse read(File gzipFile, Charset charset) {
     ParsedSearchResponse responseBody = null;
-    LOG.debug("Trying charset [{}]", charset);
+    log.debug("Trying charset [{}]", charset);
     try (FileInputStream fis = new FileInputStream(gzipFile);
          GZIPInputStream inputStream = new GZIPInputStream(fis);
          BufferedReader inputReader = new BufferedReader(new XmlSanitizingReader(
                  new InputStreamReader(inputStream, charset)))) {
       responseBody = new ParsedSearchResponse();
       parse(new InputSource(inputReader), responseBody);
-      LOG.debug("Success with charset [{}] - skipping any others", charset);
+      log.debug("Success with charset [{}] - skipping any others", charset);
       return responseBody;
     } catch (SAXException e) {
-      LOG.debug("SAX exception when parsing gzipFile [{}] using encoding [{}] - trying another charset",
+      log.debug("SAX exception when parsing gzipFile [{}] using encoding [{}] - trying another charset",
               gzipFile.getAbsolutePath(), charset, e);
     } catch (MalformedByteSequenceException e) {
-      LOG.debug("Malformed utf-8 byte when parsing with encoding [{}] - trying another charset", charset);
+      log.debug("Malformed utf-8 byte when parsing with encoding [{}] - trying another charset", charset);
     } catch (IOException ex) {
-      LOG.warn("Error reading input files", ex);
+      log.warn("Error reading input files", ex);
     } catch (ParserConfigurationException e) {
-      LOG.warn( "Failed to pull raw parsing from response gzipFile [{}] - skipping gzipFile",
+      log.warn( "Failed to pull raw parsing from response gzipFile [{}] - skipping gzipFile",
               gzipFile.getAbsolutePath(), e);
     } catch (TransformerException e) {
-      LOG.warn("Could not create parsing transformer for [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
+      log.warn("Could not create parsing transformer for [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
     }
     return responseBody;
   }
@@ -144,17 +143,17 @@ public class OccurrenceParser {
   /** Parses a single response gzipFile and returns a List of the contained RawXmlOccurrences. */
   public List<RawXmlOccurrence> parseResponseFileToRawXml(File gzipFile) {
 
-    LOG.debug(">> parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
+    log.debug(">> parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
     try {
       Optional<ParsedSearchResponse> responseBody = getCharsets(gzipFile).stream().map(charset -> read(gzipFile,charset))
               .filter(Objects::nonNull).findFirst();
       if (!responseBody.isPresent()) {
-        LOG.warn("Could not parse gzipFile (malformed parsing) - skipping gzipFile [{}]", gzipFile.getAbsolutePath());
+        log.warn("Could not parse gzipFile (malformed parsing) - skipping gzipFile [{}]", gzipFile.getAbsolutePath());
       }
-      LOG.debug("<< parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
+      log.debug("<< parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
       return responseBody.map(ParsedSearchResponse::getRecords).orElse(Collections.emptyList());
     } catch (IOException e) {
-      LOG.warn("Could not find response gzipFile [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
+      log.warn("Could not find response gzipFile [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
     }
     return Collections.emptyList();
   }
@@ -185,11 +184,11 @@ public class OccurrenceParser {
           encoding = encoding.substring(0, encoding.length() - 2);
           // drop quotes
           encoding = REPLACE_QUOTES_PAT.matcher(encoding).replaceAll("").trim();
-          LOG.debug("Found encoding [{}] in parsing declaration", encoding);
+          log.debug("Found encoding [{}] in parsing declaration", encoding);
           try {
             charsets.add(Charset.forName(encoding));
           } catch (Exception e) {
-            LOG.debug(
+            log.debug(
                     "Could not find supported charset matching detected encoding of [{}] - trying other guesses instead",
                     encoding);
           }

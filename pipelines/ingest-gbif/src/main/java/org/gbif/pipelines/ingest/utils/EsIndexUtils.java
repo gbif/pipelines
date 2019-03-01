@@ -11,16 +11,14 @@ import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsConstants;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsIndexUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(EsIndexUtils.class);
-
-  private EsIndexUtils() {}
 
   /** Connects to Elasticsearch instance and creates an index */
   public static void createIndex(EsIndexingPipelineOptions options) {
@@ -38,7 +36,7 @@ public class EsIndexUtils {
     } else {
       idx = EsIndex.create(config, options.getEsIndexName(), path, map);
     }
-    LOG.info("ES index {} created", idx);
+    log.info("ES index {} created", idx);
 
     Optional.ofNullable(idx).ifPresent(options::setEsIndexName);
   }
@@ -59,11 +57,11 @@ public class EsIndexUtils {
     String index = options.getEsIndexName();
 
     EsIndex.swapIndexInAliases(config, aliases, index);
-    LOG.info("ES index {} added to alias {}", index, aliases);
+    log.info("ES index {} added to alias {}", index, aliases);
 
     EsIndex.refresh(config, index);
     long count = EsIndex.countDocuments(config, index);
-    LOG.info("Index name - {}, Alias - {}, Number of records -  {}", index, aliases, count);
+    log.info("Index name - {}, Alias - {}, Number of records -  {}", index, aliases, count);
   }
 
   /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists */
@@ -85,7 +83,7 @@ public class EsIndexUtils {
     String index = options.getEsIndexName();
     String query = "{\"query\":{\"match\":{\"datasetKey\":\"" + options.getDatasetId() + "\"}}}";
 
-    LOG.info("ES index {} delete records by query {}", index, query);
+    log.info("ES index {} delete records by query {}", index, query);
     EsIndex.deleteRecordsByQuery(config, index, query);
   }
 }

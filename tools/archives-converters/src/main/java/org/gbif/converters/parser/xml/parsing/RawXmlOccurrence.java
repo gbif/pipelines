@@ -21,12 +21,14 @@ import java.security.NoSuchAlgorithmException;
 
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Getter
+@Setter
 public class RawXmlOccurrence {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RawXmlOccurrence.class);
 
   private String resourceName;
   private String institutionCode;
@@ -43,57 +45,9 @@ public class RawXmlOccurrence {
       MessageDigest md = MessageDigest.getInstance("MD5");
       hash = md.digest(bytesOfMessage);
     } catch (NoSuchAlgorithmException e) {
-      LOG.error("Encoding error creating hash - must be JVM problem", e);
+      log.error("Encoding error creating hash - must be JVM problem", e);
     }
 
     return hash;
-  }
-
-  public String getInstitutionCode() {
-    return institutionCode;
-  }
-
-  public void setInstitutionCode(String institutionCode) {
-    this.institutionCode = institutionCode;
-  }
-
-  public String getCollectionCode() {
-    return collectionCode;
-  }
-
-  public void setCollectionCode(String collectionCode) {
-    this.collectionCode = collectionCode;
-  }
-
-  public String getCatalogNumber() {
-    return catalogNumber;
-  }
-
-  public void setCatalogNumber(String catalogNumber) {
-    this.catalogNumber = catalogNumber;
-  }
-
-  public String getXml() {
-    return xml;
-  }
-
-  public void setXml(String xml) {
-    this.xml = xml;
-  }
-
-  public String getResourceName() {
-    return resourceName;
-  }
-
-  public void setResourceName(String resourceName) {
-    this.resourceName = resourceName;
-  }
-
-  public OccurrenceSchemaType getSchemaType() {
-    return schemaType;
-  }
-
-  public void setSchemaType(OccurrenceSchemaType schemaType) {
-    this.schemaType = schemaType;
   }
 }

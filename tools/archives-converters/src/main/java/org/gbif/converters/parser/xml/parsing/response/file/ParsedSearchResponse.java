@@ -24,8 +24,6 @@ import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.ResponseElementEnum;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -40,10 +38,10 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ParsedSearchResponse {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ParsedSearchResponse.class);
 
   private List<RawXmlOccurrence> records;
   private OccurrenceSchemaType schemaType;
@@ -80,7 +78,7 @@ public class ParsedSearchResponse {
 
     String xml = nodeToString(workingNode);
 
-    LOG.debug("Serialized record: [{}]", xml);
+    log.debug("Serialized record: [{}]", xml);
     checkSchema(xml);
     if (responseElements != null) {
       RawXmlOccurrence record = new RawXmlOccurrence();
@@ -97,7 +95,7 @@ public class ParsedSearchResponse {
     if (schemaType == null) {
       schemaType = schemaDetector.detectSchema(xml);
       if (schemaType != null) {
-        LOG.debug("Setting schema to [{}]", schemaType);
+        log.debug("Setting schema to [{}]", schemaType);
         responseElements = schemaDetector.getResponseElements(schemaType);
       }
     }
@@ -149,7 +147,7 @@ public class ParsedSearchResponse {
       DOMSource source = new DOMSource(node);
       transformer.transform(source, new StreamResult(sw));
     } catch (TransformerException e) {
-      LOG.warn("Failed to transform node to string", e);
+      log.warn("Failed to transform node to string", e);
     }
 
     String result = sw.toString();

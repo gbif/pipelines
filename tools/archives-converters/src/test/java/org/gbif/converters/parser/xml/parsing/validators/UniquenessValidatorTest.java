@@ -9,15 +9,13 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Stopwatch;
+import lombok.extern.slf4j.Slf4j;
 
 /** Tests the {@link UniquenessValidator}. */
+@Slf4j
 public class UniquenessValidatorTest {
-
-  private static final Logger LOG = LoggerFactory.getLogger(UniquenessValidatorTest.class);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -53,7 +51,7 @@ public class UniquenessValidatorTest {
           duplicatesFound++;
         }
       }
-      LOG.info("time: {}", watch.stop().elapsed(TimeUnit.MILLISECONDS));
+      log.info("time: {}", watch.stop().elapsed(TimeUnit.MILLISECONDS));
 
       Assert.assertEquals(0, duplicatesFound);
 

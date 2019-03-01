@@ -8,18 +8,17 @@ import org.apache.beam.sdk.metrics.MetricQueryResults;
 import org.apache.beam.sdk.metrics.MetricResult;
 import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.hadoop.fs.FileSystem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Class to work with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string format
  */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetricsHandler {
-
-  private static final Logger LOG = LoggerFactory.getLogger(MetricsHandler.class);
-
-  private MetricsHandler() {
-  }
 
   /**
    * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string
@@ -40,7 +39,7 @@ public class MetricsHandler {
     });
 
     String result = builder.toString();
-    LOG.info("Added pipeline metadata - {}", result.replace("\n", ", "));
+    log.info("Added pipeline metadata - {}", result.replace("\n", ", "));
     return result;
   }
 
@@ -50,20 +49,19 @@ public class MetricsHandler {
    */
   public static void saveCountersToFile(String hdfsSiteConfig, String path, PipelineResult result) {
 
-    if (path == null || path.isEmpty()) {
-      return;
+    if (path != null && !path.isEmpty()) {
+      log.info("Trying to write pipeline's metadata to a file - {}", path);
+
+      String countersInfo = getCountersInfo(result);
+
+      try (FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path)) {
+        FsUtils.createFile(fs, path, countersInfo);
+        log.info("Metadata was written to a file - {}", path);
+      } catch (IOException ex) {
+        log.warn("Write pipelines metadata file", ex);
+      }
     }
 
-    LOG.info("Trying to write pipeline's metadata to a file - {}", path);
-
-    String countersInfo = getCountersInfo(result);
-
-    try (FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path)) {
-      FsUtils.createFile(fs, path, countersInfo);
-      LOG.info("Metadata was written to a file - {}", path);
-    } catch (IOException ex) {
-      LOG.warn("Write pipelines metadata file", ex);
-    }
   }
 
 }

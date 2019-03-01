@@ -11,11 +11,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /** Factory parsres arguments or file, registers and produces {@link PipelineOptions} */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PipelinesOptionsFactory {
-
-  private PipelinesOptionsFactory() {}
 
   /**
    * Creates pipeline options object extended {@link PipelineOptions} from args or file

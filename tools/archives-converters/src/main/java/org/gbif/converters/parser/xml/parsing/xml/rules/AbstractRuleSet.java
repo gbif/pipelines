@@ -7,12 +7,11 @@ import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public abstract class AbstractRuleSet implements RuleSet {
-
-  private static final Logger LOG = LoggerFactory.getLogger(AbstractRuleSet.class);
 
   protected Properties mappingProps;
 
@@ -78,7 +77,7 @@ public abstract class AbstractRuleSet implements RuleSet {
     String pattern = mappingProps.getProperty(property);
     if (pattern != null) {
       pattern = pattern.trim();
-      LOG.debug(
+      log.debug(
           "adding call method [{}] for pattern [{}] from property [{}]",
           methodName,
           pattern,
@@ -91,7 +90,7 @@ public abstract class AbstractRuleSet implements RuleSet {
     String pattern = mappingProps.getProperty(property);
     if (pattern != null) {
       pattern = pattern.trim();
-      LOG.debug("adding call param for pattern [{}] from property [{}]", pattern, property);
+      log.debug("adding call param for pattern [{}] from property [{}]", pattern, property);
       digester.addCallParam(pattern, argPosition);
     }
   }
@@ -103,7 +102,7 @@ public abstract class AbstractRuleSet implements RuleSet {
     if (elemPattern != null && attPattern != null) {
       elemPattern = elemPattern.trim();
       attPattern = attPattern.trim();
-      LOG.debug(
+      log.debug(
           "adding call param from attribute for element pattern [{}] from property [{}], seeking attribute [{}] from property [{}]",
           elemPattern,
           elementProperty,
@@ -120,7 +119,7 @@ public abstract class AbstractRuleSet implements RuleSet {
       String pattern = mappingProps.getProperty(key);
       if (pattern != null) {
         pattern = pattern.trim();
-        LOG.debug("adding prioritized property [{}] with pattern [{}]", key, pattern);
+        log.debug("adding prioritized property [{}] with pattern [{}]", key, pattern);
         // note order of rule addition is critical
         digester.addObjectCreate(pattern, PrioritizedProperty.class);
         digester.addSetNext(pattern, "addPrioritizedProperty");

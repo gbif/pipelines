@@ -12,6 +12,8 @@ import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
@@ -20,6 +22,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINAT
 import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 
 /** Utilities for assisting in the parsing of latitude and longitude strings into Decimals. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CoordinateParseUtils {
 
   private static final String DMS =
@@ -35,10 +38,6 @@ public class CoordinateParseUtils {
       Pattern.compile(
           "^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
   private static final String POSITIVE = "NEO";
-
-  private CoordinateParseUtils() {
-    throw new UnsupportedOperationException("Can't initialize class");
-  }
 
   /**
    * This parses string representations of latitude and longitude values. It tries its best to

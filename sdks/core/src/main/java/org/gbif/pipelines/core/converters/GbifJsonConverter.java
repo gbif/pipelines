@@ -67,22 +67,20 @@ public class GbifJsonConverter extends JsonConverter {
     ObjectNode mainNode = super.buildJson();
 
     // Issues
-    Set<String> issues =
-        Arrays.stream(getBases())
-            .filter(Issues.class::isInstance)
-            .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
-            .collect(Collectors.toSet());
+    Set<String> issues = Arrays.stream(getBases())
+        .filter(Issues.class::isInstance)
+        .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
+        .collect(Collectors.toSet());
 
     ArrayNode arrayIssueNode = MAPPER.createArrayNode();
     issues.forEach(arrayIssueNode::add);
     mainNode.set("issues", arrayIssueNode);
 
     // Not issues
-    Set<String> notIssues =
-        Arrays.stream(OccurrenceIssue.values())
-            .map(Enum::name)
-            .filter(x -> !issues.contains(x))
-            .collect(Collectors.toSet());
+    Set<String> notIssues = Arrays.stream(OccurrenceIssue.values())
+        .map(Enum::name)
+        .filter(x -> !issues.contains(x))
+        .collect(Collectors.toSet());
 
     ArrayNode arrayNotIssuesNode = MAPPER.createArrayNode();
     notIssues.forEach(arrayNotIssuesNode::add);

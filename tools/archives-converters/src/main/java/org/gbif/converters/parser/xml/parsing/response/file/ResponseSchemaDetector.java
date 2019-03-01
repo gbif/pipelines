@@ -25,16 +25,14 @@ import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.ExtractionSimpleXPaths;
 import org.gbif.converters.parser.xml.constants.ResponseElementEnum;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Primary purpose of this class is, given a raw occurrence record serialized to String from XML,
  * determine which OccurrenceSchemaType it matches.
  */
+@Slf4j
 public class ResponseSchemaDetector {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ResponseSchemaDetector.class);
 
   // a dumb way to guarantee that string searching will be
   // done such that eg "CatalogNumberText" gets searched for before "CatalogNumber"
@@ -49,7 +47,7 @@ public class ResponseSchemaDetector {
     boolean result;
     for (String elem : elements) {
       result = xml.contains(elem);
-      LOG.debug("Xml contains [{}] is [{}]", elem, result);
+      log.debug("Xml contains [{}] is [{}]", elem, result);
       if (!result) {
         return false;
       }
@@ -61,7 +59,7 @@ public class ResponseSchemaDetector {
   public OccurrenceSchemaType detectSchema(String xml) {
     OccurrenceSchemaType result = null;
     for (OccurrenceSchemaType schema : schemaSearchOrder) {
-      LOG.debug("Checking for schema [{}]", schema);
+      log.debug("Checking for schema [{}]", schema);
       boolean success = checkElements(xml, distinctiveElements.get(schema).values());
       if (success) {
         result = schema;
@@ -70,7 +68,7 @@ public class ResponseSchemaDetector {
     }
 
     if (result == null) {
-      LOG.warn("Could not determine schema for xml [{}]", xml);
+      log.warn("Could not determine schema for xml [{}]", xml);
     }
 
     return result;

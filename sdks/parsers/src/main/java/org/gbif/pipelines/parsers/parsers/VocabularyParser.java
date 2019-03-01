@@ -29,7 +29,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /** Utility class that parses Enum based terms. */
-public class VocabularyParsers<T extends Enum<T>> {
+public class VocabularyParser<T extends Enum<T>> {
 
   private static final TypeStatusParser TYPE_PARSER = TypeStatusParser.getInstance();
   private static final BasisOfRecordParser BOR_PARSER = BasisOfRecordParser.getInstance();
@@ -47,49 +47,49 @@ public class VocabularyParsers<T extends Enum<T>> {
   private final DwcTerm term;
 
   /** Private constructor that keeps the basic info to run a parser. */
-  private VocabularyParsers(EnumParser<T> parser, DwcTerm term) {
+  private VocabularyParser(EnumParser<T> parser, DwcTerm term) {
     this.parser = parser;
     this.term = term;
   }
 
   /** @return a basis of record parser. */
-  public static VocabularyParsers<BasisOfRecord> basisOfRecordParser() {
-    return new VocabularyParsers<>(BOR_PARSER, DwcTerm.basisOfRecord);
+  public static VocabularyParser<BasisOfRecord> basisOfRecordParser() {
+    return new VocabularyParser<>(BOR_PARSER, DwcTerm.basisOfRecord);
   }
 
   /** @return a sex parser. */
-  public static VocabularyParsers<Sex> sexParser() {
-    return new VocabularyParsers<>(SEX_PARSER, DwcTerm.sex);
+  public static VocabularyParser<Sex> sexParser() {
+    return new VocabularyParser<>(SEX_PARSER, DwcTerm.sex);
   }
 
   /** @return a life stage parser. */
-  public static VocabularyParsers<LifeStage> lifeStageParser() {
-    return new VocabularyParsers<>(LST_PARSER, DwcTerm.lifeStage);
+  public static VocabularyParser<LifeStage> lifeStageParser() {
+    return new VocabularyParser<>(LST_PARSER, DwcTerm.lifeStage);
   }
 
   /** @return a establishmentMeans parser. */
-  public static VocabularyParsers<EstablishmentMeans> establishmentMeansParser() {
-    return new VocabularyParsers<>(EST_PARSER, DwcTerm.establishmentMeans);
+  public static VocabularyParser<EstablishmentMeans> establishmentMeansParser() {
+    return new VocabularyParser<>(EST_PARSER, DwcTerm.establishmentMeans);
   }
 
   /** @return a type status parser. */
-  public static VocabularyParsers<TypeStatus> typeStatusParser() {
-    return new VocabularyParsers<>(TYPE_PARSER, DwcTerm.typeStatus);
+  public static VocabularyParser<TypeStatus> typeStatusParser() {
+    return new VocabularyParser<>(TYPE_PARSER, DwcTerm.typeStatus);
   }
 
   /** @return a country parser. */
-  public static VocabularyParsers<Country> countryParser() {
-    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.country);
+  public static VocabularyParser<Country> countryParser() {
+    return new VocabularyParser<>(COUNTRY_PARSER, DwcTerm.country);
   }
 
   /** @return a country parser. */
-  public static VocabularyParsers<Country> countryCodeParser() {
-    return new VocabularyParsers<>(COUNTRY_PARSER, DwcTerm.countryCode);
+  public static VocabularyParser<Country> countryCodeParser() {
+    return new VocabularyParser<>(COUNTRY_PARSER, DwcTerm.countryCode);
   }
 
   /** @return a continent parser. */
-  public static VocabularyParsers<Continent> continentParser() {
-    return new VocabularyParsers<>(CONTINENT_PARSER, DwcTerm.continent);
+  public static VocabularyParser<Continent> continentParser() {
+    return new VocabularyParser<>(CONTINENT_PARSER, DwcTerm.continent);
   }
 
   /**
@@ -104,13 +104,13 @@ public class VocabularyParsers<T extends Enum<T>> {
   }
 
   /** @return a type status parser. */
-  public static VocabularyParsers<Rank> rankParser() {
-    return new VocabularyParsers<>(RANK_PARSER, DwcTerm.taxonRank);
+  public static VocabularyParser<Rank> rankParser() {
+    return new VocabularyParser<>(RANK_PARSER, DwcTerm.taxonRank);
   }
 
   /** @return a type status parser. */
-  public static VocabularyParsers<Rank> verbatimTaxonRankParser() {
-    return new VocabularyParsers<>(RANK_PARSER, DwcTerm.verbatimTaxonRank);
+  public static VocabularyParser<Rank> verbatimTaxonRankParser() {
+    return new VocabularyParser<>(RANK_PARSER, DwcTerm.verbatimTaxonRank);
   }
 
   /**

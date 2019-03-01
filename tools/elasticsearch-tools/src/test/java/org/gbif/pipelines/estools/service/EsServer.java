@@ -11,9 +11,8 @@ import org.gbif.pipelines.estools.client.EsConfig;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
@@ -22,9 +21,8 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
  *
  * <p>This class is intended to be used as a {@link org.junit.ClassRule}.
  */
+@Slf4j
 public class EsServer extends ExternalResource {
-
-  private static final Logger LOG = LoggerFactory.getLogger(EsServer.class);
 
   private static final String CLUSTER_NAME = "test_EScluster";
 
@@ -61,7 +59,7 @@ public class EsServer extends ExternalResource {
     try {
       restClient.close();
     } catch (IOException e) {
-      LOG.error("Could not close rest client for testing", e);
+      log.error("Could not close rest client for testing", e);
     }
   }
 

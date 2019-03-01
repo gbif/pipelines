@@ -2,8 +2,6 @@ package org.gbif.pipelines.parsers.config;
 
 import java.nio.file.Paths;
 
-import org.gbif.pipelines.parsers.exception.IORuntimeException;
-
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +37,7 @@ public class HttpConfigFactoryTest {
     Assert.assertTrue(config.getCacheSize() > 0);
   }
 
-  @Test(expected = IORuntimeException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void givenWrongPropertiesPathWhenGettingConfigThenExceptionThrown() {
     WsConfigFactory.create("match", Paths.get("unknown"));
   }

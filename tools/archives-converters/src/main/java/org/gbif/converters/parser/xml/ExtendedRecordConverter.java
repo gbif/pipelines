@@ -18,15 +18,13 @@ import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.DataFileWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import lombok.extern.slf4j.Slf4j;
 
 /** Parsing xml response files or tar.xz archive and convert to ExtendedRecord avro file */
+@Slf4j
 public class ExtendedRecordConverter {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ExtendedRecordConverter.class);
 
   private static final String FILE_PREFIX_RESPONSE = ".response";
   private static final String FILE_PREFIX_XML = ".xml";
@@ -80,7 +78,7 @@ public class ExtendedRecordConverter {
       return counter.get();
 
     } catch (Exception ex) {
-      LOG.error(ex.getMessage(), ex);
+      log.error(ex.getMessage(), ex);
       throw new ParsingException(ex);
     }
   }

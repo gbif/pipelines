@@ -19,6 +19,12 @@
 
   <dependencies>
 
+    <!-- Tools -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+
     <!-- This project -->
     <dependency>
       <groupId>org.gbif.pipelines</groupId>

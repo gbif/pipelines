@@ -42,21 +42,19 @@ import org.gbif.converters.parser.xml.parsing.xml.rules.DwcManisRuleSet;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Methods for parsing {@link RawXmlOccurrence}s and {@link UniqueIdentifier}s from xml fragments.
  */
+@Slf4j
 public class XmlFragmentParser {
-
-  private static final Logger LOG = LoggerFactory.getLogger(XmlFragmentParser.class);
 
   private static final Map<OccurrenceSchemaType, RuleSet> RULE_SETS = Maps.newHashMap();
 
@@ -72,7 +70,7 @@ public class XmlFragmentParser {
       RULE_SETS.put(OccurrenceSchemaType.DWC_2009, new Dwc2009RuleSet());
       RULE_SETS.put(OccurrenceSchemaType.DWC_MANIS, new DwcManisRuleSet());
     } catch (IOException e) {
-      LOG.warn("Unable to read properties files for parsing xml", e);
+      log.warn("Unable to read properties files for parsing xml", e);
     }
   }
 
@@ -81,15 +79,15 @@ public class XmlFragmentParser {
   }
 
   public static List<RawOccurrenceRecord> parseRecord(String xml, OccurrenceSchemaType schemaType) {
-    LOG.debug("Parsing xml [{}]", xml);
+    log.debug("Parsing xml [{}]", xml);
     List<RawOccurrenceRecord> records = null;
     try {
       InputSource inputSource = new InputSource(new StringReader(xml));
       records = parseRecord(inputSource, schemaType);
     } catch (IOException e) {
-      LOG.warn("IOException parsing xml string [{}]", xml, e);
+      log.warn("IOException parsing xml string [{}]", xml, e);
     } catch (SAXException e) {
-      LOG.warn("SAXException parsing xml string [{}]", xml, e);
+      log.warn("SAXException parsing xml string [{}]", xml, e);
     }
     return forceIdentifiers(records);
   }
@@ -100,9 +98,9 @@ public class XmlFragmentParser {
       InputSource inputSource = new InputSource(new ByteArrayInputStream(xml));
       records = parseRecord(inputSource, schemaType);
     } catch (IOException e) {
-      LOG.warn("IOException parsing xml bytes", e);
+      log.warn("IOException parsing xml bytes", e);
     } catch (SAXException e) {
-      LOG.warn("SAXException parsing xml bytes", e);
+      log.warn("SAXException parsing xml bytes", e);
     }
     return records;
   }
@@ -133,11 +131,11 @@ public class XmlFragmentParser {
     RawOccurrenceRecord result = null;
     List<RawOccurrenceRecord> records = parseRecord(xml, schemaType);
     if (records.isEmpty()) {
-      LOG.warn("Could not parse any records from given xml - returning null.");
+      log.warn("Could not parse any records from given xml - returning null.");
     } else if (records.size() == 1) {
       result = records.get(0);
     } else if (unitQualifier == null) {
-      LOG.warn(
+      log.warn(
           "Got multiple records from given xml, but no unitQualifier set - returning first record as a guess.");
       result = records.get(0);
     } else {
@@ -148,7 +146,7 @@ public class XmlFragmentParser {
         }
       }
       if (result == null) {
-        LOG.warn("Got multiple records from xml but none matched unitQualifier - returning null");
+        log.warn("Got multiple records from xml but none matched unitQualifier - returning null");
       }
     }
 
@@ -200,7 +198,7 @@ public class XmlFragmentParser {
           } catch (IllegalArgumentException e) {
             // some of the triplet was null or empty, so it's not valid - that's highly suspicious,
             // but could be ok...
-            LOG.info(
+            log.info(
                 "No holy triplet for an xml snippet in dataset [{}] and schema [{}], got error [{}]",
                 datasetKey.toString(),
                 schemaType.toString(),
@@ -254,7 +252,7 @@ public class XmlFragmentParser {
                       record.getCollectionCode(),
                       record.getCatalogueNumber())));
         } catch (Exception e) {
-          LOG.info(
+          log.info(
               "Could not create a triplet for record with institution code {}, collection code {} and catalogue "
                   + "number {}",
               record.getInstitutionCode(),

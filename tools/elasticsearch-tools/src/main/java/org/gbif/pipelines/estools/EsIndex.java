@@ -12,24 +12,23 @@ import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.service.EsService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.Cleanup;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.estools.service.EsService.getIndexesByAliasAndIndexPattern;
 import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
 import static org.gbif.pipelines.estools.service.EsService.updateIndexSettings;
 
 /** Exposes a public API to perform operations in a ES instance. */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsIndex {
 
-  private static final Logger LOG = LoggerFactory.getLogger(EsIndex.class);
-
   public static final String INDEX_SEPARATOR = "_";
-
-  private EsIndex() {}
 
   /**
    * Creates an Index in the ES instance specified in the {@link EsConfig} received.
@@ -39,10 +38,9 @@ public class EsIndex {
    * @return name of the index created.
    */
   public static String create(EsConfig config, String idxName) {
-    LOG.info("Creating index {}", idxName);
-    try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING);
-    }
+    log.info("Creating index {}", idxName);
+    @Cleanup EsClient esClient = EsClient.from(config);
+    return EsService.createIndex(esClient, idxName, SettingsType.INDEXING);
   }
 
   /**
@@ -72,10 +70,9 @@ public class EsIndex {
    * @return name of the index created.
    */
   public static String create(EsConfig config, String idxName, Path mappings) {
-    LOG.info("Creating index {}", idxName);
-    try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
-    }
+    log.info("Creating index {}", idxName);
+    @Cleanup EsClient esClient = EsClient.from(config);
+    return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
   }
 
   /**
@@ -106,10 +103,9 @@ public class EsIndex {
    * @return name of the index created.
    */
   public static String create(EsConfig config, String idxName, String mappings) {
-    LOG.info("Creating index {}", idxName);
-    try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
-    }
+    log.info("Creating index {}", idxName);
+    @Cleanup EsClient esClient = EsClient.from(config);
+    return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
   }
 
   /**
@@ -140,12 +136,10 @@ public class EsIndex {
    * @param settingMap custom settings, number of shards and etc.
    * @return name of the index created.
    */
-  public static String create(
-      EsConfig config, String idxName, Path mappings, Map<String, String> settingMap) {
-    LOG.info("Creating index {}", idxName);
-    try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings, settingMap);
-    }
+  public static String create(EsConfig config, String idxName, Path mappings, Map<String, String> settingMap) {
+    log.info("Creating index {}", idxName);
+    @Cleanup EsClient esClient = EsClient.from(config);
+    return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings, settingMap);
   }
 
   /**
@@ -186,22 +180,21 @@ public class EsIndex {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
-    LOG.info("Swapping index {} in alias {}", index, alias);
+    log.info("Swapping index {} in alias {}", index, alias);
 
     // get dataset id
     String datasetId = getDatasetIdFromIndex(index);
 
-    try (EsClient esClient = EsClient.from(config)) {
-      // check if there are indexes to remove
-      Set<String> idxToRemove =
-          getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
+    @Cleanup EsClient esClient = EsClient.from(config);
+    // check if there are indexes to remove
+    Set<String> idxToRemove = getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
 
-      // swap the indexes
-      swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
+    // swap the indexes
+    swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
 
-      // change index settings to search settings
-      updateIndexSettings(esClient, index, SettingsType.SEARCH);
-    }
+    // change index settings to search settings
+    updateIndexSettings(esClient, index, SettingsType.SEARCH);
+
   }
 
   /**
@@ -219,28 +212,26 @@ public class EsIndex {
     Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
 
-    LOG.info("Swapping index {} in alias {}", index, aliases);
+    log.info("Swapping index {} in alias {}", index, aliases);
 
     // get dataset id
     String datasetId = getDatasetIdFromIndex(index);
 
-    try (EsClient esClient = EsClient.from(config)) {
+    @Cleanup EsClient esClient = EsClient.from(config);
 
-      Arrays.stream(aliases)
-          .forEach(
-              alias -> {
-                // check if there are indexes to remove
-                Set<String> idxToRemove =
-                    getIndexesByAliasAndIndexPattern(
-                        esClient, getDatasetIndexesPattern(datasetId), alias);
+    Arrays.stream(aliases)
+        .forEach(
+            alias -> {
+              // check if there are indexes to remove
+              Set<String> idxToRemove =
+                  getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
 
-                // swap the indexes
-                swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
-              });
+              // swap the indexes
+              swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
+            });
 
-      // change index settings to search settings
-      updateIndexSettings(esClient, index, SettingsType.SEARCH);
-    }
+    // change index settings to search settings
+    updateIndexSettings(esClient, index, SettingsType.SEARCH);
   }
 
   /**
@@ -252,12 +243,9 @@ public class EsIndex {
    */
   public static long countDocuments(EsConfig config, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-
-    LOG.info("Counting documents from index {}", index);
-
-    try (EsClient esClient = EsClient.from(config)) {
-      return EsService.countIndexDocuments(esClient, index);
-    }
+    log.info("Counting documents from index {}", index);
+    @Cleanup EsClient esClient = EsClient.from(config);
+    return EsService.countIndexDocuments(esClient, index);
   }
 
   /**
@@ -268,12 +256,9 @@ public class EsIndex {
    */
   public static void refresh(EsConfig config, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-
-    LOG.info("Refreshing index {}", index);
-
-    try (EsClient esClient = EsClient.from(config)) {
-      EsService.refreshIndex(esClient, index);
-    }
+    log.info("Refreshing index {}", index);
+    @Cleanup EsClient esClient = EsClient.from(config);
+    EsService.refreshIndex(esClient, index);
   }
 
   /**
@@ -284,10 +269,8 @@ public class EsIndex {
    */
   public static boolean indexExists(EsConfig config, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-
-    try (EsClient esClient = EsClient.from(config)) {
-      return EsService.existsIndex(esClient, index);
-    }
+    @Cleanup EsClient esClient = EsClient.from(config);
+    return EsService.existsIndex(esClient, index);
   }
 
   /**
@@ -295,10 +278,8 @@ public class EsIndex {
    **/
   public static void deleteRecordsByQuery(EsConfig config, String index, String query) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-
-    try (EsClient esClient = EsClient.from(config)) {
-      EsService.deleteRecordsByQuery(esClient, index, query);
-    }
+    @Cleanup EsClient esClient = EsClient.from(config);
+    EsService.deleteRecordsByQuery(esClient, index, query);
   }
 
   private static String getDatasetIndexesPattern(String datasetId) {
@@ -309,7 +290,7 @@ public class EsIndex {
     List<String> pieces = Arrays.asList(index.split(INDEX_SEPARATOR));
 
     if (pieces.size() != 2) {
-      LOG.error("Index {} doesn't follow the pattern \"{datasetId}_{attempt}\"", index);
+      log.error("Index {} doesn't follow the pattern \"{datasetId}_{attempt}\"", index);
       throw new IllegalArgumentException("index has to follow the pattern \"{datasetId}_{attempt}\"");
     }
 

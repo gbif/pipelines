@@ -11,15 +11,13 @@ import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.utils.file.ClosableIterator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A utility class to simplify handling of DwC-A files using a local filesystem exposing data in Avro.
  */
+@Slf4j
 public class DwcaReader implements Closeable {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaReader.class);
 
   private final ClosableIterator<StarRecord> starRecordsIt;
   private long recordsReturned;
@@ -39,14 +37,12 @@ public class DwcaReader implements Closeable {
     return new DwcaReader(DwcFiles.fromCompressed(Paths.get(source), Paths.get(workingDir)).iterator());
   }
 
-
   /**
    * Creates and DwcaReader using a StarRecord iterator.
    */
   private DwcaReader(ClosableIterator<StarRecord> starRecordsIt) {
     this.starRecordsIt = starRecordsIt;
   }
-
 
   /**
    * Has the archive more records?.
@@ -65,7 +61,7 @@ public class DwcaReader implements Closeable {
     StarRecord next = starRecordsIt.next();
     recordsReturned++;
     if (recordsReturned % 1000 == 0) {
-      LOG.info("Read [{}] records", recordsReturned);
+      log.info("Read [{}] records", recordsReturned);
     }
     current = ExtendedRecordConverter.from(next);
     return true;
@@ -87,14 +83,13 @@ public class DwcaReader implements Closeable {
 
   @Override
   public void close() throws IOException {
-    if (starRecordsIt == null) {
-      return;
-    }
-    try {
-      LOG.info("Closing DwC-A reader having read [{}] records", recordsReturned);
-      starRecordsIt.close();
-    } catch (Exception e) {
-      throw new IOException(e);
+    if (starRecordsIt != null) {
+      try {
+        log.info("Closing DwC-A reader having read [{}] records", recordsReturned);
+        starRecordsIt.close();
+      } catch (Exception e) {
+        throw new IOException(e);
+      }
     }
   }
 }
