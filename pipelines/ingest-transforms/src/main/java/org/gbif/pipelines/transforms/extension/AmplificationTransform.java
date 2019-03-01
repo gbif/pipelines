@@ -29,6 +29,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+/**
+ * Beam level transformations for the Amplification extension, read an avro, write an avro, from value to keyValue and
+ * transforms form {@link ExtendedRecord} to {@link AmplificationRecord}.
+ *
+ * @see <a href="http://rs.gbif.org/extension/ggbn/amplification.xml</a>
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AmplificationTransform {
 

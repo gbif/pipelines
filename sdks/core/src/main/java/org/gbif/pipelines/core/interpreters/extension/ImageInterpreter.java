@@ -38,7 +38,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ImageInterpreter {
 
-  //
   private static final TargetHandler<Image> HANDLER =
       ExtensionInterpretation.extenstion(Extension.IMAGE)
           .to(Image::new)
@@ -75,9 +74,8 @@ public class ImageInterpreter {
     mr.getIssues().setIssueList(result.getIssuesAsList());
   }
 
-
   /**
-   *
+   * Parser for "http://purl.org/dc/terms/references" term value
    */
   private static void parseAndsetReferences(Image i, String v) {
     URI uri = UrlParser.parse(v);
@@ -85,7 +83,7 @@ public class ImageInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://purl.org/dc/terms/identifier" term value
    */
   private static void parseAndsetIdentifier(Image i, String v) {
     URI uri = UrlParser.parse(v);
@@ -93,7 +91,7 @@ public class ImageInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://purl.org/dc/terms/created" term value
    */
   private static List<String> parseAndSetCreated(Image i, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
@@ -103,7 +101,7 @@ public class ImageInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://www.w3.org/2003/01/geo/wgs84_pos#longitude" term value
    */
   private static String parseAndSetLongitude(Image i, String v) {
     Double lat = NumberParser.parseDouble(v);
@@ -112,7 +110,7 @@ public class ImageInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://www.w3.org/2003/01/geo/wgs84_pos#latitude" term value
    */
   private static String parseAndSetLatitude(Image i, String v) {
     Double lng = NumberParser.parseDouble(v);
@@ -121,7 +119,7 @@ public class ImageInterpreter {
   }
 
   /**
-   *
+   * Parse and check coordinates
    */
   private static List<String> parseAndSetLatLng(Image i) {
 
@@ -142,7 +140,7 @@ public class ImageInterpreter {
   }
 
   /**
-   *
+   * Skip whole record if both links are absent
    */
   private static Optional<String> checkLinks(Image i) {
     if (i.getReferences() == null && i.getIdentifier() == null) {

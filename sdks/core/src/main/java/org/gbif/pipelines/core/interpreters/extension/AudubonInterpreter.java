@@ -151,7 +151,7 @@ public class AudubonInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://rs.tdwg.org/ac/terms/accessURI" term value
    */
   private static void parseAndsetAccessUri(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
@@ -159,7 +159,7 @@ public class AudubonInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://rs.tdwg.org/ac/terms/furtherInformationURL" term value
    */
   private static void parseAndsetFurtherInformationUrl(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
@@ -167,7 +167,7 @@ public class AudubonInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://rs.tdwg.org/ac/terms/attributionLinkURL" term value
    */
   private static void parseAndsetAttributionLinkUrl(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
@@ -175,7 +175,7 @@ public class AudubonInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://purl.org/dc/terms/format" term value
    */
   private static void parseAndSetFormat(Audubon a, String v) {
     String mimeType = MEDIA_PARSER.parseMimeType(v);

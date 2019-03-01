@@ -28,6 +28,12 @@ import lombok.NoArgsConstructor;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+/**
+ * Beam level transformations for the Audubon extension, read an avro, write an avro, from value to keyValue and
+ * transforms form {@link ExtendedRecord} to {@link AudubonRecord}.
+ *
+ * @see <a href="http://rs.gbif.org/extension/ac/audubon.xml</a>
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AudubonTransform {
 

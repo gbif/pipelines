@@ -28,6 +28,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+/**
+ * Beam level transformations for the GBIF metadata, read an avro, write an avro, from value to keyValue and
+ * transforms form {@link ExtendedRecord} to {@link MetadataRecord}.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataTransform {
 

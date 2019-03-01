@@ -24,12 +24,13 @@ public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T
   private final Class<T> clazz;
   private final boolean condition;
 
+  /**
+   * If the condition is FALSE returns empty collections, if you will you "write" data, it will create an empty file,
+   * which is  useful when you "read" files, cause Beam can throw an exception if a file is absent
+   */
   @Override
   public PCollection<T> expand(PCollection<T> input) {
-    if (condition) {
-      return input;
-    }
-    return Create.empty(TypeDescriptor.of(clazz)).expand(PBegin.in(input.getPipeline()));
+    return condition ? input : Create.empty(TypeDescriptor.of(clazz)).expand(PBegin.in(input.getPipeline()));
   }
 
   public static boolean checkRecordType(List<String> types, RecordType type) {

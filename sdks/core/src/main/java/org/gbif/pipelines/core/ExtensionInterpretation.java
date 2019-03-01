@@ -22,6 +22,54 @@ import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
+/**
+ * The class is designed to simplify extension interpretation process:
+ *
+ * <pre>
+ *   1) Set extension name {@link ExtensionInterpretation#extenstion(Extension)}
+ *   or {@link ExtensionInterpretation#extenstion(String)}, basically, it will filter try to get from a map by name
+ *   2) Add a supplier of a target model {@link ExtensionInterpretation#to(Supplier)}
+ *   3) Map the Term to a field in a target model, the order is important, in general, it is a sequence of calls:
+ *    {@link TargetHandler#map(Term, BiConsumer)}
+ *    {@link TargetHandler#map(String, BiConsumer)}
+ *    {@link TargetHandler#map(Term, BiFunction)}
+ *    {@link TargetHandler#map(String, BiFunction)}
+ *    {@link TargetHandler#mapOne(Term, BiFunction)}
+ *    {@link TargetHandler#mapOne(String, BiFunction)}
+ *   4) Post mapping, if you want to process two or more fields:
+ *    {@link TargetHandler#postMap(Consumer)}
+ *    {@link TargetHandler#postMap(Function)}
+ *    {@link TargetHandler#postMapOne(Function)}
+ *   5) Skip whole record if some important conditions are violated {@link TargetHandler#skipIf(Function)}
+ *   6) Use convert and pass a source of data:
+ *    {@link TargetHandler#convert(ExtendedRecord)}
+ *    {@link TargetHandler#convert(Map)}
+ *    {@link TargetHandler#convert(List)}
+ *   7) Process the result of the conversion {@link Result}
+ * </pre>
+ *
+ * <p>Example:
+ *
+ * <pre>{@code
+ *  private static final TargetHandler<Image> HANDLER =
+ *      ExtensionInterpretation.extenstion(Extension.IMAGE)
+ *        .to(Image::new)
+ *        .map(DcTerm.identifier, ImageInterpreter::parseAndsetIdentifier)
+ *        .mapOne("http://www.w3.org/2003/01/geo/wgs84_pos#longitude", ImageInterpreter::parseAndSetLongitude)
+ *        .postMap(ImageInterpreter::parseAndSetLatLng)
+ *        .skipIf(ImageInterpreter::checkLinks);
+ *
+ *  Result<Image> result = HANDLER.convert(er);
+ *  result.getList();
+ *  result.getIssuesAsList();
+ * }</pre>
+ *
+ * <p>Example: {@link org.gbif.pipelines.core.interpreters.extension.AmplificationInterpreter}
+ * <p>Example: {@link org.gbif.pipelines.core.interpreters.extension.AudubonInterpreter}
+ * <p>Example: {@link org.gbif.pipelines.core.interpreters.extension.ImageInterpreter}
+ * <p>Example: {@link org.gbif.pipelines.core.interpreters.extension.MeasurementOrFactInterpreter}
+ * <p>Example: {@link org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter}
+ */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtensionInterpretation {
 
@@ -119,31 +167,37 @@ public class ExtensionInterpretation {
       List<T> result = new ArrayList<>();
       Set<String> issues = new HashSet<>();
 
+      // Tries to get an extension from map by the name
       Optional.ofNullable(extensions)
           .filter(e -> !e.isEmpty())
           .ifPresent(listExt ->
+
+              // Process list of extensions
               listExt.forEach(ext -> {
-                //
+
+                // Creates the new target object
                 T t = supplier.get();
 
-                //
+                // Calls sequence of mappers
                 ext.forEach((k, v) -> {
                   BiFunction<T, String, List<String>> fn = mapperMap.get(k);
                   Optional.ofNullable(fn).map(c -> fn.apply(t, v)).ifPresent(issues::addAll);
                 });
 
-                //
+                // Calls sequence of post mappers
                 postMapperSet.forEach(fn -> issues.addAll(fn.apply(t)));
 
-                //
+                // Calls sequence of validators
                 Optional<String> first = checkerSet.stream()
                     .map(x -> x.apply(t))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .findFirst();
 
+                // Collects issues
                 first.ifPresent(issues::add);
 
+                // Collects the result
                 if (!first.isPresent()) {
                   result.add(t);
                 }

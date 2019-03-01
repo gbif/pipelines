@@ -40,6 +40,7 @@ public class MeasurementOrFactInterpreter {
           .map(DwcTerm.measurementMethod, MeasurementOrFact::setMethod)
           .map(DwcTerm.measurementRemarks, MeasurementOrFact::setRemarks)
           .map(DwcTerm.measurementDeterminedDate, MeasurementOrFactInterpreter::parseAndsetDeterminedDate);
+
   /**
    * Interprets measurements or facts of a {@link ExtendedRecord} and populates a {@link MeasurementOrFactRecord}
    * with the interpreted values.
@@ -55,7 +56,7 @@ public class MeasurementOrFactInterpreter {
   }
 
   /**
-   *
+   * Parser for "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate" term value
    */
   private static List<String> parseAndsetDeterminedDate(MeasurementOrFact mf, String v) {
 

@@ -53,12 +53,12 @@ public class AmplificationInterpreter {
           .map(GGBN + "BOLDProcessID", Amplification::setBoldProcessId)
           .map(GGBN + "geneticAccessionURI", Amplification::setGeneticAccessionUri)
           .map(GGBN + "GC-content", Amplification::setGcContent)
+          .map(GGBN + "markerAccordance", Amplification::setMarkerAccordance)
           .map(GENSC + "chimera_check", Amplification::setChimeraCheck)
           .map(GENSC + "assembly", Amplification::setAssembly)
           .map(GENSC + "sop", Amplification::setSop)
           .map(GENSC + "finishing_strategy", Amplification::setFinishingStrategy)
           .map(GENSC + "annot_source", Amplification::setAnnotSource)
-          .map(GGBN + "markerAccordance", Amplification::setMarkerAccordance)
           .map(GENSC + "seq_quality_check", Amplification::setSeqQualityCheck)
           .map(GENSC + "adapters", Amplification::setAdapters)
           .map(GENSC + "mid", Amplification::setMid);

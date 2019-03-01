@@ -35,8 +35,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DWCA_TO_AVRO_
  * <p>To use this:
  *
  * <pre>{@code
- * p.apply("read",
- *     DwcaIO.Read.fromCompressed("/tmp/my-dwca.zip", "/tmp/working")
+ * p.apply("read", DwcaIO.Read.fromCompressed("/tmp/my-dwca.zip", "/tmp/working")
  *     ...;
  * }</pre>
  */

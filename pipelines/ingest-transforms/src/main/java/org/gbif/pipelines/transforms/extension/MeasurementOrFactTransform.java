@@ -30,6 +30,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMEN_OR
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+/**
+ * Beam level transformations for the Measurements_or_facts extension, read an avro, write an avro, from value to keyValue and
+ * transforms form{@link ExtendedRecord} to {@link MeasurementOrFactRecord}.
+ *
+ * @see <a href="http://rs.gbif.org/extension/dwc/measurements_or_facts.xml</a>
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MeasurementOrFactTransform {
 

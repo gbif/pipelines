@@ -37,6 +37,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+/**
+ * Beam level transformations for the DWC Location, read an avro, write an avro, from value to keyValue and
+ * transforms form {@link ExtendedRecord} to {@link LocationRecord}.
+ *
+ * @see <a href="https://dwc.tdwg.org/terms/#location</a>
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationTransform {
 
@@ -116,7 +122,8 @@ public class LocationTransform {
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
                   .withTableName("geocode_kv") //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                  .withNumOfKeyBuckets(
+                      kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
                   .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                   .build())
               .withCacheCapacity(15_000L)

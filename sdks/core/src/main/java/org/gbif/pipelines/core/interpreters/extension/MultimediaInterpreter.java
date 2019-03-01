@@ -37,7 +37,6 @@ public class MultimediaInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
 
-  //
   private static final TargetHandler<Multimedia> HANDLER =
       ExtensionInterpretation.extenstion(Extension.MULTIMEDIA)
           .to(Multimedia::new)
@@ -73,7 +72,7 @@ public class MultimediaInterpreter {
   }
 
   /**
-   *
+   * TODO:DOC
    */
   private static void parseAndsetReferences(Multimedia m, String v) {
     URI uri = UrlParser.parse(v);
@@ -81,7 +80,7 @@ public class MultimediaInterpreter {
   }
 
   /**
-   *
+   * TODO:DOC
    */
   private static void parseAndsetIdentifier(Multimedia m, String v) {
     URI uri = UrlParser.parse(v);
@@ -89,7 +88,7 @@ public class MultimediaInterpreter {
   }
 
   /**
-   *
+   * TODO:DOC
    */
   private static void parseAndSetType(Multimedia m, String v) {
     if (!Strings.isNullOrEmpty(v)) {
@@ -104,7 +103,7 @@ public class MultimediaInterpreter {
   }
 
   /**
-   *
+   * TODO:DOC
    */
   private static List<String> parseAndSetCreated(Multimedia m, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
@@ -114,7 +113,7 @@ public class MultimediaInterpreter {
   }
 
   /**
-   *
+   * TODO:DOC
    */
   private static void parseAndSetFormat(Multimedia m, String v) {
     String mimeType = MEDIA_PARSER.parseMimeType(v);
@@ -125,7 +124,7 @@ public class MultimediaInterpreter {
   }
 
   /**
-   *
+   * TODO:DOC
    */
   private static Optional<String> checkLinks(Multimedia m) {
     if (m.getReferences() == null && m.getIdentifier() == null) {

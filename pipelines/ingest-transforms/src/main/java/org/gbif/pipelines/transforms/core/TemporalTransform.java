@@ -27,6 +27,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+/**
+ * Beam level transformations for the DWC Event, read an avro, write an avro, from value to keyValue and
+ * transforms form {@link ExtendedRecord} to {@link TemporalRecord}.
+ *
+ * @see <a href="https://dwc.tdwg.org/terms/#event</a>
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalTransform {
 

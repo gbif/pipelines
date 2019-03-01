@@ -29,6 +29,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RE
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+/**
+ * Beam level transformations for the Multimedia extension, read an avro, write an avro, from value to keyValue and
+ * transforms form{@link ExtendedRecord} to {@link MultimediaRecord}.
+ *
+ * @see <a href="http://rs.gbif.org/extension/gbif/1.0/multimedia.xml</a>
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MultimediaTransform {
 

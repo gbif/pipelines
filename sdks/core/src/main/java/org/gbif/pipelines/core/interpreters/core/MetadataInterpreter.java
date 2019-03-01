@@ -15,6 +15,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataInterpreter {
 
+  /**
+   * Gets information from GBIF API by datasetId
+   */
   public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {
       mdr.setDatasetKey(datasetId);

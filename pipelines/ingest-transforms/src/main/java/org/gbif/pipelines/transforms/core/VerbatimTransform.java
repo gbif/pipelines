@@ -20,6 +20,9 @@ import lombok.NoArgsConstructor;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
+/**
+ * Beam level transformations for the raw representation of DWC, read an avro, write an avro, from value to keyValue
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimTransform {
 
