@@ -42,7 +42,7 @@ public class EsServer extends ExternalResource {
             .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
             .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
             .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
-            .withStartTimeout(30, TimeUnit.SECONDS)
+            .withStartTimeout(120, TimeUnit.SECONDS)
             .build();
 
     embeddedElastic.start();
