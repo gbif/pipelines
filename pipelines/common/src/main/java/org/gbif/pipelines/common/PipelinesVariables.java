@@ -68,13 +68,13 @@ public class PipelinesVariables {
 
     public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
-
+    // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";
     public static final String TEMPORAL_RECORDS_COUNT = "temporalRecordsCount";
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
-
+    // Extension types
     public static final String MULTIMEDIA_RECORDS_COUNT = "multimediaRecordsCount";
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
     public static final String AUDUBON_RECORDS_COUNT = "audubonRecordsCount";

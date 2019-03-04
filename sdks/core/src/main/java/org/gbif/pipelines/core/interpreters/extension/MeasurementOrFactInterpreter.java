@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 public class MeasurementOrFactInterpreter {
 
   private static final TargetHandler<MeasurementOrFact> HANDLER =
-      ExtensionInterpretation.extenstion(Extension.MEASUREMENT_OR_FACT)
+      ExtensionInterpretation.extension(Extension.MEASUREMENT_OR_FACT)
           .to(MeasurementOrFact::new)
           .map(DwcTerm.measurementID, MeasurementOrFact::setId)
           .map(DwcTerm.measurementType, MeasurementOrFact::setType)
@@ -39,7 +39,7 @@ public class MeasurementOrFactInterpreter {
           .map(DwcTerm.measurementDeterminedBy, MeasurementOrFact::setDeterminedBy)
           .map(DwcTerm.measurementMethod, MeasurementOrFact::setMethod)
           .map(DwcTerm.measurementRemarks, MeasurementOrFact::setRemarks)
-          .map(DwcTerm.measurementDeterminedDate, MeasurementOrFactInterpreter::parseAndsetDeterminedDate);
+          .map(DwcTerm.measurementDeterminedDate, MeasurementOrFactInterpreter::parseAndSetDeterminedDate);
 
   /**
    * Interprets measurements or facts of a {@link ExtendedRecord} and populates a {@link MeasurementOrFactRecord}
@@ -58,7 +58,7 @@ public class MeasurementOrFactInterpreter {
   /**
    * Parser for "http://rs.tdwg.org/dwc/terms/measurementDeterminedDate" term value
    */
-  private static List<String> parseAndsetDeterminedDate(MeasurementOrFact mf, String v) {
+  private static List<String> parseAndSetDeterminedDate(MeasurementOrFact mf, String v) {
 
     ParsedTemporal parsed = TemporalParser.parse(v);
 

@@ -37,7 +37,7 @@ public class AudubonInterpreter {
   private static final String IPTC = "http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
 
   private static final TargetHandler<Audubon> HANDLER =
-      ExtensionInterpretation.extenstion(Extension.AUDUBON)
+      ExtensionInterpretation.extension(Extension.AUDUBON)
           .to(Audubon::new)
           .map(DcElement.creator, Audubon::setCreator)
           .map(DcTerm.creator, Audubon::setCreatorUri)
@@ -131,13 +131,13 @@ public class AudubonInterpreter {
           .map("http://ns.adobe.com/exif/1.0/PixelYDimension", Audubon::setPixelYDimension)
           .map("http://ns.adobe.com/photoshop/1.0/Credit", Audubon::setCredit)
           .map(DcTerm.type, Audubon::setTypeUri)
-          .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndsetFurtherInformationUrl)
-          .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndsetAttributionLinkUrl)
-          .map(AcTerm.accessURI, AudubonInterpreter::parseAndsetAccessUri)
+          .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndSetFurtherInformationUrl)
+          .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
+          .map(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
           .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat);
 
   /**
-   * Interprets audubons of a {@link ExtendedRecord} and populates a {@link AudubonRecord}
+   * Interprets audubon of a {@link ExtendedRecord} and populates a {@link AudubonRecord}
    * with the interpreted values.
    */
   public static void interpret(ExtendedRecord er, AudubonRecord ar) {
@@ -153,7 +153,7 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://rs.tdwg.org/ac/terms/accessURI" term value
    */
-  private static void parseAndsetAccessUri(Audubon a, String v) {
+  private static void parseAndSetAccessUri(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
     Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setAccessUri);
   }
@@ -161,7 +161,7 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://rs.tdwg.org/ac/terms/furtherInformationURL" term value
    */
-  private static void parseAndsetFurtherInformationUrl(Audubon a, String v) {
+  private static void parseAndSetFurtherInformationUrl(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
     Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setFurtherInformationUrl);
   }
@@ -169,7 +169,7 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://rs.tdwg.org/ac/terms/attributionLinkURL" term value
    */
-  private static void parseAndsetAttributionLinkUrl(Audubon a, String v) {
+  private static void parseAndSetAttributionLinkUrl(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
     Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setAttributionLinkUrl);
   }

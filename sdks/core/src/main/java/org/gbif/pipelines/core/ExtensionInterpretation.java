@@ -26,8 +26,8 @@ import lombok.AllArgsConstructor;
  * The class is designed to simplify extension interpretation process:
  *
  * <pre>
- *   1) Set extension name {@link ExtensionInterpretation#extenstion(Extension)}
- *   or {@link ExtensionInterpretation#extenstion(String)}, basically, it will filter try to get from a map by name
+ *   1) Set extension name {@link ExtensionInterpretation#extension(Extension)}
+ *   or {@link ExtensionInterpretation#extension(String)}, basically, it will try to filter map by given {@link String} value
  *   2) Add a supplier of a target model {@link ExtensionInterpretation#to(Supplier)}
  *   3) Map the Term to a field in a target model, the order is important, in general, it is a sequence of calls:
  *    {@link TargetHandler#map(Term, BiConsumer)}
@@ -52,9 +52,9 @@ import lombok.AllArgsConstructor;
  *
  * <pre>{@code
  *  private static final TargetHandler<Image> HANDLER =
- *      ExtensionInterpretation.extenstion(Extension.IMAGE)
+ *      ExtensionInterpretation.extension(Extension.IMAGE)
  *        .to(Image::new)
- *        .map(DcTerm.identifier, ImageInterpreter::parseAndsetIdentifier)
+ *        .map(DcTerm.identifier, ImageInterpreter::parseAndSetIdentifier)
  *        .mapOne("http://www.w3.org/2003/01/geo/wgs84_pos#longitude", ImageInterpreter::parseAndSetLongitude)
  *        .postMap(ImageInterpreter::parseAndSetLatLng)
  *        .skipIf(ImageInterpreter::checkLinks);
@@ -73,16 +73,25 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtensionInterpretation {
 
-  private final String extenstion;
+  private final String extension;
 
-  public static ExtensionInterpretation extenstion(String extenstion) {
-    return new ExtensionInterpretation(extenstion);
+  /**
+   * @param extension Filter source map by given {@link String} value
+   */
+  public static ExtensionInterpretation extension(String extension) {
+    return new ExtensionInterpretation(extension);
   }
 
-  public static ExtensionInterpretation extenstion(Extension extenstion) {
-    return new ExtensionInterpretation(extenstion.getRowType());
+  /**
+   * @param extension Filter source map by given {@link Extension} value
+   */
+  public static ExtensionInterpretation extension(Extension extension) {
+    return new ExtensionInterpretation(extension.getRowType());
   }
 
+  /**
+   * @param supplier of a target object, as example - Image::new
+   */
   public <T> TargetHandler<T> to(Supplier<T> supplier) {
     return new TargetHandler<>(supplier);
   }
@@ -95,16 +104,31 @@ public class ExtensionInterpretation {
 
     private Set<Function<T, List<String>>> postMapperSet = new HashSet<>();
 
-    private Set<Function<T, Optional<String>>> checkerSet = new HashSet<>();
+    private Set<Function<T, Optional<String>>> validatorSet = new HashSet<>();
 
+    /**
+     * @param supplier of a target object, as example - Image::new
+     */
     private TargetHandler(Supplier<T> supplier) {
       this.supplier = supplier;
     }
 
+    /**
+     * Maps the {@link Term} to a field in a target model, can't process an issue
+     *
+     * @param key as a {@link Term} for source map
+     * @param consumer, where {@link T} is a target object and {@link String} value by key from source map
+     */
     public TargetHandler<T> map(Term key, BiConsumer<T, String> consumer) {
       return map(key.qualifiedName(), consumer);
     }
 
+    /**
+     * Maps the {@link String} to a field in a target model, can't process an issue
+     *
+     * @param key as a {@link String} for source map
+     * @param consumer, where {@link T} is a target object and {@link String} value by key from source map
+     */
     public TargetHandler<T> map(String key, BiConsumer<T, String> consumer) {
       mapperMap.put(key, (t, v) -> {
         consumer.accept(t, v);
@@ -113,10 +137,24 @@ public class ExtensionInterpretation {
       return this;
     }
 
+    /**
+     * Maps the {@link Term} to a field in a target model, can process list of {@link String} issues
+     *
+     * @param key as a {@link Term} for source map
+     * @param function, where {@link T} is a target object, {@link String} value by key from source map and
+     * {@link List<String>} list of issues
+     */
     public TargetHandler<T> map(Term key, BiFunction<T, String, List<String>> function) {
       return map(key.qualifiedName(), function);
     }
 
+    /**
+     * Maps the {@link String} to a field in a target model, can process list of {@link String} issues
+     *
+     * @param key as a {@link String} for source map
+     * @param function, where {@link T} is a target object, {@link String} value by key from source map and
+     * {@link List<String>} list of issues
+     */
     public TargetHandler<T> map(String key, BiFunction<T, String, List<String>> function) {
       mapperMap.put(key, function);
       return this;
@@ -127,10 +165,24 @@ public class ExtensionInterpretation {
       return this;
     }
 
+    /**
+     * Maps the {@link Term} to a field in a target model, can process single {@link String} issue
+     *
+     * @param key as a {@link Term} for source map
+     * @param function, where {@link T} is a target object, {@link String} value by key from source map and
+     * {@link List<String>} list of issues
+     */
     public TargetHandler<T> mapOne(Term key, BiFunction<T, String, String> function) {
       return mapOne(key.qualifiedName(), function);
     }
 
+    /**
+     * Maps the {@link String} to a field in a target model, can process single {@link String} issue
+     *
+     * @param key as a {@link String} for source map
+     * @param function, where {@link T} is a target object, {@link String} value by key from source map and
+     * {@link List<String>} list of issues
+     */
     public TargetHandler<T> mapOne(String key, BiFunction<T, String, String> function) {
       mapperMap.put(key, (t, v) -> {
         String r = function.apply(t, v);
@@ -139,11 +191,21 @@ public class ExtensionInterpretation {
       return this;
     }
 
+    /**
+     * Post mapper, if you want to process result {@link T} after main mappers, can process list of {@link String} issue
+     *
+     * @param function, where {@link T} is a target object and {@link List<String>} list of issues
+     */
     public TargetHandler<T> postMap(Function<T, List<String>> function) {
       postMapperSet.add(function);
       return this;
     }
 
+    /**
+     * Post mapper, if you want to process result {@link T} after main mappers, can't process an issue
+     *
+     * @param consumer, where {@link T} is a target object
+     */
     public TargetHandler<T> postMap(Consumer<T> consumer) {
       return postMap(t -> {
         consumer.accept(t);
@@ -151,6 +213,11 @@ public class ExtensionInterpretation {
       });
     }
 
+    /**
+     * Post mapper, if you want to process result {@link T} after main mappers, can process single {@link String} issue
+     *
+     * @param function, where {@link T} is a target object and {@link List<String>} list of issues
+     */
     public TargetHandler<T> postMapOne(Function<T, String> function) {
       return postMap(t -> {
         String r = function.apply(t);
@@ -158,11 +225,27 @@ public class ExtensionInterpretation {
       });
     }
 
-    public TargetHandler<T> skipIf(Function<T, Optional<String>> checker) {
-      checkerSet.add(checker);
+    /**
+     * Skips whole record if validator was triggered
+     *
+     * <pre>{@code
+     *  private static Optional<String> checkLink(Image i) {
+     *    return i.getReferences() == null ? Optional.of("INVALID_LINK") : Optional.empty();
+     *  }
+     * }</pre>
+     *
+     * @param validator function where {@link T} is a target object and Optional<String> if is an issue, or
+     * Optional.empty() if validation is OK
+     */
+    public TargetHandler<T> skipIf(Function<T, Optional<String>> validator) {
+      validatorSet.add(validator);
       return this;
     }
 
+    /**
+     * @param extensions a list of maps as source of data
+     * @return result of conversion
+     */
     public Result<T> convert(List<Map<String, String>> extensions) {
       List<T> result = new ArrayList<>();
       Set<String> issues = new HashSet<>();
@@ -188,7 +271,7 @@ public class ExtensionInterpretation {
                 postMapperSet.forEach(fn -> issues.addAll(fn.apply(t)));
 
                 // Calls sequence of validators
-                Optional<String> first = checkerSet.stream()
+                Optional<String> first = validatorSet.stream()
                     .map(x -> x.apply(t))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
@@ -207,14 +290,22 @@ public class ExtensionInterpretation {
       return new Result<>(result, issues);
     }
 
+    /**
+     * @param extension a map as source of data
+     * @return result of conversion
+     */
     public Result<T> convert(Map<String, String> extension) {
-      List<Map<String, String>> exts = Collections.singletonList(extension);
-      return convert(exts);
+      List<Map<String, String>> extensions = Collections.singletonList(extension);
+      return convert(extensions);
     }
 
+    /**
+     * @param record an ExtendedRecord instance as source of data
+     * @return result of conversion
+     */
     public Result<T> convert(ExtendedRecord record) {
-      List<Map<String, String>> exts = record.getExtensions().get(extenstion);
-      return convert(exts);
+      List<Map<String, String>> extensions = record.getExtensions().get(extension);
+      return convert(extensions);
     }
 
   }
@@ -225,18 +316,30 @@ public class ExtensionInterpretation {
     private final List<T> items;
     private final Set<String> issues;
 
+    /**
+     * @return Multi values result
+     */
     public List<T> getList() {
       return items;
     }
 
+    /**
+     * @return Single value result
+     */
     public Optional<T> get() {
       return items.isEmpty() ? Optional.empty() : Optional.of(items.get(0));
     }
 
+    /**
+     * @return Issues as set of values
+     */
     public Set<String> getIssues() {
       return issues;
     }
 
+    /**
+     * @return Issues as list of values
+     */
     public List<String> getIssuesAsList() {
       return new ArrayList<>(issues);
     }

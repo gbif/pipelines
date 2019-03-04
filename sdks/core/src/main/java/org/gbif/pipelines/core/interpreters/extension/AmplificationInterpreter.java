@@ -26,7 +26,7 @@ public class AmplificationInterpreter {
   private static final String GENSC = "http://gensc.org/ns/mixs/";
 
   private static final TargetHandler<Amplification> HANDLER =
-      ExtensionInterpretation.extenstion(EXTENSION_ROW_TYPE)
+      ExtensionInterpretation.extension(EXTENSION_ROW_TYPE)
           .to(Amplification::new)
           .map(GGBN + "amplificationDate", Amplification::setAmplificationDate)
           .map(GGBN + "amplificationStaff", Amplification::setAmplificationStaff)

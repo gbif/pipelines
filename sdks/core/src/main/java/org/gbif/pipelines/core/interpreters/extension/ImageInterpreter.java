@@ -39,10 +39,10 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 public class ImageInterpreter {
 
   private static final TargetHandler<Image> HANDLER =
-      ExtensionInterpretation.extenstion(Extension.IMAGE)
+      ExtensionInterpretation.extension(Extension.IMAGE)
           .to(Image::new)
-          .map(DcTerm.identifier, ImageInterpreter::parseAndsetIdentifier)
-          .map(DcTerm.references, ImageInterpreter::parseAndsetReferences)
+          .map(DcTerm.identifier, ImageInterpreter::parseAndSetIdentifier)
+          .map(DcTerm.references, ImageInterpreter::parseAndSetReferences)
           .map(DcTerm.created, ImageInterpreter::parseAndSetCreated)
           .map(DcTerm.title, Image::setTitle)
           .map(DcTerm.description, Image::setDescription)
@@ -77,7 +77,7 @@ public class ImageInterpreter {
   /**
    * Parser for "http://purl.org/dc/terms/references" term value
    */
-  private static void parseAndsetReferences(Image i, String v) {
+  private static void parseAndSetReferences(Image i, String v) {
     URI uri = UrlParser.parse(v);
     Optional.ofNullable(uri).map(URI::toString).ifPresent(i::setReferences);
   }
@@ -85,7 +85,7 @@ public class ImageInterpreter {
   /**
    * Parser for "http://purl.org/dc/terms/identifier" term value
    */
-  private static void parseAndsetIdentifier(Image i, String v) {
+  private static void parseAndSetIdentifier(Image i, String v) {
     URI uri = UrlParser.parse(v);
     Optional.ofNullable(uri).map(URI::toString).ifPresent(i::setIdentifier);
   }
