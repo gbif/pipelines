@@ -35,7 +35,7 @@ public interface EsPipelineOptions extends PipelineOptions {
   void setEsAlias(String[] esAlias);
 
   @Description("Path to an occurrence indexing schema")
-  @Default.String("elasticsearch/es-occurrence-shcema.json")
+  @Default.String("elasticsearch/es-occurrence-schema.json")
   String getEsSchemaPath();
 
   void setEsSchemaPath(String esSchemaPath);

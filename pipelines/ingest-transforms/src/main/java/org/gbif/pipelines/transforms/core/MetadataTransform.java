@@ -19,6 +19,8 @@ import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.PCollection;
 
 import lombok.AccessLevel;
@@ -65,6 +67,20 @@ public class MetadataTransform {
         .withSuffix(Pipeline.AVRO_EXTENSION)
         .withCodec(BASE_CODEC)
         .withoutSharding();
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link MetadataRecord}
+   */
+  public static SingleOutput<String, MetadataRecord> interpret(WsConfig wsConfig) {
+    return ParDo.of(new Interpreter(wsConfig));
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link MetadataRecord}
+   */
+  public static SingleOutput<String, MetadataRecord> interpret(String properties) {
+    return ParDo.of(new Interpreter(properties));
   }
 
   /**

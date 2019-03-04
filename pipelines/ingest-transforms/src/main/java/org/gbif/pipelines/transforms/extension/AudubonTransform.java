@@ -18,6 +18,8 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -69,6 +71,13 @@ public class AudubonTransform {
    */
   public static AvroIO.Write<AudubonRecord> write(String toPath) {
     return AvroIO.write(AudubonRecord.class).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link AudubonRecord}
+   */
+  public static SingleOutput<ExtendedRecord, AudubonRecord> interpret() {
+    return ParDo.of(new Interpreter());
   }
 
   /**

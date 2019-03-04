@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  *        {@link org.gbif.pipelines.io.avro.TemporalRecord}, {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *        {@link org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord} avro files
  *    3) Joins avro files
- *    4) Converts to json model (resources/elasticsearch/es-occurrence-shcema.json)
+ *    4) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
  *    5) Pushes data to Elasticsearch instance
  *    6) Swaps index name and index alias
  *    7) Deletes temporal files

@@ -32,7 +32,6 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.MDC;
 
@@ -122,42 +121,42 @@ public class DwcaToInterpretedPipeline {
     log.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Interpret metadata", ParDo.of(new MetadataTransform.Interpreter(wsConfig)))
+        .apply("Interpret metadata", MetadataTransform.interpret(wsConfig))
         .apply("Write metadata to avro", MetadataTransform.write(pathFn.apply(METADATA)));
 
     uniqueRecords
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn.apply(VERBATIM)));
 
     uniqueRecords
-        .apply("Interpret basic", ParDo.of(new BasicTransform.Interpreter()))
+        .apply("Interpret basic", BasicTransform.interpret())
         .apply("Write basic to avro", BasicTransform.write(pathFn.apply(BASIC)));
 
     uniqueRecords
-        .apply("Interpret temporal", ParDo.of(new TemporalTransform.Interpreter()))
+        .apply("Interpret temporal", TemporalTransform.interpret())
         .apply("Write temporal to avro", TemporalTransform.write(pathFn.apply(TEMPORAL)));
 
     uniqueRecords
-        .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
+        .apply("Interpret multimedia", MultimediaTransform.interpret())
         .apply("Write multimedia to avro", MultimediaTransform.write(pathFn.apply(MULTIMEDIA)));
 
     uniqueRecords
-        .apply("Interpret image", ParDo.of(new ImageTransform.Interpreter()))
+        .apply("Interpret image", ImageTransform.interpret())
         .apply("Write image to avro", ImageTransform.write(pathFn.apply(IMAGE)));
 
     uniqueRecords
-        .apply("Interpret audubon", ParDo.of(new AudubonTransform.Interpreter()))
+        .apply("Interpret audubon", AudubonTransform.interpret())
         .apply("Write audubon to avro", AudubonTransform.write(pathFn.apply(AUDUBON)));
 
     uniqueRecords
-        .apply("Interpret measurement", ParDo.of(new MeasurementOrFactTransform.Interpreter()))
+        .apply("Interpret measurement", MeasurementOrFactTransform.interpret())
         .apply("Write measurement to avro", MeasurementOrFactTransform.write(pathFn.apply(MEASUREMENT_OR_FACT)));
 
     uniqueRecords
-        .apply("Interpret taxonomy", ParDo.of(new TaxonomyTransform.Interpreter(kvConfig)))
+        .apply("Interpret taxonomy", TaxonomyTransform.interpret(kvConfig))
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply("Interpret location", ParDo.of(new LocationTransform.Interpreter(kvConfig)))
+        .apply("Interpret location", LocationTransform.interpret(kvConfig))
         .apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
 
     log.info("Running the pipeline");

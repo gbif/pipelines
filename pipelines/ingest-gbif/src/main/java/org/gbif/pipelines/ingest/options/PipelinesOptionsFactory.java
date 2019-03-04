@@ -14,7 +14,7 @@ import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-/** Factory parsres arguments or file, registers and produces {@link PipelineOptions} */
+/** Factory parsers arguments or file, registers and produces {@link PipelineOptions} */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PipelinesOptionsFactory {
 

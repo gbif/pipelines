@@ -18,6 +18,8 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -70,6 +72,13 @@ public class MultimediaTransform {
    */
   public static AvroIO.Write<MultimediaRecord> write(String toPath) {
     return AvroIO.write(MultimediaRecord.class).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link MultimediaRecord}
+   */
+  public static SingleOutput<ExtendedRecord, MultimediaRecord> interpret() {
+    return ParDo.of(new Interpreter());
   }
 
   /**

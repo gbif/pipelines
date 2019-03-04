@@ -19,6 +19,8 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -31,7 +33,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the Measurements_or_facts extension, read an avro, write an avro, from value to keyValue and
+ * Beam level transformations for the Measurements_or_facts extension, read an avro, write an avro, from value to
+ * keyValue and
  * transforms form{@link ExtendedRecord} to {@link MeasurementOrFactRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/dwc/measurements_or_facts.xml</a>
@@ -75,6 +78,13 @@ public class MeasurementOrFactTransform {
         .to(toPath)
         .withSuffix(Pipeline.AVRO_EXTENSION)
         .withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link MeasurementOrFactRecord}
+   */
+  public static SingleOutput<ExtendedRecord, MeasurementOrFactRecord> interpret() {
+    return ParDo.of(new Interpreter());
   }
 
   /**

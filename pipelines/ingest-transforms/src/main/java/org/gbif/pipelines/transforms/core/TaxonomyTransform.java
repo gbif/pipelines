@@ -29,6 +29,8 @@ import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -83,6 +85,26 @@ public class TaxonomyTransform {
     return AvroIO.write(TaxonRecord.class).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
   }
 
+  /**
+   * Creates an {@link Interpreter} for {@link TaxonRecord}
+   */
+  public static SingleOutput<ExtendedRecord, TaxonRecord> interpret(KvConfig kvConfig) {
+    return ParDo.of(new Interpreter(kvConfig));
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link TaxonRecord}
+   */
+  public static SingleOutput<ExtendedRecord, TaxonRecord> interpret(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
+    return ParDo.of(new Interpreter(kvStore));
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link TaxonRecord}
+   */
+  public static SingleOutput<ExtendedRecord, TaxonRecord> interpret(String properties) {
+    return ParDo.of(new Interpreter(properties));
+  }
 
   /**
    * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as

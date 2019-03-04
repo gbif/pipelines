@@ -78,7 +78,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Joins objects
- *    4) Converts to json model (resources/elasticsearch/es-occurrence-shcema.json)
+ *    4) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
  *    5) Pushes data to Elasticsearch instance
  * </pre>
  *
@@ -148,7 +148,7 @@ public class DwcaToEsIndexPipeline {
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", ParDo.of(new MetadataTransform.Interpreter(wsConfig)))
+            .apply("Interpret metadata", MetadataTransform.interpret(wsConfig))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
@@ -157,43 +157,43 @@ public class DwcaToEsIndexPipeline {
     // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", ParDo.of(new BasicTransform.Interpreter()))
+            .apply("Interpret basic", BasicTransform.interpret())
             .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
         uniqueRecords
-            .apply("Interpret temporal", ParDo.of(new TemporalTransform.Interpreter()))
+            .apply("Interpret temporal", TemporalTransform.interpret())
             .apply("Map Temporal to KV", TemporalTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
         uniqueRecords
-            .apply("Interpret location", ParDo.of(new LocationTransform.Interpreter(kvConfig)))
+            .apply("Interpret location", LocationTransform.interpret(kvConfig))
             .apply("Map Location to KV", LocationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         uniqueRecords
-            .apply("Interpret taxonomy", ParDo.of(new TaxonomyTransform.Interpreter(kvConfig)))
+            .apply("Interpret taxonomy", TaxonomyTransform.interpret(kvConfig))
             .apply("Map Taxon to KV", TaxonomyTransform.toKv());
 
     // Extension
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         uniqueRecords
-            .apply("Interpret multimedia", ParDo.of(new MultimediaTransform.Interpreter()))
+            .apply("Interpret multimedia", MultimediaTransform.interpret())
             .apply("Map Multimedia to KV", MultimediaTransform.toKv());
 
     PCollection<KV<String, ImageRecord>> imageCollection =
         uniqueRecords
-            .apply("Interpret image", ParDo.of(new ImageTransform.Interpreter()))
+            .apply("Interpret image", ImageTransform.interpret())
             .apply("Map Image to KV", ImageTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
         uniqueRecords
-            .apply("Interpret audubon", ParDo.of(new AudubonTransform.Interpreter()))
+            .apply("Interpret audubon", AudubonTransform.interpret())
             .apply("Map Audubon to KV", AudubonTransform.toKv());
 
     PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
         uniqueRecords
-            .apply("Interpret multimedia", ParDo.of(new MeasurementOrFactTransform.Interpreter()))
+            .apply("Interpret multimedia", MeasurementOrFactTransform.interpret())
             .apply("Map MeasurementOrFact to KV", MeasurementOrFactTransform.toKv());
 
     log.info("Adding step 3: Converting to a json object");

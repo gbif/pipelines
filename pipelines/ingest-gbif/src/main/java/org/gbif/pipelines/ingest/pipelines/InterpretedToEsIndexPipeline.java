@@ -81,7 +81,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    2) Joins avro files
- *    3) Converts to json model (resources/elasticsearch/es-occurrence-shcema.json)
+ *    3) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
  *    4) Pushes data to Elasticsearch instance
  * </pre>
  *
