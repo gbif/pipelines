@@ -20,7 +20,6 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.transforms.CheckTransforms;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;
@@ -135,30 +134,18 @@ public class AustraliaSpatialTransform {
     public void setup() throws IOException {
       if (kvConfig != null) {
 
-        ClientConfiguration clientConfig = ClientConfiguration.builder()
-            .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
-            .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
-            .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+        GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
+            .withJsonColumnQualifier("json") //stores JSON data
+            .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
+                .withTableName("australia_kv") //Geocode KV HBase table
+                .withColumnFamily("v") //Column in which qualifiers are stored
+                .withNumOfKeyBuckets(20) //Buckets for salted key generations == to # of region servers
+                .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
+                .build())
+            .withCacheCapacity(15_000L)
             .build();
 
-        if (kvConfig.getZookeeperUrl() != null) {
-
-          GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
-              .withJsonColumnQualifier("j") //stores JSON data
-              .withCountryCodeColumnQualifier("c") //stores ISO country code
-              .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                  .withTableName("australia_kv") //Geocode KV HBase table
-                  .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
-                  .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-                  .build())
-              .withCacheCapacity(15_000L)
-              .build();
-
-          kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
-        } else {
-          kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(clientConfig);
-        }
+        kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig);
 
       }
     }

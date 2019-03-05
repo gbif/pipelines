@@ -31,6 +31,7 @@ public class AustraliaSpatialInterpreter {
 
         // Parse json
         if (!Strings.isNullOrEmpty(json)) {
+          json = json.substring(11, json.length() - 1);
           ObjectMapper objectMapper = new ObjectMapper();
           Map<String, String> map = objectMapper.readValue(json, new TypeReference<HashMap<String, String>>() {});
           asr.setItems(map);

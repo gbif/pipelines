@@ -83,6 +83,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * --attempt=1
  * --targetPath=/some/path/to/output/
  * --inputPath=/some/path/to/input/dwca/dwca.zip
+ * --runner=SparkRunner
  *
  * }</pre>
  */

@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
- * --runner=DirectRunner
+ * --runner=SparkRunner
  * --targetPath=/path/GBIF/output/
  * --inputPath=/path/GBIF/input/dwca/9f747cff-839f-4485-83a1-f10317a92a82.dwca
  *

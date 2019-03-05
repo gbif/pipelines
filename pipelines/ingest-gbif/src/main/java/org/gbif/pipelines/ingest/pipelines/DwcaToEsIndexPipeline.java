@@ -95,8 +95,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
  * --inputPath=/some/path/to/input/dwca.zip
+ * --targetPath=/some/path/to/input/
  * --esHosts=http://ADDRESS,http://ADDRESS,http://ADDRESS:9200
  * --esIndexName=pipeline
+ * --runner=SparkRunner
  *
  * }</pre>
  */

@@ -238,25 +238,16 @@ public class GbifJsonConverter extends JsonConverter {
    * <pre>{@code
    * Result example:
    *
-   * "australiaSpatial": {
-   *     "sname": "name,feature_co,record_id",
-   *     "sid": "record_id",
-   *     "defaultlayer": true,
-   *     "id": "cl2123",
-   *     "layerbranch": false,
-   *     "last_update": 1472518286436,
-   *     "spid": "2123",
-   *     "indb": false,
-   *     "intersect": false,
-   *     "name": "Gazetteer of Australia 2012",
-   *     "desc": "Gazetteer of Australia 2012",
-   *     "type": "c",
-   *     "analysis": false,
-   *     "addtomap": false,
-   *     "sdesc": "state_id,status,latitude,longitude",
-   *     "namesearch": true,
-   *     "enabled": true
-   *   }
+   * "australiaSpatialLayers": [
+   *     {
+   *      "key": "c22",
+   *      "value": "234"
+   *     },
+   *     {
+   *      "key": "c223",
+   *      "value": "34"
+   *     },
+   *   ]
    *
    * }</pre>
    */
@@ -265,7 +256,16 @@ public class GbifJsonConverter extends JsonConverter {
       AustraliaSpatialRecord australiaSpatial = (AustraliaSpatialRecord) record;
       Optional.ofNullable(australiaSpatial.getItems())
           .filter(i -> !i.isEmpty())
-          .ifPresent(v -> this.addJsonRawObject("australiaSpatial", v));
+          .ifPresent(m -> {
+            List<ObjectNode> nodes = new ArrayList<>(m.size());
+            m.forEach((k, v) -> {
+              ObjectNode node = MAPPER.createObjectNode();
+              node.put("key", k);
+              node.put("value", v);
+              nodes.add(node);
+            });
+            this.addJsonArray("australiaSpatialLayers", nodes);
+          });
     };
   }
 }
