@@ -1,13 +1,14 @@
 /**
- * TODO:DOC
+ * Additional structure for Australia spatial service, represents https://sampling.ala.org.au/sampling-service/fields
  */
 {
   "name": "AustraliaSpatialRecord",
   "namespace": "org.gbif.pipelines.io.avro",
   "type": "record",
-  "doc": "TODO:DOCl",
+  "doc": "https://sampling.ala.org.au/sampling-service/fields",
   "fields": [
     {"name": "id", "type": "string", "doc": "http://rs.tdwg.org/dwc/terms/occurrenceID"},
-    {"name": "field", "type": ["null", "string"], "default" : null, "doc": ""}
+    {"name": "items", "doc": "Dynamic values", "default": {}, "type": {"type": "map", "values": "string"}},
+    {"name": "issues", "type": "IssueRecord", "default":{}}
   ]
 }

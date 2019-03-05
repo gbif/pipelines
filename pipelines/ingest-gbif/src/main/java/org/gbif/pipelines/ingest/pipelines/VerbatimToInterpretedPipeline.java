@@ -170,7 +170,7 @@ public class VerbatimToInterpretedPipeline {
 
     locationPCollection
         .apply("Check AustraliaSpatial transform condition", AustraliaSpatialTransform.check(types))
-        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret())
+        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(wsPropertiesPath))
         .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn.apply(AUSTRALIA_SPATIAL)));
 
     log.info("Running the pipeline");

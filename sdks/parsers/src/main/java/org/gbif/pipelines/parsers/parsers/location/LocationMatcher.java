@@ -34,7 +34,7 @@ class LocationMatcher {
   private final KeyValueStore<LatLng, String> kvStore;
   private final List<UnaryOperator<LatLng>> alternativeTransformations = new ArrayList<>();
 
-  private LocationMatcher(LatLng latLng, Country country, KeyValueStore<org.gbif.kvs.geocode.LatLng, String> kvStore) {
+  private LocationMatcher(LatLng latLng, Country country, KeyValueStore<LatLng, String> kvStore) {
     this.latLng = latLng;
     this.country = country;
     this.kvStore = kvStore;

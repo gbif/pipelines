@@ -174,7 +174,7 @@ public class DwcaToEsIndexPipeline {
 
     PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection =
         locationCollection
-            .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret())
+            .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(kvConfig))
             .apply("Map Australia spatial to KV", AustraliaSpatialTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationKvCollection =

@@ -232,11 +232,40 @@ public class GbifJsonConverter extends JsonConverter {
     };
   }
 
-  /** TODO:DOC */
+  /**
+   * String converter for {@link AustraliaSpatialRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * "australiaSpatial": {
+   *     "sname": "name,feature_co,record_id",
+   *     "sid": "record_id",
+   *     "defaultlayer": true,
+   *     "id": "cl2123",
+   *     "layerbranch": false,
+   *     "last_update": 1472518286436,
+   *     "spid": "2123",
+   *     "indb": false,
+   *     "intersect": false,
+   *     "name": "Gazetteer of Australia 2012",
+   *     "desc": "Gazetteer of Australia 2012",
+   *     "type": "c",
+   *     "analysis": false,
+   *     "addtomap": false,
+   *     "sdesc": "state_id,status,latitude,longitude",
+   *     "namesearch": true,
+   *     "enabled": true
+   *   }
+   *
+   * }</pre>
+   */
   private Consumer<SpecificRecordBase> getAustraliaSpatialRecordConverter() {
     return record -> {
       AustraliaSpatialRecord australiaSpatial = (AustraliaSpatialRecord) record;
-      this.addCommonFields("australiaSpatial", australiaSpatial);
+      Optional.ofNullable(australiaSpatial.getItems())
+          .filter(i -> !i.isEmpty())
+          .ifPresent(v -> this.addJsonRawObject("australiaSpatial", v));
     };
   }
 }

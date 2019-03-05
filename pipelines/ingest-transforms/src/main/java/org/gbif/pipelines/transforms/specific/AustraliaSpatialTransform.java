@@ -1,16 +1,26 @@
 package org.gbif.pipelines.transforms.specific;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 import org.gbif.api.vocabulary.Country;
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
+import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.AustraliaSpatialInterpreter;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.parsers.config.KvConfig;
+import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.transforms.CheckTransforms;
+import org.gbif.rest.client.configuration.ClientConfiguration;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;
@@ -34,8 +44,6 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 /**
  * Beam level transformations for the Australia location, read an avro, write an avro, from value to keyValue and
  * transforms form {@link LocationRecord} to {@link AustraliaSpatialRecord}.
- *
- * @see <a href="https://dwc.tdwg.org/terms/#occurrence</a>
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AustraliaSpatialTransform {
@@ -81,8 +89,22 @@ public class AustraliaSpatialTransform {
   /**
    * Creates an {@link Interpreter} for {@link AustraliaSpatialRecord}
    */
-  public static SingleOutput<LocationRecord, AustraliaSpatialRecord> interpret() {
-    return ParDo.of(new Interpreter());
+  public static SingleOutput<LocationRecord, AustraliaSpatialRecord> interpret(KvConfig kvConfig) {
+    return ParDo.of(new Interpreter(kvConfig));
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link AustraliaSpatialRecord}
+   */
+  public static SingleOutput<LocationRecord, AustraliaSpatialRecord> interpret(KeyValueStore<LatLng, String> kvStore) {
+    return ParDo.of(new Interpreter(kvStore));
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link AustraliaSpatialRecord}
+   */
+  public static SingleOutput<LocationRecord, AustraliaSpatialRecord> interpret(String properties) {
+    return ParDo.of(new Interpreter(properties));
   }
 
   /**
@@ -93,14 +115,63 @@ public class AustraliaSpatialTransform {
 
     private final Counter counter = Metrics.counter(AustraliaSpatialTransform.class, AUSTRALIA_SPATIAL_RECORDS_COUNT);
 
+    private final KvConfig kvConfig;
+    private KeyValueStore<LatLng, String> kvStore;
+
+    public Interpreter(KvConfig kvConfig) {
+      this.kvConfig = kvConfig;
+    }
+
+    public Interpreter(KeyValueStore<LatLng, String> kvStore) {
+      this.kvStore = kvStore;
+      this.kvConfig = null;
+    }
+
+    public Interpreter(String properties) {
+      this.kvConfig = KvConfigFactory.create(KvConfigFactory.AUSTRALIA_PREFIX, Paths.get(properties));
+    }
+
+    @Setup
+    public void setup() throws IOException {
+      if (kvConfig != null) {
+
+        ClientConfiguration clientConfig = ClientConfiguration.builder()
+            .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
+            .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
+            .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+            .build();
+
+        if (kvConfig.getZookeeperUrl() != null) {
+
+          GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
+              .withJsonColumnQualifier("j") //stores JSON data
+              .withCountryCodeColumnQualifier("c") //stores ISO country code
+              .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
+                  .withTableName("australia_kv") //Geocode KV HBase table
+                  .withColumnFamily("v") //Column in which qualifiers are stored
+                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                  .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
+                  .build())
+              .withCacheCapacity(15_000L)
+              .build();
+
+          kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
+        } else {
+          kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(clientConfig);
+        }
+
+      }
+    }
+
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(lr -> AustraliaSpatialRecord.newBuilder().setId(lr.getId()).build())
-          .when(lr -> Optional.ofNullable(lr.getCountry())
-              .filter(c -> c.equals(Country.AUSTRALIA.getTitle()))
+          .when(lr -> Optional.ofNullable(lr.getCountryCode())
+              .filter(c -> c.equals(Country.AUSTRALIA.getIso2LetterCode()))
+              .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
               .isPresent())
-          .via(AustraliaSpatialInterpreter::interpret)
+          .via(AustraliaSpatialInterpreter.interpret(kvStore))
           .consume(context::output);
 
       counter.inc();

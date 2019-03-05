@@ -167,7 +167,7 @@ public class DwcaToInterpretedPipeline {
     locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
 
     locationPCollection
-        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret())
+        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(kvConfig))
         .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn.apply(AUSTRALIA_SPATIAL)));
 
     log.info("Running the pipeline");

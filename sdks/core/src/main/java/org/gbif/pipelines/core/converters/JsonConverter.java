@@ -131,7 +131,7 @@ public class JsonConverter {
     return this;
   }
 
-  /** TODO:DOC */
+  /** Common way how to convert {@link SpecificRecordBase} to json string */
   JsonConverter addCommonFields(String key, SpecificRecordBase base) {
     ObjectNode node = MAPPER.createObjectNode();
     base.getSchema().getFields().forEach(

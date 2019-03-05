@@ -274,7 +274,11 @@ public class EsIndex {
   }
 
   /**
-   * TODO:DOC
+   * Deletes records in the index by some ES DSL query
+   *
+   * @param config configuration of the ES instance.
+   * @param index name of the index to refresh.
+   * @param query ES DSL query.
    **/
   public static void deleteRecordsByQuery(EsConfig config, String index, String query) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
