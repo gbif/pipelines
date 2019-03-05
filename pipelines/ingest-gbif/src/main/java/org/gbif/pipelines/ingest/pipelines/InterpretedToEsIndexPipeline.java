@@ -12,6 +12,7 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -31,6 +32,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -56,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
@@ -128,12 +131,13 @@ public class InterpretedToEsIndexPipeline {
     final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
     final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
     final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
-
     // Extension
     final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
     final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
     final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
     final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
+    // Specific
+    final TupleTag<AustraliaSpatialRecord> asrTag = new TupleTag<AustraliaSpatialRecord>() {};
 
     Pipeline p = Pipeline.create(options);
 
@@ -178,6 +182,10 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Measurement", MeasurementOrFactTransform.read(pathInterFn.apply(MEASUREMENT_OR_FACT)))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
 
+    PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection =
+        p.apply("Read Australia spatial", AustraliaSpatialTransform.read(pathInterFn.apply(AUSTRALIA_SPATIAL)))
+            .apply("Map Australia spatial to KV", AustraliaSpatialTransform.toKv());
+
     log.info("Adding step 3: Converting to a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
@@ -196,15 +204,16 @@ public class InterpretedToEsIndexPipeline {
             TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
             LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
-
             // Extension
             MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
             ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
             AudubonRecord ar = v.getOnly(arTag, AudubonRecord.newBuilder().setId(k).build());
             MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
+            // Specific
+            AustraliaSpatialRecord asr = v.getOnly(asrTag, AustraliaSpatialRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mergedMr = MultimediaConverter.merge(mr, ir, ar);
-            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mergedMr, mfr, er).buildJson().toString();
+            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mergedMr, mfr, er, asr).buildJson().toString();
 
             c.output(json);
 
@@ -224,6 +233,8 @@ public class InterpretedToEsIndexPipeline {
             .and(irTag, imageCollection)
             .and(arTag, audubonCollection)
             .and(mfrTag, measurementCollection)
+            // Specific
+            .and(asrTag, australiaSpatialCollection)
             // Raw
             .and(erTag, verbatimCollection)
             // Apply

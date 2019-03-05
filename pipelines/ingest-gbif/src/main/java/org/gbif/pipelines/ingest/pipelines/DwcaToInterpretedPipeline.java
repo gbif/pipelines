@@ -13,6 +13,7 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
@@ -28,6 +29,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -40,6 +42,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
@@ -158,6 +161,14 @@ public class DwcaToInterpretedPipeline {
     uniqueRecords
         .apply("Interpret location", LocationTransform.interpret(kvConfig))
         .apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
+
+    PCollection<LocationRecord> locationPCollection = uniqueRecords
+        .apply("Interpret location", LocationTransform.interpret(kvConfig));
+    locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
+
+    locationPCollection
+        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret())
+        .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn.apply(AUSTRALIA_SPATIAL)));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

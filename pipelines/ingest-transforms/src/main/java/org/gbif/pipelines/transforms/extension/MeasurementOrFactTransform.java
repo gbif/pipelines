@@ -28,14 +28,13 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMEN_OR_FACT_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
  * Beam level transformations for the Measurements_or_facts extension, read an avro, write an avro, from value to
- * keyValue and
- * transforms form{@link ExtendedRecord} to {@link MeasurementOrFactRecord}.
+ * keyValue and transforms form{@link ExtendedRecord} to {@link MeasurementOrFactRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/dwc/measurements_or_facts.xml</a>
  */
@@ -93,7 +92,7 @@ public class MeasurementOrFactTransform {
    */
   public static class Interpreter extends DoFn<ExtendedRecord, MeasurementOrFactRecord> {
 
-    private final Counter counter = Metrics.counter(MeasurementOrFactTransform.class, MEASUREMEN_OR_FACT_RECORDS_COUNT);
+    private final Counter counter = Metrics.counter(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT);
 
     @ProcessElement
     public void processElement(ProcessContext context) {

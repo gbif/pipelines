@@ -58,6 +58,7 @@
       "multimediaItems":{"type": "nested", "enabled": false},
       "measurementOrFactItems":{"type": "nested", "enabled": false},
       "amplificationItems":{"type": "nested", "enabled": false},
+      "australiaSpatial":{"type": "nested", "enabled": false},
 
       "verbatim": {"type": "object", "enabled": false}
     }

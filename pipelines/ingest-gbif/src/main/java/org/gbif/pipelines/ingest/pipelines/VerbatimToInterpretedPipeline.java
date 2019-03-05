@@ -12,6 +12,7 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -23,6 +24,7 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -35,6 +37,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
@@ -160,10 +163,15 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret taxonomy", TaxonomyTransform.interpret(wsPropertiesPath))
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn.apply(TAXONOMY)));
 
-    uniqueRecords
+    PCollection<LocationRecord> locationPCollection = uniqueRecords
         .apply("Check location transform condition", LocationTransform.check(types))
-        .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath))
-        .apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
+        .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath));
+    locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
+
+    locationPCollection
+        .apply("Check AustraliaSpatial transform condition", AustraliaSpatialTransform.check(types))
+        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret())
+        .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn.apply(AUSTRALIA_SPATIAL)));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

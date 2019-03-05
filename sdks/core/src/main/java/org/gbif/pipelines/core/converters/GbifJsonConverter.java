@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
@@ -54,7 +55,8 @@ public class GbifJsonConverter extends JsonConverter {
         .addSpecificConverter(ExtendedRecord.class, getExtendedRecordConverter())
         .addSpecificConverter(LocationRecord.class, getLocationRecordConverter())
         .addSpecificConverter(TemporalRecord.class, getTemporalRecordConverter())
-        .addSpecificConverter(TaxonRecord.class, getTaxonomyRecordConverter());
+        .addSpecificConverter(TaxonRecord.class, getTaxonomyRecordConverter())
+        .addSpecificConverter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter());
   }
 
   public static GbifJsonConverter create(SpecificRecordBase... bases) {
@@ -227,6 +229,14 @@ public class GbifJsonConverter extends JsonConverter {
                   this.addJsonTextFieldNoCheck("gbifTaxonKey", usage.getKey().toString())
                       .addJsonTextFieldNoCheck("gbifScientificName", usage.getName())
                       .addJsonTextFieldNoCheck("gbifTaxonRank", usage.getRank().name()));
+    };
+  }
+
+  /** TODO:DOC */
+  private Consumer<SpecificRecordBase> getAustraliaSpatialRecordConverter() {
+    return record -> {
+      AustraliaSpatialRecord australiaSpatial = (AustraliaSpatialRecord) record;
+      this.addCommonFields("australiaSpatial", australiaSpatial);
     };
   }
 }

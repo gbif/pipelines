@@ -40,20 +40,17 @@ public class JsonConverter {
   static final ObjectMapper MAPPER = new ObjectMapper();
 
   // Utility predicates to check if a node is a complex element
-  private static final Predicate<String> IS_OBJECT =
-      nodeValue -> nodeValue.startsWith("{\"") && nodeValue.endsWith("}");
-  private static final Predicate<String> IS_ARRAY_ONE =
-      nodeValue -> nodeValue.startsWith("[\"") && nodeValue.endsWith("]");
-  private static final Predicate<String> IS_ARRAY_TWO =
-      nodeValue -> nodeValue.startsWith("[{") && nodeValue.endsWith("}]");
+  private static final Predicate<String> IS_OBJECT = value -> value.startsWith("{\"") && value.endsWith("}");
+  private static final Predicate<String> IS_ARRAY_ONE = value -> value.startsWith("[\"") && value.endsWith("]");
+  private static final Predicate<String> IS_ARRAY_TWO = value -> value.startsWith("[{") && value.endsWith("}]");
   private static final Predicate<String> IS_VALID_JSON =
-      nodeValue -> {
-        try (JsonParser parser = MAPPER.getFactory().createParser(nodeValue)) {
+      value -> {
+        try (JsonParser parser = MAPPER.getFactory().createParser(value)) {
           while (parser.nextToken() != null) {
             // NOP
           }
         } catch (Exception ex) {
-          log.warn("JSON is invalid - {}", nodeValue);
+          log.warn("JSON is invalid - {}", value);
           return false;
         }
         return true;
@@ -64,8 +61,7 @@ public class JsonConverter {
 
   private final ObjectNode mainNode = MAPPER.createObjectNode();
 
-  private final Map<Class<? extends SpecificRecordBase>, Consumer<SpecificRecordBase>>
-      customConvertersMap = new HashMap<>();
+  private final Map<Class<? extends SpecificRecordBase>, Consumer<SpecificRecordBase>> convertersMap = new HashMap<>();
   private SpecificRecordBase[] bases;
   private Set<String> skipKeys = new HashSet<>();
   private List<Pattern> replaceKeys = Collections.emptyList();
@@ -86,8 +82,7 @@ public class JsonConverter {
   }
 
   JsonConverter setReplaceKeys(String... replaceKeys) {
-    this.replaceKeys =
-        Arrays.stream(replaceKeys).map(Pattern::compile).collect(Collectors.toList());
+    this.replaceKeys = Arrays.stream(replaceKeys).map(Pattern::compile).collect(Collectors.toList());
     return this;
   }
 
@@ -97,14 +92,6 @@ public class JsonConverter {
     return this;
   }
 
-  /** Applies all the replaceKeys to the value to remove all undesired patterns. */
-  private String sanitizeValue(String value) {
-    for (Pattern rule : replaceKeys) {
-      value = rule.matcher(value).replaceAll("");
-    }
-    return value;
-  }
-
   /**
    * You want to use another way how to process a specific class, you can use your appender for this
    * object
@@ -112,7 +99,7 @@ public class JsonConverter {
    * <pre>{@code
    * Example:
    *
-   * BiConsumer<SpecificRecordBase, StringBuilder> funct = (record, sb) -> {
+   * BiConsumer<SpecificRecordBase, StringBuilder> func = (record, sb) -> {
    *       Map<String, String> terms = ((ExtendedRecord) record).getCoreTerms();
    *       String example = map.get("Example");
    *       sb.append("\"exampleKey\":\"").append(example).append("\",");
@@ -120,13 +107,13 @@ public class JsonConverter {
    * }</pre>
    */
   JsonConverter addSpecificConverter(Class<? extends SpecificRecordBase> type, Consumer<SpecificRecordBase> consumer) {
-    customConvertersMap.put(type, consumer);
+    convertersMap.put(type, consumer);
     return this;
   }
 
   public ObjectNode buildJson() {
     for (SpecificRecordBase record : bases) {
-      Consumer<SpecificRecordBase> consumer = customConvertersMap.get(record.getClass());
+      Consumer<SpecificRecordBase> consumer = convertersMap.get(record.getClass());
       if (consumer != null) {
         consumer.accept(record);
       } else {
@@ -138,13 +125,21 @@ public class JsonConverter {
 
   /** Common way how to convert {@link SpecificRecordBase} to json string */
   JsonConverter addCommonFields(SpecificRecordBase base) {
-    base.getSchema()
-        .getFields()
-        .forEach(
-            field ->
-                Optional.ofNullable(base.get(field.pos()))
-                    .map(Object::toString)
-                    .ifPresent(r -> addJsonField(field.name(), r)));
+    base.getSchema().getFields().forEach(
+        f -> Optional.ofNullable(base.get(f.pos())).map(Object::toString).ifPresent(r -> addJsonField(f.name(), r))
+    );
+    return this;
+  }
+
+  /** TODO:DOC */
+  JsonConverter addCommonFields(String key, SpecificRecordBase base) {
+    ObjectNode node = MAPPER.createObjectNode();
+    base.getSchema().getFields().forEach(
+        f -> Optional.ofNullable(base.get(f.pos()))
+            .map(Object::toString)
+            .ifPresent(r -> addJsonField(node, f.name(), r))
+    );
+    mainNode.set(key, node);
     return this;
   }
 
@@ -217,5 +212,13 @@ public class JsonConverter {
 
   SpecificRecordBase[] getBases() {
     return bases;
+  }
+
+  /** Applies all the replaceKeys to the value to remove all undesired patterns. */
+  private String sanitizeValue(String value) {
+    for (Pattern rule : replaceKeys) {
+      value = rule.matcher(value).replaceAll("");
+    }
+    return value;
   }
 }
