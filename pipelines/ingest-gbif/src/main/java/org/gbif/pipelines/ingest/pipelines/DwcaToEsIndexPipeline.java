@@ -23,10 +23,6 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.parsers.config.KvConfig;
-import org.gbif.pipelines.parsers.config.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.WsConfig;
-import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -99,6 +95,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  * --esHosts=http://ADDRESS,http://ADDRESS,http://ADDRESS:9200
  * --esIndexName=pipeline
  * --runner=SparkRunner
+ * --wsProperties=/path/ws.properties
  *
  * }</pre>
  */
@@ -119,8 +116,7 @@ public class DwcaToEsIndexPipeline {
     EsIndexUtils.createIndex(options);
 
     log.info("Adding step 1: Options");
-    WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
-    KvConfig kvConfig = KvConfigFactory.create(options.getGbifApiUrl(), options.getZookeeperUrl());
+    String wsPropertiesPath = options.getWsProperties();
 
     // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
@@ -153,7 +149,7 @@ public class DwcaToEsIndexPipeline {
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", MetadataTransform.interpret(wsConfig))
+            .apply("Interpret metadata", MetadataTransform.interpret(wsPropertiesPath))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
@@ -172,11 +168,11 @@ public class DwcaToEsIndexPipeline {
 
     PCollection<LocationRecord> locationCollection =
         uniqueRecords
-            .apply("Interpret location", LocationTransform.interpret(kvConfig));
+            .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath));
 
     PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection =
         locationCollection
-            .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(kvConfig))
+            .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(wsPropertiesPath))
             .apply("Map Australia spatial to KV", AustraliaSpatialTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationKvCollection =
@@ -185,7 +181,7 @@ public class DwcaToEsIndexPipeline {
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         uniqueRecords
-            .apply("Interpret taxonomy", TaxonomyTransform.interpret(kvConfig))
+            .apply("Interpret taxonomy", TaxonomyTransform.interpret(wsPropertiesPath))
             .apply("Map Taxon to KV", TaxonomyTransform.toKv());
 
     // Extension

@@ -14,10 +14,6 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.parsers.config.KvConfig;
-import org.gbif.pipelines.parsers.config.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.WsConfig;
-import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -84,6 +80,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * --targetPath=/some/path/to/output/
  * --inputPath=/some/path/to/input/dwca/dwca.zip
  * --runner=SparkRunner
+ * --wsProperties=/path/ws.properties
  *
  * }</pre>
  */
@@ -101,8 +98,7 @@ public class DwcaToInterpretedPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
 
-    WsConfig wsConfig = WsConfigFactory.create(options.getGbifApiUrl());
-    KvConfig kvConfig = KvConfigFactory.create(options.getGbifApiUrl(), options.getZookeeperUrl());
+    String wsPropertiesPath = options.getWsProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
@@ -125,7 +121,7 @@ public class DwcaToInterpretedPipeline {
     log.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Interpret metadata", MetadataTransform.interpret(wsConfig))
+        .apply("Interpret metadata", MetadataTransform.interpret(wsPropertiesPath))
         .apply("Write metadata to avro", MetadataTransform.write(pathFn.apply(METADATA)));
 
     uniqueRecords
@@ -156,19 +152,19 @@ public class DwcaToInterpretedPipeline {
         .apply("Write measurement to avro", MeasurementOrFactTransform.write(pathFn.apply(MEASUREMENT_OR_FACT)));
 
     uniqueRecords
-        .apply("Interpret taxonomy", TaxonomyTransform.interpret(kvConfig))
+        .apply("Interpret taxonomy", TaxonomyTransform.interpret(wsPropertiesPath))
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn.apply(TAXONOMY)));
 
     uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(kvConfig))
+        .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath))
         .apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
 
     PCollection<LocationRecord> locationPCollection = uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(kvConfig));
+        .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath));
     locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
 
     locationPCollection
-        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(kvConfig))
+        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(wsPropertiesPath))
         .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn.apply(AUSTRALIA_SPATIAL)));
 
     log.info("Running the pipeline");

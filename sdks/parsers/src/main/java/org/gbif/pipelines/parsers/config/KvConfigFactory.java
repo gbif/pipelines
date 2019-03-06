@@ -22,6 +22,7 @@ public class KvConfigFactory {
   private static final String WS_TIMEOUT_PROP = ".ws.timeout";
   private static final String CACHE_SIZE_PROP = ".ws.cache.sizeMb";
   private static final String NUM_OF_KEY_BUCKETS = ".numOfKeyBuckets";
+  private static final String TABLE_NAME= ".tableName";
 
   // property defaults
   private static final String DEFAULT_TIMEOUT_SEC = "60";
@@ -41,36 +42,39 @@ public class KvConfigFactory {
         Optional.ofNullable(props.getProperty(WS_BASE_PATH_PROP))
             .filter(prop -> !prop.isEmpty())
             .map(value -> value + "/v1/")
-            .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
+            .orElseThrow(() -> new IllegalArgumentException(keyPrefix + " WS base path is required"));
 
     String zookeeperUrl =
         Optional.ofNullable(props.getProperty(ZOOKEEPER_PROP))
             .filter(prop -> !prop.isEmpty())
-            .orElseThrow(() -> new IllegalArgumentException("ws base path is required"));
+            .orElseThrow(() -> new IllegalArgumentException(keyPrefix + " Zookeeper path is required"));
+
+    String tableName =
+        Optional.ofNullable(props.getProperty(keyPrefix + TABLE_NAME))
+            .filter(prop -> !prop.isEmpty())
+            .orElseThrow(() -> new IllegalArgumentException(keyPrefix + " KV table name is required"));
 
     long cacheSize = Long.valueOf(props.getProperty(keyPrefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB));
     long timeout = Long.valueOf(props.getProperty(keyPrefix + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT_SEC));
     int numOfKeyBuckets = Integer.valueOf(props.getProperty(keyPrefix + NUM_OF_KEY_BUCKETS, DEFAULT_NUM_OF_KEY_BUCKETS));
 
-    return new KvConfig(basePath, timeout, cacheSize, zookeeperUrl, numOfKeyBuckets);
+    return new KvConfig(basePath, timeout, cacheSize, zookeeperUrl, numOfKeyBuckets, tableName);
   }
 
-  public static KvConfig create(String baseApiPath, String zookeeperUrl) {
+  public static KvConfig create(String baseApiPath, String zookeeperUrl, int numOfKeyBuckets, String tableName) {
     long timeoutInSec = Long.valueOf(DEFAULT_TIMEOUT_SEC);
     long cacheInMb = Long.valueOf(DEFAULT_CACHE_SIZE_MB);
-    int numOfKeyBuckets = Integer.valueOf(DEFAULT_NUM_OF_KEY_BUCKETS);
-    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, zookeeperUrl, numOfKeyBuckets);
+    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, zookeeperUrl, numOfKeyBuckets, tableName);
   }
 
-  public static KvConfig create(String baseApiPath) {
+  public static KvConfig create(String baseApiPath, int numOfKeyBuckets, String tableName) {
     long timeoutInSec = Long.valueOf(DEFAULT_TIMEOUT_SEC);
     long cacheInMb = Long.valueOf(DEFAULT_CACHE_SIZE_MB);
-    int numOfKeyBuckets = Integer.valueOf(DEFAULT_NUM_OF_KEY_BUCKETS);
-    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, null, numOfKeyBuckets);
+    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, null, numOfKeyBuckets, tableName);
   }
 
-  public static KvConfig create(String baseApiPath, long timeoutInSec, long cacheInMb, String zookeeperUrl, int numOfKeyBuckets) {
-    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, zookeeperUrl, numOfKeyBuckets);
+  public static KvConfig create(String baseApiPath, long timeoutInSec, long cacheInMb, String zookeeperUrl, int numOfKeyBuckets, String tableName) {
+    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, zookeeperUrl, numOfKeyBuckets, tableName);
   }
 
   /**

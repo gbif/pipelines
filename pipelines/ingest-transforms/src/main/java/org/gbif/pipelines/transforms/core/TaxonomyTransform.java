@@ -147,7 +147,7 @@ public class TaxonomyTransform {
           NameUsageMatchKVConfiguration matchConfig = NameUsageMatchKVConfiguration.builder()
               .withJsonColumnQualifier("j") //stores JSON data
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                  .withTableName("name_usage_kv") //Geocode KV HBase table
+                  .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored
                   .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
                   .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble

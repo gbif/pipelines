@@ -137,7 +137,7 @@ public class AustraliaSpatialTransform {
         GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
             .withJsonColumnQualifier("json") //stores JSON data
             .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                .withTableName("australia_kv") //Geocode KV HBase table
+                .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
                 .withColumnFamily("v") //Column in which qualifiers are stored
                 .withNumOfKeyBuckets(20) //Buckets for salted key generations == to # of region servers
                 .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
