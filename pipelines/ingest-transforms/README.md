@@ -16,5 +16,7 @@ Base [Apache Beam](https://beam.apache.org/get-started/beam-overview/) transform
     - [ImageTransform.java](./src/main/java/org/gbif/pipelines/transforms/extension/ImageTransform.java)
     - [MeasurementOrFactTransform.java](./src/main/java/org/gbif/pipelines/transforms/extension/MeasurementOrFactTransform.java)
     - [MultimediaTransform.java](./src/main/java/org/gbif/pipelines/transforms/extension/MultimediaTransform.java)
+- [specific](./src/main/java/org/gbif/pipelines/transforms/CheckTransforms.java)
+    - [AustraliaSpatialTransform.java](./src/main/java/org/gbif/pipelines/transforms/specific/AustraliaSpatialTransform.java)
 - [CheckTransforms.java](./src/main/java/org/gbif/pipelines/transforms/CheckTransforms.java)
 - [UniqueIdTransform.java](./src/main/java/org/gbif/pipelines/transforms/UniqueIdTransform.java)
