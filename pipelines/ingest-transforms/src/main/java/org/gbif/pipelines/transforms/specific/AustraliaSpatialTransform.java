@@ -139,7 +139,7 @@ public class AustraliaSpatialTransform {
             .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
                 .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
                 .withColumnFamily("v") //Column in which qualifiers are stored
-                .withNumOfKeyBuckets(20) //Buckets for salted key generations == to # of region servers
+                .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
                 .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                 .build())
             .withCacheCapacity(15_000L)
