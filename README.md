@@ -7,7 +7,7 @@
     - [**Indexing**](#indexing)
 - [**Structure**](#structure)
 - [**How to build the project**](#how-to-build-the-project)
-- [**Codestyle and tools recommendations**](#codestyle-and-tools)
+- [**Codestyle and tools recommendations**](#codestyle-and-tools-recommendations)
 
 # About the project
 
@@ -66,7 +66,7 @@ During indexing the categories of interpreted information of use are merged and 
 
 The project is structured as:
 
-- [**.buildSrc**](./buildSrc) - Tools for building the project
+- [**.buildSrc**](./.buildSrc) - Tools for building the project
 - [**docs**](./docs) - Documents related to the project
 - [**examples**](./examples) - Examples of using project API and base classes
     - [**transform**](./examples/transform) - Transform example demonstrates how to create Apache Beam pipeline, create the new transformation and use it together with GBIF transforms and core classes
@@ -77,7 +77,7 @@ The project is structured as:
     - [**ingest-gbif**](./pipelines/ingest-gbif) - Main GBIF pipelines for ingestion biodiversity data
     - [**ingest-gbif-standalone**](./pipelines/ingest-gbif-standalone) - Independent GBIF pipelines for ingestion biodiversity data
     - [**ingest-transforms**](./pipelines/ingest-transforms) - Transformations for ingestion biodiversity data
-- [**sdks**](./sdks) - Main module contains common classes, such as data models, data format iterpretations, parsers, web services clients ant etc.
+- [**sdks**](./sdks) - Main module contains common classes, such as data models, data format interpretations, parsers, web services clients ant etc.
     - [**core**](./sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader and etc
     - [**models**](./sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
     - [**parsers**](./sdks/parsers) - Data parsers and converters, mainly for internal usage inside of interpretations
@@ -104,6 +104,5 @@ Please read [Apache Maven how-to](https://maven.apache.org/run.html).
 
 - Use [Intellij IDEA COMMUNITY](https://www.jetbrains.com/idea/download/) (or better)
 - The project uses [Project Lombok](https://projectlombok.org/), please install [Lombok plugin for Intellij IDEA](https://plugins.jetbrains.com/plugin/6317-lombok-plugin).
-- The simplest way to have uniform code style is to use the [Google Java Format plugin](https://plugins.jetbrains.com/plugin/8527-google-java-format).
 - Because project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during building process from IDEA, to avoid issues please install [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and allows to build project using [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to _File | Settings | Compiler | `Java Compiler`_ and select `Javac with error-prone` in `Use compiler` box.
 - Add a custom parameter to avoid debug problem To use the compiler, go to _File | Settings | Compiler | Java Compiler | Additional command line parameters_ and add `-Xep:ParameterName:OFF`

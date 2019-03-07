@@ -9,7 +9,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 /**
  * Set of interpretation steps, uses {@link org.gbif.pipelines.io.avro.TemporalRecord} as a source
  * data and {@link org.gbif.example.io.avro.ExampleRecord} generated from
- * resources/example-record.avsc avro scheam as a target data. Regular step looks like: 1) Get data
+ * resources/example-record.avsc avro schema as a target data. Regular step looks like: 1) Get data
  * from source object 2) Do some interpretation logic 3) Set data to the target object
  */
 class ExampleInterpreter {
