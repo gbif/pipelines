@@ -11,18 +11,23 @@ import org.apache.avro.file.DataFileWriter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Converts ABCD/etc archive into {@link ExtendedRecord} AVRO file
+ */
 @Slf4j
 @NoArgsConstructor(staticName = "create")
 public class XmlToAvroConverter extends ConverterToVerbatim {
 
   private int xmlReaderParallelism = Runtime.getRuntime().availableProcessors();
 
+  /**
+   * @param xmlReaderParallelism number of threads for reader
+   */
   public XmlToAvroConverter xmlReaderParallelism(int xmlReaderParallelism) {
     this.xmlReaderParallelism = xmlReaderParallelism;
     return this;
   }
 
-  /** TODO: DOC */
   public static void main(String... args) {
     if (args.length < 2) {
       throw new IllegalArgumentException("You must specify input and output paths");
@@ -33,13 +38,25 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
     log.info("Verbatim avro file has been created - {}", isFileCreated);
   }
 
-  /** TODO: DOC */
+  /**
+   * Converts ABCD/etc archive into {@link ExtendedRecord} AVRO file
+   *
+   * @param inputPath Path to DWCA file
+   * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
+   */
   @Override
   public long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
     return ExtendedRecordConverter.crete(xmlReaderParallelism).toAvro(inputPath.toString(), dataFileWriter);
   }
 
-  /** TODO: DOC */
+  /**
+   * Converts ABCD/etc archive into {@link ExtendedRecord} AVRO file
+   *
+   * @param inputPath Path to ABCD/etc file
+   * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
+   * @param idHashPrefix prefix to use for hash function and get hashed id instead of raw id, as example it can be
+   * dataset ID
+   */
   @Override
   public long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter, String idHashPrefix) {
     return ExtendedRecordConverter.crete(xmlReaderParallelism, idHashPrefix).toAvro(inputPath.toString(), dataFileWriter);

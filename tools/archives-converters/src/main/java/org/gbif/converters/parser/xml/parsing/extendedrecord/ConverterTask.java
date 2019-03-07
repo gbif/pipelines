@@ -33,6 +33,10 @@ public class ConverterTask implements Runnable {
   private final AtomicLong counter;
   private final String idHashPrefix;
 
+  /**
+   * Converts list of {@link org.gbif.converters.parser.xml.parsing.RawXmlOccurrence} into list of {@link
+   * RawOccurrenceRecord} and appends AVRO file
+   */
   @Override
   public void run() {
     new OccurrenceParser()
@@ -42,7 +46,9 @@ public class ConverterTask implements Runnable {
         .forEach(this::appendRawOccurrenceRecords);
   }
 
-  /*TODO:DOC*/
+  /**
+   * Converts list of {@link RawOccurrenceRecord} into list of {@link ExtendedRecord} and appends AVRO file
+   */
   private void appendRawOccurrenceRecords(List<RawOccurrenceRecord> records) {
     records
         .stream()
@@ -51,7 +57,9 @@ public class ConverterTask implements Runnable {
         .forEach(this::appendExtendedRecord);
   }
 
-  /*TODO:DOC*/
+  /**
+   * Converts {@link ExtendedRecord#getId} into id hash, appends AVRO file and counts the number of records
+   */
   private void appendExtendedRecord(ExtendedRecord record) {
     try {
       String id = record.getId();

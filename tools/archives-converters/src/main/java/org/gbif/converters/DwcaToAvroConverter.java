@@ -17,12 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 import static org.gbif.converters.converter.HashUtils.getSha1;
 import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
 
+/**
+ * Converts DWC archive into {@link ExtendedRecord} AVRO file
+ */
 @Slf4j
 @NoArgsConstructor(staticName = "create")
 @Builder
 public class DwcaToAvroConverter extends ConverterToVerbatim {
 
-  /** TODO: DOC */
   public static void main(String... args) {
     if (args.length < 2) {
       throw new IllegalArgumentException("You must specify input and output paths");
@@ -33,13 +35,25 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     log.info("Verbatim avro file has been created - {}", isFileCreated);
   }
 
-  /** TODO: DOC */
+  /**
+   * Converts DWC archive into {@link ExtendedRecord} AVRO file
+   *
+   * @param inputPath Path to DWCA file
+   * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
+   */
   @Override
   protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) throws IOException {
     return convert(inputPath, dataFileWriter, null);
   }
 
-  /** TODO: DOC */
+  /**
+   * Converts DWC archive into {@link ExtendedRecord} AVRO file
+   *
+   * @param inputPath Path to DWCA file
+   * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
+   * @param idHashPrefix prefix to use for hash function and get hashed id instead of raw id, as example it can be
+   * dataset ID
+   */
   @Override
   protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter, String idHashPrefix)
       throws IOException {
