@@ -3,6 +3,8 @@
 A collection of pipelines that run from a single jar for interpretation and indexing into Elasticsearch.
 The pipelines make use of an embedded Spark instance to run.
 
+**REMEMBER, YOU HAVE TO USE  ONLY JAVA 8 VERSION**
+
 ## Main API classes:
  - [DwcaPipeline.java](./src/main/java/org/gbif/pipelines/standalone/DwcaPipeline.java)
 
