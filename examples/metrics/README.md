@@ -48,7 +48,7 @@ You can find more about [Beam Spark runner](https://beam.apache.org/documentatio
 
 #### 1.2 Create Apache Beam pipeline class
 
-Create simple [Apache Beam pipeline class](./src/org/gbif/pipelines/examples/MetricsPipeline#L33), where we:
+Create simple [Apache Beam pipeline class](./src/main/java/org/gbif/pipelines/examples/MetricsPipeline.java#L33), where we:
 1. Create pipeline from custom options
 
 ```java
@@ -75,7 +75,7 @@ LOG.info("Pipeline has been finished");
 
 #### 1.3 Add ParDo function with Apache Beam Counter to the class
 
-Add custom [DoFn with Counters](./src/org/gbif/pipelines/examples/MetricsPipeline#L58) (Read more about [Apache Beam Metrics](https://beam.apache.org/documentation/sdks/javadoc/2.0.0/org/apache/beam/sdk/metrics/Metrics.html)), where we:
+Add custom [DoFn with Counters](./src/main/java/org/gbif/pipelines/examples/MetricsPipeline.java#L58) (Read more about [Apache Beam Metrics](https://beam.apache.org/documentation/sdks/javadoc/2.0.0/org/apache/beam/sdk/metrics/Metrics.html)), where we:
 
 ```java
   private static class FilterTextFn extends DoFn<String, String> {
@@ -98,7 +98,7 @@ Add custom [DoFn with Counters](./src/org/gbif/pipelines/examples/MetricsPipelin
 
 #### 1.4 Add additional information to the logger
 
-[Call MDC.put after main method](./src/org/gbif/pipelines/examples/MetricsPipeline#L40) to add id for each logger message:
+[Call MDC.put after main method](./src/main/java/org/gbif/pipelines/examples/MetricsPipeline.java#L40) to add id for each logger message:
 
 ```java
 MDC.put("uuid", UUID.randomUUID().toString());
@@ -106,7 +106,7 @@ MDC.put("uuid", UUID.randomUUID().toString());
 
 #### 1.5 Create Apache Beam adapter for Spark Slf4j sink
 
-Basically [Slf4jSink.java](./src/main/java/org/gbif/pipelines/common/beam/Slf4jSink.java) is adapter for Spark Slf4J sink, which is absent in Apache Beam Spark runner (used v2.7.0).
+Basically [Slf4jSink.java](../../pipelines/beam-common/src/main/java/org/gbif/pipelines/common/beam/Slf4jSink.java) is adapter for Spark Slf4J sink, which is absent in Apache Beam Spark runner (used v2.7.0).
 
 ```java
 package org.gbif.pipelines.common.beam;
