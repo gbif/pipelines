@@ -30,7 +30,7 @@ public class MetadataServiceClient {
   }
 
   /**
-   * requests https://api.gbif.org/v1/dataset/{datasetid}/networks
+   * requests https://api.gbif.org/v1/dataset/{datasetId}/networks
    *
    * @return array of networks for provided datasetId
    */

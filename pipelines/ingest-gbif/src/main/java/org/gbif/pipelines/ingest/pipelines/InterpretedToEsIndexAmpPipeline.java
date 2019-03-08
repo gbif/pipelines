@@ -80,14 +80,13 @@ public class InterpretedToEsIndexAmpPipeline {
     PCollection<String> jsonCollection =
         p.apply("Read Amplification", AmplificationTransform.read(pathFn))
             .apply("Merging into json", ParDo.of(new DoFn<AmplificationRecord, String>() {
+
               private final Counter counter = Metrics.counter(GbifJsonConverter.class, AVRO_TO_JSON_COUNT);
 
               @ProcessElement
               public void processElement(ProcessContext c) {
                 String json = GbifJsonConverter.create(c.element()).buildJson().toString();
-
                 c.output(json);
-
                 counter.inc();
               }
             }));

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms.extension;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
@@ -10,6 +11,9 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AmplificationInterpreter;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.config.WsConfig;
+import org.gbif.pipelines.parsers.config.WsConfigFactory;
+import org.gbif.pipelines.parsers.ws.client.blast.BlastServiceClient;
 import org.gbif.pipelines.transforms.CheckTransforms;
 
 import org.apache.avro.file.CodecFactory;
@@ -68,7 +72,8 @@ public class AmplificationTransform {
   /**
    * Reads avro files from path, which contains {@link AmplificationRecord}
    *
-   * @param pathFn function can return an output path, where in param is fixed - {@link AmplificationTransform#BASE_NAME}
+   * @param pathFn function can return an output path, where in param is fixed - {@link
+   * AmplificationTransform#BASE_NAME}
    */
   public static AvroIO.Read<AmplificationRecord> read(UnaryOperator<String> pathFn) {
     return read(pathFn.apply(BASE_NAME));
@@ -88,7 +93,8 @@ public class AmplificationTransform {
    * Writes {@link AmplificationRecord} *.avro files to path, data will be split into several files, uses Snappy
    * AmplificationRecord codec by default
    *
-   * @param pathFn function can return an output path, where in param is fixed - {@link AmplificationTransform#BASE_NAME}
+   * @param pathFn function can return an output path, where in param is fixed - {@link
+   * AmplificationTransform#BASE_NAME}
    */
   public static AvroIO.Write<AmplificationRecord> write(UnaryOperator<String> pathFn) {
     return write(pathFn.apply(BASE_NAME));
@@ -97,8 +103,15 @@ public class AmplificationTransform {
   /**
    * Creates an {@link Interpreter} for {@link AmplificationRecord}
    */
-  public static SingleOutput<ExtendedRecord, AmplificationRecord> interpret() {
-    return ParDo.of(new Interpreter());
+  public static SingleOutput<ExtendedRecord, AmplificationRecord> interpret(WsConfig wsConfig) {
+    return ParDo.of(new Interpreter(wsConfig));
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link AmplificationRecord}
+   */
+  public static SingleOutput<ExtendedRecord, AmplificationRecord> interpret(String properties) {
+    return ParDo.of(new Interpreter(properties));
   }
 
   /**
@@ -109,6 +122,22 @@ public class AmplificationTransform {
 
     private final Counter counter = Metrics.counter(AmplificationTransform.class, AMPLIFICATION_RECORDS_COUNT);
 
+    private final WsConfig wsConfig;
+    private BlastServiceClient client;
+
+    public Interpreter(WsConfig wsConfig) {
+      this.wsConfig = wsConfig;
+    }
+
+    public Interpreter(String properties) {
+      this.wsConfig = WsConfigFactory.create(WsConfigFactory.BLAST_PREFIX, Paths.get(properties));
+    }
+
+    @Setup
+    public void setup() {
+      client = BlastServiceClient.create(wsConfig);
+    }
+
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
@@ -116,7 +145,7 @@ public class AmplificationTransform {
           .when(er -> Optional.ofNullable(er.getExtensions().get(AmplificationInterpreter.EXTENSION_ROW_TYPE))
               .filter(l -> !l.isEmpty())
               .isPresent())
-          .via(AmplificationInterpreter::interpret)
+          .via(AmplificationInterpreter.interpret(client))
           .consume(context::output);
 
       counter.inc();

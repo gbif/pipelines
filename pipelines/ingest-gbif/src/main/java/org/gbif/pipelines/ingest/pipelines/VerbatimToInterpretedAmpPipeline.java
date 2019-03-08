@@ -66,6 +66,7 @@ public class VerbatimToInterpretedAmpPipeline {
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt);
 
+    String wsPropertiesPath = options.getWsProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
@@ -75,7 +76,7 @@ public class VerbatimToInterpretedAmpPipeline {
 
     log.info("Adding pipeline transforms");
     p.apply("Read Verbatim", VerbatimTransform.read(pathFn))
-        .apply("Interpret amplification", AmplificationTransform.interpret())
+        .apply("Interpret amplification", AmplificationTransform.interpret(wsPropertiesPath))
         .apply("Write amplification to avro", AmplificationTransform.write(pathFn));
 
     log.info("Running the pipeline");

@@ -3,8 +3,16 @@ package org.gbif.pipelines.parsers.ws.client.metadata.response;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /** Can be a org.gbif.api.model.registry.Dataset model, some problem with enum unmarshalling */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Dataset implements Serializable {
 
@@ -14,36 +22,4 @@ public class Dataset implements Serializable {
   private String publishingOrganizationKey;
   private String license;
   private String title;
-
-  public String getInstallationKey() {
-    return installationKey;
-  }
-
-  public void setInstallationKey(String installationKey) {
-    this.installationKey = installationKey;
-  }
-
-  public String getPublishingOrganizationKey() {
-    return publishingOrganizationKey;
-  }
-
-  public void setPublishingOrganizationKey(String publishingOrganizationKey) {
-    this.publishingOrganizationKey = publishingOrganizationKey;
-  }
-
-  public String getLicense() {
-    return license;
-  }
-
-  public void setLicense(String license) {
-    this.license = license;
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
-  }
 }

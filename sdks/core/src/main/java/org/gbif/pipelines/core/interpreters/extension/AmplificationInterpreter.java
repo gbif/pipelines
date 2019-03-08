@@ -1,14 +1,21 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import org.gbif.pipelines.core.ExtensionInterpretation;
 import org.gbif.pipelines.core.ExtensionInterpretation.Result;
 import org.gbif.pipelines.core.ExtensionInterpretation.TargetHandler;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.ws.client.blast.BlastServiceClient;
+import org.gbif.pipelines.parsers.ws.client.blast.request.Sequence;
+import org.gbif.pipelines.parsers.ws.client.blast.response.Blast;
 
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -67,14 +74,49 @@ public class AmplificationInterpreter {
    * Interprets amplifications of a {@link ExtendedRecord} and populates a {@link AmplificationRecord}
    * with the interpreted values.
    */
-  public static void interpret(ExtendedRecord er, AmplificationRecord ar) {
-    Objects.requireNonNull(er);
-    Objects.requireNonNull(ar);
+  public static BiConsumer<ExtendedRecord, AmplificationRecord> interpret(BlastServiceClient client) {
+    return (er, ar) -> {
+      Objects.requireNonNull(er);
+      Objects.requireNonNull(ar);
 
-    Result<Amplification> result = HANDLER.convert(er);
+      Result<Amplification> result = HANDLER.convert(er);
 
-    ar.setAmplificationItems(result.getList());
-    ar.getIssues().setIssueList(result.getIssuesAsList());
+      List<Amplification> amplifications = result.getList();
+      parseAndSetBlast(amplifications, client);
+
+      ar.setAmplificationItems(amplifications);
+      ar.getIssues().setIssueList(result.getIssuesAsList());
+    };
+  }
+
+  /**
+   * Calls BLAST REST service and populate the {@link BlastResult} in {@link Amplification}
+   **/
+  private static void parseAndSetBlast(List<Amplification> amplifications, BlastServiceClient client) {
+    for (Amplification a : amplifications) {
+      String seq = Strings.isNullOrEmpty(a.getConsensusSequence()) ? a.getBarcodeSequence() : a.getConsensusSequence();
+      String marker = a.getMarker();
+      if (!Strings.isNullOrEmpty(seq) && !Strings.isNullOrEmpty(marker)) {
+        Sequence sequence = new Sequence(marker, seq);
+        Blast blast = client.getBlast(sequence);
+        a.setBlastResult(BlastResult.newBuilder()
+            .setName(blast.getName())
+            .setIdentity(blast.getIdentity())
+            .setAppliedScientificName(blast.getAppliedScientificName())
+            .setMatchType(blast.getMatchType())
+            .setBitScore(blast.getBitScore())
+            .setExpectValue(blast.getExpectValue())
+            .setQuerySequence(blast.getQuerySequence())
+            .setSubjectSequence(blast.getSubjectSequence())
+            .setQstart(blast.getQstart())
+            .setQend(blast.getQend())
+            .setSstart(blast.getSstart())
+            .setSend(blast.getSend())
+            .setDistanceToBestMatch(blast.getDistanceToBestMatch())
+            .setSequenceLength(blast.getSequenceLength())
+            .build());
+      }
+    }
   }
 
 }

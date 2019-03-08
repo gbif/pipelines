@@ -4,6 +4,27 @@
  */
 [
   {
+    "name":"BlastResult",
+    "namespace":"org.gbif.pipelines.io.avro",
+    "type":"record",
+    "fields":[
+      {"name": "name", "type": ["null", "string"], "default" : null},
+      {"name": "identity", "type": ["null", "int"], "default" : null},
+      {"name": "appliedScientificName", "type": ["null", "string"], "default" : null},
+      {"name": "matchType", "type": ["null", "string"], "default" : null},
+      {"name": "bitScore", "type": ["null", "int"], "default" : null},
+      {"name": "expectValue", "type": ["null", "int"], "default" : null},
+      {"name": "querySequence", "type": ["null", "string"], "default" : null},
+      {"name": "subjectSequence", "type": ["null", "string"], "default" : null},
+      {"name": "qstart", "type": ["null", "int"], "default" : null},
+      {"name": "qend", "type": ["null", "int"], "default" : null},
+      {"name": "sstart", "type": ["null", "int"], "default" : null},
+      {"name": "send", "type": ["null", "int"], "default" : null},
+      {"name": "distanceToBestMatch", "type": ["null", "string"], "default" : null},
+      {"name": "sequenceLength", "type": ["null", "int"], "default" : null}
+    ]
+  },
+  {
     "name":"Amplification",
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
@@ -41,7 +62,8 @@
       {"name": "markerAccordance", "type": ["null", "string"], "default" : null, "doc": "http://data.ggbn.org/schemas/ggbn/terms/markerAccordance"},
       {"name": "seqQualityCheck", "type": ["null", "string"], "default" : null, "doc": "http://gensc.org/ns/mixs/seq_quality_check"},
       {"name": "adapters", "type": ["null", "string"], "default" : null, "doc": "http://gensc.org/ns/mixs/adapters"},
-      {"name": "mid", "type": ["null", "string"], "default" : null, "doc": "http://gensc.org/ns/mixs/mid"}
+      {"name": "mid", "type": ["null", "string"], "default" : null, "doc": "http://gensc.org/ns/mixs/mid"},
+      {"name": "blastResult", "type": "BlastResult", "default":{}}
     ]
   },
   {

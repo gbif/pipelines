@@ -3,7 +3,6 @@ package org.gbif.pipelines.parsers.config;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
@@ -22,11 +21,13 @@ import lombok.NonNull;
 public class WsConfigFactory {
 
   public static final String METADATA_PREFIX = "metadata";
+  public static final String BLAST_PREFIX = "blast";
 
   // property suffixes
   private static final String WS_BASE_PATH_PROP = "gbif.api.url";
   private static final String WS_TIMEOUT_PROP = ".ws.timeout";
   private static final String CACHE_SIZE_PROP = ".ws.cache.sizeMb";
+  private static final String URL_PROP = ".ws.url";
 
   // property defaults
   private static final String DEFAULT_TIMEOUT = "60";
@@ -37,15 +38,19 @@ public class WsConfigFactory {
     Properties props = loadProperties(propertiesPath);
 
     // get the base path or throw exception if not present
-    String basePath =
-        Optional.ofNullable(props.getProperty(WS_BASE_PATH_PROP))
-            .filter(prop -> !prop.isEmpty())
-            .orElseThrow(() -> new IllegalArgumentException("WS base path is required"));
+
+    String url = props.getProperty(wsName + URL_PROP);
+    if (Strings.isNullOrEmpty(url)) {
+      url = props.getProperty(WS_BASE_PATH_PROP);
+      if (Strings.isNullOrEmpty(url)) {
+        throw new IllegalArgumentException("WS base path is required");
+      }
+    }
 
     String cacheSize = props.getProperty(wsName + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB);
     String timeout = props.getProperty(wsName + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT);
 
-    return new WsConfig(basePath, timeout, cacheSize);
+    return new WsConfig(url, timeout, cacheSize);
   }
 
   /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
@@ -65,7 +70,9 @@ public class WsConfigFactory {
     return new WsConfig(url, timeout, cacheSize);
   }
 
-  /** */
+  /**
+   *
+   */
   private static Properties loadProperties(Path propertiesPath) {
     Function<Path, InputStream> absolute =
         path -> {
