@@ -45,10 +45,21 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class GbifJsonConverter extends JsonConverter {
 
-  private static final String[] SKIP_KEYS = {"id", "decimalLatitude", "decimalLongitude", "country"};
+  private static final String ID = "id";
+  private static final String ISSUES = "issues";
+  private static final String[] SKIP_KEYS = {"decimalLatitude", "decimalLongitude", "country"};
   private static final String[] REPLACE_KEYS = {"http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"};
 
-  private GbifJsonConverter(SpecificRecordBase[] bases) {
+  private final boolean skipIssues;
+
+  private GbifJsonConverter(SpecificRecordBase[] bases, boolean skipId, boolean skipIssues) {
+    this.skipIssues = skipIssues;
+    if (skipId) {
+      this.setSkipKeys(ID);
+    }
+    if (skipIssues) {
+      this.setSkipKeys(ISSUES);
+    }
     this.setSpecificRecordBase(bases)
         .setSkipKeys(SKIP_KEYS)
         .setReplaceKeys(REPLACE_KEYS)
@@ -60,7 +71,11 @@ public class GbifJsonConverter extends JsonConverter {
   }
 
   public static GbifJsonConverter create(SpecificRecordBase... bases) {
-    return new GbifJsonConverter(bases);
+    return new GbifJsonConverter(bases, true, false);
+  }
+
+  public static GbifJsonConverter createWithIdAndSkipIssues(SpecificRecordBase... bases) {
+    return new GbifJsonConverter(bases, false, true);
   }
 
   /** Change the json result, merging all issues from records to one array */
@@ -68,25 +83,27 @@ public class GbifJsonConverter extends JsonConverter {
   public ObjectNode buildJson() {
     ObjectNode mainNode = super.buildJson();
 
-    // Issues
-    Set<String> issues = Arrays.stream(getBases())
-        .filter(Issues.class::isInstance)
-        .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
-        .collect(Collectors.toSet());
+    if (!skipIssues) {
+      // Issues
+      Set<String> issues = Arrays.stream(getBases())
+          .filter(Issues.class::isInstance)
+          .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
+          .collect(Collectors.toSet());
 
-    ArrayNode arrayIssueNode = MAPPER.createArrayNode();
-    issues.forEach(arrayIssueNode::add);
-    mainNode.set("issues", arrayIssueNode);
+      ArrayNode arrayIssueNode = MAPPER.createArrayNode();
+      issues.forEach(arrayIssueNode::add);
+      mainNode.set("issues", arrayIssueNode);
 
-    // Not issues
-    Set<String> notIssues = Arrays.stream(OccurrenceIssue.values())
-        .map(Enum::name)
-        .filter(x -> !issues.contains(x))
-        .collect(Collectors.toSet());
+      // Not issues
+      Set<String> notIssues = Arrays.stream(OccurrenceIssue.values())
+          .map(Enum::name)
+          .filter(x -> !issues.contains(x))
+          .collect(Collectors.toSet());
 
-    ArrayNode arrayNotIssuesNode = MAPPER.createArrayNode();
-    notIssues.forEach(arrayNotIssuesNode::add);
-    mainNode.set("notIssues", arrayNotIssuesNode);
+      ArrayNode arrayNotIssuesNode = MAPPER.createArrayNode();
+      notIssues.forEach(arrayNotIssuesNode::add);
+      mainNode.set("notIssues", arrayNotIssuesNode);
+    }
 
     return mainNode;
   }
