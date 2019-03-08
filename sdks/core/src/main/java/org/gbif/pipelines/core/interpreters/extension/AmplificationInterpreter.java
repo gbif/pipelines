@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AmplificationInterpreter {
 
-  public static final String EXTENSION_ROW_TYPE = "http://rs.gbif.org/extension/ggbn/amplification.xml";
+  public static final String EXTENSION_ROW_TYPE = "http://data.ggbn.org/schemas/ggbn/terms/Amplification";
 
   private static final String GGBN = "http://data.ggbn.org/schemas/ggbn/terms/";
   private static final String GENSC = "http://gensc.org/ns/mixs/";

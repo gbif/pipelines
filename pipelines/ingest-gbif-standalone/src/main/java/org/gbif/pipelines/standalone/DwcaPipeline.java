@@ -5,7 +5,9 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline;
 import org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
+import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexAmpPipeline;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
+import org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedAmpPipeline;
 import org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline;
 
 /**
@@ -45,6 +47,15 @@ public class DwcaPipeline {
       case VERBATIM_TO_INTERPRETED:
         PipelinesOptionsFactory.registerHdfs(options);
         VerbatimToInterpretedPipeline.run(options);
+        break;
+      case INTERPRETED_TO_ES_INDEX_AMP:
+        options.setTargetPath(options.getInputPath());
+        PipelinesOptionsFactory.registerHdfs(options);
+        InterpretedToEsIndexAmpPipeline.run(options);
+        break;
+      case VERBATIM_TO_INTERPRETED_AMP:
+        PipelinesOptionsFactory.registerHdfs(options);
+        VerbatimToInterpretedAmpPipeline.run(options);
         break;
       default:
         break;

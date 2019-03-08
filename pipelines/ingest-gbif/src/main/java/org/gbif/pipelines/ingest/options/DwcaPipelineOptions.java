@@ -13,7 +13,9 @@ public interface DwcaPipelineOptions
     DWCA_TO_INTERPRETED, // reads a Dwca and interprets it
     DWCA_TO_ES_INDEX, // reads a Dwca, interprets it and indexes it to ES
     INTERPRETED_TO_ES_INDEX, // reads interpreted avro files and indexes them to ES
-    VERBATIM_TO_INTERPRETED
+    VERBATIM_TO_INTERPRETED,
+    VERBATIM_TO_INTERPRETED_AMP,
+    INTERPRETED_TO_ES_INDEX_AMP
   }
 
   @Override

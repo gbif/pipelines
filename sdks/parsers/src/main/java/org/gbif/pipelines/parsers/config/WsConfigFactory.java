@@ -15,7 +15,7 @@ import lombok.NonNull;
 /**
  * Creates the configuration to use a specific WS.
  *
- * <p>By default it reads the configurarion from the "http.properties" file.
+ * <p>By default it reads the configuration from the "http.properties" file.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WsConfigFactory {

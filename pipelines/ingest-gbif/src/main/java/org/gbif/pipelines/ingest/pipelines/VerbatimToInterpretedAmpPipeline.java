@@ -19,6 +19,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+
 /**
  * NOTE: REMEMBER THAT THIS PIPELINE MUST BE STARTED AFTER {@link VerbatimToInterpretedPipeline}
  * <p>
@@ -70,12 +72,13 @@ public class VerbatimToInterpretedAmpPipeline {
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
+    UnaryOperator<String> pathVerbatimFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding pipeline transforms");
-    p.apply("Read Verbatim", VerbatimTransform.read(pathFn))
+    p.apply("Read Verbatim", VerbatimTransform.read(pathVerbatimFn))
         .apply("Interpret amplification", AmplificationTransform.interpret(wsPropertiesPath))
         .apply("Write amplification to avro", AmplificationTransform.write(pathFn));
 
