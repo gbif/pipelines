@@ -3,6 +3,8 @@
 A collection of pipelines that run from a single jar for interpretation and indexing into Elasticsearch.
 The pipelines make use of an embedded Spark instance to run.
 
+**REMEMBER, YOU HAVE TO USE  ONLY JAVA 8 VERSION**
+
 ## Main API classes:
  - [DwcaPipeline.java](./src/main/java/org/gbif/pipelines/standalone/DwcaPipeline.java)
 
@@ -39,6 +41,7 @@ java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --targetPath=TARGET_PATH \
  --inputPath=INPUT_PATH \
  --tempLocation=temp
+ --wsProperties=/path/ws.properties
 ```
 
 #### From DwCA to Elasticsearch index:
@@ -52,6 +55,7 @@ java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --esHosts=ES_HOSTS \
  --esIndexName=ES_INDEX_NAME \
  --tempLocation=temp
+ --wsProperties=/path/ws.properties
 ```
 
 #### From GBIF interpreted *.avro files to Elasticsearch index:
