@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -33,7 +34,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the Measurements_or_facts extension, read an avro, write an avro, from value to
+ * Beam level transformations for the Measurements_or_facts extension, reads an avro, writes an avro, maps from value to
  * keyValue and transforms form{@link ExtendedRecord} to {@link MeasurementOrFactRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/dwc/measurements_or_facts.xml</a>
@@ -42,6 +43,7 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 public class MeasurementOrFactTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = MEASUREMENT_OR_FACT.name().toLowerCase();
 
   /**
    * Checks if list contains {@link RecordType#MEASUREMENT_OR_FACT}, else returns empty {@link
@@ -67,6 +69,15 @@ public class MeasurementOrFactTransform {
   }
 
   /**
+   * Reads avro files from path, which contains {@link MeasurementOrFactRecord}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link MeasurementOrFactTransform#BASE_NAME}
+   */
+  public static AvroIO.Read<MeasurementOrFactRecord> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(BASE_NAME));
+  }
+
+  /**
    * Writes {@link MeasurementOrFactRecord} *.avro files to path, data will be split into several files,
    * uses Snappy compression codec by default
    *
@@ -77,6 +88,16 @@ public class MeasurementOrFactTransform {
         .to(toPath)
         .withSuffix(Pipeline.AVRO_EXTENSION)
         .withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Writes {@link MeasurementOrFactRecord} *.avro files to path, data will be split into several files,
+   * uses Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link MeasurementOrFactTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<MeasurementOrFactRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

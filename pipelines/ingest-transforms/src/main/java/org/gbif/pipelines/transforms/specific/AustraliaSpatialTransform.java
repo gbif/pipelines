@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
@@ -41,13 +42,14 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the Australia location, read an avro, write an avro, from value to keyValue and
- * transforms form {@link LocationRecord} to {@link AustraliaSpatialRecord}.
+ * Beam level transformations for the Australia location, reads an avro, writes an avro, maps from value to keyValue
+ * and transforms form {@link LocationRecord} to {@link AustraliaSpatialRecord}.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AustraliaSpatialTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = AUSTRALIA_SPATIAL.name().toLowerCase();
 
   /**
    * Checks if list contains {@link RecordType#AUSTRALIA_SPATIAL}, else returns empty {@link
@@ -73,6 +75,15 @@ public class AustraliaSpatialTransform {
   }
 
   /**
+   * Reads avro files from path, which contains {@link AustraliaSpatialRecord}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link AustraliaSpatialTransform#BASE_NAME
+   */
+  public static AvroIO.Read<AustraliaSpatialRecord> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(BASE_NAME));
+  }
+
+  /**
    * Writes {@link AustraliaSpatialRecord} *.avro files to path, data will be split into several files, uses
    * Snappy compression codec by default
    *
@@ -83,6 +94,16 @@ public class AustraliaSpatialTransform {
         .to(toPath)
         .withSuffix(Pipeline.AVRO_EXTENSION)
         .withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Writes {@link AustraliaSpatialRecord} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link AustraliaSpatialTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<AustraliaSpatialRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

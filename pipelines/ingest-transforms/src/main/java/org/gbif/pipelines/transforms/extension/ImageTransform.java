@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -32,7 +33,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the Image extension, read an avro, write an avro, from value to keyValue and
+ * Beam level transformations for the Image extension, reads an avro, writes an avro, maps from value to keyValue and
  * transforms form{@link ExtendedRecord} to {@link ImageRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/gbif/1.0/images.xml</a>
@@ -41,6 +42,7 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 public class ImageTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = IMAGE.name().toLowerCase();
 
   /**
    * Checks if list contains {@link RecordType#IMAGE}, else returns empty {@link PCollection <ExtendedRecord>}
@@ -65,6 +67,15 @@ public class ImageTransform {
   }
 
   /**
+   * Reads avro files from path, which contains {@link ImageRecord}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link ImageTransform#BASE_NAME}
+   */
+  public static AvroIO.Read<ImageRecord> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(BASE_NAME));
+  }
+
+  /**
    * Writes {@link ImageRecord} *.avro files to path, data will be split into several files,
    * uses Snappy compression codec by default
    *
@@ -72,6 +83,16 @@ public class ImageTransform {
    */
   public static AvroIO.Write<ImageRecord> write(String toPath) {
     return AvroIO.write(ImageRecord.class).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Writes {@link ImageRecord} *.avro files to path, data will be split into several files,
+   * uses Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link ImageTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<ImageRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

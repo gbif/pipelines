@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -31,13 +32,14 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the GBIF metadata, read an avro, write an avro, from value to keyValue and
+ * Beam level transformations for the GBIF metadata, reads an avro, writes an avro, maps from value to keyValue and
  * transforms form {@link ExtendedRecord} to {@link MetadataRecord}.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = METADATA.name().toLowerCase();
 
   /**
    * Checks if list contains {@link RecordType#METADATA}, else returns empty {@link PCollection<String>}
@@ -56,6 +58,15 @@ public class MetadataTransform {
   }
 
   /**
+   * Reads avro files from path, which contains {@link MetadataRecord}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link MetadataTransform#BASE_NAME}
+   */
+  public static AvroIO.Read<MetadataRecord> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(BASE_NAME));
+  }
+
+  /**
    * Writes {@link MetadataRecord} *.avro files to path, without splitting the file, uses Snappy
    * codec compression by default
    *
@@ -67,6 +78,16 @@ public class MetadataTransform {
         .withSuffix(Pipeline.AVRO_EXTENSION)
         .withCodec(BASE_CODEC)
         .withoutSharding();
+  }
+
+  /**
+   * Writes {@link MetadataRecord} *.avro files to path, without splitting the file, uses Snappy
+   * codec compression by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link MetadataTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<MetadataRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

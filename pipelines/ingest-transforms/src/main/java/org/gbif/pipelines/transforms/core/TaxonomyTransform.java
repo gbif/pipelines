@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
@@ -43,7 +44,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the DWC Taxon, read an avro, write an avro, from value to keyValue and
+ * Beam level transformations for the DWC Taxon, reads an avro, writes an avro, maps from value to keyValue and
  * transforms form {@link ExtendedRecord} to {@link TaxonRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#taxon</a>
@@ -52,6 +53,7 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 public class TaxonomyTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = TAXONOMY.name().toLowerCase();
 
   /**
    * Checks if list contains {@link RecordType#TAXONOMY}, else returns empty {@link PCollection<ExtendedRecord>}
@@ -76,6 +78,15 @@ public class TaxonomyTransform {
   }
 
   /**
+   * Reads avro files from path, which contains {@link TaxonRecord}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link TaxonomyTransform#BASE_NAME}
+   */
+  public static AvroIO.Read<TaxonRecord> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(BASE_NAME));
+  }
+
+  /**
    * Writes {@link TaxonRecord} *.avro files to path, data will be split into several files, uses
    * Snappy compression codec by default
    *
@@ -83,6 +94,16 @@ public class TaxonomyTransform {
    */
   public static AvroIO.Write<TaxonRecord> write(String toPath) {
     return AvroIO.write(TaxonRecord.class).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Writes {@link TaxonRecord} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link TaxonomyTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<TaxonRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

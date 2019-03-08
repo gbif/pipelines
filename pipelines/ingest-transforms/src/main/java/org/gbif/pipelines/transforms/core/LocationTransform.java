@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms.core;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
@@ -40,7 +41,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the DWC Location, read an avro, write an avro, from value to keyValue and
+ * Beam level transformations for the DWC Location, reads an avro, writes an avro, maps from value to keyValue and
  * transforms form {@link ExtendedRecord} to {@link LocationRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#location</a>
@@ -49,6 +50,7 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 public class LocationTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = LOCATION.name().toLowerCase();
 
   /**
    * Checks if list contains {@link RecordType#LOCATION}, else returns empty {@link PCollection<ExtendedRecord>}
@@ -73,6 +75,15 @@ public class LocationTransform {
   }
 
   /**
+   * Reads avro files from path, which contains {@link LocationRecord}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link LocationTransform#BASE_NAME}
+   */
+  public static AvroIO.Read<LocationRecord> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(BASE_NAME));
+  }
+
+  /**
    * Writes {@link LocationRecord} *.avro files to path, data will be split into several files, uses
    * Snappy compression codec by default
    *
@@ -80,6 +91,16 @@ public class LocationTransform {
    */
   public static AvroIO.Write<LocationRecord> write(String toPath) {
     return AvroIO.write(LocationRecord.class).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Writes {@link LocationRecord} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link LocationTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<LocationRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

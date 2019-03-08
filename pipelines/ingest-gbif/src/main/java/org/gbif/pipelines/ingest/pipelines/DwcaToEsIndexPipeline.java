@@ -75,6 +75,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *      {@link org.gbif.pipelines.io.avro.AustraliaSpatialRecord}
  *    3) Joins objects
  *    4) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
  *    5) Pushes data to Elasticsearch instance
@@ -150,7 +151,7 @@ public class DwcaToEsIndexPipeline {
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
             .apply("Interpret metadata", MetadataTransform.interpret(wsPropertiesPath))
-            .apply("Convert to view", View.asSingleton());
+            .apply("Convert into view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         uniqueRecords.apply("Map Verbatim to KV", VerbatimTransform.toKv());
@@ -205,7 +206,7 @@ public class DwcaToEsIndexPipeline {
             .apply("Interpret multimedia", MeasurementOrFactTransform.interpret())
             .apply("Map MeasurementOrFact to KV", MeasurementOrFactTransform.toKv());
 
-    log.info("Adding step 3: Converting to a json object");
+    log.info("Adding step 4: Group and convert object into a json");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
 
@@ -240,7 +241,6 @@ public class DwcaToEsIndexPipeline {
           }
         };
 
-    log.info("Adding step 4: Converting to a json object");
     PCollection<String> jsonCollection =
         KeyedPCollectionTuple
             // Core

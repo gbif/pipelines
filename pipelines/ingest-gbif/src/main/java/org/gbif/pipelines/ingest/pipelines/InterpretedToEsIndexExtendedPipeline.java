@@ -16,9 +16,15 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <pre>
  *    1) Creates an Elasticsearch index
- *    2) Reads {@link org.gbif.pipelines.io.avro.MetadataRecord}, {@link org.gbif.pipelines.io.avro.BasicRecord},
- *        {@link org.gbif.pipelines.io.avro.TemporalRecord}, {@link org.gbif.pipelines.io.avro.MultimediaRecord},
- *        {@link org.gbif.pipelines.io.avro.TaxonRecord}, {@link org.gbif.pipelines.io.avro.LocationRecord} avro files
+ *    2) Reads:
+ *      {@link org.gbif.pipelines.io.avro.MetadataRecord},
+ *      {@link org.gbif.pipelines.io.avro.BasicRecord},
+ *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *      {@link org.gbif.pipelines.io.avro.AustraliaSpatialRecord}
+ *      avro files
  *    3) Joins avro files
  *    4) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
  *    5) Pushes data to Elasticsearch instance

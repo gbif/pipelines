@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -30,7 +31,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the DWC Occurrence, read an avro, write an avro, from value to keyValue and
+ * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value to keyValue and
  * transforms form {@link ExtendedRecord} to {@link BasicRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#occurrence</a>
@@ -39,6 +40,7 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 public class BasicTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = BASIC.name().toLowerCase();
 
   /**
    * Checks if list contains {@link RecordType#BASIC}, else returns empty {@link PCollection<ExtendedRecord>}
@@ -63,6 +65,15 @@ public class BasicTransform {
   }
 
   /**
+   * Reads avro files from path, which contains {@link BasicRecord}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link BasicTransform#BASE_NAME}
+   */
+  public static AvroIO.Read<BasicRecord> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(BASE_NAME));
+  }
+
+  /**
    * Writes {@link BasicRecord} *.avro files to path, data will be split into several files, uses
    * Snappy compression codec by default
    *
@@ -70,6 +81,16 @@ public class BasicTransform {
    */
   public static AvroIO.Write<BasicRecord> write(String toPath) {
     return AvroIO.write(BasicRecord.class).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Writes {@link BasicRecord} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link BasicTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<BasicRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

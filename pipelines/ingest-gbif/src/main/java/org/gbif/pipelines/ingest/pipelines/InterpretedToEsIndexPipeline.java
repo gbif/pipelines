@@ -1,10 +1,9 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
@@ -57,17 +56,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 
 /**
  * Pipeline sequence:
@@ -122,8 +110,7 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     log.info("Adding step 1: Options");
-    Function<RecordType, String> pathInterFn =
-        t -> FsUtils.buildPathInterpret(options, t.name().toLowerCase(), "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
 
     // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
@@ -143,50 +130,50 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", MetadataTransform.read(pathInterFn.apply(METADATA)))
+        p.apply("Read Metadata", MetadataTransform.read(pathFn))
             .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        p.apply("Read Verbatim", VerbatimTransform.read(pathInterFn.apply(VERBATIM)))
+        p.apply("Read Verbatim", VerbatimTransform.read(pathFn))
             .apply("Map Verbatim to KV", VerbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
-        p.apply("Read Basic", BasicTransform.read(pathInterFn.apply(BASIC)))
+        p.apply("Read Basic", BasicTransform.read(pathFn))
             .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
-        p.apply("Read Temporal", TemporalTransform.read(pathInterFn.apply(TEMPORAL)))
+        p.apply("Read Temporal", TemporalTransform.read(pathFn))
             .apply("Map Temporal to KV", TemporalTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
-        p.apply("Read Location", LocationTransform.read(pathInterFn.apply(LOCATION)))
+        p.apply("Read Location", LocationTransform.read(pathFn))
             .apply("Map Location to KV", LocationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read Taxon", TaxonomyTransform.read(pathInterFn.apply(TAXONOMY)))
+        p.apply("Read Taxon", TaxonomyTransform.read(pathFn))
             .apply("Map Taxon to KV", TaxonomyTransform.toKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
-        p.apply("Read Multimedia", MultimediaTransform.read(pathInterFn.apply(MULTIMEDIA)))
+        p.apply("Read Multimedia", MultimediaTransform.read(pathFn))
             .apply("Map Multimedia to KV", MultimediaTransform.toKv());
 
     PCollection<KV<String, ImageRecord>> imageCollection =
-        p.apply("Read Image", ImageTransform.read(pathInterFn.apply(IMAGE)))
+        p.apply("Read Image", ImageTransform.read(pathFn))
             .apply("Map Image to KV", ImageTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
-        p.apply("Read Audubon", AudubonTransform.read(pathInterFn.apply(AUDUBON)))
+        p.apply("Read Audubon", AudubonTransform.read(pathFn))
             .apply("Map Audubon to KV", AudubonTransform.toKv());
 
     PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-        p.apply("Read Measurement", MeasurementOrFactTransform.read(pathInterFn.apply(MEASUREMENT_OR_FACT)))
+        p.apply("Read Measurement", MeasurementOrFactTransform.read(pathFn))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
 
     PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection =
-        p.apply("Read Australia spatial", AustraliaSpatialTransform.read(pathInterFn.apply(AUSTRALIA_SPATIAL)))
+        p.apply("Read Australia spatial", AustraliaSpatialTransform.read(pathFn))
             .apply("Map Australia spatial to KV", AustraliaSpatialTransform.toKv());
 
-    log.info("Adding step 3: Converting to a json object");
+    log.info("Adding step 3: Converting into a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
 

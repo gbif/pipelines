@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -30,7 +31,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
- * Beam level transformations for the DWC Event, read an avro, write an avro, from value to keyValue and
+ * Beam level transformations for the DWC Event, reads an avro, writes an avro, maps from value to keyValue and
  * transforms form {@link ExtendedRecord} to {@link TemporalRecord}.
  *
  * @see <a href="https://dwc.tdwg.org/terms/#event</a>
@@ -39,6 +40,7 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 public class TemporalTransform {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = TEMPORAL.name().toLowerCase();
 
   /**
    * Checks if list contains {@link RecordType#TEMPORAL}, else returns empty {@link PCollection<ExtendedRecord>}
@@ -54,12 +56,21 @@ public class TemporalTransform {
   }
 
   /**
-   * Readsavro files from path, which contains {@link TemporalRecord}
+   * Reads avro files from path, which contains {@link TemporalRecord}
    *
    * @param path path to source files
    */
   public static AvroIO.Read<TemporalRecord> read(String path) {
     return AvroIO.read(TemporalRecord.class).from(path);
+  }
+
+  /**
+   * Reads avro files from path, which contains {@link TemporalRecord}
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link TemporalTransform#BASE_NAM
+   */
+  public static AvroIO.Read<TemporalRecord> read(UnaryOperator<String> pathFn) {
+    return read(pathFn.apply(BASE_NAME));
   }
 
   /**
@@ -70,6 +81,16 @@ public class TemporalTransform {
    */
   public static AvroIO.Write<TemporalRecord> write(String toPath) {
     return AvroIO.write(TemporalRecord.class).to(toPath).withSuffix(Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Writes {@link TemporalRecord} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link TemporalTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<TemporalRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

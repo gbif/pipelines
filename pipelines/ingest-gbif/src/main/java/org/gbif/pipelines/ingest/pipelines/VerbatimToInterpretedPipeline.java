@@ -4,9 +4,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -36,18 +35,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
-
 /**
  * Pipeline sequence:
  *
@@ -63,6 +50,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *      {@link org.gbif.pipelines.io.avro.AustraliaSpatialRecord}
  *    3) Writes data to independent files
  * </pre>
  *
@@ -107,7 +95,7 @@ public class VerbatimToInterpretedPipeline {
     String wsPropertiesPath = options.getWsProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    Function<RecordType, String> pathFn = t -> FsUtils.buildPathInterpret(options, t.name(), id);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
@@ -122,56 +110,56 @@ public class VerbatimToInterpretedPipeline {
     p.apply("Create metadata collection", Create.of(datasetId))
         .apply("Check metadata transform condition", MetadataTransform.check(types))
         .apply("Interpret metadata", MetadataTransform.interpret(wsPropertiesPath))
-        .apply("Write metadata to avro", MetadataTransform.write(pathFn.apply(METADATA)));
+        .apply("Write metadata to avro", MetadataTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check verbatim transform condition", VerbatimTransform.check(types))
-        .apply("Write verbatim to avro", VerbatimTransform.write(pathFn.apply(VERBATIM)));
+        .apply("Write verbatim to avro", VerbatimTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check basic transform condition", BasicTransform.check(types))
         .apply("Interpret basic", BasicTransform.interpret())
-        .apply("Write basic to avro", BasicTransform.write(pathFn.apply(BASIC)));
+        .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check temporal transform condition", TemporalTransform.check(types))
         .apply("Interpret temporal", TemporalTransform.interpret())
-        .apply("Write temporal to avro", TemporalTransform.write(pathFn.apply(TEMPORAL)));
+        .apply("Write temporal to avro", TemporalTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check multimedia transform condition", MultimediaTransform.check(types))
         .apply("Interpret multimedia", MultimediaTransform.interpret())
-        .apply("Write multimedia to avro", MultimediaTransform.write(pathFn.apply(MULTIMEDIA)));
+        .apply("Write multimedia to avro", MultimediaTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check image transform condition", ImageTransform.check(types))
         .apply("Interpret image", ImageTransform.interpret())
-        .apply("Write image to avro", ImageTransform.write(pathFn.apply(IMAGE)));
+        .apply("Write image to avro", ImageTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check audubon transform condition", AudubonTransform.check(types))
         .apply("Interpret audubon", AudubonTransform.interpret())
-        .apply("Write audubon to avro", AudubonTransform.write(pathFn.apply(AUDUBON)));
+        .apply("Write audubon to avro", AudubonTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check measurement transform condition", MeasurementOrFactTransform.check(types))
         .apply("Interpret measurement", MeasurementOrFactTransform.interpret())
-        .apply("Write measurement to avro", MeasurementOrFactTransform.write(pathFn.apply(MEASUREMENT_OR_FACT)));
+        .apply("Write measurement to avro", MeasurementOrFactTransform.write(pathFn));
 
     uniqueRecords
         .apply("Check taxonomy transform condition", TaxonomyTransform.check(types))
         .apply("Interpret taxonomy", TaxonomyTransform.interpret(wsPropertiesPath))
-        .apply("Write taxon to avro", TaxonomyTransform.write(pathFn.apply(TAXONOMY)));
+        .apply("Write taxon to avro", TaxonomyTransform.write(pathFn));
 
     PCollection<LocationRecord> locationPCollection = uniqueRecords
         .apply("Check location transform condition", LocationTransform.check(types))
         .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath));
-    locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn.apply(LOCATION)));
+    locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
 
     locationPCollection
         .apply("Check AustraliaSpatial transform condition", AustraliaSpatialTransform.check(types))
         .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(wsPropertiesPath))
-        .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn.apply(AUSTRALIA_SPATIAL)));
+        .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
