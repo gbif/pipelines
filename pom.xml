@@ -61,7 +61,7 @@
     <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
-    <sonar.exclusions>src/main/java-generated/**</sonar.exclusions>
+    <sonar.exclusions>**/*generated*/**</sonar.exclusions>
 
     <!-- Tools-->
     <lombok.version>1.18.6</lombok.version>
