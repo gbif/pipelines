@@ -31,6 +31,7 @@
         "continent": {"type":"keyword"},
         "waterBody": {"type":"text", "copy_to": "all"},
         "countryCode": {"type":"keyword"},
+        "country": {"type":"text", "copy_to": "all"},
         "stateProvince": {"type":"text", "copy_to": "all"},
         "minimumElevationInMeters": {"type":"double"},
         "maximumElevationInMeters": {"type":"double"},

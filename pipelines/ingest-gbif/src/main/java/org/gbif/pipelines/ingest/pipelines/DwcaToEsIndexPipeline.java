@@ -232,8 +232,8 @@ public class DwcaToEsIndexPipeline {
             // Specific
             AustraliaSpatialRecord asr = v.getOnly(asrTag, AustraliaSpatialRecord.newBuilder().setId(k).build());
 
-            MultimediaRecord mergedMr = MultimediaConverter.merge(mr, ir, ar);
-            String json = GbifJsonConverter.create(mdr, br, tr, lr, txr, mergedMr, mfr, er, asr).buildJson().toString();
+            MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
+            String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er, asr);
 
             c.output(json);
 

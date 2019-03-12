@@ -42,7 +42,12 @@ public class JsonConverterTest {
             + "\"decimalLongitude\":\"2.0\"}";
 
     // When
-    String result = JsonConverter.create(extendedRecord, temporalRecord, locationRecord).buildJson().toString();
+    String result = JsonConverter.builder()
+        .record(extendedRecord)
+        .record(temporalRecord)
+        .record(locationRecord)
+        .build()
+        .toString();
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));

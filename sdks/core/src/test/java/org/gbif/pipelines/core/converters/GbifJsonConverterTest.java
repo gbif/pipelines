@@ -31,7 +31,7 @@ public class GbifJsonConverterTest {
         "{\"id\":\"777\",\"verbatim\":{\"remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"locality\":\"something:{something}\"},"
             + "\"startDate\":\"01-01-2011\",\"year\":\"2000\",\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},"
             + "\"startDayOfYear\":\"1\",\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":\"2.0\","
-            + "\"lat\":\"1.0\"},\"continent\":\"something{something}\",\"countryCode\":\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,"
+            + "\"lat\":\"1.0\"},\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,"
             + "\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,\"rank\":\"CHEMOFORM\"},{\"taxonKey\":2,\"name\":\"Name2\","
             + "\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
             + "\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
@@ -51,14 +51,14 @@ public class GbifJsonConverterTest {
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://rs.tdwg.org/dwc/terms/remark", "{\"something\":1}{\"something\":1}");
 
-    ExtendedRecord extendedRecord =
+    ExtendedRecord er =
         ExtendedRecord.newBuilder()
             .setId("777")
             .setCoreRowType("core")
             .setCoreTerms(erMap)
             .build();
 
-    TemporalRecord temporalRecord =
+    TemporalRecord tmr =
         TemporalRecord.newBuilder()
             .setId("777")
             .setEventDate(EventDate.newBuilder().setLte("01-01-2018").setGte("01-01-2011").build())
@@ -66,9 +66,9 @@ public class GbifJsonConverterTest {
             .setYear(2000)
             .setStartDayOfYear(1)
             .build();
-    temporalRecord.getIssues().getIssueList().add(OccurrenceIssue.ZERO_COORDINATE.name());
+    tmr.getIssues().getIssueList().add(OccurrenceIssue.ZERO_COORDINATE.name());
 
-    LocationRecord locationRecord =
+    LocationRecord lr =
         LocationRecord.newBuilder()
             .setId("777")
             .setCountry("Country")
@@ -77,7 +77,7 @@ public class GbifJsonConverterTest {
             .setDecimalLongitude(2d)
             .setContinent("something{something}")
             .build();
-    locationRecord.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
+    lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
     List<RankedName> rankedNameList = new ArrayList<>();
     RankedName name = RankedName.newBuilder().setKey(1).setName("Name").setRank(Rank.CHEMOFORM).build();
@@ -85,13 +85,10 @@ public class GbifJsonConverterTest {
     rankedNameList.add(name);
     rankedNameList.add(name2);
 
-    TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
+    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
 
     // When
-    String result =
-        GbifJsonConverter.create(extendedRecord, temporalRecord, locationRecord, taxonRecord)
-            .buildJson()
-            .toString();
+    String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr);
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));
@@ -106,7 +103,7 @@ public class GbifJsonConverterTest {
         "{\"id\":\"777\",\"verbatim\":{\"remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"locality\":\"something:{something}\"},"
             + "\"startDate\":\"01-01-2011\",\"year\":\"2000\",\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},"
             + "\"startDayOfYear\":\"1\",\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":\"2.0\",\"lat\":\"1.0\"},"
-            + "\"continent\":\"something{something}\",\"countryCode\":\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,"
+            + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,"
             + "\"kingdomKey\":1,\"rank\":\"CHEMOFORM\"},{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],"
             + "\"australiaSpatialLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\","
             + "\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
@@ -125,14 +122,14 @@ public class GbifJsonConverterTest {
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://rs.tdwg.org/dwc/terms/remark", "{\"something\":1}{\"something\":1}");
 
-    ExtendedRecord extendedRecord =
+    ExtendedRecord er =
         ExtendedRecord.newBuilder()
             .setId("777")
             .setCoreRowType("core")
             .setCoreTerms(erMap)
             .build();
 
-    TemporalRecord temporalRecord =
+    TemporalRecord tmr =
         TemporalRecord.newBuilder()
             .setId("777")
             .setEventDate(EventDate.newBuilder().setLte("01-01-2018").setGte("01-01-2011").build())
@@ -140,9 +137,9 @@ public class GbifJsonConverterTest {
             .setYear(2000)
             .setStartDayOfYear(1)
             .build();
-    temporalRecord.getIssues().getIssueList().add(OccurrenceIssue.ZERO_COORDINATE.name());
+    tmr.getIssues().getIssueList().add(OccurrenceIssue.ZERO_COORDINATE.name());
 
-    LocationRecord locationRecord =
+    LocationRecord lr =
         LocationRecord.newBuilder()
             .setId("777")
             .setCountry("Country")
@@ -151,9 +148,9 @@ public class GbifJsonConverterTest {
             .setDecimalLongitude(2d)
             .setContinent("something{something}")
             .build();
-    locationRecord.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
+    lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
-    AustraliaSpatialRecord australiaSpatialRecord =
+    AustraliaSpatialRecord asr =
         AustraliaSpatialRecord.newBuilder()
             .setId("777")
             .setItems(Collections.singletonMap("data", "value"))
@@ -165,13 +162,10 @@ public class GbifJsonConverterTest {
     rankedNameList.add(name);
     rankedNameList.add(name2);
 
-    TaxonRecord taxonRecord = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
+    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
 
     // When
-    String result =
-        GbifJsonConverter.create(extendedRecord, temporalRecord, locationRecord, taxonRecord, australiaSpatialRecord)
-            .buildJson()
-            .toString();
+    String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, asr);
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));
@@ -198,11 +192,11 @@ public class GbifJsonConverterTest {
             + "\"RECORDED_DATE_UNLIKELY\",\"COUNTRY_MISMATCH\"]}";
 
     // State
-    ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId("777").build();
-    TemporalRecord temporalRecord = TemporalRecord.newBuilder().setId("777").build();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("777").build();
 
     // When
-    String result = GbifJsonConverter.create(extendedRecord, temporalRecord).buildJson().toString();
+    String result = GbifJsonConverter.toStringJson(er, tr);
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));
@@ -235,7 +229,7 @@ public class GbifJsonConverterTest {
         .build();
 
     // When
-    String result = GbifJsonConverter.createWithIdAndSkipIssues(record).buildJson().toString();
+    String result = GbifJsonConverter.toStringPartialJson(record);
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));
@@ -265,7 +259,7 @@ public class GbifJsonConverterTest {
         .build();
 
     // When
-    String result = GbifJsonConverter.createWithIdAndSkipIssues(taxonRecord).buildJson().toString();
+    String result = GbifJsonConverter.toStringPartialJson(taxonRecord);
 
     // Should
     Assert.assertEquals(expected, result);
@@ -282,7 +276,7 @@ public class GbifJsonConverterTest {
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("777").build();
 
     // When
-    String result = GbifJsonConverter.createWithIdAndSkipIssues(record).buildJson().toString();
+    String result = GbifJsonConverter.toStringPartialJson(record);
 
     // Should
     Assert.assertEquals(expected, result);
@@ -299,7 +293,7 @@ public class GbifJsonConverterTest {
     TemporalRecord record = TemporalRecord.newBuilder().setId("777").build();
 
     // When
-    String result = GbifJsonConverter.createWithIdAndSkipIssues(record).buildJson().toString();
+    String result = GbifJsonConverter.toStringPartialJson(record);
 
     // Should
     Assert.assertEquals(expected, result);
@@ -316,7 +310,7 @@ public class GbifJsonConverterTest {
     LocationRecord record = LocationRecord.newBuilder().setId("777").build();
 
     // When
-    String result = GbifJsonConverter.createWithIdAndSkipIssues(record).buildJson().toString();
+    String result = GbifJsonConverter.toStringPartialJson(record);
 
     // Should
     Assert.assertEquals(expected, result);
@@ -337,7 +331,7 @@ public class GbifJsonConverterTest {
         .build();
 
     // When
-    String result = GbifJsonConverter.createWithIdAndSkipIssues(record).buildJson().toString();
+    String result = GbifJsonConverter.toStringPartialJson(record);
 
     // Should
     Assert.assertEquals(expected, result);

@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -24,90 +25,123 @@ import org.apache.avro.specific.SpecificRecordBase;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.extern.slf4j.Slf4j;
 
 /**
- * Converter for objects to GBIF elasticsearch schema. You must pass: {@link ExtendedRecord}, {@link
- * org.gbif.pipelines.io.avro.BasicRecord}, {@link org.gbif.pipelines.io.avro.TemporalRecord},
- * {@link LocationRecord}, {@link TaxonRecord}, {@link org.gbif.pipelines.io.avro.MultimediaRecord}
+ * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase} objects(Avro
+ * generated)
  *
  * <pre>{@code
  * Usage example:
  *
- * BasicRecord basic = ...
- * TemporalRecord temporal =  ...
- * LocationRecord location =  ...
- * TaxonRecord taxon =  ...
- * MultimediaRecord multimedia =  ...
- * ExtendedRecord extendedRecord =  ...
- * String result = GbifRecords2JsonConverter.create(extendedRecord, interRecord, temporal, location, taxon, multimedia).buildJson();
+ * BasicRecord br = ...
+ * TemporalRecord tmr =  ...
+ * LocationRecord lr =  ...
+ * TaxonRecord tr =  ...
+ * MultimediaRecord mr =  ...
+ * ExtendedRecord er =  ...
+ * String result = GbifJsonConverter.toStringJson(br, tmr, lr, tr, mr, er);
  *
  * }</pre>
  */
-public class GbifJsonConverter extends JsonConverter {
+@SuppressWarnings("FallThrough")
+@Slf4j
+@Builder
+public class GbifJsonConverter {
 
-  private static final String ID = "id";
-  private static final String ISSUES = "issues";
-  private static final String[] SKIP_KEYS = {"decimalLatitude", "decimalLongitude", "country"};
-  private static final String[] REPLACE_KEYS = {"http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"};
+  private final JsonConverter.JsonConverterBuilder builder =
+      JsonConverter.builder()
+          .skipKey("decimalLatitude")
+          .skipKey("decimalLongitude")
+          .replaceKey(Pattern.compile("http://rs.tdwg.org/dwc/terms/"))
+          .replaceKey(Pattern.compile("http://purl.org/dc/terms/"))
+          .converter(ExtendedRecord.class, getExtendedRecordConverter())
+          .converter(LocationRecord.class, getLocationRecordConverter())
+          .converter(TemporalRecord.class, getTemporalRecordConverter())
+          .converter(TaxonRecord.class, getTaxonomyRecordConverter())
+          .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter());
 
-  private final boolean skipIssues;
-  private final boolean skipId;
+  @Builder.Default
+  private boolean skipIssues = false;
 
-  private GbifJsonConverter(SpecificRecordBase[] bases, boolean skipId, boolean skipIssues) {
-    this.skipIssues = skipIssues;
-    this.skipId = skipId;
-    if (skipId) {
-      this.setSkipKeys(ID);
-    }
-    if (skipIssues) {
-      this.setSkipKeys(ISSUES);
-    }
-    this.setSpecificRecordBase(bases)
-        .setSkipKeys(SKIP_KEYS)
-        .setReplaceKeys(REPLACE_KEYS)
-        .addSpecificConverter(ExtendedRecord.class, getExtendedRecordConverter())
-        .addSpecificConverter(LocationRecord.class, getLocationRecordConverter())
-        .addSpecificConverter(TemporalRecord.class, getTemporalRecordConverter())
-        .addSpecificConverter(TaxonRecord.class, getTaxonomyRecordConverter())
-        .addSpecificConverter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter());
+  @Builder.Default
+  private boolean skipId = true;
+
+  @Singular
+  private List<SpecificRecordBase> records;
+
+  /**
+   * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into string json object, suited to the new ES
+   * record
+   */
+  public static String toStringJson(SpecificRecordBase... records) {
+    return GbifJsonConverter.builder()
+        .records(Arrays.asList(records))
+        .build()
+        .toString();
   }
 
-  public static GbifJsonConverter create(SpecificRecordBase... bases) {
-    return new GbifJsonConverter(bases, true, false);
-  }
-
-  public static GbifJsonConverter createWithIdAndSkipIssues(SpecificRecordBase... bases) {
-    return new GbifJsonConverter(bases, false, true);
+  /**
+   * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into string json object, suited to a partial ES
+   * record update
+   */
+  public static String toStringPartialJson(SpecificRecordBase... records) {
+    return GbifJsonConverter.builder()
+        .records(Arrays.asList(records))
+        .skipId(false)
+        .skipIssues(true)
+        .build()
+        .toString();
   }
 
   /** Change the json result, merging all issues from records to one array */
-  @Override
-  public ObjectNode buildJson() {
-    ObjectNode mainNode = super.buildJson();
+  public ObjectNode toJson() {
+    builder.records(records);
+    if (skipId) {
+      builder.skipKey("id");
+    }
+    if (skipIssues) {
+      builder.skipKey("issues");
+    }
+
+    ObjectNode mainNode = builder.build().toJson();
 
     if (!skipIssues) {
-      // Issues
-      Set<String> issues = Arrays.stream(getBases())
-          .filter(Issues.class::isInstance)
-          .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
-          .collect(Collectors.toSet());
-
-      ArrayNode arrayIssueNode = MAPPER.createArrayNode();
-      issues.forEach(arrayIssueNode::add);
-      mainNode.set("issues", arrayIssueNode);
-
-      // Not issues
-      Set<String> notIssues = Arrays.stream(OccurrenceIssue.values())
-          .map(Enum::name)
-          .filter(x -> !issues.contains(x))
-          .collect(Collectors.toSet());
-
-      ArrayNode arrayNotIssuesNode = MAPPER.createArrayNode();
-      notIssues.forEach(arrayNotIssuesNode::add);
-      mainNode.set("notIssues", arrayNotIssuesNode);
+      addIssues(mainNode);
     }
 
     return mainNode;
+  }
+
+  @Override
+  public String toString() {
+    return toJson().toString();
+  }
+
+  /**
+   * Adds issues and  notIssues json nodes
+   */
+  private void addIssues(ObjectNode mainNode) {
+    // Issues
+    Set<String> issues = records.stream()
+        .filter(Issues.class::isInstance)
+        .flatMap(x -> ((Issues) x).getIssues().getIssueList().stream())
+        .collect(Collectors.toSet());
+    ArrayNode issueArrayNodes = JsonConverter.createArrayNode();
+    issues.forEach(issueArrayNodes::add);
+    mainNode.set("issues", issueArrayNodes);
+
+    // Not issues
+    Set<String> notIssues = Arrays.stream(OccurrenceIssue.values())
+        .map(Enum::name)
+        .filter(x -> !issues.contains(x))
+        .collect(Collectors.toSet());
+
+    ArrayNode arrayNotIssuesNode = JsonConverter.createArrayNode();
+    notIssues.forEach(arrayNotIssuesNode::add);
+    mainNode.set("notIssues", arrayNotIssuesNode);
   }
 
   /**
@@ -125,21 +159,21 @@ public class GbifJsonConverter extends JsonConverter {
    *
    * }</pre>
    */
-  private Consumer<SpecificRecordBase> getExtendedRecordConverter() {
-    return record -> {
+  private BiConsumer<JsonConverter, SpecificRecordBase> getExtendedRecordConverter() {
+    return (jc, record) -> {
 
       ExtendedRecord er = (ExtendedRecord) record;
 
-      this.addJsonTextFieldNoCheck("id", er.getId());
+      jc.addJsonTextFieldNoCheck("id", er.getId());
 
       Map<String, String> terms = er.getCoreTerms();
 
       Optional.ofNullable(terms.get(DwcTerm.recordedBy.qualifiedName()))
-          .ifPresent(x -> this.addJsonTextFieldNoCheck("recordedBy", x));
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("recordedBy", x));
       Optional.ofNullable(terms.get(DwcTerm.organismID.qualifiedName()))
-          .ifPresent(x -> this.addJsonTextFieldNoCheck("organismId", x));
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("organismId", x));
 
-      this.addJsonRawObject("verbatim", terms);
+      jc.addJsonRawObject("verbatim", terms);
     };
   }
 
@@ -156,22 +190,22 @@ public class GbifJsonConverter extends JsonConverter {
    *
    * }</pre>
    */
-  private Consumer<SpecificRecordBase> getLocationRecordConverter() {
-    return record -> {
+  private BiConsumer<JsonConverter, SpecificRecordBase> getLocationRecordConverter() {
+    return (jc, record) -> {
       LocationRecord lr = (LocationRecord) record;
 
       if (!skipId) {
-        this.addJsonTextFieldNoCheck("id", lr.getId());
+        jc.addJsonTextFieldNoCheck("id", lr.getId());
       }
 
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
-        ObjectNode node = MAPPER.createObjectNode();
+        ObjectNode node = JsonConverter.createObjectNode();
         node.put("lon", lr.getDecimalLongitude().toString());
         node.put("lat", lr.getDecimalLatitude().toString());
-        this.addJsonObject("coordinates", node);
+        jc.addJsonObject("coordinates", node);
       }
       // Fields as a common view - "key": "value"
-      this.addCommonFields(record);
+      jc.addCommonFields(record);
     };
   }
 
@@ -186,20 +220,20 @@ public class GbifJsonConverter extends JsonConverter {
    *
    * }</pre>
    */
-  private Consumer<SpecificRecordBase> getTemporalRecordConverter() {
-    return record -> {
+  private BiConsumer<JsonConverter, SpecificRecordBase> getTemporalRecordConverter() {
+    return (jc, record) -> {
       TemporalRecord tr = (TemporalRecord) record;
 
       if (!skipId) {
-        this.addJsonTextFieldNoCheck("id", tr.getId());
+        jc.addJsonTextFieldNoCheck("id", tr.getId());
       }
 
       Optional.ofNullable(tr.getEventDate())
           .map(EventDate::getGte)
-          .ifPresent(x -> this.addJsonTextFieldNoCheck("startDate", x));
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("startDate", x));
 
       // Fields as a common view - "key": "value"
-      this.addCommonFields(record);
+      jc.addCommonFields(record);
     };
   }
 
@@ -229,12 +263,12 @@ public class GbifJsonConverter extends JsonConverter {
    *
    * }</pre>
    */
-  private Consumer<SpecificRecordBase> getTaxonomyRecordConverter() {
-    return record -> {
+  private BiConsumer<JsonConverter, SpecificRecordBase> getTaxonomyRecordConverter() {
+    return (jc, record) -> {
       TaxonRecord tr = (TaxonRecord) record;
 
       if (!skipId) {
-        this.addJsonTextFieldNoCheck("id", tr.getId());
+        jc.addJsonTextFieldNoCheck("id", tr.getId());
       }
 
       List<RankedName> classifications = tr.getClassification();
@@ -242,7 +276,7 @@ public class GbifJsonConverter extends JsonConverter {
         List<ObjectNode> nodes = new ArrayList<>(classifications.size());
         for (int i = 0; i < classifications.size(); i++) {
           RankedName name = classifications.get(i);
-          ObjectNode node = MAPPER.createObjectNode();
+          ObjectNode node = JsonConverter.createObjectNode();
           node.put("taxonKey", name.getKey());
           node.put("name", name.getName());
           node.put("depthKey_" + i, name.getKey());
@@ -250,16 +284,16 @@ public class GbifJsonConverter extends JsonConverter {
           node.put("rank", name.getRank().name());
           nodes.add(node);
         }
-        this.addJsonArray("backbone", nodes);
+        jc.addJsonArray("backbone", nodes);
       }
 
       // Other Gbif fields
-      Optional.ofNullable(tr.getUsage())
-          .ifPresent(
-              usage ->
-                  this.addJsonTextFieldNoCheck("gbifTaxonKey", usage.getKey().toString())
-                      .addJsonTextFieldNoCheck("gbifScientificName", usage.getName())
-                      .addJsonTextFieldNoCheck("gbifTaxonRank", usage.getRank().name()));
+      Optional.ofNullable(tr.getUsage()).ifPresent(
+          usage -> {
+            jc.addJsonTextFieldNoCheck("gbifTaxonKey", usage.getKey().toString());
+            jc.addJsonTextFieldNoCheck("gbifScientificName", usage.getName());
+            jc.addJsonTextFieldNoCheck("gbifTaxonRank", usage.getRank().name());
+          });
     };
   }
 
@@ -282,12 +316,12 @@ public class GbifJsonConverter extends JsonConverter {
    *
    * }</pre>
    */
-  private Consumer<SpecificRecordBase> getAustraliaSpatialRecordConverter() {
-    return record -> {
+  private BiConsumer<JsonConverter, SpecificRecordBase> getAustraliaSpatialRecordConverter() {
+    return (jc, record) -> {
       AustraliaSpatialRecord asr = (AustraliaSpatialRecord) record;
 
       if (!skipId) {
-        this.addJsonTextFieldNoCheck("id", asr.getId());
+        jc.addJsonTextFieldNoCheck("id", asr.getId());
       }
 
       Optional.ofNullable(asr.getItems())
@@ -295,12 +329,12 @@ public class GbifJsonConverter extends JsonConverter {
           .ifPresent(m -> {
             List<ObjectNode> nodes = new ArrayList<>(m.size());
             m.forEach((k, v) -> {
-              ObjectNode node = MAPPER.createObjectNode();
+              ObjectNode node = JsonConverter.createObjectNode();
               node.put("key", k);
               node.put("value", v);
               nodes.add(node);
             });
-            this.addJsonArray("australiaSpatialLayers", nodes);
+            jc.addJsonArray("australiaSpatialLayers", nodes);
           });
     };
   }

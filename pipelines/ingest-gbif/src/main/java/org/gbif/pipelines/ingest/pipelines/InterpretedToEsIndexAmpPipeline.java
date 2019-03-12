@@ -85,7 +85,7 @@ public class InterpretedToEsIndexAmpPipeline {
 
               @ProcessElement
               public void processElement(ProcessContext c) {
-                String json = GbifJsonConverter.createWithIdAndSkipIssues(c.element()).buildJson().toString();
+                String json = GbifJsonConverter.toStringPartialJson(c.element());
                 c.output(json);
                 counter.inc();
               }
