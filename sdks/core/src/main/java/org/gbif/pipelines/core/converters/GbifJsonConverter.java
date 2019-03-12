@@ -51,9 +51,11 @@ public class GbifJsonConverter extends JsonConverter {
   private static final String[] REPLACE_KEYS = {"http://rs.tdwg.org/dwc/terms/", "http://purl.org/dc/terms/"};
 
   private final boolean skipIssues;
+  private final boolean skipId;
 
   private GbifJsonConverter(SpecificRecordBase[] bases, boolean skipId, boolean skipIssues) {
     this.skipIssues = skipIssues;
+    this.skipId = skipId;
     if (skipId) {
       this.setSkipKeys(ID);
     }
@@ -156,12 +158,16 @@ public class GbifJsonConverter extends JsonConverter {
    */
   private Consumer<SpecificRecordBase> getLocationRecordConverter() {
     return record -> {
-      LocationRecord location = (LocationRecord) record;
+      LocationRecord lr = (LocationRecord) record;
 
-      if (location.getDecimalLongitude() != null && location.getDecimalLatitude() != null) {
+      if (!skipId) {
+        this.addJsonTextFieldNoCheck("id", lr.getId());
+      }
+
+      if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
         ObjectNode node = MAPPER.createObjectNode();
-        node.put("lon", location.getDecimalLongitude().toString());
-        node.put("lat", location.getDecimalLatitude().toString());
+        node.put("lon", lr.getDecimalLongitude().toString());
+        node.put("lat", lr.getDecimalLatitude().toString());
         this.addJsonObject("coordinates", node);
       }
       // Fields as a common view - "key": "value"
@@ -182,9 +188,13 @@ public class GbifJsonConverter extends JsonConverter {
    */
   private Consumer<SpecificRecordBase> getTemporalRecordConverter() {
     return record -> {
-      TemporalRecord temporal = (TemporalRecord) record;
+      TemporalRecord tr = (TemporalRecord) record;
 
-      Optional.ofNullable(temporal.getEventDate())
+      if (!skipId) {
+        this.addJsonTextFieldNoCheck("id", tr.getId());
+      }
+
+      Optional.ofNullable(tr.getEventDate())
           .map(EventDate::getGte)
           .ifPresent(x -> this.addJsonTextFieldNoCheck("startDate", x));
 
@@ -221,9 +231,13 @@ public class GbifJsonConverter extends JsonConverter {
    */
   private Consumer<SpecificRecordBase> getTaxonomyRecordConverter() {
     return record -> {
-      TaxonRecord taxon = (TaxonRecord) record;
+      TaxonRecord tr = (TaxonRecord) record;
 
-      List<RankedName> classifications = taxon.getClassification();
+      if (!skipId) {
+        this.addJsonTextFieldNoCheck("id", tr.getId());
+      }
+
+      List<RankedName> classifications = tr.getClassification();
       if (classifications != null && !classifications.isEmpty()) {
         List<ObjectNode> nodes = new ArrayList<>(classifications.size());
         for (int i = 0; i < classifications.size(); i++) {
@@ -240,7 +254,7 @@ public class GbifJsonConverter extends JsonConverter {
       }
 
       // Other Gbif fields
-      Optional.ofNullable(taxon.getUsage())
+      Optional.ofNullable(tr.getUsage())
           .ifPresent(
               usage ->
                   this.addJsonTextFieldNoCheck("gbifTaxonKey", usage.getKey().toString())
@@ -270,8 +284,13 @@ public class GbifJsonConverter extends JsonConverter {
    */
   private Consumer<SpecificRecordBase> getAustraliaSpatialRecordConverter() {
     return record -> {
-      AustraliaSpatialRecord australiaSpatial = (AustraliaSpatialRecord) record;
-      Optional.ofNullable(australiaSpatial.getItems())
+      AustraliaSpatialRecord asr = (AustraliaSpatialRecord) record;
+
+      if (!skipId) {
+        this.addJsonTextFieldNoCheck("id", asr.getId());
+      }
+
+      Optional.ofNullable(asr.getItems())
           .filter(i -> !i.isEmpty())
           .ifPresent(m -> {
             List<ObjectNode> nodes = new ArrayList<>(m.size());
