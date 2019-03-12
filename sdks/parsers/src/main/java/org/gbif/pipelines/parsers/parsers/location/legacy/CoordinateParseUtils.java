@@ -222,8 +222,8 @@ public class CoordinateParseUtils {
   }
 
   private static double dmsToDecimal(double degree, Double minutes, Double seconds) {
-    minutes = minutes == null ? 0 : minutes;
-    seconds = seconds == null ? 0 : seconds;
+    minutes = minutes == null ? Double.valueOf(0d) : minutes;
+    seconds = seconds == null ? Double.valueOf(0d) : seconds;
     return degree + (minutes / 60) + (seconds / 3600);
   }
 
