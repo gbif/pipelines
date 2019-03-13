@@ -11,7 +11,9 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
@@ -58,7 +60,8 @@ public class GbifJsonConverter {
           .converter(LocationRecord.class, getLocationRecordConverter())
           .converter(TemporalRecord.class, getTemporalRecordConverter())
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
-          .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter());
+          .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
+          .converter(AmplificationRecord.class, getAmplificationRecordConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -148,8 +151,13 @@ public class GbifJsonConverter {
    * Result example:
    *
    * "verbatim": {
-   *   "continent": "North America",
-   *   //.....more fields
+   *    "core":{
+   *      "continent": "North America",
+   *      //.....more fields
+   *    }
+   *    "extensions": {
+   *      ...
+   *    }
    * },
    * "basisOfRecord": null,
    *  //.....more fields
@@ -356,6 +364,40 @@ public class GbifJsonConverter {
             });
             jc.addJsonArray("australiaSpatialLayers", nodes);
           });
+    };
+  }
+
+  private BiConsumer<JsonConverter, SpecificRecordBase> getAmplificationRecordConverter() {
+    return (jc, record) -> {
+      AmplificationRecord ar = (AmplificationRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck("id", ar.getId());
+      }
+
+      List<ObjectNode> nodes = ar.getAmplificationItems().stream()
+          .filter(x -> x.getBlastResult() != null)
+          .map(x -> {
+            BlastResult blast = x.getBlastResult();
+            ObjectNode node = JsonConverter.createObjectNode();
+            node.put("name", blast.getName());
+            node.put("identity", blast.getIdentity());
+            node.put("appliedScientificName", blast.getAppliedScientificName());
+            node.put("matchType", blast.getMatchType());
+            node.put("bitScore", blast.getBitScore());
+            node.put("expectValue", blast.getExpectValue());
+            node.put("querySequence", blast.getQuerySequence());
+            node.put("subjectSequence", blast.getSubjectSequence());
+            node.put("qstart", blast.getQstart());
+            node.put("qend", blast.getQend());
+            node.put("sstart", blast.getSstart());
+            node.put("send", blast.getSend());
+            node.put("distanceToBestMatch", blast.getDistanceToBestMatch());
+            node.put("sequenceLength", blast.getSequenceLength());
+            return node;
+          }).collect(Collectors.toList());
+
+      jc.addJsonArray("amplificationItems", nodes);
     };
   }
 }

@@ -14,6 +14,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -391,6 +392,50 @@ public class GbifJsonConverterTest {
     AustraliaSpatialRecord record = AustraliaSpatialRecord.newBuilder()
         .setId("777")
         .setItems(Collections.singletonMap("{awdawd}", "\"{\"wad\":\"adw\"}\""))
+        .build();
+
+    // When
+    String result = GbifJsonConverter.toStringPartialJson(record);
+
+    // Should
+    Assert.assertEquals(expected, result);
+    Assert.assertTrue(JsonValidationUtils.isValid(result));
+  }
+
+  @Test
+  public void amplificationRecordSkipIssuesWithIdTest() {
+
+    // Expected
+    String expected =
+        "{\"id\":\"777\",\"amplificationItems\":[{\"name\":\"n\",\"identity\":3,\"appliedScientificName\":"
+            + "\"sn\",\"matchType\":\"mt\",\"bitScore\":1,\"expectValue\":2,\"querySequence\":\"qs\",\"subjectSequence\":"
+            + "\"ss\",\"qstart\":5,\"qend\":4,\"sstart\":8,\"send\":6,\"distanceToBestMatch\":\"dm\",\"sequenceLength\":7}]}";
+
+    // State
+    AmplificationRecord record = AmplificationRecord.newBuilder()
+        .setId("777")
+        .setAmplificationItems(
+            Collections.singletonList(
+                Amplification.newBuilder().setBlastResult(
+                    BlastResult.newBuilder()
+                        .setAppliedScientificName("sn")
+                        .setBitScore(1)
+                        .setDistanceToBestMatch("dm")
+                        .setExpectValue(2)
+                        .setIdentity(3)
+                        .setMatchType("mt")
+                        .setName("n")
+                        .setQend(4)
+                        .setQstart(5)
+                        .setQuerySequence("qs")
+                        .setSend(6)
+                        .setSequenceLength(7)
+                        .setSstart(8)
+                        .setSubjectSequence("ss")
+                        .build()
+                ).build()
+            )
+        )
         .build();
 
     // When
