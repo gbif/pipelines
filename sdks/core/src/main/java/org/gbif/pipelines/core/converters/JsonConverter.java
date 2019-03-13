@@ -183,6 +183,10 @@ public class JsonConverter {
     addJsonFieldNoCheck(mainNode, key, value);
   }
 
+  public ObjectNode getMainNode() {
+    return mainNode;
+  }
+
   static ArrayNode createArrayNode() {
     return MAPPER.createArrayNode();
   }

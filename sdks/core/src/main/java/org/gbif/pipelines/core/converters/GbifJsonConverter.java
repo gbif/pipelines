@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -55,8 +54,6 @@ public class GbifJsonConverter {
       JsonConverter.builder()
           .skipKey("decimalLatitude")
           .skipKey("decimalLongitude")
-          .replaceKey(Pattern.compile("http://rs.tdwg.org/dwc/terms/"))
-          .replaceKey(Pattern.compile("http://purl.org/dc/terms/"))
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
           .converter(LocationRecord.class, getLocationRecordConverter())
           .converter(TemporalRecord.class, getTemporalRecordConverter())
@@ -166,14 +163,37 @@ public class GbifJsonConverter {
 
       jc.addJsonTextFieldNoCheck("id", er.getId());
 
-      Map<String, String> terms = er.getCoreTerms();
+      Map<String, String> core = er.getCoreTerms();
+      Map<String, List<Map<String, String>>> ext = er.getExtensions();
 
-      Optional.ofNullable(terms.get(DwcTerm.recordedBy.qualifiedName()))
+      Optional.ofNullable(core.get(DwcTerm.recordedBy.qualifiedName()))
           .ifPresent(x -> jc.addJsonTextFieldNoCheck("recordedBy", x));
-      Optional.ofNullable(terms.get(DwcTerm.organismID.qualifiedName()))
+      Optional.ofNullable(core.get(DwcTerm.organismID.qualifiedName()))
           .ifPresent(x -> jc.addJsonTextFieldNoCheck("organismId", x));
 
-      jc.addJsonRawObject("verbatim", terms);
+      // Core
+      ObjectNode coreNode = JsonConverter.createObjectNode();
+      core.forEach((k, v) -> jc.addJsonRawField(coreNode, k, v));
+
+      // Extensions
+      ObjectNode extNode = JsonConverter.createObjectNode();
+      ext.forEach((k, v) -> {
+        ArrayNode extArrayNode = JsonConverter.createArrayNode();
+        v.forEach(m -> {
+          ObjectNode ns = JsonConverter.createObjectNode();
+          m.forEach((ks, vs) -> jc.addJsonRawField(ns, ks, vs));
+          extArrayNode.add(ns);
+        });
+        extNode.set(k, extArrayNode);
+      });
+
+      // Verbatim
+      ObjectNode verbatimNode = JsonConverter.createObjectNode();
+      verbatimNode.set("core", coreNode);
+      verbatimNode.set("extensions", extNode);
+
+      // Main node
+      jc.getMainNode().set("verbatim", verbatimNode);
     };
   }
 

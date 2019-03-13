@@ -1,12 +1,16 @@
 package org.gbif.pipelines.core.converters;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
@@ -28,28 +32,33 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"verbatim\":{\"remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"locality\":\"something:{something}\"},"
-            + "\"startDate\":\"01-01-2011\",\"year\":\"2000\",\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},"
-            + "\"startDayOfYear\":\"1\",\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":\"2.0\","
-            + "\"lat\":\"1.0\"},\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,"
-            + "\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,\"rank\":\"CHEMOFORM\"},{\"taxonKey\":2,\"name\":\"Name2\","
-            + "\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
-            + "\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
-            + "\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\",\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\","
-            + "\"PRESUMED_NEGATED_LONGITUDE\",\"DEPTH_UNLIKELY\",\"IDENTIFIED_DATE_INVALID\",\"ELEVATION_MIN_MAX_SWAPPED\",\"TAXON_MATCH_NONE\","
-            + "\"TYPE_STATUS_INVALID\",\"TAXON_MATCH_FUZZY\",\"CONTINENT_INVALID\",\"GEODETIC_DATUM_INVALID\",\"MODIFIED_DATE_UNLIKELY\","
-            + "\"COORDINATE_REPROJECTED\",\"PRESUMED_SWAPPED_COORDINATE\",\"REFERENCES_URI_INVALID\",\"COORDINATE_ROUNDED\","
-            + "\"IDENTIFIED_DATE_UNLIKELY\",\"COUNTRY_COORDINATE_MISMATCH\",\"DEPTH_NON_NUMERIC\",\"COUNTRY_DERIVED_FROM_COORDINATES\","
-            + "\"COORDINATE_REPROJECTION_FAILED\",\"COORDINATE_UNCERTAINTY_METERS_INVALID\",\"PRESUMED_NEGATED_LATITUDE\",\"MULTIMEDIA_URI_INVALID\","
-            + "\"COORDINATE_ACCURACY_INVALID\",\"GEODETIC_DATUM_ASSUMED_WGS84\",\"TAXON_MATCH_HIGHERRANK\",\"ELEVATION_UNLIKELY\","
-            + "\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\",\"RECORDED_DATE_INVALID\",\"INDIVIDUAL_COUNT_INVALID\","
-            + "\"RECORDED_DATE_MISMATCH\",\"DEPTH_NOT_METRIC\",\"MULTIMEDIA_DATE_INVALID\",\"INTERPRETATION_ERROR\",\"RECORDED_DATE_UNLIKELY\","
-            + "\"COUNTRY_MISMATCH\"]}";
+        "{\"id\":\"777\",\"verbatim\":{\"core\":{\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}"
+            + "{\\\"something\\\":1}\",\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},"
+            + "\"extensions\":{}},\"startDate\":\"01-01-2011\",\"year\":\"2000\",\"day\":\"1\",\"eventDate\":"
+            + "{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},\"startDayOfYear\":\"1\",\"issues\":"
+            + "[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":\"2.0\",\"lat\":\"1.0\"},"
+            + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"backbone\":"
+            + "[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,\"rank\":\"CHEMOFORM\"},"
+            + "{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],"
+            + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\","
+            + "\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
+            + "\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\",\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\","
+            + "\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\",\"DEPTH_UNLIKELY\","
+            + "\"IDENTIFIED_DATE_INVALID\",\"ELEVATION_MIN_MAX_SWAPPED\",\"TAXON_MATCH_NONE\",\"TYPE_STATUS_INVALID\","
+            + "\"TAXON_MATCH_FUZZY\",\"CONTINENT_INVALID\",\"GEODETIC_DATUM_INVALID\",\"MODIFIED_DATE_UNLIKELY\","
+            + "\"COORDINATE_REPROJECTED\",\"PRESUMED_SWAPPED_COORDINATE\",\"REFERENCES_URI_INVALID\","
+            + "\"COORDINATE_ROUNDED\",\"IDENTIFIED_DATE_UNLIKELY\",\"COUNTRY_COORDINATE_MISMATCH\",\"DEPTH_NON_NUMERIC\","
+            + "\"COUNTRY_DERIVED_FROM_COORDINATES\",\"COORDINATE_REPROJECTION_FAILED\","
+            + "\"COORDINATE_UNCERTAINTY_METERS_INVALID\",\"PRESUMED_NEGATED_LATITUDE\",\"MULTIMEDIA_URI_INVALID\","
+            + "\"COORDINATE_ACCURACY_INVALID\",\"GEODETIC_DATUM_ASSUMED_WGS84\",\"TAXON_MATCH_HIGHERRANK\","
+            + "\"ELEVATION_UNLIKELY\",\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\","
+            + "\"RECORDED_DATE_INVALID\",\"INDIVIDUAL_COUNT_INVALID\",\"RECORDED_DATE_MISMATCH\",\"DEPTH_NOT_METRIC\","
+            + "\"MULTIMEDIA_DATE_INVALID\",\"INTERPRETATION_ERROR\",\"RECORDED_DATE_UNLIKELY\",\"COUNTRY_MISMATCH\"]}";
 
     // State
     Map<String, String> erMap = new HashMap<>(2);
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
-    erMap.put("http://rs.tdwg.org/dwc/terms/remark", "{\"something\":1}{\"something\":1}");
+    erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
@@ -100,19 +109,41 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"verbatim\":{\"remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"locality\":\"something:{something}\"},"
+        "{\"id\":\"777\",\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/remark\":\"{\\\"something\\\":1}"
+            + "{\\\"something\\\":1}\",\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},\"extensions\":"
+            + "{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"http://purl.org/dc/terms/license\":\"Lic1\","
+            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#latitude\":\"60.4\",\"http://purl.org/dc/terms/identifier\":"
+            + "\"http://www.gbif.org/tmp.jpg\",\"http://rs.tdwg.org/dwc/terms/datasetID\":\"1\",\"http://purl.org/dc/terms/description\":\"Desc1\","
+            + "\"http://purl.org/dc/terms/publisher\":\"Pub1\",\"http://purl.org/dc/terms/audience\":\"Aud1\","
+            + "\"http://purl.org/dc/terms/spatial\":\"Sp1\",\"http://purl.org/dc/terms/format\":\"jpeg\","
+            + "\"http://purl.org/dc/terms/rightsHolder\":\"Rh1\",\"http://purl.org/dc/terms/creator\":\"Cr1\","
+            + "\"http://purl.org/dc/terms/created\":\"2010\",\"http://purl.org/dc/terms/references\":\"http://www.gbif.org/tmp.jpg\","
+            + "\"http://purl.org/dc/terms/contributor\":\"Cont1\",\"http://purl.org/dc/terms/title\":\"Tt1\","
+            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},{\"http://purl.org/dc/terms/created\":\"not a date\"}],"
+            + "\"http://rs.gbif.org/terms/1.0/Image\":[{\"http://purl.org/dc/terms/license\":\"Lic1\","
+            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#latitude\":\"60.4\",\"http://purl.org/dc/terms/identifier\":\"http://www.gbif.org/tmp.jpg\","
+            + "\"http://rs.tdwg.org/dwc/terms/datasetID\":\"1\",\"http://purl.org/dc/terms/description\":\"Desc1\","
+            + "\"http://purl.org/dc/terms/publisher\":\"Pub1\",\"http://purl.org/dc/terms/audience\":\"Aud1\","
+            + "\"http://purl.org/dc/terms/spatial\":\"Sp1\",\"http://purl.org/dc/terms/format\":\"jpeg\","
+            + "\"http://purl.org/dc/terms/rightsHolder\":\"Rh1\",\"http://purl.org/dc/terms/creator\":\"Cr1\","
+            + "\"http://purl.org/dc/terms/created\":\"2010\",\"http://purl.org/dc/terms/references\":\"http://www.gbif.org/tmp.jpg\","
+            + "\"http://purl.org/dc/terms/contributor\":\"Cont1\",\"http://purl.org/dc/terms/title\":\"Tt1\","
+            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},{\"http://purl.org/dc/terms/created\":\"not a date\"}]}},"
             + "\"startDate\":\"01-01-2011\",\"year\":\"2000\",\"day\":\"1\",\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},"
             + "\"startDayOfYear\":\"1\",\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":\"2.0\",\"lat\":\"1.0\"},"
-            + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,"
-            + "\"kingdomKey\":1,\"rank\":\"CHEMOFORM\"},{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],"
-            + "\"australiaSpatialLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\","
-            + "\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
-            + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\",\"DEPTH_UNLIKELY\","
-            + "\"IDENTIFIED_DATE_INVALID\",\"ELEVATION_MIN_MAX_SWAPPED\",\"TAXON_MATCH_NONE\",\"TYPE_STATUS_INVALID\",\"TAXON_MATCH_FUZZY\","
-            + "\"CONTINENT_INVALID\",\"GEODETIC_DATUM_INVALID\",\"MODIFIED_DATE_UNLIKELY\",\"COORDINATE_REPROJECTED\",\"PRESUMED_SWAPPED_COORDINATE\","
-            + "\"REFERENCES_URI_INVALID\",\"COORDINATE_ROUNDED\",\"IDENTIFIED_DATE_UNLIKELY\",\"COUNTRY_COORDINATE_MISMATCH\",\"DEPTH_NON_NUMERIC\","
-            + "\"COUNTRY_DERIVED_FROM_COORDINATES\",\"COORDINATE_REPROJECTION_FAILED\",\"COORDINATE_UNCERTAINTY_METERS_INVALID\",\"PRESUMED_NEGATED_LATITUDE\","
-            + "\"MULTIMEDIA_URI_INVALID\",\"COORDINATE_ACCURACY_INVALID\",\"GEODETIC_DATUM_ASSUMED_WGS84\",\"TAXON_MATCH_HIGHERRANK\",\"ELEVATION_UNLIKELY\","
+            + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\","
+            + "\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,\"rank\":\"CHEMOFORM\"},"
+            + "{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],"
+            + "\"australiaSpatialLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
+            + "\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
+            + "\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\",\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\","
+            + "\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\",\"DEPTH_UNLIKELY\",\"IDENTIFIED_DATE_INVALID\","
+            + "\"ELEVATION_MIN_MAX_SWAPPED\",\"TAXON_MATCH_NONE\",\"TYPE_STATUS_INVALID\",\"TAXON_MATCH_FUZZY\",\"CONTINENT_INVALID\","
+            + "\"GEODETIC_DATUM_INVALID\",\"MODIFIED_DATE_UNLIKELY\",\"COORDINATE_REPROJECTED\",\"PRESUMED_SWAPPED_COORDINATE\","
+            + "\"REFERENCES_URI_INVALID\",\"COORDINATE_ROUNDED\",\"IDENTIFIED_DATE_UNLIKELY\",\"COUNTRY_COORDINATE_MISMATCH\","
+            + "\"DEPTH_NON_NUMERIC\",\"COUNTRY_DERIVED_FROM_COORDINATES\",\"COORDINATE_REPROJECTION_FAILED\","
+            + "\"COORDINATE_UNCERTAINTY_METERS_INVALID\",\"PRESUMED_NEGATED_LATITUDE\",\"MULTIMEDIA_URI_INVALID\","
+            + "\"COORDINATE_ACCURACY_INVALID\",\"GEODETIC_DATUM_ASSUMED_WGS84\",\"TAXON_MATCH_HIGHERRANK\",\"ELEVATION_UNLIKELY\","
             + "\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\",\"RECORDED_DATE_INVALID\",\"INDIVIDUAL_COUNT_INVALID\","
             + "\"RECORDED_DATE_MISMATCH\",\"DEPTH_NOT_METRIC\",\"MULTIMEDIA_DATE_INVALID\",\"INTERPRETATION_ERROR\",\"RECORDED_DATE_UNLIKELY\","
             + "\"COUNTRY_MISMATCH\"]}";
@@ -122,11 +153,42 @@ public class GbifJsonConverterTest {
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://rs.tdwg.org/dwc/terms/remark", "{\"something\":1}{\"something\":1}");
 
+    // State
+    Map<String, String> ext1 = new HashMap<>();
+    ext1.put(DcTerm.identifier.qualifiedName(), "http://www.gbif.org/tmp.jpg");
+    ext1.put(DcTerm.references.qualifiedName(), "http://www.gbif.org/tmp.jpg");
+    ext1.put(DcTerm.created.qualifiedName(), "2010");
+    ext1.put(DcTerm.title.qualifiedName(), "Tt1");
+    ext1.put(DcTerm.description.qualifiedName(), "Desc1");
+    ext1.put(DcTerm.spatial.qualifiedName(), "Sp1");
+    ext1.put(DcTerm.format.qualifiedName(), "jpeg");
+    ext1.put(DcTerm.creator.qualifiedName(), "Cr1");
+    ext1.put(DcTerm.contributor.qualifiedName(), "Cont1");
+    ext1.put(DcTerm.publisher.qualifiedName(), "Pub1");
+    ext1.put(DcTerm.audience.qualifiedName(), "Aud1");
+    ext1.put(DcTerm.license.qualifiedName(), "Lic1");
+    ext1.put(DcTerm.rightsHolder.qualifiedName(), "Rh1");
+    ext1.put(DwcTerm.datasetID.qualifiedName(), "1");
+    ext1.put("http://www.w3.org/2003/01/geo/wgs84_pos#longitude", "-131.3");
+    ext1.put("http://www.w3.org/2003/01/geo/wgs84_pos#latitude", "60.4");
+
+    Map<String, String> ext2 = new HashMap<>();
+    ext2.put(DcTerm.created.qualifiedName(), "not a date");
+
+    Map<String, List<Map<String, String>>> extMap1 = new HashMap<>();
+    extMap1.put(Extension.IMAGE.getRowType(), Arrays.asList(ext1, ext2));
+
+    Map<String, List<Map<String, String>>> extMap2 = new HashMap<>();
+    extMap2.put(Extension.AUDUBON.getRowType(), Arrays.asList(ext1, ext2));
+
+    extMap1.putAll(extMap2);
+
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
             .setId("777")
             .setCoreRowType("core")
             .setCoreTerms(erMap)
+            .setExtensions(extMap1)
             .build();
 
     TemporalRecord tmr =
@@ -177,19 +239,20 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"verbatim\":{},\"issues\":[],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
-            + "\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
-            + "\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\",\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\","
-            + "\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\",\"DEPTH_UNLIKELY\",\"IDENTIFIED_DATE_INVALID\","
-            + "\"ELEVATION_MIN_MAX_SWAPPED\",\"TAXON_MATCH_NONE\",\"BASIS_OF_RECORD_INVALID\",\"TYPE_STATUS_INVALID\",\"TAXON_MATCH_FUZZY\","
-            + "\"CONTINENT_INVALID\",\"GEODETIC_DATUM_INVALID\",\"MODIFIED_DATE_UNLIKELY\",\"COORDINATE_REPROJECTED\","
-            + "\"PRESUMED_SWAPPED_COORDINATE\",\"REFERENCES_URI_INVALID\",\"COORDINATE_ROUNDED\",\"IDENTIFIED_DATE_UNLIKELY\","
-            + "\"COUNTRY_COORDINATE_MISMATCH\",\"DEPTH_NON_NUMERIC\",\"COUNTRY_DERIVED_FROM_COORDINATES\",\"COORDINATE_REPROJECTION_FAILED\","
+        "{\"id\":\"777\",\"verbatim\":{\"core\":{},\"extensions\":{}},\"issues\":[],\"notIssues\":"
+            + "[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\","
+            + "\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
+            + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\","
+            + "\"DEPTH_UNLIKELY\",\"IDENTIFIED_DATE_INVALID\",\"ELEVATION_MIN_MAX_SWAPPED\",\"TAXON_MATCH_NONE\","
+            + "\"BASIS_OF_RECORD_INVALID\",\"TYPE_STATUS_INVALID\",\"TAXON_MATCH_FUZZY\",\"CONTINENT_INVALID\","
+            + "\"GEODETIC_DATUM_INVALID\",\"MODIFIED_DATE_UNLIKELY\",\"COORDINATE_REPROJECTED\",\"PRESUMED_SWAPPED_COORDINATE\","
+            + "\"REFERENCES_URI_INVALID\",\"COORDINATE_ROUNDED\",\"IDENTIFIED_DATE_UNLIKELY\",\"COUNTRY_COORDINATE_MISMATCH\","
+            + "\"DEPTH_NON_NUMERIC\",\"COUNTRY_DERIVED_FROM_COORDINATES\",\"COORDINATE_REPROJECTION_FAILED\","
             + "\"COORDINATE_UNCERTAINTY_METERS_INVALID\",\"PRESUMED_NEGATED_LATITUDE\",\"MULTIMEDIA_URI_INVALID\","
             + "\"COORDINATE_ACCURACY_INVALID\",\"GEODETIC_DATUM_ASSUMED_WGS84\",\"TAXON_MATCH_HIGHERRANK\",\"ELEVATION_UNLIKELY\","
-            + "\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\",\"RECORDED_DATE_INVALID\",\"INDIVIDUAL_COUNT_INVALID\","
-            + "\"RECORDED_DATE_MISMATCH\",\"DEPTH_NOT_METRIC\",\"MULTIMEDIA_DATE_INVALID\",\"INTERPRETATION_ERROR\",\"ZERO_COORDINATE\","
-            + "\"RECORDED_DATE_UNLIKELY\",\"COUNTRY_MISMATCH\"]}";
+            + "\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\",\"RECORDED_DATE_INVALID\","
+            + "\"INDIVIDUAL_COUNT_INVALID\",\"RECORDED_DATE_MISMATCH\",\"DEPTH_NOT_METRIC\",\"MULTIMEDIA_DATE_INVALID\","
+            + "\"INTERPRETATION_ERROR\",\"ZERO_COORDINATE\",\"RECORDED_DATE_UNLIKELY\",\"COUNTRY_MISMATCH\"]}";
 
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
@@ -270,7 +333,7 @@ public class GbifJsonConverterTest {
   public void extendedRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"verbatim\":{}}";
+    String expected = "{\"id\":\"777\",\"verbatim\":{\"core\":{},\"extensions\":{}}}";
 
     // State
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("777").build();
