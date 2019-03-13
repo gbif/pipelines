@@ -367,6 +367,35 @@ public class GbifJsonConverter {
     };
   }
 
+  /**
+   * String converter for {@link AmplificationRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * {
+   *  "id": "777",
+   *  "amplificationItems": [
+   *    {
+   *      "name": "n",
+   *      "identity": 3,
+   *      "appliedScientificName": "sn",
+   *      "matchType": "mt",
+   *      "bitScore": 1,
+   *      "expectValue": 2,
+   *      "querySequence": "qs",
+   *      "subjectSequence": "ss",
+   *      "qstart": 5,
+   *      "qend": 4,
+   *      "sstart": 8,
+   *      "send": 6,
+   *      "distanceToBestMatch": "dm",
+   *      "sequenceLength": 7
+   *    }
+   *  ]
+   * }
+   * }</pre>
+   */
   private BiConsumer<JsonConverter, SpecificRecordBase> getAmplificationRecordConverter() {
     return (jc, record) -> {
       AmplificationRecord ar = (AmplificationRecord) record;
@@ -376,7 +405,7 @@ public class GbifJsonConverter {
       }
 
       List<ObjectNode> nodes = ar.getAmplificationItems().stream()
-          .filter(x -> x.getBlastResult() != null)
+          .filter(x -> x.getBlastResult() != null && x.getBlastResult().getMatchType() != null)
           .map(x -> {
             BlastResult blast = x.getBlastResult();
             ObjectNode node = JsonConverter.createObjectNode();

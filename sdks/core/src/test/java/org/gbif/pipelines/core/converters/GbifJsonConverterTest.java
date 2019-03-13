@@ -268,39 +268,6 @@ public class GbifJsonConverterTest {
   }
 
   @Test
-  public void avroBaseRecordSkipIssuesWithIdTest() {
-
-    // Expected
-    String expected =
-        "{\"id\":\"777\",\"amplificationItems\":[{\"amplificationDate\": null, \"amplificationStaff\": null, \"amplificationSuccess\": null, "
-            + "\"amplificationSuccessDetails\": null, \"amplificationMethod\": null, \"primerSequenceForward\": null, \"primerNameForward\": null, "
-            + "\"primerReferenceCitationForward\": null, \"primerReferenceLinkForward\": null, \"primerSequenceReverse\": null, "
-            + "\"primerNameReverse\": null, \"primerReferenceCitationReverse\": null, \"primerReferenceLinkReverse\": null, "
-            + "\"purificationMethod\": null, \"consensusSequence\": \"DNADNADNA\", \"consensusSequenceLength\": null, "
-            + "\"consensusSequenceChromatogramFileUri\": null, \"barcodeSequence\": null, \"haplotype\": null, \"marker\": \"IRS\", "
-            + "\"markerSubfragment\": null, \"geneticAccessionNumber\": null, \"boldProcessId\": null, \"geneticAccessionUri\": null, "
-            + "\"gcContent\": null, \"chimeraCheck\": null, \"assembly\": null, \"sop\": null, \"finishingStrategy\": null, "
-            + "\"annotSource\": null, \"markerAccordance\": null, \"seqQualityCheck\": null, \"adapters\": null, \"mid\": null, "
-            + "\"blastResult\": {\"name\": null, \"identity\": null, \"appliedScientificName\": null, \"matchType\": null, \"bitScore\": null, "
-            + "\"expectValue\": null, \"querySequence\": null, \"subjectSequence\": null, \"qstart\": null, \"qend\": null, \"sstart\": null, "
-            + "\"send\": null, \"distanceToBestMatch\": null, \"sequenceLength\": null}}]}";
-
-    // State
-    AmplificationRecord record = AmplificationRecord.newBuilder()
-        .setId("777")
-        .setAmplificationItems(Collections.singletonList(
-            Amplification.newBuilder().setMarker("IRS").setConsensusSequence("DNADNADNA").build()))
-        .build();
-
-    // When
-    String result = GbifJsonConverter.toStringPartialJson(record);
-
-    // Should
-    Assert.assertTrue(JsonValidationUtils.isValid(result));
-    Assert.assertEquals(expected, result);
-  }
-
-  @Test
   public void taxonRecordUsageTest() {
 
     // Expected
@@ -415,7 +382,7 @@ public class GbifJsonConverterTest {
     AmplificationRecord record = AmplificationRecord.newBuilder()
         .setId("777")
         .setAmplificationItems(
-            Collections.singletonList(
+            Arrays.asList(
                 Amplification.newBuilder().setBlastResult(
                     BlastResult.newBuilder()
                         .setAppliedScientificName("sn")
@@ -433,7 +400,8 @@ public class GbifJsonConverterTest {
                         .setSstart(8)
                         .setSubjectSequence("ss")
                         .build()
-                ).build()
+                ).build(),
+                Amplification.newBuilder().build()
             )
         )
         .build();
