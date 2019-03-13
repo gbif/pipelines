@@ -228,8 +228,8 @@ public class GbifJsonConverter {
 
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
         ObjectNode node = JsonConverter.createObjectNode();
-        node.put("lon", lr.getDecimalLongitude().toString());
-        node.put("lat", lr.getDecimalLatitude().toString());
+        node.put("lon", lr.getDecimalLongitude());
+        node.put("lat", lr.getDecimalLatitude());
         jc.addJsonObject("coordinates", node);
       }
       // Fields as a common view - "key": "value"
@@ -409,20 +409,7 @@ public class GbifJsonConverter {
           .map(x -> {
             BlastResult blast = x.getBlastResult();
             ObjectNode node = JsonConverter.createObjectNode();
-            node.put("name", blast.getName());
-            node.put("identity", blast.getIdentity());
-            node.put("appliedScientificName", blast.getAppliedScientificName());
-            node.put("matchType", blast.getMatchType());
-            node.put("bitScore", blast.getBitScore());
-            node.put("expectValue", blast.getExpectValue());
-            node.put("querySequence", blast.getQuerySequence());
-            node.put("subjectSequence", blast.getSubjectSequence());
-            node.put("qstart", blast.getQstart());
-            node.put("qend", blast.getQend());
-            node.put("sstart", blast.getSstart());
-            node.put("send", blast.getSend());
-            node.put("distanceToBestMatch", blast.getDistanceToBestMatch());
-            node.put("sequenceLength", blast.getSequenceLength());
+            jc.addCommonFields(blast, node);
             return node;
           }).collect(Collectors.toList());
 

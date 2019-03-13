@@ -9,6 +9,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -20,6 +22,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
+
+import static org.apache.avro.Schema.Type.UNION;
 
 /**
  * Common converter, to convert any {@link SpecificRecordBase} object to json string
@@ -101,21 +105,54 @@ public class JsonConverter {
     return toJson().toString();
   }
 
+  /**
+   * Common way how to convert {@link SpecificRecordBase} to json string
+   * Converts {@link SpecificRecordBase} by fields type and adds into {@link ObjectNode}
+   */
+  void addCommonFields(SpecificRecordBase record, ObjectNode node) {
+    record.getSchema().getFields().stream()
+        .filter(n -> !skipKeys.contains(n.name()))
+        .forEach(
+            f -> Optional.ofNullable(record.get(f.pos())).ifPresent(r -> {
+
+              Schema schema = f.schema();
+              Optional<Type> type = schema.getType() == UNION
+                  ? schema.getTypes().stream().filter(t -> t.getType() != Type.NULL).findFirst().map(Schema::getType)
+                  : Optional.of(schema.getType());
+
+              type.ifPresent(t -> {
+                switch (t) {
+                  case BOOLEAN:
+                    node.put(f.name(), (Boolean) r);
+                    break;
+                  case FLOAT:
+                  case DOUBLE:
+                    node.put(f.name(), (Double) r);
+                    break;
+                  case INT:
+                    node.put(f.name(), (Integer) r);
+                    break;
+                  case LONG:
+                    node.put(f.name(), (Long) r);
+                    break;
+                  default:
+                    addJsonFieldNoCheck(node, f.name(), r.toString());
+                    break;
+                }
+              });
+            })
+        );
+  }
+
   /** Common way how to convert {@link SpecificRecordBase} to json string */
   void addCommonFields(SpecificRecordBase base) {
-    base.getSchema().getFields().forEach(
-        f -> Optional.ofNullable(base.get(f.pos())).map(Object::toString).ifPresent(r -> addJsonField(f.name(), r))
-    );
+    addCommonFields(base, mainNode);
   }
 
   /** Common way how to convert {@link SpecificRecordBase} to json string */
   void addCommonFields(String key, SpecificRecordBase base) {
     ObjectNode node = MAPPER.createObjectNode();
-    base.getSchema().getFields().forEach(
-        f -> Optional.ofNullable(base.get(f.pos()))
-            .map(Object::toString)
-            .ifPresent(r -> addJsonField(node, f.name(), r))
-    );
+    addCommonFields(base, node);
     mainNode.set(key, node);
   }
 
@@ -142,43 +179,43 @@ public class JsonConverter {
     node.addAll(values);
   }
 
-  /** Check field in skipKeys and convert - "key":"value" */
+  /** Checks field in skipKeys and convert - "key":"value" */
   void addJsonField(ObjectNode node, String key, String value) {
     if (!skipKeys.contains(key)) {
       addJsonFieldNoCheck(node, key, value);
     }
   }
 
-  /** Check field in skipKeys and convert - "key":"value" */
+  /** Checks field in skipKeys and convert - "key":"value" */
   void addJsonRawField(ObjectNode node, String key, String value) {
     if (!skipKeys.contains(key)) {
       addJsonRawFieldNoCheck(node, key, value);
     }
   }
 
-  /** Check field in skipKeys and convert - "key":"value" */
+  /** Checks field in skipKeys and convert - "key":"value" */
   void addJsonField(String key, String value) {
     addJsonField(mainNode, key, value);
   }
 
-  /** Add text field without any skip checks */
+  /** Adds text field without any skip checks */
   void addJsonTextFieldNoCheck(String key, String value) {
     mainNode.set(sanitizeValue(key), new TextNode(value));
   }
 
-  /** Convert - "key":"value" and check some incorrect symbols for json */
+  /** Converts - "key":"value" and check some incorrect symbols for json */
   void addJsonFieldNoCheck(ObjectNode node, String key, String value) {
     // Can be a json  or a string
     node.set(sanitizeValue(key), IS_COMPLEX_OBJECT.test(value) ? new POJONode(value) : new TextNode(value));
   }
 
-  /** Convert - "key":"value" and check some incorrect symbols for json */
+  /** Converts - "key":"value" and check some incorrect symbols for json */
   void addJsonRawFieldNoCheck(ObjectNode node, String key, String value) {
     // Can be a json  or a string
     node.set(sanitizeValue(key), new TextNode(value));
   }
 
-  /** Convert - "key":"value" and check some incorrect symbols for json */
+  /** Converts - "key":"value" and check some incorrect symbols for json */
   void addJsonFieldNoCheck(String key, String value) {
     addJsonFieldNoCheck(mainNode, key, value);
   }
