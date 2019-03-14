@@ -37,7 +37,12 @@ public class SimpleTypeParser {
 
   /** Parses a double value and consumes its response (if any). */
   public static void parseDouble(ExtendedRecord er, DwcTerm term, Consumer<Optional<Double>> consumer) {
-    Optional.ofNullable(extractValue(er, term))
+    parseDouble(extractValue(er, term), consumer);
+  }
+
+  /** Parses a double value and consumes its response (if any). */
+  public static void parseDouble(String value, Consumer<Optional<Double>> consumer) {
+    Optional.ofNullable(value)
         .ifPresent(termValue -> consumer.accept(Optional.ofNullable(NumberParser.parseDouble(termValue))));
   }
 
@@ -54,7 +59,8 @@ public class SimpleTypeParser {
   }
 
   /** Parses a boolean value and applies mapping functions to its response (if any). */
-  public static <U> Optional<U> parseBoolean(ExtendedRecord er, DwcTerm term, Function<ParseResult<Boolean>, U> mapper) {
+  public static <U> Optional<U> parseBoolean(ExtendedRecord er, DwcTerm term,
+      Function<ParseResult<Boolean>, U> mapper) {
     return Optional.ofNullable(extractValue(er, term))
         .map(termValue -> mapper.apply(BOOLEAN_PARSER.parse(termValue)));
   }

@@ -3,6 +3,8 @@ package org.gbif.pipelines.core.interpreters.extension;
 import java.time.temporal.Temporal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
@@ -13,6 +15,7 @@ import org.gbif.pipelines.io.avro.DeterminedDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFact;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
@@ -33,12 +36,12 @@ public class MeasurementOrFactInterpreter {
           .to(MeasurementOrFact::new)
           .map(DwcTerm.measurementID, MeasurementOrFact::setId)
           .map(DwcTerm.measurementType, MeasurementOrFact::setType)
-          .map(DwcTerm.measurementValue, MeasurementOrFact::setValue)
           .map(DwcTerm.measurementAccuracy, MeasurementOrFact::setAccuracy)
           .map(DwcTerm.measurementUnit, MeasurementOrFact::setUnit)
           .map(DwcTerm.measurementDeterminedBy, MeasurementOrFact::setDeterminedBy)
           .map(DwcTerm.measurementMethod, MeasurementOrFact::setMethod)
           .map(DwcTerm.measurementRemarks, MeasurementOrFact::setRemarks)
+          .map(DwcTerm.measurementValue, MeasurementOrFactInterpreter::parseAndSetValue)
           .map(DwcTerm.measurementDeterminedDate, MeasurementOrFactInterpreter::parseAndSetDeterminedDate);
 
   /**
@@ -67,8 +70,18 @@ public class MeasurementOrFactInterpreter {
     parsed.getFrom().map(Temporal::toString).ifPresent(determinedDate::setGte);
     parsed.getTo().map(Temporal::toString).ifPresent(determinedDate::setLte);
 
-    mf.setDeterminedDate(determinedDate);
+    mf.setDeterminedDateParsed(determinedDate);
+    mf.setDeterminedDate(v);
 
     return parsed.getIssueList();
+  }
+
+  /**
+   * Parser for "http://rs.tdwg.org/dwc/terms/measurementValue" term value, tries to parse if it is a Double
+   */
+  private static void parseAndSetValue(MeasurementOrFact mf, String v) {
+    mf.setValue(v);
+    Consumer<Optional<Double>> fn = result -> result.ifPresent(mf::setValueParsed);
+    SimpleTypeParser.parseDouble(v, fn);
   }
 }
