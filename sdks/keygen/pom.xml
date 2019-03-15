@@ -24,9 +24,38 @@
       <artifactId>lombok</artifactId>
     </dependency>
 
+    <!-- GBIF -->
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>dwc-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>hbase-utils</artifactId>
+      <version>0.12</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>org.apache.hbase</artifactId>
+          <groupId>hbase</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>org.apache.hadoop</artifactId>
+          <groupId>hadoop-core</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
     </dependency>
 
   </dependencies>

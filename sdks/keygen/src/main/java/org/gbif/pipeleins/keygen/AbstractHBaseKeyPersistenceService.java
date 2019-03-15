@@ -7,12 +7,11 @@ import java.util.Set;
 
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.occurrence.common.config.OccHBaseConfiguration;
-import org.gbif.occurrence.common.identifier.OccurrenceKeyHelper;
-import org.gbif.occurrence.persistence.IllegalDataStateException;
-import org.gbif.occurrence.persistence.api.KeyLookupResult;
-import org.gbif.occurrence.persistence.hbase.Columns;
-import org.gbif.occurrence.persistence.hbase.HBaseStore;
+import org.gbif.pipeleins.api.KeyLookupResult;
+import org.gbif.pipeleins.config.OccHBaseConfiguration;
+import org.gbif.pipeleins.hbase.Columns;
+import org.gbif.pipeleins.hbase.HBaseStore;
+import org.gbif.pipeleins.identifier.OccurrenceKeyHelper;
 
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -41,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * An abstract implementation of KeyPersistenceService that handles the finding and deleting of keys in HBase, but
  * leaves the generation of keys to sub-classes.
  */
-public abstract class AbstractHBaseKeyPersistenceService implements KeyPersistenceService<Integer> {
+public abstract class AbstractHBaseKeyPersistenceService {
 
   private static final Logger LOG = LoggerFactory.getLogger(AbstractHBaseKeyPersistenceService.class);
   private static final int HBASE_CLIENT_CACHING = 200;
@@ -51,21 +50,19 @@ public abstract class AbstractHBaseKeyPersistenceService implements KeyPersisten
   private final HBaseStore<Integer> occurrenceTableStore;
   protected final HBaseStore<String> lookupTableStore;
   protected final HBaseStore<Integer> counterTableStore;
-  protected final KeyBuilder keyBuilder;
+  protected final OccurrenceKeyBuilder keyBuilder;
 
-  public AbstractHBaseKeyPersistenceService(OccHBaseConfiguration cfg, Connection connection, KeyBuilder keyBuilder) {
+  public AbstractHBaseKeyPersistenceService(OccHBaseConfiguration cfg, Connection connection, OccurrenceKeyBuilder keyBuilder) {
     lookupTableName =  TableName.valueOf(checkNotNull(cfg.lookupTable, "lookupTable can't be null"));
     this.connection = checkNotNull(connection, "tablePool can't be null");
     this.keyBuilder = checkNotNull(keyBuilder, "keyBuilder can't be null");
-    lookupTableStore = new HBaseStore<String>(cfg.lookupTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
-    counterTableStore = new HBaseStore<Integer>(cfg.counterTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
-    occurrenceTableStore = new HBaseStore<Integer>(cfg.occTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    lookupTableStore = new HBaseStore<>(cfg.lookupTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    counterTableStore = new HBaseStore<>(cfg.counterTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    occurrenceTableStore = new HBaseStore<>(cfg.occTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
   }
 
-  @Override
   public abstract KeyLookupResult generateKey(Set<String> uniqueStrings, String scope);
 
-  @Override
   public KeyLookupResult findKey(Set<String> uniqueStrings, String scope) {
     checkNotNull(uniqueStrings, "uniqueStrings can't be null");
     checkNotNull(scope, "scope can't be null");
@@ -114,7 +111,6 @@ public abstract class AbstractHBaseKeyPersistenceService implements KeyPersisten
     return result;
   }
 
-  @Override
   public Set<Integer> findKeysByScope(String scope) {
     Set<Integer> keys = Sets.newHashSet();
     // note HTableStore isn't capable of ad hoc scans
@@ -146,7 +142,6 @@ public abstract class AbstractHBaseKeyPersistenceService implements KeyPersisten
    * @param occurrenceKey the key to delete
    * @param datasetKey    the optional "scope" for the lookup (without it this method is very slow)
    */
-  @Override
   public void deleteKey(Integer occurrenceKey, @Nullable String datasetKey) {
     checkNotNull(occurrenceKey, "occurrenceKey can't be null");
 
@@ -188,7 +183,6 @@ public abstract class AbstractHBaseKeyPersistenceService implements KeyPersisten
 
   }
 
-  @Override
   public void deleteKeyByUniques(Set<String> uniqueStrings, String scope) {
     checkNotNull(uniqueStrings, "uniqueStrings can't be null");
     checkNotNull(scope, "scope can't be null");
@@ -213,7 +207,7 @@ public abstract class AbstractHBaseKeyPersistenceService implements KeyPersisten
     for (Map.Entry<String, Integer> entry : conflictingKeys.entrySet()) {
       sb.append('[').append(entry.getKey()).append("]=[").append(entry.getValue()).append(']');
     }
-    throw new IllegalDataStateException(sb.toString());
+    throw new IllegalStateException(sb.toString());
   }
 
 

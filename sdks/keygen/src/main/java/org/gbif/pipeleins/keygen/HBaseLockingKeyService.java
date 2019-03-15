@@ -7,14 +7,15 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.gbif.hbase.util.ResultReader;
-import org.gbif.occurrence.common.config.OccHBaseConfiguration;
-import org.gbif.occurrence.persistence.api.KeyLookupResult;
-import org.gbif.occurrence.persistence.hbase.Columns;
+import org.gbif.pipeleins.api.KeyLookupResult;
+import org.gbif.pipeleins.config.OccHBaseConfiguration;
+import org.gbif.pipeleins.hbase.Columns;
 
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -31,7 +32,7 @@ public class HBaseLockingKeyService extends AbstractHBaseKeyPersistenceService {
   public static final int COUNTER_ROW = 1;
 
   // The number of IDs to reserve at a time in batch
-  private static final int BATCHED_ID_SIZE = 100;
+  private static final Integer BATCHED_ID_SIZE = 100;
   // the next available key to allocate
   private int currentKey;
   // our reserved upper key limit for the current batch
@@ -135,7 +136,6 @@ public class HBaseLockingKeyService extends AbstractHBaseKeyPersistenceService {
 
     if (failed) {
       log.debug("Failed to get lock. Releasing held locks and trying again.");
-      reattempts.mark();
       releaseLocks(statusMap);
       try {
         Random random = new Random();
@@ -188,7 +188,7 @@ public class HBaseLockingKeyService extends AbstractHBaseKeyPersistenceService {
     // if we have exhausted our reserved keys, get a new batch of them
     if (currentKey == maxReservedKeyInclusive) {
       // get batch
-      Long longKey = counterTableStore.incrementColumnValue(COUNTER_ROW, Columns.COUNTER_COLUMN, BATCHED_ID_SIZE);
+      Long longKey = counterTableStore.incrementColumnValue(COUNTER_ROW, Columns.COUNTER_COLUMN, BATCHED_ID_SIZE.longValue());
       if (longKey > Integer.MAX_VALUE) {
         throw new IllegalStateException("HBase issuing keys larger than Integer can support");
       }
