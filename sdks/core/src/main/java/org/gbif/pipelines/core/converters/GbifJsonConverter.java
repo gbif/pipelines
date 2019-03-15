@@ -54,6 +54,9 @@ import lombok.extern.slf4j.Slf4j;
 @Builder
 public class GbifJsonConverter {
 
+  private static final String ID = "id";
+  private static final String ISSUES = "issues";
+
   private final JsonConverter.JsonConverterBuilder builder =
       JsonConverter.builder()
           .skipKey("decimalLatitude")
@@ -103,10 +106,10 @@ public class GbifJsonConverter {
   public ObjectNode toJson() {
     builder.records(records);
     if (skipId) {
-      builder.skipKey("id");
+      builder.skipKey(ID);
     }
     if (skipIssues) {
-      builder.skipKey("issues");
+      builder.skipKey(ISSUES);
     }
 
     ObjectNode mainNode = builder.build().toJson();
@@ -134,7 +137,7 @@ public class GbifJsonConverter {
         .collect(Collectors.toSet());
     ArrayNode issueArrayNodes = JsonConverter.createArrayNode();
     issues.forEach(issueArrayNodes::add);
-    mainNode.set("issues", issueArrayNodes);
+    mainNode.set(ISSUES, issueArrayNodes);
 
     // Not issues
     Set<String> notIssues = Arrays.stream(OccurrenceIssue.values())
@@ -172,7 +175,7 @@ public class GbifJsonConverter {
 
       ExtendedRecord er = (ExtendedRecord) record;
 
-      jc.addJsonTextFieldNoCheck("id", er.getId());
+      jc.addJsonTextFieldNoCheck(ID, er.getId());
 
       Map<String, String> core = er.getCoreTerms();
       Map<String, List<Map<String, String>>> ext = er.getExtensions();
@@ -226,7 +229,7 @@ public class GbifJsonConverter {
       LocationRecord lr = (LocationRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck("id", lr.getId());
+        jc.addJsonTextFieldNoCheck(ID, lr.getId());
       }
 
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
@@ -256,7 +259,7 @@ public class GbifJsonConverter {
       TemporalRecord tr = (TemporalRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck("id", tr.getId());
+        jc.addJsonTextFieldNoCheck(ID, tr.getId());
       }
 
       Optional.ofNullable(tr.getEventDate())
@@ -299,7 +302,7 @@ public class GbifJsonConverter {
       TaxonRecord tr = (TaxonRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck("id", tr.getId());
+        jc.addJsonTextFieldNoCheck(ID, tr.getId());
       }
 
       List<RankedName> classifications = tr.getClassification();
@@ -352,7 +355,7 @@ public class GbifJsonConverter {
       AustraliaSpatialRecord asr = (AustraliaSpatialRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck("id", asr.getId());
+        jc.addJsonTextFieldNoCheck(ID, asr.getId());
       }
 
       Optional.ofNullable(asr.getItems())
@@ -404,7 +407,7 @@ public class GbifJsonConverter {
       AmplificationRecord ar = (AmplificationRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck("id", ar.getId());
+        jc.addJsonTextFieldNoCheck(ID, ar.getId());
       }
 
       List<ObjectNode> nodes = ar.getAmplificationItems().stream()
@@ -457,7 +460,7 @@ public class GbifJsonConverter {
       MeasurementOrFactRecord mfr = (MeasurementOrFactRecord) record;
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck("id", mfr.getId());
+        jc.addJsonTextFieldNoCheck(ID, mfr.getId());
       }
 
       List<ObjectNode> nodes = mfr.getMeasurementOrFactItems().stream()
