@@ -20,21 +20,23 @@ public class MetadataInterpreter {
    */
   public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {
-      mdr.setDatasetKey(datasetId);
+      if (client != null) {
+        mdr.setDatasetKey(datasetId);
 
-      Dataset dataset = client.getDataset(datasetId);
-      mdr.setDatasetTitle(dataset.getTitle());
-      mdr.setInstallationKey(dataset.getInstallationKey());
-      mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-      mdr.setLicense(dataset.getLicense());
+        Dataset dataset = client.getDataset(datasetId);
+        mdr.setDatasetTitle(dataset.getTitle());
+        mdr.setInstallationKey(dataset.getInstallationKey());
+        mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
+        mdr.setLicense(dataset.getLicense());
 
-      Installation installation = client.getInstallation(mdr.getInstallationKey());
-      mdr.setOrganizationKey(installation.getOrganizationKey());
-      mdr.setProtocol(installation.getProtocol());
+        Installation installation = client.getInstallation(mdr.getInstallationKey());
+        mdr.setOrganizationKey(installation.getOrganizationKey());
+        mdr.setProtocol(installation.getProtocol());
 
-      Organization organization = client.getOrganization(mdr.getOrganizationKey());
-      mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
-      mdr.setPublisherTitle(organization.getTitle());
+        Organization organization = client.getOrganization(mdr.getOrganizationKey());
+        mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
+        mdr.setPublisherTitle(organization.getTitle());
+      }
     };
   }
 }

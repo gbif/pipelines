@@ -93,6 +93,13 @@ public class MetadataTransform {
   /**
    * Creates an {@link Interpreter} for {@link MetadataRecord}
    */
+  public static SingleOutput<String, MetadataRecord> interpret() {
+    return ParDo.of(new Interpreter());
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link MetadataRecord}
+   */
   public static SingleOutput<String, MetadataRecord> interpret(WsConfig wsConfig) {
     return ParDo.of(new Interpreter(wsConfig));
   }
@@ -117,6 +124,10 @@ public class MetadataTransform {
     private final WsConfig wsConfig;
     private MetadataServiceClient client;
 
+    public Interpreter() {
+      this.wsConfig = null;
+    }
+
     public Interpreter(WsConfig wsConfig) {
       this.wsConfig = wsConfig;
     }
@@ -127,7 +138,9 @@ public class MetadataTransform {
 
     @Setup
     public void setup() {
-      client = MetadataServiceClient.create(wsConfig);
+      if (wsConfig != null) {
+        client = MetadataServiceClient.create(wsConfig);
+      }
     }
 
     @ProcessElement

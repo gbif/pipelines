@@ -41,46 +41,49 @@ public class TaxonomyInterpreter {
   public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(
       KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
     return (er, tr) -> {
-      ModelUtils.checkNullOrEmpty(er);
+      if (kvStore != null) {
 
-      SpeciesMatchRequest matchRequest = SpeciesMatchRequest.builder()
-          .withKingdom(extractValue(er, DwcTerm.kingdom))
-          .withPhylum(extractValue(er, DwcTerm.phylum))
-          .withClass_(extractValue(er, DwcTerm.class_))
-          .withOrder(extractValue(er, DwcTerm.order))
-          .withFamily(extractValue(er, DwcTerm.family))
-          .withGenus(extractValue(er, DwcTerm.genus))
-          .withScientificName(extractValue(er, DwcTerm.scientificName))
-          .build();
+        ModelUtils.checkNullOrEmpty(er);
 
-      NameUsageMatch usageMatch = null;
-      try {
-        usageMatch = kvStore.get(matchRequest);
-      } catch (NoSuchElementException | NullPointerException ex) {
-        log.error(ex.getMessage(), ex);
-      }
+        SpeciesMatchRequest matchRequest = SpeciesMatchRequest.builder()
+            .withKingdom(extractValue(er, DwcTerm.kingdom))
+            .withPhylum(extractValue(er, DwcTerm.phylum))
+            .withClass_(extractValue(er, DwcTerm.class_))
+            .withOrder(extractValue(er, DwcTerm.order))
+            .withFamily(extractValue(er, DwcTerm.family))
+            .withGenus(extractValue(er, DwcTerm.genus))
+            .withScientificName(extractValue(er, DwcTerm.scientificName))
+            .build();
 
-      if (usageMatch == null) {
-        addIssue(tr, INTERPRETATION_ERROR);
-      } else if (isEmpty(usageMatch)) {
-        // "NO_MATCHING_RESULTS". This
-        // happens when we get an empty response from the WS
-        addIssue(tr, TAXON_MATCH_NONE);
-      } else {
-
-        MatchType matchType = usageMatch.getDiagnostics().getMatchType();
-
-        if (MatchType.NONE == matchType) {
-          addIssue(tr, TAXON_MATCH_NONE);
-        } else if (MatchType.FUZZY == matchType) {
-          addIssue(tr, TAXON_MATCH_FUZZY);
-        } else if (MatchType.HIGHERRANK == matchType) {
-          addIssue(tr, TAXON_MATCH_HIGHERRANK);
+        NameUsageMatch usageMatch = null;
+        try {
+          usageMatch = kvStore.get(matchRequest);
+        } catch (NoSuchElementException | NullPointerException ex) {
+          log.error(ex.getMessage(), ex);
         }
 
-        // convert taxon record
-        TaxonRecordConverter.convert(usageMatch, tr);
-        tr.setId(er.getId());
+        if (usageMatch == null) {
+          addIssue(tr, INTERPRETATION_ERROR);
+        } else if (isEmpty(usageMatch)) {
+          // "NO_MATCHING_RESULTS". This
+          // happens when we get an empty response from the WS
+          addIssue(tr, TAXON_MATCH_NONE);
+        } else {
+
+          MatchType matchType = usageMatch.getDiagnostics().getMatchType();
+
+          if (MatchType.NONE == matchType) {
+            addIssue(tr, TAXON_MATCH_NONE);
+          } else if (MatchType.FUZZY == matchType) {
+            addIssue(tr, TAXON_MATCH_FUZZY);
+          } else if (MatchType.HIGHERRANK == matchType) {
+            addIssue(tr, TAXON_MATCH_HIGHERRANK);
+          }
+
+          // convert taxon record
+          TaxonRecordConverter.convert(usageMatch, tr);
+          tr.setId(er.getId());
+        }
       }
     };
   }

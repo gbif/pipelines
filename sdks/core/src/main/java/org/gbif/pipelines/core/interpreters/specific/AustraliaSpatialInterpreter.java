@@ -25,19 +25,21 @@ public class AustraliaSpatialInterpreter {
 
   public static BiConsumer<LocationRecord, AustraliaSpatialRecord> interpret(KeyValueStore<LatLng, String> kvStore) {
     return (lr, asr) -> {
-      try {
-        // Call kv store
-        String json = kvStore.get(new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()));
+      if (kvStore != null) {
+        try {
+          // Call kv store
+          String json = kvStore.get(new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()));
 
-        // Parse json
-        if (!Strings.isNullOrEmpty(json)) {
-          json = json.substring(11, json.length() - 1);
-          ObjectMapper objectMapper = new ObjectMapper();
-          Map<String, String> map = objectMapper.readValue(json, new TypeReference<HashMap<String, String>>() {});
-          asr.setItems(map);
+          // Parse json
+          if (!Strings.isNullOrEmpty(json)) {
+            json = json.substring(11, json.length() - 1);
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, String> map = objectMapper.readValue(json, new TypeReference<HashMap<String, String>>() {});
+            asr.setItems(map);
+          }
+        } catch (NoSuchElementException | NullPointerException | IOException ex) {
+          log.error(ex.getMessage(), ex);
         }
-      } catch (NoSuchElementException | NullPointerException | IOException ex) {
-        log.error(ex.getMessage(), ex);
       }
     };
   }

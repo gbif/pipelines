@@ -48,44 +48,12 @@ public class HBaseStore<T> {
     return ResultReader.getInteger(row, cf, columnName, null);
   }
 
-  public Long getLong(T key, String columnName) {
-    Result row = getRow(key, columnName);
-    return ResultReader.getLong(row, cf, columnName, null);
-  }
-
-  public Double getDouble(T key, String columnName) {
-    Result row = getRow(key, columnName);
-    return ResultReader.getDouble(row, cf, columnName, null);
-  }
-
-  public Float getFloat(T key, String columnName) {
-    Result row = getRow(key, columnName);
-    return ResultReader.getFloat(row, cf, columnName, null);
-  }
-
   public String getString(T key, String columnName) {
     Result row = getRow(key, columnName);
     return ResultReader.getString(row, cf, columnName, null);
   }
 
-  public byte[] getBytes(T key, String columnName) {
-    Result row = getRow(key, columnName);
-    return ResultReader.getBytes(row, cf, columnName, null);
-  }
-
   public void putInt(T key, String columnName, int value) {
-    put(key, columnName, Bytes.toBytes(value));
-  }
-
-  public void putLong(T key, String columnName, long value) {
-    put(key, columnName, Bytes.toBytes(value));
-  }
-
-  public void putFloat(T key, String columnName, float value) {
-    put(key, columnName, Bytes.toBytes(value));
-  }
-
-  public void putDouble(T key, String columnName, double value) {
     put(key, columnName, Bytes.toBytes(value));
   }
 

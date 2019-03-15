@@ -76,16 +76,18 @@ public class AmplificationInterpreter {
    */
   public static BiConsumer<ExtendedRecord, AmplificationRecord> interpret(BlastServiceClient client) {
     return (er, ar) -> {
-      Objects.requireNonNull(er);
-      Objects.requireNonNull(ar);
+      if (client != null) {
+        Objects.requireNonNull(er);
+        Objects.requireNonNull(ar);
 
-      Result<Amplification> result = HANDLER.convert(er);
+        Result<Amplification> result = HANDLER.convert(er);
 
-      List<Amplification> amplifications = result.getList();
-      parseAndSetBlast(amplifications, client);
+        List<Amplification> amplifications = result.getList();
+        parseAndSetBlast(amplifications, client);
 
-      ar.setAmplificationItems(amplifications);
-      ar.getIssues().setIssueList(result.getIssuesAsList());
+        ar.setAmplificationItems(amplifications);
+        ar.getIssues().setIssueList(result.getIssuesAsList());
+      }
     };
   }
 

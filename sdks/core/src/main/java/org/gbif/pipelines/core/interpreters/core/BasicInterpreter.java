@@ -2,6 +2,7 @@ package org.gbif.pipelines.core.interpreters.core;
 
 import java.net.URI;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -14,6 +15,7 @@ import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipeleins.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
@@ -36,6 +38,15 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BasicInterpreter {
+
+  /** Generates or gets existing GBIF id */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService) {
+    return (er, br) -> {
+      if (keygenService != null) {
+        // TODO: LOGIC
+      }
+    };
+  }
 
   /** {@link DwcTerm#individualCount} interpretation. */
   public static void interpretIndividualCount(ExtendedRecord er, BasicRecord br) {

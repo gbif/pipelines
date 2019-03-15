@@ -1,13 +1,13 @@
 package org.gbif.pipeleins.config;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 /**
  * Configs needed to connect to the occurrence HBase db.
  */
-public class OccHBaseConfiguration {
+public class HbaseConfiguration {
 
   @Min(1)
   public int hbasePoolSize = 5;
@@ -39,7 +39,7 @@ public class OccHBaseConfiguration {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
       .add("hbasePoolSize", hbasePoolSize)
       .add("occTable", occTable)
       .add("counterTable", counterTable)

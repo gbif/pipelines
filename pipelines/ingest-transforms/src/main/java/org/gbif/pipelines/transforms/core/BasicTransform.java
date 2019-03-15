@@ -3,6 +3,8 @@ package org.gbif.pipelines.transforms.core;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
+import org.gbif.pipeleins.config.HbaseConfiguration;
+import org.gbif.pipeleins.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
@@ -108,10 +110,30 @@ public class BasicTransform {
 
     private final Counter counter = Metrics.counter(BasicTransform.class, BASIC_RECORDS_COUNT);
 
+    private final HbaseConfiguration config;
+    private HBaseLockingKeyService keygenService;
+
+    public Interpreter(HbaseConfiguration config) {
+      this.config = config;
+    }
+
+    public Interpreter() {
+      this.config = null;
+    }
+
+    @Setup
+    public void setup() {
+      if (config != null) {
+        // TODO: INIT SERVICE
+        keygenService = null;
+      }
+    }
+
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> BasicRecord.newBuilder().setId(er.getId()).build())
+          .via(BasicInterpreter.interpretGbifId(keygenService))
           .via(BasicInterpreter::interpretBasisOfRecord)
           .via(BasicInterpreter::interpretSex)
           .via(BasicInterpreter::interpretEstablishmentMeans)
