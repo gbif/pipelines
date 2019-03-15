@@ -18,6 +18,7 @@ import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -26,6 +27,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.POJONode;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +63,8 @@ public class GbifJsonConverter {
           .converter(TemporalRecord.class, getTemporalRecordConverter())
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
           .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
-          .converter(AmplificationRecord.class, getAmplificationRecordConverter());
+          .converter(AmplificationRecord.class, getAmplificationRecordConverter())
+          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -411,9 +414,35 @@ public class GbifJsonConverter {
             ObjectNode node = JsonConverter.createObjectNode();
             jc.addCommonFields(blast, node);
             return node;
-          }).collect(Collectors.toList());
+          })
+          .collect(Collectors.toList());
 
       jc.addJsonArray("amplificationItems", nodes);
+    };
+  }
+
+
+  private BiConsumer<JsonConverter, SpecificRecordBase> getMeasurementOrFactRecordConverter() {
+    return (jc, record) -> {
+      MeasurementOrFactRecord mfr = (MeasurementOrFactRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck("id", mfr.getId());
+      }
+
+      List<ObjectNode> nodes = mfr.getMeasurementOrFactItems().stream()
+          .filter(x -> x.getValueParsed() != null || x.getDeterminedDateParsed() != null)
+          .map(x -> {
+            ObjectNode node = JsonConverter.createObjectNode();
+            node.put("id", x.getId());
+            node.put("type", x.getType());
+            node.put("value", x.getValueParsed());
+            node.set("determinedDate", new POJONode(x.getDeterminedDateParsed()));
+            return node;
+          })
+          .collect(Collectors.toList());
+
+      jc.addJsonArray("measurementOrFactItems", nodes);
     };
   }
 }
