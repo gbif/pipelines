@@ -34,7 +34,7 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
  * Beam level transformations for the DWC Event, reads an avro, writes an avro, maps from value to keyValue and
  * transforms form {@link ExtendedRecord} to {@link TemporalRecord}.
  *
- * @see <a href="https://dwc.tdwg.org/terms/#event</a>
+ * @see <a href="https://dwc.tdwg.org/terms/#event">https://dwc.tdwg.org/terms/#event</a>
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalTransform {
