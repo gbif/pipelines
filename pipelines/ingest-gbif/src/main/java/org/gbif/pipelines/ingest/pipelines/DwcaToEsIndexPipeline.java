@@ -1,8 +1,10 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 
+import org.gbif.pipeleins.config.OccHbaseConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
@@ -52,6 +54,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -111,7 +114,11 @@ public class DwcaToEsIndexPipeline {
 
   public static void run(DwcaPipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
+    String datasetId = options.getDatasetId();
+    OccHbaseConfiguration tableConfig = options.getOccHbaseConfiguration();
+    List<Configuration> hdfsConfig = options.getHdfsConfiguration();
+
+    MDC.put("datasetId", datasetId);
     MDC.put("attempt", options.getAttempt().toString());
 
     EsIndexUtils.createIndex(options);
@@ -149,7 +156,7 @@ public class DwcaToEsIndexPipeline {
 
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+        p.apply("Create metadata collection", Create.of(datasetId))
             .apply("Interpret metadata", MetadataTransform.interpret(wsPropertiesPath))
             .apply("Convert into view", View.asSingleton());
 
@@ -159,7 +166,7 @@ public class DwcaToEsIndexPipeline {
     // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", BasicTransform.interpret())
+            .apply("Interpret basic",  BasicTransform.interpret(tableConfig, hdfsConfig, datasetId))
             .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =

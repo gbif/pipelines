@@ -1,7 +1,9 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -15,6 +17,8 @@ import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipeleins.api.KeyLookupResult;
+import org.gbif.pipeleins.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipeleins.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -24,6 +28,7 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
@@ -36,6 +41,7 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
  * Interpreting function that receives a ExtendedRecord instance and applies an interpretation to
  * it.
  */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BasicInterpreter {
 
@@ -43,7 +49,29 @@ public class BasicInterpreter {
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService) {
     return (er, br) -> {
       if (keygenService != null) {
-        // TODO: LOGIC
+
+        Set<String> uniqueStrings = new HashSet<>(2);
+
+        // Adds occurrenceId
+        String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
+        if (!Strings.isNullOrEmpty(occurrenceId)) {
+          uniqueStrings.add(occurrenceId);
+        }
+
+        // Adds triplet
+        String ic = extractValue(er, DwcTerm.institutionCode);
+        String cc = extractValue(er, DwcTerm.collectionCode);
+        String cn = extractValue(er, DwcTerm.catalogNumber);
+        OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+
+        if (!uniqueStrings.isEmpty()) {
+          KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
+              .orElse(keygenService.generateKey(uniqueStrings));
+
+          br.setGbifId(key.getKey());
+        } else {
+          addIssue(br, "GBIF_ID_INVALID");
+        }
       }
     };
   }

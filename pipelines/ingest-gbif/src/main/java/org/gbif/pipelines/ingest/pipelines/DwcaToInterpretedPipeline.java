@@ -3,9 +3,11 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+import org.gbif.pipeleins.config.OccHbaseConfiguration;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -30,6 +32,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -83,7 +86,11 @@ public class DwcaToInterpretedPipeline {
 
   public static void run(DwcaPipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
+    String datasetId = options.getDatasetId();
+    OccHbaseConfiguration tableConfig = options.getOccHbaseConfiguration();
+    List<Configuration> hdfsConfig = options.getHdfsConfiguration();
+
+    MDC.put("datasetId", datasetId);
     MDC.put("attempt", options.getAttempt().toString());
 
     String wsPropertiesPath = options.getWsProperties();
@@ -116,7 +123,7 @@ public class DwcaToInterpretedPipeline {
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret basic", BasicTransform.interpret())
+        .apply("Interpret basic", BasicTransform.interpret(tableConfig, hdfsConfig, datasetId))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords

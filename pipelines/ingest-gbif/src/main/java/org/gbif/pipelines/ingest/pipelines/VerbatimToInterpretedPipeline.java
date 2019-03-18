@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+import org.gbif.pipeleins.config.OccHbaseConfiguration;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -29,6 +30,7 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -85,6 +87,8 @@ public class VerbatimToInterpretedPipeline {
 
     String datasetId = options.getDatasetId();
     String attempt = options.getAttempt().toString();
+    OccHbaseConfiguration tableConfig = options.getOccHbaseConfiguration();
+    List<Configuration> hdfsConfig = options.getHdfsConfiguration();
 
     FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), datasetId, attempt, options.getInterpretationTypes());
 
@@ -118,7 +122,7 @@ public class VerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check basic transform condition", BasicTransform.check(types))
-        .apply("Interpret basic", BasicTransform.interpret())
+        .apply("Interpret basic", BasicTransform.interpret(tableConfig, hdfsConfig, datasetId))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords

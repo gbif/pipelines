@@ -3,6 +3,8 @@ package org.gbif.pipelines.ingest.options;
 import java.util.List;
 import java.util.Optional;
 
+import org.gbif.pipeleins.config.OccHbaseConfiguration;
+
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.DefaultValueFactory;
@@ -60,12 +62,16 @@ public interface BasePipelineOptions extends PipelineOptions {
 
   void setAvroSyncInterval(int syncInterval);
 
+  @Description("Occurrence HBase table name configuration")
+  OccHbaseConfiguration getOccHbaseConfiguration();
+
+  void setOccHbaseConfiguration(OccHbaseConfiguration configuration);
+
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 
     static Optional<String> getDefaultFs(PipelineOptions options) {
-      List<Configuration> configs =
-          options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
+      List<Configuration> configs = options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
 
       return Optional.ofNullable(configs)
           .filter(x -> !x.isEmpty())

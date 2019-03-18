@@ -1,8 +1,10 @@
 package org.gbif.pipeleins.identifier;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -22,5 +24,22 @@ public class OccurrenceKeyBuilder {
     return uniqueStrings.stream()
         .map(us -> scope + DELIMITER + us)
         .collect(Collectors.toSet());
+  }
+
+  public static Optional<String> buildKey(String institutionCode, String collectionCode, String catalogNumber) {
+
+    if (Strings.isNullOrEmpty(institutionCode) || Strings.isNullOrEmpty(collectionCode) || Strings.isNullOrEmpty(
+        catalogNumber)) {
+      return Optional.empty();
+    }
+
+    String key = institutionCode + DELIMITER
+        + collectionCode
+        + DELIMITER
+        + catalogNumber
+        + DELIMITER
+        + null; // To support backward compatibility
+
+    return Optional.of(key);
   }
 }

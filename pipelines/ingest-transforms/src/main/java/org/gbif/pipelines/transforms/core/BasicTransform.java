@@ -1,9 +1,10 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.gbif.pipeleins.config.HbaseConfiguration;
+import org.gbif.pipeleins.config.OccHbaseConfiguration;
 import org.gbif.pipeleins.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
@@ -24,9 +25,15 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
@@ -38,6 +45,7 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
  *
  * @see <a href="https://dwc.tdwg.org/terms/#occurrence</a>
  */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BasicTransform {
 
@@ -103,6 +111,14 @@ public class BasicTransform {
   }
 
   /**
+   * Creates an {@link Interpreter} for {@link BasicRecord}
+   */
+  public static SingleOutput<ExtendedRecord, BasicRecord> interpret(OccHbaseConfiguration tableConfig,
+      List<Configuration> hbaseConfigs, String datasetId) {
+    return ParDo.of(new Interpreter(tableConfig, hbaseConfigs, datasetId));
+  }
+
+  /**
    * ParDo runs sequence of interpretations for {@link BasicRecord} using {@link ExtendedRecord} as
    * a source and {@link BasicInterpreter} as interpretation steps
    */
@@ -110,22 +126,50 @@ public class BasicTransform {
 
     private final Counter counter = Metrics.counter(BasicTransform.class, BASIC_RECORDS_COUNT);
 
-    private final HbaseConfiguration config;
+    private final OccHbaseConfiguration tableConfig;
+    private final List<Configuration> hbaseConfigs;
+    private final String datasetId;
+    private Connection connection;
     private HBaseLockingKeyService keygenService;
 
-    public Interpreter(HbaseConfiguration config) {
-      this.config = config;
+    public Interpreter(OccHbaseConfiguration tableConfig, List<Configuration> hbaseConfigs, String datasetId) {
+      this.tableConfig = tableConfig;
+      this.datasetId = datasetId;
+      this.hbaseConfigs = hbaseConfigs;
     }
+
 
     public Interpreter() {
-      this.config = null;
+      this.tableConfig = null;
+      this.hbaseConfigs = null;
+      this.datasetId = null;
     }
 
+    @SneakyThrows
     @Setup
     public void setup() {
-      if (config != null) {
-        // TODO: INIT SERVICE
-        keygenService = null;
+      if (tableConfig != null) {
+        if (hbaseConfigs != null && !hbaseConfigs.isEmpty()) {
+          for (Configuration cfg : hbaseConfigs) {
+            try {
+              connection = ConnectionFactory.createConnection(cfg);
+              break;
+            } catch (IOException ex) {
+              log.warn("HBase connection exception!", ex);
+            }
+          }
+        } else {
+          connection = ConnectionFactory.createConnection(HBaseConfiguration.create());
+        }
+        keygenService = new HBaseLockingKeyService(tableConfig, connection, datasetId);
+      }
+    }
+
+    @SneakyThrows
+    @Teardown
+    public void teardown() {
+      if (connection != null) {
+        connection.close();
       }
     }
 

@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.hbase.util.ResultReader;
 import org.gbif.pipeleins.api.KeyLookupResult;
-import org.gbif.pipeleins.config.HbaseConfiguration;
+import org.gbif.pipeleins.config.OccHbaseConfiguration;
 import org.gbif.pipeleins.hbase.Columns;
 import org.gbif.pipeleins.hbase.HBaseStore;
 import org.gbif.pipeleins.identifier.OccurrenceKeyBuilder;
@@ -72,15 +72,22 @@ public class HBaseLockingKeyService {
   private final Connection connection;
   private final TableName lookupTableName;
   private final HBaseStore<Integer> occurrenceTableStore;
-  protected final HBaseStore<String> lookupTableStore;
-  protected final HBaseStore<Integer> counterTableStore;
+  private final HBaseStore<String> lookupTableStore;
+  private final HBaseStore<Integer> counterTableStore;
 
-  public HBaseLockingKeyService(HbaseConfiguration cfg, Connection connection) {
-    lookupTableName = TableName.valueOf(checkNotNull(cfg.lookupTable, "lookupTable can't be null"));
+  private final String datasetId;
+
+  public HBaseLockingKeyService(OccHbaseConfiguration cfg, Connection connection, String datasetId) {
+    this.lookupTableName = TableName.valueOf(checkNotNull(cfg.lookupTable, "lookupTable can't be null"));
     this.connection = checkNotNull(connection, "tablePool can't be null");
-    lookupTableStore = new HBaseStore<>(cfg.lookupTable, OCCURRENCE_COLUMN_FAMILY, connection);
-    counterTableStore = new HBaseStore<>(cfg.counterTable, OCCURRENCE_COLUMN_FAMILY, connection);
-    occurrenceTableStore = new HBaseStore<>(cfg.occTable, OCCURRENCE_COLUMN_FAMILY, connection);
+    this.lookupTableStore = new HBaseStore<>(cfg.lookupTable, OCCURRENCE_COLUMN_FAMILY, connection);
+    this.counterTableStore = new HBaseStore<>(cfg.counterTable, OCCURRENCE_COLUMN_FAMILY, connection);
+    this.occurrenceTableStore = new HBaseStore<>(cfg.occTable, OCCURRENCE_COLUMN_FAMILY, connection);
+    this.datasetId = datasetId;
+  }
+
+  public HBaseLockingKeyService(OccHbaseConfiguration cfg, Connection connection) {
+    this(cfg, connection, null);
   }
 
   /**
@@ -220,6 +227,13 @@ public class HBaseLockingKeyService {
   }
 
   /**
+   *
+   */
+  public KeyLookupResult generateKey(Set<String> uniqueStrings) {
+    return generateKey(uniqueStrings, datasetId);
+  }
+
+  /**
    * Provides the next available key. Because throughput of an incrementColumnValue is limited by HBase to a few
    * thousand calls per second, this implementation reserves a batch of IDs at a time, and then allocates them to
    * the calling threads, until they are exhausted, when it will go and reserve another batch. Failure scenarios
@@ -244,6 +258,9 @@ public class HBaseLockingKeyService {
     return currentKey;
   }
 
+  /**
+   *
+   */
   public KeyLookupResult findKey(Set<String> uniqueStrings, String scope) {
     checkNotNull(uniqueStrings, "uniqueStrings can't be null");
     checkNotNull(scope, "scope can't be null");
@@ -292,6 +309,13 @@ public class HBaseLockingKeyService {
     return result;
   }
 
+  /**
+   *
+   */
+  public KeyLookupResult findKey(Set<String> uniqueStrings) {
+    return findKey(uniqueStrings, datasetId);
+  }
+
   @SneakyThrows
   public Set<Integer> findKeysByScope(String scope) {
     Set<Integer> keys = Sets.newHashSet();
@@ -309,6 +333,13 @@ public class HBaseLockingKeyService {
       }
     }
     return keys;
+  }
+
+  /**
+   *
+   */
+  public Set<Integer> findKeysByScope() {
+    return findKeysByScope(datasetId);
   }
 
 
@@ -359,6 +390,13 @@ public class HBaseLockingKeyService {
 
   }
 
+  /**
+   *
+   */
+  public void deleteKey(Integer occurrenceKey) {
+    deleteKey(occurrenceKey, datasetId);
+  }
+
   @SneakyThrows
   public void deleteKeyByUniques(Set<String> uniqueStrings, String scope) {
     checkNotNull(uniqueStrings, "uniqueStrings can't be null");
@@ -375,10 +413,16 @@ public class HBaseLockingKeyService {
     if (!keysToDelete.isEmpty()) {
       lookupTable.delete(keysToDelete);
     }
-
   }
 
-  protected static void failWithConflictingLookup(Map<String, Integer> conflictingKeys) {
+  /**
+   *
+   */
+  public void deleteKeyByUniques(Set<String> uniqueStrings) {
+    deleteKeyByUniques(uniqueStrings, datasetId);
+  }
+
+  private static void failWithConflictingLookup(Map<String, Integer> conflictingKeys) {
     StringBuilder sb = new StringBuilder("Found inconsistent occurrence keys in looking up unique identifiers:");
     for (Map.Entry<String, Integer> entry : conflictingKeys.entrySet()) {
       sb.append('[').append(entry.getKey()).append("]=[").append(entry.getValue()).append(']');
