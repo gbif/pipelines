@@ -44,13 +44,13 @@ public class HBaseLockingKeyServiceTest {
     CFG.setEnvironment("test");
   }
 
-  private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.lookupTable);
+  private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
   private static final String CF_NAME = "o";
   private static final byte[] CF = Bytes.toBytes(CF_NAME);
-  private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.counterTable);
+  private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
   private static final String COUNTER_CF_NAME = "o";
   private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
-  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.occTable);
+  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccTable());
 
 
   private static Connection CONNECTION = null;

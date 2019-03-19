@@ -2,20 +2,28 @@ package org.gbif.pipelines.keygen.config;
 
 import com.google.common.base.MoreObjects;
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Configs needed to connect to the occurrence HBase db.
  */
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class OccHbaseConfiguration {
 
   @NotNull
-  public String occTable;
+  private String occTable;
 
   @NotNull
-  public String counterTable;
+  private String counterTable;
 
   @NotNull
-  public String lookupTable;
+  private String lookupTable;
 
 
   /**

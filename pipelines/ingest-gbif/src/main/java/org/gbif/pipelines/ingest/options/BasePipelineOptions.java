@@ -62,10 +62,34 @@ public interface BasePipelineOptions extends PipelineOptions {
 
   void setAvroSyncInterval(int syncInterval);
 
+  void setGbifIdOccTable(String gbifIdOccTable);
+
+  String getGbifIdOccTable();
+
+  void setGbifIdCounterTable(String gbifIdCounterTable);
+
+  String getGbifIdCounterTable();
+
+  void setGbifIdLookupTable(String gbifIdLookupTable);
+
+  String getGbifIdLookupTable();
+
   @Description("Occurrence HBase table name configuration")
+  @Default.InstanceFactory(DefaultOccHbaseConfigurationFactory.class)
   OccHbaseConfiguration getOccHbaseConfiguration();
 
-  void setOccHbaseConfiguration(OccHbaseConfiguration configuration);
+  void setOccHbaseConfiguration(OccHbaseConfiguration occHbaseConfiguration);
+
+  /** A {@link DefaultValueFactory} which creates OccHbaseConfiguration instance */
+  class DefaultOccHbaseConfigurationFactory implements DefaultValueFactory<OccHbaseConfiguration> {
+
+    @Override
+    public OccHbaseConfiguration create(PipelineOptions options) {
+      BasePipelineOptions bpo = options.as(BasePipelineOptions.class);
+      return new OccHbaseConfiguration(bpo.getGbifIdOccTable(), bpo.getGbifIdCounterTable(),
+          bpo.getGbifIdLookupTable());
+    }
+  }
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {

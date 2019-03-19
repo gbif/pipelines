@@ -73,11 +73,11 @@ public class HBaseLockingKeyService {
   private final String datasetId;
 
   public HBaseLockingKeyService(OccHbaseConfiguration cfg, Connection connection, String datasetId) {
-    this.lookupTableName = TableName.valueOf(checkNotNull(cfg.lookupTable, "lookupTable can't be null"));
+    this.lookupTableName = TableName.valueOf(checkNotNull(cfg.getLookupTable(), "lookupTable can't be null"));
     this.connection = checkNotNull(connection, "tablePool can't be null");
-    this.lookupTableStore = new HBaseStore<>(cfg.lookupTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
-    this.counterTableStore = new HBaseStore<>(cfg.counterTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
-    this.occurrenceTableStore = new HBaseStore<>(cfg.occTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    this.lookupTableStore = new HBaseStore<>(cfg.getLookupTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    this.counterTableStore = new HBaseStore<>(cfg.getCounterTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    this.occurrenceTableStore = new HBaseStore<>(cfg.getOccTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
     this.datasetId = datasetId;
   }
 

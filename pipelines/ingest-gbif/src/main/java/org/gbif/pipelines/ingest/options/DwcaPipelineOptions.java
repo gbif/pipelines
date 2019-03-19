@@ -5,8 +5,7 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.Hidden;
 import org.apache.beam.sdk.options.Validation;
 
-public interface DwcaPipelineOptions
-    extends EsIndexingPipelineOptions, InterpretationPipelineOptions {
+public interface DwcaPipelineOptions extends EsIndexingPipelineOptions, InterpretationPipelineOptions {
 
   enum PipelineStep {
     DWCA_TO_VERBATIM, // only reads a Dwca and converts it to an avro file
@@ -19,8 +18,7 @@ public interface DwcaPipelineOptions
   }
 
   @Override
-  @Description(
-      "Path of the Dwc-A file. It can be a zip file or a folder with the uncompressed files. Required.")
+  @Description("Path of the Dwc-A file. It can be a zip file or a folder with the uncompressed files. Required.")
   @Validation.Required
   String getInputPath();
 
