@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.hbase;
+package org.gbif.pipelines.keygen.hbase;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
@@ -9,9 +9,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- *
- */
 public class ColumnsTest {
 
   @Test

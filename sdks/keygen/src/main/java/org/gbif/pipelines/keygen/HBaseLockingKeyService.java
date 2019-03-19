@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.keygen;
+package org.gbif.pipelines.keygen;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.hbase.util.ResultReader;
-import org.gbif.pipeleins.api.KeyLookupResult;
-import org.gbif.pipeleins.config.OccHbaseConfiguration;
-import org.gbif.pipeleins.hbase.Columns;
-import org.gbif.pipeleins.hbase.HBaseStore;
-import org.gbif.pipeleins.identifier.OccurrenceKeyBuilder;
+import org.gbif.pipelines.keygen.api.KeyLookupResult;
+import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
+import org.gbif.pipelines.keygen.hbase.Columns;
+import org.gbif.pipelines.keygen.hbase.HBaseStore;
+import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -39,11 +39,6 @@ import lombok.Cleanup;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipeleins.hbase.Columns.COUNTER_COLUMN;
-import static org.gbif.pipeleins.hbase.Columns.LOOKUP_KEY_COLUMN;
-import static org.gbif.pipeleins.hbase.Columns.LOOKUP_LOCK_COLUMN;
-import static org.gbif.pipeleins.hbase.Columns.OCCURRENCE_COLUMN_FAMILY;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -80,9 +75,9 @@ public class HBaseLockingKeyService {
   public HBaseLockingKeyService(OccHbaseConfiguration cfg, Connection connection, String datasetId) {
     this.lookupTableName = TableName.valueOf(checkNotNull(cfg.lookupTable, "lookupTable can't be null"));
     this.connection = checkNotNull(connection, "tablePool can't be null");
-    this.lookupTableStore = new HBaseStore<>(cfg.lookupTable, OCCURRENCE_COLUMN_FAMILY, connection);
-    this.counterTableStore = new HBaseStore<>(cfg.counterTable, OCCURRENCE_COLUMN_FAMILY, connection);
-    this.occurrenceTableStore = new HBaseStore<>(cfg.occTable, OCCURRENCE_COLUMN_FAMILY, connection);
+    this.lookupTableStore = new HBaseStore<>(cfg.lookupTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    this.counterTableStore = new HBaseStore<>(cfg.counterTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    this.occurrenceTableStore = new HBaseStore<>(cfg.occTable, Columns.OCCURRENCE_COLUMN_FAMILY, connection);
     this.datasetId = datasetId;
   }
 
@@ -113,15 +108,15 @@ public class HBaseLockingKeyService {
       KeyStatus status = null;
       byte[] existingLock = null;
       if (row != null) {
-        String rawStatus = ResultReader.getString(row, OCCURRENCE_COLUMN_FAMILY,
+        String rawStatus = ResultReader.getString(row, Columns.OCCURRENCE_COLUMN_FAMILY,
             Columns.LOOKUP_STATUS_COLUMN, null);
         if (rawStatus != null) {
           status = KeyStatus.valueOf(rawStatus);
         }
-        existingLock = ResultReader.getBytes(row, OCCURRENCE_COLUMN_FAMILY,
-            LOOKUP_LOCK_COLUMN, null);
-        key = ResultReader.getInteger(row, OCCURRENCE_COLUMN_FAMILY,
-            LOOKUP_KEY_COLUMN, null);
+        existingLock = ResultReader.getBytes(row, Columns.OCCURRENCE_COLUMN_FAMILY,
+            Columns.LOOKUP_LOCK_COLUMN, null);
+        key = ResultReader.getInteger(row, Columns.OCCURRENCE_COLUMN_FAMILY,
+            Columns.LOOKUP_KEY_COLUMN, null);
         log.debug("Got existing status [{}] existingLock [{}] key [{}]", status, existingLock, key);
       }
 
@@ -141,8 +136,8 @@ public class HBaseLockingKeyService {
         log.debug("Status ALLOCATED, using found key [{}]", foundKey);
       } else if (existingLock == null) {
         // lock is ours for the taking - checkAndPut lockId, expecting null for lockId
-        boolean gotLock = lookupTableStore.checkAndPut(lookupKey, LOOKUP_LOCK_COLUMN, lockId,
-            LOOKUP_LOCK_COLUMN, null, now);
+        boolean gotLock = lookupTableStore.checkAndPut(lookupKey, Columns.LOOKUP_LOCK_COLUMN, lockId,
+            Columns.LOOKUP_LOCK_COLUMN, null, now);
         if (gotLock) {
           statusMap.put(lookupKey, KeyStatus.ALLOCATING);
           log.debug("Grabbed free lock, now ALLOCATING [{}]", lookupKey);
@@ -153,16 +148,16 @@ public class HBaseLockingKeyService {
         }
       } else {
         // somebody has written their lockId and so has the lock, but they haven't finished yet (status != ALLOCATED)
-        Long existingLockTs = ResultReader.getTimestamp(row, OCCURRENCE_COLUMN_FAMILY,
-            LOOKUP_LOCK_COLUMN);
+        Long existingLockTs = ResultReader.getTimestamp(row, Columns.OCCURRENCE_COLUMN_FAMILY,
+            Columns.LOOKUP_LOCK_COLUMN);
         if (now - existingLockTs > STALE_LOCK_TIME) {
           log.debug("Found stale lock for [{}]", lookupKey);
           // Someone died before releasing lock.
           // Note that key could be not null here - this means that thread had the lock, wrote the key, but then
           // died before releasing lock.
           // check and put our lockId, expecting lock to match the existing lock
-          boolean gotLock = lookupTableStore.checkAndPut(lookupKey, LOOKUP_LOCK_COLUMN,
-              lockId, LOOKUP_LOCK_COLUMN, existingLock, now);
+          boolean gotLock = lookupTableStore.checkAndPut(lookupKey, Columns.LOOKUP_LOCK_COLUMN,
+              lockId, Columns.LOOKUP_LOCK_COLUMN, existingLock, now);
           if (gotLock) {
             statusMap.put(lookupKey, KeyStatus.ALLOCATING);
             log.debug("Reset stale lock, now ALLOCATING [{}]", lookupKey);
@@ -213,7 +208,7 @@ public class HBaseLockingKeyService {
     for (Map.Entry<String, KeyStatus> entry : statusMap.entrySet()) {
       if (entry.getValue() == KeyStatus.ALLOCATING) {
         // TODO: combine into one put
-        lookupTableStore.putInt(entry.getKey(), LOOKUP_KEY_COLUMN, key);
+        lookupTableStore.putInt(entry.getKey(), Columns.LOOKUP_KEY_COLUMN, key);
         lookupTableStore.putString(entry.getKey(), Columns.LOOKUP_STATUS_COLUMN, KeyStatus.ALLOCATED.toString());
       }
     }
@@ -246,7 +241,7 @@ public class HBaseLockingKeyService {
     // if we have exhausted our reserved keys, get a new batch of them
     if (currentKey == maxReservedKeyInclusive) {
       // get batch
-      Long longKey = counterTableStore.incrementColumnValue(COUNTER_ROW, COUNTER_COLUMN, BATCHED_ID_SIZE.longValue());
+      Long longKey = counterTableStore.incrementColumnValue(COUNTER_ROW, Columns.COUNTER_COLUMN, BATCHED_ID_SIZE.longValue());
       if (longKey > Integer.MAX_VALUE) {
         throw new IllegalStateException("HBase issuing keys larger than Integer can support");
       }
@@ -274,7 +269,7 @@ public class HBaseLockingKeyService {
     // get the occurrenceKey for each lookupKey, and set a flag if we find any null
     boolean gotNulls = false;
     for (String uniqueString : lookupKeys) {
-      Integer occurrenceKey = lookupTableStore.getInt(uniqueString, LOOKUP_KEY_COLUMN);
+      Integer occurrenceKey = lookupTableStore.getInt(uniqueString, Columns.LOOKUP_KEY_COLUMN);
       if (occurrenceKey == null) {
         gotNulls = true;
       } else {
@@ -327,7 +322,7 @@ public class HBaseLockingKeyService {
     scan.setFilter(new PrefixFilter(Bytes.toBytes(scope)));
     ResultScanner results = table.getScanner(scan);
     for (Result result : results) {
-      byte[] rawKey = result.getValue(Columns.CF, Bytes.toBytes(LOOKUP_KEY_COLUMN));
+      byte[] rawKey = result.getValue(Columns.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN));
       if (rawKey != null) {
         keys.add(Bytes.toInt(rawKey));
       }
@@ -365,7 +360,7 @@ public class HBaseLockingKeyService {
     // scan the lookup table for all rows where the key matches our dataset prefix and the cell value is our
     // target occurrenceKey, then delete those rows
     Scan scan = new Scan();
-    scan.addColumn(Columns.CF, Bytes.toBytes(LOOKUP_KEY_COLUMN));
+    scan.addColumn(Columns.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN));
     // TODO: this is still too slow even with prefix - lease timeouts in logs
     List<Filter> filters = Lists.newArrayList();
     if (rawDatasetKey == null) {
@@ -373,7 +368,7 @@ public class HBaseLockingKeyService {
     } else {
       filters.add(new PrefixFilter(Bytes.toBytes(OccurrenceKeyBuilder.buildKeyPrefix(rawDatasetKey))));
     }
-    Filter valueFilter = new SingleColumnValueFilter(Columns.CF, Bytes.toBytes(LOOKUP_KEY_COLUMN),
+    Filter valueFilter = new SingleColumnValueFilter(Columns.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN),
         CompareFilter.CompareOp.EQUAL, Bytes.toBytes(occurrenceKey));
     filters.add(valueFilter);
     Filter filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
@@ -435,14 +430,14 @@ public class HBaseLockingKeyService {
       Integer occurrenceKey) {
     lookupKeys.stream()
         .filter(lookupKey -> !foundOccurrenceKeys.containsKey(lookupKey))
-        .forEach(lookupKey -> lookupTableStore.putInt(lookupKey, LOOKUP_KEY_COLUMN, occurrenceKey));
+        .forEach(lookupKey -> lookupTableStore.putInt(lookupKey, Columns.LOOKUP_KEY_COLUMN, occurrenceKey));
   }
 
   private void releaseLocks(Map<String, KeyStatus> statusMap) {
     statusMap.entrySet()
         .stream()
         .filter(entry -> entry.getValue() == KeyStatus.ALLOCATING)
-        .forEach(entry -> lookupTableStore.delete(entry.getKey(), LOOKUP_LOCK_COLUMN));
+        .forEach(entry -> lookupTableStore.delete(entry.getKey(), Columns.LOOKUP_LOCK_COLUMN));
   }
 
   private enum KeyStatus {

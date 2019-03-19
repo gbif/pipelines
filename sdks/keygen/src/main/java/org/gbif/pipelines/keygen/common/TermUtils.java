@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.common;
+package org.gbif.pipelines.keygen.common;
 
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;

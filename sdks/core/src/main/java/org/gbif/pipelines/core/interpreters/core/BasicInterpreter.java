@@ -17,11 +17,11 @@ import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipeleins.api.KeyLookupResult;
-import org.gbif.pipeleins.identifier.OccurrenceKeyBuilder;
-import org.gbif.pipeleins.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.api.KeyLookupResult;
+import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 

@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.config;
+package org.gbif.pipelines.keygen.config;
 
 import com.google.common.base.MoreObjects;
 import javax.validation.constraints.NotNull;

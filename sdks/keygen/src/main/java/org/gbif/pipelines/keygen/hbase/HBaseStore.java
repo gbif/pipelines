@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.hbase;
+package org.gbif.pipelines.keygen.hbase;
 
 import java.io.IOException;
 

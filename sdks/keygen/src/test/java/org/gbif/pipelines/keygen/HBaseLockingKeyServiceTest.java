@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.keygen;
+package org.gbif.pipelines.keygen;
 
 import java.io.IOException;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.gbif.pipeleins.api.KeyLookupResult;
-import org.gbif.pipeleins.config.OccHbaseConfiguration;
-import org.gbif.pipeleins.hbase.Columns;
+import org.gbif.pipelines.keygen.api.KeyLookupResult;
+import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
+import org.gbif.pipelines.keygen.hbase.Columns;
 
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;

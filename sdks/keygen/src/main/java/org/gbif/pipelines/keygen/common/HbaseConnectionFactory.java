@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.common;
+package org.gbif.pipelines.keygen.common;
 
 import java.io.IOException;
 import java.util.List;

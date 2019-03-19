@@ -13,7 +13,7 @@
   <packaging>pom</packaging>
 
   <name>Pipelines :: Sdks</name>
-  <description>Main module contains common classes, such as data models, data format iterpretations, parsers, web
+  <description>Main module contains common classes, such as data models, data format interpretations, parsers, web
     services clients ant etc.
   </description>
 

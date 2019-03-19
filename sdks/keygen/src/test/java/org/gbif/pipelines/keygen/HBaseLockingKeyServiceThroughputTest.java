@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.keygen;
+package org.gbif.pipelines.keygen;
 
 import java.io.IOException;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.gbif.pipeleins.config.OccHbaseConfiguration;
+import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;

@@ -1,10 +1,10 @@
-package org.gbif.pipeleins.hbase;
+package org.gbif.pipelines.keygen.hbase;
 
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
-import org.gbif.pipeleins.common.TermUtils;
+import org.gbif.pipelines.keygen.common.TermUtils;
 
 import org.apache.hadoop.hbase.util.Bytes;
 

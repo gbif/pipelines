@@ -3,7 +3,7 @@ package org.gbif.pipelines.ingest.options;
 import java.util.List;
 import java.util.Optional;
 
-import org.gbif.pipeleins.config.OccHbaseConfiguration;
+import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
 
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;

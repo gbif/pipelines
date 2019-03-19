@@ -3,15 +3,15 @@ package org.gbif.pipelines.transforms.core;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.gbif.pipeleins.common.HbaseConnectionFactory;
-import org.gbif.pipeleins.config.OccHbaseConfiguration;
-import org.gbif.pipeleins.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
+import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
 import org.gbif.pipelines.transforms.CheckTransforms;
 
 import org.apache.avro.file.CodecFactory;

@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.api;
+package org.gbif.pipelines.keygen.api;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

@@ -1,4 +1,4 @@
-package org.gbif.pipeleins.identifier;
+package org.gbif.pipelines.keygen.identifier;
 
 import java.util.Optional;
 import java.util.Set;
