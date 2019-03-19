@@ -1,9 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
+import org.gbif.pipeleins.common.HbaseConnectionFactory;
 import org.gbif.pipeleins.config.OccHbaseConfiguration;
 import org.gbif.pipeleins.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -26,9 +26,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -149,18 +147,7 @@ public class BasicTransform {
     @Setup
     public void setup() {
       if (tableConfig != null) {
-        if (hbaseConfigs != null && !hbaseConfigs.isEmpty()) {
-          for (Configuration cfg : hbaseConfigs) {
-            try {
-              connection = ConnectionFactory.createConnection(cfg);
-              break;
-            } catch (IOException ex) {
-              log.warn("HBase connection exception!", ex);
-            }
-          }
-        } else {
-          connection = ConnectionFactory.createConnection(HBaseConfiguration.create());
-        }
+        connection = HbaseConnectionFactory.create(hbaseConfigs);
         keygenService = new HBaseLockingKeyService(tableConfig, connection, datasetId);
       }
     }

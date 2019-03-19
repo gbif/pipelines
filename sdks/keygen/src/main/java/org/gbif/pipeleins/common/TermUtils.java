@@ -1,7 +1,5 @@
 package org.gbif.pipeleins.common;
 
-import java.util.Set;
-
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
@@ -26,7 +24,7 @@ public class TermUtils {
   /**
    * Interpreted terms that exist as java properties on Occurrence.
    */
-  private static final Set<? extends Term> JAVA_PROPERTY_TERMS =
+  private static final ImmutableSet<Term> JAVA_PROPERTY_TERMS =
       ImmutableSet.of(DwcTerm.decimalLatitude,
           DwcTerm.decimalLongitude,
           DwcTerm.continent,
@@ -93,7 +91,7 @@ public class TermUtils {
   /**
    * TODO: is this correct? -> Terms used during interpretation and superseded by an interpreted property
    */
-  private static final Set<? extends Term> INTERPRETED_SOURCE_TERMS =
+  private static final ImmutableSet<Term> INTERPRETED_SOURCE_TERMS =
       ImmutableSet.copyOf(Iterables.concat(JAVA_PROPERTY_TERMS,
           Lists.newArrayList(DwcTerm.decimalLatitude,
               DwcTerm.decimalLongitude,

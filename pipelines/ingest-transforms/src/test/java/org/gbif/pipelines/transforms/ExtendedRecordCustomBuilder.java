@@ -42,8 +42,7 @@ public class ExtendedRecordCustomBuilder {
     return this;
   }
 
-  public ExtendedRecordCustomBuilder addExtensionRecord(
-      Extension extension, Map<String, String> record) {
+  public ExtendedRecordCustomBuilder addExtensionRecord(Extension extension, Map<String, String> record) {
     if (extension != null) {
       if (extensions == null) {
         extensions = new HashMap<>();
