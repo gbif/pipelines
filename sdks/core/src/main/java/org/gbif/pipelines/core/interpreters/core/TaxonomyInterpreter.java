@@ -48,7 +48,7 @@ public class TaxonomyInterpreter {
         SpeciesMatchRequest matchRequest = SpeciesMatchRequest.builder()
             .withKingdom(extractValue(er, DwcTerm.kingdom))
             .withPhylum(extractValue(er, DwcTerm.phylum))
-            .withClass_(extractValue(er, DwcTerm.class_))
+            .withClazz(extractValue(er, DwcTerm.class_))
             .withOrder(extractValue(er, DwcTerm.order))
             .withFamily(extractValue(er, DwcTerm.family))
             .withGenus(extractValue(er, DwcTerm.genus))
