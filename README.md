@@ -11,6 +11,8 @@
 
 # About the project
 
+**REMEMBER, YOU HAVE TO USE JAVA 8 VERSION**
+
 **Pipelines for data processing and indexing of biodiversity data**
 
 _Status: WIP_
