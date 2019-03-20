@@ -41,7 +41,7 @@ java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --targetPath=TARGET_PATH \
  --inputPath=INPUT_PATH \
  --tempLocation=temp
- --wsProperties=/path/ws.properties
+ --properties=/path/ws.properties
 ```
 
 #### From DwCA to Elasticsearch index:
@@ -55,7 +55,7 @@ java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
  --esHosts=ES_HOSTS \
  --esIndexName=ES_INDEX_NAME \
  --tempLocation=temp
- --wsProperties=/path/ws.properties
+ --properties=/path/ws.properties
 ```
 
 #### From GBIF interpreted *.avro files to Elasticsearch index:

@@ -7,7 +7,8 @@
   "type": "record",
   "doc": "Interpreted values at the occurrence record level",
   "fields": [
-    {"name": "id", "type": "string", "doc": "http://rs.tdwg.org/dwc/terms/occurrenceID"},
+    {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+    {"name": "gbifId", "type": ["null", "int"], "default" : null, "doc": "GBIF internal identifier"},
     {"name": "basisOfRecord", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/basisOfRecord"},
     {"name": "sex", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
     {"name": "lifeStage", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/lifeStage"},

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -73,12 +74,14 @@
     <gbif-common.version>0.44</gbif-common.version>
     <dwc-api.version>1.21</dwc-api.version>
     <kvs.version>1.2-SNAPSHOT</kvs.version>
+    <hbase-utils.version>0.12</hbase-utils.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
     <apache.beam.version>2.11.0</apache.beam.version>
-    <hadoop-common.version>2.6.0-cdh5.12.1</hadoop-common.version>
-    <hadoop-core.version>2.6.0-mr1-cdh5.15.0</hadoop-core.version>
+    <hadoop.version>2.6.0-cdh5.12.0</hadoop.version>
+    <hadoop-core.version>2.6.0-mr1-cdh5.12.0</hadoop-core.version>
+    <hbase.version>1.2.0-cdh5.12.0</hbase.version>
 
     <geotools.version>12.1</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
@@ -117,6 +120,7 @@
     <hamcrest-core.version>1.3</hamcrest-core.version>
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
     <embedded.elasticsearch.version>2.7.1</embedded.elasticsearch.version>
+    <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
 
     <!-- Maven plugin -->
     <maven-plugin-api.version>3.5.4</maven-plugin-api.version>
@@ -269,6 +273,11 @@
         <artifactId>beam-common</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>keygen</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
       <!-- GBIF -->
       <dependency>
@@ -326,6 +335,21 @@
         <artifactId>kvs-core</artifactId>
         <version>${kvs.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>hbase-utils</artifactId>
+        <version>${hbase-utils.version}</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>org.apache.hbase</artifactId>
+            <groupId>hbase</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>org.apache.hadoop</artifactId>
+            <groupId>hadoop-core</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
       <!-- Avro -->
       <dependency>
@@ -365,7 +389,7 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-common</artifactId>
-        <version>${hadoop-common.version}</version>
+        <version>${hadoop.version}</version>
         <scope>provided</scope>
         <exclusions>
           <exclusion>
@@ -396,8 +420,52 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-hdfs</artifactId>
-        <version>${hadoop-common.version}</version>
+        <version>${hadoop.version}</version>
         <scope>provided</scope>
+      </dependency>
+
+      <!-- HBase -->
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-client</artifactId>
+        <version>${hbase.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-common</artifactId>
+        <version>${hbase.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <!-- Utils -->
@@ -651,7 +719,7 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minicluster</artifactId>
-        <version>${hadoop-common.version}</version>
+        <version>${hadoop.version}</version>
         <exclusions>
           <exclusion>
             <groupId>log4j</groupId>
@@ -662,6 +730,36 @@
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
         </exclusions>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hbase</groupId>
+        <artifactId>hbase-testing-util</artifactId>
+        <version>${hbase.version}</version>
+        <scope>test</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-minicluster</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>log4j-over-slf4j</artifactId>
+        <version>${log4j-over-slf4j.version}</version>
         <scope>test</scope>
       </dependency>
 

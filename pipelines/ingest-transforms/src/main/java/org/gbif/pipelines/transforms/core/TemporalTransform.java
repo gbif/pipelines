@@ -67,7 +67,7 @@ public class TemporalTransform {
   /**
    * Reads avro files from path, which contains {@link TemporalRecord}
    *
-   * @param pathFn function can return an output path, where in param is fixed - {@link TemporalTransform#BASE_NAM
+   * @param pathFn function can return an output path, where in param is fixed - {@link TemporalTransform#BASE_NAME
    */
   public static AvroIO.Read<TemporalRecord> read(UnaryOperator<String> pathFn) {
     return read(pathFn.apply(BASE_NAME));

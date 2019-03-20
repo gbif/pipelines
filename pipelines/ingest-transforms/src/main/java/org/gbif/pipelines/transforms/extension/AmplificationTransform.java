@@ -103,6 +103,13 @@ public class AmplificationTransform {
   /**
    * Creates an {@link Interpreter} for {@link AmplificationRecord}
    */
+  public static SingleOutput<ExtendedRecord, AmplificationRecord> interpret() {
+    return ParDo.of(new Interpreter());
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link AmplificationRecord}
+   */
   public static SingleOutput<ExtendedRecord, AmplificationRecord> interpret(WsConfig wsConfig) {
     return ParDo.of(new Interpreter(wsConfig));
   }
@@ -125,6 +132,10 @@ public class AmplificationTransform {
     private final WsConfig wsConfig;
     private BlastServiceClient client;
 
+    public Interpreter() {
+      this.wsConfig = null;
+    }
+
     public Interpreter(WsConfig wsConfig) {
       this.wsConfig = wsConfig;
     }
@@ -135,7 +146,9 @@ public class AmplificationTransform {
 
     @Setup
     public void setup() {
-      client = BlastServiceClient.create(wsConfig);
+      if (wsConfig != null) {
+        client = BlastServiceClient.create(wsConfig);
+      }
     }
 
     @ProcessElement

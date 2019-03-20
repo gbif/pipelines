@@ -11,6 +11,8 @@
 
 # About the project
 
+**REMEMBER, YOU HAVE TO USE JAVA 8 VERSION**
+
 **Pipelines for data processing and indexing of biodiversity data**
 
 _Status: WIP_
@@ -81,6 +83,7 @@ The project is structured as:
     - [**core**](./sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader and etc
     - [**models**](./sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
     - [**parsers**](./sdks/parsers) - Data parsers and converters, mainly for internal usage inside of interpretations
+    - [**keygen**](./sdks/keygen) - The library to generate GBIF identifier, to support backward compatibility, the codebase (with minimum changes) was copied from occurrence/occurrence-persistence project
 - [**tools**](./tools) - Module for different independent tools
     - [**archives-converters**](./tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC](https://www.tdwg.org/standards/dwc/) 1.4/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
     - [**elasticsearch-tools**](./tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes

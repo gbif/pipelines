@@ -2,10 +2,10 @@ package org.gbif.pipelines.parsers.utils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
 
@@ -14,12 +14,12 @@ public class ModelUtils {
 
   private ModelUtils() {}
 
-  public static String extractValue(ExtendedRecord er, DwcTerm term) {
+  public static String extractValue(ExtendedRecord er, Term term) {
     return er.getCoreTerms().get(term.qualifiedName());
   }
 
-  public static String extractValue(ExtendedRecord er, DcTerm term) {
-    return er.getCoreTerms().get(term.qualifiedName());
+  public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
+    return Optional.ofNullable(er.getCoreTerms().get(term.qualifiedName()));
   }
 
   /** Checks if a {@link ExtendedRecord} is null or empty. */

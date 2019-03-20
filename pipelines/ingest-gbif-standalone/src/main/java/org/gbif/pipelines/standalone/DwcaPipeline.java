@@ -18,6 +18,9 @@ import org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline;
  *  2) From DwCA to GBIF interpreted *.avro files
  *  3) From DwCA to Elasticsearch index
  *  4) From GBIF interpreted *.avro files to Elasticsearch index
+ *  5) From ExtendedRecord *.avro file to GBIF interpreted *.avro files
+ *  6) From interpreted amplification extension *.avro files to appended Elasticsearch index
+ *  7) From ExtendedRecord *.avro file to interpreted amplification extension *.avro files
  * </pre>
  *
  * Please read README.md

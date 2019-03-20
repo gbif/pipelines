@@ -48,28 +48,31 @@ public class LocationInterpreter {
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
-  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(KeyValueStore<LatLng, String> kvStore) {
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
+      KeyValueStore<LatLng, String> kvStore) {
     return (er, lr) -> {
-      // parse the terms
-      ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, kvStore);
+      if (kvStore != null) {
+        // parse the terms
+        ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, kvStore);
 
-      // set values in the location record
-      ParsedLocation parsedLocation = parsedResult.getResult();
+        // set values in the location record
+        ParsedLocation parsedLocation = parsedResult.getResult();
 
-      Optional.ofNullable(parsedLocation.getCountry())
-          .ifPresent(country -> {
-            lr.setCountry(country.getTitle());
-            lr.setCountryCode(country.getIso2LetterCode());
-          });
+        Optional.ofNullable(parsedLocation.getCountry())
+            .ifPresent(country -> {
+              lr.setCountry(country.getTitle());
+              lr.setCountryCode(country.getIso2LetterCode());
+            });
 
-      Optional.ofNullable(parsedLocation.getLatLng())
-          .ifPresent(latLng -> {
-            lr.setDecimalLatitude(latLng.getLatitude());
-            lr.setDecimalLongitude(latLng.getLongitude());
-          });
+        Optional.ofNullable(parsedLocation.getLatLng())
+            .ifPresent(latLng -> {
+              lr.setDecimalLatitude(latLng.getLatitude());
+              lr.setDecimalLongitude(latLng.getLongitude());
+            });
 
-      // set the issues to the interpretation
-      addIssue(lr, parsedResult.getIssues());
+        // set the issues to the interpretation
+        addIssue(lr, parsedResult.getIssues());
+      }
     };
   }
 

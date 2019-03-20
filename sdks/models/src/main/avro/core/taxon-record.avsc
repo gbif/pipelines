@@ -57,7 +57,7 @@
     "type" : "record",
     "doc" : "A taxonomic record",
     "fields" : [
-      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc" : "The record id"},
+      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
       {"name" : "synonym", "type" : ["null", "boolean"], "default" : null},
       {"name" : "usage", "type" : ["null", "RankedName"], "default" : null},
       {"name" : "classification", "type" : ["null", {"type" : "array", "items" : "RankedName"}], "default" : null},

@@ -60,7 +60,7 @@ public class ParsedUnitUtils {
   }
 
   /**
-   * Common method for parsing shor numeric string to int
+   * Common method for parsing short numeric string to int
    *
    * @param rawValue raw value for parsing
    * @param validator predicate with validity conditions

@@ -7,7 +7,7 @@
   "type":"record",
   "doc":"Additional information",
   "fields":[
-    {"name": "id","type":"string"},
+    {"name": "id","type":"string", "doc":"Pipelines identifier"},
     {"name": "datasetKey","type":["null","string"],"default":null},
     {"name": "datasetTitle","type":["null","string"],"default":null},
     {"name": "installationKey","type":["null","string"],"default":null},

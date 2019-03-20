@@ -109,6 +109,13 @@ public class AustraliaSpatialTransform {
   /**
    * Creates an {@link Interpreter} for {@link AustraliaSpatialRecord}
    */
+  public static SingleOutput<LocationRecord, AustraliaSpatialRecord> interpret() {
+    return ParDo.of(new Interpreter());
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link AustraliaSpatialRecord}
+   */
   public static SingleOutput<LocationRecord, AustraliaSpatialRecord> interpret(KvConfig kvConfig) {
     return ParDo.of(new Interpreter(kvConfig));
   }
@@ -137,6 +144,11 @@ public class AustraliaSpatialTransform {
 
     private final KvConfig kvConfig;
     private KeyValueStore<LatLng, String> kvStore;
+
+    public Interpreter() {
+      this.kvStore = null;
+      this.kvConfig = null;
+    }
 
     public Interpreter(KvConfig kvConfig) {
       this.kvConfig = kvConfig;

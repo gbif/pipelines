@@ -109,6 +109,13 @@ public class TaxonomyTransform {
   /**
    * Creates an {@link Interpreter} for {@link TaxonRecord}
    */
+  public static SingleOutput<ExtendedRecord, TaxonRecord> interpret() {
+    return ParDo.of(new Interpreter());
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link TaxonRecord}
+   */
   public static SingleOutput<ExtendedRecord, TaxonRecord> interpret(KvConfig kvConfig) {
     return ParDo.of(new Interpreter(kvConfig));
   }
@@ -137,6 +144,11 @@ public class TaxonomyTransform {
 
     private final KvConfig kvConfig;
     private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
+
+    public Interpreter() {
+      this.kvStore = null;
+      this.kvConfig = null;
+    }
 
     public Interpreter(KvConfig kvConfig) {
       this.kvConfig = kvConfig;

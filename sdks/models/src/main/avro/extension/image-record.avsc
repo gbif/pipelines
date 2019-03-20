@@ -32,8 +32,8 @@
     "type": "record",
     "doc": "A container for interpreted image fields.",
     "fields": [
-      {"name": "id", "type": "string", "doc": "http://rs.tdwg.org/dwc/terms/occurrenceID"},
-      {"name": "imageItems", "type": ["null", {"type" : "array", "items" : "Image"}], "default" : null },
+      {"name": "id", "type": "string", "doc":"Pipelines identifier"},
+      {"name": "imageItems", "type": {"type" : "array", "items" : "Image"}, "default" : {}},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

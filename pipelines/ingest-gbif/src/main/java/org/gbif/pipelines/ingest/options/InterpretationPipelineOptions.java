@@ -42,11 +42,11 @@ public interface InterpretationPipelineOptions
 
   void setInterpretationTypes(List<String> types);
 
-  @Description("WS properties for interpretations that require the use of external web services")
+  @Description("Properties for interpretations that require the use of external web services")
   @JsonIgnore
-  String getWsProperties();
+  String getProperties();
 
-  void setWsProperties(String path);
+  void setProperties(String path);
 
   @Description("Path to hdfs-site-config.xml")
   String getHdfsSiteConfig();

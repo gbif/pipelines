@@ -21,6 +21,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFact;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
@@ -244,7 +246,7 @@ public class GbifJsonConverterTest {
                 MeasurementOrFact.newBuilder()
                     .setId("125")
                     .build()))
-                .build();
+            .build();
 
     // When
     String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, asr, mfr);
@@ -378,6 +380,80 @@ public class GbifJsonConverterTest {
     AustraliaSpatialRecord record = AustraliaSpatialRecord.newBuilder()
         .setId("777")
         .setItems(Collections.singletonMap("{awdawd}", "\"{\"wad\":\"adw\"}\""))
+        .build();
+
+    // When
+    String result = GbifJsonConverter.toStringPartialJson(record);
+
+    // Should
+    Assert.assertEquals(expected, result);
+    Assert.assertTrue(JsonValidationUtils.isValid(result));
+  }
+
+  @Test
+  public void measurementOrFactRecordSkipIssuesWithIdTest() {
+
+    // Expected
+    String expected = "{\"id\":\"777\",\"measurementOrFactItems\":[]}";
+
+    // State
+    MeasurementOrFactRecord record = MeasurementOrFactRecord.newBuilder().setId("777").build();
+
+    // When
+    String result = GbifJsonConverter.toStringPartialJson(record);
+
+    // Should
+    Assert.assertEquals(expected, result);
+    Assert.assertTrue(JsonValidationUtils.isValid(result));
+  }
+
+  @Test
+  public void amplificationRecordSkipIssuesWithIdEmptyTest() {
+
+    // Expected
+    String expected = "{\"id\":\"777\",\"amplificationItems\":[]}";
+
+    // State
+    AmplificationRecord record = AmplificationRecord.newBuilder().setId("777").build();
+
+    // When
+    String result = GbifJsonConverter.toStringPartialJson(record);
+
+    // Should
+    Assert.assertEquals(expected, result);
+    Assert.assertTrue(JsonValidationUtils.isValid(result));
+  }
+
+  @Test
+  public void multimediaRecordSkipIssuesWithIdTest() {
+
+    // Expected
+    String expected = "{\"id\":\"777\",\"multimediaItems\":[]}";
+
+    // State
+    MultimediaRecord record = MultimediaRecord.newBuilder().setId("777").build();
+
+    // When
+    String result = GbifJsonConverter.toStringPartialJson(record);
+
+    // Should
+    Assert.assertEquals(expected, result);
+    Assert.assertTrue(JsonValidationUtils.isValid(result));
+  }
+
+  @Test
+  public void multimediaRecordSkipIssuesWithIdEmptyTest() {
+
+    // Expected
+    String expected = "{\"id\":\"777\",\"multimediaItems\":[{\"type\": null, \"format\": null, \"identifier\": null, "
+        + "\"references\": null, \"title\": null, \"description\": null, \"source\": null, \"audience\": null, "
+        + "\"created\": null, \"creator\": null, \"contributor\": null, \"publisher\": null, \"license\": null, "
+        + "\"rightsHolder\": null, \"datasetId\": null}]}";
+
+    // State
+    MultimediaRecord record = MultimediaRecord.newBuilder()
+        .setId("777")
+        .setMultimediaItems(Collections.singletonList(Multimedia.newBuilder().build()))
         .build();
 
     // When

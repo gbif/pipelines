@@ -64,8 +64,7 @@ public interface BasePipelineOptions extends PipelineOptions {
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {
 
     static Optional<String> getDefaultFs(PipelineOptions options) {
-      List<Configuration> configs =
-          options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
+      List<Configuration> configs = options.as(HadoopFileSystemOptions.class).getHdfsConfiguration();
 
       return Optional.ofNullable(configs)
           .filter(x -> !x.isEmpty())

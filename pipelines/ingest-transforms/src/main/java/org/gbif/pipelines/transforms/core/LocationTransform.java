@@ -106,6 +106,13 @@ public class LocationTransform {
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret() {
+    return ParDo.of(new Interpreter());
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link LocationRecord}
+   */
   public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KvConfig kvConfig) {
     return ParDo.of(new Interpreter(kvConfig));
   }
@@ -134,6 +141,11 @@ public class LocationTransform {
 
     private final KvConfig kvConfig;
     private KeyValueStore<LatLng, String> kvStore;
+
+    public Interpreter() {
+      this.kvConfig = null;
+      this.kvStore = null;
+    }
 
     public Interpreter(KvConfig kvConfig) {
       this.kvConfig = kvConfig;
@@ -166,7 +178,8 @@ public class LocationTransform {
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
                   .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                  .withNumOfKeyBuckets(
+                      kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
                   .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                   .build())
               .withCacheCapacity(15_000L)

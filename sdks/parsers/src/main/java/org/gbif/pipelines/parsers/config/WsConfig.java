@@ -3,10 +3,10 @@ package org.gbif.pipelines.parsers.config;
 import java.io.Serializable;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
 /** Models the ws configuration. If you want to create an istance, use {@link WsConfigFactory} */
-@Getter
+@Data
 @AllArgsConstructor
 public final class WsConfig implements Serializable {
 
