@@ -40,7 +40,7 @@
     "doc": "A container for interpreted multimedia fields.",
     "fields": [
       {"name": "id", "type": "string", "doc":"Pipelines identifier"},
-      {"name": "multimediaItems", "type": ["null", {"type" : "array", "items" : "Multimedia"}], "default" : null },
+      {"name": "multimediaItems", "type": {"type" : "array", "items" : "Multimedia"}, "default" : {}},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

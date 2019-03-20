@@ -3,13 +3,15 @@ package org.gbif.pipelines.parsers.config;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
-import org.gbif.pipelines.parsers.exception.IORuntimeException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class KvConfigFactory {
 
   public static final String TAXONOMY_PREFIX = "taxonomy";
@@ -22,18 +24,14 @@ public class KvConfigFactory {
   private static final String WS_TIMEOUT_PROP = ".ws.timeout";
   private static final String CACHE_SIZE_PROP = ".ws.cache.sizeMb";
   private static final String NUM_OF_KEY_BUCKETS = ".numOfKeyBuckets";
-  private static final String TABLE_NAME= ".tableName";
+  private static final String TABLE_NAME = ".tableName";
 
   // property defaults
   private static final String DEFAULT_TIMEOUT_SEC = "60";
   private static final String DEFAULT_CACHE_SIZE_MB = "64";
   private static final String DEFAULT_NUM_OF_KEY_BUCKETS = "10";
 
-  private KvConfigFactory() {}
-
-  public static KvConfig create(String keyPrefix, Path propertiesPath) {
-    Objects.requireNonNull(keyPrefix);
-    Objects.requireNonNull(propertiesPath);
+  public static KvConfig create(@NonNull String keyPrefix, @NonNull Path propertiesPath) {
     // load properties or throw exception if cannot be loaded
     Properties props = loadProperties(propertiesPath);
 
@@ -56,25 +54,27 @@ public class KvConfigFactory {
 
     long cacheSize = Long.valueOf(props.getProperty(keyPrefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB));
     long timeout = Long.valueOf(props.getProperty(keyPrefix + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT_SEC));
-    int numOfKeyBuckets = Integer.valueOf(props.getProperty(keyPrefix + NUM_OF_KEY_BUCKETS, DEFAULT_NUM_OF_KEY_BUCKETS));
+    int numOfKeyBuckets =
+        Integer.valueOf(props.getProperty(keyPrefix + NUM_OF_KEY_BUCKETS, DEFAULT_NUM_OF_KEY_BUCKETS));
 
-    return new KvConfig(basePath, timeout, cacheSize, zookeeperUrl, numOfKeyBuckets, tableName);
+    return KvConfig.create(basePath, timeout, cacheSize, tableName, zookeeperUrl, numOfKeyBuckets);
   }
 
   public static KvConfig create(String baseApiPath, String zookeeperUrl, int numOfKeyBuckets, String tableName) {
     long timeoutInSec = Long.valueOf(DEFAULT_TIMEOUT_SEC);
     long cacheInMb = Long.valueOf(DEFAULT_CACHE_SIZE_MB);
-    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, zookeeperUrl, numOfKeyBuckets, tableName);
+    return KvConfig.create(baseApiPath, timeoutInSec, cacheInMb, tableName, zookeeperUrl, numOfKeyBuckets);
   }
 
   public static KvConfig create(String baseApiPath, int numOfKeyBuckets, String tableName) {
     long timeoutInSec = Long.valueOf(DEFAULT_TIMEOUT_SEC);
     long cacheInMb = Long.valueOf(DEFAULT_CACHE_SIZE_MB);
-    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, null, numOfKeyBuckets, tableName);
+    return KvConfig.create(baseApiPath, timeoutInSec, cacheInMb, tableName, null, numOfKeyBuckets);
   }
 
-  public static KvConfig create(String baseApiPath, long timeoutInSec, long cacheInMb, String zookeeperUrl, int numOfKeyBuckets, String tableName) {
-    return new KvConfig(baseApiPath, timeoutInSec, cacheInMb, zookeeperUrl, numOfKeyBuckets, tableName);
+  public static KvConfig create(String baseApiPath, long timeoutInSec, long cacheInMb, String zookeeperUrl,
+      int numOfKeyBuckets, String tableName) {
+    return KvConfig.create(baseApiPath, timeoutInSec, cacheInMb, tableName, zookeeperUrl, numOfKeyBuckets);
   }
 
   /**
@@ -86,7 +86,7 @@ public class KvConfigFactory {
         return new FileInputStream(path.toFile());
       } catch (Exception ex) {
         String msg = "Properties with absolute path could not be read from " + propertiesPath;
-        throw new IORuntimeException(msg, ex);
+        throw new IllegalArgumentException(msg, ex);
       }
     };
 
@@ -101,7 +101,7 @@ public class KvConfigFactory {
       props.load(in);
     } catch (Exception ex) {
       String msg = "Properties with absolute path could not be read from " + propertiesPath;
-      throw new IORuntimeException(msg, ex);
+      throw new IllegalArgumentException(msg, ex);
     }
 
     return props;

@@ -33,7 +33,7 @@
     "doc": "A container for interpreted image fields.",
     "fields": [
       {"name": "id", "type": "string", "doc":"Pipelines identifier"},
-      {"name": "imageItems", "type": ["null", {"type" : "array", "items" : "Image"}], "default" : null },
+      {"name": "imageItems", "type": {"type" : "array", "items" : "Image"}, "default" : {}},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

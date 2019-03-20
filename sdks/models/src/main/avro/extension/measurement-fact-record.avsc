@@ -38,7 +38,7 @@
     "doc": "A container for interpreted MeasurementOrFact fields.",
     "fields": [
       {"name": "id", "type": "string", "doc":"Pipelines identifier"},
-      {"name": "measurementOrFactItems", "type": ["null", {"type" : "array", "items" : "MeasurementOrFact"}], "default" : null },
+      {"name": "measurementOrFactItems", "type": {"type" : "array", "items" : "MeasurementOrFact"}, "default" : {}},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

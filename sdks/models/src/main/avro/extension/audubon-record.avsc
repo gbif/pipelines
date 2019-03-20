@@ -113,7 +113,7 @@
     "doc": "A container for interpreted Audubon fields.",
     "fields": [
       {"name": "id", "type": "string", "doc":"Pipelines identifier"},
-      {"name": "audubonItems", "type": ["null", {"type" : "array", "items" : "Audubon"}], "default" : null },
+      {"name": "audubonItems", "type": {"type" : "array", "items" : "Audubon"}, "default" : {}},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

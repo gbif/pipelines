@@ -56,7 +56,7 @@ public class JsonConverter {
 
   // Utility predicates to check if a node is a complex element
   private static final Predicate<String> IS_OBJECT = value -> value.startsWith("{\"") && value.endsWith("}");
-  private static final Predicate<String> IS_ARRAY_ONE = value -> value.startsWith("[\"") && value.endsWith("]");
+  private static final Predicate<String> IS_ARRAY_ONE = value -> value.startsWith("[") && value.endsWith("]");
   private static final Predicate<String> IS_ARRAY_TWO = value -> value.startsWith("[{") && value.endsWith("}]");
   private static final Predicate<String> IS_VALID_JSON =
       value -> {

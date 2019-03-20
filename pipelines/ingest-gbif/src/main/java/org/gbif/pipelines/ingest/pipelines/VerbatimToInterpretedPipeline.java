@@ -12,7 +12,6 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -30,7 +29,6 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -64,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
  * or pass all parameters:
  *
  * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline
- * --wsProperties=/some/path/to/output/ws.properties
+ * --properties=/some/path/to/output/ws.properties
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
  * --interpretationTypes=ALL
@@ -87,8 +85,6 @@ public class VerbatimToInterpretedPipeline {
 
     String datasetId = options.getDatasetId();
     String attempt = options.getAttempt().toString();
-    OccHbaseConfiguration tableConfig = options.getOccHbaseConfiguration();
-    List<Configuration> hdfsConfig = options.getHdfsConfiguration();
 
     FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), datasetId, attempt, options.getInterpretationTypes());
 
@@ -96,7 +92,7 @@ public class VerbatimToInterpretedPipeline {
     MDC.put("attempt", attempt);
 
     List<String> types = options.getInterpretationTypes();
-    String wsPropertiesPath = options.getWsProperties();
+    String propertiesPath = options.getProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
@@ -113,7 +109,7 @@ public class VerbatimToInterpretedPipeline {
 
     p.apply("Create metadata collection", Create.of(datasetId))
         .apply("Check metadata transform condition", MetadataTransform.check(types))
-        .apply("Interpret metadata", MetadataTransform.interpret(wsPropertiesPath))
+        .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath))
         .apply("Write metadata to avro", MetadataTransform.write(pathFn));
 
     uniqueRecords
@@ -122,7 +118,7 @@ public class VerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check basic transform condition", BasicTransform.check(types))
-        .apply("Interpret basic", BasicTransform.interpret(tableConfig, hdfsConfig, datasetId))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords
@@ -152,17 +148,17 @@ public class VerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check taxonomy transform condition", TaxonomyTransform.check(types))
-        .apply("Interpret taxonomy", TaxonomyTransform.interpret(wsPropertiesPath))
+        .apply("Interpret taxonomy", TaxonomyTransform.interpret(propertiesPath))
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn));
 
     PCollection<LocationRecord> locationPCollection = uniqueRecords
         .apply("Check location transform condition", LocationTransform.check(types))
-        .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath));
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath));
     locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
 
     locationPCollection
         .apply("Check AustraliaSpatial transform condition", AustraliaSpatialTransform.check(types))
-        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(wsPropertiesPath))
+        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(propertiesPath))
         .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn));
 
     log.info("Running the pipeline");

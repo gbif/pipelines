@@ -3,7 +3,6 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -14,7 +13,6 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -32,7 +30,6 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.values.PCollection;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -71,7 +68,7 @@ import lombok.extern.slf4j.Slf4j;
  * --targetPath=/some/path/to/output/
  * --inputPath=/some/path/to/input/dwca/dwca.zip
  * --runner=SparkRunner
- * --wsProperties=/path/ws.properties
+ * --properties=/path/ws.properties
  *
  * }</pre>
  */
@@ -87,13 +84,11 @@ public class DwcaToInterpretedPipeline {
   public static void run(DwcaPipelineOptions options) {
 
     String datasetId = options.getDatasetId();
-    OccHbaseConfiguration tableConfig = options.getOccHbaseConfiguration();
-    List<Configuration> hdfsConfig = options.getHdfsConfiguration();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", options.getAttempt().toString());
 
-    String wsPropertiesPath = options.getWsProperties();
+    String propertiesPath = options.getProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
@@ -116,14 +111,14 @@ public class DwcaToInterpretedPipeline {
     log.info("Adding interpretations");
 
     p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Interpret metadata", MetadataTransform.interpret(wsPropertiesPath))
+        .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath))
         .apply("Write metadata to avro", MetadataTransform.write(pathFn));
 
     uniqueRecords
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret basic", BasicTransform.interpret(tableConfig, hdfsConfig, datasetId))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords
@@ -147,19 +142,19 @@ public class DwcaToInterpretedPipeline {
         .apply("Write measurement to avro", MeasurementOrFactTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret taxonomy", TaxonomyTransform.interpret(wsPropertiesPath))
+        .apply("Interpret taxonomy", TaxonomyTransform.interpret(propertiesPath))
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath))
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath))
         .apply("Write location to avro", LocationTransform.write(pathFn));
 
     PCollection<LocationRecord> locationPCollection = uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(wsPropertiesPath));
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath));
     locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
 
     locationPCollection
-        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(wsPropertiesPath))
+        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(propertiesPath))
         .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn));
 
     log.info("Running the pipeline");

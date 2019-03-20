@@ -40,7 +40,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
  * or pass all parameters:
  *
  * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedAmpPipeline
- * --wsProperties=/some/path/to/output/ws.properties
+ * --properties=/some/path/to/output/ws.properties
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
  * --runner=SparkRunner
@@ -68,7 +68,7 @@ public class VerbatimToInterpretedAmpPipeline {
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt);
 
-    String wsPropertiesPath = options.getWsProperties();
+    String wsPropertiesPath = options.getProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);

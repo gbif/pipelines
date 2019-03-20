@@ -1,13 +1,13 @@
 package org.gbif.pipelines.keygen.common;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,18 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class HbaseConnectionFactory {
 
-  public static Connection create(List<Configuration> hbaseConfigs) throws IOException {
-    if (hbaseConfigs != null && !hbaseConfigs.isEmpty()) {
-      for (Configuration cfg : hbaseConfigs) {
-        try {
-          return ConnectionFactory.createConnection(cfg);
-        } catch (IOException ex) {
-          log.warn("HBase connection exception!", ex);
-        }
-      }
-      throw new IOException("Can't create a connection to HBase");
+  public static Connection create(String hbaseZk) throws IOException {
+    if (Strings.isNullOrEmpty(hbaseZk)) {
+      return ConnectionFactory.createConnection(HBaseConfiguration.create());
     }
-    return ConnectionFactory.createConnection(HBaseConfiguration.create());
+    Configuration hbaseConfig = HBaseConfiguration.create();
+    hbaseConfig.set("hbase.zookeeper.quorum", hbaseZk);
+    return ConnectionFactory.createConnection(hbaseConfig);
   }
 
   public static Connection create() throws IOException {

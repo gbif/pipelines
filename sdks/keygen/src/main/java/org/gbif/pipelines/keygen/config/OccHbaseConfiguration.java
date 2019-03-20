@@ -1,28 +1,29 @@
 package org.gbif.pipelines.keygen.config;
 
-import com.google.common.base.MoreObjects;
-import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.NonNull;
 
 /**
  * Configs needed to connect to the occurrence HBase db.
  */
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
-@Getter
-@Setter
-public class OccHbaseConfiguration {
+@AllArgsConstructor(staticName = "create")
+public class OccHbaseConfiguration implements Serializable {
 
-  @NotNull
+  private static final long serialVersionUID = -4728303272918599949L;
+
+  @NonNull
   private String occTable;
 
-  @NotNull
+  @NonNull
   private String counterTable;
 
-  @NotNull
+  @NonNull
   private String lookupTable;
 
 
@@ -36,14 +37,4 @@ public class OccHbaseConfiguration {
     counterTable = prefix + "_occurrence_counter";
     lookupTable = prefix + "_occurrence_lookup";
   }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("occTable", occTable)
-        .add("counterTable", counterTable)
-        .add("lookupTable", lookupTable)
-        .toString();
-  }
-
 }

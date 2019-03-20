@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -11,7 +12,8 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
-import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
+import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
 import org.gbif.pipelines.transforms.CheckTransforms;
 
 import org.apache.avro.file.CodecFactory;
@@ -25,7 +27,6 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Connection;
 
 import lombok.AccessLevel;
@@ -111,9 +112,8 @@ public class BasicTransform {
   /**
    * Creates an {@link Interpreter} for {@link BasicRecord}
    */
-  public static SingleOutput<ExtendedRecord, BasicRecord> interpret(OccHbaseConfiguration tableConfig,
-      List<Configuration> hbaseConfigs, String datasetId) {
-    return ParDo.of(new Interpreter(tableConfig, hbaseConfigs, datasetId));
+  public static SingleOutput<ExtendedRecord, BasicRecord> interpret(String propertiesPath, String datasetId) {
+    return ParDo.of(new Interpreter(propertiesPath, datasetId));
   }
 
   /**
@@ -124,31 +124,33 @@ public class BasicTransform {
 
     private final Counter counter = Metrics.counter(BasicTransform.class, BASIC_RECORDS_COUNT);
 
-    private final OccHbaseConfiguration tableConfig;
-    private final List<Configuration> hbaseConfigs;
+    private final KeygenConfig keygenConfig;
     private final String datasetId;
     private Connection connection;
     private HBaseLockingKeyService keygenService;
 
-    public Interpreter(OccHbaseConfiguration tableConfig, List<Configuration> hbaseConfigs, String datasetId) {
-      this.tableConfig = tableConfig;
+    public Interpreter(String propertiesPath, String datasetId) {
+      this.keygenConfig = KeygenConfigFactory.create(Paths.get(propertiesPath));
       this.datasetId = datasetId;
-      this.hbaseConfigs = hbaseConfigs;
+    }
+
+    public Interpreter(KeygenConfig keygenConfig, String datasetId) {
+      this.keygenConfig = keygenConfig;
+      this.datasetId = datasetId;
     }
 
 
     public Interpreter() {
-      this.tableConfig = null;
-      this.hbaseConfigs = null;
+      this.keygenConfig = null;
       this.datasetId = null;
     }
 
     @SneakyThrows
     @Setup
     public void setup() {
-      if (tableConfig != null) {
-        connection = HbaseConnectionFactory.create(hbaseConfigs);
-        keygenService = new HBaseLockingKeyService(tableConfig, connection, datasetId);
+      if (keygenConfig != null) {
+        connection = HbaseConnectionFactory.create(keygenConfig.getHbaseZk());
+        keygenService = new HBaseLockingKeyService(keygenConfig.getOccHbaseConfiguration(), connection, datasetId);
       }
     }
 

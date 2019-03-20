@@ -73,7 +73,7 @@
     "doc": "A container for interpreted amplification fields.",
     "fields": [
       {"name": "id", "type": "string", "doc":"Pipelines identifier"},
-      {"name": "amplificationItems", "type": ["null", {"type" : "array", "items" : "Amplification"}], "default" : null },
+      {"name": "amplificationItems", "type": {"type" : "array", "items" : "Amplification"}, "default" : {}},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }
