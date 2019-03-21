@@ -62,7 +62,13 @@
     <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
-    <sonar.exclusions>src/main/java-generated/**</sonar.exclusions>
+
+    <!-- Sonar -->
+    <sonar.exclusions>src/main/java-generated/**,src/main/org/gbif/pipelines/examples/**</sonar.exclusions>
+
+    <sonar.jacoco.reportPath>${project.basedir}/../../target/jacoco.exec</sonar.jacoco.reportPath>
+    <sonar.language>java</sonar.language>
+    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 
     <!-- Tools-->
     <lombok.version>1.18.6</lombok.version>
@@ -133,6 +139,7 @@
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
     <maven-plugin-plugin.version>3.5.2</maven-plugin-plugin.version>
     <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
+    <jococo.version>0.8.3</jococo.version>
 
     <!-- Checkstyle -->
     <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
@@ -214,6 +221,25 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jococo.version}</version>
+        <executions>
+          <execution>
+            <id>agent-for-ut</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+            <configuration>
+              <append>true</append>
+              <destFile>${sonar.jacoco.reportPath}</destFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
 
