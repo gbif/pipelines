@@ -18,6 +18,10 @@
     changes) was copied from occurrence/occurrence-persistence project
   </description>
 
+  <properties>
+    <sonar.skip>true</sonar.skip>
+  </properties>
+
   <dependencies>
 
     <!-- Tools -->

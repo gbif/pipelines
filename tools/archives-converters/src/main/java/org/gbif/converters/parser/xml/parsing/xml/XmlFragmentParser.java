@@ -130,13 +130,12 @@ public class XmlFragmentParser {
       byte[] xml, OccurrenceSchemaType schemaType, String unitQualifier) {
     RawOccurrenceRecord result = null;
     List<RawOccurrenceRecord> records = parseRecord(xml, schemaType);
-    if (records.isEmpty()) {
+    if (records == null || records.isEmpty()) {
       log.warn("Could not parse any records from given xml - returning null.");
     } else if (records.size() == 1) {
       result = records.get(0);
     } else if (unitQualifier == null) {
-      log.warn(
-          "Got multiple records from given xml, but no unitQualifier set - returning first record as a guess.");
+      log.warn("Got multiple records from given xml, but no unitQualifier set - returning first record as a guess.");
       result = records.get(0);
     } else {
       for (RawOccurrenceRecord record : records) {
@@ -167,7 +166,7 @@ public class XmlFragmentParser {
    * @param xml snippet of xml representing one (or more, in ABCD) occurrence
    * @param schemaType the protocol that produced this xml (e.g. DWC, ABCD)
    * @param useOccurrenceId @return a set of 0 or more IdentifierExtractionResults containing
-   *     UniqueIdentifiers as found in the xml
+   * UniqueIdentifiers as found in the xml
    * @see UniqueIdentifier
    */
   public static Set<IdentifierExtractionResult> extractIdentifiers(

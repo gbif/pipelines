@@ -1,5 +1,6 @@
 package org.gbif.pipelines.keygen;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -48,11 +49,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <a href="http://dev.gbif.org/code/snippet/CR-OCC-5">http://dev.gbif.org/code/snippet/CR-OCC-5</a>.
  */
 @Slf4j
-public class HBaseLockingKeyService {
+public class HBaseLockingKeyService implements Serializable {
 
-  private static final long WAIT_BEFORE_RETRY_MS = 5000;
+  private static final long serialVersionUID = -3128096563237268385L;
+
+  private static final long WAIT_BEFORE_RETRY_MS = 5000L;
   private static final int WAIT_SKEW = 4000;
-  private static final long STALE_LOCK_TIME = 5 * 60 * 1000;
+  private static final long STALE_LOCK_TIME = 5L * 60L * 1000L;
   public static final int COUNTER_ROW = 1;
 
   // The number of IDs to reserve at a time in batch
