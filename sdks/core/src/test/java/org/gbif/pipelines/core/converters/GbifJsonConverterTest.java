@@ -14,6 +14,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.DeterminedDate;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -44,7 +45,7 @@ public class GbifJsonConverterTest {
             + "\"01-01-2018\"},\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":"
             + "{\"lon\":2.0,\"lat\":1.0},\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":"
             + "\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,\"rank\":"
-            + "\"CHEMOFORM\"},{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],"
+            + "\"CHEMOFORM\"},{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],\"gbifId\":111,"
             + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\","
             + "\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
             + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\","
@@ -69,6 +70,8 @@ public class GbifJsonConverterTest {
             .setCoreRowType("core")
             .setCoreTerms(erMap)
             .build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(111).build();
 
     TemporalRecord tmr =
         TemporalRecord.newBuilder()
@@ -100,7 +103,7 @@ public class GbifJsonConverterTest {
     TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
 
     // When
-    String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr);
+    String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, br);
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));

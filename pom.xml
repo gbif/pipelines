@@ -64,11 +64,8 @@
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
     <!-- Sonar -->
-    <sonar.exclusions>src/main/java-generated/**,src/main/org/gbif/pipelines/examples/**</sonar.exclusions>
-
-    <sonar.jacoco.reportPath>${project.basedir}/../../target/jacoco.exec</sonar.jacoco.reportPath>
+    <sonar.exclusions>src/main/java-generated/**,src/main/org/gbif/pipelines/examples/**,src/main/org/gbif/converters/parser/xml/**</sonar.exclusions>
     <sonar.language>java</sonar.language>
-    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 
     <!-- Tools-->
     <lombok.version>1.18.6</lombok.version>
@@ -210,8 +207,7 @@
               <artifactId>plexus-compiler-javac-errorprone</artifactId>
               <version>${plexus-compiler-javac-errorprone.version}</version>
             </dependency>
-            <!-- override plexus-compiler-javac-errorprone's dependency on
-                 Error Prone with the latest version -->
+            <!-- Override plexus-compiler-javac-errorprone's dependency on Errorprone with the latest version -->
             <dependency>
               <groupId>com.google.errorprone</groupId>
               <artifactId>error_prone_core</artifactId>
@@ -221,32 +217,11 @@
         </plugin>
       </plugins>
     </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jococo.version}</version>
-        <executions>
-          <execution>
-            <id>agent-for-ut</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-            <configuration>
-              <append>true</append>
-              <destFile>${sonar.jacoco.reportPath}</destFile>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
   </build>
 
 
-  <!--
-  All dependencies of all modules are listed here with the project-wide default version.  Only when necessary
-  are library versions overridden in modules.
--->
+  <!-- All dependencies of all modules are listed here with the project-wide default version.  Only when necessary
+  are library versions overridden in modules.-->
   <dependencyManagement>
     <dependencies>
 
