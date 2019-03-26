@@ -19,5 +19,5 @@ public class Installation implements Serializable {
   private static final long serialVersionUID = -4294360703275377726L;
 
   private String organizationKey;
-  private String protocol;
+  private String type;
 }
