@@ -314,7 +314,7 @@ public class GbifJsonConverter {
           node.put("taxonKey", name.getKey());
           node.put("name", name.getName());
           node.put("depthKey_" + i, name.getKey());
-          node.put("kingdomKey", name.getKey());
+          node.put(name.getRank().name().toLowerCase() + "Key", name.getKey());
           node.put("rank", name.getRank().name());
           nodes.add(node);
         }

@@ -90,7 +90,7 @@ public class TaxonRecordConverter {
             .setNote(diagnosticsApi.getNote())
             .setLineage(diagnosticsApi.getLineage());
 
-    // status. A bit of deffensive programming...
+    // status. A bit of defensive programming...
     if (diagnosticsApi.getStatus() != null) {
       builder.setStatus(Status.valueOf(diagnosticsApi.getStatus().name()));
     }
