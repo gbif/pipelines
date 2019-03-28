@@ -277,7 +277,6 @@ public class GbifJsonConverter {
    * <pre>{@code
    * Result example:
    *
-   * "gbifKingdom": "Animalia",
    *  //.....more fields
    * "usage": {
    *  "key": 2442896,
@@ -299,35 +298,33 @@ public class GbifJsonConverter {
    */
   private BiConsumer<JsonConverter, SpecificRecordBase> getTaxonomyRecordConverter() {
     return (jc, record) -> {
-      TaxonRecord tr = (TaxonRecord) record;
+      TaxonRecord trOrg = (TaxonRecord) record;
+      //Copy only the fields that are needed in the Index
+      TaxonRecord.Builder trBuilder = TaxonRecord.newBuilder()
+                        .setAcceptedUsage(trOrg.getAcceptedUsage())
+                        .setClassification(trOrg.getClassification())
+                        .setSynonym(trOrg.getSynonym())
+                        .setUsage(trOrg.getUsage());
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, tr.getId());
+        trBuilder.setId(trOrg.getId());
       }
+
+      TaxonRecord tr = trBuilder.build();
+
+      //Create a ObjectNode with the specific fields copied from the original record
+      ObjectNode classificationNode = JsonConverter.createObjectNode(tr);
 
       List<RankedName> classifications = tr.getClassification();
       if (classifications != null && !classifications.isEmpty()) {
-        List<ObjectNode> nodes = new ArrayList<>(classifications.size());
-        for (int i = 0; i < classifications.size(); i++) {
-          RankedName name = classifications.get(i);
-          ObjectNode node = JsonConverter.createObjectNode();
-          node.put("taxonKey", name.getKey());
-          node.put("name", name.getName());
-          node.put("depthKey_" + i, name.getKey());
-          node.put(name.getRank().name().toLowerCase() + "Key", name.getKey());
-          node.put("rank", name.getRank().name());
-          nodes.add(node);
-        }
-        jc.addJsonArray("backbone", nodes);
+        //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
+        classifications.forEach(rankedName ->
+            classificationNode.put(rankedName.getRank().name().toLowerCase() + "Key", rankedName.getKey())
+        );
       }
 
-      // Other Gbif fields
-      Optional.ofNullable(tr.getUsage()).ifPresent(
-          usage -> {
-            jc.addJsonTextFieldNoCheck("gbifTaxonKey", usage.getKey().toString());
-            jc.addJsonTextFieldNoCheck("gbifScientificName", usage.getName());
-            jc.addJsonTextFieldNoCheck("gbifTaxonRank", usage.getRank().name());
-          });
+      jc.addJsonObject("gbifClassification", classificationNode);
+
     };
   }
 

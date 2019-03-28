@@ -224,12 +224,25 @@ public class JsonConverter {
     return mainNode;
   }
 
+  /**
+   * Creates a empty ArrayNode.
+   */
   static ArrayNode createArrayNode() {
     return MAPPER.createArrayNode();
   }
 
+  /**
+   * Creates an empty ObjecNode.
+   */
   static ObjectNode createObjectNode() {
     return MAPPER.createObjectNode();
+  }
+
+  /**
+   * Creates a ObjectNode of a plain Java object.
+   */
+  static ObjectNode createObjectNode(Object object) {
+    return MAPPER.valueToTree(object);
   }
 
   /** Applies all the replaceKeys to the value to remove all undesired patterns. */
