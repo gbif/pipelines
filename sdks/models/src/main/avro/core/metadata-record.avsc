@@ -18,7 +18,7 @@
     {"name": "protocol","type":["null","string"],"default":null},
     {"name": "license","type":["null","string"],"default":null},
     {"name": "publishingCountry","type":["null","string"],"default":null},
-    {"name" : "networkKeys", "type" : {"type" : "array", "items" : "string"}, "default": []},
+    {"name": "networkKeys", "type" : {"type" : "array", "items" : "string"}, "default": []},
     {"name": "issues", "type": "IssueRecord", "default":{}}
   ]
 }

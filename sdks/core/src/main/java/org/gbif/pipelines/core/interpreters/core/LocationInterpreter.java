@@ -1,9 +1,13 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.common.parsers.core.ParseResult;
@@ -44,6 +48,23 @@ public class LocationInterpreter {
   // 45 close to 5000 km
   private static final double COORDINATE_PRECISION_UPPER_BOUND = 45d;
 
+  //List of Geospatial Issues
+  private static final Set<String> SPATIAL_ISSUES = Stream.of("ZERO_COORDINATE",
+                                                              "COORDINATE_INVALID",
+                                                              "COORDINATE_OUT_OF_RANGE",
+                                                              "COUNTRY_COORDINATE_MISMATCH")
+                                                      .collect(Collectors.toSet());
+
+  /**
+   * Determines if the record contains geo-spatial issues.
+   */
+  private static Optional<Boolean> hasGeospatialIssues(LocationRecord lr) {
+    if (Objects.nonNull(lr.getIssues())) {
+     return Optional.of(lr.getIssues().getIssueList().stream().anyMatch(SPATIAL_ISSUES::contains));
+    }
+    return Optional.empty();
+  }
+
   /**
    * Interprets the {@link DwcTerm#country}, {@link DwcTerm#countryCode}, {@link
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
@@ -64,14 +85,21 @@ public class LocationInterpreter {
               lr.setCountryCode(country.getIso2LetterCode());
             });
 
-        Optional.ofNullable(parsedLocation.getLatLng())
-            .ifPresent(latLng -> {
-              lr.setDecimalLatitude(latLng.getLatitude());
-              lr.setDecimalLongitude(latLng.getLongitude());
-            });
+
+        LatLng latLng = parsedLocation.getLatLng();
+        if (Objects.nonNull(latLng)) {
+          lr.setDecimalLatitude(latLng.getLatitude());
+          lr.setDecimalLongitude(latLng.getLongitude());
+          lr.setHasCoordinate(Boolean.TRUE);
+        } else {
+          lr.setHasCoordinate(Boolean.FALSE);
+        }
 
         // set the issues to the interpretation
         addIssue(lr, parsedResult.getIssues());
+
+        //Has geo-spatial issues
+        hasGeospatialIssues(lr).ifPresent(lr::setHasGeospatialIssue);
       }
     };
   }

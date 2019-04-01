@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -104,6 +105,17 @@ public class InterpretedToEsIndexPipeline {
     run(options);
   }
 
+  /**
+   * Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
+   */
+  private static Optional<Boolean> isRepatriated(LocationRecord lr, MetadataRecord mr) {
+
+    if (Objects.nonNull(lr) && Objects.nonNull(mr) && Objects.nonNull(lr.getCountry()) && Objects.nonNull(mr.getPublishingCountry())) {
+      return Optional.of(lr.getCountry().equals(mr.getPublishingCountry()));
+    }
+    return Optional.empty();
+  }
+
   public static void run(EsIndexingPipelineOptions options) {
 
     MDC.put("datasetId", options.getDatasetId());
@@ -200,6 +212,10 @@ public class InterpretedToEsIndexPipeline {
             AustraliaSpatialRecord asr = v.getOnly(asrTag, AustraliaSpatialRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
+
+            //Interpretation that required multiple sources
+            isRepatriated(lr, mdr).ifPresent(lr::setRepatriated);
+
             String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er, asr);
 
             c.output(json);
