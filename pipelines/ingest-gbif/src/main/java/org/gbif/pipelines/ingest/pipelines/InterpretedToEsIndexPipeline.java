@@ -181,9 +181,6 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Measurement", MeasurementOrFactTransform.read(pathFn))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
 
-    PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection =
-        p.apply("Read Australia spatial", AustraliaSpatialTransform.read(pathFn))
-            .apply("Map Australia spatial to KV", AustraliaSpatialTransform.toKv());
 
     log.info("Adding step 3: Converting into a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
@@ -236,8 +233,6 @@ public class InterpretedToEsIndexPipeline {
             .and(irTag, imageCollection)
             .and(arTag, audubonCollection)
             .and(mfrTag, measurementCollection)
-            // Specific
-            .and(asrTag, australiaSpatialCollection)
             // Raw
             .and(erTag, verbatimCollection)
             // Apply

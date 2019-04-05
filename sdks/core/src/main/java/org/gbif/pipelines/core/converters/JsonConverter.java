@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -9,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -22,6 +24,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
+
+import static java.lang.Enum.valueOf;
 
 import static org.apache.avro.Schema.Type.UNION;
 
@@ -105,6 +109,16 @@ public class JsonConverter {
     return toJson().toString();
   }
 
+  private void addArrayNode(ObjectNode node, Schema.Field field,Collection<?> objects) {
+    ArrayNode arrayNode = node.putArray(field.name());
+    objects.forEach( value -> {
+      if(value instanceof SpecificRecordBase) {
+        ObjectNode element = createObjectNode();
+        addCommonFields((SpecificRecordBase)value, element);
+        arrayNode.add(element);
+      }
+    });
+  }
   /**
    * Common way how to convert {@link SpecificRecordBase} to json string
    * Converts {@link SpecificRecordBase} by fields type and adds into {@link ObjectNode}
@@ -134,6 +148,12 @@ public class JsonConverter {
                     break;
                   case LONG:
                     node.put(f.name(), (Long) r);
+                    break;
+                  case ARRAY:
+                    Collection values = (Collection)r;
+                    if(!values.isEmpty()) {
+                      addArrayNode(node, f, (Collection)r);
+                    }
                     break;
                   default:
                     addJsonFieldNoCheck(node, f.name(), r.toString());
@@ -238,13 +258,6 @@ public class JsonConverter {
     return MAPPER.createObjectNode();
   }
 
-  /**
-   * Creates a ObjectNode of a plain Java object.
-   */
-  static ObjectNode createObjectNode(Object object) {
-    return MAPPER.valueToTree(object);
-  }
-
   /** Applies all the replaceKeys to the value to remove all undesired patterns. */
   private String sanitizeValue(String value) {
     for (Pattern rule : replaceKeys) {
@@ -253,4 +266,7 @@ public class JsonConverter {
     return value;
   }
 
+  public static ObjectMapper mapper() {
+    return MAPPER;
+  }
 }

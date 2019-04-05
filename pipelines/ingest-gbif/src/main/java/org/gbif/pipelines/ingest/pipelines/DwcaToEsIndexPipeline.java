@@ -13,7 +13,6 @@ import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -34,7 +33,6 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -132,8 +130,6 @@ public class DwcaToEsIndexPipeline {
     final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
     final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
     final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
-    // Specific
-    final TupleTag<AustraliaSpatialRecord> asrTag = new TupleTag<AustraliaSpatialRecord>() {};
 
     String tmpDir = FsUtils.getTempDir(options);
 
@@ -172,11 +168,6 @@ public class DwcaToEsIndexPipeline {
     PCollection<LocationRecord> locationCollection =
         uniqueRecords
             .apply("Interpret location", LocationTransform.interpret(propertiesPath));
-
-    PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection =
-        locationCollection
-            .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(propertiesPath))
-            .apply("Map Australia spatial to KV", AustraliaSpatialTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationKvCollection =
         locationCollection
@@ -231,11 +222,9 @@ public class DwcaToEsIndexPipeline {
             ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
             AudubonRecord ar = v.getOnly(arTag, AudubonRecord.newBuilder().setId(k).build());
             MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
-            // Specific
-            AustraliaSpatialRecord asr = v.getOnly(asrTag, AustraliaSpatialRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-            String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er, asr);
+            String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er);
 
             c.output(json);
 
@@ -255,8 +244,6 @@ public class DwcaToEsIndexPipeline {
             .and(irTag, imageCollection)
             .and(arTag, audubonCollection)
             .and(mfrTag, measurementCollection)
-            // Specific
-            .and(asrTag, australiaSpatialCollection)
             // Raw
             .and(erTag, verbatimCollection)
             // Apply

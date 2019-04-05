@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -182,8 +184,24 @@ public class GbifJsonConverter {
 
       Optional.ofNullable(core.get(DwcTerm.recordedBy.qualifiedName()))
           .ifPresent(x -> jc.addJsonTextFieldNoCheck("recordedBy", x));
+      Optional.ofNullable(core.get(DwcTerm.recordNumber.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("recordNumber", x));
       Optional.ofNullable(core.get(DwcTerm.organismID.qualifiedName()))
           .ifPresent(x -> jc.addJsonTextFieldNoCheck("organismId", x));
+      Optional.ofNullable(core.get(DwcTerm.samplingProtocol.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("samplingProtocol", x));
+      Optional.ofNullable(core.get(DwcTerm.eventID.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventId", x));
+      Optional.ofNullable(core.get(DwcTerm.parentEventID.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("parentEventId", x));
+      Optional.ofNullable(core.get(DwcTerm.institutionCode.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("institutionCode", x));
+      Optional.ofNullable(core.get(DwcTerm.collectionCode.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("collectionCode", x));
+      Optional.ofNullable(core.get(DwcTerm.catalogNumber.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("catalogNumber", x));
+      Optional.ofNullable(core.get(DwcTerm.occurrenceID.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("occurrenceId", x));
 
       // Core
       ObjectNode coreNode = JsonConverter.createObjectNode();
@@ -277,6 +295,7 @@ public class GbifJsonConverter {
    * <pre>{@code
    * Result example:
    *
+   * "gbifKingdom": "Animalia",
    *  //.....more fields
    * "usage": {
    *  "key": 2442896,
@@ -307,24 +326,29 @@ public class GbifJsonConverter {
                         .setUsage(trOrg.getUsage());
 
       if (!skipId) {
-        trBuilder.setId(trOrg.getId());
+        jc.addJsonTextFieldNoCheck(ID, trOrg.getId());
       }
 
       TaxonRecord tr = trBuilder.build();
 
-      //Create a ObjectNode with the specific fields copied from the original record
-      ObjectNode classificationNode = JsonConverter.createObjectNode(tr);
 
+      //Create a ObjectNode with the specific fields copied from the original record
+      ObjectNode classificationNode = JsonConverter.createObjectNode();
+      jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
       if (classifications != null && !classifications.isEmpty()) {
         //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
-        classifications.forEach(rankedName ->
-            classificationNode.put(rankedName.getRank().name().toLowerCase() + "Key", rankedName.getKey())
+        StringJoiner pathJoiner = new StringJoiner("_");
+        classifications.forEach(rankedName -> {
+            classificationNode.put(rankedName.getRank().name().toLowerCase() + "Key", rankedName.getKey());
+            if (Objects.nonNull(tr.getAcceptedUsage()) && tr.getAcceptedUsage().getRank() != rankedName.getRank()) {
+              pathJoiner.add(rankedName.getKey().toString());
+            }
+          }
         );
+        classificationNode.put("classificationPath", "_"  + pathJoiner.toString());
       }
-
       jc.addJsonObject("gbifClassification", classificationNode);
-
     };
   }
 
