@@ -341,7 +341,7 @@ public class GbifJsonConverter {
         StringJoiner pathJoiner = new StringJoiner("_");
         classifications.forEach(rankedName -> {
             classificationNode.put(rankedName.getRank().name().toLowerCase() + "Key", rankedName.getKey());
-            if (Objects.nonNull(tr.getAcceptedUsage()) && tr.getAcceptedUsage().getRank() != rankedName.getRank()) {
+            if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getRank() != rankedName.getRank()) {
               pathJoiner.add(rankedName.getKey().toString());
             }
           }
