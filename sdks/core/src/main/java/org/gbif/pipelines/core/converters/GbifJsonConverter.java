@@ -343,7 +343,9 @@ public class GbifJsonConverter {
         //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
         StringJoiner pathJoiner = new StringJoiner("_");
         classifications.forEach(rankedName -> {
-            classificationNode.put(rankedName.getRank().name().toLowerCase() + "Key", rankedName.getKey());
+            String lwRank = rankedName.getRank().name().toLowerCase();
+            classificationNode.put(lwRank + "Key", rankedName.getKey());
+            classificationNode.put(lwRank, rankedName.getName());
             if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getRank() != rankedName.getRank()) {
               pathJoiner.add(rankedName.getKey().toString());
             }
