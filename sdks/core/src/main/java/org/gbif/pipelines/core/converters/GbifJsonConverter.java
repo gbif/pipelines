@@ -254,7 +254,10 @@ public class GbifJsonConverter {
         ObjectNode node = JsonConverter.createObjectNode();
         node.put("lon", lr.getDecimalLongitude());
         node.put("lat", lr.getDecimalLatitude());
+        //geo_point
         jc.addJsonObject("coordinates", node);
+        //geo_shape
+        jc.addJsonTextFieldNoCheck("scoordinates", "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude()  + ")");
       }
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
@@ -282,7 +285,7 @@ public class GbifJsonConverter {
 
       Optional.ofNullable(tr.getEventDate())
           .map(EventDate::getGte)
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("startDate", x));
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventDateSingle", x));
 
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
