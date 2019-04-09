@@ -125,6 +125,9 @@ public class TaxonomyInterpreter {
     };
   }
 
+  /**
+   * Converts a {@link ParsedName} into {@link org.gbif.pipelines.io.avro.ParsedName}.
+   */
   private static org.gbif.pipelines.io.avro.ParsedName toParsedNameAvro(ParsedName pn) {
     org.gbif.pipelines.io.avro.ParsedName.Builder builder =  org.gbif.pipelines.io.avro.ParsedName.newBuilder()
                                                               .setAbbreviated(pn.isAbbreviated())
@@ -150,6 +153,7 @@ public class TaxonomyInterpreter {
                                                               .setRemarks(pn.getRemarks())
                                                               .setSpecificEpithet(pn.getSpecificEpithet());
 
+    //Nullable fields
     Optional.ofNullable(pn.getBasionymAuthorship())
         .ifPresent(authorship -> builder.setBasionymAuthorship(toAuthorshipAvro(authorship)));
     Optional.ofNullable(pn.getCombinationAuthorship())
@@ -167,6 +171,9 @@ public class TaxonomyInterpreter {
     return builder.build();
   }
 
+  /**
+   * Converts a {@link Authorship} into {@link org.gbif.pipelines.io.avro.Authorship}.
+   */
   private static org.gbif.pipelines.io.avro.Authorship toAuthorshipAvro(Authorship authorship) {
     return org.gbif.pipelines.io.avro.Authorship.newBuilder()
              .setEmpty(authorship.isEmpty())
