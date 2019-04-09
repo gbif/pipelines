@@ -44,8 +44,8 @@ public class GbifJsonConverterTest {
             + "\"startDate\":\"01-01-2011\",\"year\":2000,\"day\":1,\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": "
             + "\"01-01-2018\"},\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":"
             + "{\"lon\":2.0,\"lat\":1.0},\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":"
-            + "\"Code 1'2\\\"\",\"gbifClassification\":{\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
-            + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],\"acceptedUsage\":{\"key\": 2, \"name\": \"Name2\", \"rank\": \"ABERRATION\"},"
+            + "\"Code 1'2\\\"\",\"gbifClassification\":{\"usage\":{\"key\": 2, \"name\": \"Name2\", \"rank\": \"ABERRATION\"},"
+            + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"}," + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],"
             + "\"issues\":{\"issueList\": []},\"chemoformKey\":1,\"aberrationKey\":2,\"classificationPath\":\"_1\"},\"gbifId\":111,"
             + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\","
             + "\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
@@ -101,7 +101,7 @@ public class GbifJsonConverterTest {
     rankedNameList.add(name);
     rankedNameList.add(name2);
 
-    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).setAcceptedUsage(name2).build();
+    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).setUsage(name2).build();
 
     // When
     String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, br);
@@ -139,8 +139,8 @@ public class GbifJsonConverterTest {
             + "\"startDate\":\"01-01-2011\",\"year\":2000,\"day\":1,\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},"
             + "\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":2.0,\"lat\":1.0},"
             + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\","
-            + "\"gbifClassification\":{\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
-            + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],\"acceptedUsage\":{\"key\": 2, \"name\": \"Name2\", \"rank\": \"ABERRATION\"},\"issues\":{\"issueList\": []},"
+            + "\"gbifClassification\":{\"usage\":{\"key\": 2, \"name\": \"Name2\", \"rank\": \"ABERRATION\"},"
+            + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"}," + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],\"issues\":{\"issueList\": []},"
             + "\"chemoformKey\":1,\"aberrationKey\":2,\"classificationPath\":\"_1\"},"
             + "\"australiaSpatialLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"measurementOrFactItems\":[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
             + "{\\\"something\\\":1}\",\"value\":1.1,\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}},{\"id\":\"124\",\"type\":null,"
@@ -233,7 +233,7 @@ public class GbifJsonConverterTest {
     rankedNameList.add(name);
     rankedNameList.add(name2);
 
-    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).setAcceptedUsage(name2).build();
+    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).setUsage(name2).build();
 
     MeasurementOrFactRecord mfr =
         MeasurementOrFactRecord.newBuilder().setId("777").setMeasurementOrFactItems(

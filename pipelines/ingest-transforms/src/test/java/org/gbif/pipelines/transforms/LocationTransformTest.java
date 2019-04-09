@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -56,7 +57,11 @@ public class LocationTransformTest {
         "56.26",
         "9.51",
         "Copenhagen",
-        "GEODETIC_DATUM_ASSUMED_WGS84"
+        "GEODETIC_DATUM_ASSUMED_WGS84",
+        "155.5",
+        "44.5",
+        "105.0",
+        "5.0"
     };
     final String[] japan = {
         "1",
@@ -75,7 +80,11 @@ public class LocationTransformTest {
         "36.21",
         "138.25",
         "Tokyo",
-        "GEODETIC_DATUM_ASSUMED_WGS84"
+        "GEODETIC_DATUM_ASSUMED_WGS84",
+        "155.5",
+        "44.5",
+        "105.0",
+        "5.0"
     };
 
     final List<ExtendedRecord> records = createExtendedRecordList(denmark, japan);
@@ -140,6 +149,12 @@ public class LocationTransformTest {
                       .setDecimalLatitude(Double.valueOf(x[13]))
                       .setDecimalLongitude(Double.valueOf(x[14]))
                       .setStateProvince(x[15])
+                      .setDepth(Double.valueOf(x[17]))
+                      .setDepthAccuracy(Double.valueOf(x[18]))
+                      .setElevation(Double.valueOf(x[19]))
+                      .setElevationAccuracy(Double.valueOf(x[20]))
+                      .setHasCoordinate(true)
+                      .setHasGeospatialIssue(false)
                       .build();
               record.getIssues().getIssueList().add(x[16]);
               return record;

@@ -10,7 +10,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.Continent;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.geospatial.DoubleAccuracy;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
@@ -160,6 +162,23 @@ public class LocationInterpreter {
     }
   }
 
+  /**
+   * {@link org.gbif.dwc.terms.GbifTerm#elevation} and {@link
+   * org.gbif.dwc.terms.GbifTerm#elevationAccuracy} interpretation.
+   */
+  public static void interpretElevation(ExtendedRecord er, LocationRecord lr) {
+    String minElevation = extractValue(er, DwcTerm.minimumElevationInMeters);
+    String maxElevation = extractValue(er, DwcTerm.maximumElevationInMeters);
+    OccurrenceParseResult<DoubleAccuracy> parseResult =
+        MeterRangeParser.parseElevation(minElevation, maxElevation, null);
+    if (parseResult.isSuccessful()) {
+      lr.setElevation(parseResult.getPayload().getValue());
+      lr.setElevationAccuracy(parseResult.getPayload().getAccuracy());
+    } else {
+      addIssue(lr, "MAX_ELEVATION_INVALID");
+    }
+  }
+
   /** {@link DwcTerm#minimumDepthInMeters} interpretation. */
   public static void interpretMinimumDepthInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.minimumDepthInMeters);
@@ -186,7 +205,22 @@ public class LocationInterpreter {
     }
   }
 
-  /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
+  /**
+   * {@link org.gbif.dwc.terms.GbifTerm#depth} and {@link org.gbif.dwc.terms.GbifTerm#depthAccuracy}
+   * interpretation.
+   */
+  public static void interpretDepth(ExtendedRecord er, LocationRecord lr) {
+    String minDepth = extractValue(er, DwcTerm.minimumDepthInMeters);
+    String maxDepth = extractValue(er, DwcTerm.maximumDepthInMeters);
+    OccurrenceParseResult<DoubleAccuracy> parseResult = MeterRangeParser.parseDepth(minDepth, maxDepth, null);
+    if (parseResult.isSuccessful()) {
+      lr.setDepth(parseResult.getPayload().getValue());
+      lr.setDepthAccuracy(parseResult.getPayload().getAccuracy());
+    }
+    parseResult.getIssues().forEach(i -> addIssue(lr, i.name()));
+  }
+
+  /** {@link DwcTerm#minimumDistanceAboveSurfaceInMeters} interpretation. */
   public static void interpretMinimumDistanceAboveSurfaceInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.minimumDistanceAboveSurfaceInMeters);
     if (!Strings.isNullOrEmpty(value)) {
@@ -199,7 +233,7 @@ public class LocationInterpreter {
     }
   }
 
-  /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
+  /** {@link DwcTerm#maximumDistanceAboveSurfaceInMeters} interpretation. */
   public static void interpretMaximumDistanceAboveSurfaceInMeters(ExtendedRecord er, LocationRecord lr) {
     String value = extractValue(er, DwcTerm.maximumDistanceAboveSurfaceInMeters);
     if (!Strings.isNullOrEmpty(value)) {
