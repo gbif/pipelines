@@ -8,6 +8,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
+import org.gbif.pipelines.core.interpreters.core.TypifiedNameInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -168,6 +169,7 @@ public class BasicTransform {
           .to(er -> BasicRecord.newBuilder().setId(er.getId()).build())
           .via(BasicInterpreter.interpretGbifId(keygenService))
           .via(BasicInterpreter::interpretBasisOfRecord)
+          .via(TypifiedNameInterpreter::interpretTypifiedName)
           .via(BasicInterpreter::interpretSex)
           .via(BasicInterpreter::interpretEstablishmentMeans)
           .via(BasicInterpreter::interpretLifeStage)

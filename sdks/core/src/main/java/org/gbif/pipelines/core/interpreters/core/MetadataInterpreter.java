@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -36,7 +37,10 @@ public class MetadataInterpreter {
 
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (Objects.nonNull(networkList) && !networkList.isEmpty()) {
-          mdr.setNetworkKeys(networkList.stream().map(Network::getKey).collect(Collectors.toList()));
+          mdr.setNetworkKeys(
+              networkList.stream().map(Network::getKey).collect(Collectors.toList()));
+        } else {
+          mdr.setNetworkKeys(Collections.emptyList());
         }
 
         Installation installation = client.getInstallation(mdr.getInstallationKey());
@@ -47,7 +51,6 @@ public class MetadataInterpreter {
         mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
         mdr.setPublisherTitle(organization.getTitle());
         mdr.setPublishingCountry(organization.getCountry());
-
       }
     };
   }

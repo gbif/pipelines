@@ -52,6 +52,53 @@
     ]
   },
   {
+    "type" : "record",
+    "name" : "ParsedName",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "doc" : "Schema for org.gbif.pipelines.io.avro.ParsedName",
+    "fields" : [
+      {"name" : "abbreviated", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "autonym", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "basionymAuthorship", "type" : [ "null",
+        { "type" : "record",
+          "name" : "Authorship",
+          "doc" : "Schema for org.gbif.nameparser.api.Authorship",
+          "fields" : [
+            {"name" : "authors", "type" : [ "null", { "type" : "array", "items" : "string"} ]},
+            {"name" : "empty", "type" : ["null", "boolean"], "default" : null},
+            {"name" : "exAuthors", "type" : [ "null", {"type" : "array","items" : "string"} ]},
+            {"name" : "year", "type" : [ "null", "string" ]}]
+          } ], "default" : null
+      },
+      {"name" : "binomial", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "candidatus", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "code", "type" : [ "null", {"type" : "enum", "name" : "NomCode","doc" : "", "symbols" : [ "BACTERIAL", "BOTANICAL", "CULTIVARS", "VIRUS", "ZOOLOGICAL" ]} ], "default" : null},
+      {"name" : "combinationAuthorship", "type" : [ "null", "Authorship" ], "default" : null},
+      {"name" : "cultivarEpithet", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "doubtful", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "genus", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "incomplete", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "indetermined", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "infragenericEpithet", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "infraspecificEpithet", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "nomenclaturalNotes", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "notho", "type" : [ "null", {"type" : "enum", "name" : "NamePart", "doc" : "", "symbols" : [ "GENERIC", "INFRAGENERIC", "SPECIFIC", "INFRASPECIFIC" ]} ], "default" : null},
+      {"name" : "rank", "type" : ["null", "Rank"], "default" : null},
+      {"name" : "remarks", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "sanctioningAuthor", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "specificEpithet", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "state", "type" : [ "null", {"type" : "enum", "name" : "State", "doc" : "", "symbols" : [ "COMPLETE", "PARTIAL", "NONE" ]} ], "default" : null},
+      {"name" : "strain", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "taxonomicNote", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "terminalEpithet", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "trinomial", "type" : ["null", "boolean"], "default" : null},
+      {"name" : "type","type" : [ "null", { "type" : "enum", "name" : "NameType", "doc" : "", "symbols" : [ "SCIENTIFIC", "VIRUS", "HYBRID_FORMULA", "INFORMAL", "OTU", "PLACEHOLDER", "NO_NAME" ]} ], "default" : null},
+      {"name" : "uninomial", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "unparsed", "type" : [ "null", "string" ], "default" : null},
+      {"name" : "warnings", "type" : [ "null", {"type" : "array","items" : "string"} ], "default" : null}
+    ]
+  },
+  {
     "name" : "TaxonRecord",
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "record",
@@ -78,6 +125,7 @@
           }
         ]
       },
+      {"name" : "usageParsedName", "type" : ["null", "ParsedName"], "default" : null},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

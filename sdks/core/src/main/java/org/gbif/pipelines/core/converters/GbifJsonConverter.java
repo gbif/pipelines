@@ -323,7 +323,10 @@ public class GbifJsonConverter {
                         .setAcceptedUsage(trOrg.getAcceptedUsage())
                         .setClassification(trOrg.getClassification())
                         .setSynonym(trOrg.getSynonym())
-                        .setUsage(trOrg.getUsage());
+                        .setUsage(trOrg.getUsage())
+                        .setUsageParsedName(trOrg.getUsageParsedName())
+                        .setDiagnostics(trOrg.getDiagnostics())
+                        .setIssues(null); //Issues are accumulated
 
       if (!skipId) {
         jc.addJsonTextFieldNoCheck(ID, trOrg.getId());
@@ -348,6 +351,10 @@ public class GbifJsonConverter {
         );
         classificationNode.put("classificationPath", "_"  + pathJoiner.toString());
       }
+      Optional.ofNullable(tr.getUsageParsedName()).ifPresent(pn -> { //Required by API V1
+        ObjectNode usageParsedNameNode =  (ObjectNode)classificationNode.get("usageParsedName");
+        usageParsedNameNode.put("genericName", pn.getGenus() != null ? pn.getGenus(): pn.getUninomial());
+      });
       jc.addJsonObject("gbifClassification", classificationNode);
     };
   }

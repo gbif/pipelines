@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -148,6 +147,13 @@ public class JsonConverter {
                     break;
                   case LONG:
                     node.put(f.name(), (Long) r);
+                    break;
+                  case RECORD:
+                    if (r instanceof SpecificRecordBase) {
+                      ObjectNode recordNode = createObjectNode();
+                      addCommonFields((SpecificRecordBase) r, recordNode);
+                      node.set(f.name(), recordNode);
+                    }
                     break;
                   case ARRAY:
                     Collection values = (Collection)r;

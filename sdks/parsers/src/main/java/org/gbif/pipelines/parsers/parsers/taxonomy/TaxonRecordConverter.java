@@ -2,6 +2,7 @@ package org.gbif.pipelines.parsers.parsers.taxonomy;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.gbif.pipelines.io.avro.Diagnostic;
@@ -39,7 +40,9 @@ public class TaxonRecordConverter {
     taxonRecord.setClassification(classifications);
     taxonRecord.setSynonym(source.isSynonym());
     taxonRecord.setUsage(convertRankedName(source.getUsage()));
-    taxonRecord.setAcceptedUsage(convertRankedName(source.getAcceptedUsage()));
+    //Usage is set as the accepted usage if the accepted usage is null
+    taxonRecord.setAcceptedUsage(Optional.ofNullable(convertRankedName(source.getAcceptedUsage()))
+                                  .orElse(taxonRecord.getUsage()));
     taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));
     taxonRecord.setDiagnostics(convertDiagnostics(source.getDiagnostics()));
 
