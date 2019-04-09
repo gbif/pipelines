@@ -169,14 +169,13 @@ public class LocationInterpreter {
   public static void interpretElevation(ExtendedRecord er, LocationRecord lr) {
     String minElevation = extractValue(er, DwcTerm.minimumElevationInMeters);
     String maxElevation = extractValue(er, DwcTerm.maximumElevationInMeters);
-    OccurrenceParseResult<DoubleAccuracy> parseResult =
+    OccurrenceParseResult<DoubleAccuracy> occurrenceParseResult =
         MeterRangeParser.parseElevation(minElevation, maxElevation, null);
-    if (parseResult.isSuccessful()) {
-      lr.setElevation(parseResult.getPayload().getValue());
-      lr.setElevationAccuracy(parseResult.getPayload().getAccuracy());
-    } else {
-      addIssue(lr, "MAX_ELEVATION_INVALID");
+    if (occurrenceParseResult.isSuccessful()) {
+      lr.setElevation(occurrenceParseResult.getPayload().getValue());
+      lr.setElevationAccuracy(occurrenceParseResult.getPayload().getAccuracy());
     }
+    occurrenceParseResult.getIssues().forEach(i -> addIssue(lr, i));
   }
 
   /** {@link DwcTerm#minimumDepthInMeters} interpretation. */
@@ -212,12 +211,12 @@ public class LocationInterpreter {
   public static void interpretDepth(ExtendedRecord er, LocationRecord lr) {
     String minDepth = extractValue(er, DwcTerm.minimumDepthInMeters);
     String maxDepth = extractValue(er, DwcTerm.maximumDepthInMeters);
-    OccurrenceParseResult<DoubleAccuracy> parseResult = MeterRangeParser.parseDepth(minDepth, maxDepth, null);
-    if (parseResult.isSuccessful()) {
-      lr.setDepth(parseResult.getPayload().getValue());
-      lr.setDepthAccuracy(parseResult.getPayload().getAccuracy());
+    OccurrenceParseResult<DoubleAccuracy> occurrenceParseResult = MeterRangeParser.parseDepth(minDepth, maxDepth, null);
+    if (occurrenceParseResult.isSuccessful()) {
+      lr.setDepth(occurrenceParseResult.getPayload().getValue());
+      lr.setDepthAccuracy(occurrenceParseResult.getPayload().getAccuracy());
     }
-    parseResult.getIssues().forEach(i -> addIssue(lr, i.name()));
+    occurrenceParseResult.getIssues().forEach(i -> addIssue(lr, i));
   }
 
   /** {@link DwcTerm#minimumDistanceAboveSurfaceInMeters} interpretation. */
