@@ -26,6 +26,7 @@ import org.apache.beam.sdk.values.PCollection;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
@@ -146,7 +147,7 @@ public class MetadataTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(id -> MetadataRecord.newBuilder().setId(id).build())
+          .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(DateTime.now().getMillis()).build())
           .via(MetadataInterpreter.interpret(client))
           .consume(context::output);
 

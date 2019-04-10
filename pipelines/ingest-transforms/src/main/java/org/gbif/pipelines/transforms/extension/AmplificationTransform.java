@@ -30,6 +30,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION;
@@ -154,7 +155,7 @@ public class AmplificationTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> AmplificationRecord.newBuilder().setId(er.getId()).build())
+          .to(er -> AmplificationRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(AmplificationInterpreter.EXTENSION_ROW_TYPE))
               .filter(l -> !l.isEmpty())
               .isPresent())

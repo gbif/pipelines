@@ -27,6 +27,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
@@ -113,7 +114,7 @@ public class AudubonTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> AudubonRecord.newBuilder().setId(er.getId()).build())
+          .to(er -> AudubonRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.AUDUBON.getRowType()))
               .filter(l -> !l.isEmpty())
               .isPresent())

@@ -25,6 +25,7 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.specific.SpecificRecordBase;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -33,6 +34,7 @@ import com.fasterxml.jackson.databind.node.POJONode;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase} objects(Avro
@@ -63,6 +65,7 @@ public class GbifJsonConverter {
       JsonConverter.builder()
           .skipKey("decimalLatitude")
           .skipKey("decimalLongitude")
+          .skipKey("created")
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
           .converter(LocationRecord.class, getLocationRecordConverter())
           .converter(TemporalRecord.class, getTemporalRecordConverter())
@@ -120,7 +123,20 @@ public class GbifJsonConverter {
       addIssues(mainNode);
     }
 
+    mainNode.set("created", new TextNode(getMaxCreationDate().toString()));
+
     return mainNode;
+  }
+
+  /**
+   * Gets the maximum/latest created date of all the records.
+   */
+  private DateTime getMaxCreationDate() {
+    return records.stream()
+            .map(record -> record.get("created"))
+            .map(created -> new DateTime((Long)created))
+            .max(DateTime::compareTo)
+            .orElse(DateTime.now());
   }
 
   @Override
@@ -203,6 +219,8 @@ public class GbifJsonConverter {
       Optional.ofNullable(core.get(DwcTerm.occurrenceID.qualifiedName()))
           .ifPresent(x -> jc.addJsonTextFieldNoCheck("occurrenceId", x));
 
+      Optional.ofNullable(er.getCreated())
+          .ifPresent(created -> jc.addJsonField("lastCrawled", created.toString()));
       // Core
       ObjectNode coreNode = JsonConverter.createObjectNode();
       core.forEach((k, v) -> jc.addJsonRawField(coreNode, k, v));

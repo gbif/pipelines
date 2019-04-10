@@ -45,7 +45,6 @@ public class MetadataInterpreter {
 
         Installation installation = client.getInstallation(mdr.getInstallationKey());
         mdr.setOrganizationKey(installation.getOrganizationKey());
-        mdr.setProtocol(installation.getType());
 
         Organization organization = client.getOrganization(mdr.getOrganizationKey());
         mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());

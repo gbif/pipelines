@@ -35,6 +35,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
@@ -196,7 +197,7 @@ public class LocationTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
+          .to(er -> LocationRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
           .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore))
           .via(LocationInterpreter::interpretContinent)
           .via(LocationInterpreter::interpretWaterBody)

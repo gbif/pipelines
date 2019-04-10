@@ -24,8 +24,6 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 
-import static java.lang.Enum.valueOf;
-
 import static org.apache.avro.Schema.Type.UNION;
 
 /**

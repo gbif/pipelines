@@ -28,6 +28,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MEASUREMENT_OR_FACT;
@@ -118,7 +119,7 @@ public class MeasurementOrFactTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> MeasurementOrFactRecord.newBuilder().setId(er.getId()).build())
+          .to(er -> MeasurementOrFactRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()))
               .filter(l -> !l.isEmpty())
               .isPresent())
