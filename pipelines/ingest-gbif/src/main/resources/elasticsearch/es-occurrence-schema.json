@@ -180,7 +180,7 @@
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
 
-      "gbifClassification": {"type": "nested"},
+      "gbifClassification": {"type": "object"},
       "multimediaItems": {"type": "nested", "enabled": false},
       "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},
