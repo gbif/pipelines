@@ -235,13 +235,15 @@ public class GbifJsonConverter {
       // Extensions
       ObjectNode extNode = JsonConverter.createObjectNode();
       ext.forEach((k, v) -> {
-        ArrayNode extArrayNode = JsonConverter.createArrayNode();
-        v.forEach(m -> {
-          ObjectNode ns = JsonConverter.createObjectNode();
-          m.forEach((ks, vs) -> jc.addJsonRawField(ns, ks, vs));
-          extArrayNode.add(ns);
-        });
-        extNode.set(k, extArrayNode);
+        if (!v.isEmpty()) {
+          ArrayNode extArrayNode = JsonConverter.createArrayNode();
+          v.forEach(m -> {
+            ObjectNode ns = JsonConverter.createObjectNode();
+            m.forEach((ks, vs) -> jc.addJsonRawField(ns, ks, vs));
+            extArrayNode.add(ns);
+          });
+          extNode.set(k, extArrayNode);
+        }
       });
 
       // Verbatim
