@@ -1,6 +1,9 @@
 package org.gbif.pipelines.parsers.ws.client.metadata.response;
 
+import org.gbif.api.model.registry.MachineTag;
+
 import java.io.Serializable;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -22,4 +25,5 @@ public class Dataset implements Serializable {
   private String publishingOrganizationKey;
   private String license;
   private String title;
+  private List<MachineTag> machineTags;
 }

@@ -9,6 +9,7 @@
   "fields":[
     {"name": "id","type":"string", "doc":"Pipelines identifier"},
     {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+    {"name": "lastCrawled", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was last crawled"},
     {"name": "datasetKey","type":["null","string"],"default":null},
     {"name": "datasetTitle","type":["null","string"],"default":null},
     {"name": "installationKey","type":["null","string"],"default":null},

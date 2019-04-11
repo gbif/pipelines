@@ -83,6 +83,7 @@ public class GbifJsonConverter {
   @Singular
   private List<SpecificRecordBase> records;
 
+
   /**
    * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into string json object, suited to the new ES
    * record
@@ -124,6 +125,9 @@ public class GbifJsonConverter {
     }
 
     mainNode.set("created", new TextNode(getMaxCreationDate().toString()));
+    Optional.ofNullable(mainNode.get("lastCrawled")).ifPresent(
+        lastCrawled -> mainNode.set("lastCrawled", new TextNode(new DateTime(lastCrawled.asLong()).toString()))
+    );
 
     return mainNode;
   }
@@ -133,6 +137,7 @@ public class GbifJsonConverter {
    */
   private DateTime getMaxCreationDate() {
     return records.stream()
+            .filter(record -> Objects.nonNull(record.getSchema().getField("created")))
             .map(record -> record.get("created"))
             .map(created -> new DateTime((Long)created))
             .max(DateTime::compareTo)
@@ -219,8 +224,6 @@ public class GbifJsonConverter {
       Optional.ofNullable(core.get(DwcTerm.occurrenceID.qualifiedName()))
           .ifPresent(x -> jc.addJsonTextFieldNoCheck("occurrenceId", x));
 
-      Optional.ofNullable(er.getCreated())
-          .ifPresent(created -> jc.addJsonField("lastCrawled", created.toString()));
       // Core
       ObjectNode coreNode = JsonConverter.createObjectNode();
       core.forEach((k, v) -> jc.addJsonRawField(coreNode, k, v));
