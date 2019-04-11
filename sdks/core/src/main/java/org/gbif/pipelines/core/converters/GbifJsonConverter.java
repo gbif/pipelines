@@ -21,10 +21,12 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.specific.SpecificRecordBase;
 
@@ -60,19 +62,21 @@ public class GbifJsonConverter {
 
   private static final String ID = "id";
   private static final String ISSUES = "issues";
+  private static final String CREATED_FIELD = "created";
 
   private final JsonConverter.JsonConverterBuilder builder =
       JsonConverter.builder()
           .skipKey("decimalLatitude")
           .skipKey("decimalLongitude")
-          .skipKey("created")
+          .skipKey(CREATED_FIELD)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
           .converter(LocationRecord.class, getLocationRecordConverter())
           .converter(TemporalRecord.class, getTemporalRecordConverter())
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
           .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
-          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter());
+          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
+          .converter(MultimediaRecord.class, getMultimediaRecordConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -124,7 +128,7 @@ public class GbifJsonConverter {
       addIssues(mainNode);
     }
 
-    mainNode.set("created", new TextNode(getMaxCreationDate().toString()));
+    mainNode.set(CREATED_FIELD, new TextNode(getMaxCreationDate().toString()));
     Optional.ofNullable(mainNode.get("lastCrawled")).ifPresent(
         lastCrawled -> mainNode.set("lastCrawled", new TextNode(new DateTime(lastCrawled.asLong()).toString()))
     );
@@ -137,8 +141,8 @@ public class GbifJsonConverter {
    */
   private DateTime getMaxCreationDate() {
     return records.stream()
-            .filter(record -> Objects.nonNull(record.getSchema().getField("created")))
-            .map(record -> record.get("created"))
+            .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
+            .map(record -> record.get(CREATED_FIELD))
             .map(created -> new DateTime((Long)created))
             .max(DateTime::compareTo)
             .orElse(DateTime.now());
@@ -530,6 +534,36 @@ public class GbifJsonConverter {
           .collect(Collectors.toList());
 
       jc.addJsonArray("measurementOrFactItems", nodes);
+    };
+  }
+
+  /**
+   * String converter for {@link MultimediaRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * {
+   *  "id": "777",
+   *  "multimediaItems": [
+   *
+   *   ],
+   *   "mediaType":["StillImage","Audio"]
+   * }</pre>
+   */
+  private BiConsumer<JsonConverter, SpecificRecordBase> getMultimediaRecordConverter() {
+    return (jc, record) -> {
+      MultimediaRecord mr = (MultimediaRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(ID, mr.getId());
+      }
+      jc.addCommonFields("multimediaItems", mr);
+      List<JsonNode> mediaTypes = mr.getMultimediaItems().stream()
+          .filter(x -> x.getType() != null)
+          .map(multimedia -> new TextNode(multimedia.getType()))
+          .collect(Collectors.toList());
+      jc.addJsonArray("mediaType", mediaTypes);
     };
   }
 }

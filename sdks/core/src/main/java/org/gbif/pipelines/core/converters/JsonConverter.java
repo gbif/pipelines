@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -198,7 +199,7 @@ public class JsonConverter {
     mainNode.set(key, node);
   }
 
-  void addJsonArray(String key, List<ObjectNode> values) {
+  void addJsonArray(String key, List<? extends JsonNode> values) {
     ArrayNode node = mainNode.putArray(key);
     node.addAll(values);
   }
