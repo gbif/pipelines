@@ -13,20 +13,8 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Issues;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.specific.SpecificRecordBase;
 
@@ -556,16 +544,13 @@ public class GbifJsonConverter {
   private BiConsumer<JsonConverter, SpecificRecordBase> getMultimediaRecordConverter() {
     return (jc, record) -> {
       MultimediaRecord mr = (MultimediaRecord) record;
-
       if (!skipId) {
         jc.addJsonTextFieldNoCheck(ID, mr.getId());
       }
-      jc.addCommonFields("multimediaItems", mr);
-      List<JsonNode> mediaTypes = mr.getMultimediaItems().stream()
-          .filter(x -> x.getType() != null)
-          .map(multimedia -> new TextNode(multimedia.getType()))
-          .collect(Collectors.toList());
-      jc.addJsonArray("mediaType", mediaTypes);
+      jc.addCommonFields("media", mr);
+
     };
   }
+
+
 }

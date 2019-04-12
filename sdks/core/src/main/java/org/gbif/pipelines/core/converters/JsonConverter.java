@@ -199,7 +199,7 @@ public class JsonConverter {
     mainNode.set(key, node);
   }
 
-  void addJsonArray(String key, List<? extends JsonNode> values) {
+  void addJsonArray(String key, Collection<? extends JsonNode> values) {
     ArrayNode node = mainNode.putArray(key);
     node.addAll(values);
   }
