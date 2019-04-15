@@ -6,8 +6,6 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
-import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -32,7 +30,9 @@ import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -114,7 +114,8 @@ public class DwcaToInterpretedPipeline {
     log.info("Adding interpretations");
 
     //Create metadata
-    PCollection<MetadataRecord> metadataRecordP = p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+    PCollection<MetadataRecord> metadataRecordP =
+        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
             .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()));
 
     //Write metadata
@@ -154,12 +155,8 @@ public class DwcaToInterpretedPipeline {
         .apply("Interpret taxonomy", TaxonomyTransform.interpret(propertiesPath))
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn));
 
-    uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView).withSideInputs(metadataView))
-        .apply("Write location to avro", LocationTransform.write(pathFn));
-
     PCollection<LocationRecord> locationPCollection = uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView).withSideInputs(metadataView));
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView));
     locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
 
     locationPCollection

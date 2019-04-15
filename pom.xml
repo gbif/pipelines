@@ -63,13 +63,6 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <!-- Sonar -->
-    <sonar.exclusions>src/main/java-generated/**,src/main/org/gbif/pipelines/examples/**,src/main/org/gbif/converters/parser/**</sonar.exclusions>
-
-    <sonar.jacoco.reportPath>${project.basedir}/../../target/jacoco.exec</sonar.jacoco.reportPath>
-    <sonar.language>java</sonar.language>
-    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-
     <!-- Tools-->
     <lombok.version>1.18.6</lombok.version>
 
@@ -121,7 +114,7 @@
     <commons-codec.version>1.11</commons-codec.version>
 
     <!-- Test -->
-    <junit.version>4.12</junit.version>
+    <junit4.version>4.12</junit4.version>
     <mockwebserver.version>3.11.0</mockwebserver.version>
     <hamcrest-core.version>1.3</hamcrest-core.version>
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
@@ -139,12 +132,22 @@
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
     <maven-plugin-plugin.version>3.5.2</maven-plugin-plugin.version>
     <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
-    <jococo.version>0.8.3</jococo.version>
+    <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
+    <sonar-maven-plugin.version>3.6.0.1398</sonar-maven-plugin.version>
 
     <!-- Checkstyle -->
     <plexus-compiler-javac-errorprone.version>2.8.3</plexus-compiler-javac-errorprone.version>
     <error_prone_core.version>2.3.2</error_prone_core.version>
 
+    <!-- JaCoCo -->
+    <jacoco.ut.output.file>${project.build.directory}/jacoco.exec</jacoco.ut.output.file>
+
+    <!-- Sonar -->
+    <sonar.jacoco.reportPaths>${jacoco.ut.output.file}</sonar.jacoco.reportPaths>
+    <sonar.exclusions>**/java-generated/**</sonar.exclusions>
+    <sonar.cpd.exclusions>**/java-generated/**</sonar.cpd.exclusions>
+    <sonar.language>java</sonar.language>
+    <sonar.sources>src/main/java</sonar.sources>
   </properties>
 
   <build>
@@ -218,27 +221,19 @@
             </dependency>
           </dependencies>
         </plugin>
+
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>${sonar-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco-maven-plugin.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jococo.version}</version>
-        <executions>
-          <execution>
-            <id>agent-for-ut</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-            <configuration>
-              <append>true</append>
-              <destFile>${sonar.jacoco.reportPath}</destFile>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
   </build>
 
 
@@ -712,7 +707,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
+        <version>${junit4.version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -788,5 +783,41 @@
 
     </dependencies>
   </dependencyManagement>
+
+  <profiles>
+    <profile>
+      <id>coverage</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare-agent-ut</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+                <configuration>
+                  <destFile>${jacoco.ut.output.file}</destFile>
+                  <append>true</append>
+                  <includes>org.gbif.*</includes>
+                  <propertyName>argLine</propertyName>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+            
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>${argLine}</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

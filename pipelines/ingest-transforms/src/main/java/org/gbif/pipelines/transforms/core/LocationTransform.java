@@ -110,28 +110,28 @@ public class LocationTransform {
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> interpret(PCollectionView<MetadataRecord> metadataView) {
-    return ParDo.of(new Interpreter(metadataView));
+    return ParDo.of(new Interpreter(metadataView)).withSideInputs(metadataView);
   }
 
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KvConfig kvConfig, PCollectionView<MetadataRecord> metadataView) {
-    return ParDo.of(new Interpreter(kvConfig, metadataView));
+    return ParDo.of(new Interpreter(kvConfig, metadataView)).withSideInputs(metadataView);
   }
 
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KeyValueStore<LatLng, String> kvStore, PCollectionView<MetadataRecord> metadataView) {
-    return ParDo.of(new Interpreter(kvStore, metadataView));
+    return ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView);
   }
 
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
   public static SingleOutput<ExtendedRecord, LocationRecord> interpret(String properties, PCollectionView<MetadataRecord> metadataView) {
-    return ParDo.of(new Interpreter(properties, metadataView));
+    return ParDo.of(new Interpreter(properties, metadataView)).withSideInputs(metadataView);
   }
 
   /**

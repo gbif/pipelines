@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
@@ -22,8 +19,11 @@ import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,14 +33,14 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class LocationTransformTest {
 
-    private static class RemoveDateCreated extends DoFn<LocationRecord, LocationRecord>  implements Serializable  {
+  private static class RemoveDateCreated extends DoFn<LocationRecord, LocationRecord> implements Serializable {
 
-        @ProcessElement
-        public void processElement(ProcessContext context) {
-            LocationRecord locationRecord = LocationRecord.newBuilder(context.element()).setCreated(null).build();
-            context.output(locationRecord);
-        }
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      LocationRecord locationRecord = LocationRecord.newBuilder(context.element()).setCreated(null).build();
+      context.output(locationRecord);
     }
+  }
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
@@ -112,7 +112,7 @@ public class LocationTransformTest {
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView))
+        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter(kvStore, metadataView)))
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should

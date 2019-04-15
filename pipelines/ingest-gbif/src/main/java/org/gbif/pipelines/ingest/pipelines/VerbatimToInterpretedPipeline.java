@@ -161,7 +161,7 @@ public class VerbatimToInterpretedPipeline {
 
     PCollection<LocationRecord> locationPCollection = uniqueRecords
         .apply("Check location transform condition", LocationTransform.check(types))
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView).withSideInputs(metadataView));
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView));
     locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
 
     locationPCollection
