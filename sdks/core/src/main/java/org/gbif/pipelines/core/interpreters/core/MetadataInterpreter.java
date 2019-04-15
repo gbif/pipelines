@@ -17,7 +17,6 @@ import org.gbif.api.vocabulary.TagName;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 
@@ -51,13 +50,10 @@ public class MetadataInterpreter {
           mdr.setNetworkKeys(Collections.emptyList());
         }
 
-        Installation installation = client.getInstallation(mdr.getInstallationKey());
-        mdr.setOrganizationKey(installation.getOrganizationKey());
-
-        Organization organization = client.getOrganization(mdr.getOrganizationKey());
+        Organization organization = client.getOrganization(dataset.getPublishingOrganizationKey());
         mdr.setEndorsingNodeKey(organization.getEndorsingNodeKey());
         mdr.setPublisherTitle(organization.getTitle());
-        mdr.setPublishingCountry(organization.getCountry());
+        mdr.setDatasetPublishingCountry(organization.getCountry());
         getLastCrawledDate(dataset.getMachineTags()).ifPresent(d -> mdr.setLastCrawled(d.getTime()));
       }
     };

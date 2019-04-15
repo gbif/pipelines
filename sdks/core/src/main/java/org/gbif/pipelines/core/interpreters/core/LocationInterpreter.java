@@ -10,11 +10,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.Continent;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.DoubleAccuracy;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -32,6 +35,7 @@ import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
 import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
@@ -57,6 +61,8 @@ public class LocationInterpreter {
                                                               "COORDINATE_OUT_OF_RANGE",
                                                               "COUNTRY_COORDINATE_MISMATCH")
                                                       .collect(Collectors.toSet());
+
+  private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
 
   /**
    * Determines if the record contains geo-spatial issues.
@@ -106,12 +112,31 @@ public class LocationInterpreter {
 
         // Interpretation that required multiple sources
         // Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
-        if (Objects.nonNull(mdr) && Objects.nonNull(lr.getCountry()) && Objects.nonNull(mdr.getPublishingCountry())) {
-          lr.setRepatriated(lr.getCountry().equals(mdr.getPublishingCountry()));
+        if (Objects.nonNull(mdr) && Objects.nonNull(lr.getCountry()) && Objects.nonNull(mdr.getDatasetPublishingCountry())) {
+          lr.setRepatriated(lr.getCountry().equals(mdr.getDatasetPublishingCountry()));
         }
 
+        interpretPublishingCountry(er, mdr).ifPresent(lr::setPublishingCountry);
       }
     };
+  }
+
+  /**
+   * Interprets the publishing country for eBird dataset.
+   */
+  private static Optional<String> interpretPublishingCountry(ExtendedRecord er, MetadataRecord mr) {
+    // Special case for eBird, use the supplied publishing country.
+    if (EBIRD_DATASET_KEY.toString().equals(mr.getDatasetKey())) {
+
+      String verbatimPublishingCountryCode = extractValue(er, GbifTerm.publishingCountry);
+      OccurrenceParseResult<Country> result = new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode));
+
+      if (result.isSuccessful()) {
+        return Optional.of(result.getPayload().getIso2LetterCode());
+      }
+    }
+
+    return Optional.ofNullable(mr.getDatasetPublishingCountry());
   }
 
   /** {@link DwcTerm#continent} interpretation. */

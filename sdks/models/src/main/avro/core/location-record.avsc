@@ -13,6 +13,7 @@
     {"name": "waterBody","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/waterBody"},
     {"name": "country","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/country"},
     {"name": "countryCode","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/countryCode"},
+    {"name": "publishingCountry","type":["null","string"],"default":null, "doc":"https://gbif.github.io/gbif-api/apidocs/org/gbif/dwc/terms/GbifTerm.html#publishingCountry"},
     {"name": "stateProvince","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/stateProvince"},
     {"name": "minimumElevationInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/minimumElevationInMeters"},
     {"name": "maximumElevationInMeters","type":["null","double"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/maximumElevationInMeters"},

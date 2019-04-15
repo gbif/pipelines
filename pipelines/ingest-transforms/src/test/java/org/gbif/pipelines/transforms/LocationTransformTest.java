@@ -107,7 +107,7 @@ public class LocationTransformTest {
 
     PCollectionView<MetadataRecord> metadataView =
             p.apply("Create test metadata",Create.of(MetadataRecord.newBuilder().setId("0")
-                    .setPublishingCountry(Country.DENMARK.getIso2LetterCode()).build()))
+                    .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode()).build()))
             .apply("Convert into view", View.asSingleton());
 
     // When
