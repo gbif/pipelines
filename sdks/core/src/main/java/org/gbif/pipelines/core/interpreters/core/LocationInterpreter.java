@@ -19,6 +19,7 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
@@ -72,7 +73,7 @@ public class LocationInterpreter {
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      KeyValueStore<LatLng, String> kvStore) {
+          KeyValueStore<LatLng, String> kvStore, MetadataRecord mdr) {
     return (er, lr) -> {
       if (kvStore != null) {
         // parse the terms
@@ -102,6 +103,13 @@ public class LocationInterpreter {
 
         //Has geo-spatial issues
         hasGeospatialIssues(lr).ifPresent(lr::setHasGeospatialIssue);
+
+        // Interpretation that required multiple sources
+        // Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
+        if (Objects.nonNull(mdr) && Objects.nonNull(lr.getCountry()) && Objects.nonNull(mdr.getPublishingCountry())) {
+          lr.setRepatriated(lr.getCountry().equals(mdr.getPublishingCountry()));
+        }
+
       }
     };
   }

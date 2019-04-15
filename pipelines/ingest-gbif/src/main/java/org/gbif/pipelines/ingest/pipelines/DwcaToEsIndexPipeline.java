@@ -111,6 +111,7 @@ public class DwcaToEsIndexPipeline {
 
     String datasetId = options.getDatasetId();
 
+
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", options.getAttempt().toString());
 
@@ -167,7 +168,7 @@ public class DwcaToEsIndexPipeline {
 
     PCollection<LocationRecord> locationCollection =
         uniqueRecords
-            .apply("Interpret location", LocationTransform.interpret(propertiesPath));
+            .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView).withSideInputs(metadataView));
 
     PCollection<KV<String, LocationRecord>> locationKvCollection =
         locationCollection

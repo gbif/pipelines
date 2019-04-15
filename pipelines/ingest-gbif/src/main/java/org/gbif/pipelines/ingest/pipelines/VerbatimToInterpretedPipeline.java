@@ -6,12 +6,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -107,10 +110,15 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Adding interpretations");
 
-    p.apply("Create metadata collection", Create.of(datasetId))
-        .apply("Check metadata transform condition", MetadataTransform.check(types))
-        .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath))
-        .apply("Write metadata to avro", MetadataTransform.write(pathFn));
+    //Create metadata
+    PCollection<MetadataRecord> metadataRecordP = p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()));
+
+    //Write metadata
+    metadataRecordP.apply("Write metadata to avro", MetadataTransform.write(pathFn));
+
+    //Create View for further use
+    PCollectionView<MetadataRecord> metadataView = metadataRecordP.apply("Convert into view", View.asSingleton());
 
     uniqueRecords
         .apply("Check verbatim transform condition", VerbatimTransform.check(types))
@@ -153,7 +161,7 @@ public class VerbatimToInterpretedPipeline {
 
     PCollection<LocationRecord> locationPCollection = uniqueRecords
         .apply("Check location transform condition", LocationTransform.check(types))
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath));
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView).withSideInputs(metadataView));
     locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
 
     locationPCollection
