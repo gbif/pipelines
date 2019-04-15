@@ -149,7 +149,7 @@ public class DwcaToEsIndexPipeline {
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(datasetId))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath))
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()))
             .apply("Convert into view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =

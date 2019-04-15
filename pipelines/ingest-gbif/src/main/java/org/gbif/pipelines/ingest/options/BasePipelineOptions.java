@@ -20,6 +20,11 @@ public interface BasePipelineOptions extends PipelineOptions {
 
   void setDatasetId(String id);
 
+  @Description("Type of the endpoint being crawled")
+  String getEndPointType();
+
+  void setEndPointType(String id);
+
   @Description("Attempt of the dataset used to name the target file in file system.")
   Integer getAttempt();
 

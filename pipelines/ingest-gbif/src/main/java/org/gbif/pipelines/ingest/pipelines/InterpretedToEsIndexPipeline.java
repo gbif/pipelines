@@ -32,7 +32,6 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -105,17 +104,6 @@ public class InterpretedToEsIndexPipeline {
     run(options);
   }
 
-  /**
-   * Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
-   */
-  private static Optional<Boolean> isRepatriated(LocationRecord lr, MetadataRecord mr) {
-
-    if (Objects.nonNull(lr) && Objects.nonNull(mr) && Objects.nonNull(lr.getCountry()) && Objects.nonNull(mr.getPublishingCountry())) {
-      return Optional.of(lr.getCountry().equals(mr.getPublishingCountry()));
-    }
-    return Optional.empty();
-  }
-
   public static void run(EsIndexingPipelineOptions options) {
 
     MDC.put("datasetId", options.getDatasetId());
@@ -181,7 +169,6 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Measurement", MeasurementOrFactTransform.read(pathFn))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
 
-
     log.info("Adding step 3: Converting into a json object");
     DoFn<KV<String, CoGbkResult>, String> doFn =
         new DoFn<KV<String, CoGbkResult>, String>() {
@@ -209,9 +196,6 @@ public class InterpretedToEsIndexPipeline {
             AustraliaSpatialRecord asr = v.getOnly(asrTag, AustraliaSpatialRecord.newBuilder().setId(k).build());
 
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-
-            //Interpretation that required multiple sources
-            isRepatriated(lr, mdr).ifPresent(lr::setRepatriated);
 
             String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er, asr);
 
