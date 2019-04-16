@@ -12,7 +12,6 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -25,7 +24,6 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -155,13 +153,9 @@ public class DwcaToInterpretedPipeline {
         .apply("Interpret taxonomy", TaxonomyTransform.interpret(propertiesPath))
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn));
 
-    PCollection<LocationRecord> locationPCollection = uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView));
-    locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
-
-    locationPCollection
-        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(propertiesPath))
-        .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn));
+    uniqueRecords
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView))
+        .apply("Write location to avro", LocationTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

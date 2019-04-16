@@ -6,14 +6,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
-import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -26,12 +23,13 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -111,7 +109,8 @@ public class VerbatimToInterpretedPipeline {
     log.info("Adding interpretations");
 
     //Create metadata
-    PCollection<MetadataRecord> metadataRecordP = p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+    PCollection<MetadataRecord> metadataRecordP =
+        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
             .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()));
 
     //Write metadata
@@ -159,15 +158,10 @@ public class VerbatimToInterpretedPipeline {
         .apply("Interpret taxonomy", TaxonomyTransform.interpret(propertiesPath))
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn));
 
-    PCollection<LocationRecord> locationPCollection = uniqueRecords
+    uniqueRecords
         .apply("Check location transform condition", LocationTransform.check(types))
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView));
-    locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
-
-    locationPCollection
-        .apply("Check AustraliaSpatial transform condition", AustraliaSpatialTransform.check(types))
-        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(propertiesPath))
-        .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn));
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView))
+        .apply("Write location to avro", LocationTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
