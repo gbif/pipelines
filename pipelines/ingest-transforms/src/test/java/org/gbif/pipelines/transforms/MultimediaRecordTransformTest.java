@@ -3,11 +3,9 @@ package org.gbif.pipelines.transforms;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.beam.sdk.transforms.DoFn;
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.MediaType;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -37,6 +35,15 @@ public class MultimediaRecordTransformTest {
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
+  private static class CleanDateCreate extends DoFn<MultimediaRecord, MultimediaRecord> {
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      MultimediaRecord mdr = MultimediaRecord.newBuilder(context.element()).build();
+      mdr.setCreated(0L);
+      context.output(mdr);
+    }
+  }
+
   @Test
   @Category(NeedsRunner.class)
   public void transformationTest() {
@@ -63,7 +70,8 @@ public class MultimediaRecordTransformTest {
 
     // When
     PCollection<MultimediaRecord> dataStream =
-        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new Interpreter()));
+        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new Interpreter()))
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(createExpectedMultimedia());
@@ -87,6 +95,7 @@ public class MultimediaRecordTransformTest {
 
     return MultimediaRecord.newBuilder()
         .setId(RECORD_ID)
+        .setCreated(0L)
         .setMultimediaItems(Collections.singletonList(multimedia))
         .build();
   }

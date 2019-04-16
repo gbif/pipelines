@@ -126,11 +126,15 @@
       "datasetKey": {"type": "keyword"},
       "datasetTitle": {"type": "keyword", "copy_to": "all"},
       "installationKey": {"type": "keyword"},
-      "organizationKey": {"type": "keyword"},
       "endorsingNodeKey": {"type": "keyword"},
       "publisherTitle": {"type": "keyword", "copy_to": "all"},
       "license": {"type": "keyword", "copy_to": "all"},
       "protocol": {"type": "keyword", "copy_to": "all"},
+      "publishingCountry": {"type": "keyword", "copy_to": "all"},
+      "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
+      "publishingOrganizationKey": {"type": "keyword"},
+
+
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},

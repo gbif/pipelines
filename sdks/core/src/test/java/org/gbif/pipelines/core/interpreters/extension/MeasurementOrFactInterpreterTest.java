@@ -20,7 +20,7 @@ public class MeasurementOrFactInterpreterTest {
 
     // Expected
     String expected =
-        "{\"id\": \"id\", \"measurementOrFactItems\": [{\"id\": \"Id1\", \"type\": \"Type1\", \"value\": \"1.5\", "
+        "{\"id\": \"id\", \"created\": 0, \"measurementOrFactItems\": [{\"id\": \"Id1\", \"type\": \"Type1\", \"value\": \"1.5\", "
             + "\"accuracy\": \"Accurancy1\", \"unit\": \"Unit1\", \"determinedDate\": \"2010/2011\", \"determinedBy\": "
             + "\"By1\", \"method\": \"Method1\", \"remarks\": \"Remarks1\", \"determinedDateParsed\": {\"gte\": \"2010\", "
             + "\"lte\": \"2011\"}, \"valueParsed\": 1.5}, {\"id\": \"Id2\", \"type\": \"Type2\", \"value\": \"Value2\","
@@ -66,7 +66,7 @@ public class MeasurementOrFactInterpreterTest {
         .setExtensions(ext)
         .build();
 
-    MeasurementOrFactRecord mfr = MeasurementOrFactRecord.newBuilder().setId(record.getId()).build();
+    MeasurementOrFactRecord mfr = MeasurementOrFactRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
     MeasurementOrFactInterpreter.interpret(record, mfr);

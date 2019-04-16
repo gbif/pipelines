@@ -6,7 +6,6 @@ import java.util.Objects;
 
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 
@@ -59,17 +58,6 @@ public class MetadataServiceClient {
   public Dataset getDataset(String datasetId) {
     Objects.requireNonNull(datasetId);
     Call<Dataset> call = rest.getService().getDataset(datasetId);
-    return performCall(call);
-  }
-
-  /**
-   * requests http://api.gbif.org/v1/installation/{installationId}
-   *
-   * @return installation info
-   */
-  public Installation getInstallation(String installationId) {
-    Objects.requireNonNull(installationId);
-    Call<Installation> call = rest.getService().getInstallation(installationId);
     return performCall(call);
   }
 

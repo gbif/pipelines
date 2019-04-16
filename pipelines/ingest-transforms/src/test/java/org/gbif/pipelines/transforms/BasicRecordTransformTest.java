@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.beam.sdk.transforms.DoFn;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -27,6 +28,15 @@ public class BasicRecordTransformTest {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
 
+    private static class CleanDateCreate extends DoFn<BasicRecord, BasicRecord> {
+        @ProcessElement
+        public void processElement(ProcessContext context) {
+            BasicRecord br = BasicRecord.newBuilder(context.element()).build();
+            br.setCreated(0L);
+            context.output(br);
+        }
+    }
+
   @Test
   @Category(NeedsRunner.class)
   public void transformationTest() {
@@ -45,7 +55,8 @@ public class BasicRecordTransformTest {
 
     // When
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter()));
+        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter()))
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(basicRecords);
@@ -75,6 +86,7 @@ public class BasicRecordTransformTest {
             x ->
                 BasicRecord.newBuilder()
                     .setId(x[0])
+                    .setCreated(0L)
                     .setBasisOfRecord(x[1])
                     .setSex(x[2])
                     .setEstablishmentMeans(x[3])

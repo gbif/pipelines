@@ -1,8 +1,7 @@
 package org.gbif.pipelines.transforms;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.io.Serializable;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
@@ -11,14 +10,18 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.core.LocationTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,6 +30,15 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class LocationTransformTest {
+
+  private static class RemoveDateCreated extends DoFn<LocationRecord, LocationRecord> implements Serializable {
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      LocationRecord locationRecord = LocationRecord.newBuilder(context.element()).setCreated(0L).build();
+      context.output(locationRecord);
+    }
+  }
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
@@ -39,6 +51,7 @@ public class LocationTransformTest {
     KeyValueTestStore<LatLng, String> kvStore = new KeyValueTestStore<>();
     kvStore.put(new LatLng(56.26d, 9.51d), Country.DENMARK.getIso2LetterCode());
     kvStore.put(new LatLng(36.21d, 138.25d), Country.JAPAN.getIso2LetterCode());
+    long dateCreated = new Date().getTime();
 
     final String[] denmark = {
         "0",
@@ -61,7 +74,8 @@ public class LocationTransformTest {
         "155.5",
         "44.5",
         "105.0",
-        "5.0"
+        "5.0",
+        "false"
     };
     final String[] japan = {
         "1",
@@ -84,15 +98,26 @@ public class LocationTransformTest {
         "155.5",
         "44.5",
         "105.0",
-        "5.0"
+        "5.0",
+         "true"
     };
 
-    final List<ExtendedRecord> records = createExtendedRecordList(denmark, japan);
-    final List<LocationRecord> locations = createLocationList(denmark, japan);
+    final MetadataRecord mdr = MetadataRecord.newBuilder()
+                                .setId("0")
+                                .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode())
+                                .setDatasetKey(UUID.randomUUID().toString())
+                                .build();
+    final List<ExtendedRecord> records = createExtendedRecordList(mdr, denmark, japan);
+    final List<LocationRecord> locations = createLocationList(mdr, denmark, japan);
+
+    PCollectionView<MetadataRecord> metadataView =
+            p.apply("Create test metadata",Create.of(mdr))
+            .apply("Convert into view", View.asSingleton());
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter(kvStore)));
+        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView))
+            .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(locations);
@@ -101,7 +126,7 @@ public class LocationTransformTest {
     p.run();
   }
 
-  private List<ExtendedRecord> createExtendedRecordList(String[]... locations) {
+  private List<ExtendedRecord> createExtendedRecordList(MetadataRecord metadataRecord, String[]... locations) {
     return Arrays.stream(locations)
         .map(
             x -> {
@@ -122,12 +147,13 @@ public class LocationTransformTest {
               terms.put(DwcTerm.decimalLatitude.qualifiedName(), x[13]);
               terms.put(DwcTerm.decimalLongitude.qualifiedName(), x[14]);
               terms.put(DwcTerm.stateProvince.qualifiedName(), x[15]);
+              terms.put(GbifTerm.publishingCountry.qualifiedName(), metadataRecord.getDatasetPublishingCountry());
               return record;
             })
         .collect(Collectors.toList());
   }
 
-  private List<LocationRecord> createLocationList(String[]... locations) {
+  private List<LocationRecord> createLocationList(MetadataRecord mdr, String[]... locations) {
     return Arrays.stream(locations)
         .map(
             x -> {
@@ -153,8 +179,11 @@ public class LocationTransformTest {
                       .setDepthAccuracy(Double.valueOf(x[18]))
                       .setElevation(Double.valueOf(x[19]))
                       .setElevationAccuracy(Double.valueOf(x[20]))
+                      .setRepatriated(Boolean.parseBoolean(x[21]))
                       .setHasCoordinate(true)
                       .setHasGeospatialIssue(false)
+                      .setPublishingCountry(mdr.getDatasetPublishingCountry())
+                      .setCreated(0L)
                       .build();
               record.getIssues().getIssueList().add(x[16]);
               return record;

@@ -12,7 +12,7 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -24,12 +24,13 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -110,9 +111,16 @@ public class DwcaToInterpretedPipeline {
 
     log.info("Adding interpretations");
 
-    p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-        .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath))
-        .apply("Write metadata to avro", MetadataTransform.write(pathFn));
+    //Create metadata
+    PCollection<MetadataRecord> metadataRecordP =
+        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()));
+
+    //Write metadata
+    metadataRecordP.apply("Write metadata to avro", MetadataTransform.write(pathFn));
+
+    //Create View for further use
+    PCollectionView<MetadataRecord> metadataView = metadataRecordP.apply("Convert into view", View.asSingleton());
 
     uniqueRecords
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn));
@@ -146,16 +154,8 @@ public class DwcaToInterpretedPipeline {
         .apply("Write taxon to avro", TaxonomyTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath))
+        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView))
         .apply("Write location to avro", LocationTransform.write(pathFn));
-
-    PCollection<LocationRecord> locationPCollection = uniqueRecords
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath));
-    locationPCollection.apply("Write location to avro", LocationTransform.write(pathFn));
-
-    locationPCollection
-        .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(propertiesPath))
-        .apply("Write Australia spatial to avro", AustraliaSpatialTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

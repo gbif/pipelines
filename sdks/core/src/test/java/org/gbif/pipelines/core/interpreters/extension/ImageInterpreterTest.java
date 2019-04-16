@@ -67,7 +67,7 @@ public class ImageInterpreterTest {
         .build();
 
     String result =
-        "{\"id\": \"id\", \"imageItems\": [{\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
+        "{\"id\": \"id\", \"created\": 0, \"imageItems\": [{\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
             + "\"http://www.gbif.org/tmp.jpg\", \"title\": \"Tt1\", \"description\": \"Desc1\", \"spatial\": \"Sp1\", "
             + "\"latitude\": -131.3, \"longitude\": 60.4, \"format\": \"jpeg\", \"created\": \"2010\", \"creator\": "
             + "\"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Pub1\", \"audience\": \"Aud1\", \"license\": "
@@ -78,7 +78,7 @@ public class ImageInterpreterTest {
             + "\"Lic2\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"1\"}], \"issues\": {\"issueList\": [\"RECORDED_DATE_INVALID\", "
             + "\"MULTIMEDIA_URI_INVALID\", \"COORDINATE_OUT_OF_RANGE\", \"PRESUMED_SWAPPED_COORDINATE\"]}}";
 
-    ImageRecord ir = ImageRecord.newBuilder().setId(record.getId()).build();
+    ImageRecord ir = ImageRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
     ImageInterpreter.interpret(record, ir);

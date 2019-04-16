@@ -187,6 +187,10 @@ public class JsonConverter {
     mainNode.set(key, node);
   }
 
+  void addSingleJsonObject(String key, ObjectNode node) {
+    mainNode.set(key, node);
+  }
+
   void addJsonComplexObject(String key, Map<String, String> fields) {
     ObjectNode node = MAPPER.createObjectNode();
     fields.forEach((k, v) -> addJsonField(node, k, v));
@@ -199,7 +203,7 @@ public class JsonConverter {
     mainNode.set(key, node);
   }
 
-  void addJsonArray(String key, List<? extends JsonNode> values) {
+  void addJsonArray(String key, Collection<? extends JsonNode> values) {
     ArrayNode node = mainNode.putArray(key);
     node.addAll(values);
   }

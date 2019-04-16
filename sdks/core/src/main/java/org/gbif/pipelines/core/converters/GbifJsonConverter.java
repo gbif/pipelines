@@ -1,38 +1,16 @@
 package org.gbif.pipelines.core.converters;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.node.*;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Issues;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.specific.SpecificRecordBase;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.POJONode;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
@@ -75,8 +53,7 @@ public class GbifJsonConverter {
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
           .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
-          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
-          .converter(MultimediaRecord.class, getMultimediaRecordConverter());
+          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -128,7 +105,8 @@ public class GbifJsonConverter {
       addIssues(mainNode);
     }
 
-    mainNode.set(CREATED_FIELD, new TextNode(getMaxCreationDate().toString()));
+    getMaxCreationDate(mainNode).ifPresent(createdDate -> mainNode.set(CREATED_FIELD, new TextNode(createdDate.toString())));
+
     Optional.ofNullable(mainNode.get("lastCrawled")).ifPresent(
         lastCrawled -> mainNode.set("lastCrawled", new TextNode(new DateTime(lastCrawled.asLong()).toString()))
     );
@@ -139,13 +117,15 @@ public class GbifJsonConverter {
   /**
    * Gets the maximum/latest created date of all the records.
    */
-  private DateTime getMaxCreationDate() {
-    return records.stream()
-            .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
-            .map(record -> record.get(CREATED_FIELD))
-            .map(created -> new DateTime((Long)created))
-            .max(DateTime::compareTo)
-            .orElse(DateTime.now());
+  private Optional<DateTime> getMaxCreationDate(ObjectNode rootNode) {
+    return Optional.ofNullable(rootNode.get(CREATED_FIELD))
+            .map(created -> Optional.of(new DateTime(rootNode.get(CREATED_FIELD).asLong())))
+            .orElseGet(() -> records.stream()
+                    .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
+                    .map(record -> record.get(CREATED_FIELD))
+                    .filter(Objects::nonNull)
+                    .map(created -> new DateTime((Long) created))
+                    .max(DateTime::compareTo));
   }
 
   @Override
@@ -369,6 +349,7 @@ public class GbifJsonConverter {
       ObjectNode classificationNode = JsonConverter.createObjectNode();
       jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
+      Collection<IntNode> taxonKey = new HashSet<>();
       if (classifications != null && !classifications.isEmpty()) {
         //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
         StringJoiner pathJoiner = new StringJoiner("_");
@@ -376,12 +357,16 @@ public class GbifJsonConverter {
             String lwRank = rankedName.getRank().name().toLowerCase();
             classificationNode.put(lwRank + "Key", rankedName.getKey());
             classificationNode.put(lwRank, rankedName.getName());
+            taxonKey.add(IntNode.valueOf(rankedName.getKey()));
             if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getRank() != rankedName.getRank()) {
               pathJoiner.add(rankedName.getKey().toString());
             }
           }
         );
         classificationNode.put("classificationPath", "_"  + pathJoiner.toString());
+        //All key are concatenated to support a single taxonKey field
+        ArrayNode taxonKeyNode = classificationNode.putArray("taxonKey");
+        taxonKeyNode.addAll(taxonKey);
       }
       Optional.ofNullable(tr.getUsageParsedName()).ifPresent(pn -> { //Required by API V1
         ObjectNode usageParsedNameNode =  (ObjectNode)classificationNode.get("usageParsedName");
@@ -536,36 +521,6 @@ public class GbifJsonConverter {
           .collect(Collectors.toList());
 
       jc.addJsonArray("measurementOrFactItems", nodes);
-    };
-  }
-
-  /**
-   * String converter for {@link MultimediaRecord}, convert an object to specific string view
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * {
-   *  "id": "777",
-   *  "multimediaItems": [
-   *
-   *   ],
-   *   "mediaType":["StillImage","Audio"]
-   * }</pre>
-   */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getMultimediaRecordConverter() {
-    return (jc, record) -> {
-      MultimediaRecord mr = (MultimediaRecord) record;
-
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, mr.getId());
-      }
-      jc.addCommonFields("multimediaItems", mr);
-      List<JsonNode> mediaTypes = mr.getMultimediaItems().stream()
-          .filter(x -> x.getType() != null)
-          .map(multimedia -> new TextNode(multimedia.getType()))
-          .collect(Collectors.toList());
-      jc.addJsonArray("mediaType", mediaTypes);
     };
   }
 }

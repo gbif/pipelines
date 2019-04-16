@@ -1,18 +1,14 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
-import org.gbif.pipelines.core.converters.GbifJsonConverter;
-import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -22,6 +18,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
@@ -32,15 +29,11 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
-import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
@@ -55,7 +48,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
 /**
@@ -105,17 +97,6 @@ public class InterpretedToEsIndexPipeline {
     run(options);
   }
 
-  /**
-   * Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
-   */
-  private static Optional<Boolean> isRepatriated(LocationRecord lr, MetadataRecord mr) {
-
-    if (Objects.nonNull(lr) && Objects.nonNull(mr) && Objects.nonNull(lr.getCountry()) && Objects.nonNull(mr.getPublishingCountry())) {
-      return Optional.of(lr.getCountry().equals(mr.getPublishingCountry()));
-    }
-    return Optional.empty();
-  }
-
   public static void run(EsIndexingPipelineOptions options) {
 
     MDC.put("datasetId", options.getDatasetId());
@@ -135,8 +116,6 @@ public class InterpretedToEsIndexPipeline {
     final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
     final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
     final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
-    // Specific
-    final TupleTag<AustraliaSpatialRecord> asrTag = new TupleTag<AustraliaSpatialRecord>() {};
 
     Pipeline p = Pipeline.create(options);
 
@@ -181,45 +160,10 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Measurement", MeasurementOrFactTransform.read(pathFn))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
 
-
     log.info("Adding step 3: Converting into a json object");
-    DoFn<KV<String, CoGbkResult>, String> doFn =
-        new DoFn<KV<String, CoGbkResult>, String>() {
-
-          private final Counter counter = Metrics.counter(GbifJsonConverter.class, AVRO_TO_JSON_COUNT);
-
-          @ProcessElement
-          public void processElement(ProcessContext c) {
-            CoGbkResult v = c.element().getValue();
-            String k = c.element().getKey();
-
-            // Core
-            MetadataRecord mdr = c.sideInput(metadataView);
-            ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
-            BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
-            TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
-            LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
-            TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
-            // Extension
-            MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
-            ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
-            AudubonRecord ar = v.getOnly(arTag, AudubonRecord.newBuilder().setId(k).build());
-            MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
-            // Specific
-            AustraliaSpatialRecord asr = v.getOnly(asrTag, AustraliaSpatialRecord.newBuilder().setId(k).build());
-
-            MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-
-            //Interpretation that required multiple sources
-            isRepatriated(lr, mdr).ifPresent(lr::setRepatriated);
-
-            String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er, asr);
-
-            c.output(json);
-
-            counter.inc();
-          }
-        };
+    SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
+        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
+            .converter();
 
     PCollection<String> jsonCollection =
         KeyedPCollectionTuple
@@ -237,7 +181,7 @@ public class InterpretedToEsIndexPipeline {
             .and(erTag, verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", ParDo.of(doFn).withSideInputs(metadataView));
+            .apply("Merging to json", gbifJsonDoFn);
 
     log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =

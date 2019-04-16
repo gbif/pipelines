@@ -37,8 +37,8 @@ public class JsonConverterTest {
 
     String expected =
         "{\"id\":\"777\",\"coreRowType\":\"core\",\"coreTerms\":\"{}\",\"extensions\":\"{}\",\"year\":2000,"
-            + "\"day\":1,\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},\"startDayOfYear\":1,"
-            + "\"issues\":{\"issueList\": []},\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"decimalLatitude\":1.0,"
+            + "\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},\"startDayOfYear\":1,"
+            + "\"issues\":{},\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"decimalLatitude\":1.0,"
             + "\"decimalLongitude\":2.0}";
 
     // When

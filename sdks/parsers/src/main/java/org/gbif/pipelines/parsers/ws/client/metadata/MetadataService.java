@@ -3,7 +3,6 @@ package org.gbif.pipelines.parsers.ws.client.metadata;
 import java.util.List;
 
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Installation;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 
@@ -31,15 +30,6 @@ interface MetadataService {
    */
   @GET("/v1/dataset/{datasetId}")
   Call<Dataset> getDataset(@Path("datasetId") String datasetId);
-
-  /**
-   * get installation info of provided installation uuid.
-   *
-   * @param installationId installationId
-   * @return JsonElement with provided installation info.
-   */
-  @GET("/v1/installation/{installationId}")
-  Call<Installation> getInstallation(@Path("installationId") String installationId);
 
   /**
    * get organization info of provided organization uuid.

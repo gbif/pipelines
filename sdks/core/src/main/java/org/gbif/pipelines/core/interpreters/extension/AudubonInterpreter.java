@@ -19,6 +19,7 @@ import org.gbif.pipelines.core.ExtensionInterpretation.TargetHandler;
 import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MediaType;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -65,7 +66,6 @@ public class AudubonInterpreter {
           .map(AcTerm.subjectCategoryVocabulary, Audubon::setSubjectCategoryVocabulary)
           .map(AcTerm.tag, Audubon::setTag)
           .map(DcTerm.identifier, Audubon::setIdentifier)
-          .map(DcElement.type, Audubon::setType)
           .map(AcTerm.subtypeLiteral, Audubon::setSubtypeLiteral)
           .map(AcTerm.subtype, Audubon::setSubtype)
           .map(DcTerm.title, Audubon::setTitle)
@@ -134,7 +134,8 @@ public class AudubonInterpreter {
           .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndSetFurtherInformationUrl)
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
           .map(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
-          .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat);
+          .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat)
+          .map(DcElement.type, AudubonInterpreter::parseAndSetType);
 
   /**
    * Interprets audubon of a {@link ExtendedRecord} and populates a {@link AudubonRecord}
@@ -183,5 +184,20 @@ public class AudubonInterpreter {
       mimeType = MEDIA_PARSER.parseMimeType(a.getIdentifier());
     }
     a.setFormat(mimeType);
+  }
+
+  /**
+   * Parser for "http://purl.org/dc/elements/1.1/type" term value
+   */
+  private static void parseAndSetType(Audubon a, String v) {
+    if (!Strings.isNullOrEmpty(v)) {
+      if (v.toLowerCase().startsWith("image")) {
+        a.setType(MediaType.StillImage.name());
+      } else if (v.toLowerCase().startsWith("audio")) {
+        a.setType(MediaType.Sound.name());
+      } else if (v.toLowerCase().startsWith("video")) {
+        a.setType(MediaType.MovingImage.name());
+      }
+    }
   }
 }

@@ -66,7 +66,7 @@ public class MultimediaInterpreterTest {
         .build();
 
     String result =
-        "{\"id\": \"id\", \"multimediaItems\": [{\"type\": \"StillImage\", \"format\": \"text/plain\", \"identifier\": "
+        "{\"id\": \"id\", \"created\": 0, \"multimediaItems\": [{\"type\": \"StillImage\", \"format\": \"text/plain\", \"identifier\": "
             + "\"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": \"Title1\", "
             + "\"description\": \"Desc1\", \"source\": \"Sr1\", \"audience\": \"Audi1\", \"created\": \"2000-11-21\", "
             + "\"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Publ1\", \"license\": \"Lice1\", "
@@ -77,7 +77,7 @@ public class MultimediaInterpreterTest {
             + "\"license\": \"Lice2\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"2\"}], \"issues\": {\"issueList\": "
             + "[\"RECORDED_DATE_INVALID\", \"MULTIMEDIA_URI_INVALID\"]}}";
 
-    MultimediaRecord mr = MultimediaRecord.newBuilder().setId(record.getId()).build();
+    MultimediaRecord mr = MultimediaRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
     MultimediaInterpreter.interpret(record, mr);
