@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -28,7 +29,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.hadoop.hbase.client.Connection;
-import org.joda.time.DateTime;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -166,7 +166,7 @@ public class BasicTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> BasicRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
+          .to(er -> BasicRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .via(BasicInterpreter.interpretGbifId(keygenService))
           .via(BasicInterpreter::interpretBasisOfRecord)
           .via(BasicInterpreter::interpretTypifiedName)

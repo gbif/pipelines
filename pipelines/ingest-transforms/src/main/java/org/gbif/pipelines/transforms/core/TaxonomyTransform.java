@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
@@ -38,7 +39,6 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
@@ -200,7 +200,7 @@ public class TaxonomyTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(r -> TaxonRecord.newBuilder().setCreated(DateTime.now().getMillis()).build())
+          .to(r -> TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build())
           .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore))
           // the id is null when there is an error in the interpretation. In these
           // cases we do not write the taxonRecord because it is totally empty.

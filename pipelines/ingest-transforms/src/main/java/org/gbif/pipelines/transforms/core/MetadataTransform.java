@@ -1,10 +1,10 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
@@ -27,7 +27,6 @@ import org.apache.beam.sdk.values.PCollection;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
@@ -152,7 +151,7 @@ public class MetadataTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(DateTime.now().getMillis()).build())
+          .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(Instant.now().toEpochMilli()).build())
           .via(MetadataInterpreter.interpret(client))
           .via(MetadataInterpreter.interpretEndointType(endpointType))
           .consume(context::output);

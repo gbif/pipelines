@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.specific;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
@@ -36,7 +37,6 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUSTRALIA_SPATIAL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL;
@@ -187,7 +187,7 @@ public class AustraliaSpatialTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(lr -> AustraliaSpatialRecord.newBuilder().setId(lr.getId()).setCreated(DateTime.now().getMillis()).build())
+          .to(lr -> AustraliaSpatialRecord.newBuilder().setId(lr.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .when(lr -> Optional.ofNullable(lr.getCountryCode())
               .filter(c -> c.equals(Country.AUSTRALIA.getIso2LetterCode()))
               .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())

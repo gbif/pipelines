@@ -2,10 +2,10 @@ package org.gbif.pipelines.transforms.core;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
@@ -33,11 +33,11 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
@@ -204,7 +204,7 @@ public class LocationTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> LocationRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
+          .to(er -> LocationRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, context.sideInput(metadataView)))
           .via(LocationInterpreter::interpretContinent)
           .via(LocationInterpreter::interpretWaterBody)

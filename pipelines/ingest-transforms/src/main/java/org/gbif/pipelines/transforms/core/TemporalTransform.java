@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -25,7 +26,6 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
@@ -112,7 +112,7 @@ public class TemporalTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> TemporalRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
+          .to(er -> TemporalRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .via(TemporalInterpreter::interpretEventDate)
           .via(TemporalInterpreter::interpretDateIdentified)
           .via(TemporalInterpreter::interpretModifiedDate)

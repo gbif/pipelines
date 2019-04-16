@@ -1,5 +1,8 @@
 package org.gbif.pipelines.core.converters;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -11,6 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
+import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -28,7 +32,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
 import org.apache.avro.specific.SpecificRecordBase;
-import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
@@ -64,6 +67,9 @@ public class GbifJsonConverter {
   private static final String ID = "id";
   private static final String ISSUES = "issues";
   private static final String CREATED_FIELD = "created";
+
+  private static final LongFunction<LocalDateTime> DATE_FN =
+      l -> LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.systemDefault());
 
   private final JsonConverter.JsonConverterBuilder builder =
       JsonConverter.builder()
@@ -131,7 +137,7 @@ public class GbifJsonConverter {
     getMaxCreationDate(mainNode).ifPresent(createdDate -> mainNode.set(CREATED_FIELD, new TextNode(createdDate.toString())));
 
     Optional.ofNullable(mainNode.get("lastCrawled")).ifPresent(
-        lastCrawled -> mainNode.set("lastCrawled", new TextNode(new DateTime(lastCrawled.asLong()).toString()))
+        lastCrawled -> mainNode.set("lastCrawled", new TextNode(DATE_FN.apply(lastCrawled.asLong()).toString()))
     );
 
     return mainNode;
@@ -140,15 +146,15 @@ public class GbifJsonConverter {
   /**
    * Gets the maximum/latest created date of all the records.
    */
-  private Optional<DateTime> getMaxCreationDate(ObjectNode rootNode) {
+  private Optional<LocalDateTime> getMaxCreationDate(ObjectNode rootNode) {
     return Optional.ofNullable(rootNode.get(CREATED_FIELD))
-            .map(created -> Optional.of(new DateTime(rootNode.get(CREATED_FIELD).asLong())))
-            .orElseGet(() -> records.stream()
-                    .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
-                    .map(record -> record.get(CREATED_FIELD))
-                    .filter(Objects::nonNull)
-                    .map(DateTime::new)
-                    .max(DateTime::compareTo));
+        .map(created -> Optional.of(DATE_FN.apply(rootNode.get(CREATED_FIELD).asLong())))
+        .orElseGet(() -> records.stream()
+            .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
+            .map(record -> record.get(CREATED_FIELD))
+            .filter(Objects::nonNull)
+            .map(x -> DATE_FN.apply((Long) x))
+            .max(LocalDateTime::compareTo));
   }
 
   @Override
@@ -287,7 +293,8 @@ public class GbifJsonConverter {
         //geo_point
         jc.addJsonObject("coordinates", node);
         //geo_shape
-        jc.addJsonTextFieldNoCheck("scoordinates", "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude()  + ")");
+        jc.addJsonTextFieldNoCheck("scoordinates",
+            "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude() + ")");
       }
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
@@ -353,20 +360,19 @@ public class GbifJsonConverter {
       TaxonRecord trOrg = (TaxonRecord) record;
       //Copy only the fields that are needed in the Index
       TaxonRecord.Builder trBuilder = TaxonRecord.newBuilder()
-                        .setAcceptedUsage(trOrg.getAcceptedUsage())
-                        .setClassification(trOrg.getClassification())
-                        .setSynonym(trOrg.getSynonym())
-                        .setUsage(trOrg.getUsage())
-                        .setUsageParsedName(trOrg.getUsageParsedName())
-                        .setDiagnostics(trOrg.getDiagnostics())
-                        .setIssues(null); //Issues are accumulated
+          .setAcceptedUsage(trOrg.getAcceptedUsage())
+          .setClassification(trOrg.getClassification())
+          .setSynonym(trOrg.getSynonym())
+          .setUsage(trOrg.getUsage())
+          .setUsageParsedName(trOrg.getUsageParsedName())
+          .setDiagnostics(trOrg.getDiagnostics())
+          .setIssues(null); //Issues are accumulated
 
       if (!skipId) {
         jc.addJsonTextFieldNoCheck(ID, trOrg.getId());
       }
 
       TaxonRecord tr = trBuilder.build();
-
 
       //Create a ObjectNode with the specific fields copied from the original record
       ObjectNode classificationNode = JsonConverter.createObjectNode();
@@ -377,23 +383,23 @@ public class GbifJsonConverter {
         //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
         StringJoiner pathJoiner = new StringJoiner("_");
         classifications.forEach(rankedName -> {
-            String lwRank = rankedName.getRank().name().toLowerCase();
-            classificationNode.put(lwRank + "Key", rankedName.getKey());
-            classificationNode.put(lwRank, rankedName.getName());
-            taxonKey.add(IntNode.valueOf(rankedName.getKey()));
-            if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getRank() != rankedName.getRank()) {
-              pathJoiner.add(rankedName.getKey().toString());
+              String lwRank = rankedName.getRank().name().toLowerCase();
+              classificationNode.put(lwRank + "Key", rankedName.getKey());
+              classificationNode.put(lwRank, rankedName.getName());
+              taxonKey.add(IntNode.valueOf(rankedName.getKey()));
+              if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getRank() != rankedName.getRank()) {
+                pathJoiner.add(rankedName.getKey().toString());
+              }
             }
-          }
         );
-        classificationNode.put("classificationPath", "_"  + pathJoiner.toString());
+        classificationNode.put("classificationPath", "_" + pathJoiner.toString());
         //All key are concatenated to support a single taxonKey field
         ArrayNode taxonKeyNode = classificationNode.putArray("taxonKey");
         taxonKeyNode.addAll(taxonKey);
       }
       Optional.ofNullable(tr.getUsageParsedName()).ifPresent(pn -> { //Required by API V1
-        ObjectNode usageParsedNameNode =  (ObjectNode)classificationNode.get("usageParsedName");
-        usageParsedNameNode.put("genericName", pn.getGenus() != null ? pn.getGenus(): pn.getUninomial());
+        ObjectNode usageParsedNameNode = (ObjectNode) classificationNode.get("usageParsedName");
+        usageParsedNameNode.put("genericName", pn.getGenus() != null ? pn.getGenus() : pn.getUninomial());
       });
       jc.addJsonObject("gbifClassification", classificationNode);
     };
