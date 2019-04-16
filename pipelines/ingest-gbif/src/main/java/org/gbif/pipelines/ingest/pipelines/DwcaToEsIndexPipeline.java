@@ -7,6 +7,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
+import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
@@ -265,6 +266,8 @@ public class DwcaToEsIndexPipeline {
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
+
+    EsIndexUtils.swapIndexIfAliasExists(options);
 
     Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
       String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);

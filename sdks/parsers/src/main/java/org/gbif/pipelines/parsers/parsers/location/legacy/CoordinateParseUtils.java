@@ -1,25 +1,19 @@
 package org.gbif.pipelines.parsers.parsers.location.legacy;
 
+import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.gbif.common.parsers.NumberParser;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.gbif.common.parsers.NumberParser;
-import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_ROUNDED;
-import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 
 /** Utilities for assisting in the parsing of latitude and longitude strings into Decimals. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -64,7 +58,7 @@ public class CoordinateParseUtils {
    */
   public static ParsedField<LatLng> parseLatLng(final String latitude, final String longitude) {
     if (Strings.isNullOrEmpty(latitude) || Strings.isNullOrEmpty(longitude)) {
-      return ParsedField.fail(COORDINATE_INVALID.name());
+      return ParsedField.fail();
     }
     Double lat = NumberParser.parseDouble(latitude);
     Double lng = NumberParser.parseDouble(longitude);
@@ -104,7 +98,7 @@ public class CoordinateParseUtils {
   // 02° 49' 52" N	131° 47' 03" E
   public static ParsedField<LatLng> parseVerbatimCoordinates(final String coordinates) {
     if (Strings.isNullOrEmpty(coordinates)) {
-      return ParsedField.fail(COORDINATE_INVALID.name());
+      return ParsedField.fail();
     }
     Matcher m = DMS_COORD.matcher(coordinates);
     if (m.find()) {

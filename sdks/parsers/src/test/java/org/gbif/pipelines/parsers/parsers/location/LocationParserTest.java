@@ -79,7 +79,6 @@ public class LocationParserTest {
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
-    Assert.assertTrue(result.getIssues().contains(COORDINATE_INVALID.name()));
   }
 
   @Test
@@ -138,7 +137,6 @@ public class LocationParserTest {
             .getIssues()
             .containsAll(
                 Arrays.asList(
-                    COUNTRY_INVALID.name(),
                     COORDINATE_ROUNDED.name(),
                     COUNTRY_DERIVED_FROM_COORDINATES.name(),
                     GEODETIC_DATUM_ASSUMED_WGS84.name())));
@@ -168,7 +166,6 @@ public class LocationParserTest {
             .getIssues()
             .containsAll(
                 Arrays.asList(
-                    COUNTRY_INVALID.name(),
                     COORDINATE_ROUNDED.name(),
                     COUNTRY_DERIVED_FROM_COORDINATES.name(),
                     GEODETIC_DATUM_ASSUMED_WGS84.name())));
@@ -194,7 +191,6 @@ public class LocationParserTest {
             .getIssues()
             .containsAll(
                 Arrays.asList(
-                    COUNTRY_INVALID.name(),
                     COORDINATE_ROUNDED.name(),
                     COUNTRY_DERIVED_FROM_COORDINATES.name(),
                     GEODETIC_DATUM_ASSUMED_WGS84.name())));
