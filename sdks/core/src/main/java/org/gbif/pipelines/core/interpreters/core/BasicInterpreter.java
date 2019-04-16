@@ -14,9 +14,11 @@ import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.UrlParser;
+import org.gbif.common.parsers.core.Parsable;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -44,6 +46,8 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BasicInterpreter {
+
+  private static final Parsable<String> TYPE_NAME_PARSER = org.gbif.common.parsers.TypifiedNameParser.getInstance();
 
   /** Generates or gets existing GBIF id */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService) {
@@ -175,6 +179,22 @@ public class BasicInterpreter {
       } else {
         addIssue(br, REFERENCES_URI_INVALID);
       }
+    }
+  }
+
+  /** {@link DwcTerm#typifiedName} interpretation. */
+  public static void interpretTypifiedName(ExtendedRecord er, BasicRecord br) {
+    Optional<String> typifiedName = Optional.ofNullable(er.getCoreTerms().get(GbifTerm.typifiedName.qualifiedName()));
+    if (typifiedName.isPresent()) {
+      br.setTypifiedName(typifiedName.get());
+    } else {
+      Optional.ofNullable(er.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()))
+          .ifPresent(typeStatusValue -> {
+            ParseResult<String> result = TYPE_NAME_PARSER.parse(er.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()));
+            if (result.isSuccessful()) {
+              br.setTypifiedName(result.getPayload());
+            }
+          });
     }
   }
 }
