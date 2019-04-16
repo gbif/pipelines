@@ -229,6 +229,8 @@ public class DwcaToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
+    EsIndexUtils.swapIndexIfAliasExists(options);
+
     Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
       String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
       MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);

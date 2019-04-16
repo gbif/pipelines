@@ -1,11 +1,7 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
@@ -17,8 +13,7 @@ import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.Wgs84Projection;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import java.util.*;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;
@@ -47,7 +42,7 @@ public class LocationParser {
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
-    if (!countryName.equals(countryCode)) {
+    if (parsedCountry.isSuccessful() && parsedCountryCode.isSuccessful() && !countryName.equals(countryCode)) {
       issues.add(COUNTRY_MISMATCH.name());
     }
 
@@ -103,7 +98,7 @@ public class LocationParser {
     if (!parseResultOpt.isPresent()) {
       // case when the country is null in the extended record. We return an issue not to break the
       // whole interpretation
-      return ParsedField.<Country>builder().issues(Collections.singletonList(issue)).build();
+      return ParsedField.fail();
     }
 
     ParseResult<Country> parseResult = parseResultOpt.get();
