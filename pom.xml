@@ -102,7 +102,6 @@
     <okio.version>2.0.0</okio.version>
 
     <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
-    <joda-time.version>2.4</joda-time.version>
 
     <commons-compress.version>1.18</commons-compress.version>
     <commons-digester.version>2.1</commons-digester.version>
@@ -501,11 +500,6 @@
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>${findbugs-jsr305.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>joda-time</groupId>
-        <artifactId>joda-time</artifactId>
-        <version>${joda-time.version}</version>
       </dependency>
 
       <!-- XML -->
