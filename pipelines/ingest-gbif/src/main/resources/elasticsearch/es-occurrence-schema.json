@@ -185,7 +185,7 @@
       "notIssues": {"type": "keyword"},
 
       "gbifClassification": {"type": "object"},
-      "media": {"type": "nested", "enabled": false},
+      "multimediaItems": {"type": "nested", "enabled": false},
       "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},
 

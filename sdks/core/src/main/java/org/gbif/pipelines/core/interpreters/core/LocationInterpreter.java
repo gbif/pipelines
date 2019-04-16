@@ -113,7 +113,7 @@ public class LocationInterpreter {
         // Interpretation that required multiple sources
         // Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
         if (Objects.nonNull(mdr) && Objects.nonNull(lr.getCountry()) && Objects.nonNull(mdr.getDatasetPublishingCountry())) {
-          lr.setRepatriated(lr.getCountry().equals(mdr.getDatasetPublishingCountry()));
+          lr.setRepatriated(!lr.getCountryCode().equals(mdr.getDatasetPublishingCountry()));
         }
 
         interpretPublishingCountry(er, mdr).ifPresent(lr::setPublishingCountry);

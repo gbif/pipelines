@@ -187,6 +187,10 @@ public class JsonConverter {
     mainNode.set(key, node);
   }
 
+  void addSingleJsonObject(String key, ObjectNode node) {
+    mainNode.set(key, node);
+  }
+
   void addJsonComplexObject(String key, Map<String, String> fields) {
     ObjectNode node = MAPPER.createObjectNode();
     fields.forEach((k, v) -> addJsonField(node, k, v));

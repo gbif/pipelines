@@ -63,8 +63,7 @@ public class GbifJsonConverter {
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
           .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
-          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
-          .converter(MultimediaRecord.class, getMultimediaRecordConverter());
+          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -116,7 +115,8 @@ public class GbifJsonConverter {
       addIssues(mainNode);
     }
 
-    mainNode.set(CREATED_FIELD, new TextNode(getMaxCreationDate().toString()));
+    getMaxCreationDate(mainNode).ifPresent(createdDate -> mainNode.set(CREATED_FIELD, new TextNode(createdDate.toString())));
+
     Optional.ofNullable(mainNode.get("lastCrawled")).ifPresent(
         lastCrawled -> mainNode.set("lastCrawled", new TextNode(new DateTime(lastCrawled.asLong()).toString()))
     );
@@ -127,13 +127,15 @@ public class GbifJsonConverter {
   /**
    * Gets the maximum/latest created date of all the records.
    */
-  private DateTime getMaxCreationDate() {
-    return records.stream()
-            .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
-            .map(record -> record.get(CREATED_FIELD))
-            .map(created -> new DateTime((Long)created))
-            .max(DateTime::compareTo)
-            .orElse(DateTime.now());
+  private Optional<DateTime> getMaxCreationDate(ObjectNode rootNode) {
+    return Optional.ofNullable(rootNode.get(CREATED_FIELD))
+            .map(created -> Optional.of(new DateTime(rootNode.get(CREATED_FIELD).asLong())))
+            .orElseGet(() -> records.stream()
+                    .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
+                    .map(record -> record.get(CREATED_FIELD))
+                    .filter(Objects::nonNull)
+                    .map(created -> new DateTime((Long) created))
+                    .max(DateTime::compareTo));
   }
 
   @Override
@@ -526,31 +528,4 @@ public class GbifJsonConverter {
       jc.addJsonArray("measurementOrFactItems", nodes);
     };
   }
-
-  /**
-   * String converter for {@link MultimediaRecord}, convert an object to specific string view
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * {
-   *  "id": "777",
-   *  "multimediaItems": [
-   *
-   *   ],
-   *   "mediaType":["StillImage","Audio"]
-   * }</pre>
-   */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getMultimediaRecordConverter() {
-    return (jc, record) -> {
-      MultimediaRecord mr = (MultimediaRecord) record;
-      if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, mr.getId());
-      }
-      jc.addCommonFields("media", mr);
-
-    };
-  }
-
-
 }

@@ -205,7 +205,7 @@ public class LocationTransform {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> LocationRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
-          .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, null))
+          .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, context.sideInput(metadataView)))
           .via(LocationInterpreter::interpretContinent)
           .via(LocationInterpreter::interpretWaterBody)
           .via(LocationInterpreter::interpretStateProvince)

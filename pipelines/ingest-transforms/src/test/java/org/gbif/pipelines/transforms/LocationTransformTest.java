@@ -1,14 +1,12 @@
 package org.gbif.pipelines.transforms;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -37,7 +35,7 @@ public class LocationTransformTest {
 
     @ProcessElement
     public void processElement(ProcessContext context) {
-      LocationRecord locationRecord = LocationRecord.newBuilder(context.element()).setCreated(null).build();
+      LocationRecord locationRecord = LocationRecord.newBuilder(context.element()).setCreated(0L).build();
       context.output(locationRecord);
     }
   }
@@ -76,7 +74,8 @@ public class LocationTransformTest {
         "155.5",
         "44.5",
         "105.0",
-        "5.0"
+        "5.0",
+        "false"
     };
     final String[] japan = {
         "1",
@@ -99,20 +98,25 @@ public class LocationTransformTest {
         "155.5",
         "44.5",
         "105.0",
-        "5.0"
+        "5.0",
+         "true"
     };
 
-    final List<ExtendedRecord> records = createExtendedRecordList(denmark, japan);
-    final List<LocationRecord> locations = createLocationList(denmark, japan);
+    final MetadataRecord mdr = MetadataRecord.newBuilder()
+                                .setId("0")
+                                .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode())
+                                .setDatasetKey(UUID.randomUUID().toString())
+                                .build();
+    final List<ExtendedRecord> records = createExtendedRecordList(mdr, denmark, japan);
+    final List<LocationRecord> locations = createLocationList(mdr, denmark, japan);
 
     PCollectionView<MetadataRecord> metadataView =
-            p.apply("Create test metadata",Create.of(MetadataRecord.newBuilder().setId("0")
-                    .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode()).build()))
+            p.apply("Create test metadata",Create.of(mdr))
             .apply("Convert into view", View.asSingleton());
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter(kvStore, metadataView)))
+        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView))
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should
@@ -122,7 +126,7 @@ public class LocationTransformTest {
     p.run();
   }
 
-  private List<ExtendedRecord> createExtendedRecordList(String[]... locations) {
+  private List<ExtendedRecord> createExtendedRecordList(MetadataRecord metadataRecord, String[]... locations) {
     return Arrays.stream(locations)
         .map(
             x -> {
@@ -143,12 +147,13 @@ public class LocationTransformTest {
               terms.put(DwcTerm.decimalLatitude.qualifiedName(), x[13]);
               terms.put(DwcTerm.decimalLongitude.qualifiedName(), x[14]);
               terms.put(DwcTerm.stateProvince.qualifiedName(), x[15]);
+              terms.put(GbifTerm.publishingCountry.qualifiedName(), metadataRecord.getDatasetPublishingCountry());
               return record;
             })
         .collect(Collectors.toList());
   }
 
-  private List<LocationRecord> createLocationList(String[]... locations) {
+  private List<LocationRecord> createLocationList(MetadataRecord mdr, String[]... locations) {
     return Arrays.stream(locations)
         .map(
             x -> {
@@ -174,8 +179,11 @@ public class LocationTransformTest {
                       .setDepthAccuracy(Double.valueOf(x[18]))
                       .setElevation(Double.valueOf(x[19]))
                       .setElevationAccuracy(Double.valueOf(x[20]))
+                      .setRepatriated(Boolean.parseBoolean(x[21]))
                       .setHasCoordinate(true)
                       .setHasGeospatialIssue(false)
+                      .setPublishingCountry(mdr.getDatasetPublishingCountry())
+                      .setCreated(0L)
                       .build();
               record.getIssues().getIssueList().add(x[16]);
               return record;
