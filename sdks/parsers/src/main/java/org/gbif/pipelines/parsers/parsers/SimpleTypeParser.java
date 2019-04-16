@@ -10,18 +10,17 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /** Utility class that parses basic data types. */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SimpleTypeParser {
 
   // Caching instance of BooleanParser since it is a file based parser
   private static final BooleanParser BOOLEAN_PARSER = BooleanParser.getInstance();
-
-  /** Utility class. */
-  private SimpleTypeParser() {
-    // hidden constructor
-  }
 
   /** Parses an integer value and consumes its response (if any). */
   public static void parseInt(ExtendedRecord er, DwcTerm term, Consumer<Optional<Integer>> consumer) {

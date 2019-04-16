@@ -6,6 +6,9 @@ import java.util.function.Predicate;
 import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
 import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.YEAR;
@@ -14,14 +17,11 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 /** Interpreter for raw date only. The main method parse, fills year, month and day in ParseDate */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 class ParserRawDate {
 
   private static final Predicate<String> YEAR_PREDICATE =
       year -> year.length() == 4 && isNumeric(year);
-
-  private ParserRawDate() {
-    // Can't have an instance
-  }
 
   /**
    * Parse year, month and day index in the raw date string, and save raw values into

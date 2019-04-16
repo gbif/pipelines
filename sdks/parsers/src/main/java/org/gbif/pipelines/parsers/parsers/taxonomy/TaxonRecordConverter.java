@@ -14,10 +14,12 @@ import org.gbif.pipelines.io.avro.Status;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.rest.client.species.NameUsageMatch;
 
-/** Adapts a {@link NameUsageMatch} into a {@link TaxonRecord} */
-public class TaxonRecordConverter {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-  private TaxonRecordConverter() {}
+/** Adapts a {@link NameUsageMatch} into a {@link TaxonRecord} */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class TaxonRecordConverter {
 
   /**
    * I modify the parameter instead of creating a new one and returning it because the lambda

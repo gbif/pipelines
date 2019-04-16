@@ -2,10 +2,14 @@ package org.gbif.pipelines.parsers.parsers.temporal.utils;
 
 import java.util.regex.Pattern;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 /**
  * Contains methods which can delimit raw string into raw array, example: "10-10-2010" to {"10",
  * "10", "2010"} and etc.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DelimiterUtils {
 
   // Period values
@@ -31,10 +35,6 @@ public class DelimiterUtils {
   private static final String MINUS = ESCAPE + "-";
   private static final String PLUS = ESCAPE + "+";
   private static final String Z = ESCAPE + "Z";
-
-  private DelimiterUtils() {
-    // Can't have an instance
-  }
 
   /**
    * Attempt to split the rawPeriod into raw periods by delimiter '/' symbol, the symbol must be the

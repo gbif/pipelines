@@ -9,10 +9,12 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
 
-/** Helps to work with org.gbif.pipelines.io.avro models */
-public class ModelUtils {
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-  private ModelUtils() {}
+/** Helps to work with org.gbif.pipelines.io.avro models */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ModelUtils {
 
   public static String extractValue(ExtendedRecord er, Term term) {
     return er.getCoreTerms().get(term.qualifiedName());

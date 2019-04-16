@@ -17,6 +17,7 @@ import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.CountryMaps;
 
 import com.google.common.base.Strings;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
@@ -24,6 +25,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 
 /** Matches the location fields related to Country and Coordinates to find possible mismatches. */
 @Slf4j
+@AllArgsConstructor(staticName = "create")
 class LocationMatcher {
 
   // Antarctica: "Territories south of 60° south latitude"
@@ -33,16 +35,6 @@ class LocationMatcher {
   private final Country country;
   private final KeyValueStore<LatLng, String> kvStore;
   private final List<UnaryOperator<LatLng>> alternativeTransformations = new ArrayList<>();
-
-  private LocationMatcher(LatLng latLng, Country country, KeyValueStore<LatLng, String> kvStore) {
-    this.latLng = latLng;
-    this.country = country;
-    this.kvStore = kvStore;
-  }
-
-  static LocationMatcher create(LatLng latLng, Country country, KeyValueStore<LatLng, String> kvStore) {
-    return new LocationMatcher(latLng, country, kvStore);
-  }
 
   LocationMatcher additionalTransform(UnaryOperator<LatLng> transformation) {
     alternativeTransformations.add(transformation);

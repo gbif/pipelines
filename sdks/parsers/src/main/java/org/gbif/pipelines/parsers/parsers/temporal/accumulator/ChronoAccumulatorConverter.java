@@ -15,6 +15,9 @@ import java.util.function.Function;
 
 import org.gbif.pipelines.parsers.parsers.temporal.utils.ParsedUnitUtils;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
@@ -26,6 +29,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_UNLIKELY;
 
 /** The main function convert ChronoAccumulator to Temporal in approrative way */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChronoAccumulatorConverter {
 
   private static final Year OLD_YEAR = Year.of(1600);
@@ -40,10 +44,6 @@ public class ChronoAccumulatorConverter {
     FUNCTION_MAP.put(HOUR_OF_DAY, ParsedUnitUtils::parseHour);
     FUNCTION_MAP.put(MINUTE_OF_HOUR, ParsedUnitUtils::parseMinute);
     FUNCTION_MAP.put(SECOND_OF_MINUTE, ParsedUnitUtils::parseSecond);
-  }
-
-  private ChronoAccumulatorConverter() {
-    // Can't have an instance
   }
 
   /**

@@ -18,6 +18,9 @@ import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator
 import org.gbif.pipelines.parsers.parsers.temporal.parser.ParserRawDateTime;
 import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -26,14 +29,11 @@ import static com.google.common.base.Strings.isNullOrEmpty;
  * Main interpreter class. Interpreter for raw temporal period. The main method interpret two dates,
  * from and to
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalParser {
 
   private static final BiFunction<ChronoAccumulator, List<String>, Temporal> TEMPORAL_FUNC =
       (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
-
-  private TemporalParser() {
-    // Can't have an instance
-  }
 
   public static ParsedTemporal parse(String rawDate) {
     return parse("", "", "", rawDate);

@@ -26,9 +26,13 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /** Utility class that parses Enum based terms. */
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class VocabularyParser<T extends Enum<T>> {
 
   private static final TypeStatusParser TYPE_PARSER = TypeStatusParser.getInstance();
@@ -45,12 +49,6 @@ public class VocabularyParser<T extends Enum<T>> {
 
   // Term ot be parsed
   private final DwcTerm term;
-
-  /** Private constructor that keeps the basic info to run a parser. */
-  private VocabularyParser(EnumParser<T> parser, DwcTerm term) {
-    this.parser = parser;
-    this.term = term;
-  }
 
   /** @return a basis of record parser. */
   public static VocabularyParser<BasisOfRecord> basisOfRecordParser() {

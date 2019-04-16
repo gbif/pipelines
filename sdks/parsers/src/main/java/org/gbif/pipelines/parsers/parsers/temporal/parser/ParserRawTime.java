@@ -3,6 +3,9 @@ package org.gbif.pipelines.parsers.parsers.temporal.parser;
 import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
 import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
@@ -10,11 +13,8 @@ import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 /** Interpreter for raw time. The main method parse */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 class ParserRawTime {
-
-  private ParserRawTime() {
-    // Can't have an instance
-  }
 
   /**
    * Parse hour, minute and second position in the raw date string, and save raw values into
