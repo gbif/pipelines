@@ -36,8 +36,7 @@ public class CountryMaps {
   static {
     ClassLoader classLoader = CountryMaps.class.getClassLoader();
     try (InputStream in = classLoader.getResourceAsStream(CONFUSED_COUNTRY_FILE);
-        BufferedReader reader =
-            new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
       reader
           .lines()
           .filter(nextLine -> !nextLine.isEmpty() && !nextLine.startsWith("#"))

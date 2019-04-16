@@ -14,14 +14,14 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.nameparser.NameParserGBIF;
-import org.gbif.nameparser.api.Authorship;
 import org.gbif.nameparser.api.NameParser;
-import org.gbif.nameparser.api.ParsedName;
 import org.gbif.nameparser.api.UnparsableNameException;
+import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.NamePart;
 import org.gbif.pipelines.io.avro.NameType;
 import org.gbif.pipelines.io.avro.NomCode;
+import org.gbif.pipelines.io.avro.ParsedName;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
@@ -108,8 +108,8 @@ public class TaxonomyInterpreter {
           // parse name into pieces - we don't get them from the nub lookup
           try {
             if (Objects.nonNull(usageMatch.getUsage())) {
-              ParsedName pn = NAME_PARSER.parse(usageMatch.getUsage().getName(),
-                                                org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank().name()));
+              org.gbif.nameparser.api.ParsedName pn = NAME_PARSER.parse(usageMatch.getUsage().getName(),
+                  org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank().name()));
               tr.setUsageParsedName(toParsedNameAvro(pn));
             }
           } catch (UnparsableNameException e) {
@@ -126,32 +126,32 @@ public class TaxonomyInterpreter {
   }
 
   /**
-   * Converts a {@link ParsedName} into {@link org.gbif.pipelines.io.avro.ParsedName}.
+   * Converts a {@link org.gbif.nameparser.api.ParsedName} into {@link org.gbif.pipelines.io.avro.ParsedName}.
    */
-  private static org.gbif.pipelines.io.avro.ParsedName toParsedNameAvro(ParsedName pn) {
-    org.gbif.pipelines.io.avro.ParsedName.Builder builder =  org.gbif.pipelines.io.avro.ParsedName.newBuilder()
-                                                              .setAbbreviated(pn.isAbbreviated())
-                                                              .setAutonym(pn.isAutonym())
-                                                              .setBinomial(pn.isBinomial())
-                                                              .setCandidatus(pn.isCandidatus())
-                                                              .setCultivarEpithet(pn.getCultivarEpithet())
-                                                              .setDoubtful(pn.isDoubtful())
-                                                              .setGenus(pn.getGenus())
-                                                              .setWarnings(pn.getWarnings())
-                                                              .setUninomial(pn.getUninomial())
-                                                              .setUnparsed(pn.getUnparsed())
-                                                              .setTrinomial(pn.isTrinomial())
-                                                              .setIncomplete(pn.isIncomplete())
-                                                              .setIndetermined(pn.isIndetermined())
-                                                              .setTerminalEpithet(pn.getTerminalEpithet())
-                                                              .setInfragenericEpithet(pn.getInfragenericEpithet())
-                                                              .setInfraspecificEpithet(pn.getInfraspecificEpithet())
-                                                              .setNomenclaturalNotes(pn.getNomenclaturalNotes())
-                                                              .setTaxonomicNote(pn.getTaxonomicNote())
-                                                              .setStrain(pn.getStrain())
-                                                              .setSanctioningAuthor(pn.getSanctioningAuthor())
-                                                              .setRemarks(pn.getRemarks())
-                                                              .setSpecificEpithet(pn.getSpecificEpithet());
+  private static ParsedName toParsedNameAvro(org.gbif.nameparser.api.ParsedName pn) {
+    ParsedName.Builder builder = ParsedName.newBuilder()
+        .setAbbreviated(pn.isAbbreviated())
+        .setAutonym(pn.isAutonym())
+        .setBinomial(pn.isBinomial())
+        .setCandidatus(pn.isCandidatus())
+        .setCultivarEpithet(pn.getCultivarEpithet())
+        .setDoubtful(pn.isDoubtful())
+        .setGenus(pn.getGenus())
+        .setWarnings(pn.getWarnings())
+        .setUninomial(pn.getUninomial())
+        .setUnparsed(pn.getUnparsed())
+        .setTrinomial(pn.isTrinomial())
+        .setIncomplete(pn.isIncomplete())
+        .setIndetermined(pn.isIndetermined())
+        .setTerminalEpithet(pn.getTerminalEpithet())
+        .setInfragenericEpithet(pn.getInfragenericEpithet())
+        .setInfraspecificEpithet(pn.getInfraspecificEpithet())
+        .setNomenclaturalNotes(pn.getNomenclaturalNotes())
+        .setTaxonomicNote(pn.getTaxonomicNote())
+        .setStrain(pn.getStrain())
+        .setSanctioningAuthor(pn.getSanctioningAuthor())
+        .setRemarks(pn.getRemarks())
+        .setSpecificEpithet(pn.getSpecificEpithet());
 
     //Nullable fields
     Optional.ofNullable(pn.getBasionymAuthorship())
@@ -172,15 +172,15 @@ public class TaxonomyInterpreter {
   }
 
   /**
-   * Converts a {@link Authorship} into {@link org.gbif.pipelines.io.avro.Authorship}.
+   * Converts a {@link org.gbif.nameparser.api.Authorship} into {@link org.gbif.pipelines.io.avro.Authorship}.
    */
-  private static org.gbif.pipelines.io.avro.Authorship toAuthorshipAvro(Authorship authorship) {
-    return org.gbif.pipelines.io.avro.Authorship.newBuilder()
-             .setEmpty(authorship.isEmpty())
-             .setYear(authorship.getYear())
-             .setAuthors(authorship.getAuthors())
-             .setExAuthors(authorship.getExAuthors())
-             .build();
+  private static Authorship toAuthorshipAvro(org.gbif.nameparser.api.Authorship authorship) {
+    return Authorship.newBuilder()
+        .setEmpty(authorship.isEmpty())
+        .setYear(authorship.getYear())
+        .setAuthors(authorship.getAuthors())
+        .setExAuthors(authorship.getExAuthors())
+        .build();
   }
 
   private static boolean isEmpty(NameUsageMatch response) {
