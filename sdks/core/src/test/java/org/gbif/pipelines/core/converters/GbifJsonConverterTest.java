@@ -47,7 +47,7 @@ public class GbifJsonConverterTest {
             + "\"Code 1'2\\\"\",\"gbifClassification\":{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
             + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"}," + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],"
             + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\","
-            +  "\"classificationPath\":\"_1\"},\"gbifId\":111,"
+            +  "\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},\"gbifId\":111,"
             + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\","
             + "\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
             + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\","
@@ -144,7 +144,7 @@ public class GbifJsonConverterTest {
             + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\","
             + "\"gbifClassification\":{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
             + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"}," + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],"
-            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\"},"
+            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},"
             + "\"australiaSpatialLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"measurementOrFactItems\":[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
             + "{\\\"something\\\":1}\",\"value\":1.1,\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}},{\"id\":\"124\",\"type\":null,"
             + "\"value\":null,\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2012\"}}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
@@ -305,7 +305,7 @@ public class GbifJsonConverterTest {
             + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
             + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}]"
             + ",\"acceptedUsage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
-            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\"},\"created\":\"1970-01-01T01:00:00.000+01:00\"}";
+            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},\"created\":\"1970-01-01T01:00:00.000+01:00\"}";
 
     // State
     List<RankedName> rankedNameList = new ArrayList<>();

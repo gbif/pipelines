@@ -1,26 +1,16 @@
 package org.gbif.pipelines.core.converters;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.node.*;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.*;
 
-import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.avro.specific.SpecificRecordBase;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.POJONode;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
@@ -359,6 +349,7 @@ public class GbifJsonConverter {
       ObjectNode classificationNode = JsonConverter.createObjectNode();
       jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
+      Collection<IntNode> taxonKey = new HashSet<>();
       if (classifications != null && !classifications.isEmpty()) {
         //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
         StringJoiner pathJoiner = new StringJoiner("_");
@@ -366,12 +357,16 @@ public class GbifJsonConverter {
             String lwRank = rankedName.getRank().name().toLowerCase();
             classificationNode.put(lwRank + "Key", rankedName.getKey());
             classificationNode.put(lwRank, rankedName.getName());
+            taxonKey.add(IntNode.valueOf(rankedName.getKey()));
             if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getRank() != rankedName.getRank()) {
               pathJoiner.add(rankedName.getKey().toString());
             }
           }
         );
         classificationNode.put("classificationPath", "_"  + pathJoiner.toString());
+        //All key are concatenated to support a single taxonKey field
+        ArrayNode taxonKeyNode = classificationNode.putArray("taxonKey");
+        taxonKeyNode.addAll(taxonKey);
       }
       Optional.ofNullable(tr.getUsageParsedName()).ifPresent(pn -> { //Required by API V1
         ObjectNode usageParsedNameNode =  (ObjectNode)classificationNode.get("usageParsedName");
