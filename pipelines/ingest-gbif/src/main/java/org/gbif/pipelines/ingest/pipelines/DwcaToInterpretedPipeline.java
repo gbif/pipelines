@@ -112,15 +112,15 @@ public class DwcaToInterpretedPipeline {
     log.info("Adding interpretations");
 
     //Create metadata
-    PCollection<MetadataRecord> metadataRecordP =
+    PCollection<MetadataRecord> metadataRecords =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
             .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()));
 
     //Write metadata
-    metadataRecordP.apply("Write metadata to avro", MetadataTransform.write(pathFn));
+    metadataRecords.apply("Write metadata to avro", MetadataTransform.write(pathFn));
 
     //Create View for further use
-    PCollectionView<MetadataRecord> metadataView = metadataRecordP.apply("Convert into view", View.asSingleton());
+    PCollectionView<MetadataRecord> metadataView = metadataRecords.apply("Convert into view", View.asSingleton());
 
     uniqueRecords
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn));
