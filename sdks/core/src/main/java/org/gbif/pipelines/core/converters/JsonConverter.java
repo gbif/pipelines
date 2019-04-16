@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.converters;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -9,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -105,6 +107,16 @@ public class JsonConverter {
     return toJson().toString();
   }
 
+  private void addArrayNode(ObjectNode node, Schema.Field field,Collection<?> objects) {
+    ArrayNode arrayNode = node.putArray(field.name());
+    objects.forEach( value -> {
+      if(value instanceof SpecificRecordBase) {
+        ObjectNode element = createObjectNode();
+        addCommonFields((SpecificRecordBase)value, element);
+        arrayNode.add(element);
+      }
+    });
+  }
   /**
    * Common way how to convert {@link SpecificRecordBase} to json string
    * Converts {@link SpecificRecordBase} by fields type and adds into {@link ObjectNode}
@@ -135,6 +147,19 @@ public class JsonConverter {
                   case LONG:
                     node.put(f.name(), (Long) r);
                     break;
+                  case RECORD:
+                    if (r instanceof SpecificRecordBase) {
+                      ObjectNode recordNode = createObjectNode();
+                      addCommonFields((SpecificRecordBase) r, recordNode);
+                      node.set(f.name(), recordNode);
+                    }
+                    break;
+                  case ARRAY:
+                    Collection values = (Collection)r;
+                    if(!values.isEmpty()) {
+                      addArrayNode(node, f, (Collection)r);
+                    }
+                    break;
                   default:
                     addJsonFieldNoCheck(node, f.name(), r.toString());
                     break;
@@ -162,6 +187,10 @@ public class JsonConverter {
     mainNode.set(key, node);
   }
 
+  void addSingleJsonObject(String key, ObjectNode node) {
+    mainNode.set(key, node);
+  }
+
   void addJsonComplexObject(String key, Map<String, String> fields) {
     ObjectNode node = MAPPER.createObjectNode();
     fields.forEach((k, v) -> addJsonField(node, k, v));
@@ -174,7 +203,7 @@ public class JsonConverter {
     mainNode.set(key, node);
   }
 
-  void addJsonArray(String key, List<ObjectNode> values) {
+  void addJsonArray(String key, Collection<? extends JsonNode> values) {
     ArrayNode node = mainNode.putArray(key);
     node.addAll(values);
   }
@@ -224,10 +253,16 @@ public class JsonConverter {
     return mainNode;
   }
 
+  /**
+   * Creates a empty ArrayNode.
+   */
   static ArrayNode createArrayNode() {
     return MAPPER.createArrayNode();
   }
 
+  /**
+   * Creates an empty ObjecNode.
+   */
   static ObjectNode createObjectNode() {
     return MAPPER.createObjectNode();
   }
@@ -240,4 +275,7 @@ public class JsonConverter {
     return value;
   }
 
+  public static ObjectMapper mapper() {
+    return MAPPER;
+  }
 }

@@ -8,6 +8,7 @@
   "doc": "Interpreted values at the occurrence record level",
   "fields": [
     {"name": "id", "type": "string", "doc": "Pipelines identifier"},
+    {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
     {"name": "gbifId", "type": ["null", "int"], "default" : null, "doc": "GBIF internal identifier"},
     {"name": "basisOfRecord", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/basisOfRecord"},
     {"name": "sex", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sex"},
@@ -15,6 +16,7 @@
     {"name": "establishmentMeans", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/establishmentMeans"},
     {"name": "individualCount", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/individualCount"},
     {"name": "typeStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/typeStatus"},
+    {"name": "typifiedName", "type": ["null", "string"], "default" : null, "doc": "https://gbif.github.io/dwc-api/apidocs/org/gbif/dwc/terms/GbifTerm.html#typifiedName"},
     {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
     {"name": "issues", "type": "IssueRecord", "default":{}}
   ]

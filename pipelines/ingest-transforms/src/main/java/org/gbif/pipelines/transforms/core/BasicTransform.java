@@ -8,6 +8,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
+import org.gbif.pipelines.core.interpreters.core.TypifiedNameInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -15,6 +16,7 @@ import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
 import org.gbif.pipelines.transforms.CheckTransforms;
+
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;
@@ -33,6 +35,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
@@ -165,9 +168,10 @@ public class BasicTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> BasicRecord.newBuilder().setId(er.getId()).build())
+          .to(er -> BasicRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
           .via(BasicInterpreter.interpretGbifId(keygenService))
           .via(BasicInterpreter::interpretBasisOfRecord)
+          .via(TypifiedNameInterpreter::interpretTypifiedName)
           .via(BasicInterpreter::interpretSex)
           .via(BasicInterpreter::interpretEstablishmentMeans)
           .via(BasicInterpreter::interpretLifeStage)

@@ -9,7 +9,6 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -30,7 +29,6 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -118,8 +116,6 @@ public class InterpretedToEsIndexPipeline {
     final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
     final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
     final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
-    // Specific
-    final TupleTag<AustraliaSpatialRecord> asrTag = new TupleTag<AustraliaSpatialRecord>() {};
 
     Pipeline p = Pipeline.create(options);
 
@@ -164,13 +160,9 @@ public class InterpretedToEsIndexPipeline {
         p.apply("Read Measurement", MeasurementOrFactTransform.read(pathFn))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
 
-    PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection =
-        p.apply("Read Australia spatial", AustraliaSpatialTransform.read(pathFn))
-            .apply("Map Australia spatial to KV", AustraliaSpatialTransform.toKv());
-
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, asrTag, metadataView)
+        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
             .converter();
 
     PCollection<String> jsonCollection =
@@ -185,8 +177,6 @@ public class InterpretedToEsIndexPipeline {
             .and(irTag, imageCollection)
             .and(arTag, audubonCollection)
             .and(mfrTag, measurementCollection)
-            // Specific
-            .and(asrTag, australiaSpatialCollection)
             // Raw
             .and(erTag, verbatimCollection)
             // Apply

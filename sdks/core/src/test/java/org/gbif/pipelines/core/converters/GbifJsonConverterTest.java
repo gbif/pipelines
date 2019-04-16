@@ -41,11 +41,13 @@ public class GbifJsonConverterTest {
     String expected =
         "{\"id\":\"777\",\"verbatim\":{\"core\":{\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}"
             + "{\\\"something\\\":1}\",\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},\"extensions\":{}},"
-            + "\"startDate\":\"01-01-2011\",\"year\":2000,\"day\":1,\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": "
+            + "\"eventDateSingle\":\"01-01-2011\",\"year\":2000,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":"
             + "\"01-01-2018\"},\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":"
-            + "{\"lon\":2.0,\"lat\":1.0},\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":"
-            + "\"Code 1'2\\\"\",\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,\"rank\":"
-            + "\"CHEMOFORM\"},{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],\"gbifId\":111,"
+            + "{\"lon\":2.0,\"lat\":1.0},\"scoordinates\":\"POINT (2.0 1.0)\",\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":"
+            + "\"Code 1'2\\\"\",\"gbifClassification\":{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
+            + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"}," + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],"
+            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\","
+            +  "\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},\"gbifId\":111,"
             + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\","
             + "\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
             + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\","
@@ -57,7 +59,7 @@ public class GbifJsonConverterTest {
             + "\"PRESUMED_NEGATED_LATITUDE\",\"MULTIMEDIA_URI_INVALID\",\"COORDINATE_ACCURACY_INVALID\",\"GEODETIC_DATUM_ASSUMED_WGS84\","
             + "\"TAXON_MATCH_HIGHERRANK\",\"ELEVATION_UNLIKELY\",\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\","
             + "\"RECORDED_DATE_INVALID\",\"INDIVIDUAL_COUNT_INVALID\",\"RECORDED_DATE_MISMATCH\",\"DEPTH_NOT_METRIC\","
-            + "\"MULTIMEDIA_DATE_INVALID\",\"INTERPRETATION_ERROR\",\"RECORDED_DATE_UNLIKELY\",\"COUNTRY_MISMATCH\"]}";
+            + "\"MULTIMEDIA_DATE_INVALID\",\"INTERPRETATION_ERROR\",\"RECORDED_DATE_UNLIKELY\",\"COUNTRY_MISMATCH\"],\"created\":\"1970-01-01T01:00:00.000+01:00\"}";
 
     // State
     Map<String, String> erMap = new HashMap<>(2);
@@ -76,6 +78,7 @@ public class GbifJsonConverterTest {
     TemporalRecord tmr =
         TemporalRecord.newBuilder()
             .setId("777")
+            .setCreated(0L)
             .setEventDate(EventDate.newBuilder().setLte("01-01-2018").setGte("01-01-2011").build())
             .setDay(1)
             .setYear(2000)
@@ -100,7 +103,7 @@ public class GbifJsonConverterTest {
     rankedNameList.add(name);
     rankedNameList.add(name2);
 
-    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
+    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).setUsage(name2).build();
 
     // When
     String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, br);
@@ -135,12 +138,14 @@ public class GbifJsonConverterTest {
             + "\"http://purl.org/dc/terms/created\":\"2010\",\"http://purl.org/dc/terms/references\":\"http://www.gbif.org/tmp.jpg\","
             + "\"http://purl.org/dc/terms/contributor\":\"Cont1\",\"http://purl.org/dc/terms/title\":\"Tt1\","
             + "\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},{\"http://purl.org/dc/terms/created\":\"not a date\"}]}},"
-            + "\"startDate\":\"01-01-2011\",\"year\":2000,\"day\":1,\"eventDate\":{\"gte\": \"01-01-2011\", \"lte\": \"01-01-2018\"},"
+            + "\"eventDateSingle\":\"01-01-2011\",\"year\":2000,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},"
             + "\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":2.0,\"lat\":1.0},"
+            +  "\"scoordinates\":\"POINT (2.0 1.0)\","
             + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\","
-            + "\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,\"rank\":\"CHEMOFORM\"},"
-            + "{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],\"australiaSpatialLayers\":"
-            + "[{\"key\":\"data\",\"value\":\"value\"}],\"measurementOrFactItems\":[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
+            + "\"gbifClassification\":{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
+            + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"}," + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],"
+            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},"
+            + "\"australiaSpatialLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"measurementOrFactItems\":[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
             + "{\\\"something\\\":1}\",\"value\":1.1,\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}},{\"id\":\"124\",\"type\":null,"
             + "\"value\":null,\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2012\"}}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
             + "\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
@@ -231,7 +236,7 @@ public class GbifJsonConverterTest {
     rankedNameList.add(name);
     rankedNameList.add(name2);
 
-    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).build();
+    TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).setUsage(name2).build();
 
     MeasurementOrFactRecord mfr =
         MeasurementOrFactRecord.newBuilder().setId("777").setMeasurementOrFactItems(
@@ -296,9 +301,11 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"backbone\":[{\"taxonKey\":1,\"name\":\"Name\",\"depthKey_0\":1,\"kingdomKey\":1,\"rank\":\"CHEMOFORM\"},"
-            + "{\"taxonKey\":2,\"name\":\"Name2\",\"depthKey_1\":2,\"kingdomKey\":2,\"rank\":\"ABERRATION\"}],\"gbifTaxonKey\":\"1\","
-            + "\"gbifScientificName\":\"n\",\"gbifTaxonRank\":\"ABERRATION\"}";
+        "{\"id\":\"777\",\"gbifClassification\":{\"usage\":{\"key\":1,\"name\":\"n\",\"rank\":\"ABERRATION\"},"
+            + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
+            + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}]"
+            + ",\"acceptedUsage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
+            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},\"created\":\"1970-01-01T01:00:00.000+01:00\"}";
 
     // State
     List<RankedName> rankedNameList = new ArrayList<>();
@@ -309,8 +316,10 @@ public class GbifJsonConverterTest {
 
     TaxonRecord taxonRecord = TaxonRecord.newBuilder()
         .setId("777")
+        .setCreated(0L)
         .setUsage(RankedName.newBuilder().setKey(1).setName("n").setRank(Rank.ABERRATION).build())
         .setClassification(rankedNameList)
+        .setAcceptedUsage(name2)
         .build();
 
     // When
@@ -342,10 +351,10 @@ public class GbifJsonConverterTest {
   public void temporalRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\"}";
+    String expected = "{\"id\":\"777\",\"created\":\"1970-01-01T01:00:00.000+01:00\"}";
 
     // State
-    TemporalRecord record = TemporalRecord.newBuilder().setId("777").build();
+    TemporalRecord record = TemporalRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(record);
@@ -377,11 +386,12 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected = "{\"id\":\"777\",\"australiaSpatialLayers\":[{\"key\":\"{awdawd}\","
-        + "\"value\":\"\\\"{\\\"wad\\\":\\\"adw\\\"}\\\"\"}]}";
+        + "\"value\":\"\\\"{\\\"wad\\\":\\\"adw\\\"}\\\"\"}],\"created\":\"1970-01-01T01:00:00.000+01:00\"}";
 
     // State
     AustraliaSpatialRecord record = AustraliaSpatialRecord.newBuilder()
         .setId("777")
+        .setCreated(0L)
         .setItems(Collections.singletonMap("{awdawd}", "\"{\"wad\":\"adw\"}\""))
         .build();
 
@@ -397,10 +407,10 @@ public class GbifJsonConverterTest {
   public void measurementOrFactRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"measurementOrFactItems\":[]}";
+    String expected = "{\"id\":\"777\",\"measurementOrFactItems\":[],\"created\":\"1970-01-01T01:00:00.000+01:00\"}";
 
     // State
-    MeasurementOrFactRecord record = MeasurementOrFactRecord.newBuilder().setId("777").build();
+    MeasurementOrFactRecord record = MeasurementOrFactRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(record);
@@ -414,10 +424,10 @@ public class GbifJsonConverterTest {
   public void amplificationRecordSkipIssuesWithIdEmptyTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"amplificationItems\":[]}";
+    String expected = "{\"id\":\"777\",\"amplificationItems\":[],\"created\":\"1970-01-01T01:00:00.000+01:00\"}";
 
     // State
-    AmplificationRecord record = AmplificationRecord.newBuilder().setId("777").build();
+    AmplificationRecord record = AmplificationRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(record);
@@ -431,7 +441,7 @@ public class GbifJsonConverterTest {
   public void multimediaRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"multimediaItems\":[]}";
+    String expected = "{\"id\":\"777\"}";
 
     // State
     MultimediaRecord record = MultimediaRecord.newBuilder().setId("777").build();
@@ -448,10 +458,7 @@ public class GbifJsonConverterTest {
   public void multimediaRecordSkipIssuesWithIdEmptyTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"multimediaItems\":[{\"type\": null, \"format\": null, \"identifier\": null, "
-        + "\"references\": null, \"title\": null, \"description\": null, \"source\": null, \"audience\": null, "
-        + "\"created\": null, \"creator\": null, \"contributor\": null, \"publisher\": null, \"license\": null, "
-        + "\"rightsHolder\": null, \"datasetId\": null}]}";
+    String expected = "{\"id\":\"777\",\"multimediaItems\":[{}]}";
 
     // State
     MultimediaRecord record = MultimediaRecord.newBuilder()
@@ -511,4 +518,5 @@ public class GbifJsonConverterTest {
     Assert.assertEquals(expected, result);
     Assert.assertTrue(JsonValidationUtils.isValid(result));
   }
+
 }

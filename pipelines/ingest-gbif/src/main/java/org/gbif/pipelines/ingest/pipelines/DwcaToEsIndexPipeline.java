@@ -11,7 +11,6 @@ import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -33,7 +32,6 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.specific.AustraliaSpatialTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -126,8 +124,6 @@ public class DwcaToEsIndexPipeline {
     final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
     final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
     final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
-    // Specific
-    final TupleTag<AustraliaSpatialRecord> asrTag = new TupleTag<AustraliaSpatialRecord>() {};
 
     String tmpDir = FsUtils.getTempDir(options);
 
@@ -146,7 +142,7 @@ public class DwcaToEsIndexPipeline {
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(datasetId))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath))
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()))
             .apply("Convert into view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
@@ -163,17 +159,9 @@ public class DwcaToEsIndexPipeline {
             .apply("Interpret temporal", TemporalTransform.interpret())
             .apply("Map Temporal to KV", TemporalTransform.toKv());
 
-    PCollection<LocationRecord> locationCollection =
+    PCollection<KV<String, LocationRecord>> locationCollection =
         uniqueRecords
-            .apply("Interpret location", LocationTransform.interpret(propertiesPath));
-
-    PCollection<KV<String, AustraliaSpatialRecord>> australiaSpatialCollection =
-        locationCollection
-            .apply("Interpret Australia spatial", AustraliaSpatialTransform.interpret(propertiesPath))
-            .apply("Map Australia spatial to KV", AustraliaSpatialTransform.toKv());
-
-    PCollection<KV<String, LocationRecord>> locationKvCollection =
-        locationCollection
+            .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView))
             .apply("Map Location to KV", LocationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
@@ -204,7 +192,7 @@ public class DwcaToEsIndexPipeline {
 
     log.info("Adding step 4: Group and convert object into a json");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, asrTag, metadataView)
+        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
             .converter();
 
     PCollection<String> jsonCollection =
@@ -212,15 +200,13 @@ public class DwcaToEsIndexPipeline {
             // Core
             .of(brTag, basicCollection)
             .and(trTag, temporalCollection)
-            .and(lrTag, locationKvCollection)
+            .and(lrTag, locationCollection)
             .and(txrTag, taxonCollection)
             // Extension
             .and(mrTag, multimediaCollection)
             .and(irTag, imageCollection)
             .and(arTag, audubonCollection)
             .and(mfrTag, measurementCollection)
-            // Specific
-            .and(asrTag, australiaSpatialCollection)
             // Raw
             .and(erTag, verbatimCollection)
             // Apply

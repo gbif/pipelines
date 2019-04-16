@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
+import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
@@ -16,6 +17,7 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.transforms.CheckTransforms;
@@ -35,6 +37,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
@@ -106,29 +109,29 @@ public class LocationTransform {
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> interpret() {
-    return ParDo.of(new Interpreter());
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(PCollectionView<MetadataRecord> metadataView) {
+    return ParDo.of(new Interpreter(metadataView)).withSideInputs(metadataView);
   }
 
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KvConfig kvConfig) {
-    return ParDo.of(new Interpreter(kvConfig));
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KvConfig kvConfig, PCollectionView<MetadataRecord> metadataView) {
+    return ParDo.of(new Interpreter(kvConfig, metadataView)).withSideInputs(metadataView);
   }
 
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KeyValueStore<LatLng, String> kvStore) {
-    return ParDo.of(new Interpreter(kvStore));
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KeyValueStore<LatLng, String> kvStore, PCollectionView<MetadataRecord> metadataView) {
+    return ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView);
   }
 
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(String properties) {
-    return ParDo.of(new Interpreter(properties));
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(String properties, PCollectionView<MetadataRecord> metadataView) {
+    return ParDo.of(new Interpreter(properties, metadataView)).withSideInputs(metadataView);
   }
 
   /**
@@ -140,24 +143,29 @@ public class LocationTransform {
     private final Counter counter = Metrics.counter(LocationTransform.class, LOCATION_RECORDS_COUNT);
 
     private final KvConfig kvConfig;
+    private final PCollectionView<MetadataRecord> metadataView;
     private KeyValueStore<LatLng, String> kvStore;
 
-    public Interpreter() {
+    public Interpreter(PCollectionView<MetadataRecord> metadataView) {
+      this.metadataView = metadataView;
       this.kvConfig = null;
       this.kvStore = null;
     }
 
-    public Interpreter(KvConfig kvConfig) {
+    public Interpreter(KvConfig kvConfig, PCollectionView<MetadataRecord> metadataView) {
       this.kvConfig = kvConfig;
+      this.metadataView = metadataView;
     }
 
-    public Interpreter(KeyValueStore<LatLng, String> kvStore) {
+    public Interpreter(KeyValueStore<LatLng, String> kvStore, PCollectionView<MetadataRecord> metadataView) {
       this.kvStore = kvStore;
+      this.metadataView = metadataView;
       this.kvConfig = null;
     }
 
-    public Interpreter(String properties) {
+    public Interpreter(String properties, PCollectionView<MetadataRecord> metadataView) {
       this.kvConfig = KvConfigFactory.create(KvConfigFactory.GEOCODE_PREFIX, Paths.get(properties));
+      this.metadataView = metadataView;
     }
 
     @Setup
@@ -196,15 +204,17 @@ public class LocationTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-          .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore))
+          .to(er -> LocationRecord.newBuilder().setId(er.getId()).setCreated(DateTime.now().getMillis()).build())
+          .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, context.sideInput(metadataView)))
           .via(LocationInterpreter::interpretContinent)
           .via(LocationInterpreter::interpretWaterBody)
           .via(LocationInterpreter::interpretStateProvince)
           .via(LocationInterpreter::interpretMinimumElevationInMeters)
           .via(LocationInterpreter::interpretMaximumElevationInMeters)
+          .via(LocationInterpreter::interpretElevation)
           .via(LocationInterpreter::interpretMinimumDepthInMeters)
           .via(LocationInterpreter::interpretMaximumDepthInMeters)
+          .via(LocationInterpreter::interpretDepth)
           .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
           .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
           .via(LocationInterpreter::interpretCoordinatePrecision)

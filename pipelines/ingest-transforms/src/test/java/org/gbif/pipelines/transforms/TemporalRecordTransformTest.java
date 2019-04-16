@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.beam.sdk.transforms.DoFn;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -34,6 +35,15 @@ public class TemporalRecordTransformTest {
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
+
+    private static class CleanDateCreate extends DoFn<TemporalRecord, TemporalRecord> {
+        @ProcessElement
+        public void processElement(ProcessContext context) {
+            TemporalRecord tr = TemporalRecord.newBuilder(context.element()).build();
+            tr.setCreated(0L);
+            context.output(tr);
+        }
+    }
 
   @Test
   @Category(NeedsRunner.class)
@@ -68,7 +78,7 @@ public class TemporalRecordTransformTest {
     final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, periodTwo, periodThree);
 
     // When
-    PCollection<TemporalRecord> dataStream = p.apply(Create.of(input)).apply(ParDo.of(new Interpreter()));
+    PCollection<TemporalRecord> dataStream = p.apply(Create.of(input)).apply(ParDo.of(new Interpreter())).apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);
@@ -109,6 +119,7 @@ public class TemporalRecordTransformTest {
                   .setModified(x.getFrom().map(Temporal::toString).orElse(null))
                   .setStartDayOfYear(1)
                   .setEndDayOfYear(365)
+                  .setCreated(0L)
                   .build();
             })
         .collect(Collectors.toList());

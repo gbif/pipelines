@@ -1,36 +1,20 @@
 package org.gbif.pipelines.core.converters;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.node.*;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Issues;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 
 import org.apache.avro.specific.SpecificRecordBase;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.POJONode;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase} objects(Avro
@@ -56,11 +40,13 @@ public class GbifJsonConverter {
 
   private static final String ID = "id";
   private static final String ISSUES = "issues";
+  private static final String CREATED_FIELD = "created";
 
   private final JsonConverter.JsonConverterBuilder builder =
       JsonConverter.builder()
           .skipKey("decimalLatitude")
           .skipKey("decimalLongitude")
+          .skipKey(CREATED_FIELD)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
           .converter(LocationRecord.class, getLocationRecordConverter())
           .converter(TemporalRecord.class, getTemporalRecordConverter())
@@ -77,6 +63,7 @@ public class GbifJsonConverter {
 
   @Singular
   private List<SpecificRecordBase> records;
+
 
   /**
    * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into string json object, suited to the new ES
@@ -118,7 +105,27 @@ public class GbifJsonConverter {
       addIssues(mainNode);
     }
 
+    getMaxCreationDate(mainNode).ifPresent(createdDate -> mainNode.set(CREATED_FIELD, new TextNode(createdDate.toString())));
+
+    Optional.ofNullable(mainNode.get("lastCrawled")).ifPresent(
+        lastCrawled -> mainNode.set("lastCrawled", new TextNode(new DateTime(lastCrawled.asLong()).toString()))
+    );
+
     return mainNode;
+  }
+
+  /**
+   * Gets the maximum/latest created date of all the records.
+   */
+  private Optional<DateTime> getMaxCreationDate(ObjectNode rootNode) {
+    return Optional.ofNullable(rootNode.get(CREATED_FIELD))
+            .map(created -> Optional.of(new DateTime(rootNode.get(CREATED_FIELD).asLong())))
+            .orElseGet(() -> records.stream()
+                    .filter(record -> Objects.nonNull(record.getSchema().getField(CREATED_FIELD)))
+                    .map(record -> record.get(CREATED_FIELD))
+                    .filter(Objects::nonNull)
+                    .map(created -> new DateTime((Long) created))
+                    .max(DateTime::compareTo));
   }
 
   @Override
@@ -182,8 +189,24 @@ public class GbifJsonConverter {
 
       Optional.ofNullable(core.get(DwcTerm.recordedBy.qualifiedName()))
           .ifPresent(x -> jc.addJsonTextFieldNoCheck("recordedBy", x));
+      Optional.ofNullable(core.get(DwcTerm.recordNumber.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("recordNumber", x));
       Optional.ofNullable(core.get(DwcTerm.organismID.qualifiedName()))
           .ifPresent(x -> jc.addJsonTextFieldNoCheck("organismId", x));
+      Optional.ofNullable(core.get(DwcTerm.samplingProtocol.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("samplingProtocol", x));
+      Optional.ofNullable(core.get(DwcTerm.eventID.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventId", x));
+      Optional.ofNullable(core.get(DwcTerm.parentEventID.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("parentEventId", x));
+      Optional.ofNullable(core.get(DwcTerm.institutionCode.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("institutionCode", x));
+      Optional.ofNullable(core.get(DwcTerm.collectionCode.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("collectionCode", x));
+      Optional.ofNullable(core.get(DwcTerm.catalogNumber.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("catalogNumber", x));
+      Optional.ofNullable(core.get(DwcTerm.occurrenceID.qualifiedName()))
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("occurrenceId", x));
 
       // Core
       ObjectNode coreNode = JsonConverter.createObjectNode();
@@ -192,13 +215,15 @@ public class GbifJsonConverter {
       // Extensions
       ObjectNode extNode = JsonConverter.createObjectNode();
       ext.forEach((k, v) -> {
-        ArrayNode extArrayNode = JsonConverter.createArrayNode();
-        v.forEach(m -> {
-          ObjectNode ns = JsonConverter.createObjectNode();
-          m.forEach((ks, vs) -> jc.addJsonRawField(ns, ks, vs));
-          extArrayNode.add(ns);
-        });
-        extNode.set(k, extArrayNode);
+        if (!v.isEmpty()) {
+          ArrayNode extArrayNode = JsonConverter.createArrayNode();
+          v.forEach(m -> {
+            ObjectNode ns = JsonConverter.createObjectNode();
+            m.forEach((ks, vs) -> jc.addJsonRawField(ns, ks, vs));
+            extArrayNode.add(ns);
+          });
+          extNode.set(k, extArrayNode);
+        }
       });
 
       // Verbatim
@@ -236,7 +261,10 @@ public class GbifJsonConverter {
         ObjectNode node = JsonConverter.createObjectNode();
         node.put("lon", lr.getDecimalLongitude());
         node.put("lat", lr.getDecimalLatitude());
+        //geo_point
         jc.addJsonObject("coordinates", node);
+        //geo_shape
+        jc.addJsonTextFieldNoCheck("scoordinates", "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude()  + ")");
       }
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
@@ -264,7 +292,7 @@ public class GbifJsonConverter {
 
       Optional.ofNullable(tr.getEventDate())
           .map(EventDate::getGte)
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("startDate", x));
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventDateSingle", x));
 
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
@@ -299,35 +327,52 @@ public class GbifJsonConverter {
    */
   private BiConsumer<JsonConverter, SpecificRecordBase> getTaxonomyRecordConverter() {
     return (jc, record) -> {
-      TaxonRecord tr = (TaxonRecord) record;
+      TaxonRecord trOrg = (TaxonRecord) record;
+      //Copy only the fields that are needed in the Index
+      TaxonRecord.Builder trBuilder = TaxonRecord.newBuilder()
+                        .setAcceptedUsage(trOrg.getAcceptedUsage())
+                        .setClassification(trOrg.getClassification())
+                        .setSynonym(trOrg.getSynonym())
+                        .setUsage(trOrg.getUsage())
+                        .setUsageParsedName(trOrg.getUsageParsedName())
+                        .setDiagnostics(trOrg.getDiagnostics())
+                        .setIssues(null); //Issues are accumulated
 
       if (!skipId) {
-        jc.addJsonTextFieldNoCheck(ID, tr.getId());
+        jc.addJsonTextFieldNoCheck(ID, trOrg.getId());
       }
 
+      TaxonRecord tr = trBuilder.build();
+
+
+      //Create a ObjectNode with the specific fields copied from the original record
+      ObjectNode classificationNode = JsonConverter.createObjectNode();
+      jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
+      Collection<IntNode> taxonKey = new HashSet<>();
       if (classifications != null && !classifications.isEmpty()) {
-        List<ObjectNode> nodes = new ArrayList<>(classifications.size());
-        for (int i = 0; i < classifications.size(); i++) {
-          RankedName name = classifications.get(i);
-          ObjectNode node = JsonConverter.createObjectNode();
-          node.put("taxonKey", name.getKey());
-          node.put("name", name.getName());
-          node.put("depthKey_" + i, name.getKey());
-          node.put("kingdomKey", name.getKey());
-          node.put("rank", name.getRank().name());
-          nodes.add(node);
-        }
-        jc.addJsonArray("backbone", nodes);
+        //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
+        StringJoiner pathJoiner = new StringJoiner("_");
+        classifications.forEach(rankedName -> {
+            String lwRank = rankedName.getRank().name().toLowerCase();
+            classificationNode.put(lwRank + "Key", rankedName.getKey());
+            classificationNode.put(lwRank, rankedName.getName());
+            taxonKey.add(IntNode.valueOf(rankedName.getKey()));
+            if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getRank() != rankedName.getRank()) {
+              pathJoiner.add(rankedName.getKey().toString());
+            }
+          }
+        );
+        classificationNode.put("classificationPath", "_"  + pathJoiner.toString());
+        //All key are concatenated to support a single taxonKey field
+        ArrayNode taxonKeyNode = classificationNode.putArray("taxonKey");
+        taxonKeyNode.addAll(taxonKey);
       }
-
-      // Other Gbif fields
-      Optional.ofNullable(tr.getUsage()).ifPresent(
-          usage -> {
-            jc.addJsonTextFieldNoCheck("gbifTaxonKey", usage.getKey().toString());
-            jc.addJsonTextFieldNoCheck("gbifScientificName", usage.getName());
-            jc.addJsonTextFieldNoCheck("gbifTaxonRank", usage.getRank().name());
-          });
+      Optional.ofNullable(tr.getUsageParsedName()).ifPresent(pn -> { //Required by API V1
+        ObjectNode usageParsedNameNode =  (ObjectNode)classificationNode.get("usageParsedName");
+        usageParsedNameNode.put("genericName", pn.getGenus() != null ? pn.getGenus(): pn.getUninomial());
+      });
+      jc.addJsonObject("gbifClassification", classificationNode);
     };
   }
 

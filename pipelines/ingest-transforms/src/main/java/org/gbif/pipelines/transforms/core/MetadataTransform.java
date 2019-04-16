@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
@@ -26,6 +27,7 @@ import org.apache.beam.sdk.values.PCollection;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.joda.time.DateTime;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
@@ -100,15 +102,15 @@ public class MetadataTransform {
   /**
    * Creates an {@link Interpreter} for {@link MetadataRecord}
    */
-  public static SingleOutput<String, MetadataRecord> interpret(WsConfig wsConfig) {
-    return ParDo.of(new Interpreter(wsConfig));
+  public static SingleOutput<String, MetadataRecord> interpret(WsConfig wsConfig, String endpointType) {
+    return ParDo.of(new Interpreter(wsConfig, endpointType));
   }
 
   /**
    * Creates an {@link Interpreter} for {@link MetadataRecord}
    */
-  public static SingleOutput<String, MetadataRecord> interpret(String properties) {
-    return ParDo.of(new Interpreter(properties));
+  public static SingleOutput<String, MetadataRecord> interpret(String properties, String endpointType) {
+    return ParDo.of(new Interpreter(properties, endpointType));
   }
 
   /**
@@ -122,18 +124,22 @@ public class MetadataTransform {
     private final Counter counter = Metrics.counter(MetadataTransform.class, METADATA_RECORDS_COUNT);
 
     private final WsConfig wsConfig;
+    private final String endpointType;
     private MetadataServiceClient client;
 
     public Interpreter() {
       this.wsConfig = null;
+      this.endpointType = null;
     }
 
-    public Interpreter(WsConfig wsConfig) {
+    public Interpreter(WsConfig wsConfig, String endpointType) {
       this.wsConfig = wsConfig;
+      this.endpointType = endpointType;
     }
 
-    public Interpreter(String properties) {
+    public Interpreter(String properties, String endpointType) {
       this.wsConfig = WsConfigFactory.create(WsConfigFactory.METADATA_PREFIX, Paths.get(properties));
+      this.endpointType = endpointType;
     }
 
     @Setup
@@ -146,8 +152,9 @@ public class MetadataTransform {
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
-          .to(id -> MetadataRecord.newBuilder().setId(id).build())
+          .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(DateTime.now().getMillis()).build())
           .via(MetadataInterpreter.interpret(client))
+          .via(MetadataInterpreter.interpretEndointType(endpointType))
           .consume(context::output);
 
       counter.inc();

@@ -1,31 +1,165 @@
 {
-  "record": {
+  "record" : {
+    "dynamic_templates": [
+      {
+        "verbatim": {
+          "path_match": "verbatim.*",
+          "mapping": {
+            "type": "keyword",
+            "copy_to": "all"
+          }
+        }
+      },
+      {
+        "gbif_classification_rank": {
+          "path_match": "gbifClassification.*.rank",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "gbif_classification_keys": {
+          "path_match": "gbifClassification.classification.*Key",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "gbif_classification_name": {
+          "path_match": "gbifClassification.classification.name",
+          "mapping": {
+            "type": "text", "boost": 90, "copy_to": "all"
+          }
+        }
+      },
+      {
+        "gbif_classification_synonym": {
+          "path_match": "gbifClassification.classification.synonym",
+          "mapping": {
+            "type": "boolean"
+          }
+        }
+      },
+      {
+        "gbif_classification_path": {
+          "path_match": "gbifClassification.classificationPath",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "gbif_classification_scientificname": {
+          "path_match": "gbifClassification.usage.name",
+          "mapping": {
+            "type": "text", "boost": 100, "copy_to": "all"
+          }
+        }
+      },
+      {
+        "gbif_classification_accepted_usage": {
+          "path_match": "gbifClassification.acceptedUsage.name",
+          "mapping": {
+            "type": "text", "boost": 100, "copy_to": "all"
+          }
+        }
+      },
+      {
+        "gbif_classification_diagnostics_match_type": {
+          "path_match": "gbifClassification.diagnostics.matchType",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "gbif_classification_diagnostics_match_status": {
+          "path_match": "gbifClassification.diagnostics.status",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "gbif_parsed_name_year": {
+          "path_match": "gbifClassification.usageParsedName.*Authorship.year",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "gbif_parsed_name_state": {
+          "path_match": "gbifClassification.usageParsedName.state",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "gbif_parsed_name_type": {
+          "path_match": "gbifClassification.usageParsedName.type",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "gbif_parsed_name_notho": {
+          "path_match": "gbifClassification.usageParsedName.notho",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      }
+    ],
     "properties": {
 
       "all": {"type": "text"},
 
+      "id": {"type": "keyword"},
+      "lastCrawled": {"type": "date"},
+      "created": {"type": "date"},
+
       "datasetKey": {"type": "keyword"},
       "datasetTitle": {"type": "keyword", "copy_to": "all"},
       "installationKey": {"type": "keyword"},
-      "publishingOrganizationKey": {"type": "keyword"},
       "endorsingNodeKey": {"type": "keyword"},
       "publisherTitle": {"type": "keyword", "copy_to": "all"},
+      "license": {"type": "keyword", "copy_to": "all"},
+      "protocol": {"type": "keyword", "copy_to": "all"},
+      "publishingCountry": {"type": "keyword", "copy_to": "all"},
+      "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
+      "publishingOrganizationKey": {"type": "keyword"},
+
+
 
       "basisOfRecord": {"type": "keyword"},
-      "sex": {"type": "text", "copy_to": "all"},
-      "lifeStage": {"type":  "text", "copy_to": "all"},
+      "sex": {"type": "keyword", "copy_to": "all"},
+      "lifeStage": {"type":  "keyword", "copy_to": "all"},
       "establishmentMeans": {"type": "text", "copy_to": "all"},
       "individualCount": {"type": "integer"},
-      "typeStatus": {"type": "text", "copy_to": "all"},
+      "typeStatus": {"type": "keyword", "copy_to": "all"},
+      "typifiedName": {"type": "keyword", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
-      "recordedBy": {"type": "keyword", "copy_to": "all"},
-      "organismId": {"type": "keyword"},
+      "recordedBy": {"type": "keyword", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "recordNumber": {"type": "keyword", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "organismId": {"type": "keyword", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "samplingProtocol":  {"type": "keyword", "copy_to": "all"},
+      "eventId":  {"type": "keyword", "copy_to": "all"},
+      "parentEventId":  {"type": "keyword", "copy_to": "all"},
+      "institutionCode":  {"type": "keyword", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "collectionCode":  {"type": "keyword", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "catalogNumber":  {"type": "keyword", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "occurrenceId":  {"type": "keyword", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
 
-      "continent": {"type":"keyword"},
-      "waterBody": {"type":"text", "copy_to": "all"},
-      "countryCode": {"type":"keyword"},
+      "continent": {"type":"keyword", "copy_to": "all"},
+      "waterBody": {"type":"text", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "countryCode": {"type":"keyword", "copy_to": "all"},
       "country": {"type":"text", "copy_to": "all"},
-      "stateProvince": {"type":"text", "copy_to": "all"},
+      "stateProvince": {"type":"text", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "minimumElevationInMeters": {"type":"double"},
       "maximumElevationInMeters": {"type":"double"},
       "minimumDepthInMeters": {"type":"double"},
@@ -35,6 +169,7 @@
       "coordinateUncertaintyInMeters": {"type":"double"},
       "coordinatePrecision": {"type":"double"},
       "coordinates": {"type": "geo_point"},
+      "scoordinates": {"type": "geo_shape"},
 
       "year": {"type": "integer"},
       "month": {"type": "integer"},
@@ -44,18 +179,12 @@
       "endDayOfYear": {"type": "integer"},
       "modified": {"type": "date"},
       "dateIdentified": {"type": "date"},
-      "startDate": {"type": "date"},
+      "eventDateSingle": {"type": "date"},
 
-      "gbifScientificName": {"type": "text", "boost": 100, "copy_to": "all"},
-      "gbifTaxonKey": {"type": "keyword"},
-      "gbifTaxonRank": {"type": "keyword"},
+      "issues": {"type": "keyword"},
+      "notIssues": {"type": "keyword"},
 
-      "synonym": {"type": "boolean"},
-      "usage":  {"type": "object", "enabled": false},
-      "classification": {"type": "object", "enabled": false},
-      "acceptedUsage":{"type": "object", "enabled": false},
-      "nomenclature":{"type": "text", "copy_to": "all"},
-
+      "gbifClassification": {"type": "object"},
       "multimediaItems": {"type": "nested", "enabled": false},
       "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},
