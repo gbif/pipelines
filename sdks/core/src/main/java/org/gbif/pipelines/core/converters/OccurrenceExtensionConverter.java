@@ -21,8 +21,11 @@ public class OccurrenceExtensionConverter {
 
   public static List<ExtendedRecord> convert(ExtendedRecord er) {
     List<Map<String, String>> occurrenceExts = er.getExtensions().get(DwcTerm.Occurrence.qualifiedName());
-    if (occurrenceExts == null || occurrenceExts.isEmpty()) {
+    if (occurrenceExts == null) {
       return Collections.emptyList();
+    }
+    if (occurrenceExts.isEmpty()) {
+      return Collections.singletonList(er);
     }
 
     Map<String, String> coreTerms = er.getCoreTerms();

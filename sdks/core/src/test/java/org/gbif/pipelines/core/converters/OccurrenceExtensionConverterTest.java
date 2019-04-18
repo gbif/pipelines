@@ -28,6 +28,22 @@ public class OccurrenceExtensionConverterTest {
   }
 
   @Test
+  public void emptyOccurrenceAsExtensionTest() {
+    // State
+    ExtendedRecord er = ExtendedRecord.newBuilder()
+        .setId("777")
+        .setExtensions(Collections.singletonMap(DwcTerm.Occurrence.qualifiedName(), Collections.emptyList()))
+        .build();
+
+    // When
+    List<ExtendedRecord> result = OccurrenceExtensionConverter.convert(er);
+
+    // Should
+    Assert.assertNotNull(result);
+    Assert.assertEquals(1, result.size());
+  }
+
+  @Test
   public void occurrenceAsExtensionTest() {
     // State
     String id = "1";
