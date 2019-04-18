@@ -5,7 +5,6 @@ import java.io.Serializable;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -32,6 +31,60 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
+/**
+ * Beam level transformations for the ES output json. The transformation consumes objects, which classes were generated
+ * from avro schema files and converts into json string object
+ *
+ * <p>
+ * Example:
+ * <p>
+ *
+ * <pre>{@code
+ *
+ * final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
+ * final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
+ * final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
+ * final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
+ * final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
+ * final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
+ * final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
+ * final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
+ * final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
+ *
+ * PCollectionView<MetadataRecord> metadataView = ...
+ * PCollection<KV<String, ExtendedRecord>> verbatimCollection = ...
+ * PCollection<KV<String, BasicRecord>> basicCollection = ...
+ * PCollection<KV<String, TemporalRecord>> temporalCollection = ...
+ * PCollection<KV<String, LocationRecord>> locationCollection = ...
+ * PCollection<KV<String, TaxonRecord>> taxonCollection = ...
+ * PCollection<KV<String, MultimediaRecord>> multimediaCollection = ...
+ * PCollection<KV<String, ImageRecord>> imageCollection = ...
+ * PCollection<KV<String, AudubonRecord>> audubonCollection = ...
+ * PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection = ...
+ *
+ * SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
+ *     GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
+ *         .converter();
+ *
+ * PCollection<String> jsonCollection =
+ *     KeyedPCollectionTuple
+ *         // Core
+ *         .of(brTag, basicCollection)
+ *         .and(trTag, temporalCollection)
+ *         .and(lrTag, locationCollection)
+ *         .and(txrTag, taxonCollection)
+ *         // Extension
+ *         .and(mrTag, multimediaCollection)
+ *         .and(irTag, imageCollection)
+ *         .and(arTag, audubonCollection)
+ *         .and(mfrTag, measurementCollection)
+ *         // Raw
+ *         .and(erTag, verbatimCollection)
+ *         // Apply
+ *         .apply("Grouping objects", CoGroupByKey.create())
+ *         .apply("Merging to json", gbifJsonDoFn);
+ * }</pre>
+ */
 @Slf4j
 @AllArgsConstructor(staticName = "create")
 public class GbifJsonTransform implements Serializable {
