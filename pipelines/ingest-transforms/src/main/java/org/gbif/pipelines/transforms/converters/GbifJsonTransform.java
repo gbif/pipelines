@@ -27,12 +27,11 @@ import org.apache.beam.sdk.values.TupleTag;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 
 /**
- * Beam level transformations for the ES output json. The transformation consumes objects, which classes were generated
+ * Beam level transformation for the ES output json. The transformation consumes objects, which classes were generated
  * from avro schema files and converts into json string object
  *
  * <p>
@@ -85,7 +84,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  *         .apply("Merging to json", gbifJsonDoFn);
  * }</pre>
  */
-@Slf4j
 @AllArgsConstructor(staticName = "create")
 public class GbifJsonTransform implements Serializable {
 
