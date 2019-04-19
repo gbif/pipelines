@@ -14,8 +14,8 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.converters.converter.HashUtils.getSha1;
 import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
+import static org.gbif.pipelines.core.utils.HashUtils.getSha1;
 
 /**
  * Converts DWC archive into {@link ExtendedRecord} AVRO file

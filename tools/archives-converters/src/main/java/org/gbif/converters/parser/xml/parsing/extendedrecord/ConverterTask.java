@@ -16,8 +16,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.converters.converter.HashUtils.getSha1;
 import static org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter.RECORD_ID_ERROR;
+import static org.gbif.pipelines.core.utils.HashUtils.getSha1;
 
 /**
  * The task for CompletableFuture which reads a xml response file, parses and converts to
