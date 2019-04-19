@@ -70,6 +70,9 @@ public class PipelinesVariables {
 
     public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
+
+    public static final String OCCURRENCE_EXT_COUNT = "occurrenceExtCount";
+    public static final String HASH_ID_COUNT = "hashIdCount";
     // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";
