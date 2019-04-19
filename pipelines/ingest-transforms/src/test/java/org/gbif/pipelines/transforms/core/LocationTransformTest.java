@@ -1,7 +1,10 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
@@ -51,7 +54,6 @@ public class LocationTransformTest {
     KeyValueTestStore<LatLng, String> kvStore = new KeyValueTestStore<>();
     kvStore.put(new LatLng(56.26d, 9.51d), Country.DENMARK.getIso2LetterCode());
     kvStore.put(new LatLng(36.21d, 138.25d), Country.JAPAN.getIso2LetterCode());
-    long dateCreated = new Date().getTime();
 
     final String[] denmark = {
         "0",

@@ -1,17 +1,21 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transforms.extension;
 
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.beam.sdk.transforms.DoFn;
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.transforms.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
 import org.apache.beam.sdk.testing.TestPipeline;
 import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 import org.junit.Rule;
@@ -36,6 +40,7 @@ public class MultimediaRecordTransformTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   private static class CleanDateCreate extends DoFn<MultimediaRecord, MultimediaRecord> {
+
     @ProcessElement
     public void processElement(ProcessContext context) {
       MultimediaRecord mdr = MultimediaRecord.newBuilder(context.element()).build();
@@ -50,7 +55,7 @@ public class MultimediaRecordTransformTest {
 
     // State
     Map<String, String> extension =
-        ExtendedRecordCustomBuilder.createMultimediaExtensionBuilder()
+        ExtendedRecordCustomBuilder.MultimediaExtensionBuilder.builder()
             .identifier(URI)
             .format("image/jpeg")
             .title(TITLE)
@@ -60,7 +65,8 @@ public class MultimediaRecordTransformTest {
             .created(CREATED)
             .source(SOURCE)
             .type("image")
-            .build();
+            .build()
+            .toMap();
 
     ExtendedRecord extendedRecord =
         ExtendedRecordCustomBuilder.create()

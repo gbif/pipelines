@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transforms.core;
 
 import java.io.IOException;
 import java.io.Serializable;

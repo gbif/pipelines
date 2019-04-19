@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transforms.core;
 
 import java.util.Collections;
 
@@ -9,6 +9,7 @@ import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
+import org.gbif.pipelines.transforms.ExtendedRecordCustomBuilder;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform.Interpreter;
 import org.gbif.rest.client.species.NameUsageMatch;
 
