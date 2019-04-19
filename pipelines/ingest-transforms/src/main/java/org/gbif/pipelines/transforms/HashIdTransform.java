@@ -7,18 +7,25 @@ import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.HASH_ID_COUNT;
 
-@AllArgsConstructor(staticName = "create")
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class HashIdTransform extends DoFn<ExtendedRecord, ExtendedRecord> {
 
   private final Counter counter = Metrics.counter(GbifJsonTransform.class, HASH_ID_COUNT);
 
   // Id prefix
   private final String datasetId;
+
+  public static SingleOutput<ExtendedRecord, ExtendedRecord> create(String datasetId) {
+    return ParDo.of(new HashIdTransform(datasetId));
+  }
 
   @ProcessElement
   public void processElement(@Element ExtendedRecord er, OutputReceiver<ExtendedRecord> out) {

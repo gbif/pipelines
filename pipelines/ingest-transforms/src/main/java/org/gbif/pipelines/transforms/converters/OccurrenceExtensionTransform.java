@@ -7,7 +7,10 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_COUNT;
@@ -17,10 +20,14 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EX
  *
  * @see <a href="https://github.com/gbif/ipt/wiki/BestPracticesSamplingEventData>Sampling event</a>
  */
-@NoArgsConstructor(staticName = "create")
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedRecord> {
 
   private final Counter counter = Metrics.counter(GbifJsonTransform.class, OCCURRENCE_EXT_COUNT);
+
+  public static SingleOutput<ExtendedRecord, ExtendedRecord> create() {
+    return ParDo.of(new OccurrenceExtensionTransform());
+  }
 
   @ProcessElement
   public void processElement(@Element ExtendedRecord er, OutputReceiver<ExtendedRecord> out) {
