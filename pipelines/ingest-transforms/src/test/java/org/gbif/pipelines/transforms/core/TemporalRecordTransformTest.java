@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@Category(NeedsRunner.class)
 public class TemporalRecordTransformTest {
 
   @Rule
@@ -46,7 +47,6 @@ public class TemporalRecordTransformTest {
     }
 
   @Test
-  @Category(NeedsRunner.class)
   public void transformationTest() {
     // State
     final List<ExtendedRecord> input =

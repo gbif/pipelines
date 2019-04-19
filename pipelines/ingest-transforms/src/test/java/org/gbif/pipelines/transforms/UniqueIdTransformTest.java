@@ -19,13 +19,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@Category(NeedsRunner.class)
 public class UniqueIdTransformTest {
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  @Category(NeedsRunner.class)
   public void filterDuplicateDifferentTest() {
     // State
     final List<ExtendedRecord> input = createCollection("0001_1", "0001_1", "0001_2", "0002_1", "0003_1", "0004_1");
@@ -40,7 +40,6 @@ public class UniqueIdTransformTest {
   }
 
   @Test
-  @Category(NeedsRunner.class)
   public void filterDuplicateIdenticalTest() {
     // State
     final List<ExtendedRecord> input = createCollection("0001_1", "0001_1", "0001_1", "0002_1", "0003_1", "0004_1");

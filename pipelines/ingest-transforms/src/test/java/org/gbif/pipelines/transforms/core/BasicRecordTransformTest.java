@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@Category(NeedsRunner.class)
 public class BasicRecordTransformTest {
 
   @Rule public final transient TestPipeline p = TestPipeline.create();
@@ -38,7 +39,6 @@ public class BasicRecordTransformTest {
     }
 
   @Test
-  @Category(NeedsRunner.class)
   public void transformationTest() {
 
     // State

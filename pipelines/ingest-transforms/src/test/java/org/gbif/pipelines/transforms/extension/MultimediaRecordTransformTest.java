@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@Category(NeedsRunner.class)
 public class MultimediaRecordTransformTest {
 
   private static final String RECORD_ID = "123";
@@ -50,7 +51,6 @@ public class MultimediaRecordTransformTest {
   }
 
   @Test
-  @Category(NeedsRunner.class)
   public void transformationTest() {
 
     // State

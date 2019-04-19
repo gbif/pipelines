@@ -32,6 +32,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@Category(NeedsRunner.class)
 public class LocationTransformTest {
 
   private static class RemoveDateCreated extends DoFn<LocationRecord, LocationRecord> implements Serializable {
@@ -47,7 +48,6 @@ public class LocationTransformTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  @Category(NeedsRunner.class)
   public void transformationTest() {
 
     // State
