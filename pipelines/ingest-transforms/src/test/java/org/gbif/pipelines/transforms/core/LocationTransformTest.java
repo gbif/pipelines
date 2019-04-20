@@ -1,7 +1,10 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
@@ -29,6 +32,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
+@Category(NeedsRunner.class)
 public class LocationTransformTest {
 
   private static class RemoveDateCreated extends DoFn<LocationRecord, LocationRecord> implements Serializable {
@@ -44,14 +48,12 @@ public class LocationTransformTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  @Category(NeedsRunner.class)
   public void transformationTest() {
 
     // State
     KeyValueTestStore<LatLng, String> kvStore = new KeyValueTestStore<>();
     kvStore.put(new LatLng(56.26d, 9.51d), Country.DENMARK.getIso2LetterCode());
     kvStore.put(new LatLng(36.21d, 138.25d), Country.JAPAN.getIso2LetterCode());
-    long dateCreated = new Date().getTime();
 
     final String[] denmark = {
         "0",

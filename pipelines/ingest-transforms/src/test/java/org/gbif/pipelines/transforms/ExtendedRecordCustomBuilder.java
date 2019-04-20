@@ -11,26 +11,20 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
 /**
  * Builder for a {@link ExtendedRecord}.
  *
  * <p>Recommended for testing purposes.
  */
+@NoArgsConstructor(staticName = "create")
 public class ExtendedRecordCustomBuilder {
 
   private String name;
   private String id;
   private Map<String, List<Map<String, String>>> extensions;
-
-  private ExtendedRecordCustomBuilder() {}
-
-  public static ExtendedRecordCustomBuilder create() {
-    return new ExtendedRecordCustomBuilder();
-  }
-
-  public static MultimediaExtensionBuilder createMultimediaExtensionBuilder() {
-    return new MultimediaExtensionBuilder();
-  }
 
   public ExtendedRecordCustomBuilder name(String name) {
     this.name = name;
@@ -75,6 +69,7 @@ public class ExtendedRecordCustomBuilder {
     }
   }
 
+  @Builder
   public static class MultimediaExtensionBuilder {
 
     // AUDUBON Extension
@@ -88,54 +83,7 @@ public class ExtendedRecordCustomBuilder {
     private String creator;
     private String created;
 
-    private MultimediaExtensionBuilder() {}
-
-    public MultimediaExtensionBuilder format(String format) {
-      this.format = format;
-      return this;
-    }
-
-    public MultimediaExtensionBuilder identifier(String identifier) {
-      this.identifier = identifier;
-      return this;
-    }
-
-    public MultimediaExtensionBuilder title(String title) {
-      this.title = title;
-      return this;
-    }
-
-    public MultimediaExtensionBuilder description(String description) {
-      this.description = description;
-      return this;
-    }
-
-    public MultimediaExtensionBuilder license(String license) {
-      this.license = license;
-      return this;
-    }
-
-    public MultimediaExtensionBuilder source(String source) {
-      this.source = source;
-      return this;
-    }
-
-    public MultimediaExtensionBuilder creator(String creator) {
-      this.creator = creator;
-      return this;
-    }
-
-    public MultimediaExtensionBuilder created(String created) {
-      this.created = created;
-      return this;
-    }
-
-    public MultimediaExtensionBuilder type(String type) {
-      this.type = type;
-      return this;
-    }
-
-    public Map<String, String> build() {
+    public Map<String, String> toMap() {
       Map<String, String> Extension = new HashMap<>();
       addToMap(Extension, DcTerm.format, format);
       addToMap(Extension, DcTerm.identifier, identifier);

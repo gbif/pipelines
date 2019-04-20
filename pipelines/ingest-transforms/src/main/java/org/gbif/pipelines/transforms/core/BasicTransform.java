@@ -33,7 +33,6 @@ import org.apache.hadoop.hbase.client.Connection;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
@@ -45,7 +44,6 @@ import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
  *
  * @see <a href="https://dwc.tdwg.org/terms/#occurrence</a>
  */
-@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BasicTransform {
 

@@ -13,6 +13,7 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
+import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
@@ -104,6 +105,7 @@ public class VerbatimToInterpretedPipeline {
     log.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", VerbatimTransform.read(options.getInputPath()))
+            .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create());
 
     log.info("Adding interpretations");
