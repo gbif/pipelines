@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord.Builder;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -20,6 +21,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import static org.gbif.dwc.terms.DwcTerm.Occurrence;
 
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
@@ -51,11 +54,12 @@ public class OccurrenceExtensionTransformTest {
     ExtendedRecord er = ExtendedRecord.newBuilder()
         .setId(id)
         .setCoreTerms(Collections.singletonMap(somethingCore, somethingCore))
-        .setExtensions(Collections.singletonMap(DwcTerm.Occurrence.qualifiedName(), Arrays.asList(ext1, ext2, ext3)))
+        .setExtensions(Collections.singletonMap(Occurrence.qualifiedName(), Arrays.asList(ext1, ext2, ext3)))
         .build();
 
     final List<ExtendedRecord> expected =
-        createCollection(id + "_" + somethingCore + "_" + somethingExt, id + "_" + somethingCore + "_" + somethingExt,
+        createCollection(false, id + "_" + somethingCore + "_" + somethingExt,
+            id + "_" + somethingCore + "_" + somethingExt,
             id + "_" + somethingCore + "_" + somethingExt);
 
     // When
@@ -66,7 +70,60 @@ public class OccurrenceExtensionTransformTest {
     p.run();
   }
 
-  private List<ExtendedRecord> createCollection(String... idName) {
+  @Test
+  public void occurrenceExtensionIsEmptyTest() {
+
+    // State
+    String id = "1";
+    String somethingCore = "somethingCore";
+
+    Map<String, String> ext = new HashMap<>(2);
+    ext.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext.put(somethingCore, somethingCore);
+
+    ExtendedRecord er = ExtendedRecord.newBuilder()
+        .setId(id)
+        .setCoreTerms(ext)
+        .setExtensions(Collections.singletonMap(Occurrence.qualifiedName(), Collections.emptyList()))
+        .build();
+
+    final List<ExtendedRecord> expected = createCollection(true, id + "_" + somethingCore);
+
+    // When
+    PCollection<ExtendedRecord> result = p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create());
+
+    // Should
+    PAssert.that(result).containsInAnyOrder(expected);
+    p.run();
+  }
+
+  @Test
+  public void noOccurrenceExtensionTest() {
+
+    // State
+    String id = "1";
+    String somethingCore = "somethingCore";
+
+    Map<String, String> ext = new HashMap<>(2);
+    ext.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext.put(somethingCore, somethingCore);
+
+    ExtendedRecord er = ExtendedRecord.newBuilder()
+        .setId(id)
+        .setCoreTerms(ext)
+        .build();
+
+    final List<ExtendedRecord> expected = createCollection(false, id + "_" + somethingCore);
+
+    // When
+    PCollection<ExtendedRecord> result = p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create());
+
+    // Should
+    PAssert.that(result).containsInAnyOrder(expected);
+    p.run();
+  }
+
+  private List<ExtendedRecord> createCollection(boolean isExt, String... idName) {
     return Arrays.stream(idName)
         .map(x -> {
           String[] array = x.split("_");
@@ -74,12 +131,19 @@ public class OccurrenceExtensionTransformTest {
           Map<String, String> ext = new HashMap<>(2);
           ext.put(DwcTerm.occurrenceID.qualifiedName(), array[0]);
           ext.put("somethingCore", array[1]);
-          ext.put("somethingExt", array[2]);
+          if (array.length == 3) {
+            ext.put("somethingExt", array[2]);
+          }
 
-          return ExtendedRecord.newBuilder()
+          Builder builder = ExtendedRecord.newBuilder()
               .setId(array[0])
-              .setCoreTerms(ext)
-              .build();
+              .setCoreTerms(ext);
+
+          if (isExt) {
+            builder.setExtensions(Collections.singletonMap(Occurrence.qualifiedName(), Collections.emptyList()));
+          }
+
+          return builder.build();
         })
         .collect(Collectors.toList());
   }
