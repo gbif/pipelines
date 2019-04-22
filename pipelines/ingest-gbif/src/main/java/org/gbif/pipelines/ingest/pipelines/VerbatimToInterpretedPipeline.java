@@ -105,7 +105,7 @@ public class VerbatimToInterpretedPipeline {
     log.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", VerbatimTransform.read(options.getInputPath()))
-            .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
+            .apply("Read occurrences from extension", OccurrenceExtensionTransform.create(datasetId))
             .apply("Filter duplicates", UniqueIdTransform.create());
 
     log.info("Adding interpretations");

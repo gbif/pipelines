@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord.Builder;
 
@@ -27,6 +28,8 @@ import static org.gbif.dwc.terms.DwcTerm.Occurrence;
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
 public class OccurrenceExtensionTransformTest {
+
+  private final String datasetId = "e8608a74-5ff4-4669-abe9-8d893f10f8d3";
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
@@ -58,12 +61,52 @@ public class OccurrenceExtensionTransformTest {
         .build();
 
     final List<ExtendedRecord> expected =
-        createCollection(false, id + "_" + somethingCore + "_" + somethingExt,
+        createCollection(false, false, id + "_" + somethingCore + "_" + somethingExt,
             id + "_" + somethingCore + "_" + somethingExt,
             id + "_" + somethingCore + "_" + somethingExt);
 
     // When
     PCollection<ExtendedRecord> result = p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create());
+
+    // Should
+    PAssert.that(result).containsInAnyOrder(expected);
+    p.run();
+  }
+
+
+  @Test
+  public void extensionContainsOccurrenceHashTest() {
+
+    // State
+    String id = "1";
+    String somethingCore = "somethingCore";
+    String somethingExt = "somethingExt";
+
+    Map<String, String> ext1 = new HashMap<>(2);
+    ext1.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext1.put(somethingExt, somethingExt);
+
+    Map<String, String> ext2 = new HashMap<>(2);
+    ext2.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext2.put(somethingExt, somethingExt);
+
+    Map<String, String> ext3 = new HashMap<>(2);
+    ext3.put(DwcTerm.occurrenceID.qualifiedName(), id);
+    ext3.put(somethingExt, somethingExt);
+
+    ExtendedRecord er = ExtendedRecord.newBuilder()
+        .setId(id)
+        .setCoreTerms(Collections.singletonMap(somethingCore, somethingCore))
+        .setExtensions(Collections.singletonMap(Occurrence.qualifiedName(), Arrays.asList(ext1, ext2, ext3)))
+        .build();
+
+    final List<ExtendedRecord> expected =
+        createCollection(false, true, id + "_" + somethingCore + "_" + somethingExt,
+            id + "_" + somethingCore + "_" + somethingExt,
+            id + "_" + somethingCore + "_" + somethingExt);
+
+    // When
+    PCollection<ExtendedRecord> result = p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create(datasetId));
 
     // Should
     PAssert.that(result).containsInAnyOrder(expected);
@@ -87,7 +130,7 @@ public class OccurrenceExtensionTransformTest {
         .setExtensions(Collections.singletonMap(Occurrence.qualifiedName(), Collections.emptyList()))
         .build();
 
-    final List<ExtendedRecord> expected = createCollection(true, id + "_" + somethingCore);
+    final List<ExtendedRecord> expected = createCollection(true, false, id + "_" + somethingCore);
 
     // When
     PCollection<ExtendedRecord> result = p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create());
@@ -113,7 +156,7 @@ public class OccurrenceExtensionTransformTest {
         .setCoreTerms(ext)
         .build();
 
-    final List<ExtendedRecord> expected = createCollection(false, id + "_" + somethingCore);
+    final List<ExtendedRecord> expected = createCollection(false, false, id + "_" + somethingCore);
 
     // When
     PCollection<ExtendedRecord> result = p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create());
@@ -123,7 +166,7 @@ public class OccurrenceExtensionTransformTest {
     p.run();
   }
 
-  private List<ExtendedRecord> createCollection(boolean isExt, String... idName) {
+  private List<ExtendedRecord> createCollection(boolean isExt, boolean isHashedId, String... idName) {
     return Arrays.stream(idName)
         .map(x -> {
           String[] array = x.split("_");
@@ -135,9 +178,13 @@ public class OccurrenceExtensionTransformTest {
             ext.put("somethingExt", array[2]);
           }
 
-          Builder builder = ExtendedRecord.newBuilder()
-              .setId(array[0])
-              .setCoreTerms(ext);
+          Builder builder = ExtendedRecord.newBuilder().setCoreTerms(ext);
+
+          if (isHashedId) {
+            builder.setId(HashUtils.getSha1(datasetId, array[0]));
+          } else {
+            builder.setId(array[0]);
+          }
 
           if (isExt) {
             builder.setExtensions(Collections.singletonMap(Occurrence.qualifiedName(), Collections.emptyList()));
