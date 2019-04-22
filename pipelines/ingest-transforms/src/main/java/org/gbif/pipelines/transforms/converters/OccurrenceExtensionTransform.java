@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.converters.OccurrenceExtensionConverter;
-import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.beam.sdk.metrics.Counter;
@@ -14,9 +13,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 
-import com.google.common.base.Strings;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_COUNT;
 
@@ -25,20 +23,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EX
  *
  * @see <a href="https://github.com/gbif/ipt/wiki/BestPracticesSamplingEventData>Sampling event</a>
  */
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedRecord> {
 
   private final Counter counter = Metrics.counter(GbifJsonTransform.class, OCCURRENCE_EXT_COUNT);
-
-  private final String datasetId;
-
-  private OccurrenceExtensionTransform() {
-    this.datasetId = null;
-  }
-
-  public static SingleOutput<ExtendedRecord, ExtendedRecord> create(String datasetId) {
-    return ParDo.of(new OccurrenceExtensionTransform(datasetId));
-  }
 
   public static SingleOutput<ExtendedRecord, ExtendedRecord> create() {
     return ParDo.of(new OccurrenceExtensionTransform());
@@ -51,11 +39,7 @@ public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedR
       Map<String, String> coreTerms = er.getCoreTerms();
       occurrenceExts.forEach(occurrence -> {
         counter.inc();
-        ExtendedRecord converted = OccurrenceExtensionConverter.convert(coreTerms, occurrence);
-        if (!Strings.isNullOrEmpty(datasetId)) {
-          converted.setId(HashUtils.getSha1(datasetId, converted.getId()));
-        }
-        out.output(converted);
+        out.output(OccurrenceExtensionConverter.convert(coreTerms, occurrence));
       });
     } else {
       out.output(er);

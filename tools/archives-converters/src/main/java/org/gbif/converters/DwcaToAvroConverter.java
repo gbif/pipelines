@@ -2,7 +2,6 @@ package org.gbif.converters;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 
 import org.gbif.converters.converter.ConverterToVerbatim;
 import org.gbif.pipelines.core.io.DwcaReader;
@@ -15,7 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
-import static org.gbif.pipelines.core.utils.HashUtils.getSha1;
 
 /**
  * Converts DWC archive into {@link ExtendedRecord} AVRO file
@@ -42,20 +40,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
    * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
    */
   @Override
-  protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) throws IOException {
-    return convert(inputPath, dataFileWriter, null);
-  }
-
-  /**
-   * Converts DWC archive into {@link ExtendedRecord} AVRO file
-   *
-   * @param inputPath Path to DWCA file
-   * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
-   * @param idHashPrefix prefix to use for hash function and get hashed id instead of raw id, as example it can be
-   * dataset ID
-   */
-  @Override
-  protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter, String idHashPrefix)
+  protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException {
     DwcaReader reader = DwcaReader.fromLocation(inputPath.toString());
     log.info("Exporting the DwC Archive to Avro started {}", inputPath);
@@ -63,9 +48,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     // Read all records
     while (reader.advance()) {
       ExtendedRecord record = reader.getCurrent();
-      String id = record.getId();
-      if (!id.equals(RECORD_ID_ERROR)) {
-        Optional.ofNullable(idHashPrefix).ifPresent(x -> record.setId(getSha1(idHashPrefix, id)));
+      if (!record.getId().equals(RECORD_ID_ERROR)) {
         dataFileWriter.append(record);
       }
     }

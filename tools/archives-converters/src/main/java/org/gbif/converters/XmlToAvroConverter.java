@@ -48,17 +48,4 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
   public long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
     return ExtendedRecordConverter.crete(xmlReaderParallelism).toAvro(inputPath.toString(), dataFileWriter);
   }
-
-  /**
-   * Converts ABCD/etc archive into {@link ExtendedRecord} AVRO file
-   *
-   * @param inputPath Path to ABCD/etc file
-   * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
-   * @param idHashPrefix prefix to use for hash function and get hashed id instead of raw id, as example it can be
-   * dataset ID
-   */
-  @Override
-  public long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter, String idHashPrefix) {
-    return ExtendedRecordConverter.crete(xmlReaderParallelism, idHashPrefix).toAvro(inputPath.toString(), dataFileWriter);
-  }
 }

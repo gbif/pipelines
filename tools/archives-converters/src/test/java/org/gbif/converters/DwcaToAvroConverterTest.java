@@ -44,32 +44,4 @@ public class DwcaToAvroConverterTest {
 
   }
 
-  @Test
-  public void avroDeserializingSha1IdTest() throws IOException {
-
-    // State
-    String idPrefix = "7ef15372-1387-11e2-bb2e-00145eb45e9a";
-
-    // When
-    DwcaToAvroConverter.create().inputPath(inpPath).outputPath(outPath).idHashPrefix(idPrefix).convert();
-
-    // Should
-    File verbatim = new File(outPath);
-    Assert.assertTrue(verbatim.exists());
-
-    // Deserialize ExtendedRecord from disk
-    DatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
-    try (DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(verbatim, datumReader)) {
-      while (dataFileReader.hasNext()) {
-        ExtendedRecord record = dataFileReader.next();
-        Assert.assertNotNull(record);
-        Assert.assertNotNull(record.getId());
-        Assert.assertEquals(40, record.getId().length());
-      }
-    }
-
-    Files.deleteIfExists(verbatim.toPath());
-
-  }
-
 }

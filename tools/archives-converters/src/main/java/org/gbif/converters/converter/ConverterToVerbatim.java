@@ -24,7 +24,6 @@ public abstract class ConverterToVerbatim {
   private java.nio.file.Path inputPath;
   private Path outputPath;
   private Path metaPath;
-  private String idHashPrefix;
 
   public ConverterToVerbatim hdfsSiteConfig(String hdfsSiteConfig) {
     this.hdfsSiteConfig = hdfsSiteConfig;
@@ -71,11 +70,6 @@ public abstract class ConverterToVerbatim {
     return this;
   }
 
-  public ConverterToVerbatim idHashPrefix(String idHashPrefix) {
-    this.idHashPrefix = idHashPrefix;
-    return this;
-  }
-
   public boolean convert() {
 
     Objects.requireNonNull(inputPath, "inputPath cannot be null");
@@ -99,7 +93,7 @@ public abstract class ConverterToVerbatim {
                 .build()
                 .createDataFileWriter()) {
 
-      long numberOfRecords = convert(inputPath, dataFileWriter, idHashPrefix);
+      long numberOfRecords = convert(inputPath, dataFileWriter);
 
       createMetafile(fs, metaPath, numberOfRecords);
 
@@ -121,10 +115,5 @@ public abstract class ConverterToVerbatim {
   }
 
   protected abstract long convert(java.nio.file.Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter)
-      throws IOException;
-
-
-  protected abstract long convert(java.nio.file.Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter,
-      String idHashPrefix)
       throws IOException;
 }

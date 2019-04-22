@@ -30,19 +30,13 @@ public class ExtendedRecordConverter {
   private static final String FILE_PREFIX_XML = ".xml";
 
   private final Executor executor;
-  private final String idHashPrefix;
 
-  private ExtendedRecordConverter(int parallelism, String idHashPrefix) {
+  private ExtendedRecordConverter(int parallelism) {
     this.executor = ExecutorPool.getInstance(parallelism);
-    this.idHashPrefix = idHashPrefix;
   }
 
   public static ExtendedRecordConverter crete(int parallelism) {
-    return new ExtendedRecordConverter(parallelism, null);
-  }
-
-  public static ExtendedRecordConverter crete(int parallelism, String idHashPrefix) {
-    return new ExtendedRecordConverter(parallelism, idHashPrefix);
+    return new ExtendedRecordConverter(parallelism);
   }
 
   /** @param inputPath path to directory with response files or a tar.xz archive */
@@ -62,7 +56,7 @@ public class ExtendedRecordConverter {
       AtomicLong counter = new AtomicLong(0);
 
       Predicate<Path> prefixPr = x -> x.toString().endsWith(FILE_PREFIX_RESPONSE) || x.toString().endsWith(FILE_PREFIX_XML);
-      Function<File, ConverterTask> taskFn = f -> new ConverterTask(f, writer, validator, counter, idHashPrefix);
+      Function<File, ConverterTask> taskFn = f -> new ConverterTask(f, writer, validator, counter);
 
       // Run async process - read a file, convert to ExtendedRecord and write to avro
       CompletableFuture[] futures =

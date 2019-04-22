@@ -73,46 +73,6 @@ public class OccurrenceExtensionTransformTest {
     p.run();
   }
 
-
-  @Test
-  public void extensionContainsOccurrenceHashTest() {
-
-    // State
-    String id = "1";
-    String somethingCore = "somethingCore";
-    String somethingExt = "somethingExt";
-
-    Map<String, String> ext1 = new HashMap<>(2);
-    ext1.put(DwcTerm.occurrenceID.qualifiedName(), id);
-    ext1.put(somethingExt, somethingExt);
-
-    Map<String, String> ext2 = new HashMap<>(2);
-    ext2.put(DwcTerm.occurrenceID.qualifiedName(), id);
-    ext2.put(somethingExt, somethingExt);
-
-    Map<String, String> ext3 = new HashMap<>(2);
-    ext3.put(DwcTerm.occurrenceID.qualifiedName(), id);
-    ext3.put(somethingExt, somethingExt);
-
-    ExtendedRecord er = ExtendedRecord.newBuilder()
-        .setId(id)
-        .setCoreTerms(Collections.singletonMap(somethingCore, somethingCore))
-        .setExtensions(Collections.singletonMap(Occurrence.qualifiedName(), Arrays.asList(ext1, ext2, ext3)))
-        .build();
-
-    final List<ExtendedRecord> expected =
-        createCollection(false, true, id + "_" + somethingCore + "_" + somethingExt,
-            id + "_" + somethingCore + "_" + somethingExt,
-            id + "_" + somethingCore + "_" + somethingExt);
-
-    // When
-    PCollection<ExtendedRecord> result = p.apply(Create.of(er)).apply(OccurrenceExtensionTransform.create(datasetId));
-
-    // Should
-    PAssert.that(result).containsInAnyOrder(expected);
-    p.run();
-  }
-
   @Test
   public void occurrenceExtensionIsEmptyTest() {
 
