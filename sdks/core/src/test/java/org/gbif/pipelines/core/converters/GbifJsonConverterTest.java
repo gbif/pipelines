@@ -39,11 +39,13 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"verbatim\":{\"core\":{\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}"
+        "{\"id\":\"777\",\"all\":[\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"something:{something}\"],"
+            + "\"verbatim\":{\"core\":{\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}"
             + "{\\\"something\\\":1}\",\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},\"extensions\":{}},"
             + "\"eventDateSingle\":\"01-01-2011\",\"year\":2000,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":"
             + "\"01-01-2018\"},\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":"
-            + "{\"lon\":2.0,\"lat\":1.0},\"scoordinates\":\"POINT (2.0 1.0)\",\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":"
+            + "{\"lon\":2.0,\"lat\":1.0},\"decimalLatitude\":1.0,\"decimalLongitude\":2.0,\"scoordinates\":\"POINT (2.0 1.0)\","
+            + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":"
             + "\"Code 1'2\\\"\",\"gbifClassification\":{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
             + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
             + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],"
@@ -121,7 +123,9 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/remark\":\"{\\\"something\\\":1}"
+        "{\"id\":\"777\","
+            + "\"all\":[\"Cr1\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"http://www.gbif.org/tmp.jpg\",\"something:{something}\",\"2010\",\"Desc1\",\"Lic1\",\"Tt1\",\"1\",\"Pub1\",\"-131.3\",\"Sp1\",\"not a date\",\"60.4\",\"jpeg\",\"Rh1\",\"Cont1\",\"Aud1\"],"
+            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/remark\":\"{\\\"something\\\":1}"
             + "{\\\"something\\\":1}\",\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},"
             + "\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":[{\"http://purl.org/dc/terms/license\":\"Lic1\","
             + "\"http://www.w3.org/2003/01/geo/wgs84_pos#latitude\":\"60.4\",\"http://purl.org/dc/terms/identifier\":"
@@ -143,7 +147,7 @@ public class GbifJsonConverterTest {
             + "\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},{\"http://purl.org/dc/terms/created\":\"not a date\"}]}},"
             + "\"eventDateSingle\":\"01-01-2011\",\"year\":2000,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},"
             + "\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":2.0,\"lat\":1.0},"
-            + "\"scoordinates\":\"POINT (2.0 1.0)\","
+            + "\"decimalLatitude\":1.0,\"decimalLongitude\":2.0,\"scoordinates\":\"POINT (2.0 1.0)\","
             + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\","
             + "\"gbifClassification\":{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
             + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
@@ -273,7 +277,7 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"verbatim\":{\"core\":{},\"extensions\":{}},\"issues\":[],\"notIssues\":"
+        "{\"id\":\"777\",\"all\":[],\"verbatim\":{\"core\":{},\"extensions\":{}},\"issues\":[],\"notIssues\":"
             + "[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\","
             + "\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
             + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\","
@@ -339,7 +343,7 @@ public class GbifJsonConverterTest {
   public void extendedRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"verbatim\":{\"core\":{},\"extensions\":{}}}";
+    String expected = "{\"id\":\"777\",\"all\":[],\"verbatim\":{\"core\":{},\"extensions\":{}}}";
 
     // State
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("777").build();

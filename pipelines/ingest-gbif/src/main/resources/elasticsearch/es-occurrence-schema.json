@@ -187,6 +187,8 @@
       "coordinatePrecision": {"type":"double"},
       "coordinates": {"type": "geo_point"},
       "scoordinates": {"type": "geo_shape"},
+      "decimalLatitude": {"type":"double"},
+      "decimalLongitude": {"type":"double"},
 
       "year": {"type": "integer"},
       "month": {"type": "integer"},
