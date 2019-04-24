@@ -134,7 +134,7 @@
     ],
     "properties": {
 
-      "all": {"type": "text"},
+      "all": {"type": "text", "index" :  true, "stored" :  false},
 
       "id": {"type": "keyword"},
       "lastCrawled": {"type": "date"},
