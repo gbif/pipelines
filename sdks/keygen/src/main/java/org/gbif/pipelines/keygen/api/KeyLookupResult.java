@@ -13,7 +13,7 @@ import lombok.Getter;
 @EqualsAndHashCode
 public class KeyLookupResult {
 
-  private final int key;
+  private final long key;
   private final boolean created;
 
 }

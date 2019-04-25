@@ -75,7 +75,7 @@ public class GbifJsonConverterTest {
             .setCoreTerms(erMap)
             .build();
 
-    BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(111).build();
+    BasicRecord br = BasicRecord.newBuilder().setId("777").setGbifId(111L).build();
 
     TemporalRecord tmr =
         TemporalRecord.newBuilder()

@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 public class HBaseLockingKeyServiceThroughputTest {
 
   private static final OccHbaseConfiguration CFG = new OccHbaseConfiguration();
+
   static {
     CFG.setEnvironment("keygen_test");
   }
@@ -90,9 +91,9 @@ public class HBaseLockingKeyServiceThroughputTest {
             runningAvg = (netPeriods * runningAvg + generated) / (netPeriods + 1);
           }
           System.out.println("Key generation at [" + generated + " keys/s] for running avg of [" + runningAvg
-                             + " keys/s] and per thread [" + (runningAvg / threadCount)
-                             + " keys/sec] with id generation time of [" + (threadCount * 1000 / runningAvg)
-                             + " ms/id]");
+              + " keys/s] and per thread [" + (runningAvg / threadCount)
+              + " keys/sec] with id generation time of [" + (threadCount * 1000 / runningAvg)
+              + " ms/id]");
         } else {
           System.out.println("Stats in [" + (buildAverageAfter - periods) + "] seconds.");
         }
@@ -131,7 +132,8 @@ public class HBaseLockingKeyServiceThroughputTest {
       persistingThreads = Integer.valueOf(args[1]);
     }
     System.out
-      .println("Running test with hbasePool [" + hbasePoolSize + "] and persistingThreads [" + persistingThreads + "]");
+        .println(
+            "Running test with hbasePool [" + hbasePoolSize + "] and persistingThreads [" + persistingThreads + "]");
     HBaseLockingKeyServiceThroughputTest instance = new HBaseLockingKeyServiceThroughputTest(hbasePoolSize);
     instance.testNoContention(persistingThreads);
   }

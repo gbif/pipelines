@@ -22,10 +22,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Columns {
 
-
   // the one column family for all columns of the occurrence table
   public static final String OCCURRENCE_COLUMN_FAMILY = "o";
   public static final byte[] CF = Bytes.toBytes(OCCURRENCE_COLUMN_FAMILY);
+
   // the counter table is a single cell that is the "autoincrement" number for new keys, with column family, column,
   // and key ("row" in hbase speak)
   public static final String COUNTER_COLUMN = "id";

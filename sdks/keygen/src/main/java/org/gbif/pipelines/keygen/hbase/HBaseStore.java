@@ -27,33 +27,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class HBaseStore<T> {
 
   private static final String KEY_CANT_BE_NULL_MSG = "key can't be null";
-  public static final String HBASE_READ_ERROR_MSG = "Could not read from HBase";
+  private static final String HBASE_READ_ERROR_MSG = "Could not read from HBase";
 
   private final TableName tableName;
   private final String cf;
   private final byte[] cfBytes;
   private final Connection connection;
 
-  // TODO consider a put and get builder that adds columns with successive calls
-
   public HBaseStore(String tableName, String cf, Connection connection) {
     this.tableName = TableName.valueOf(checkNotNull(tableName, "tableName can't be null"));
     this.cf = checkNotNull(cf, "cf can't be null");
-    cfBytes = Bytes.toBytes(cf);
+    this.cfBytes = Bytes.toBytes(cf);
     this.connection = checkNotNull(connection, "connection can't be null");
   }
 
-  public Integer getInt(T key, String columnName) {
+  public Long getLong(T key, String columnName) {
     Result row = getRow(key, columnName);
-    return ResultReader.getInteger(row, cf, columnName, null);
+    return ResultReader.getLong(row, cf, columnName, null);
   }
 
   public String getString(T key, String columnName) {
     Result row = getRow(key, columnName);
     return ResultReader.getString(row, cf, columnName, null);
   }
-
-  public void putInt(T key, String columnName, int value) {
+  public void putLong(T key, String columnName, long value) {
     put(key, columnName, Bytes.toBytes(value));
   }
 

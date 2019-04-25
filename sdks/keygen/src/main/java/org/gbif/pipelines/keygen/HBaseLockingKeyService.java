@@ -1,7 +1,6 @@
 package org.gbif.pipelines.keygen;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -51,27 +50,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class HBaseLockingKeyService implements Serializable {
 
-  private static final long serialVersionUID = -3128096563237268385L;
+  private static final long serialVersionUID = -3128096563237268386L;
 
-  private static final long WAIT_BEFORE_RETRY_MS = 5000L;
+  private static final long WAIT_BEFORE_RETRY_MS = 5000;
   private static final int WAIT_SKEW = 4000;
-  private static final long STALE_LOCK_TIME = 5L * 60L * 1000L;
-  public static final int COUNTER_ROW = 1;
+  private static final long STALE_LOCK_TIME = 5 * 60 * 1000;
+  private static final long COUNTER_ROW = 1;
 
   // The number of IDs to reserve at a time in batch
-  private static final Integer BATCHED_ID_SIZE = 100;
+  private static final int BATCHED_ID_SIZE = 100;
   // the next available key to allocate
-  private int currentKey;
+  private long currentKey;
   // our reserved upper key limit for the current batch
-  private int maxReservedKeyInclusive;
+  private long maxReservedKeyInclusive;
 
   private static final int HBASE_CLIENT_CACHING = 200;
 
   private final Connection connection;
   private final TableName lookupTableName;
-  private final HBaseStore<Integer> occurrenceTableStore;
+  private final HBaseStore<Long> occurrenceTableStore;
   private final HBaseStore<String> lookupTableStore;
-  private final HBaseStore<Integer> counterTableStore;
+  private final HBaseStore<Long> counterTableStore;
 
   private final String datasetId;
 
@@ -93,7 +92,7 @@ public class HBaseLockingKeyService implements Serializable {
    */
   public KeyLookupResult generateKey(Set<String> uniqueStrings, String scope) {
     Map<String, KeyStatus> statusMap = Maps.newTreeMap(); // required: predictable sorting for e.g. testing
-    Map<String, Integer> existingKeyMap = Maps.newTreeMap(); // required: predictable sorting for e.g. testing
+    Map<String, Long> existingKeyMap = Maps.newTreeMap(); // required: predictable sorting for e.g. testing
     byte[] lockId = Bytes.toBytes(UUID.randomUUID().toString());
 
     // lookupTable schema: lookupKey | status | lock | key
@@ -103,8 +102,8 @@ public class HBaseLockingKeyService implements Serializable {
 
     Set<String> lookupKeys = OccurrenceKeyBuilder.buildKeys(uniqueStrings, scope);
     boolean failed = false;
-    Integer key = null;
-    Integer foundKey = null;
+    Long key = null;
+    Long foundKey = null;
     for (String lookupKey : lookupKeys) {
       Result row = lookupTableStore.getRow(lookupKey);
       log.debug("Lookup for [{}] produced [{}]", lookupKey, row);
@@ -116,10 +115,8 @@ public class HBaseLockingKeyService implements Serializable {
         if (rawStatus != null) {
           status = KeyStatus.valueOf(rawStatus);
         }
-        existingLock = ResultReader.getBytes(row, Columns.OCCURRENCE_COLUMN_FAMILY,
-            Columns.LOOKUP_LOCK_COLUMN, null);
-        key = ResultReader.getInteger(row, Columns.OCCURRENCE_COLUMN_FAMILY,
-            Columns.LOOKUP_KEY_COLUMN, null);
+        existingLock = ResultReader.getBytes(row, Columns.OCCURRENCE_COLUMN_FAMILY, Columns.LOOKUP_LOCK_COLUMN, null);
+        key = ResultReader.getLong(row, Columns.OCCURRENCE_COLUMN_FAMILY, Columns.LOOKUP_KEY_COLUMN, null);
         log.debug("Got existing status [{}] existingLock [{}] key [{}]", status, existingLock, key);
       }
 
@@ -132,7 +129,7 @@ public class HBaseLockingKeyService implements Serializable {
           foundKey = key;
         } else {
           // we've found conflicting keys for our lookupKeys - this is fatal
-          if (foundKey.intValue() != key.intValue()) {
+          if (foundKey.longValue() != key.longValue()) {
             failWithConflictingLookup(existingKeyMap);
           }
         }
@@ -158,7 +155,7 @@ public class HBaseLockingKeyService implements Serializable {
           // Someone died before releasing lock.
           // Note that key could be not null here - this means that thread had the lock, wrote the key, but then
           // died before releasing lock.
-          // check and put our lockId, expecting lock to match the existing lock
+          // checkandPut our lockId, expecting lock to match the existing lock
           boolean gotLock = lookupTableStore.checkAndPut(lookupKey, Columns.LOOKUP_LOCK_COLUMN,
               lockId, Columns.LOOKUP_LOCK_COLUMN, existingLock, now);
           if (gotLock) {
@@ -211,7 +208,7 @@ public class HBaseLockingKeyService implements Serializable {
     for (Map.Entry<String, KeyStatus> entry : statusMap.entrySet()) {
       if (entry.getValue() == KeyStatus.ALLOCATING) {
         // TODO: combine into one put
-        lookupTableStore.putInt(entry.getKey(), Columns.LOOKUP_KEY_COLUMN, key);
+        lookupTableStore.putLong(entry.getKey(), Columns.LOOKUP_KEY_COLUMN, key);
         lookupTableStore.putString(entry.getKey(), Columns.LOOKUP_STATUS_COLUMN, KeyStatus.ALLOCATED.toString());
       }
     }
@@ -240,15 +237,12 @@ public class HBaseLockingKeyService implements Serializable {
    * @return the next key
    */
   @Synchronized
-  private int getNextKey() {
+  private long getNextKey() {
     // if we have exhausted our reserved keys, get a new batch of them
     if (currentKey == maxReservedKeyInclusive) {
       // get batch
-      Long longKey = counterTableStore.incrementColumnValue(COUNTER_ROW, Columns.COUNTER_COLUMN, BATCHED_ID_SIZE.longValue());
-      if (longKey > Integer.MAX_VALUE) {
-        throw new IllegalStateException("HBase issuing keys larger than Integer can support");
-      }
-      maxReservedKeyInclusive = longKey.intValue();
+      maxReservedKeyInclusive =
+          counterTableStore.incrementColumnValue(COUNTER_ROW, Columns.COUNTER_COLUMN, BATCHED_ID_SIZE);
       // safer to calculate our guaranteed safe range than rely on what nextKey was set to
       currentKey = maxReservedKeyInclusive - BATCHED_ID_SIZE;
     }
@@ -267,12 +261,12 @@ public class HBaseLockingKeyService implements Serializable {
     }
 
     Set<String> lookupKeys = OccurrenceKeyBuilder.buildKeys(uniqueStrings, scope);
-    Map<String, Integer> foundOccurrenceKeys = Maps.newTreeMap(); // required: predictable sorting for e.g. testing
+    Map<String, Long> foundOccurrenceKeys = Maps.newTreeMap(); // required: predictable sorting for e.g. testing
 
     // get the occurrenceKey for each lookupKey, and set a flag if we find any null
     boolean gotNulls = false;
     for (String uniqueString : lookupKeys) {
-      Integer occurrenceKey = lookupTableStore.getInt(uniqueString, Columns.LOOKUP_KEY_COLUMN);
+      Long occurrenceKey = lookupTableStore.getLong(uniqueString, Columns.LOOKUP_KEY_COLUMN);
       if (occurrenceKey == null) {
         gotNulls = true;
       } else {
@@ -282,13 +276,13 @@ public class HBaseLockingKeyService implements Serializable {
 
     // go through all the returned keys and make sure they're all the same - if not, fail loudly (this means
     // an inconsistency in the db that we can't resolve here)
-    Integer resultKey = null;
+    Long resultKey = null;
     for (String uniqueString : lookupKeys) {
-      Integer occurrenceKey = foundOccurrenceKeys.get(uniqueString);
+      Long occurrenceKey = foundOccurrenceKeys.get(uniqueString);
       if (occurrenceKey != null) {
         if (resultKey == null) {
           resultKey = occurrenceKey;
-        } else if (resultKey.intValue() != occurrenceKey.intValue()) {
+        } else if (resultKey.longValue() != occurrenceKey.longValue()) {
           failWithConflictingLookup(foundOccurrenceKeys);
         }
       }
@@ -315,8 +309,8 @@ public class HBaseLockingKeyService implements Serializable {
   }
 
   @SneakyThrows
-  public Set<Integer> findKeysByScope(String scope) {
-    Set<Integer> keys = Sets.newHashSet();
+  public Set<Long> findKeysByScope(String scope) {
+    Set<Long> keys = Sets.newHashSet();
     // note HTableStore isn't capable of ad hoc scans
     @Cleanup Table table = connection.getTable(lookupTableName);
     Scan scan = new Scan();
@@ -327,7 +321,7 @@ public class HBaseLockingKeyService implements Serializable {
     for (Result result : results) {
       byte[] rawKey = result.getValue(Columns.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN));
       if (rawKey != null) {
-        keys.add(Bytes.toInt(rawKey));
+        keys.add(Bytes.toLong(rawKey));
       }
     }
     return keys;
@@ -336,7 +330,7 @@ public class HBaseLockingKeyService implements Serializable {
   /**
    *
    */
-  public Set<Integer> findKeysByScope() {
+  public Set<Long> findKeysByScope() {
     return findKeysByScope(datasetId);
   }
 
@@ -351,7 +345,7 @@ public class HBaseLockingKeyService implements Serializable {
    * @param datasetKey the optional "scope" for the lookup (without it this method is very slow)
    */
   @SneakyThrows
-  public void deleteKey(Integer occurrenceKey, @Nullable String datasetKey) {
+  public void deleteKey(Long occurrenceKey, @Nullable String datasetKey) {
     checkNotNull(occurrenceKey, "occurrenceKey can't be null");
 
     // get the dataset for this occurrence if not handed in as scope
@@ -378,9 +372,10 @@ public class HBaseLockingKeyService implements Serializable {
     scan.setFilter(filterList);
     @Cleanup Table lookupTable = connection.getTable(lookupTableName);
     @Cleanup ResultScanner resultScanner = lookupTable.getScanner(scan);
-    List<Delete> keysToDelete = new ArrayList<>();
+    List<Delete> keysToDelete = Lists.newArrayList();
     for (Result result : resultScanner) {
-      keysToDelete.add(new Delete(result.getRow()));
+      Delete delete = new Delete(result.getRow());
+      keysToDelete.add(delete);
     }
     if (!keysToDelete.isEmpty()) {
       lookupTable.delete(keysToDelete);
@@ -391,7 +386,7 @@ public class HBaseLockingKeyService implements Serializable {
   /**
    *
    */
-  public void deleteKey(Integer occurrenceKey) {
+  public void deleteKey(Long occurrenceKey) {
     deleteKey(occurrenceKey, datasetId);
   }
 
@@ -420,20 +415,18 @@ public class HBaseLockingKeyService implements Serializable {
     deleteKeyByUniques(uniqueStrings, datasetId);
   }
 
-  private static void failWithConflictingLookup(Map<String, Integer> conflictingKeys) {
+  private static void failWithConflictingLookup(Map<String, Long> conflictingKeys) {
     StringBuilder sb = new StringBuilder("Found inconsistent occurrence keys in looking up unique identifiers:");
-    for (Map.Entry<String, Integer> entry : conflictingKeys.entrySet()) {
+    for (Map.Entry<String, Long> entry : conflictingKeys.entrySet()) {
       sb.append('[').append(entry.getKey()).append("]=[").append(entry.getValue()).append(']');
     }
     throw new IllegalStateException(sb.toString());
   }
 
-
-  private void fillMissingKeys(Set<String> lookupKeys, Map<String, Integer> foundOccurrenceKeys,
-      Integer occurrenceKey) {
+  private void fillMissingKeys(Set<String> lookupKeys, Map<String, Long> foundOccurrenceKeys, Long occurrenceKey) {
     lookupKeys.stream()
         .filter(lookupKey -> !foundOccurrenceKeys.containsKey(lookupKey))
-        .forEach(lookupKey -> lookupTableStore.putInt(lookupKey, Columns.LOOKUP_KEY_COLUMN, occurrenceKey));
+        .forEach(lookupKey -> lookupTableStore.putLong(lookupKey, Columns.LOOKUP_KEY_COLUMN, occurrenceKey));
   }
 
   private void releaseLocks(Map<String, KeyStatus> statusMap) {
