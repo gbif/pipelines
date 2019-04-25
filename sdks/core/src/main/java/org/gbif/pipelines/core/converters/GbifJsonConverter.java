@@ -16,6 +16,7 @@ import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
@@ -260,6 +261,14 @@ public class GbifJsonConverter {
       verbatimNode.set("core", coreNode);
       verbatimNode.set("extensions", extNode);
 
+      //Copy to all field
+      Set<TextNode> allFieldValues = Stream.concat(er.getCoreTerms().values().stream(),
+                                                   er.getExtensions().values().stream()
+                                                      .flatMap(v -> v.stream().filter(Objects::nonNull).flatMap(m -> m.values().stream())))
+                                           .map(TextNode::new)
+                                      .collect(Collectors.toSet());
+      jc.getMainNode().putArray("all").addAll(allFieldValues);
+
       // Main node
       jc.getMainNode().set("verbatim", verbatimNode);
     };
@@ -292,6 +301,9 @@ public class GbifJsonConverter {
         node.put("lat", lr.getDecimalLatitude());
         //geo_point
         jc.addJsonObject("coordinates", node);
+
+        jc.getMainNode().put("decimalLatitude", lr.getDecimalLatitude());
+        jc.getMainNode().put("decimalLongitude", lr.getDecimalLongitude());
         //geo_shape
         jc.addJsonTextFieldNoCheck("scoordinates",
             "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude() + ")");
