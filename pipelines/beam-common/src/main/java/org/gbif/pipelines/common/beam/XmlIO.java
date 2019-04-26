@@ -4,8 +4,6 @@ import java.io.InputStream;
 import java.nio.channels.Channels;
 
 import org.gbif.converters.parser.xml.OccurrenceParser;
-import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
-import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -70,38 +68,24 @@ public class XmlIO extends PTransform<PBegin, PCollection<ExtendedRecord>> {
       }
     });
 
-    SingleOutput<ResourceId, RawXmlOccurrence> resourceIdToRawXml = ParDo.of(
-        new DoFn<ResourceId, RawXmlOccurrence>() {
-          @SneakyThrows
-          @ProcessElement
-          public void processElement(@Element ResourceId resourceId, OutputReceiver<RawXmlOccurrence> out) {
-            @Cleanup InputStream is = Channels.newInputStream(FileSystems.open(resourceId));
-            new OccurrenceParser().parseStream(is).forEach(out::output);
-          }
-        });
-
-    SingleOutput<RawXmlOccurrence, RawOccurrenceRecord> rawXmlToRawOcc = ParDo.of(
-        new DoFn<RawXmlOccurrence, RawOccurrenceRecord>() {
-          @ProcessElement
-          public void processElement(@Element RawXmlOccurrence rxo, OutputReceiver<RawOccurrenceRecord> out) {
-            XmlFragmentParser.parseRecord(rxo).forEach(out::output);
-          }
-        });
-
-    SingleOutput<RawOccurrenceRecord, ExtendedRecord> rawOccToExtRec = ParDo.of(
-        new DoFn<RawOccurrenceRecord, ExtendedRecord>() {
-          @ProcessElement
-          public void processElement(@Element RawOccurrenceRecord roc, OutputReceiver<ExtendedRecord> out) {
-            out.output(ExtendedRecordConverter.from(roc));
-          }
-        });
+    SingleOutput<ResourceId, ExtendedRecord> resourceIdToExtRec = ParDo.of(new DoFn<ResourceId, ExtendedRecord>() {
+      @SneakyThrows
+      @ProcessElement
+      public void processElement(@Element ResourceId resourceId, OutputReceiver<ExtendedRecord> out) {
+        @Cleanup InputStream is = Channels.newInputStream(FileSystems.open(resourceId));
+        new OccurrenceParser().parseStream(is)
+            .forEach(rxo ->
+                XmlFragmentParser.parseRecord(rxo).stream()
+                    .map(ExtendedRecordConverter::from)
+                    .forEach(out::output)
+            );
+      }
+    });
 
     return input
         .apply("Input folder path", Create.of(path))
         .apply("Read files paths", pathToResourceId)
-        .apply("ResourceId To RawXmlOccurrence", resourceIdToRawXml)
-        .apply("RawXmlOccurrence To RawOccurrenceRecord", rawXmlToRawOcc)
-        .apply("RawOccurrenceRecord To ExtendedRecord", rawOccToExtRec);
+        .apply("ResourceId To ExtendedRecord", resourceIdToExtRec);
   }
 
 }
