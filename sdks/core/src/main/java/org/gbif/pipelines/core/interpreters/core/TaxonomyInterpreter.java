@@ -11,6 +11,7 @@ import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.nameparser.NameParserGBIF;
@@ -76,6 +77,12 @@ public class TaxonomyInterpreter {
             .withFamily(extractValue(er, DwcTerm.family))
             .withGenus(extractValue(er, DwcTerm.genus))
             .withScientificName(extractValue(er, DwcTerm.scientificName))
+            .withRank(extractValue(er, DwcTerm.taxonRank))
+            .withVerbatimRank(extractValue(er, DwcTerm.verbatimTaxonRank))
+            .withSpecificEpithet(extractValue(er, DwcTerm.specificEpithet))
+            .withInfraspecificEpithet(extractValue(er, DwcTerm.infraspecificEpithet))
+            .withScientificNameAuthorship(extractValue(er, DwcTerm.scientificNameAuthorship))
+            .withGenericName(extractValue(er, GbifTerm.genericName))
             .build();
 
         NameUsageMatch usageMatch = null;
