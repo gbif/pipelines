@@ -69,7 +69,6 @@ import lombok.extern.slf4j.Slf4j;
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
- *      {@link org.gbif.pipelines.io.avro.AustraliaSpatialRecord}
  *    3) Joins objects
  *    4) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
  *    5) Pushes data to Elasticsearch instance

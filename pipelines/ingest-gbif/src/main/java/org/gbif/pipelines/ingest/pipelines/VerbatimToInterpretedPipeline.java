@@ -53,7 +53,6 @@ import lombok.extern.slf4j.Slf4j;
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
- *      {@link org.gbif.pipelines.io.avro.AustraliaSpatialRecord}
  *    3) Writes data to independent files
  * </pre>
  *

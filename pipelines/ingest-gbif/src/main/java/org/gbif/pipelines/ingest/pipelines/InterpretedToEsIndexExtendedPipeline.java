@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
- *      {@link org.gbif.pipelines.io.avro.AustraliaSpatialRecord}
  *      avro files
  *    3) Joins avro files
  *    4) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
