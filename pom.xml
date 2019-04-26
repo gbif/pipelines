@@ -295,6 +295,11 @@
         <artifactId>keygen</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>archives-converters</artifactId>
+        <version>${project.version}</version>
+      </dependency>
 
       <!-- GBIF -->
       <dependency>

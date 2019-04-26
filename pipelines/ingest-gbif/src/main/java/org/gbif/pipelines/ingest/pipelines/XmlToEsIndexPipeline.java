@@ -1,10 +1,9 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.nio.file.Paths;
 import java.util.Optional;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
-import org.gbif.pipelines.common.beam.DwcaIO;
+import org.gbif.pipelines.common.beam.XmlIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
@@ -58,17 +57,17 @@ import lombok.extern.slf4j.Slf4j;
  * Pipeline sequence:
  *
  * <pre>
- *    1) Reads DwCA archive and converts to {@link org.gbif.pipelines.io.avro.ExtendedRecord}
- *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file to:
- *      {@link org.gbif.pipelines.io.avro.MetadataRecord},
- *      {@link org.gbif.pipelines.io.avro.BasicRecord},
- *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
- *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
- *      {@link org.gbif.pipelines.io.avro.ImageRecord},
- *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
- *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
- *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
- *      {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    1) Reads XML files and converts to {@link ExtendedRecord}
+ *    2) Interprets and converts avro {@link ExtendedRecord} file to:
+ *      {@link MetadataRecord},
+ *      {@link BasicRecord},
+ *      {@link TemporalRecord},
+ *      {@link MultimediaRecord},
+ *      {@link ImageRecord},
+ *      {@link AudubonRecord},
+ *      {@link MeasurementOrFactRecord},
+ *      {@link TaxonRecord},
+ *      {@link LocationRecord}
  *    3) Joins objects
  *    4) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
  *    5) Pushes data to Elasticsearch instance
@@ -77,14 +76,14 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline some.properties
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.XmlToEsIndexPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.XmlToEsIndexPipeline
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
- * --inputPath=/some/path/to/input/dwca.zip
+ * --inputPath=/some/path/to/input/0057a720-17c9-4658-971e-9578f3577cf5/*.xml
  * --targetPath=/some/path/to/input/
  * --esHosts=http://ADDRESS,http://ADDRESS,http://ADDRESS:9200
  * --esIndexName=pipeline
@@ -95,7 +94,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class DwcaToEsIndexPipeline {
+public class XmlToEsIndexPipeline {
 
   public static void main(String[] args) {
     DwcaPipelineOptions options = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, args);
@@ -126,18 +125,11 @@ public class DwcaToEsIndexPipeline {
     final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
     final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
 
-    String tmpDir = FsUtils.getTempDir(options);
-
-    String inputPath = options.getInputPath();
-    boolean isDir = Paths.get(inputPath).toFile().isDirectory();
-
-    DwcaIO.Read reader = isDir ? DwcaIO.Read.fromLocation(inputPath) : DwcaIO.Read.fromCompressed(inputPath, tmpDir);
-
     Pipeline p = Pipeline.create(options);
 
     log.info("Reading avro files");
     PCollection<ExtendedRecord> uniqueRecords =
-        p.apply("Read ExtendedRecords", reader)
+        p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Hash ID", HashIdTransform.create(datasetId))
             .apply("Filter duplicates", UniqueIdTransform.create());

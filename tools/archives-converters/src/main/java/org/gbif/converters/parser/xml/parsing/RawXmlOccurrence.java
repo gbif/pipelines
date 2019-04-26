@@ -15,6 +15,7 @@
  */
 package org.gbif.converters.parser.xml.parsing;
 
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,7 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Setter
-public class RawXmlOccurrence {
+public class RawXmlOccurrence implements Serializable {
+
+  private static final long serialVersionUID = -162646273274391257L;
 
   private String resourceName;
   private String institutionCode;

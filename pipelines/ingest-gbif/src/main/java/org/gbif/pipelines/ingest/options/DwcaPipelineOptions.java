@@ -11,6 +11,9 @@ public interface DwcaPipelineOptions extends EsIndexingPipelineOptions, Interpre
     DWCA_TO_VERBATIM, // only reads a Dwca and converts it to an avro file
     DWCA_TO_INTERPRETED, // reads a Dwca and interprets it
     DWCA_TO_ES_INDEX, // reads a Dwca, interprets it and indexes it to ES
+    XML_TO_VERBATIM, // only reads XML files and converts it to an avro file
+    XML_TO_INTERPRETED, // reads XML files and interprets it
+    XML_TO_ES_INDEX, // reads XML files, interprets it and indexes it to ES
     INTERPRETED_TO_ES_INDEX, // reads interpreted avro files and indexes them to ES
     VERBATIM_TO_INTERPRETED,
     VERBATIM_TO_INTERPRETED_AMP,
@@ -33,17 +36,6 @@ public interface DwcaPipelineOptions extends EsIndexingPipelineOptions, Interpre
 
   @Override
   void setTargetPath(String targetPath);
-
-  @Description("Gbif API url, by defaut is https://api.gbif.org")
-  @Default.String("https://api.gbif.org")
-  String getGbifApiUrl();
-
-  void setGbifApiUrl(String path);
-
-  @Description("HBase client zookeeper service urls")
-  String getZookeeperUrl();
-
-  void setZookeeperUrl(String path);
 
   @Description(
       "The pipeline can be configured to run all the steps or only a few of them."
