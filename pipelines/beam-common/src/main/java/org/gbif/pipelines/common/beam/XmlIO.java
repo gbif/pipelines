@@ -11,6 +11,8 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.io.fs.MatchResult;
 import org.apache.beam.sdk.io.fs.ResourceId;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -22,6 +24,8 @@ import org.apache.beam.sdk.values.PCollection;
 import lombok.AllArgsConstructor;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.XML_TO_AVRO_COUNT;
 
 /**
  * Composite transformation, IO operation for XML archives formats.
@@ -69,6 +73,9 @@ public class XmlIO extends PTransform<PBegin, PCollection<ExtendedRecord>> {
     });
 
     SingleOutput<ResourceId, ExtendedRecord> resourceIdToExtRec = ParDo.of(new DoFn<ResourceId, ExtendedRecord>() {
+
+      private final Counter xmlCount = Metrics.counter("XmlIO", XML_TO_AVRO_COUNT);
+
       @SneakyThrows
       @ProcessElement
       public void processElement(@Element ResourceId resourceId, OutputReceiver<ExtendedRecord> out) {
@@ -77,7 +84,10 @@ public class XmlIO extends PTransform<PBegin, PCollection<ExtendedRecord>> {
             .forEach(rxo ->
                 XmlFragmentParser.parseRecord(rxo).stream()
                     .map(ExtendedRecordConverter::from)
-                    .forEach(out::output)
+                    .forEach(er -> {
+                      xmlCount.inc();
+                      out.output(er);
+                    })
             );
       }
     });
