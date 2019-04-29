@@ -22,7 +22,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DWCA_TO_AVRO_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DWCA_TO_ER_COUNT;
 
 /**
  * IO operations for DwC-A formats.
@@ -133,7 +133,7 @@ public class DwcaIO {
   /** A wrapper around the standard DwC-IO provided NormalizedDwcArchive. */
   private static class BoundedDwCAReader extends BoundedSource.BoundedReader<ExtendedRecord> {
 
-    private final Counter dwcaCount = Metrics.counter("DwcaIO", DWCA_TO_AVRO_COUNT);
+    private final Counter dwcaCount = Metrics.counter("DwcaIO", DWCA_TO_ER_COUNT);
 
     private final DwcaSource source;
     private DwcaReader reader;

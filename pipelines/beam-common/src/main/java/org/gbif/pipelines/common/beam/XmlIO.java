@@ -25,7 +25,7 @@ import lombok.AllArgsConstructor;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.XML_TO_AVRO_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.XML_TO_ER_COUNT;
 
 /**
  * Composite transformation, IO operation for XML archives formats.
@@ -74,7 +74,7 @@ public class XmlIO extends PTransform<PBegin, PCollection<ExtendedRecord>> {
 
     SingleOutput<ResourceId, ExtendedRecord> resourceIdToExtRec = ParDo.of(new DoFn<ResourceId, ExtendedRecord>() {
 
-      private final Counter xmlCount = Metrics.counter("XmlIO", XML_TO_AVRO_COUNT);
+      private final Counter xmlCount = Metrics.counter("XmlIO", XML_TO_ER_COUNT);
 
       @SneakyThrows
       @ProcessElement

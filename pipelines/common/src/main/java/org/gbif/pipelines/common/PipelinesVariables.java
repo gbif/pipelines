@@ -66,8 +66,8 @@ public class PipelinesVariables {
   public static class Metrics {
 
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
-    public static final String DWCA_TO_AVRO_COUNT = "dwcaToAvroCount";
-    public static final String XML_TO_AVRO_COUNT = "xmlToAvroCount";
+    public static final String DWCA_TO_ER_COUNT = "dwcaToErCount";
+    public static final String XML_TO_ER_COUNT = "xmlToErCount";
 
     public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
