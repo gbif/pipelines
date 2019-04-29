@@ -5,7 +5,6 @@ import java.nio.channels.Channels;
 
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter;
-import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -77,22 +76,6 @@ public class XmlIO extends PTransform<PBegin, PCollection<ExtendedRecord>> {
 
       private final Counter xmlCount = Metrics.counter("XmlIO", XML_TO_ER_COUNT);
 
-      private UniquenessValidator validator;
-
-      @Setup
-      public void setup() {
-        if (validator == null) {
-          validator = UniquenessValidator.getNewInstance();
-        }
-      }
-
-      @Teardown
-      public void teardown() {
-        if (validator != null) {
-          validator.close();
-        }
-      }
-
       @SneakyThrows
       @ProcessElement
       public void processElement(@Element ResourceId resourceId, OutputReceiver<ExtendedRecord> out) {
@@ -101,7 +84,6 @@ public class XmlIO extends PTransform<PBegin, PCollection<ExtendedRecord>> {
             .forEach(rxo ->
                 XmlFragmentParser.parseRecord(rxo).stream()
                     .map(ExtendedRecordConverter::from)
-                    .filter(er -> validator.isUnique(er.getId()))
                     .forEach(er -> {
                       xmlCount.inc();
                       out.output(er);
