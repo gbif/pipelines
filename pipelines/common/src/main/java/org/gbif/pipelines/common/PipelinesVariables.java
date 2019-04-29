@@ -71,6 +71,7 @@ public class PipelinesVariables {
 
     public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
+    public static final String IDENTICAL_OBJECTS_COUNT = "identicalObjectsCount";
 
     public static final String OCCURRENCE_EXT_COUNT = "occurrenceExtCount";
     public static final String HASH_ID_COUNT = "hashIdCount";

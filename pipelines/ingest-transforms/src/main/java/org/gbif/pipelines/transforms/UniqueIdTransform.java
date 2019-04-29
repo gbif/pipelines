@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_OBJECTS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_IDS_COUNT;
 
 /** Transformation for filtering all duplicate records with the same {@link ExtendedRecord#getId} */
@@ -41,6 +42,7 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
 
               private final Counter uniqueCounter = Metrics.counter(UniqueIdTransform.class, UNIQUE_IDS_COUNT);
               private final Counter duplicateCounter = Metrics.counter(UniqueIdTransform.class, DUPLICATE_IDS_COUNT);
+              private final Counter identicalCounter = Metrics.counter(UniqueIdTransform.class, IDENTICAL_OBJECTS_COUNT);
 
               @ProcessElement
               public void processElement(ProcessContext c) {
@@ -61,6 +63,7 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
                   }
                   if (areEqual) {
                     c.output(record);
+                    identicalCounter.inc();
                   }
                   // Log duplicate and metric
                   log.warn("occurrenceId = {}, duplicates were found", element.getKey());
