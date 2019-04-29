@@ -85,6 +85,7 @@
     <geotools.version>12.1</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
     <guava.version>20.0</guava.version>
+    <aeonbits.version>1.0.6</aeonbits.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.5</slf4j.version>
@@ -505,6 +506,11 @@
         <groupId>com.google.code.findbugs</groupId>
         <artifactId>jsr305</artifactId>
         <version>${findbugs-jsr305.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.aeonbits.owner</groupId>
+        <artifactId>owner-java8</artifactId>
+        <version>${aeonbits.version}</version>
       </dependency>
 
       <!-- XML -->

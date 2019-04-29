@@ -161,7 +161,7 @@ public class AustraliaSpatialTransform {
     }
 
     public Interpreter(String properties) {
-      this.kvConfig = KvConfigFactory.create(KvConfigFactory.AUSTRALIA_PREFIX, Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
     }
 
     @Setup
@@ -171,9 +171,9 @@ public class AustraliaSpatialTransform {
         GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
             .withJsonColumnQualifier("json") //stores JSON data
             .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
+                .withTableName(kvConfig.getAustraliaTableName()) //Geocode KV HBase table
                 .withColumnFamily("v") //Column in which qualifiers are stored
-                .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                .withNumOfKeyBuckets(kvConfig.getAustraliaNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
                 .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                 .build())
             .withCacheCapacity(15_000L)

@@ -164,7 +164,7 @@ public class LocationTransform {
     }
 
     public Interpreter(String properties, PCollectionView<MetadataRecord> metadataView) {
-      this.kvConfig = KvConfigFactory.create(KvConfigFactory.GEOCODE_PREFIX, Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
       this.metadataView = metadataView;
     }
 
@@ -174,20 +174,19 @@ public class LocationTransform {
 
         ClientConfiguration clientConfig = ClientConfiguration.builder()
             .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
-            .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
-            .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+            .withFileCacheMaxSizeMb(kvConfig.getGeocodeCacheSizeMb()) //Max file cache size
+            .withTimeOut(kvConfig.getGeocodeTimeout()) //Geocode service connection time-out
             .build();
 
-        if (kvConfig.getZookeeperUrl() != null) {
+        if (kvConfig.getZookeeperUrl() != null && !kvConfig.getGeocodeRestOnly()) {
 
           GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
               .withJsonColumnQualifier("j") //stores JSON data
               .withCountryCodeColumnQualifier("c") //stores ISO country code
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                  .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
+                  .withTableName(kvConfig.getGeocodeTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(
-                      kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                  .withNumOfKeyBuckets(kvConfig.getGeocodeNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
                   .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                   .build())
               .withCacheCapacity(15_000L)

@@ -137,7 +137,7 @@ public class MetadataTransform {
     }
 
     public Interpreter(String properties, String endpointType) {
-      this.wsConfig = WsConfigFactory.create(WsConfigFactory.METADATA_PREFIX, Paths.get(properties));
+      this.wsConfig = WsConfigFactory.create(Paths.get(properties));
       this.endpointType = endpointType;
     }
 

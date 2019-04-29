@@ -1,26 +1,21 @@
 package org.gbif.pipelines.parsers.config;
 
-import java.io.Serializable;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.aeonbits.owner.Config;
 
 /** Models the ws configuration. If you want to create an istance, use {@link WsConfigFactory} */
-@Data
-@AllArgsConstructor
-public final class WsConfig implements Serializable {
+public interface WsConfig extends Config {
 
-  private static final long serialVersionUID = -9019714539955270670L;
-  // ws path
-  private final String basePath;
-  // timeout in seconds
-  private final long timeout;
-  // cache size in bytes
-  private final long cacheSize;
+  @Key("gbif.api.url")
+  String getBasePath();
 
-  public WsConfig(String basePath, String timeout, String cacheSizeMb) {
-    this.basePath = basePath;
-    this.timeout = Long.parseLong(timeout);
-    this.cacheSize = Long.parseLong(cacheSizeMb) * 1024L * 1024L;
-  }
+  @Key("metadata.ws.timeout")
+  @DefaultValue("60")
+  long getMetadataTimeout();
+
+  @Key("blast.ws.url")
+  String getBlastUrl();
+
+  @Key("blast.ws.timeout")
+  @DefaultValue("60")
+  long getBlastTimeout();
 }

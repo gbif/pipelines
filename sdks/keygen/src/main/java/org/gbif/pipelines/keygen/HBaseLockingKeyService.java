@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.hbase.util.ResultReader;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
-import org.gbif.pipelines.keygen.config.OccHbaseConfiguration;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.hbase.Columns;
 import org.gbif.pipelines.keygen.hbase.HBaseStore;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
@@ -74,7 +74,7 @@ public class HBaseLockingKeyService implements Serializable {
 
   private final String datasetId;
 
-  public HBaseLockingKeyService(OccHbaseConfiguration cfg, Connection connection, String datasetId) {
+  public HBaseLockingKeyService(KeygenConfig cfg, Connection connection, String datasetId) {
     this.lookupTableName = TableName.valueOf(checkNotNull(cfg.getLookupTable(), "lookupTable can't be null"));
     this.connection = checkNotNull(connection, "tablePool can't be null");
     this.lookupTableStore = new HBaseStore<>(cfg.getLookupTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
@@ -83,7 +83,7 @@ public class HBaseLockingKeyService implements Serializable {
     this.datasetId = datasetId;
   }
 
-  public HBaseLockingKeyService(OccHbaseConfiguration cfg, Connection connection) {
+  public HBaseLockingKeyService(KeygenConfig cfg, Connection connection) {
     this(cfg, connection, null);
   }
 

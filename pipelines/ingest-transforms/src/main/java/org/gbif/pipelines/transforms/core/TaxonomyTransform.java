@@ -161,7 +161,7 @@ public class TaxonomyTransform {
     }
 
     public Interpreter(String properties) {
-      this.kvConfig = KvConfigFactory.create(KvConfigFactory.TAXONOMY_PREFIX, Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
     }
 
     @Setup
@@ -170,20 +170,20 @@ public class TaxonomyTransform {
 
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
             .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
-            .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
-            .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
+            .withFileCacheMaxSizeMb(kvConfig.getTaxonomyCacheSizeMb()) //Max file cache size
+            .withTimeOut(kvConfig.getTaxonomyTimeout()) //Geocode service connection time-out
             .build();
 
-        if (kvConfig.getZookeeperUrl() != null) {
+        if (kvConfig.getZookeeperUrl() != null && !kvConfig.getTaxonomyRestOnly()) {
 
           NameMatchServiceSyncClient nameMatchClient = new NameMatchServiceSyncClient(clientConfiguration);
 
           NameUsageMatchKVConfiguration matchConfig = NameUsageMatchKVConfiguration.builder()
               .withJsonColumnQualifier("j") //stores JSON data
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                  .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
+                  .withTableName(kvConfig.getTaxonomyTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
+                  .withNumOfKeyBuckets(kvConfig.getTaxonomyNumOfKeyBuckets()) //Buckets for salted key generations
                   .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                   .build())
               .withCacheCapacity(15_000L)

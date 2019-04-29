@@ -149,7 +149,7 @@ public class BasicTransform {
     public void setup() {
       if (keygenConfig != null) {
         connection = HbaseConnectionFactory.create(keygenConfig.getHbaseZk());
-        keygenService = new HBaseLockingKeyService(keygenConfig.getOccHbaseConfiguration(), connection, datasetId);
+        keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
       }
     }
 
