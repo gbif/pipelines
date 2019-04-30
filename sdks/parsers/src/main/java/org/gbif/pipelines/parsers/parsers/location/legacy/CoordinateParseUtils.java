@@ -66,15 +66,11 @@ public class CoordinateParseUtils {
       // try degree minute seconds
       try {
         lat = parseDMS(latitude, true);
-      } catch (IllegalArgumentException e) {
-        return ParsedField.fail(COORDINATE_INVALID.name());
-      }
-
-      try {
         lng = parseDMS(longitude, false);
       } catch (IllegalArgumentException e) {
         return ParsedField.fail(COORDINATE_INVALID.name());
       }
+
     }
 
     return validateAndRound(lat, lng);
