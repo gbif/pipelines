@@ -17,43 +17,18 @@ package org.gbif.converters.parser.xml.parsing.xml;
 
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class PrioritizedProperty {
 
-  private Integer priority;
   private PrioritizedPropertyNameEnum name;
+  private Integer priority;
   private String property;
-
-  public Integer getPriority() {
-    return priority;
-  }
-
-  public void setPriority(Integer priority) {
-    this.priority = priority;
-  }
-
-  public PrioritizedPropertyNameEnum getName() {
-    return name;
-  }
-
-  public void setName(PrioritizedPropertyNameEnum name) {
-    this.name = name;
-  }
-
-  public String getProperty() {
-    return property;
-  }
-
-  public void setProperty(String property) {
-    this.property = property;
-  }
-
-  public String debugDump() {
-    return "PrioritizedProperty [priority="
-        + priority
-        + ", name="
-        + name
-        + ", property="
-        + property
-        + "]";
-  }
 }

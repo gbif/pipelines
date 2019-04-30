@@ -15,10 +15,13 @@
  */
 package org.gbif.converters.parser.xml.model;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
@@ -39,10 +42,6 @@ public abstract class PropertyPrioritizer {
   public abstract void resolvePriorities();
 
   public void addPrioritizedProperty(PrioritizedProperty prop) {
-    if (log.isDebugEnabled()) {
-      log.debug(">> addPrioritizedProperty [{}]", prop.debugDump());
-    }
-
     if (prop.getName() != null) {
       Set<PrioritizedProperty> nameProps = prioritizedProps.get(prop.getName());
       if (nameProps == null) {
@@ -53,21 +52,28 @@ public abstract class PropertyPrioritizer {
     } else {
       log.warn("Attempting add of null PrioritizedProperty");
     }
-
-    log.debug("<< addPrioritizedProperty");
   }
 
   /** Highest priority is 1. */
   protected static String findHighestPriority(Set<PrioritizedProperty> props) {
-    String result = null;
-    int highestPriority = Integer.MAX_VALUE;
-    for (PrioritizedProperty prop : props) {
-      if (prop.getPriority() < highestPriority) {
-        highestPriority = prop.getPriority();
-        result = prop.getProperty();
-      }
-    }
 
-    return result;
+    TreeMap<Integer, List<PrioritizedProperty>> map = new TreeMap<>();
+    props.forEach(p -> {
+      List<PrioritizedProperty> list = map.get(p.getPriority());
+      if (list == null) {
+        List<PrioritizedProperty> created = new ArrayList<>(props.size());
+        created.add(p);
+        map.put(p.getPriority(), created);
+      } else {
+        list.add(p);
+        map.put(p.getPriority(), list);
+      }
+    });
+
+    return map.firstEntry().getValue().stream()
+        .map(PrioritizedProperty::getProperty)
+        .sorted()
+        .findFirst()
+        .orElse(null);
   }
 }
