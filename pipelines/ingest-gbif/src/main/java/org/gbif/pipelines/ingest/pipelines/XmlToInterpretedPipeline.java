@@ -97,7 +97,7 @@ public class XmlToInterpretedPipeline {
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
-    log.info("Reading avro files");
+    log.info("Reading xml files");
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
