@@ -16,7 +16,6 @@ public class DwcManisRecordParserTest extends ParserTestCase {
         getClass().getResource("/responses/dwc_manis/dwc_manis_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    // System.out.println(ror.debugDump());
     // common to all schemas
     assertEquals("ANSP", ror.getInstitutionCode());
     assertEquals("HRP", ror.getCollectionCode());
@@ -43,7 +42,6 @@ public class DwcManisRecordParserTest extends ParserTestCase {
     String fileName = getClass().getResource("/responses/dwc_manis/dwc_manis_idtype.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    // System.out.println(ror.debugDump());
     // showIdentifiers(ror);
     assertEquals(1, ror.getIdentifierRecords().size());
     IdentifierRecord idRec = ror.getIdentifierRecords().get(0);

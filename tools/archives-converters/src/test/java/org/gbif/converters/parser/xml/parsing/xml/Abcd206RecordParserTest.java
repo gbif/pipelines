@@ -19,7 +19,6 @@ public class Abcd206RecordParserTest extends ParserTestCase {
         getClass().getResource("/responses/abcd206/abcd206_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    // System.out.println(ror.debugDump());
     assertEquals("BGBM", ror.getInstitutionCode());
     assertEquals("AlgaTerra", ror.getCollectionCode());
     assertEquals("HumanObservation", ror.getBasisOfRecord());
@@ -43,7 +42,6 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     String fileName = getClass().getResource("/responses/abcd206/abcd206_idtype.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    //    showIdentifiers(ror);
     assertEquals(7, ror.getIdentifierRecords().size());
     assertEquals("0123456789ABCD", ror.getId());
   }
@@ -60,10 +58,6 @@ public class Abcd206RecordParserTest extends ParserTestCase {
     assertEquals("Closteriaceae", ror.getFamily());
   }
 
-  /**
-   * TODO: add these tests public void testParseMultiIdentificationPreferredTrue() public void
-   * testParseNoIdentification()
-   */
   @Test
   public void testParseMultiIdentificationPreferredFalse() {
     String fileName =
@@ -137,7 +131,6 @@ public class Abcd206RecordParserTest extends ParserTestCase {
   public void testParseLinks() {
     String fileName = getClass().getResource("/responses/abcd206/abcd206_links.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
-    // showLinks(ror);
     assertEquals(2, ror.getLinkRecords().size());
   }
 }

@@ -76,22 +76,4 @@ public class ImageRecord extends PropertyPrioritizer implements Serializable {
         && Strings.isNullOrEmpty(rights)
         && Strings.isNullOrEmpty(htmlForDisplay);
   }
-
-  public String debugDump() {
-    return "ImageRecord [\nrawImageType="
-        + rawImageType
-        + ",\nimageType="
-        + imageType
-        + ",\nurl="
-        + url
-        + ",\npageUrl="
-        + pageUrl
-        + ",\ndescription="
-        + description
-        + ",\nrights="
-        + rights
-        + ",\nhtmlForDisplay="
-        + htmlForDisplay
-        + "]";
-  }
 }
