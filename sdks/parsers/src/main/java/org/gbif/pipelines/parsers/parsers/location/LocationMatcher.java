@@ -1,25 +1,20 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.UnaryOperator;
-
+import com.google.common.base.Strings;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.CountryMaps;
-
-import com.google.common.base.Strings;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.Location;
+
+import java.util.*;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 import javax.swing.text.html.Option;
 
@@ -57,20 +52,19 @@ class LocationMatcher {
 
   private ParsedField<ParsedLocation> applyWithCountry() {
 
-    Optional<Country> countryKv = getCountryFromCoordinates(latLng);
+    Optional<Set<Country>> countriesKv = getCountryFromCoordinates(latLng);
 
     // if the WS returned countries we try to match with them
-    if (countryKv.isPresent()) {
-      Country c = countryKv.get();
-      // TODO: change to list
-      if (c.equals(this.country)) {
+    if (countriesKv.isPresent()) {
+      Set<Country> countries = countriesKv.get();
+      if (countries.contains(this.country)) {
         // country found
         return success(this.country, latLng);
       }
 
       // if not found, try with equivalent countries
       Optional<Country> equivalentMatch =
-          containsAnyCountry(CountryMaps.equivalent(this.country), Collections.singletonList(c));
+          containsAnyCountry(CountryMaps.equivalent(this.country), countries);
       if (equivalentMatch.isPresent()) {
         // country found
         return success(equivalentMatch.get(), latLng);
@@ -78,7 +72,7 @@ class LocationMatcher {
 
       // if not found, try with confused countries
       Optional<Country> confusedMatch =
-          containsAnyCountry(CountryMaps.confused(this.country), Collections.singletonList(c));
+          containsAnyCountry(CountryMaps.confused(this.country), countries);
       if (confusedMatch.isPresent()) {
         // country found
         return success(confusedMatch.get(), latLng, COUNTRY_DERIVED_FROM_COORDINATES);
@@ -91,11 +85,12 @@ class LocationMatcher {
       LatLng latLngTransformed = transformation.apply(latLng);
 
       // call ws
-      Optional<Country> countriesFound = getCountryFromCoordinates(latLngTransformed);
-      if (countriesFound.filter(x -> x.equals(country)).isPresent()) {
+      Optional<Set<Country>> countriesFound = getCountryFromCoordinates(latLngTransformed);
+      if (countriesFound.filter(x -> x.contains(country)).isPresent()) {
         // country found
         // Add issues from the transformation
-        return success(country, latLngTransformed, CoordinatesFunction.getIssueTypes(transformation));
+        return success(
+            country, latLngTransformed, CoordinatesFunction.getIssueTypes(transformation));
       }
     }
 
@@ -106,40 +101,48 @@ class LocationMatcher {
   private ParsedField<ParsedLocation> applyWithoutCountry() {
     // call WS with identity coords
     return getCountryFromCoordinates(latLng)
-        .map(x -> success(x, latLng, COUNTRY_DERIVED_FROM_COORDINATES))
+        .filter(v -> !v.isEmpty())
+        .map(v -> v.iterator().next())
+        .map(v -> success(v, latLng, COUNTRY_DERIVED_FROM_COORDINATES))
         .orElse(ParsedField.fail());
   }
 
-  private Optional<Country> getCountryFromCoordinates(LatLng latLng) {
+  private Optional<Set<Country>> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
+      GeocodeResponse geocodeResponse = null;
       try {
-        Optional<Country> country =
-        Optional.ofNullable(kvStore.get(latLng))
-                .map(geocodeResponse -> geocodeResponse.getLocations().iterator().next())
-                .map(location ->  Country.fromIsoCode(location.getIsoCountryCode2Digit()));
-        if (country.isPresent()) {
-          return  country;
-        } else if(isAntarctica(latLng.getLatitude(), this.country)) {
-           return Optional.of(Country.ANTARCTICA);
-        }
+        geocodeResponse = kvStore.get(latLng);
       } catch (NoSuchElementException | NullPointerException ex) {
         log.error(ex.getMessage(), ex);
+      }
+      if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
+        return Optional.of(
+            geocodeResponse.getLocations().stream()
+                .map(Location::getIsoCountryCode2Digit)
+                .map(Country::fromIsoCode)
+                .collect(Collectors.toSet()));
+      }
+      if (isAntarctica(latLng.getLatitude(), this.country)) {
+        return Optional.of(Collections.singleton(Country.ANTARCTICA));
       }
     }
     return Optional.empty();
   }
 
-  private static Optional<Country> containsAnyCountry(Set<Country> possibilities, List<Country> countries) {
+  private static Optional<Country> containsAnyCountry(
+      Set<Country> possibilities, Set<Country> countries) {
     return Optional.ofNullable(possibilities)
         .flatMap(set -> set.stream().filter(countries::contains).findFirst());
   }
 
-  private static ParsedField<ParsedLocation> success(Country country, LatLng latLng, List<String> issues) {
+  private static ParsedField<ParsedLocation> success(
+      Country country, LatLng latLng, List<String> issues) {
     ParsedLocation pl = new ParsedLocation(country, latLng);
     return ParsedField.success(pl, issues);
   }
 
-  private static ParsedField<ParsedLocation> success(Country country, LatLng latLng, OccurrenceIssue issue) {
+  private static ParsedField<ParsedLocation> success(
+      Country country, LatLng latLng, OccurrenceIssue issue) {
     return success(country, latLng, Collections.singletonList(issue.name()));
   }
 
