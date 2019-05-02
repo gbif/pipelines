@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
+import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
@@ -38,6 +38,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
@@ -123,7 +124,7 @@ public class LocationTransform {
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KeyValueStore<LatLng, String> kvStore, PCollectionView<MetadataRecord> metadataView) {
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KeyValueStore<LatLng, GeocodeResponse> kvStore, PCollectionView<MetadataRecord> metadataView) {
     return ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView);
   }
 
@@ -144,7 +145,7 @@ public class LocationTransform {
 
     private final KvConfig kvConfig;
     private final PCollectionView<MetadataRecord> metadataView;
-    private KeyValueStore<LatLng, String> kvStore;
+    private KeyValueStore<LatLng, GeocodeResponse> kvStore;
 
     public Interpreter(PCollectionView<MetadataRecord> metadataView) {
       this.metadataView = metadataView;
@@ -157,7 +158,7 @@ public class LocationTransform {
       this.metadataView = metadataView;
     }
 
-    public Interpreter(KeyValueStore<LatLng, String> kvStore, PCollectionView<MetadataRecord> metadataView) {
+    public Interpreter(KeyValueStore<LatLng, GeocodeResponse> kvStore, PCollectionView<MetadataRecord> metadataView) {
       this.kvStore = kvStore;
       this.metadataView = metadataView;
       this.kvConfig = null;
@@ -180,9 +181,8 @@ public class LocationTransform {
 
         if (kvConfig.getZookeeperUrl() != null && !kvConfig.getGeocodeRestOnly()) {
 
-          GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
-              .withJsonColumnQualifier("j") //stores JSON data
-              .withCountryCodeColumnQualifier("c") //stores ISO country code
+          CachedHBaseKVStoreConfiguration geocodeKvStoreConfig = CachedHBaseKVStoreConfiguration.builder()
+              .withValueColumnQualifier("j") //stores JSON data
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
                   .withTableName(kvConfig.getGeocodeTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored

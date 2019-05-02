@@ -4,8 +4,12 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 
+import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.Location;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Collections;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
@@ -18,12 +22,18 @@ public class LocationMatcherTest {
   private static final KeyValueTestStore TEST_STORE = new KeyValueTestStore();
 
   static {
-    TEST_STORE.put(new LatLng(60.4d, -131.3d), Country.CANADA.getIso2LetterCode());
-    TEST_STORE.put(new LatLng(30.2d, 100.2344349d), Country.CHINA.getIso2LetterCode());
-    TEST_STORE.put(new LatLng(30.2d, 100.234435d), Country.CHINA.getIso2LetterCode());
-    TEST_STORE.put(new LatLng(71.7d, -42.6d), Country.GREENLAND.getIso2LetterCode());
-    TEST_STORE.put(new LatLng(-17.65, -149.46), Country.FRENCH_POLYNESIA.getIso2LetterCode());
-    TEST_STORE.put(new LatLng(27.15, -13.20), Country.MOROCCO.getIso2LetterCode());
+    TEST_STORE.put(new LatLng(60.4d, -131.3d), toGeocodeResponse(Country.CANADA));
+    TEST_STORE.put(new LatLng(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
+    TEST_STORE.put(new LatLng(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
+    TEST_STORE.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
+    TEST_STORE.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
+    TEST_STORE.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+  }
+
+  private static GeocodeResponse toGeocodeResponse(Country country) {
+    Location location = new Location();
+    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
+    return new GeocodeResponse(Collections.singletonList(location));
   }
 
   private KeyValueTestStore getkvStore() {

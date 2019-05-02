@@ -1,10 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
@@ -25,6 +22,8 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.Location;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,13 +46,19 @@ public class LocationTransformTest {
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
+    private static GeocodeResponse toGeocodeResponse(Country country) {
+        Location location = new Location();
+        location.setIsoCountryCode2Digit(country.getIso2LetterCode());
+        return new GeocodeResponse(Collections.singletonList(location));
+    }
+
   @Test
   public void transformationTest() {
 
     // State
-    KeyValueTestStore<LatLng, String> kvStore = new KeyValueTestStore<>();
-    kvStore.put(new LatLng(56.26d, 9.51d), Country.DENMARK.getIso2LetterCode());
-    kvStore.put(new LatLng(36.21d, 138.25d), Country.JAPAN.getIso2LetterCode());
+    KeyValueTestStore<LatLng, GeocodeResponse> kvStore = new KeyValueTestStore<>();
+    kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK));
+    kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN));
 
     final String[] denmark = {
         "0",

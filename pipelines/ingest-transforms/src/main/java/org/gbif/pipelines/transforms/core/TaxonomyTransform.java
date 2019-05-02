@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
-import org.gbif.kvs.species.NameUsageMatchKVConfiguration;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -178,8 +178,8 @@ public class TaxonomyTransform {
 
           NameMatchServiceSyncClient nameMatchClient = new NameMatchServiceSyncClient(clientConfiguration);
 
-          NameUsageMatchKVConfiguration matchConfig = NameUsageMatchKVConfiguration.builder()
-              .withJsonColumnQualifier("j") //stores JSON data
+          CachedHBaseKVStoreConfiguration matchConfig = CachedHBaseKVStoreConfiguration.builder()
+              .withValueColumnQualifier("j") //stores JSON data
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
                   .withTableName(kvConfig.getTaxonomyTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored

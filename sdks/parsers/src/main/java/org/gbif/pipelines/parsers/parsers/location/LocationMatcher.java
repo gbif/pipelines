@@ -19,6 +19,9 @@ import org.gbif.pipelines.parsers.parsers.location.legacy.CountryMaps;
 import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.rest.client.geocode.GeocodeResponse;
+
+import javax.swing.text.html.Option;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
@@ -33,7 +36,7 @@ class LocationMatcher {
 
   private final LatLng latLng;
   private final Country country;
-  private final KeyValueStore<LatLng, String> kvStore;
+  private final KeyValueStore<LatLng, GeocodeResponse> kvStore;
   private final List<UnaryOperator<LatLng>> alternativeTransformations = new ArrayList<>();
 
   LocationMatcher additionalTransform(UnaryOperator<LatLng> transformation) {
@@ -109,17 +112,18 @@ class LocationMatcher {
 
   private Optional<Country> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
-      String countryKv = "";
       try {
-        countryKv = kvStore.get(latLng);
+        Optional<Country> country =
+        Optional.ofNullable(kvStore.get(latLng))
+                .map(geocodeResponse -> geocodeResponse.getLocations().iterator().next())
+                .map(location ->  Country.fromIsoCode(location.getIsoCountryCode2Digit()));
+        if (country.isPresent()) {
+          return  country;
+        } else if(isAntarctica(latLng.getLatitude(), this.country)) {
+           return Optional.of(Country.ANTARCTICA);
+        }
       } catch (NoSuchElementException | NullPointerException ex) {
         log.error(ex.getMessage(), ex);
-      }
-      if (!Strings.isNullOrEmpty(countryKv)) {
-        return Optional.of(Country.fromIsoCode(countryKv));
-      }
-      if (Strings.isNullOrEmpty(countryKv) && isAntarctica(latLng.getLatitude(), this.country)) {
-        return Optional.of(Country.ANTARCTICA);
       }
     }
     return Optional.empty();

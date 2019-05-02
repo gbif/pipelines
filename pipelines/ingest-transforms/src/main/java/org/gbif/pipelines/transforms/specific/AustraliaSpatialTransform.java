@@ -7,12 +7,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.GeocodeKVStoreConfiguration;
-import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
+import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
+import org.gbif.kvs.hbase.ReadOnlyHBaseStore;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
@@ -168,8 +169,8 @@ public class AustraliaSpatialTransform {
     public void setup() throws IOException {
       if (kvConfig != null) {
 
-        GeocodeKVStoreConfiguration geocodeKvStoreConfig = GeocodeKVStoreConfiguration.builder()
-            .withJsonColumnQualifier("json") //stores JSON data
+        CachedHBaseKVStoreConfiguration hBaseKVStoreConfiguration = CachedHBaseKVStoreConfiguration.builder()
+            .withValueColumnQualifier("json") //stores JSON data
             .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
                 .withTableName(kvConfig.getAustraliaTableName()) //Geocode KV HBase table
                 .withColumnFamily("v") //Column in which qualifiers are stored
@@ -179,7 +180,10 @@ public class AustraliaSpatialTransform {
             .withCacheCapacity(15_000L)
             .build();
 
-        kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig);
+        kvStore = ReadOnlyHBaseStore.<LatLng,String>builder()
+                    .withHBaseStoreConfiguration(hBaseKVStoreConfiguration.getHBaseKVStoreConfiguration())
+                    .withResultMapper(result ->  Bytes.toString(result.getValue(Bytes.toBytes("v"), Bytes.toBytes("json"))))
+                    .build();
 
       }
     }

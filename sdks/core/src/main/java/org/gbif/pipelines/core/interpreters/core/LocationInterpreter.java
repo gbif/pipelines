@@ -34,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
 import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
@@ -79,7 +80,7 @@ public class LocationInterpreter {
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-          KeyValueStore<LatLng, String> kvStore, MetadataRecord mdr) {
+          KeyValueStore<LatLng, GeocodeResponse> kvStore, MetadataRecord mdr) {
     return (er, lr) -> {
       if (kvStore != null) {
         // parse the terms

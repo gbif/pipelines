@@ -12,6 +12,7 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.Wgs84Projection;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import java.util.*;
 
@@ -27,7 +28,7 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationParser {
 
-  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, KeyValueStore<LatLng, String> kvStore) {
+  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
     ModelUtils.checkNullOrEmpty(er);
     Objects.requireNonNull(kvStore, "Geolookup kvStore is required");
 
