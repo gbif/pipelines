@@ -59,6 +59,7 @@ class LocationMatcher {
     // if the WS returned countries we try to match with them
     if (countryKv.isPresent()) {
       Country c = countryKv.get();
+      // TODO: change to list
       if (c.equals(this.country)) {
         // country found
         return success(this.country, latLng);
@@ -96,14 +97,14 @@ class LocationMatcher {
     }
 
     // no result found
-    return fail();
+    return ParsedField.fail(Collections.singletonList(COUNTRY_COORDINATE_MISMATCH.name()));
   }
 
   private ParsedField<ParsedLocation> applyWithoutCountry() {
     // call WS with identity coords
     return getCountryFromCoordinates(latLng)
         .map(x -> success(x, latLng, COUNTRY_DERIVED_FROM_COORDINATES))
-        .orElse(fail());
+        .orElse(ParsedField.fail());
   }
 
   private Optional<Country> getCountryFromCoordinates(LatLng latLng) {
@@ -127,10 +128,6 @@ class LocationMatcher {
   private static Optional<Country> containsAnyCountry(Set<Country> possibilities, List<Country> countries) {
     return Optional.ofNullable(possibilities)
         .flatMap(set -> set.stream().filter(countries::contains).findFirst());
-  }
-
-  private static ParsedField<ParsedLocation> fail() {
-    return ParsedField.fail(Collections.singletonList(COUNTRY_COORDINATE_MISMATCH.name()));
   }
 
   private static ParsedField<ParsedLocation> success(Country country, LatLng latLng, List<String> issues) {

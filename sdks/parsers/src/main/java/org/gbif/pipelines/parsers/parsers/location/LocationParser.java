@@ -123,23 +123,21 @@ public class LocationParser {
   private static ParsedField<LatLng> parseLatLng(ExtendedRecord er) {
     ParsedField<LatLng> parsedLatLon = CoordinatesParser.parseCoords(er);
 
-    // collect issues form the coords parsing
-    List<String> issues = parsedLatLon.getIssues();
-
     if (!parsedLatLon.isSuccessful()) {
       // coords parsing failed
-      return ParsedField.<LatLng>builder().issues(issues).build();
+      return parsedLatLon;
     }
 
     // interpret geodetic datum and reproject if needed
     // the reprojection will keep the original values even if it failed with issues
-    String datumVerbatim = extractValue(er, DwcTerm.geodeticDatum);
-    Double lat = parsedLatLon.getResult().getLatitude();
-    Double lng = parsedLatLon.getResult().getLongitude();
+    ParsedField<LatLng> projectedLatLng =
+        Wgs84Projection.reproject(
+            parsedLatLon.getResult().getLatitude(),
+            parsedLatLon.getResult().getLongitude(),
+            extractValue(er, DwcTerm.geodeticDatum));
 
-    ParsedField<LatLng> projectedLatLng = Wgs84Projection.reproject(lat, lng, datumVerbatim);
-
-    // collect issues from the projection parsing
+    // collect issues
+    List<String> issues = parsedLatLon.getIssues();
     issues.addAll(projectedLatLng.getIssues());
 
     return ParsedField.<LatLng>builder()

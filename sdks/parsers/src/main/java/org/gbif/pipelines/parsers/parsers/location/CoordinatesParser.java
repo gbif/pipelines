@@ -1,5 +1,6 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -59,16 +60,18 @@ class CoordinatesParser {
    * @return {@link ParsedField<LatLng>} for the coordinates parsed.
    */
   static ParsedField<LatLng> parseCoords(ExtendedRecord extendedRecord) {
-    ParsedField<LatLng> result = null;
+    List<String> issues = new ArrayList<>();
     for (var parsingFunction : PARSING_FUNCTIONS) {
-      result = parsingFunction.apply(extendedRecord);
+      ParsedField<LatLng> result = parsingFunction.apply(extendedRecord);
 
       if (result.isSuccessful()) {
         // return the first successful result
         return result;
       }
+
+      issues.addAll(result.getIssues());
     }
 
-    return result;
+    return ParsedField.fail(issues);
   }
 }
