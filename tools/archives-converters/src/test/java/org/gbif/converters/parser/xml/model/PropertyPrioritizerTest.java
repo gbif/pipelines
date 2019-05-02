@@ -27,4 +27,21 @@ public class PropertyPrioritizerTest {
     // Should
     Assert.assertEquals(expected, result);
   }
+
+  @Test
+  public void reverseFindHighestPriorityTest() {
+
+    // State
+    String expected = "Aa";
+    Set<PrioritizedProperty> set = new HashSet<>(3);
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Cc"));
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Bb"));
+    set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Aa"));
+
+    // When
+    String result = PropertyPrioritizer.findHighestPriority(set);
+
+    // Should
+    Assert.assertEquals(expected, result);
+  }
 }

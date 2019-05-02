@@ -15,13 +15,11 @@
  */
 package org.gbif.converters.parser.xml.model;
 
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
@@ -56,24 +54,9 @@ public abstract class PropertyPrioritizer {
 
   /** Highest priority is 1. */
   protected static String findHighestPriority(Set<PrioritizedProperty> props) {
-
-    TreeMap<Integer, List<PrioritizedProperty>> map = new TreeMap<>();
-    props.forEach(p -> {
-      List<PrioritizedProperty> list = map.get(p.getPriority());
-      if (list == null) {
-        List<PrioritizedProperty> created = new ArrayList<>(props.size());
-        created.add(p);
-        map.put(p.getPriority(), created);
-      } else {
-        list.add(p);
-        map.put(p.getPriority(), list);
-      }
-    });
-
-    return map.firstEntry().getValue().stream()
+    return props.stream()
+        .min(Comparator.comparing(PrioritizedProperty::getPriority).thenComparing(PrioritizedProperty::getProperty))
         .map(PrioritizedProperty::getProperty)
-        .sorted()
-        .findFirst()
         .orElse(null);
   }
 }
