@@ -55,19 +55,4 @@ public class TypificationRecord implements Serializable {
         && Strings.isNullOrEmpty(publication)
         && Strings.isNullOrEmpty(scientificName);
   }
-
-  public String debugDump() {
-    return "ScientificName ["
-        + scientificName
-        + "]\n"
-        + "Publication ["
-        + publication
-        + "]\n"
-        + "TypeStatus ["
-        + typeStatus
-        + "]\n"
-        + "Notes ["
-        + notes
-        + "]\n";
-  }
 }

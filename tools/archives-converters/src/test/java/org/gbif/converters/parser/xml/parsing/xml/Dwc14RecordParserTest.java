@@ -14,7 +14,6 @@ public class Dwc14RecordParserTest extends ParserTestCase {
         getClass().getResource("/responses/dwc14/dwc14_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    // System.out.println(ror.debugDump());
     // common to all schemas
     assertEquals("UGENT", ror.getInstitutionCode());
     assertEquals("vertebrata", ror.getCollectionCode());
@@ -55,14 +54,7 @@ public class Dwc14RecordParserTest extends ParserTestCase {
     String fileName = getClass().getResource("/responses/dwc14/dwc14_typification.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    /** TODO: find test record with types */
-    // showTypifications(ror);
     assertEquals(0, ror.getTypificationRecords().size());
-    // TypificationRecord typRecord = ror.getTypificationRecords().iterator().next();
-    // assertEquals("Fake species Linnaeus, 1771", typRecord.getScientificName());
-    // assertEquals("Fake title citation.", typRecord.getPublication());
-    // assertEquals("Holotype", typRecord.getTypeStatus());
-    // assertEquals("Some fake notes.", typRecord.getNotes());
   }
 
   /** TODO: find test record with image(s) */
@@ -70,12 +62,7 @@ public class Dwc14RecordParserTest extends ParserTestCase {
   public void testParseImages() {
     String fileName = getClass().getResource("/responses/dwc14/dwc14_images.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
-    // showImages(ror);
     assertEquals(0, ror.getImageRecords().size());
-    // ImageRecord image = ror.getImageRecords().get(0);
-    // assertEquals("http://biology.africamuseum.be/STERNAImages/Ornithology/SternaRMCADetails.php?image=_PHM7832",
-    // image.getUrl());
-    // assertEquals("zoomable image", image.getDescription());
   }
 
   /** TODO: find test record with links */
@@ -83,7 +70,6 @@ public class Dwc14RecordParserTest extends ParserTestCase {
   public void testParseLinks() {
     String fileName = getClass().getResource("/responses/dwc14/dwc14_links.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
-    // showLinks(ror);
     assertEquals(0, ror.getLinkRecords().size());
   }
 }

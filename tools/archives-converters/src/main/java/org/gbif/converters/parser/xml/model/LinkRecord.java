@@ -37,16 +37,4 @@ public class LinkRecord implements Serializable {
         && Strings.isNullOrEmpty(url)
         && Strings.isNullOrEmpty(description);
   }
-
-  public String debugDump() {
-    return "LinkRecord [\nrawLinkType="
-        + rawLinkType
-        + ",\nlinkType="
-        + linkType
-        + ",\nurl="
-        + url
-        + ",\ndescription="
-        + description
-        + "]";
-  }
 }

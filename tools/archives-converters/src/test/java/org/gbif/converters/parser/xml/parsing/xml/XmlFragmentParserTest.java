@@ -77,7 +77,7 @@ public class XmlFragmentParserTest {
 
     private final List<RawXmlOccurrence> raws;
 
-    public BatchRecordParser(List<RawXmlOccurrence> raws) {
+    BatchRecordParser(List<RawXmlOccurrence> raws) {
       this.raws = raws;
     }
 

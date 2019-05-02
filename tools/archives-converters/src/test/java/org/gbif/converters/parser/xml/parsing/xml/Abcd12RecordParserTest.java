@@ -34,7 +34,6 @@ public class Abcd12RecordParserTest extends ParserTestCase {
         getClass().getResource("/responses/abcd12/abcd12_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    // System.out.println(ror.debugDump());
     assertEquals("TLMF", ror.getInstitutionCode());
     assertEquals("Tiroler Landesmuseum Ferdinandeum", ror.getCollectionCode());
     assertEquals("AUT", ror.getCountry());
@@ -52,7 +51,6 @@ public class Abcd12RecordParserTest extends ParserTestCase {
         getClass().getResource("/responses/abcd12/abcd12_simple_fields_2.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    // System.out.println(ror.debugDump());
     assertEquals("TLMF", ror.getInstitutionCode());
     assertEquals("Tiroler Landesmuseum Ferdinandeum", ror.getCollectionCode());
     assertEquals("AUT", ror.getCountry());
@@ -72,7 +70,6 @@ public class Abcd12RecordParserTest extends ParserTestCase {
     assertEquals(1, rors.size());
 
     RawOccurrenceRecord ror = rors.get(0);
-    // System.out.println(ror.debugDump());
     assertEquals("Ancylobotrys petersiana", ror.getScientificName());
     assertEquals("Vonk, G.J.A", ror.getIdentifierName());
     assertEquals("Apocynaceae", ror.getFamily());
@@ -84,7 +81,6 @@ public class Abcd12RecordParserTest extends ParserTestCase {
     String fileName = getClass().getResource("/responses/abcd12/abcd12_idtype.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    // showIdentifiers(ror);
     assertEquals(2, ror.getIdentifierRecords().size());
   }
 

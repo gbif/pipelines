@@ -16,7 +16,6 @@ public class Dwc10RecordParserTest extends ParserTestCase {
         getClass().getResource("/responses/dwc10/dwc10_all_simple_fields.gz").getFile();
     RawOccurrenceRecord ror = setupRor(fileName).get(0);
 
-    // System.out.println(ror.debugDump());
     // common to all schemas
     assertEquals("BR", ror.getInstitutionCode());
     assertEquals("MYCO", ror.getCollectionCode());

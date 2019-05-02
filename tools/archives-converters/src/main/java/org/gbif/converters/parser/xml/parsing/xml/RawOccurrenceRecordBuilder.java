@@ -235,10 +235,7 @@ public class RawOccurrenceRecordBuilder extends PropertyPrioritizer {
     TypificationRecord typRec =
         new TypificationRecord(scientificName, publication, typeStatus, notes);
 
-    if (typRec.isEmpty()) {
-      log.debug("Got all nulls for new type - ignoring");
-    } else {
-      log.debug("Got new typRec:\n {}", typRec.debugDump());
+    if (!typRec.isEmpty()) {
       typificationRecords.add(typRec);
     }
 

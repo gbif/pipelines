@@ -35,16 +35,13 @@ import static org.junit.Assert.assertEquals;
 public class ResponseSchemaDetectorTest {
 
   private ResponseSchemaDetector detector;
-  private DocumentBuilder docBuilder;
-  private Document doc;
-  private Element root;
 
   @Before
   public void setUp() throws ParserConfigurationException {
     detector = new ResponseSchemaDetector();
-    docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    doc = docBuilder.newDocument();
-    root = doc.createElement("occurrence");
+    DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+    Document doc = docBuilder.newDocument();
+    Element root = doc.createElement("occurrence");
     doc.appendChild(root);
   }
 

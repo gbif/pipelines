@@ -19,73 +19,24 @@ import java.io.File;
 import java.util.List;
 
 import org.gbif.converters.parser.xml.OccurrenceParser;
-import org.gbif.converters.parser.xml.model.IdentifierRecord;
-import org.gbif.converters.parser.xml.model.ImageRecord;
-import org.gbif.converters.parser.xml.model.LinkRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
-import org.gbif.converters.parser.xml.model.TypificationRecord;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 
 import org.junit.Before;
 
 public abstract class ParserTestCase {
 
-  protected OccurrenceParser occurrenceParser;
+  OccurrenceParser occurrenceParser;
 
   @Before
   public void setUp() {
     occurrenceParser = new OccurrenceParser();
   }
 
-  protected List<RawOccurrenceRecord> setupRor(String fileName) {
+  List<RawOccurrenceRecord> setupRor(String fileName) {
     File response = new File(fileName);
     RawXmlOccurrence xmlRecord = occurrenceParser.parseResponseFileToRawXml(response).get(0);
 
     return XmlFragmentParser.parseRecord(xmlRecord);
-  }
-
-  protected void showIdentifiers(RawOccurrenceRecord ror) {
-    System.out.println("got [" + ror.getIdentifierRecords().size() + "] identifier records");
-    for (IdentifierRecord idRec : ror.getIdentifierRecords()) {
-      System.out.println(
-          "IdRec type ["
-              + idRec.getIdentifierType()
-              + "] identifier ["
-              + idRec.getIdentifier()
-              + "]");
-    }
-  }
-
-  protected void showTaxons(RawOccurrenceRecord ror) {
-    System.out.println("got taxons:");
-    System.out.println("Kingdom: [" + ror.getKingdom() + "]");
-    System.out.println("Phylum: [" + ror.getPhylum() + "]");
-    System.out.println("Class: [" + ror.getKlass() + "]");
-    System.out.println("Order: [" + ror.getOrder() + "]");
-    System.out.println("Family: [" + ror.getFamily() + "]");
-    System.out.println("Genus: [" + ror.getGenus() + "]");
-    System.out.println("Species: [" + ror.getSpecies() + "]");
-    System.out.println("Subspecies: [" + ror.getSubspecies() + "]");
-  }
-
-  protected void showTypifications(RawOccurrenceRecord ror) {
-    System.out.println("got [" + ror.getTypificationRecords().size() + "] typification records");
-    for (TypificationRecord typRec : ror.getTypificationRecords()) {
-      System.out.println(typRec.debugDump());
-    }
-  }
-
-  protected void showImages(RawOccurrenceRecord ror) {
-    System.out.println("got [" + ror.getImageRecords().size() + "] image records");
-    for (ImageRecord image : ror.getImageRecords()) {
-      System.out.println(image.debugDump());
-    }
-  }
-
-  protected void showLinks(RawOccurrenceRecord ror) {
-    System.out.println("got [" + ror.getLinkRecords().size() + "] link records");
-    for (LinkRecord link : ror.getLinkRecords()) {
-      System.out.println(link.debugDump());
-    }
   }
 }
