@@ -104,7 +104,7 @@ public class LocationMatcherTest {
 
     // Should
     Assert.assertFalse(result.isSuccessful());
-    Assert.assertEquals(result.getIssues().get(0), COUNTRY_COORDINATE_MISMATCH.name());
+    Assert.assertTrue(result.getIssues().isEmpty());
   }
 
   @Test
@@ -294,6 +294,6 @@ public class LocationMatcherTest {
 
     // Should
     Assert.assertFalse(result.isSuccessful());
-    Assert.assertEquals(result.getIssues().get(0), COUNTRY_COORDINATE_MISMATCH.name());
+    Assert.assertTrue(result.getIssues().isEmpty());
   }
 }
