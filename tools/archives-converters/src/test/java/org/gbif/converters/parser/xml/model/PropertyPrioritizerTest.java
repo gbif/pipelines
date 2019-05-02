@@ -1,7 +1,8 @@
 package org.gbif.converters.parser.xml.model;
 
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
 import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
@@ -16,7 +17,7 @@ public class PropertyPrioritizerTest {
 
     // State
     String expected = "Aa";
-    Set<PrioritizedProperty> set = new HashSet<>(3);
+    Set<PrioritizedProperty> set = new TreeSet<>(Comparator.comparing(PrioritizedProperty::getProperty));
     set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Aa"));
     set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Bb"));
     set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Cc"));
@@ -33,7 +34,7 @@ public class PropertyPrioritizerTest {
 
     // State
     String expected = "Aa";
-    Set<PrioritizedProperty> set = new HashSet<>(3);
+    Set<PrioritizedProperty> set = new TreeSet<>(Comparator.comparing(PrioritizedProperty::getProperty).reversed());
     set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Cc"));
     set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Bb"));
     set.add(new PrioritizedProperty(PrioritizedPropertyNameEnum.COLLECTOR_NAME,1,"Aa"));
