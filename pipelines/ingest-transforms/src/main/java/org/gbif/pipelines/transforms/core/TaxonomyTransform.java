@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -23,7 +24,6 @@ import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.transforms.CheckTransforms;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
-import org.gbif.rest.client.species.retrofit.NameMatchServiceSyncClient;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;
@@ -39,6 +39,8 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
@@ -143,6 +145,8 @@ public class TaxonomyTransform {
 
     private final Counter counter = Metrics.counter(TaxonomyTransform.class, TAXON_RECORDS_COUNT);
 
+    private final Logger LOG = LoggerFactory.getLogger(Interpreter.class);
+
     private final KvConfig kvConfig;
     private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
 
@@ -205,6 +209,17 @@ public class TaxonomyTransform {
           .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));
 
       counter.inc();
+    }
+
+    @Teardown
+    public void tearDown(){
+      if (Objects.nonNull(kvStore)) {
+        try {
+          kvStore.close();
+        } catch (IOException ex) {
+          LOG.error("Error closing KVStore", ex);
+        }
+      }
     }
   }
 }
