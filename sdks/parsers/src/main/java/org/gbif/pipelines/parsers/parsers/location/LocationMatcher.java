@@ -1,6 +1,5 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
@@ -15,8 +14,6 @@ import org.gbif.rest.client.geocode.Location;
 import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-
-import javax.swing.text.html.Option;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;

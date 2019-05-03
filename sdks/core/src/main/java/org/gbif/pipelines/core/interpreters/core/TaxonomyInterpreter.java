@@ -5,7 +5,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.vocabulary.Kingdom;
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
@@ -18,7 +17,10 @@ import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.species.NameUsageMatch;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.*;
