@@ -176,8 +176,6 @@ public class TaxonomyTransform {
 
         if (kvConfig.getZookeeperUrl() != null && !kvConfig.getTaxonomyRestOnly()) {
 
-          NameMatchServiceSyncClient nameMatchClient = new NameMatchServiceSyncClient(clientConfiguration);
-
           CachedHBaseKVStoreConfiguration matchConfig = CachedHBaseKVStoreConfiguration.builder()
               .withValueColumnQualifier("j") //stores JSON data
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
@@ -189,7 +187,7 @@ public class TaxonomyTransform {
               .withCacheCapacity(15_000L)
               .build();
 
-          kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, nameMatchClient);
+          kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
         } else {
           kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
         }
