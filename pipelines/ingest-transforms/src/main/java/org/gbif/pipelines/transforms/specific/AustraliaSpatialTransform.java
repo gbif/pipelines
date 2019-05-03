@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
-import org.apache.hadoop.hbase.util.Bytes;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -35,9 +35,11 @@ import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUSTRALIA_SPATIAL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL;
@@ -140,6 +142,7 @@ public class AustraliaSpatialTransform {
    * ParDo runs sequence of interpretations for {@link AustraliaSpatialRecord} using {@link LocationRecord} as
    * a source and {@link AustraliaSpatialInterpreter} as interpretation steps
    */
+  @Slf4j
   public static class Interpreter extends DoFn<LocationRecord, AustraliaSpatialRecord> {
 
     private final Counter counter = Metrics.counter(AustraliaSpatialTransform.class, AUSTRALIA_SPATIAL_RECORDS_COUNT);
@@ -162,7 +165,7 @@ public class AustraliaSpatialTransform {
     }
 
     public Interpreter(String properties) {
-      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(KvConfigFactory.AUSTRALIA_PREFIX, Paths.get(properties));
     }
 
     @Setup
@@ -172,9 +175,9 @@ public class AustraliaSpatialTransform {
         CachedHBaseKVStoreConfiguration hBaseKVStoreConfiguration = CachedHBaseKVStoreConfiguration.builder()
             .withValueColumnQualifier("json") //stores JSON data
             .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                .withTableName(kvConfig.getAustraliaTableName()) //Geocode KV HBase table
+                .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
                 .withColumnFamily("v") //Column in which qualifiers are stored
-                .withNumOfKeyBuckets(kvConfig.getAustraliaNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
                 .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                 .build())
             .withCacheCapacity(15_000L)
@@ -187,6 +190,18 @@ public class AustraliaSpatialTransform {
 
       }
     }
+
+    @Teardown
+    public void tearDown() {
+      if (Objects.nonNull(kvStore)) {
+        try {
+          kvStore.close();
+        } catch (IOException ex) {
+          log.error("Error closing KVStore", ex);
+        }
+      }
+    }
+
 
     @ProcessElement
     public void processElement(ProcessContext context) {

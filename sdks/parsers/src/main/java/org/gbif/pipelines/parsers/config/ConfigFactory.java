@@ -3,6 +3,7 @@ package org.gbif.pipelines.parsers.config;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
 
@@ -11,6 +12,12 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class ConfigFactory {
+
+  static String getKey(Properties props, String key){
+    return Optional.ofNullable(props.getProperty(key))
+        .filter(prop -> !prop.isEmpty())
+        .orElseThrow(() -> new IllegalArgumentException(key + " - can't find the value!"));
+  }
 
   static Properties loadProperties(Path propertiesPath) {
     Function<Path, InputStream> absolute = path -> {

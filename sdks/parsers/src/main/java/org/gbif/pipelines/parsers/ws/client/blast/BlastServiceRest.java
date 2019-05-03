@@ -18,15 +18,15 @@ public class BlastServiceRest {
     // create client
     OkHttpClient client =
         new OkHttpClient.Builder()
-            .connectTimeout(wsConfig.getBlastTimeout(), TimeUnit.SECONDS)
-            .readTimeout(wsConfig.getBlastTimeout(), TimeUnit.SECONDS)
+            .connectTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
+            .readTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
             .build();
 
     // create service
     Retrofit retrofit =
         new Retrofit.Builder()
             .client(client)
-            .baseUrl(wsConfig.getBlastUrl())
+            .baseUrl(wsConfig.getBasePath())
             .addConverterFactory(JacksonConverterFactory.create())
             .validateEagerly(true)
             .build();

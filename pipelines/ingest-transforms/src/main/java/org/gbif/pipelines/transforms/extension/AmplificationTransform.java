@@ -142,7 +142,7 @@ public class AmplificationTransform {
     }
 
     public Interpreter(String properties) {
-      this.wsConfig = WsConfigFactory.create(Paths.get(properties));
+      this.wsConfig = WsConfigFactory.create(WsConfigFactory.BLAST_PREFIX, Paths.get(properties));
     }
 
     @Setup

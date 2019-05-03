@@ -19,8 +19,8 @@ public class MetadataServiceRest {
     // create client
     OkHttpClient client =
         new OkHttpClient.Builder()
-            .connectTimeout(wsConfig.getMetadataTimeout(), TimeUnit.SECONDS)
-            .readTimeout(wsConfig.getMetadataTimeout(), TimeUnit.SECONDS)
+            .connectTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
+            .readTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
             .build();
 
     // create service

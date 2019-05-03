@@ -1,65 +1,30 @@
 package org.gbif.pipelines.parsers.config;
 
-import org.aeonbits.owner.Config;
+import java.io.Serializable;
 
-public interface KvConfig extends Config {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
 
-  @Key("gbif.api.url")
-  String getBasePath();
+@Data
+@AllArgsConstructor(staticName = "create")
+@Getter
+public final class KvConfig implements Serializable {
 
-  @Key("zookeeper.url")
-  String getZookeeperUrl();
+  private static final long serialVersionUID = -9019714539959567270L;
+  // ws path
+  private final String basePath;
+  // timeout in seconds
+  private final long timeout;
+  // cache size in mb
+  private final long cacheSizeMb;
+  //
+  private final String tableName;
 
-  @Key("taxonomy.ws.timeout")
-  @DefaultValue("60")
-  long getTaxonomyTimeout();
+  private final String zookeeperUrl;
 
-  @Key("taxonomy.ws.cache.sizeMb")
-  @DefaultValue("64")
-  long getTaxonomyCacheSizeMb();
+  private final int numOfKeyBuckets;
 
-  @Key("taxonomy.tableName")
-  String getTaxonomyTableName();
-
-  @Key("taxonomy.numOfKeyBuckets")
-  @DefaultValue("10")
-  int getTaxonomyNumOfKeyBuckets();
-
-  @Key("taxonomy.restOnly")
-  @DefaultValue("false")
-  boolean getTaxonomyRestOnly();
-
-  @Key("geocode.ws.timeout")
-  @DefaultValue("60")
-  long getGeocodeTimeout();
-
-  @Key("geocode.ws.cache.sizeMb")
-  @DefaultValue("64")
-  long getGeocodeCacheSizeMb();
-
-  @Key("geocode.tableName")
-  String getGeocodeTableName();
-
-  @Key("geocode.numOfKeyBuckets")
-  @DefaultValue("10")
-  int getGeocodeNumOfKeyBuckets();
-
-  @Key("geocode.restOnly")
-  @DefaultValue("false")
-  boolean getGeocodeRestOnly();
-
-  @Key("australia.spatial.ws.timeout")
-  @DefaultValue("60")
-  long getAustraliaTimeout();
-
-  @Key("australia.spatial.ws.cache.sizeMb")
-  @DefaultValue("64")
-  long getAustraliaCacheSizeMb();
-
-  @Key("australia.spatial.tableName")
-  String getAustraliaTableName();
-
-  @Key("australia.spatial.numOfKeyBuckets")
-  @DefaultValue("20")
-  int getAustraliaNumOfKeyBuckets();
+  private final boolean restOnly;
 }
+

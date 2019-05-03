@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.UnaryOperator;
 
 import org.gbif.kvs.KeyValueStore;
@@ -22,6 +23,7 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.transforms.CheckTransforms;
 import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;
@@ -38,7 +40,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.gbif.rest.client.geocode.GeocodeResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
@@ -139,6 +141,7 @@ public class LocationTransform {
    * ParDo runs sequence of interpretations for {@link LocationRecord} using {@link ExtendedRecord}
    * as a source and {@link LocationInterpreter} as interpretation steps
    */
+  @Slf4j
   public static class Interpreter extends DoFn<ExtendedRecord, LocationRecord> {
 
     private final Counter counter = Metrics.counter(LocationTransform.class, LOCATION_RECORDS_COUNT);
@@ -165,7 +168,7 @@ public class LocationTransform {
     }
 
     public Interpreter(String properties, PCollectionView<MetadataRecord> metadataView) {
-      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(KvConfigFactory.GEOCODE_PREFIX, Paths.get(properties));
       this.metadataView = metadataView;
     }
 
@@ -175,18 +178,18 @@ public class LocationTransform {
 
         ClientConfiguration clientConfig = ClientConfiguration.builder()
             .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
-            .withFileCacheMaxSizeMb(kvConfig.getGeocodeCacheSizeMb()) //Max file cache size
-            .withTimeOut(kvConfig.getGeocodeTimeout()) //Geocode service connection time-out
+            .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
+            .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
             .build();
 
-        if (kvConfig.getZookeeperUrl() != null && !kvConfig.getGeocodeRestOnly()) {
+        if (kvConfig.getZookeeperUrl() != null && !kvConfig.isRestOnly()) {
 
           CachedHBaseKVStoreConfiguration geocodeKvStoreConfig = CachedHBaseKVStoreConfiguration.builder()
               .withValueColumnQualifier("j") //stores JSON data
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                  .withTableName(kvConfig.getGeocodeTableName()) //Geocode KV HBase table
+                  .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(kvConfig.getGeocodeNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
                   .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                   .build())
               .withCacheCapacity(15_000L)
@@ -197,6 +200,17 @@ public class LocationTransform {
           kvStore = GeocodeKVStoreFactory.simpleGeocodeKVStore(clientConfig);
         }
 
+      }
+    }
+
+    @Teardown
+    public void tearDown() {
+      if (Objects.nonNull(kvStore)) {
+        try {
+          kvStore.close();
+        } catch (IOException ex) {
+          log.error("Error closing KVStore", ex);
+        }
       }
     }
 

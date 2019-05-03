@@ -77,7 +77,7 @@
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.11.0</apache.beam.version>
+    <apache.beam.version>2.10.0</apache.beam.version>
     <hadoop.version>2.6.0-cdh5.12.0</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.0</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.12.0</hbase.version>
@@ -85,7 +85,6 @@
     <geotools.version>12.1</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
     <guava.version>20.0</guava.version>
-    <aeonbits.version>1.0.6</aeonbits.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.5</slf4j.version>
@@ -97,6 +96,7 @@
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
 
     <jackson.version>2.9.8</jackson.version>
+    <jackson-dataformat-avro.version>2.8.6</jackson-dataformat-avro.version>
 
     <retrofit.version>2.5.0</retrofit.version>
     <okhttp.version>3.11.0</okhttp.version>
@@ -507,11 +507,6 @@
         <artifactId>jsr305</artifactId>
         <version>${findbugs-jsr305.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.aeonbits.owner</groupId>
-        <artifactId>owner-java8</artifactId>
-        <version>${aeonbits.version}</version>
-      </dependency>
 
       <!-- XML -->
       <dependency>
@@ -590,6 +585,11 @@
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-avro</artifactId>
+        <version>${jackson-dataformat-avro.version}</version>
       </dependency>
 
       <!-- Http clients -->

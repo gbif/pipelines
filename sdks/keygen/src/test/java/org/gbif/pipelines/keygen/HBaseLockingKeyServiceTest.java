@@ -2,7 +2,6 @@ package org.gbif.pipelines.keygen;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -11,7 +10,6 @@ import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.hbase.Columns;
 
-import org.aeonbits.owner.ConfigFactory;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -40,26 +38,19 @@ public class HBaseLockingKeyServiceTest {
   private static final String B = "b";
   private static final String C = "c";
 
-  private static KeygenConfig cfg;
+  private static final KeygenConfig CFG =
+      KeygenConfig.create("test_occurrence", "test_occurrence_counter", "test_occurrence_lookup", null);
 
-  static {
-    Properties properties = new Properties();
-    properties.setProperty("keygen.table.occ", "test_occurrence");
-    properties.setProperty("keygen.table.counter", "test_occurrence_counter");
-    properties.setProperty("keygen.table.lookup", "test_occurrence_lookup");
-    cfg = ConfigFactory.create(KeygenConfig.class, properties);
-  }
-
-  private static final byte[] LOOKUP_TABLE = Bytes.toBytes(cfg.getLookupTable());
+  private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
   private static final String CF_NAME = "o";
   private static final byte[] CF = Bytes.toBytes(CF_NAME);
-  private static final byte[] COUNTER_TABLE = Bytes.toBytes(cfg.getCounterTable());
+  private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
   private static final String COUNTER_CF_NAME = "o";
   private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
-  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(cfg.getOccTable());
+  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccTable());
 
 
-  private static Connection connection = null;
+  private static Connection CONNECTION = null;
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
   private HBaseLockingKeyService keyService;
 
@@ -72,7 +63,7 @@ public class HBaseLockingKeyServiceTest {
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
     TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
-    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+    CONNECTION = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
   }
 
   @Before
@@ -81,13 +72,13 @@ public class HBaseLockingKeyServiceTest {
     TEST_UTIL.truncateTable(COUNTER_TABLE);
     TEST_UTIL.truncateTable(OCCURRENCE_TABLE);
 
-    keyService = new HBaseLockingKeyService(cfg, connection);
+    keyService = new HBaseLockingKeyService(CFG, CONNECTION);
   }
 
   @AfterClass
   public static void afterClass() throws Exception {
     TEST_UTIL.shutdownMiniCluster();
-    connection.close();
+    CONNECTION.close();
   }
 
   @Test
@@ -115,7 +106,7 @@ public class HBaseLockingKeyServiceTest {
     Put put = new Put(lookupKey1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
@@ -145,7 +136,8 @@ public class HBaseLockingKeyServiceTest {
     assertEquals(250, result.getKey());
 
     // first one claimed up to 300, then "died". On restart we claim 300 to 400.
-    HBaseLockingKeyService keyService2 = new HBaseLockingKeyService(cfg, connection);
+    HBaseLockingKeyService keyService2 =
+        new HBaseLockingKeyService(CFG, CONNECTION);
     for (int i = 0; i < 50; i++) {
       Set<String> uniqueIds = ImmutableSet.of("A" + i);
       result = keyService2.generateKey(uniqueIds, "boo");
@@ -163,7 +155,7 @@ public class HBaseLockingKeyServiceTest {
     Put put = new Put(lookupKey1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
       byte[] lock2 = Bytes.toBytes(UUID.randomUUID().toString());
       byte[] lookupKey2 = Bytes.toBytes(datasetKey + "|EFGH");
@@ -188,7 +180,7 @@ public class HBaseLockingKeyServiceTest {
     Put put = new Put(lookupKey1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(1L));
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
 
       byte[] lookupKey2 = Bytes.toBytes(datasetKey + "|EFGH");
@@ -214,7 +206,7 @@ public class HBaseLockingKeyServiceTest {
     byte[] lock = Bytes.toBytes(UUID.randomUUID().toString());
     Put put = new Put(lookupKey);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock);
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
@@ -233,14 +225,12 @@ public class HBaseLockingKeyServiceTest {
     byte[] lock = Bytes.toBytes(UUID.randomUUID().toString());
     Put put = new Put(lookupKey);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), ts, lock);
-    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
-    //    System.out.println("start at [" + System.currentTimeMillis() + "]");
     KeyLookupResult result = keyService.generateKey(ImmutableSet.of("ABCD"), datasetKey);
     assertEquals(1, result.getKey());
-    //    System.out.println("end at [" + System.currentTimeMillis() + "]");
   }
 
   @Test

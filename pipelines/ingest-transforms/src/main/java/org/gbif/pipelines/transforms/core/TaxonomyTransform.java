@@ -39,8 +39,7 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAXONOMY;
@@ -126,7 +125,8 @@ public class TaxonomyTransform {
   /**
    * Creates an {@link Interpreter} for {@link TaxonRecord}
    */
-  public static SingleOutput<ExtendedRecord, TaxonRecord> interpret(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
+  public static SingleOutput<ExtendedRecord, TaxonRecord> interpret(
+      KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
     return ParDo.of(new Interpreter(kvStore));
   }
 
@@ -141,11 +141,10 @@ public class TaxonomyTransform {
    * ParDo runs sequence of interpretations for {@link TaxonRecord} using {@link ExtendedRecord} as
    * a source and {@link TaxonomyInterpreter} as interpretation steps
    */
+  @Slf4j
   public static class Interpreter extends DoFn<ExtendedRecord, TaxonRecord> {
 
     private final Counter counter = Metrics.counter(TaxonomyTransform.class, TAXON_RECORDS_COUNT);
-
-    private final Logger LOG = LoggerFactory.getLogger(Interpreter.class);
 
     private final KvConfig kvConfig;
     private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
@@ -165,7 +164,7 @@ public class TaxonomyTransform {
     }
 
     public Interpreter(String properties) {
-      this.kvConfig = KvConfigFactory.create(Paths.get(properties));
+      this.kvConfig = KvConfigFactory.create(KvConfigFactory.TAXONOMY_PREFIX, Paths.get(properties));
     }
 
     @Setup
@@ -174,18 +173,18 @@ public class TaxonomyTransform {
 
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
             .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
-            .withFileCacheMaxSizeMb(kvConfig.getTaxonomyCacheSizeMb()) //Max file cache size
-            .withTimeOut(kvConfig.getTaxonomyTimeout()) //Geocode service connection time-out
+            .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
+            .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
             .build();
 
-        if (kvConfig.getZookeeperUrl() != null && !kvConfig.getTaxonomyRestOnly()) {
+        if (kvConfig.getZookeeperUrl() != null && !kvConfig.isRestOnly()) {
 
           CachedHBaseKVStoreConfiguration matchConfig = CachedHBaseKVStoreConfiguration.builder()
               .withValueColumnQualifier("j") //stores JSON data
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                  .withTableName(kvConfig.getTaxonomyTableName()) //Geocode KV HBase table
+                  .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(kvConfig.getTaxonomyNumOfKeyBuckets()) //Buckets for salted key generations
+                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
                   .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                   .build())
               .withCacheCapacity(15_000L)
@@ -199,6 +198,17 @@ public class TaxonomyTransform {
       }
     }
 
+    @Teardown
+    public void tearDown() {
+      if (Objects.nonNull(kvStore)) {
+        try {
+          kvStore.close();
+        } catch (IOException ex) {
+          log.error("Error closing KVStore", ex);
+        }
+      }
+    }
+
     @ProcessElement
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
@@ -209,17 +219,6 @@ public class TaxonomyTransform {
           .consume(v -> Optional.ofNullable(v.getId()).ifPresent(id -> context.output(v)));
 
       counter.inc();
-    }
-
-    @Teardown
-    public void tearDown(){
-      if (Objects.nonNull(kvStore)) {
-        try {
-          kvStore.close();
-        } catch (IOException ex) {
-          LOG.error("Error closing KVStore", ex);
-        }
-      }
     }
   }
 }

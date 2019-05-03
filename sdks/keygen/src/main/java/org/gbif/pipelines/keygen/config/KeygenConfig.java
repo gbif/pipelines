@@ -1,18 +1,21 @@
 package org.gbif.pipelines.keygen.config;
 
-import org.aeonbits.owner.Config;
+import java.io.Serializable;
 
-public interface KeygenConfig extends Config {
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-  @Key("keygen.table.occ")
-  String getOccTable();
+@Data
+@AllArgsConstructor(staticName = "create")
+public class KeygenConfig implements Serializable {
 
-  @Key("keygen.table.counter")
-  String getCounterTable();
+  private static final long serialVersionUID = -8963859065783618024L;
 
-  @Key("keygen.table.lookup")
-  String getLookupTable();
+  private String occTable;
 
-  @Key("zookeeper.url")
-  String getHbaseZk();
+  private String counterTable;
+
+  private String lookupTable;
+
+  private String hbaseZk;
 }
