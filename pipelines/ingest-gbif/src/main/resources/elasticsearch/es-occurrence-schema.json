@@ -113,23 +113,6 @@
             "type": "keyword"
           }
         }
-      },
-      {
-        "multimedia_items_type": {
-          "path_match": "multimediaItems.type",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "multimedia_items_disabled": {
-          "path_match": "multimediaItems.*",
-          "path_unmatch": "multimediaItems.type",
-          "mapping": {
-            "enabled": false
-          }
-        }
       }
     ],
     "properties": {
@@ -204,7 +187,10 @@
       "notIssues": {"type": "keyword"},
 
       "gbifClassification": {"type": "object"},
-      "multimediaItems": {"type": "object"},
+
+      "mediaTypes": {"type":  "keyword", "copy_to": "all"},
+      "multimediaItems": {"type": "nested", "enabled": false},
+
       "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},
 
