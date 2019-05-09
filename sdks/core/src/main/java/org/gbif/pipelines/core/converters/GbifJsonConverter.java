@@ -20,17 +20,7 @@ import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.Issues;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 
 import org.apache.avro.specific.SpecificRecordBase;
 
@@ -83,7 +73,8 @@ public class GbifJsonConverter {
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
           .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
-          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter());
+          .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
+          .converter(MultimediaRecord.class, getMultimediaConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -562,6 +553,54 @@ public class GbifJsonConverter {
           .collect(Collectors.toList());
 
       jc.addJsonArray("measurementOrFactItems", nodes);
+    };
+  }
+
+  /**
+   * String converter for {@link MultimediaRecord}, convert an object to specific string view * *
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * {
+   *  "id": "777",
+   *  "multimediaItems": [
+   *    {
+   *      "type": "StillImage",
+   *      "format": "image/jpeg",
+   *      "identifier": "http://arctos.database.museum/media/10436011?open"
+   *     },
+   *     {
+   *      "type": "MovingImage",
+   *      "format": "video/mp4",
+   *      "identifier": "http://arctos.database.museum/media/10436025?open"
+   *      }
+   *  ],
+   *  "mediaTypes": [
+   *     "StillImage",
+   *     "MovingImage"
+   *  ]
+   *
+   * }</pre>
+   *
+   * @return
+   */
+  private BiConsumer<JsonConverter, SpecificRecordBase> getMultimediaConverter() {
+    return (jc, record) -> {
+      MultimediaRecord mr = (MultimediaRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(ID, mr.getId());
+      }
+
+      jc.addCommonFields(mr);
+
+      Set<TextNode> mediaTypes =
+          mr.getMultimediaItems().stream()
+              .map(Multimedia::getType)
+              .map(TextNode::valueOf)
+              .collect(Collectors.toSet());
+      jc.addJsonArray("mediaTypes", mediaTypes);
     };
   }
 }

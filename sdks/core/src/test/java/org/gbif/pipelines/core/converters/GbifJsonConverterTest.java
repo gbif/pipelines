@@ -11,23 +11,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.Amplification;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.DeterminedDate;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFact;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -522,6 +506,38 @@ public class GbifJsonConverterTest {
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(record);
+
+    // Should
+    Assert.assertEquals(expected, result);
+    Assert.assertTrue(JsonValidationUtils.isValid(result));
+  }
+
+  @Test
+  public void multimediaRecordTest() {
+
+    // Expected
+    String expected =
+        "{\"id\":\"777\",\"multimediaItems\":[{\"type\":\"StillImage\",\"format\":\"image/jpeg\"},"
+          + "{\"type\":\"MovingImage\",\"format\":\"video/mp4\"}],"
+          + "\"mediaTypes\":[\"StillImage\",\"MovingImage\"]}";
+
+    // State
+    Multimedia stillImage = new Multimedia();
+    stillImage.setType(MediaType.StillImage.name());
+    stillImage.setFormat("image/jpeg");
+
+    Multimedia movingImage = new Multimedia();
+    movingImage.setType(MediaType.MovingImage.name());
+    movingImage.setFormat("video/mp4");
+
+    MultimediaRecord multimediaRecord =
+        MultimediaRecord.newBuilder()
+            .setId("777")
+            .setMultimediaItems(Arrays.asList(stillImage, movingImage))
+            .build();
+
+    // When
+    String result = GbifJsonConverter.toStringPartialJson(multimediaRecord);
 
     // Should
     Assert.assertEquals(expected, result);
