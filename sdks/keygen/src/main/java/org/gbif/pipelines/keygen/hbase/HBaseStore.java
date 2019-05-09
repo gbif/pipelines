@@ -1,7 +1,9 @@
 package org.gbif.pipelines.keygen.hbase;
 
 import java.io.IOException;
+import java.util.Optional;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.hbase.util.ResultReader;
 
@@ -33,12 +35,15 @@ public class HBaseStore<T> {
   private final String cf;
   private final byte[] cfBytes;
   private final Connection connection;
+  private final int numberOfBuckets;
 
-  public HBaseStore(String tableName, String cf, Connection connection) {
+  public HBaseStore(String tableName, String cf, Connection connection, int numberOfBuckets) {
+    checkArgument(numberOfBuckets>0, "bucket count must be >0");
     this.tableName = TableName.valueOf(checkNotNull(tableName, "tableName can't be null"));
     this.cf = checkNotNull(cf, "cf can't be null");
     this.cfBytes = Bytes.toBytes(cf);
     this.connection = checkNotNull(connection, "connection can't be null");
+    this.numberOfBuckets = numberOfBuckets;
   }
 
   public Long getLong(T key, String columnName) {
@@ -84,6 +89,21 @@ public class HBaseStore<T> {
       if (byteKey != null) {
         Put put = new Put(byteKey);
         put.addColumn(cfBytes, Bytes.toBytes(columnName), value);
+        table.put(put);
+      }
+    } catch (IOException e) {
+      throw new ServiceUnavailableException(HBASE_READ_ERROR_MSG, e);
+    }
+  }
+
+  public void putLongString(T key, String columnName, long value, String columnName2, String value2) {
+    checkNotNull(key, KEY_CANT_BE_NULL_MSG);
+    try (Table table = connection.getTable(tableName)) {
+      byte[] byteKey = convertKey(key);
+      if (byteKey != null) {
+        Put put = new Put(byteKey);
+        put.addColumn(cfBytes, Bytes.toBytes(columnName), Bytes.toBytes(value));
+        put.addColumn(cfBytes, Bytes.toBytes(columnName2), Bytes.toBytes(value2));
         table.put(put);
       }
     } catch (IOException e) {
@@ -204,19 +224,40 @@ public class HBaseStore<T> {
   }
 
   private byte[] convertKey(T key) {
-    // instanceof is dirty, but it's that or separate classes for different key types
-    if (key instanceof Integer) {
-      return Bytes.toBytes((Integer) key);
-    } else if (key instanceof String) {
-      return Bytes.toBytes((String) key);
-    } else if (key instanceof Long) {
-      return Bytes.toBytes((Long) key);
-    } else if (key instanceof Float) {
-      return Bytes.toBytes((Float) key);
-    } else if (key instanceof Double) {
-      return Bytes.toBytes((Double) key);
-    }
+    return saltKey(String.valueOf(key), numberOfBuckets);
+  }
 
-    return null;
+  /**
+   * Returns the unsalted key using a modulus based approach.
+   * @param unsalted Key to salt
+   * @param numberOfBuckets To use in salting
+   * @return The salted key
+   */
+  @VisibleForTesting
+  public static byte[] saltKey(String unsalted, int numberOfBuckets) {
+    int salt = Math.abs(unsalted.hashCode() % numberOfBuckets);
+    int digitCount = digitCount(numberOfBuckets-1);  // minus one because e.g. %100 produces 0..99 (2 digits)
+    String saltedKey = leftPadZeros(salt,digitCount) + ":" + unsalted;
+    return Bytes.toBytes(saltedKey);
+  }
+
+  /**
+   * Pads with 0s to desired length.
+   * @param number To pad
+   * @param length The final length needed
+   * @return The string padded with 0 if needed
+   */
+  static String leftPadZeros(int number, int length) {
+    return String.format("%0" + length + "d", number);
+  }
+
+  /**
+   * Returns the number of digits in the number.  This will only provide sensible results for number>0 and the input
+   * is not sanitized.
+   *
+   * @return the number of digits in the number
+   */
+  private static int digitCount(int number) {
+    return (int)(Math.log10(number)+1);
   }
 }

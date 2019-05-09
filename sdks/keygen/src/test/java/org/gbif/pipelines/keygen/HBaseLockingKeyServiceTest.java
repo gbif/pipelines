@@ -17,6 +17,7 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.gbif.pipelines.keygen.hbase.HBaseStore;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -28,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import static org.gbif.pipelines.keygen.HBaseLockingKeyService.NUMBER_OF_BUCKETS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -102,7 +104,8 @@ public class HBaseLockingKeyServiceTest {
 
     String datasetKey = UUID.randomUUID().toString();
     String triplet = "IC|CC|CN|null";
-    byte[] lookupKey1 = Bytes.toBytes(datasetKey + "|" + triplet);
+
+    byte[] lookupKey1 = HBaseStore.saltKey(datasetKey + "|" + triplet, NUMBER_OF_BUCKETS);
     Put put = new Put(lookupKey1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
@@ -129,20 +132,20 @@ public class HBaseLockingKeyServiceTest {
   @Test
   public void testResumeCountAfterFailure() {
     KeyLookupResult result = null;
-    for (int i = 0; i < 250; i++) {
+    for (int i = 0; i < 1001; i++) {
       Set<String> uniqueIds = ImmutableSet.of(String.valueOf(i));
       result = keyService.generateKey(uniqueIds, "boo");
     }
-    assertEquals(250, result.getKey());
+    assertEquals(1001, result.getKey());
 
-    // first one claimed up to 300, then "died". On restart we claim 300 to 400.
+    // first one claimed up to 2000, then "died". On restart we claim 2000 to 3000.
     HBaseLockingKeyService keyService2 =
         new HBaseLockingKeyService(CFG, CONNECTION);
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 5; i++) {
       Set<String> uniqueIds = ImmutableSet.of("A" + i);
       result = keyService2.generateKey(uniqueIds, "boo");
     }
-    assertEquals(350, result.getKey());
+    assertEquals(2005, result.getKey());
   }
 
   @Test
@@ -176,14 +179,14 @@ public class HBaseLockingKeyServiceTest {
 
     String datasetKey = "fakeuuid";
 
-    byte[] lookupKey1 = Bytes.toBytes(datasetKey + "|ABCD");
+    byte[] lookupKey1 = HBaseStore.saltKey(datasetKey + "|ABCD", NUMBER_OF_BUCKETS);
     Put put = new Put(lookupKey1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(1L));
     try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
 
-      byte[] lookupKey2 = Bytes.toBytes(datasetKey + "|EFGH");
+      byte[] lookupKey2 = HBaseStore.saltKey(datasetKey + "|EFGH", NUMBER_OF_BUCKETS);
       put = new Put(lookupKey2);
       put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
       put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
