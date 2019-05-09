@@ -18,6 +18,7 @@ import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Strings;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.*;
@@ -597,10 +598,12 @@ public class GbifJsonConverter {
 
       Set<TextNode> mediaTypes =
           mr.getMultimediaItems().stream()
+              .filter(i -> !Strings.isNullOrEmpty(i.getType()))
               .map(Multimedia::getType)
               .map(TextNode::valueOf)
               .collect(Collectors.toSet());
-      jc.addJsonArray("mediaTypes", mediaTypes);
+
+      Optional.of(mediaTypes).filter(v -> !v.isEmpty()).ifPresent(v -> jc.addJsonArray("mediaTypes", v));;
     };
   }
 }
