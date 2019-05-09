@@ -1,11 +1,17 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
-import java.util.Optional;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.converters.parser.xml.model.IdentifierRecord;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
+import org.gbif.converters.parser.xml.model.TypificationRecord;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import com.google.common.base.Strings;
@@ -21,7 +27,7 @@ public class ExtendedRecordConverter {
 
     ExtendedRecord record = ExtendedRecord.newBuilder().setId(rawRecord.getId()).build();
 
-    final BiConsumer<DwcTerm, String> setter =
+    final BiConsumer<Term, String> setter =
         (term, value) ->
             Optional.ofNullable(value)
                 .filter(str -> !str.isEmpty())
@@ -43,7 +49,7 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.infraspecificEpithet, rawRecord.getSubspecies());
     setter.accept(DwcTerm.decimalLatitude, rawRecord.getLatitude());
     setter.accept(DwcTerm.decimalLongitude, rawRecord.getLongitude());
-    setter.accept(DwcTerm.coordinatePrecision, rawRecord.getLatLongPrecision());
+    setter.accept(DwcTerm.coordinateUncertaintyInMeters, rawRecord.getLatLongPrecision());
     setter.accept(DwcTerm.geodeticDatum, rawRecord.getGeodeticDatum());
     setter.accept(DwcTerm.minimumElevationInMeters, rawRecord.getMinAltitude());
     setter.accept(DwcTerm.maximumElevationInMeters, rawRecord.getMaxAltitude());
@@ -54,7 +60,6 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.stateProvince, rawRecord.getStateOrProvince());
     setter.accept(DwcTerm.county, rawRecord.getCounty());
     setter.accept(DwcTerm.recordedBy, rawRecord.getCollectorName());
-    setter.accept(DwcTerm.fieldNumber, rawRecord.getCollectorsFieldNumber());
     setter.accept(DwcTerm.locality, rawRecord.getLocality());
     setter.accept(DwcTerm.year, rawRecord.getYear());
     setter.accept(DwcTerm.month, rawRecord.getMonth());
@@ -63,14 +68,49 @@ public class ExtendedRecordConverter {
     setter.accept(DwcTerm.basisOfRecord, rawRecord.getBasisOfRecord());
     setter.accept(DwcTerm.identifiedBy, rawRecord.getIdentifierName());
     setter.accept(DwcTerm.dateIdentified, rawRecord.getDateIdentified());
-    setter.accept(DwcTerm.identificationQualifier, rawRecord.getUnitQualifier());
+    setter.accept(GbifTerm.elevationAccuracy, rawRecord.getAltitudePrecision());
+    setter.accept(GbifTerm.depthAccuracy, rawRecord.getDepthPrecision());
 
-    if (Strings.isNullOrEmpty(rawRecord.getDateIdentified())) {
-      StringJoiner joiner = new StringJoiner("-");
-      Optional.ofNullable(rawRecord.getYearIdentified()).ifPresent(joiner::add);
-      Optional.ofNullable(rawRecord.getMonthIdentified()).ifPresent(joiner::add);
-      Optional.ofNullable(rawRecord.getDayIdentified()).ifPresent(joiner::add);
-      setter.accept(DwcTerm.identifiedBy, joiner.toString());
+    if (rawRecord.getIdentifierRecords() != null) {
+      rawRecord.getIdentifierRecords().stream()
+          .filter(ir -> ir.getIdentifierType() == IdentifierRecord.OCCURRENCE_ID_TYPE)
+          .map(IdentifierRecord::getIdentifier)
+          .findFirst()
+          .ifPresent(id -> setter.accept(DwcTerm.occurrenceID, id));
+    }
+
+    if (rawRecord.getTypificationRecords() != null
+        && !rawRecord.getTypificationRecords().isEmpty()) {
+      // just use first one - any more makes no sense
+      TypificationRecord typificationRecord = rawRecord.getTypificationRecords().get(0);
+      setter.accept(GbifTerm.typifiedName, typificationRecord.getScientificName());
+      setter.accept(DwcTerm.typeStatus, typificationRecord.getTypeStatus());
+    }
+
+    if (rawRecord.getImageRecords() != null && !rawRecord.getImageRecords().isEmpty()) {
+      List<Map<String, String>> verbMediaList =
+          rawRecord.getImageRecords().stream()
+              .map(
+                  imageRecord -> {
+                    Map<String, String> mediaTerms = new HashMap<>(5);
+
+                    final BiConsumer<Term, String> mediaSetter =
+                        (term, value) ->
+                            Optional.ofNullable(value)
+                                .filter(str -> !str.isEmpty())
+                                .ifPresent(x -> mediaTerms.put(term.qualifiedName(), x));
+
+                    mediaSetter.accept(DcTerm.format, imageRecord.getRawImageType());
+                    mediaSetter.accept(DcTerm.identifier, imageRecord.getUrl());
+                    mediaSetter.accept(DcTerm.references, imageRecord.getPageUrl());
+                    mediaSetter.accept(DcTerm.description, imageRecord.getDescription());
+                    mediaSetter.accept(DcTerm.license, imageRecord.getRights());
+
+                    return mediaTerms;
+                  })
+              .collect(Collectors.toList());
+
+      record.getExtensions().put(Extension.MULTIMEDIA.getRowType(), verbMediaList);
     }
 
     return record;

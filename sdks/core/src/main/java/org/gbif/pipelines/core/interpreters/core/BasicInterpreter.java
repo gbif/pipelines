@@ -182,7 +182,7 @@ public class BasicInterpreter {
     }
   }
 
-  /** {@link DwcTerm#typifiedName} interpretation. */
+  /** {@link GbifTerm#typifiedName} interpretation. */
   public static void interpretTypifiedName(ExtendedRecord er, BasicRecord br) {
     Optional<String> typifiedName = Optional.ofNullable(er.getCoreTerms().get(GbifTerm.typifiedName.qualifiedName()));
     if (typifiedName.isPresent()) {

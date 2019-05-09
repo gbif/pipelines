@@ -1,10 +1,10 @@
 package org.gbif.pipelines.common.beam;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.google.common.collect.Maps;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -44,11 +44,27 @@ public class XmlIOTest {
     coreMap1.put(DwcTerm.scientificName.qualifiedName(),"Tenebrionidae Latreille, 1802");
     coreMap1.put(DwcTerm.recordedBy.qualifiedName(),"de Vauloger");
     coreMap1.put(DwcTerm.locality.qualifiedName(),"Algeria, Tunisia, Sweden, other countries");
+    coreMap1.put(DwcTerm.occurrenceID.qualifiedName(), "ZFMK/Ob/223903199/909708/169734");
+
+    final List<Map<String, String>> multimediaExtension2 = new ArrayList<>();
+    multimediaExtension2.add(
+      Collections.singletonMap(
+        DcTerm.identifier.qualifiedName(),
+        "http://biocase.zfmk.de/resource/zfmk/COL/Ob0363.jpg"));
+    Map<String, String> mediaItem2 = new HashMap<>();
+    mediaItem2.put(
+      DcTerm.identifier.qualifiedName(), "http://biocase.zfmk.de/resource/zfmk/COL/Typ5.jpg");
+    mediaItem2.put(
+      DcTerm.description.qualifiedName(),
+      "Pappe - ~25,5 x 18,5 - Oberseite & Seiten: rotbraun - Unterseite: blau - Ränder:\n"
+        + "              hellgrün");
+    multimediaExtension2.add(mediaItem2);
 
     final ExtendedRecord expected = ExtendedRecord.newBuilder()
         .setId("ZFMK/Ob/223903199/909708/169734")
         .setCoreRowType(DwcTerm.Occurrence.qualifiedName())
         .setCoreTerms(coreMap1)
+        .setExtensions(Collections.singletonMap(Extension.MULTIMEDIA.getRowType(), multimediaExtension2))
         .build();
 
     // When
@@ -77,12 +93,29 @@ public class XmlIOTest {
     coreMap1.put(DwcTerm.scientificName.qualifiedName(),"Tenebrionidae Latreille, 1802");
     coreMap1.put(DwcTerm.recordedBy.qualifiedName(),"de Vauloger");
     coreMap1.put(DwcTerm.locality.qualifiedName(),"Algeria, Tunisia, Sweden, other countries");
+    coreMap1.put(DwcTerm.occurrenceID.qualifiedName(), "ZFMK/Ob/223903199/909708/169734");
 
-    final ExtendedRecord ex1 = ExtendedRecord.newBuilder()
-        .setId("ZFMK/Ob/223903199/909708/169734")
-        .setCoreRowType(DwcTerm.Occurrence.qualifiedName())
-        .setCoreTerms(coreMap1)
-        .build();
+    final List<Map<String, String>> multimediaExtension1 = new ArrayList<>();
+    multimediaExtension1.add(
+      Collections.singletonMap(
+        DcTerm.identifier.qualifiedName(),
+        "http://biocase.zfmk.de/resource/zfmk/COL/Ob0363.jpg"));
+    Map<String, String> mediaItem1 = new HashMap<>();
+    mediaItem1.put(
+      DcTerm.identifier.qualifiedName(), "http://biocase.zfmk.de/resource/zfmk/COL/Typ5.jpg");
+    mediaItem1.put(
+      DcTerm.description.qualifiedName(),
+      "Pappe - ~25,5 x 18,5 - Oberseite & Seiten: rotbraun - Unterseite: blau - Ränder:\n"
+        + "              hellgrün");
+    multimediaExtension1.add(mediaItem1);
+
+    final ExtendedRecord ex1 =
+        ExtendedRecord.newBuilder()
+            .setId("ZFMK/Ob/223903199/909708/169734")
+            .setCoreRowType(DwcTerm.Occurrence.qualifiedName())
+            .setCoreTerms(coreMap1)
+            .setExtensions(Collections.singletonMap(Extension.MULTIMEDIA.getRowType(), multimediaExtension1))
+            .build();
 
     final Map<String, String> coreMap2 = new HashMap<>();
     coreMap2.put(DwcTerm.basisOfRecord.qualifiedName(),"PreservedSpecimen");
@@ -92,11 +125,27 @@ public class XmlIOTest {
     coreMap2.put(DwcTerm.family.qualifiedName(),"Curculionidae");
     coreMap2.put(DwcTerm.institutionCode.qualifiedName(),"ZFMK");
     coreMap2.put(DwcTerm.scientificName.qualifiedName(),"Curculionidae Latreille, 1802");
+    coreMap2.put(DwcTerm.occurrenceID.qualifiedName(), "ZFMK/Ob/223902837/908708/169372");
+
+    final List<Map<String, String>> multimediaExtension2 = new ArrayList<>();
+    multimediaExtension2.add(
+      Collections.singletonMap(
+        DcTerm.identifier.qualifiedName(),
+        "http://biocase.zfmk.de/resource/zfmk/COL/Ob0001.jpg"));
+    Map<String, String> mediaItem2 = new HashMap<>();
+    mediaItem2.put(DcTerm.identifier.qualifiedName(),
+      "http://biocase.zfmk.de/resource/zfmk/COL/Typ1.jpg");
+    mediaItem2.put(
+      DcTerm.description.qualifiedName(),
+      "Pappe - 40 x 30 - Oberseite & Seiten: Holzimitat - Unterseite: schwarz grün mamoriert -\n"
+        + "              Ränder: schwarz");
+    multimediaExtension2.add(mediaItem2);
 
     final ExtendedRecord ex2 = ExtendedRecord.newBuilder()
         .setId("ZFMK/Ob/223902837/908708/169372")
         .setCoreRowType(DwcTerm.Occurrence.qualifiedName())
         .setCoreTerms(coreMap2)
+        .setExtensions(Collections.singletonMap(Extension.MULTIMEDIA.getRowType(), multimediaExtension2))
         .build();
 
     final List<ExtendedRecord> expected = Arrays.asList(ex1, ex2);
