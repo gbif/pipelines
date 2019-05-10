@@ -451,7 +451,7 @@ public class GbifJsonConverterTest {
   public void multimediaRecordSkipIssuesWithIdEmptyTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"multimediaItems\":[{}]}";
+    String expected = "{\"id\":\"777\",\"multimediaItems\":[{}],\"mediaTypes\":[]}";
 
     // State
     MultimediaRecord record = MultimediaRecord.newBuilder()

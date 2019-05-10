@@ -18,7 +18,10 @@ import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+import lombok.val;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.*;
@@ -594,16 +597,51 @@ public class GbifJsonConverter {
         jc.addJsonTextFieldNoCheck(ID, mr.getId());
       }
 
-      jc.addCommonFields(mr);
+      // multimedia items
+      if (mr.getMultimediaItems() != null && !mr.getMultimediaItems().isEmpty()) {
+        List<ObjectNode> items =
+            mr.getMultimediaItems().stream()
+                .map(
+                    item -> {
+                      ObjectNode node = JsonConverter.createObjectNode();
 
-      Set<TextNode> mediaTypes =
-          mr.getMultimediaItems().stream()
-              .filter(i -> !Strings.isNullOrEmpty(i.getType()))
-              .map(Multimedia::getType)
-              .map(TextNode::valueOf)
-              .collect(Collectors.toSet());
+                      final BiConsumer<String, String> addField =
+                          (field, value) ->
+                              Optional.ofNullable(value)
+                                  .filter(v -> !v.isEmpty())
+                                  .ifPresent(v -> node.put(field, v));
 
-      Optional.of(mediaTypes).filter(v -> !v.isEmpty()).ifPresent(v -> jc.addJsonArray("mediaTypes", v));;
+                      addField.accept("type", item.getType());
+                      addField.accept("format", item.getFormat());
+                      addField.accept("identifier", item.getIdentifier());
+                      addField.accept("audience", item.getAudience());
+                      addField.accept("contributor", item.getContributor());
+                      addField.accept("created", item.getCreated());
+                      addField.accept("creator", item.getCreator());
+                      addField.accept("description", item.getDescription());
+                      addField.accept("license", item.getLicense());
+                      addField.accept("publisher", item.getPublisher());
+                      addField.accept("references", item.getReferences());
+                      addField.accept("rightsHolder", item.getRightsHolder());
+                      addField.accept("source", item.getSource());
+                      addField.accept("title", item.getTitle());
+
+                      return node;
+                    })
+                .collect(Collectors.toList());
+
+        jc.addJsonArray("multimediaItems", items);
+
+        // media types
+        Set<TextNode> mediaTypes =
+            mr.getMultimediaItems().stream()
+                .filter(i -> !Strings.isNullOrEmpty(i.getType()))
+                .map(Multimedia::getType)
+                .map(TextNode::valueOf)
+                .collect(Collectors.toSet());
+
+        jc.addJsonArray("mediaTypes", mediaTypes);
+      }
     };
   }
 }
