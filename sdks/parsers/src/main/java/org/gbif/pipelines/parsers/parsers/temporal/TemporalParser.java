@@ -106,19 +106,7 @@ public class TemporalParser {
       issueList.add(RECORDED_DATE_INVALID.name());
     }
 
-    if (fromTemporal != null) {
-      if (!temporalDates.getYear().isPresent() && HAS_YEAR_FN.test(fromTemporal)) {
-        temporalDates.setYear(Year.from(fromTemporal));
-      }
-      if (!temporalDates.getMonth().isPresent() && HAS_MONTH_FN.test(fromTemporal) && HAS_YEAR_MATCH.test(fromTemporal,
-          temporalDates.getYear().get())) {
-        temporalDates.setMonth(Month.from(fromTemporal));
-      }
-      if (!temporalDates.getDay().isPresent() && HAS_DAY_FN.test(fromTemporal) && HAS_MONTH_MATCH.test(fromTemporal,
-          temporalDates.getMonth().get())) {
-        temporalDates.setDay(MonthDay.from(fromTemporal).getDayOfMonth());
-      }
-    }
+    fillYearMonthDay(fromTemporal, temporalDates);
 
     temporalDates.setFromDate(fromTemporal);
     temporalDates.setToDate(toTemporal);
@@ -135,6 +123,25 @@ public class TemporalParser {
 
     // Base temporal instance
     return new ParsedTemporal(year, month, day, base);
+  }
+
+  /** Update Year, month and day fields using parsed event date */
+  private static void fillYearMonthDay(Temporal fromTemporal, ParsedTemporal temporalDates) {
+    if (fromTemporal != null) {
+      if (!temporalDates.getYear().isPresent() && HAS_YEAR_FN.test(fromTemporal)) {
+        temporalDates.setYear(Year.from(fromTemporal));
+      }
+      if (!temporalDates.getMonth().isPresent() && temporalDates.getYear().isPresent()
+          && HAS_MONTH_FN.test(fromTemporal) && HAS_YEAR_MATCH.test(fromTemporal,
+          temporalDates.getYear().get())) {
+        temporalDates.setMonth(Month.from(fromTemporal));
+      }
+      if (!temporalDates.getDay().isPresent() && temporalDates.getMonth().isPresent()
+          && HAS_DAY_FN.test(fromTemporal) && HAS_MONTH_MATCH.test(fromTemporal,
+          temporalDates.getMonth().get())) {
+        temporalDates.setDay(MonthDay.from(fromTemporal).getDayOfMonth());
+      }
+    }
   }
 
   /** Compare dates, FROM cannot be greater than TO */
