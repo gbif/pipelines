@@ -27,88 +27,8 @@
         }
       },
       {
-        "gbif_classification_name": {
-          "path_match": "gbifClassification.classification.name",
-          "mapping": {
-            "type": "text", "boost": 90, "copy_to": "all"
-          }
-        }
-      },
-      {
-        "gbif_classification_synonym": {
-          "path_match": "gbifClassification.classification.synonym",
-          "mapping": {
-            "type": "boolean"
-          }
-        }
-      },
-      {
-        "gbif_classification_path": {
-          "path_match": "gbifClassification.classificationPath",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "gbif_classification_scientificname": {
-          "path_match": "gbifClassification.usage.name",
-          "mapping": {
-            "type": "text", "boost": 100, "copy_to": "all"
-          }
-        }
-      },
-      {
-        "gbif_classification_accepted_usage": {
-          "path_match": "gbifClassification.acceptedUsage.name",
-          "mapping": {
-            "type": "text", "boost": 100, "copy_to": "all"
-          }
-        }
-      },
-      {
-        "gbif_classification_diagnostics_match_type": {
-          "path_match": "gbifClassification.diagnostics.matchType",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "gbif_classification_diagnostics_match_status": {
-          "path_match": "gbifClassification.diagnostics.status",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
         "gbif_parsed_name_year": {
           "path_match": "gbifClassification.usageParsedName.*Authorship.year",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "gbif_parsed_name_state": {
-          "path_match": "gbifClassification.usageParsedName.state",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "gbif_parsed_name_type": {
-          "path_match": "gbifClassification.usageParsedName.type",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "gbif_parsed_name_notho": {
-          "path_match": "gbifClassification.usageParsedName.notho",
           "mapping": {
             "type": "keyword"
           }
@@ -133,8 +53,6 @@
       "publishingCountry": {"type": "keyword", "copy_to": "all"},
       "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
       "publishingOrganizationKey": {"type": "keyword"},
-
-
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},
@@ -173,12 +91,12 @@
       "decimalLatitude": {"type":"double"},
       "decimalLongitude": {"type":"double"},
 
-      "year": {"type": "integer"},
-      "month": {"type": "integer"},
-      "day": {"type": "integer"},
+      "year": {"type": "short"},
+      "month": {"type": "short"},
+      "day": {"type": "short"},
       "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
-      "startDayOfYear": {"type": "integer"},
-      "endDayOfYear": {"type": "integer"},
+      "startDayOfYear": {"type": "short"},
+      "endDayOfYear": {"type": "short"},
       "modified": {"type": "date"},
       "dateIdentified": {"type": "date"},
       "eventDateSingle": {"type": "date"},
@@ -186,7 +104,21 @@
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
 
-      "gbifClassification": {"type": "object"},
+      "gbifClassification": {
+        "type": "object",
+        "properties": {
+          "classification.name":  { "type": "text", "boost": 90, "copy_to": "all" },
+          "classification.synonym": { "type": "boolean"  },
+          "classificationPath": { "type": "keyword"  },
+          "usage.name": { "type": "text", "boost": 100, "copy_to": "all"  },
+          "acceptedUsage.name": { "type": "text", "boost": 100, "copy_to": "all" },
+          "diagnostics.matchType": { "type": "keyword" },
+          "diagnostics.status": { "type": "keyword" },
+          "usageParsedName.state": { "type": "keyword" },
+          "usageParsedName.type": { "type": "keyword" },
+          "usageParsedName.notho": { "type": "keyword" }
+        }
+      },
 
       "mediaTypes": {"type":  "keyword", "copy_to": "all"},
       "multimediaItems": {"type": "nested", "enabled": false},

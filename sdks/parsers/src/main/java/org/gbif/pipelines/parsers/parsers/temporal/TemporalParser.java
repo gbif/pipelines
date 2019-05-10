@@ -3,6 +3,7 @@ package org.gbif.pipelines.parsers.parsers.temporal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.MonthDay;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.ChronoField;
@@ -12,6 +13,8 @@ import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
 import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulatorConverter;
@@ -35,12 +38,20 @@ public class TemporalParser {
   private static final BiFunction<ChronoAccumulator, List<String>, Temporal> TEMPORAL_FUNC =
       (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
+  private static final Predicate<Temporal> HAS_DAY_FN = t -> t instanceof LocalDate || t instanceof LocalDateTime;
+  private static final Predicate<Temporal> HAS_MONTH_FN = t -> HAS_DAY_FN.test(t) || t instanceof YearMonth;
+  private static final Predicate<Temporal> HAS_YEAR_FN = t -> HAS_MONTH_FN.test(t) || t instanceof Year;
+
+  private static final BiPredicate<Temporal, Year> HAS_YEAR_MATCH =
+      (fromDate, year) -> year == null || Year.from(fromDate).equals(year);
+  private static final BiPredicate<Temporal, Month> HAS_MONTH_MATCH =
+      (fromDate, month) -> month == null || Month.from(fromDate).equals(month);
+
   public static ParsedTemporal parse(String rawDate) {
     return parse("", "", "", rawDate);
   }
 
-  public static ParsedTemporal parse(
-      String rawYear, String rawMonth, String rawDay, String rawDate) {
+  public static ParsedTemporal parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
     // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
     if (isNullOrEmpty(rawYear) && isNullOrEmpty(rawDate)) {
       return new ParsedTemporal();
@@ -95,14 +106,27 @@ public class TemporalParser {
       issueList.add(RECORDED_DATE_INVALID.name());
     }
 
+    if (fromTemporal != null) {
+      if (!temporalDates.getYear().isPresent() && HAS_YEAR_FN.test(fromTemporal)) {
+        temporalDates.setYear(Year.from(fromTemporal));
+      }
+      if (!temporalDates.getMonth().isPresent() && HAS_MONTH_FN.test(fromTemporal) && HAS_YEAR_MATCH.test(fromTemporal,
+          temporalDates.getYear().get())) {
+        temporalDates.setMonth(Month.from(fromTemporal));
+      }
+      if (!temporalDates.getDay().isPresent() && HAS_DAY_FN.test(fromTemporal) && HAS_MONTH_MATCH.test(fromTemporal,
+          temporalDates.getMonth().get())) {
+        temporalDates.setDay(MonthDay.from(fromTemporal).getDayOfMonth());
+      }
+    }
+
     temporalDates.setFromDate(fromTemporal);
     temporalDates.setToDate(toTemporal);
     temporalDates.setIssueList(issueList);
     return temporalDates;
   }
 
-  private static ParsedTemporal getBaseParsedTemporal(
-      ChronoAccumulator accumulator, List<String> issueList) {
+  private static ParsedTemporal getBaseParsedTemporal(ChronoAccumulator accumulator, List<String> issueList) {
     // Convert year, month and day parsed values
     Year year = ChronoAccumulatorConverter.getYear(accumulator, issueList).orElse(null);
     Month month = ChronoAccumulatorConverter.getMonth(accumulator, issueList).orElse(null);

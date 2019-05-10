@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.hbase.util.ResultReader;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
@@ -52,13 +53,16 @@ public class HBaseLockingKeyService implements Serializable {
 
   private static final long serialVersionUID = -3128096563237268386L;
 
-  private static final long WAIT_BEFORE_RETRY_MS = 5000;
-  private static final int WAIT_SKEW = 4000;
-  private static final long STALE_LOCK_TIME = 5 * 60 * 1000;
-  private static final long COUNTER_ROW = 1;
+  private static final long WAIT_BEFORE_RETRY_MS = 250; // wait when collision
+  private static final int WAIT_SKEW = 100; // randomises wait to reduce races
+  private static final long STALE_LOCK_TIME = 60 * 1000; // time to wait for other party to complete
+  private static final long COUNTER_ROW = 1; // row ID holding the counter
+
+  @VisibleForTesting
+  static final int NUMBER_OF_BUCKETS = 100; // TODO: consider if this should be parameterized.
 
   // The number of IDs to reserve at a time in batch
-  private static final int BATCHED_ID_SIZE = 100;
+  private static final int BATCHED_ID_SIZE = 1000;
   // the next available key to allocate
   private long currentKey;
   // our reserved upper key limit for the current batch
@@ -77,9 +81,9 @@ public class HBaseLockingKeyService implements Serializable {
   public HBaseLockingKeyService(KeygenConfig cfg, Connection connection, String datasetId) {
     this.lookupTableName = TableName.valueOf(checkNotNull(cfg.getLookupTable(), "lookupTable can't be null"));
     this.connection = checkNotNull(connection, "tablePool can't be null");
-    this.lookupTableStore = new HBaseStore<>(cfg.getLookupTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
-    this.counterTableStore = new HBaseStore<>(cfg.getCounterTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
-    this.occurrenceTableStore = new HBaseStore<>(cfg.getOccTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    this.lookupTableStore = new HBaseStore<>(cfg.getLookupTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
+    this.counterTableStore = new HBaseStore<>(cfg.getCounterTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
+    this.occurrenceTableStore = new HBaseStore<>(cfg.getOccTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
     this.datasetId = datasetId;
   }
 
@@ -207,9 +211,12 @@ public class HBaseLockingKeyService implements Serializable {
     // write the key and update status to ALLOCATED
     for (Map.Entry<String, KeyStatus> entry : statusMap.entrySet()) {
       if (entry.getValue() == KeyStatus.ALLOCATING) {
-        // TODO: combine into one put
-        lookupTableStore.putLong(entry.getKey(), Columns.LOOKUP_KEY_COLUMN, key);
-        lookupTableStore.putString(entry.getKey(), Columns.LOOKUP_STATUS_COLUMN, KeyStatus.ALLOCATED.toString());
+        lookupTableStore.putLongString(
+            entry.getKey(),
+            Columns.LOOKUP_KEY_COLUMN,
+            key,
+            Columns.LOOKUP_STATUS_COLUMN,
+            KeyStatus.ALLOCATED.toString());
       }
     }
 
@@ -222,7 +229,7 @@ public class HBaseLockingKeyService implements Serializable {
   }
 
   /**
-   *
+   * Retrieves or creates the key for the given record identifiers.
    */
   public KeyLookupResult generateKey(Set<String> uniqueStrings) {
     return generateKey(uniqueStrings, datasetId);

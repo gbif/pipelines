@@ -51,8 +51,7 @@ public class ChronoAccumulatorConverter {
    *
    * @return some Temporal value: Year, YearMonth, LocalDate, LocalDateTime
    */
-  public static Optional<Temporal> toTemporal(
-      ChronoAccumulator accumulator, List<String> issueList) {
+  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator, List<String> issueList) {
 
     // Check Year
     Optional<Integer> intYear = convert(accumulator, YEAR, issueList);
@@ -142,8 +141,7 @@ public class ChronoAccumulatorConverter {
    * @param field one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
    *     MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
-  private static Optional<Integer> convert(
-      ChronoAccumulator accumulator, ChronoField field, List<String> issueList) {
+  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField field, List<String> issueList) {
     Optional<String> rawValue = accumulator.getChronoFileValue(field);
     if (rawValue.isPresent()) {
       Optional<Integer> value = FUNCTION_MAP.get(field).apply(rawValue.get());
