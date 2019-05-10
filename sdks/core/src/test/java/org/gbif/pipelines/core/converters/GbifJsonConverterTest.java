@@ -11,7 +11,24 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.Amplification;
+import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
+import org.gbif.pipelines.io.avro.DeterminedDate;
+import org.gbif.pipelines.io.avro.EventDate;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFact;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,7 +64,7 @@ public class GbifJsonConverterTest {
             + "\"TAXON_MATCH_HIGHERRANK\",\"ELEVATION_UNLIKELY\",\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\","
             + "\"RECORDED_DATE_INVALID\",\"INDIVIDUAL_COUNT_INVALID\",\"RECORDED_DATE_MISMATCH\",\"DEPTH_NOT_METRIC\","
             + "\"MULTIMEDIA_DATE_INVALID\",\"INTERPRETATION_ERROR\",\"RECORDED_DATE_UNLIKELY\",\"COUNTRY_MISMATCH\"],"
-            + "\"created\":\"2019-04-17T00:37:55.758\"}";
+            + "\"created\":\"2019-04-16T22:37:55.758\"}";
 
     // State
     Map<String, String> erMap = new HashMap<>(2);
@@ -298,7 +315,7 @@ public class GbifJsonConverterTest {
             + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}]"
             + ",\"acceptedUsage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
             + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\","
-            + "\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},\"created\":\"1970-01-01T01:00\"}";
+            + "\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},\"created\":\"1970-01-01T00:00\"}";
 
     // State
     List<RankedName> rankedNameList = new ArrayList<>();
@@ -344,7 +361,7 @@ public class GbifJsonConverterTest {
   public void temporalRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"created\":\"1970-01-01T01:00\"}";
+    String expected = "{\"id\":\"777\",\"created\":\"1970-01-01T00:00\"}";
 
     // State
     TemporalRecord record = TemporalRecord.newBuilder().setId("777").setCreated(0L).build();
@@ -379,7 +396,7 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected = "{\"id\":\"777\",\"australiaSpatialLayers\":[{\"key\":\"{awdawd}\","
-        + "\"value\":\"\\\"{\\\"wad\\\":\\\"adw\\\"}\\\"\"}],\"created\":\"1970-01-01T01:00\"}";
+        + "\"value\":\"\\\"{\\\"wad\\\":\\\"adw\\\"}\\\"\"}],\"created\":\"1970-01-01T00:00\"}";
 
     // State
     AustraliaSpatialRecord record = AustraliaSpatialRecord.newBuilder()
@@ -400,7 +417,7 @@ public class GbifJsonConverterTest {
   public void measurementOrFactRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"measurementOrFactItems\":[],\"created\":\"1970-01-01T01:00\"}";
+    String expected = "{\"id\":\"777\",\"measurementOrFactItems\":[],\"created\":\"1970-01-01T00:00\"}";
 
     // State
     MeasurementOrFactRecord record = MeasurementOrFactRecord.newBuilder().setId("777").setCreated(0L).build();
@@ -417,7 +434,7 @@ public class GbifJsonConverterTest {
   public void amplificationRecordSkipIssuesWithIdEmptyTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"amplificationItems\":[],\"created\":\"1970-01-01T01:00\"}";
+    String expected = "{\"id\":\"777\",\"amplificationItems\":[],\"created\":\"1970-01-01T00:00\"}";
 
     // State
     AmplificationRecord record = AmplificationRecord.newBuilder().setId("777").setCreated(0L).build();

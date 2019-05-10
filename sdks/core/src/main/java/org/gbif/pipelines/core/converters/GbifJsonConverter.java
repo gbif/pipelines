@@ -18,13 +18,21 @@ import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import lombok.val;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
+import org.gbif.pipelines.io.avro.EventDate;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.Issues;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 import org.apache.avro.specific.SpecificRecordBase;
 
@@ -33,6 +41,7 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.POJONode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Strings;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +73,7 @@ public class GbifJsonConverter {
   private static final String CREATED_FIELD = "created";
 
   private static final LongFunction<LocalDateTime> DATE_FN =
-      l -> LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.systemDefault());
+      l -> LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.of("UTC"));
 
   private final JsonConverter.JsonConverterBuilder builder =
       JsonConverter.builder()
@@ -130,7 +139,8 @@ public class GbifJsonConverter {
       addIssues(mainNode);
     }
 
-    getMaxCreationDate(mainNode).ifPresent(createdDate -> mainNode.set(CREATED_FIELD, new TextNode(createdDate.toString())));
+    getMaxCreationDate(mainNode).ifPresent(
+        createdDate -> mainNode.set(CREATED_FIELD, new TextNode(createdDate.toString())));
 
     Optional.ofNullable(mainNode.get("lastCrawled")).ifPresent(
         lastCrawled -> mainNode.set("lastCrawled", new TextNode(DATE_FN.apply(lastCrawled.asLong()).toString()))
@@ -258,10 +268,10 @@ public class GbifJsonConverter {
 
       //Copy to all field
       Set<TextNode> allFieldValues = Stream.concat(er.getCoreTerms().values().stream(),
-                                                   er.getExtensions().values().stream()
-                                                      .flatMap(v -> v.stream().filter(Objects::nonNull).flatMap(m -> m.values().stream())))
-                                           .map(TextNode::new)
-                                      .collect(Collectors.toSet());
+          er.getExtensions().values().stream()
+              .flatMap(v -> v.stream().filter(Objects::nonNull).flatMap(m -> m.values().stream())))
+          .map(TextNode::new)
+          .collect(Collectors.toSet());
       jc.getMainNode().putArray("all").addAll(allFieldValues);
 
       // Main node
@@ -586,8 +596,6 @@ public class GbifJsonConverter {
    *  ]
    *
    * }</pre>
-   *
-   * @return
    */
   private BiConsumer<JsonConverter, SpecificRecordBase> getMultimediaConverter() {
     return (jc, record) -> {
@@ -599,46 +607,43 @@ public class GbifJsonConverter {
 
       // multimedia items
       if (mr.getMultimediaItems() != null && !mr.getMultimediaItems().isEmpty()) {
-        List<ObjectNode> items =
-            mr.getMultimediaItems().stream()
-                .map(
-                    item -> {
-                      ObjectNode node = JsonConverter.createObjectNode();
+        List<ObjectNode> items = mr.getMultimediaItems().stream()
+            .map(item -> {
+              ObjectNode node = JsonConverter.createObjectNode();
 
-                      final BiConsumer<String, String> addField =
-                          (field, value) ->
-                              Optional.ofNullable(value)
-                                  .filter(v -> !v.isEmpty())
-                                  .ifPresent(v -> node.put(field, v));
+              final BiConsumer<String, String> addField =
+                  (field, value) ->
+                      Optional.ofNullable(value)
+                          .filter(v -> !v.isEmpty())
+                          .ifPresent(v -> node.put(field, v));
 
-                      addField.accept("type", item.getType());
-                      addField.accept("format", item.getFormat());
-                      addField.accept("identifier", item.getIdentifier());
-                      addField.accept("audience", item.getAudience());
-                      addField.accept("contributor", item.getContributor());
-                      addField.accept("created", item.getCreated());
-                      addField.accept("creator", item.getCreator());
-                      addField.accept("description", item.getDescription());
-                      addField.accept("license", item.getLicense());
-                      addField.accept("publisher", item.getPublisher());
-                      addField.accept("references", item.getReferences());
-                      addField.accept("rightsHolder", item.getRightsHolder());
-                      addField.accept("source", item.getSource());
-                      addField.accept("title", item.getTitle());
+              addField.accept("type", item.getType());
+              addField.accept("format", item.getFormat());
+              addField.accept("identifier", item.getIdentifier());
+              addField.accept("audience", item.getAudience());
+              addField.accept("contributor", item.getContributor());
+              addField.accept("created", item.getCreated());
+              addField.accept("creator", item.getCreator());
+              addField.accept("description", item.getDescription());
+              addField.accept("license", item.getLicense());
+              addField.accept("publisher", item.getPublisher());
+              addField.accept("references", item.getReferences());
+              addField.accept("rightsHolder", item.getRightsHolder());
+              addField.accept("source", item.getSource());
+              addField.accept("title", item.getTitle());
 
-                      return node;
-                    })
-                .collect(Collectors.toList());
+              return node;
+            })
+            .collect(Collectors.toList());
 
         jc.addJsonArray("multimediaItems", items);
 
         // media types
-        Set<TextNode> mediaTypes =
-            mr.getMultimediaItems().stream()
-                .filter(i -> !Strings.isNullOrEmpty(i.getType()))
-                .map(Multimedia::getType)
-                .map(TextNode::valueOf)
-                .collect(Collectors.toSet());
+        Set<TextNode> mediaTypes = mr.getMultimediaItems().stream()
+            .filter(i -> !Strings.isNullOrEmpty(i.getType()))
+            .map(Multimedia::getType)
+            .map(TextNode::valueOf)
+            .collect(Collectors.toSet());
 
         jc.addJsonArray("mediaTypes", mediaTypes);
       }
