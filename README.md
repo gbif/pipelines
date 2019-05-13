@@ -1,3 +1,5 @@
+[![Build Status](https://builds.gbif.org/job/pipelines/badge/icon)](https://builds.gbif.org/job/pipelinesi/)
+
 # Table of Contents
 
 - [**About the project**](#about-the-project)
