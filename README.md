@@ -1,4 +1,4 @@
-[![Build Status](https://builds.gbif.org/job/pipelines/badge/icon)](https://builds.gbif.org/job/pipelines/)
+[![Build Status](https://builds.gbif.org/job/pipelines/badge/icon?style=flat-square)](https://builds.gbif.org/job/pipelines/)
 
 # Table of Contents
 
