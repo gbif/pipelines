@@ -30,8 +30,7 @@ public class ParserRawDateTime {
    * @return ChronoAccumulator which store all parsed values
    */
   public static ChronoAccumulator parse(String rawDate, ChronoField lastParsed) {
-    if (isNullOrEmpty(rawDate)
-        || (!RGX_YEAR.matcher(rawDate).find() && !RGX_PATTERN.matcher(rawDate).find())) {
+    if (isNullOrEmpty(rawDate) || (!RGX_YEAR.matcher(rawDate).find() && !RGX_PATTERN.matcher(rawDate).find())) {
       return new ChronoAccumulator();
     }
 

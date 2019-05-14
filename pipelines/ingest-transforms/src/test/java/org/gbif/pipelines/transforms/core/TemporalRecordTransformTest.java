@@ -56,21 +56,21 @@ public class TemporalRecordTransformTest {
     // First
     final LocalDateTime fromOne = LocalDateTime.of(1999, 4, 17, 12, 26);
     final LocalDateTime toOne = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
-    final ParsedTemporal periodOne = new ParsedTemporal(fromOne, toOne);
+    final ParsedTemporal periodOne = ParsedTemporal.create(fromOne, toOne);
     periodOne.setYear(Year.of(1999));
     periodOne.setMonth(Month.of(10));
     periodOne.setDay(1);
     // Second
     final YearMonth fromTwo = YearMonth.of(1999, 4);
     final YearMonth toTwo = YearMonth.of(2010, 5);
-    final ParsedTemporal periodTwo = new ParsedTemporal(fromTwo, toTwo);
+    final ParsedTemporal periodTwo = ParsedTemporal.create(fromTwo, toTwo);
     periodTwo.setYear(Year.of(1999));
     periodTwo.setMonth(Month.of(10));
     periodTwo.setDay(1);
     // Third
     final Year fromThree = Year.of(2010);
     final Year toThree = Year.of(2011);
-    final ParsedTemporal periodThree = new ParsedTemporal(fromThree, toThree);
+    final ParsedTemporal periodThree = ParsedTemporal.create(fromThree, toThree);
     periodThree.setYear(Year.of(1999));
     periodThree.setMonth(Month.of(10));
     periodThree.setDay(1);

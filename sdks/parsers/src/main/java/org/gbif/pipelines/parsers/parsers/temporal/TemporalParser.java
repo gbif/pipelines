@@ -10,8 +10,8 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalUnit;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -24,7 +24,8 @@ import org.gbif.pipelines.parsers.parsers.temporal.utils.DelimiterUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
@@ -35,7 +36,9 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalParser {
 
-  private static final BiFunction<ChronoAccumulator, List<String>, Temporal> TEMPORAL_FUNC =
+  private static final int ISSUE_SIZE = ParsedTemporalIssue.values().length;
+
+  private static final BiFunction<ChronoAccumulator, Set<ParsedTemporalIssue>, Temporal> TEMPORAL_FUNC =
       (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
   private static final Predicate<Temporal> HAS_DAY_FN = t -> t instanceof LocalDate || t instanceof LocalDateTime;
@@ -54,15 +57,15 @@ public class TemporalParser {
   public static ParsedTemporal parse(String rawYear, String rawMonth, String rawDay, String rawDate) {
     // If year and rawDate are absent, return ParsedTemporalDates with NULL values inside
     if (isNullOrEmpty(rawYear) && isNullOrEmpty(rawDate)) {
-      return new ParsedTemporal();
+      return isNullOrEmpty(rawMonth) && isNullOrEmpty(rawDay) ? ParsedTemporal.create() : ParsedTemporal.create(DATE_INVALID);
     }
 
-    List<String> issueList = new ArrayList<>();
+    Set<ParsedTemporalIssue> issues = new HashSet<>(ISSUE_SIZE);
 
     // Parse year, month and day
     ChronoAccumulator accum = ChronoAccumulator.from(rawYear, rawMonth, rawDay);
 
-    ParsedTemporal temporalDates = getBaseParsedTemporal(accum, issueList);
+    ParsedTemporal temporalDates = getBaseParsedTemporal(accum, issues);
 
     if (isNullOrEmpty(rawDate)) {
       return temporalDates;
@@ -79,7 +82,7 @@ public class TemporalParser {
     ChronoAccumulator toAccum = ParserRawDateTime.parse(rawTo, lastChronoField);
 
     if (fromAccum.areAllNumeric() || (!isNullOrEmpty(rawTo) && toAccum.areAllNumeric())) {
-      issueList.add(RECORDED_DATE_INVALID.name());
+      issues.add(DATE_INVALID);
     }
 
     // If toAccum doesn't contain last parsed value, raw date will consist of one date only
@@ -91,38 +94,38 @@ public class TemporalParser {
       fromAccum.mergeReplace(accum);
     }
 
-    Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccum, issueList);
-    Temporal toTemporal = TEMPORAL_FUNC.apply(toAccum, issueList);
+    Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccum, issues);
+    Temporal toTemporal = TEMPORAL_FUNC.apply(toAccum, issues);
 
     if (!isValidDateType(fromTemporal, toTemporal)) {
       toTemporal = null;
-      issueList.add(RECORDED_DATE_INVALID.name());
     }
 
     if (!isValidRange(fromTemporal, toTemporal)) {
       Temporal tmp = fromTemporal;
       fromTemporal = toTemporal;
       toTemporal = tmp;
-      issueList.add(RECORDED_DATE_INVALID.name());
+      issues.add(DATE_INVALID);
     }
 
     fillYearMonthDay(fromTemporal, temporalDates);
 
     temporalDates.setFromDate(fromTemporal);
     temporalDates.setToDate(toTemporal);
-    temporalDates.setIssueList(issueList);
+    temporalDates.setIssueSet(issues);
     return temporalDates;
   }
 
-  private static ParsedTemporal getBaseParsedTemporal(ChronoAccumulator accumulator, List<String> issueList) {
+  private static ParsedTemporal getBaseParsedTemporal(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
     // Convert year, month and day parsed values
-    Year year = ChronoAccumulatorConverter.getYear(accumulator, issueList).orElse(null);
-    Month month = ChronoAccumulatorConverter.getMonth(accumulator, issueList).orElse(null);
-    Integer day = ChronoAccumulatorConverter.getDay(accumulator, issueList).orElse(null);
-    Temporal base = TEMPORAL_FUNC.apply(accumulator, issueList);
+    Year year = ChronoAccumulatorConverter.getYear(accumulator, issues).orElse(null);
+    Month month = ChronoAccumulatorConverter.getMonth(accumulator, issues).orElse(null);
+    Integer day = ChronoAccumulatorConverter.getDay(accumulator, issues).orElse(null);
+    Temporal base = TEMPORAL_FUNC.apply(accumulator, issues);
 
-    // Base temporal instance
-    return new ParsedTemporal(year, month, day, base);
+    boolean hasIssue = issues.contains(DATE_INVALID) || issues.contains(DATE_UNLIKELY);
+
+    return hasIssue  ? ParsedTemporal.create(issues) : ParsedTemporal.create(year, month, day, base);
   }
 
   /** Update Year, month and day fields using parsed event date */

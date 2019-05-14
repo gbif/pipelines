@@ -8,11 +8,12 @@ import java.time.YearMonth;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue;
 import org.gbif.pipelines.parsers.parsers.temporal.utils.ParsedUnitUtils;
 
 import lombok.AccessLevel;
@@ -25,25 +26,24 @@ import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_UNLIKELY;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 
-/** The main function convert ChronoAccumulator to Temporal in approrative way */
+/** The main function convert ChronoAccumulator to Temporal in appropriative way */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ChronoAccumulatorConverter {
 
   private static final Year OLD_YEAR = Year.of(1600);
 
-  private static final Map<ChronoField, Function<String, Optional<Integer>>> FUNCTION_MAP =
-      new EnumMap<>(ChronoField.class);
+  private static final Map<ChronoField, Function<String, Optional<Integer>>> FN_MAP = new EnumMap<>(ChronoField.class);
 
   static {
-    FUNCTION_MAP.put(YEAR, ParsedUnitUtils::parseYear);
-    FUNCTION_MAP.put(MONTH_OF_YEAR, ParsedUnitUtils::parseMonth);
-    FUNCTION_MAP.put(DAY_OF_MONTH, ParsedUnitUtils::parseDay);
-    FUNCTION_MAP.put(HOUR_OF_DAY, ParsedUnitUtils::parseHour);
-    FUNCTION_MAP.put(MINUTE_OF_HOUR, ParsedUnitUtils::parseMinute);
-    FUNCTION_MAP.put(SECOND_OF_MINUTE, ParsedUnitUtils::parseSecond);
+    FN_MAP.put(YEAR, ParsedUnitUtils::parseYear);
+    FN_MAP.put(MONTH_OF_YEAR, ParsedUnitUtils::parseMonth);
+    FN_MAP.put(DAY_OF_MONTH, ParsedUnitUtils::parseDay);
+    FN_MAP.put(HOUR_OF_DAY, ParsedUnitUtils::parseHour);
+    FN_MAP.put(MINUTE_OF_HOUR, ParsedUnitUtils::parseMinute);
+    FN_MAP.put(SECOND_OF_MINUTE, ParsedUnitUtils::parseSecond);
   }
 
   /**
@@ -51,53 +51,50 @@ public class ChronoAccumulatorConverter {
    *
    * @return some Temporal value: Year, YearMonth, LocalDate, LocalDateTime
    */
-  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator, List<String> issueList) {
+  public static Optional<Temporal> toTemporal(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
 
     // Check Year
-    Optional<Integer> intYear = convert(accumulator, YEAR, issueList);
-    if (!intYear.isPresent()) {
+    Optional<Year> optYear = getYear(accumulator, issues);
+    if (!optYear.isPresent() || issues.contains(DATE_UNLIKELY) || issues.contains(DATE_INVALID)) {
       return Optional.empty();
     }
-    Year year = Year.of(intYear.get());
-    if (year.isBefore(OLD_YEAR)) {
-      issueList.add(RECORDED_DATE_UNLIKELY.name());
-    }
+    Year year = optYear.get();
 
     // Check Month
-    Optional<Integer> intMonth = convert(accumulator, MONTH_OF_YEAR, issueList);
-    if (!intMonth.isPresent()) {
+    Optional<Month> optMonth = getMonth(accumulator, issues);
+    if (!optMonth.isPresent()) {
       return Optional.of(year);
     }
 
-    YearMonth yearMonth = year.atMonth(intMonth.get());
+    YearMonth yearMonth = year.atMonth(optMonth.get());
     // Check Day
-    Optional<Integer> intDay = convert(accumulator, DAY_OF_MONTH, issueList);
+    Optional<Integer> intDay = getDay(accumulator, issues);
     if (!intDay.isPresent()) {
       return Optional.of(yearMonth);
     }
 
     if (!yearMonth.isValidDay(intDay.get())) {
-      issueList.add(RECORDED_DATE_INVALID.name());
-      return Optional.of(yearMonth);
+      issues.add(DATE_INVALID);
+      return Optional.empty();
     }
     LocalDate localDate = yearMonth.atDay(intDay.get());
 
     // Check Hour
-    Optional<Integer> intHour = convert(accumulator, HOUR_OF_DAY, issueList);
+    Optional<Integer> intHour = convert(accumulator, HOUR_OF_DAY, issues);
     if (!intHour.isPresent()) {
       return Optional.of(localDate);
     }
     LocalDateTime localDateTime = localDate.atTime(intHour.get(), 0);
 
     // Check Minute
-    Optional<Integer> intMinute = convert(accumulator, MINUTE_OF_HOUR, issueList);
+    Optional<Integer> intMinute = convert(accumulator, MINUTE_OF_HOUR, issues);
     if (!intMinute.isPresent()) {
       return Optional.of(localDateTime);
     }
     localDateTime = localDateTime.withMinute(intMinute.get());
 
     // Check Second
-    Optional<Integer> intSecond = convert(accumulator, SECOND_OF_MINUTE, issueList);
+    Optional<Integer> intSecond = convert(accumulator, SECOND_OF_MINUTE, issues);
     if (!intSecond.isPresent()) {
       return Optional.of(localDateTime);
     }
@@ -110,8 +107,13 @@ public class ChronoAccumulatorConverter {
    * @param accumulator - where to look for a value
    * @return Year value if present
    */
-  public static Optional<Year> getYear(ChronoAccumulator accumulator, List<String> issueList) {
-    return convert(accumulator, YEAR, issueList).map(Year::of);
+  public static Optional<Year> getYear(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
+    Optional<Year> year = convert(accumulator, YEAR, issues).map(Year::of);
+    if (year.isPresent() && (year.get().isBefore(OLD_YEAR) || year.get().isAfter(Year.now()))) {
+      issues.add(DATE_UNLIKELY);
+      return Optional.empty();
+    }
+    return year;
   }
 
   /**
@@ -120,8 +122,8 @@ public class ChronoAccumulatorConverter {
    * @param accumulator - where to look for a value
    * @return Month value if present
    */
-  public static Optional<Month> getMonth(ChronoAccumulator accumulator, List<String> issueList) {
-    return convert(accumulator, MONTH_OF_YEAR, issueList).map(Month::of);
+  public static Optional<Month> getMonth(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
+    return convert(accumulator, MONTH_OF_YEAR, issues).map(Month::of);
   }
 
   /**
@@ -130,8 +132,8 @@ public class ChronoAccumulatorConverter {
    * @param accumulator - where to look for a value
    * @return Integer day value if present
    */
-  public static Optional<Integer> getDay(ChronoAccumulator accumulator, List<String> issueList) {
-    return convert(accumulator, DAY_OF_MONTH, issueList);
+  public static Optional<Integer> getDay(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
+    return convert(accumulator, DAY_OF_MONTH, issues);
   }
 
   /**
@@ -139,14 +141,14 @@ public class ChronoAccumulatorConverter {
    *
    * @param accumulator raw value for parsing
    * @param field one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
-   *     MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   * MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
-  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField field, List<String> issueList) {
+  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField field, Set<ParsedTemporalIssue> issues) {
     Optional<String> rawValue = accumulator.getChronoFileValue(field);
     if (rawValue.isPresent()) {
-      Optional<Integer> value = FUNCTION_MAP.get(field).apply(rawValue.get());
+      Optional<Integer> value = FN_MAP.get(field).apply(rawValue.get());
       if (!value.isPresent()) {
-        issueList.add(RECORDED_DATE_INVALID.name());
+        issues.add(DATE_INVALID);
       }
       return value;
     }
