@@ -3,14 +3,9 @@ package org.gbif.converters.parser.xml.parsing.xml;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.identifier.OccurrenceKeyHelper;
@@ -20,7 +15,6 @@ import org.gbif.converters.parser.xml.identifier.UniqueIdentifier;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.io.Resources;
@@ -42,53 +36,6 @@ public class XmlFragmentParserTest {
     List<RawOccurrenceRecord> results = XmlFragmentParser.parseRecord(rawRecord);
     assertEquals(1, results.size());
     assertEquals("Oschütz", results.get(0).getCollectorName());
-  }
-
-  @Ignore("too expensive for constant use")
-  @Test
-  public void testMultiThreadLoad() throws Exception {
-    String xml =
-        Resources.toString(
-            Resources.getResource("id_extraction/abcd1_umlaut.xml"), StandardCharsets.UTF_8);
-
-    // 5 parsers in 5 threads parse 1000 records each
-    List<RawXmlOccurrence> raws = new ArrayList<>();
-    for (int i = 0; i < 5000; i++) {
-      raws.add(createFakeOcc(xml));
-    }
-
-    ExecutorService tp = Executors.newFixedThreadPool(5);
-    List<Future<List<RawOccurrenceRecord>>> futures = new ArrayList<>();
-    for (int i = 0; i < 5; i++) {
-      int start = i * 1000;
-      int end = start + 1000;
-      futures.add(tp.submit(new BatchRecordParser(raws.subList(start, end))));
-    }
-
-    List<RawOccurrenceRecord> rors = new ArrayList<>();
-    for (Future<List<RawOccurrenceRecord>> future : futures) {
-      rors.addAll(future.get());
-    }
-
-    assertEquals(5000, rors.size());
-  }
-
-  private static class BatchRecordParser implements Callable<List<RawOccurrenceRecord>> {
-
-    private final List<RawXmlOccurrence> raws;
-
-    BatchRecordParser(List<RawXmlOccurrence> raws) {
-      this.raws = raws;
-    }
-
-    @Override
-    public List<RawOccurrenceRecord> call() {
-      List<RawOccurrenceRecord> rors = new ArrayList<>();
-      for (RawXmlOccurrence raw : raws) {
-        rors.addAll(XmlFragmentParser.parseRecord(raw));
-      }
-      return rors;
-    }
   }
 
   @Test
