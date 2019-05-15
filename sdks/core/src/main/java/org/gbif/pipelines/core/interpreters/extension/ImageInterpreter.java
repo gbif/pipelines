@@ -3,9 +3,12 @@ package org.gbif.pipelines.core.interpreters.extension;
 import java.net.URI;
 import java.time.temporal.Temporal;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.NumberParser;
@@ -22,13 +25,17 @@ import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 
 /**
  * Interpreter for the Image extension, Interprets form {@link ExtendedRecord} to {@link ImageRecord}.
@@ -37,6 +44,13 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ImageInterpreter {
+
+  private static final Map<ParsedTemporalIssue, String> DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
+
+  static {
+    DATE_ISSUE_MAP.put(DATE_INVALID, MULTIMEDIA_DATE_INVALID.name());
+    DATE_ISSUE_MAP.put(DATE_UNLIKELY, "MULTIMEDIA_DATE_UNLIKELY");
+  }
 
   private static final TargetHandler<Image> HANDLER =
       ExtensionInterpretation.extension(Extension.IMAGE)
@@ -97,7 +111,11 @@ public class ImageInterpreter {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFrom().map(Temporal::toString).ifPresent(i::setCreated);
 
-    return parsed.getIssueList();
+    return parsed.getIssueSet()
+        .stream()
+        .map(DATE_ISSUE_MAP::get)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   /**

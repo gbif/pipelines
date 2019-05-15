@@ -1,6 +1,8 @@
 package org.gbif.pipelines.parsers.parsers.temporal;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
@@ -92,12 +94,14 @@ public class ParsedTemporal {
     this.fromDate = fromDate;
   }
 
-  public void setFromDate(Year year, Month month, Integer day) {
-    if (year != null && month != null && day != null) {
+  public void setFromDate(Year year, Month month, Integer day, LocalTime time) {
+    if (year != null && month != null && day != null && time != null) {
+      this.fromDate = LocalDateTime.of(LocalDate.of(year.getValue(), month, day), time);
+    } else if (year != null && month != null && day != null) {
       this.fromDate = LocalDate.of(year.getValue(), month, day);
-    }else if (year != null && month != null) {
+    } else if (year != null && month != null) {
       this.fromDate = YearMonth.of(year.getValue(), month);
-    }else if (year != null) {
+    } else if (year != null) {
       this.fromDate = Year.of(year.getValue());
     }
   }

@@ -62,7 +62,9 @@ public class ChronoAccumulatorConverter {
 
     // Check Month
     Optional<Month> optMonth = getMonth(accumulator, issues);
-    if (!optMonth.isPresent()) {
+    if (!optMonth.isPresent() && issues.contains(DATE_INVALID)) {
+      return Optional.empty();
+    } else if (!optMonth.isPresent()) {
       return Optional.of(year);
     }
 

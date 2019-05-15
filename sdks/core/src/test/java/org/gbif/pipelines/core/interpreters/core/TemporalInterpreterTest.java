@@ -81,6 +81,9 @@ public class TemporalInterpreterTest {
     // Expect
     TemporalRecord expected = TemporalRecord.newBuilder()
         .setId("777")
+        .setEventDate(EventDate.newBuilder().build())
+        .setStartDayOfYear(null)
+        .setEndDayOfYear(null)
         .setIssues(
             IssueRecord.newBuilder()
                 .setIssueList(Arrays.asList(RECORDED_DATE_INVALID.name(), IDENTIFIED_DATE_INVALID.name(),
@@ -156,7 +159,7 @@ public class TemporalInterpreterTest {
     // Expect
     TemporalRecord expected = TemporalRecord.newBuilder()
         .setId("777")
-        .setEventDate(EventDate.newBuilder().setGte("2011-10-10").build())
+        .setEventDate(EventDate.newBuilder().setGte("2011-11-10").build())
         .setYear(2000)
         .setMonth(10)
         .setDay(10)

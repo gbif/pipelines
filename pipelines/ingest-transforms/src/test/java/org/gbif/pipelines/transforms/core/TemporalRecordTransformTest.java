@@ -6,6 +6,7 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.transforms.core.TemporalTransform.Interpreter;
@@ -30,6 +32,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_MISMATCH;
+
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
 public class TemporalRecordTransformTest {
@@ -37,14 +41,15 @@ public class TemporalRecordTransformTest {
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
-    private static class CleanDateCreate extends DoFn<TemporalRecord, TemporalRecord> {
-        @ProcessElement
-        public void processElement(ProcessContext context) {
-            TemporalRecord tr = TemporalRecord.newBuilder(context.element()).build();
-            tr.setCreated(0L);
-            context.output(tr);
-        }
+  private static class CleanDateCreate extends DoFn<TemporalRecord, TemporalRecord> {
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      TemporalRecord tr = TemporalRecord.newBuilder(context.element()).build();
+      tr.setCreated(0L);
+      context.output(tr);
     }
+  }
 
   @Test
   public void transformationTest() {
@@ -56,21 +61,27 @@ public class TemporalRecordTransformTest {
     // First
     final LocalDateTime fromOne = LocalDateTime.of(1999, 4, 17, 12, 26);
     final LocalDateTime toOne = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
-    final ParsedTemporal periodOne = ParsedTemporal.create(fromOne, toOne);
+    final ParsedTemporal periodOne = ParsedTemporal.create();
+    periodOne.setFromDate(fromOne);
+    periodOne.setToDate(toOne);
     periodOne.setYear(Year.of(1999));
     periodOne.setMonth(Month.of(10));
     periodOne.setDay(1);
     // Second
     final YearMonth fromTwo = YearMonth.of(1999, 4);
     final YearMonth toTwo = YearMonth.of(2010, 5);
-    final ParsedTemporal periodTwo = ParsedTemporal.create(fromTwo, toTwo);
+    final ParsedTemporal periodTwo = ParsedTemporal.create();
+    periodTwo.setFromDate(fromTwo);
+    periodTwo.setToDate(toTwo);
     periodTwo.setYear(Year.of(1999));
     periodTwo.setMonth(Month.of(10));
     periodTwo.setDay(1);
     // Third
     final Year fromThree = Year.of(2010);
     final Year toThree = Year.of(2011);
-    final ParsedTemporal periodThree = ParsedTemporal.create(fromThree, toThree);
+    final ParsedTemporal periodThree = ParsedTemporal.create();
+    periodThree.setFromDate(fromThree);
+    periodThree.setToDate(toThree);
     periodThree.setYear(Year.of(1999));
     periodThree.setMonth(Month.of(10));
     periodThree.setDay(1);
@@ -78,7 +89,10 @@ public class TemporalRecordTransformTest {
     final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, periodTwo, periodThree);
 
     // When
-    PCollection<TemporalRecord> dataStream = p.apply(Create.of(input)).apply(ParDo.of(new Interpreter())).apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+    PCollection<TemporalRecord> dataStream = p
+        .apply(Create.of(input))
+        .apply(ParDo.of(new Interpreter()))
+        .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
     PAssert.that(dataStream).containsInAnyOrder(dataExpected);
@@ -120,6 +134,9 @@ public class TemporalRecordTransformTest {
                   .setStartDayOfYear(1)
                   .setEndDayOfYear(365)
                   .setCreated(0L)
+                  .setIssues(IssueRecord.newBuilder()
+                      .setIssueList(Collections.singletonList(RECORDED_DATE_MISMATCH.name()))
+                      .build())
                   .build();
             })
         .collect(Collectors.toList());

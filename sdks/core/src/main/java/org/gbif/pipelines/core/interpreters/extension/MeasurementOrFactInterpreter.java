@@ -1,10 +1,13 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.time.temporal.Temporal;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
@@ -17,10 +20,14 @@ import org.gbif.pipelines.io.avro.MeasurementOrFact;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 
 /**
  * Interpreter for the MeasurementsOrFacts extension, Interprets form {@link ExtendedRecord} to {@link
@@ -30,6 +37,13 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MeasurementOrFactInterpreter {
+
+  private static final Map<ParsedTemporalIssue, String> DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
+
+  static {
+    DATE_ISSUE_MAP.put(DATE_INVALID, "MEASUREMENT_OR_FACT_DATE_INVALID");
+    DATE_ISSUE_MAP.put(DATE_UNLIKELY, "MEASUREMENT_OR_FACT_DATE_UNLIKELY");
+  }
 
   private static final TargetHandler<MeasurementOrFact> HANDLER =
       ExtensionInterpretation.extension(Extension.MEASUREMENT_OR_FACT)
@@ -73,7 +87,11 @@ public class MeasurementOrFactInterpreter {
     mf.setDeterminedDateParsed(determinedDate);
     mf.setDeterminedDate(v);
 
-    return parsed.getIssueList();
+    return parsed.getIssueSet()
+        .stream()
+        .map(DATE_ISSUE_MAP::get)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   /**

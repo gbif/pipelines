@@ -1,6 +1,10 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DcTerm;
@@ -75,7 +79,7 @@ public class MultimediaInterpreterTest {
             + "\"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp22.jpg\", \"references\": null, \"title\": null, "
             + "\"description\": null, \"source\": null, \"audience\": null, \"created\": null, \"creator\": null, \"contributor\": null, "
             + "\"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}], \"issues\": {\"issueList\": "
-            + "[\"RECORDED_DATE_INVALID\", \"MULTIMEDIA_URI_INVALID\"]}}";
+            + "[\"MULTIMEDIA_URI_INVALID\", \"MULTIMEDIA_DATE_INVALID\"]}}";
 
     MultimediaRecord mr = MultimediaRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 

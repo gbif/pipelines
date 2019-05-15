@@ -29,7 +29,7 @@ public class MeasurementOrFactInterpreterTest {
             + "\"lte\": null}, \"valueParsed\": null}, {\"id\": null, \"type\": null, \"value\": \"1\", \"accuracy\": null, "
             + "\"unit\": null, \"determinedDate\": \"not a date\", \"determinedBy\": null, \"method\": null, \"remarks\": null, "
             + "\"determinedDateParsed\": {\"gte\": null, \"lte\": null}, \"valueParsed\": 1.0}], \"issues\": {\"issueList\": "
-            + "[\"RECORDED_DATE_INVALID\"]}}";
+            + "[\"MEASUREMENT_OR_FACT_DATE_INVALID\"]}}";
 
     // State
     Map<String, String> ext1 = new HashMap<>();

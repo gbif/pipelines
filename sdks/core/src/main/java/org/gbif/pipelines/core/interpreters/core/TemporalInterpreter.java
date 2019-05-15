@@ -5,7 +5,8 @@ import java.time.Month;
 import java.time.Year;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAdjusters;
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.gbif.dwc.terms.DcTerm;
@@ -36,9 +37,9 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalInterpreter {
 
-  private static final HashMap<ParsedTemporalIssue, String> EVENT_DATE_ISSUE_MAP = new HashMap<>(3);
-  private static final HashMap<ParsedTemporalIssue, String> MODIFIED_DATE_ISSUE_MAP = new HashMap<>(2);
-  private static final HashMap<ParsedTemporalIssue, String> IDENTIFIED_DATE_ISSUE_MAP = new HashMap<>(2);
+  private static final Map<ParsedTemporalIssue, String> EVENT_DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
+  private static final Map<ParsedTemporalIssue, String> MODIFIED_DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
+  private static final Map<ParsedTemporalIssue, String> IDENTIFIED_DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
 
   static {
     EVENT_DATE_ISSUE_MAP.put(DATE_INVALID, RECORDED_DATE_INVALID.name());

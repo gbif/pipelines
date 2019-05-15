@@ -2,6 +2,7 @@ package org.gbif.pipelines.parsers.parsers.temporal;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.MonthDay;
 import java.time.Year;
@@ -15,7 +16,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import org.gbif.pipelines.parsers.parsers.temporal.accumulator.ChronoAccumulator;
@@ -48,11 +48,6 @@ public class TemporalParser {
   private static final Predicate<Temporal> HAS_MONTH_FN = t -> HAS_DAY_FN.test(t) || t instanceof YearMonth;
   private static final Predicate<Temporal> HAS_YEAR_FN = t -> HAS_MONTH_FN.test(t) || t instanceof Year;
 
-  private static final BiPredicate<Temporal, Year> HAS_YEAR_MATCH =
-      (fromDate, year) -> year == null || Year.from(fromDate).equals(year);
-  private static final BiPredicate<Temporal, Month> HAS_MONTH_MATCH =
-      (fromDate, month) -> month == null || Month.from(fromDate).equals(month);
-
   public static ParsedTemporal parse(String rawDate) {
     return parse("", "", "", rawDate);
   }
@@ -72,6 +67,7 @@ public class TemporalParser {
       return yearMonthDayParsed;
     }
 
+    // Parse event date
     ParsedTemporal eventDateParsed = parseEventDate(rawDate);
 
     return mergeParsedTemporal(yearMonthDayParsed, eventDateParsed);
@@ -112,6 +108,10 @@ public class TemporalParser {
     Temporal fromTemporal = TEMPORAL_FUNC.apply(fromAccum, issues);
     Temporal toTemporal = TEMPORAL_FUNC.apply(toAccum, issues);
 
+    if (!fromAccum.getLastParsed().isPresent() && !isNullOrEmpty(rawFrom)) {
+      issues.add(DATE_INVALID);
+    }
+
     if (!isValidDateType(fromTemporal, toTemporal)) {
       toTemporal = null;
     }
@@ -135,15 +135,15 @@ public class TemporalParser {
       return yearMonthDayParsed;
     }
 
-    if (eventDateParsed.getFrom().isPresent() && eventDateParsed.getTo().isPresent()) {
-      return parseCaseFromAndTo(yearMonthDayParsed, eventDateParsed.getFrom().get(), eventDateParsed.getTo().get());
+    if (eventDateParsed.getTo().isPresent()) {
+      return mergeYmd(yearMonthDayParsed, eventDateParsed);
     }
 
-    return parseCaseFrom(yearMonthDayParsed, eventDateParsed);
+    return mergeFromAndYmd(yearMonthDayParsed, eventDateParsed);
   }
 
-  /** Update Year, month and day fields using parsed event date */
-  private static ParsedTemporal parseCaseFrom(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+  /** Merge from date from event and date from yaer-month-day */
+  private static ParsedTemporal mergeFromAndYmd(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
 
     Temporal fromTemporal = eventDateParsed.getFrom().orElse(null);
 
@@ -158,33 +158,42 @@ public class TemporalParser {
     Year fromYear = HAS_YEAR_FN.test(fromTemporal) ? Year.from(fromTemporal) : null;
     Year year = yearMonthDayParsed.getYear().orElse(null);
     boolean isYearMatch = fromYear == null || year == null || fromYear.equals(year);
-    Year resultYear = isYearMatch ? (fromYear == null ? year : fromYear) : null;
+    Year yearNotNull = fromYear == null ? year : fromYear;
+    Year resultYear = isYearMatch ? yearNotNull : year;
 
     Month fromMonth = HAS_MONTH_FN.test(fromTemporal) ? Month.from(fromTemporal) : null;
     Month month = yearMonthDayParsed.getMonth().orElse(null);
     boolean isMonthMatch = fromMonth == null || month == null || fromMonth.equals(month);
-    Month resultMonth = isMonthMatch ? (fromMonth == null ? month : fromMonth) : null;
+    Month monthNotNull = fromMonth == null ? month : fromMonth;
+    Month resultMonth = isMonthMatch ? monthNotNull : month;
 
     Integer fromDay = HAS_DAY_FN.test(fromTemporal) ? MonthDay.from(fromTemporal).getDayOfMonth() : null;
     Integer day = yearMonthDayParsed.getDay().orElse(null);
     boolean isDayMatch = fromDay == null || day == null || fromDay.equals(day);
-    Integer resultDay = isDayMatch ? (fromDay == null ? day : fromDay) : null;
+    Integer dayNotNull = fromDay == null ? day : fromDay;
+    Integer resultDay = isDayMatch ? dayNotNull : day;
+
+    boolean hasTime = fromTemporal instanceof LocalDateTime;
+    LocalTime resultTime = hasTime ? LocalTime.from(fromTemporal) : null;
 
     if (!isYearMatch || !isMonthMatch || !isDayMatch) {
+      yearMonthDayParsed.setFromDate(fromTemporal);
       yearMonthDayParsed.setIssueSet(Collections.singleton(DATE_MISMATCH));
+    } else {
+      yearMonthDayParsed.setFromDate(resultYear, resultMonth, resultDay, resultTime);
     }
 
     yearMonthDayParsed.setYear(resultYear);
     yearMonthDayParsed.setMonth(resultMonth);
     yearMonthDayParsed.setDay(resultDay);
-    yearMonthDayParsed.setFromDate(resultYear, resultMonth, resultDay);
 
     return yearMonthDayParsed;
   }
 
-  /** Update Year, month and day fields using parsed event date */
-  private static ParsedTemporal parseCaseFromAndTo(ParsedTemporal yearMonthDayParsed, Temporal fromTemporal,
-      Temporal toTemporal) {
+  /** Merge from date from/to event and date from yaer-month-day */
+  private static ParsedTemporal mergeYmd(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+    Temporal fromTemporal = eventDateParsed.getFrom().get();
+    Temporal toTemporal = eventDateParsed.getTo().get();
 
     yearMonthDayParsed.setFromDate(fromTemporal);
     yearMonthDayParsed.setToDate(toTemporal);
@@ -246,27 +255,5 @@ public class TemporalParser {
       return true;
     }
     return from.getClass().equals(to.getClass());
-  }
-
-  /** Match dates base, example 2013-10 base equals 2013-10-11, example 2013-10 base equals null */
-  private static boolean areDatesBaseMatch(ParsedTemporal yearMonthDayParsed, Temporal temporal) {
-    Optional<Year> year = yearMonthDayParsed.getYear();
-    if (year.isPresent() && !year.get().equals(Year.from(temporal))) {
-      return false;
-    }
-
-    if (!HAS_MONTH_FN.test(temporal)) {
-      return true;
-    }
-    Optional<Month> month = yearMonthDayParsed.getMonth();
-    if (month.isPresent() && !month.get().equals(Month.from(temporal))) {
-      return false;
-    }
-
-    if (!HAS_DAY_FN.test(temporal)) {
-      return true;
-    }
-    Optional<Integer> day = yearMonthDayParsed.getDay();
-    return day.isPresent() && day.get().equals(MonthDay.from(temporal).getDayOfMonth());
   }
 }
