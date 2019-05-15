@@ -4,19 +4,19 @@ import java.text.DateFormatSymbols;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 /** Util class for parsing values */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ParsedUnitUtils {
 
   // Cached instance
   private static final String[] MONTHS = DateFormatSymbols.getInstance().getMonths();
-
-  private ParsedUnitUtils() {
-    // Can't have an instance
-  }
 
   public static Optional<Integer> parseYear(String year) {
     return parseInteger(year, x -> false);

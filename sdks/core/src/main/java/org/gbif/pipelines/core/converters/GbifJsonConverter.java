@@ -20,10 +20,10 @@ import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -337,9 +337,8 @@ public class GbifJsonConverter {
         jc.addJsonTextFieldNoCheck(ID, tr.getId());
       }
 
-      Optional.ofNullable(tr.getEventDate())
-          .map(EventDate::getGte)
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventDateSingle", x));
+      TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
+          .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventDateSingle", x.toString()));
 
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);

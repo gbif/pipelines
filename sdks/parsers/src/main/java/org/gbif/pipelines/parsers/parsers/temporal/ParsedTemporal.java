@@ -1,7 +1,9 @@
 package org.gbif.pipelines.parsers.parsers.temporal;
 
+import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
+import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,19 +37,22 @@ public class ParsedTemporal {
     return parsedTemporal;
   }
 
-  public static ParsedTemporal create(Temporal fromDate, Temporal toDate) {
+  public static ParsedTemporal create(Temporal fromDate, Temporal toDate, Set<ParsedTemporalIssue> issues) {
     ParsedTemporal parsedTemporal = create();
     parsedTemporal.setFromDate(fromDate);
     parsedTemporal.setToDate(toDate);
+    parsedTemporal.setIssueSet(issues);
     return parsedTemporal;
   }
 
-  public static ParsedTemporal create(Year year, Month month, Integer day, Temporal fromDate) {
+  public static ParsedTemporal create(Year year, Month month, Integer day, Temporal fromDate,
+      Set<ParsedTemporalIssue> issues) {
     ParsedTemporal parsedTemporal = create();
+    parsedTemporal.setFromDate(fromDate);
     parsedTemporal.setYear(year);
     parsedTemporal.setMonth(month);
     parsedTemporal.setDay(day);
-    parsedTemporal.setFromDate(fromDate);
+    parsedTemporal.setIssueSet(issues);
     return parsedTemporal;
   }
 
@@ -85,6 +90,16 @@ public class ParsedTemporal {
 
   public void setFromDate(Temporal fromDate) {
     this.fromDate = fromDate;
+  }
+
+  public void setFromDate(Year year, Month month, Integer day) {
+    if (year != null && month != null && day != null) {
+      this.fromDate = LocalDate.of(year.getValue(), month, day);
+    }else if (year != null && month != null) {
+      this.fromDate = YearMonth.of(year.getValue(), month);
+    }else if (year != null) {
+      this.fromDate = Year.of(year.getValue());
+    }
   }
 
   public void setToDate(Temporal toDate) {

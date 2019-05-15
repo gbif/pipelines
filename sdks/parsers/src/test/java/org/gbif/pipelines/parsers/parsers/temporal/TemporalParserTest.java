@@ -8,12 +8,12 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_MISMATCH;
 import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -141,6 +141,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -160,6 +161,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -179,6 +181,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -218,6 +221,8 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.MAY, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertEquals(1, result.getIssueSet().size());
+    assertTrue(result.getIssueSet().contains(DATE_MISMATCH));
   }
 
   @Test
@@ -238,6 +243,8 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.MAY, result.getMonth().get());
     assertFalse(result.getDay().isPresent());
+    assertEquals(1, result.getIssueSet().size());
+    assertTrue(result.getIssueSet().contains(DATE_MISMATCH));
   }
 
   @Test
@@ -257,6 +264,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -274,6 +282,10 @@ public class TemporalParserTest {
     // Should
     assertEquals(expectedFirst, result.getFrom().get());
     assertEquals(expectedSecond, result.getTo().get());
+    assertEquals(Year.parse(year), result.getYear().get());
+    assertEquals(Month.JANUARY, result.getMonth().get());
+    assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -294,6 +306,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -314,6 +327,8 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertEquals(1, result.getIssueSet().size());
+    assertTrue(result.getIssueSet().contains(DATE_MISMATCH));
   }
 
   @Test
@@ -334,6 +349,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -354,6 +370,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(MonthDay.from(expectedFirst).getDayOfMonth(), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
 
@@ -375,6 +392,8 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.MAY, result.getMonth().get());
     assertFalse(result.getDay().isPresent());
+    assertEquals(1, result.getIssueSet().size());
+    assertTrue(result.getIssueSet().contains(DATE_MISMATCH));
   }
 
   @Test
@@ -394,6 +413,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -413,6 +433,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -432,6 +453,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -451,6 +473,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -470,10 +493,10 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
-  @Ignore("FIX ME")
   public void eventDateWrongYearTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
@@ -490,10 +513,10 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
-  @Ignore("FIX ME")
   public void eventDateWrongYearMonthMistakeTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 4, 1);
@@ -551,6 +574,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -570,6 +594,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -589,6 +614,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -608,6 +634,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -627,6 +654,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -646,6 +674,28 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.APRIL, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
+  }
+
+  @Test
+  public void localDateSlashShortMonthDate2Test() {
+    // State
+    Temporal expectedFirst = LocalDate.of(1999, 4, 1);
+
+    String eventDate = "1999/4/1";
+    String year = "2000";
+    String month = "04";
+    String day = "01";
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+    // Should
+    assertEquals(expectedFirst, result.getFrom().get());
+    assertFalse(result.getTo().isPresent());
+    assertEquals(Year.parse(year), result.getYear().get());
+    assertEquals(Month.APRIL, result.getMonth().get());
+    assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertEquals(1, result.getIssueSet().size());
+    assertTrue(result.getIssueSet().contains(DATE_MISMATCH));
   }
 
   @Test
@@ -1085,7 +1135,8 @@ public class TemporalParserTest {
     assertFalse(result.getYear().isPresent());
     assertFalse(result.getMonth().isPresent());
     assertFalse(result.getDay().isPresent());
-    assertFalse(result.getIssueSet().isEmpty());
+    assertEquals(1, result.getIssueSet().size());
+    assertTrue(result.getIssueSet().contains(DATE_INVALID));
   }
 
   @Test
@@ -1104,6 +1155,8 @@ public class TemporalParserTest {
     assertFalse(result.getYear().isPresent());
     assertFalse(result.getMonth().isPresent());
     assertFalse(result.getDay().isPresent());
+    assertEquals(1, result.getIssueSet().size());
+    assertTrue(result.getIssueSet().contains(DATE_UNLIKELY));
   }
 
   @Test
@@ -1152,7 +1205,6 @@ public class TemporalParserTest {
   }
 
   @Test
-  @Ignore("FIX ME")
   public void localDateTextEventDateTest() {
     // State
     Temporal expectedFirst = LocalDate.of(1999, 1, 1);
@@ -1171,6 +1223,7 @@ public class TemporalParserTest {
     assertEquals(Year.parse(year), result.getYear().get());
     assertEquals(Month.JANUARY, result.getMonth().get());
     assertEquals(Integer.parseInt(day), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -1275,6 +1328,7 @@ public class TemporalParserTest {
     assertEquals(Year.from(expectedFirst), result.getYear().get());
     assertEquals(Month.from(expectedFirst), result.getMonth().get());
     assertEquals(MonthDay.from(expectedFirst).getDayOfMonth(), result.getDay().get().intValue());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 
   @Test
@@ -1282,7 +1336,7 @@ public class TemporalParserTest {
 
     // State
     Temporal expectedFirst = Year.of(2011);
-    Temporal expectedSecond = Year.of(2013);
+    Temporal expectedTwo = Year.of(2013);
 
     String eventDate = "2013/2011";
     String year = "2013";
@@ -1294,9 +1348,36 @@ public class TemporalParserTest {
 
     // Should
     assertEquals(expectedFirst, result.getFrom().get());
-    assertEquals(expectedSecond, result.getTo().get());
+    assertEquals(expectedTwo, result.getTo().get());
+    assertTrue(result.getTo().isPresent());
     assertEquals(Year.parse(year), result.getYear().get());
     assertFalse(result.getMonth().isPresent());
     assertFalse(result.getDay().isPresent());
+    assertEquals(1, result.getIssueSet().size());
+    assertTrue(result.getIssueSet().contains(DATE_MISMATCH));
+  }
+
+  @Test
+  public void invalidPeriod2Test() {
+
+    // State
+    Temporal expectedFirst = Year.of(2011);
+    Temporal expectedSecond = Year.of(2013);
+
+    String eventDate = "2013/2011";
+    String year = null;
+    String month = null;
+    String day = null;
+
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+
+    // Should
+    assertEquals(expectedFirst, result.getFrom().get());
+    assertEquals(expectedSecond, result.getTo().get());
+    assertEquals(expectedFirst, result.getYear().get());
+    assertFalse(result.getMonth().isPresent());
+    assertFalse(result.getDay().isPresent());
+    assertTrue(result.getIssueSet().isEmpty());
   }
 }
