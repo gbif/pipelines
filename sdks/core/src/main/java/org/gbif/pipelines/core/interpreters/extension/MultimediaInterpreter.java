@@ -1,8 +1,14 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import java.net.URI;
+import java.time.temporal.Temporal;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
@@ -16,15 +22,17 @@ import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
-import java.net.URI;
-import java.time.temporal.Temporal;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
 
 /**
@@ -34,6 +42,13 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MultimediaInterpreter {
+
+  private static final Map<ParsedTemporalIssue, String> DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
+
+  static {
+    DATE_ISSUE_MAP.put(DATE_INVALID, MULTIMEDIA_DATE_INVALID.name());
+    DATE_ISSUE_MAP.put(DATE_UNLIKELY, "MULTIMEDIA_DATE_UNLIKELY");
+  }
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
 
@@ -74,26 +89,23 @@ public class MultimediaInterpreter {
 
   private static void parseAssociatedMedia(Result<Multimedia> result, ExtendedRecord er) {
     extractOptValue(er, DwcTerm.associatedMedia).ifPresent(v ->
-      UrlParser.parseUriList(v).forEach(uri -> {
-        if (uri == null) {
-          result.getIssues().add(MULTIMEDIA_URI_INVALID.name());
-        } else if (!containsUri(result, uri)) {
-          Multimedia multimedia = new Multimedia();
-          multimedia.setIdentifier(uri.toString());
-          parseAndSetFormatAndType(multimedia, null);
-          result.getList().add(multimedia);
-        }
-    }));
+        UrlParser.parseUriList(v).forEach(uri -> {
+          if (uri == null) {
+            result.getIssues().add(MULTIMEDIA_URI_INVALID.name());
+          } else if (!containsUri(result, uri)) {
+            Multimedia multimedia = new Multimedia();
+            multimedia.setIdentifier(uri.toString());
+            parseAndSetFormatAndType(multimedia, null);
+            result.getList().add(multimedia);
+          }
+        }));
   }
 
   private static boolean containsUri(Result<Multimedia> result, URI uri) {
     return result.getList().stream()
-        .anyMatch(
-            v ->
-                (!Strings.isNullOrEmpty(v.getIdentifier())
-                        && uri.equals(URI.create(v.getIdentifier())))
-                    || (!Strings.isNullOrEmpty(v.getReferences())
-                        && uri.equals(URI.create(v.getReferences()))));
+        .anyMatch(v ->
+            (!Strings.isNullOrEmpty(v.getIdentifier()) && uri.equals(URI.create(v.getIdentifier())))
+                || (!Strings.isNullOrEmpty(v.getReferences()) && uri.equals(URI.create(v.getReferences()))));
   }
 
   /**
@@ -134,7 +146,11 @@ public class MultimediaInterpreter {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFrom().map(Temporal::toString).ifPresent(m::setCreated);
 
-    return parsed.getIssueList();
+    return parsed.getIssueSet()
+        .stream()
+        .map(DATE_ISSUE_MAP::get)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   /**

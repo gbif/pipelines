@@ -10,7 +10,6 @@ import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
 import static java.time.temporal.ChronoField.YEAR;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 /** The accumulator class for storing all parsed chrono fields */
 public class ChronoAccumulator {
@@ -31,7 +30,7 @@ public class ChronoAccumulator {
    * Set raw value
    *
    * @param chronoField one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
-   *     MINUTE_OF_HOUR, SECOND_OF_MINUTE
+   * MINUTE_OF_HOUR, SECOND_OF_MINUTE
    * @param rawValue raw value for parsing
    */
   public void setChronoField(ChronoField chronoField, String rawValue) {
@@ -72,13 +71,5 @@ public class ChronoAccumulator {
   public ChronoAccumulator mergeAbsent(ChronoAccumulator accumulator) {
     accumulator.valueMap.forEach(valueMap::putIfAbsent);
     return this;
-  }
-
-  /** Checks all value in the folder are numeric, except month */
-  public boolean areAllNumeric() {
-    return valueMap
-        .entrySet()
-        .stream()
-        .anyMatch(x -> MONTH_OF_YEAR != x.getKey() && !isNumeric(x.getValue()));
   }
 }

@@ -1,26 +1,25 @@
 package org.gbif.pipelines.parsers.parsers.temporal.utils;
 
 import java.text.DateFormatSymbols;
-import java.time.Year;
 import java.util.Optional;
 import java.util.function.Predicate;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 /** Util class for parsing values */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ParsedUnitUtils {
 
   // Cached instance
   private static final String[] MONTHS = DateFormatSymbols.getInstance().getMonths();
 
-  private ParsedUnitUtils() {
-    // Can't have an instance
-  }
-
   public static Optional<Integer> parseYear(String year) {
-    return parseInteger(year, x -> x > Year.now().getValue() || x < 1000);
+    return parseInteger(year, x -> false);
   }
 
   public static Optional<Integer> parseMonth(String month) {
@@ -67,10 +66,10 @@ public class ParsedUnitUtils {
    * @return parsed value or ISSUE(-1) value, if value is invalid
    */
   private static Optional<Integer> parseInteger(String rawValue, Predicate<Integer> validator) {
-    Integer value =
-        (!isNullOrEmpty(rawValue) && isNumeric(rawValue) && rawValue.length() < 5)
-            ? Integer.valueOf(rawValue)
-            : -1;
-    return validator.test(value) ? Optional.empty() : Optional.of(value);
+    if (!isNullOrEmpty(rawValue) && isNumeric(rawValue)) {
+      Integer value = Integer.valueOf(rawValue);
+      return validator.test(value) ? Optional.empty() : Optional.of(value);
+    }
+    return Optional.empty();
   }
 }
