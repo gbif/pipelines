@@ -21,7 +21,7 @@
     <module>ingest-transforms</module>
     <module>ingest-gbif</module>
     <module>ingest-gbif-standalone</module>
-      <module>ingest-gbif-hbase</module>
+    <module>export-gbif-hbase</module>
   </modules>
 
 </project>

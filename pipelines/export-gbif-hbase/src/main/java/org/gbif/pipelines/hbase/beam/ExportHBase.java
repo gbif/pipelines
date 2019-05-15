@@ -1,16 +1,23 @@
 package org.gbif.pipelines.hbase.beam;
 
+import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.hbase.HBaseIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Contextful;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -27,18 +34,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /** Executes a pipeline that reads HBase and exports verbatim data into Avro using the {@link ExtendedRecord}. schema */
-public class BulkLoad {
+public class ExportHBase {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
   public static void main(String[] args) {
-    PipelineOptionsFactory.register(BulkLoadOptions.class);
-    BulkLoadOptions options = PipelineOptionsFactory.fromArgs(args).as(BulkLoadOptions.class);
+    PipelineOptionsFactory.register(ExportHBaseOptions.class);
+    ExportHBaseOptions options = PipelineOptionsFactory.fromArgs(args).as(ExportHBaseOptions.class);
     options.setRunner(SparkRunner.class);
     Pipeline p = Pipeline.create(options);
 
-    Counter recordsExported = Metrics.counter(BulkLoad.class,"recordsExported");
-    Counter recordsFailed = Metrics.counter(BulkLoad.class,"recordsFailed");
+    Counter recordsExported = Metrics.counter(ExportHBase.class,"recordsExported");
+    Counter recordsFailed = Metrics.counter(ExportHBase.class,"recordsFailed");
 
     //Params
     String exportPath = options.getExportPath();
@@ -53,14 +60,14 @@ public class BulkLoad {
 
     PCollection<Result> rows =
         p.apply(
-            "read",
+            "read HBase",
             HBaseIO.read().withConfiguration(hbaseConfig).withScan(scan).withTableId(table));
 
-    PCollection<ExtendedRecord> records =
+    PCollection<KV<UUID, ExtendedRecord>> records =
         rows.apply(
-            "convert",
+            "convert to extended record",
             ParDo.of(
-                new DoFn<Result, ExtendedRecord>() {
+                new DoFn<Result, KV<UUID, ExtendedRecord>>() {
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
@@ -68,12 +75,13 @@ public class BulkLoad {
                     try {
                       VerbatimOccurrence verbatimOccurrence = OccurrenceBuilder.buildVerbatimOccurrence(row);
                       ExtendedRecord.Builder builder = ExtendedRecord.newBuilder()
+                          .setId(String.valueOf(verbatimOccurrence.getKey()))
                                                           .setCoreTerms(toVerbatimMap(verbatimOccurrence.getVerbatimFields()));
                       if (Objects.nonNull(verbatimOccurrence.getExtensions())) {
                         builder.setExtensions(toVerbatimExtensionsMap(verbatimOccurrence.getExtensions()));
                       }
 
-                      c.output(builder.build());
+                      c.output(KV.of(verbatimOccurrence.getDatasetKey(), builder.build()));
                       recordsExported.inc();
                     } catch (NullPointerException e) {
                       // Expected for bad data
@@ -82,7 +90,14 @@ public class BulkLoad {
                   }
                 }));
 
-    records.apply("To Avro", AvroIO.write(ExtendedRecord.class).to(exportPath).withSuffix(PipelinesVariables.Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC));
+    records.apply("write avro file per dataset", FileIO.<String, KV<UUID,ExtendedRecord>>writeDynamic()
+        .by(kv -> kv.getValue().toString())
+        .via(Contextful.fn(src -> src.getValue()),
+            Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
+        .to(exportPath)
+        .withDestinationCoder(StringUtf8Coder.of())
+        .withNumShards(10)
+        .withNaming(key -> defaultNaming(key, PipelinesVariables.Pipeline.AVRO_EXTENSION)));
 
     PipelineResult result = p.run();
     result.waitUntilFinish();
@@ -103,7 +118,7 @@ public class BulkLoad {
     return
             verbatimExtensions.entrySet().stream()
               .collect(HashMap::new,
-                      (m, v) -> m.put(v.getKey().name(), v.getValue().stream().map(BulkLoad::toVerbatimMap).collect(Collectors.toList())),
+                      (m, v) -> m.put(v.getKey().name(), v.getValue().stream().map(ExportHBase::toVerbatimMap).collect(Collectors.toList())),
                       HashMap::putAll);
   }
 }

@@ -7,7 +7,7 @@ import org.apache.beam.sdk.options.PipelineOptions;
 /**
  * Pipeline settings and arguments for Hbase to Avro export.
  */
-public interface BulkLoadOptions extends PipelineOptions {
+public interface ExportHBaseOptions extends PipelineOptions {
 
   @Description("HBase Zookeeper ensemble")
   String getHbaseZk();
