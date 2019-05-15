@@ -121,16 +121,16 @@ public class TemporalRecordTransformTest {
     return Arrays.stream(dates)
         .map(
             x -> {
-              String from = x.getFrom().map(Temporal::toString).orElse(null);
-              String to = x.getTo().map(Temporal::toString).orElse(null);
+              String from = x.getFromOpt().map(Temporal::toString).orElse(null);
+              String to = x.getToOpt().map(Temporal::toString).orElse(null);
               return TemporalRecord.newBuilder()
                   .setId("0")
-                  .setYear(x.getYear().map(Year::getValue).orElse(null))
-                  .setMonth(x.getMonth().map(Month::getValue).orElse(null))
-                  .setDay(x.getDay().orElse(null))
+                  .setYear(x.getYearOpt().map(Year::getValue).orElse(null))
+                  .setMonth(x.getMonthOpt().map(Month::getValue).orElse(null))
+                  .setDay(x.getDayOpt().orElse(null))
                   .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
-                  .setDateIdentified(x.getFrom().map(Temporal::toString).orElse(null))
-                  .setModified(x.getFrom().map(Temporal::toString).orElse(null))
+                  .setDateIdentified(x.getFromOpt().map(Temporal::toString).orElse(null))
+                  .setModified(x.getFromOpt().map(Temporal::toString).orElse(null))
                   .setStartDayOfYear(1)
                   .setEndDayOfYear(365)
                   .setCreated(0L)

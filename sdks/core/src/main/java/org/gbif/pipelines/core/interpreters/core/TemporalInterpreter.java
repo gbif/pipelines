@@ -68,16 +68,16 @@ public class TemporalInterpreter {
     // Get all parsed values and set
     EventDate eventDate = new EventDate();
 
-    temporalDates.getYear().map(Year::getValue).ifPresent(tr::setYear);
-    temporalDates.getMonth().map(Month::getValue).ifPresent(tr::setMonth);
-    temporalDates.getDay().ifPresent(tr::setDay);
-    temporalDates.getFrom().map(Temporal::toString).ifPresent(eventDate::setGte);
-    temporalDates.getTo().map(Temporal::toString).ifPresent(eventDate::setLte);
+    temporalDates.getYearOpt().map(Year::getValue).ifPresent(tr::setYear);
+    temporalDates.getMonthOpt().map(Month::getValue).ifPresent(tr::setMonth);
+    temporalDates.getDayOpt().ifPresent(tr::setDay);
+    temporalDates.getFromOpt().map(Temporal::toString).ifPresent(eventDate::setGte);
+    temporalDates.getToOpt().map(Temporal::toString).ifPresent(eventDate::setLte);
 
     tr.setEventDate(eventDate);
 
     // Map issues to Interpretation
-    temporalDates.getIssueSet().forEach(x ->
+    temporalDates.getIssues().forEach(x ->
         Optional.ofNullable(EVENT_DATE_ISSUE_MAP.get(x)).ifPresent(tr.getIssues().getIssueList()::add)
     );
   }
@@ -85,8 +85,8 @@ public class TemporalInterpreter {
   /** {@link DcTerm#modified} interpretation. */
   public static void interpretModifiedDate(ExtendedRecord er, TemporalRecord tr) {
     ParsedTemporal date = TemporalParser.parse(extractValue(er, DcTerm.modified));
-    date.getFrom().map(Temporal::toString).ifPresent(tr::setModified);
-    date.getIssueSet().forEach(x ->
+    date.getFromOpt().map(Temporal::toString).ifPresent(tr::setModified);
+    date.getIssues().forEach(x ->
         Optional.ofNullable(MODIFIED_DATE_ISSUE_MAP.get(x)).ifPresent(tr.getIssues().getIssueList()::add)
     );
   }
@@ -94,8 +94,8 @@ public class TemporalInterpreter {
   /** {@link DwcTerm#dateIdentified} interpretation. */
   public static void interpretDateIdentified(ExtendedRecord er, TemporalRecord tr) {
     ParsedTemporal date = TemporalParser.parse(extractValue(er, DwcTerm.dateIdentified));
-    date.getFrom().map(Temporal::toString).ifPresent(tr::setDateIdentified);
-    date.getIssueSet().forEach(x ->
+    date.getFromOpt().map(Temporal::toString).ifPresent(tr::setDateIdentified);
+    date.getIssues().forEach(x ->
         Optional.ofNullable(IDENTIFIED_DATE_ISSUE_MAP.get(x)).ifPresent(tr.getIssues().getIssueList()::add)
     );
   }

@@ -144,10 +144,9 @@ public class MultimediaInterpreter {
    */
   private static List<String> parseAndSetCreated(Multimedia m, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
-    parsed.getFrom().map(Temporal::toString).ifPresent(m::setCreated);
+    parsed.getFromOpt().map(Temporal::toString).ifPresent(m::setCreated);
 
-    return parsed.getIssueSet()
-        .stream()
+    return parsed.getIssues().stream()
         .map(DATE_ISSUE_MAP::get)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());

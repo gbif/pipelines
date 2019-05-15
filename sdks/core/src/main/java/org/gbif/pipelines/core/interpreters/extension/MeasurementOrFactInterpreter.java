@@ -81,14 +81,13 @@ public class MeasurementOrFactInterpreter {
 
     DeterminedDate determinedDate = new DeterminedDate();
 
-    parsed.getFrom().map(Temporal::toString).ifPresent(determinedDate::setGte);
-    parsed.getTo().map(Temporal::toString).ifPresent(determinedDate::setLte);
+    parsed.getFromOpt().map(Temporal::toString).ifPresent(determinedDate::setGte);
+    parsed.getToOpt().map(Temporal::toString).ifPresent(determinedDate::setLte);
 
     mf.setDeterminedDateParsed(determinedDate);
     mf.setDeterminedDate(v);
 
-    return parsed.getIssueSet()
-        .stream()
+    return parsed.getIssues().stream()
         .map(DATE_ISSUE_MAP::get)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());

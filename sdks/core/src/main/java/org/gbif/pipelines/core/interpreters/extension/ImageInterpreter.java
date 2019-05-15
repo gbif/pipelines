@@ -109,10 +109,9 @@ public class ImageInterpreter {
    */
   private static List<String> parseAndSetCreated(Image i, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
-    parsed.getFrom().map(Temporal::toString).ifPresent(i::setCreated);
+    parsed.getFromOpt().map(Temporal::toString).ifPresent(i::setCreated);
 
-    return parsed.getIssueSet()
-        .stream()
+    return parsed.getIssues().stream()
         .map(DATE_ISSUE_MAP::get)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());

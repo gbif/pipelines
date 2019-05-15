@@ -28,18 +28,22 @@ import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
 import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
+import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
@@ -57,11 +61,13 @@ public class LocationInterpreter {
   private static final double COORDINATE_PRECISION_UPPER_BOUND = 45d;
 
   //List of Geospatial Issues
-  private static final Set<String> SPATIAL_ISSUES = Stream.of("ZERO_COORDINATE",
-                                                              "COORDINATE_INVALID",
-                                                              "COORDINATE_OUT_OF_RANGE",
-                                                              "COUNTRY_COORDINATE_MISMATCH")
-                                                      .collect(Collectors.toSet());
+  private static final Set<String> SPATIAL_ISSUES =
+      Stream.of(
+          ZERO_COORDINATE.name(),
+          COORDINATE_INVALID.name(),
+          COORDINATE_OUT_OF_RANGE.name(),
+          COUNTRY_COORDINATE_MISMATCH.name()
+      ).collect(Collectors.toSet());
 
   private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
 
@@ -69,8 +75,8 @@ public class LocationInterpreter {
    * Determines if the record contains geo-spatial issues.
    */
   private static Optional<Boolean> hasGeospatialIssues(LocationRecord lr) {
-    if (Objects.nonNull(lr.getIssues())) {
-     return Optional.of(lr.getIssues().getIssueList().stream().anyMatch(SPATIAL_ISSUES::contains));
+    if (lr.getIssues() != null) {
+      return Optional.of(lr.getIssues().getIssueList().stream().anyMatch(SPATIAL_ISSUES::contains));
     }
     return Optional.empty();
   }
@@ -80,7 +86,7 @@ public class LocationInterpreter {
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-          KeyValueStore<LatLng, GeocodeResponse> kvStore, MetadataRecord mdr) {
+      KeyValueStore<LatLng, GeocodeResponse> kvStore, MetadataRecord mdr) {
     return (er, lr) -> {
       if (kvStore != null) {
         // parse the terms
@@ -94,7 +100,6 @@ public class LocationInterpreter {
               lr.setCountry(country.getTitle());
               lr.setCountryCode(country.getIso2LetterCode());
             });
-
 
         LatLng latLng = parsedLocation.getLatLng();
         if (Objects.nonNull(latLng)) {
@@ -113,7 +118,8 @@ public class LocationInterpreter {
 
         // Interpretation that required multiple sources
         // Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
-        if (Objects.nonNull(mdr) && Objects.nonNull(lr.getCountry()) && Objects.nonNull(mdr.getDatasetPublishingCountry())) {
+        if (Objects.nonNull(mdr) && Objects.nonNull(lr.getCountry())
+            && Objects.nonNull(mdr.getDatasetPublishingCountry())) {
           lr.setRepatriated(!lr.getCountryCode().equals(mdr.getDatasetPublishingCountry()));
         }
 
@@ -130,7 +136,8 @@ public class LocationInterpreter {
     if (EBIRD_DATASET_KEY.toString().equals(mr.getDatasetKey())) {
 
       String verbatimPublishingCountryCode = extractValue(er, GbifTerm.publishingCountry);
-      OccurrenceParseResult<Country> result = new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode));
+      OccurrenceParseResult<Country> result =
+          new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode));
 
       if (result.isSuccessful()) {
         return Optional.of(result.getPayload().getIso2LetterCode());
