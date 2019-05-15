@@ -68,9 +68,9 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.40</gbif-parsers.version>
     <dwca-io.version>2.5</dwca-io.version>
-    <gbif-api.version>0.70</gbif-api.version>
+    <gbif-api.version>0.81</gbif-api.version>
     <gbif-common.version>0.44</gbif-common.version>
-    <dwc-api.version>1.21</dwc-api.version>
+    <dwc-api.version>1.22</dwc-api.version>
     <kvs.version>1.2</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
 
