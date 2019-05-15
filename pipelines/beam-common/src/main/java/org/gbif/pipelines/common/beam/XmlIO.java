@@ -22,7 +22,6 @@ import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 
 import lombok.AllArgsConstructor;
-import lombok.Cleanup;
 import lombok.SneakyThrows;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.XML_TO_ER_COUNT;
@@ -79,16 +78,16 @@ public class XmlIO extends PTransform<PBegin, PCollection<ExtendedRecord>> {
       @SneakyThrows
       @ProcessElement
       public void processElement(@Element ResourceId resourceId, OutputReceiver<ExtendedRecord> out) {
-        @Cleanup InputStream is = Channels.newInputStream(FileSystems.open(resourceId));
-        new OccurrenceParser().parseStream(is)
-            .forEach(rxo ->
-                XmlFragmentParser.parseRecord(rxo).stream()
-                    .map(ExtendedRecordConverter::from)
-                    .forEach(er -> {
-                      xmlCount.inc();
-                      out.output(er);
-                    })
-            );
+        try (InputStream is = Channels.newInputStream(FileSystems.open(resourceId))) {
+          new OccurrenceParser().parseStream(is).forEach(rxo ->
+              XmlFragmentParser.parseRecord(rxo).stream()
+                  .map(ExtendedRecordConverter::from)
+                  .forEach(er -> {
+                    xmlCount.inc();
+                    out.output(er);
+                  })
+          );
+        }
       }
     });
 

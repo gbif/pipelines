@@ -4,7 +4,6 @@ import java.io.FilterReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,9 +23,8 @@ public class XmlSanitizingReader extends FilterReader {
     log.debug("Starting XmlSanitizingReader");
   }
 
-  @Synchronized
   @Override
-  public int read() throws IOException {
+  public synchronized int read() throws IOException {
     int nextChar = nextValidXmlChar();
     log.debug("call to read(), returning [{}]", nextChar);
     return nextChar;
@@ -38,9 +36,8 @@ public class XmlSanitizingReader extends FilterReader {
    * cases except where end of stream is the first char read. This is something that BufferedReader
    * expects for its readLine() calls (and how it behaves for its implementation of this method).
    */
-  @Synchronized
   @Override
-  public int read(char[] buffer, int offset, int length) throws IOException {
+  public synchronized int read(char[] buffer, int offset, int length) throws IOException {
     log.debug("call to read(b, o, l) with l [{}]", length);
     /**
      * TODO: careful here - I think char can only represent basic multilingual plane while int can
@@ -70,9 +67,8 @@ public class XmlSanitizingReader extends FilterReader {
     return (!endOfStreamReached && in.ready());
   }
 
-  @Synchronized
   @Override
-  public void close() throws IOException {
+  public synchronized void close() throws IOException {
     if (in == null) {
       return;
     }
@@ -85,8 +81,7 @@ public class XmlSanitizingReader extends FilterReader {
     return false;
   }
 
-  @Synchronized
-  private int nextValidXmlChar() throws IOException {
+  private synchronized int nextValidXmlChar() throws IOException {
     Integer validChar = null;
     while (validChar == null) {
       int nextChar = in.read();

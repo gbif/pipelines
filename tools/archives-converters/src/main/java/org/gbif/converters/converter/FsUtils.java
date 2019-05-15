@@ -16,7 +16,6 @@ import org.apache.hadoop.fs.Path;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
-import lombok.Cleanup;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -68,24 +67,27 @@ public class FsUtils {
     if (!fs.exists(path)) {
       return true;
     }
+
     if (fs.getFileStatus(path).getLen() > FILE_LIMIT_SIZE) {
       return false;
     }
-    SpecificDatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
-    @Cleanup AvroFSInput input = new AvroFSInput(fs.open(path), fs.getFileStatus(path).getLen());
-    @Cleanup DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(input, datumReader);
-    if (!dataFileReader.hasNext()) {
-      log.warn("File is empty - {}", path);
-      Path parent = path.getParent();
-      fs.delete(parent, true);
 
-      Path subParent = parent.getParent();
-      if (!fs.listFiles(subParent, true).hasNext()) {
-        fs.delete(subParent, true);
+    SpecificDatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
+    try (AvroFSInput input = new AvroFSInput(fs.open(path), fs.getFileStatus(path).getLen());
+        DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(input, datumReader)) {
+      if (!dataFileReader.hasNext()) {
+        log.warn("File is empty - {}", path);
+        Path parent = path.getParent();
+        fs.delete(parent, true);
+
+        Path subParent = parent.getParent();
+        if (!fs.listFiles(subParent, true).hasNext()) {
+          fs.delete(subParent, true);
+        }
+        return true;
       }
-      return true;
+      return false;
     }
-    return false;
   }
 
   public static long fileSize(URI file, String hdfsSiteConfig) throws IOException {
@@ -94,8 +96,9 @@ public class FsUtils {
   }
 
   public static void createFile(FileSystem fs, Path path, String body) throws IOException {
-    @Cleanup FSDataOutputStream stream = fs.create(path, true);
-    stream.writeChars(body);
+    try (FSDataOutputStream stream = fs.create(path, true)) {
+      stream.writeChars(body);
+    }
   }
 
 }

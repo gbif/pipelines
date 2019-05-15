@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.hbase.util.ResultReader;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
@@ -32,13 +31,12 @@ import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import javax.annotation.Nullable;
-import lombok.Cleanup;
 import lombok.SneakyThrows;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -81,9 +79,12 @@ public class HBaseLockingKeyService implements Serializable {
   public HBaseLockingKeyService(KeygenConfig cfg, Connection connection, String datasetId) {
     this.lookupTableName = TableName.valueOf(checkNotNull(cfg.getLookupTable(), "lookupTable can't be null"));
     this.connection = checkNotNull(connection, "tablePool can't be null");
-    this.lookupTableStore = new HBaseStore<>(cfg.getLookupTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
-    this.counterTableStore = new HBaseStore<>(cfg.getCounterTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
-    this.occurrenceTableStore = new HBaseStore<>(cfg.getOccTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
+    this.lookupTableStore =
+        new HBaseStore<>(cfg.getLookupTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
+    this.counterTableStore =
+        new HBaseStore<>(cfg.getCounterTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
+    this.occurrenceTableStore =
+        new HBaseStore<>(cfg.getOccTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
     this.datasetId = datasetId;
   }
 
@@ -243,8 +244,7 @@ public class HBaseLockingKeyService implements Serializable {
    *
    * @return the next key
    */
-  @Synchronized
-  private long getNextKey() {
+  private synchronized long getNextKey() {
     // if we have exhausted our reserved keys, get a new batch of them
     if (currentKey == maxReservedKeyInclusive) {
       // get batch
@@ -319,16 +319,18 @@ public class HBaseLockingKeyService implements Serializable {
   public Set<Long> findKeysByScope(String scope) {
     Set<Long> keys = Sets.newHashSet();
     // note HTableStore isn't capable of ad hoc scans
-    @Cleanup Table table = connection.getTable(lookupTableName);
     Scan scan = new Scan();
     scan.setCacheBlocks(false);
     scan.setCaching(HBASE_CLIENT_CACHING);
     scan.setFilter(new PrefixFilter(Bytes.toBytes(scope)));
-    ResultScanner results = table.getScanner(scan);
-    for (Result result : results) {
-      byte[] rawKey = result.getValue(Columns.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN));
-      if (rawKey != null) {
-        keys.add(Bytes.toLong(rawKey));
+
+    try (Table table = connection.getTable(lookupTableName)) {
+      ResultScanner results = table.getScanner(scan);
+      for (Result result : results) {
+        byte[] rawKey = result.getValue(Columns.CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN));
+        if (rawKey != null) {
+          keys.add(Bytes.toLong(rawKey));
+        }
       }
     }
     return keys;
@@ -377,22 +379,19 @@ public class HBaseLockingKeyService implements Serializable {
     filters.add(valueFilter);
     Filter filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL, filters);
     scan.setFilter(filterList);
-    @Cleanup Table lookupTable = connection.getTable(lookupTableName);
-    @Cleanup ResultScanner resultScanner = lookupTable.getScanner(scan);
-    List<Delete> keysToDelete = Lists.newArrayList();
-    for (Result result : resultScanner) {
-      Delete delete = new Delete(result.getRow());
-      keysToDelete.add(delete);
+    try (Table lookupTable = connection.getTable(lookupTableName);
+        ResultScanner resultScanner = lookupTable.getScanner(scan)) {
+      List<Delete> keysToDelete = Lists.newArrayList();
+      for (Result result : resultScanner) {
+        Delete delete = new Delete(result.getRow());
+        keysToDelete.add(delete);
+      }
+      if (!keysToDelete.isEmpty()) {
+        lookupTable.delete(keysToDelete);
+      }
     }
-    if (!keysToDelete.isEmpty()) {
-      lookupTable.delete(keysToDelete);
-    }
-
   }
 
-  /**
-   *
-   */
   public void deleteKey(Long occurrenceKey) {
     deleteKey(occurrenceKey, datasetId);
   }
@@ -409,15 +408,13 @@ public class HBaseLockingKeyService implements Serializable {
         .map(lookupKey -> new Delete(Bytes.toBytes(lookupKey)))
         .collect(Collectors.toCollection(() -> Lists.newArrayListWithCapacity(lookupKeys.size())));
 
-    @Cleanup Table lookupTable = connection.getTable(lookupTableName);
     if (!keysToDelete.isEmpty()) {
-      lookupTable.delete(keysToDelete);
+      try (Table lookupTable = connection.getTable(lookupTableName)) {
+        lookupTable.delete(keysToDelete);
+      }
     }
   }
 
-  /**
-   *
-   */
   public void deleteKeyByUniques(Set<String> uniqueStrings) {
     deleteKeyByUniques(uniqueStrings, datasetId);
   }
