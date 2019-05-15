@@ -13,7 +13,6 @@ import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.var;
 
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
@@ -51,9 +50,9 @@ class CoordinatesParser {
    * <p>It tries with these fields, in this order, and returns the first successful one:
    *
    * <ol>
-   *   <li>{@link DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude}
-   *   <li>{@link DwcTerm#verbatimLatitude} and {@link DwcTerm#verbatimLongitude}
-   *   <li>{@link DwcTerm#verbatimCoordinates}
+   * <li>{@link DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude}
+   * <li>{@link DwcTerm#verbatimLatitude} and {@link DwcTerm#verbatimLongitude}
+   * <li>{@link DwcTerm#verbatimCoordinates}
    * </ol>
    *
    * @param extendedRecord {@link ExtendedRecord} with the fields to parse.
@@ -61,7 +60,7 @@ class CoordinatesParser {
    */
   static ParsedField<LatLng> parseCoords(ExtendedRecord extendedRecord) {
     List<String> issues = new ArrayList<>();
-    for (var parsingFunction : PARSING_FUNCTIONS) {
+    for (Function<ExtendedRecord, ParsedField<LatLng>> parsingFunction : PARSING_FUNCTIONS) {
       ParsedField<LatLng> result = parsingFunction.apply(extendedRecord);
 
       if (result.isSuccessful()) {
