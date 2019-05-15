@@ -13,7 +13,7 @@
 
 # About the project
 
-**REMEMBER, YOU HAVE TO USE JAVA 8 VERSION**
+**REMEMBER, YOU HAVE TO USE JAVA VERSION 8**
 
 **Pipelines for data processing and indexing of biodiversity data**
 
@@ -30,14 +30,14 @@ The project provides vanilla JVM-based parsing and interpretation libraries, and
 
 ## Ingress
 
-Ingress is from [Darwin Core Archive](https://www.tdwg.org/standards/dwc/) (zip files of one or more "CSV"s) or ABCD Archives (compressed XML) only[1].
-During ingress data is converted from it's native format and stored as [Avro](https://avro.apache.org/docs/current/) files containing Darwin Core compliant data.
+Ingress is from [Darwin Core Archive](https://www.tdwg.org/standards/dwc/) (zip files of one or more delimited text files) or ABCD Archives (compressed XML) only[1].
+During ingress data is converted from its native format and stored as [Avro](https://avro.apache.org/docs/current/) files containing Darwin Core compliant data.
 
 This is depicted below:
 
 ![Ingress](./docs/images/ingress.svg)
 
-> Avro is chosen as a storage and interchange format exclusively in this project because a) it is splittable with each split compressed independently, b) it holds the data schema with the data, c) is well supported in the Hadoop ecosystem (e.g. Hive, Spark) and many other tools (e.g. Google cloud) d) is very robust in serialization and e) reduces boiler plate code thanks to schema to code generators. Darwin Core Archives and JSON for example do not exhibit all these traits.
+> Avro is chosen as a storage and interchange format exclusively in this project because a) it is splittable with each split compressed independently, b) it holds the data schema with the data, c) is well supported in the Hadoop ecosystem (e.g. Hive, Spark) and many other tools (e.g. Google Cloud) d) is very robust in serialization and e) reduces boiler plate code thanks to schema to code generators. Darwin Core Archives and JSON for example do not exhibit all these traits.
 
 [1] Other protocols (e.g. DiGIR, TAPIR) are supported by GBIF but are converted by crawling code upstream of this project.
 
@@ -45,7 +45,7 @@ This is depicted below:
 
 During interpretation the verbatim data is parsed, normalised and tested against quality control procedures.
 
-To enable extensibility data is interpreted into separate [`avro`](https://avro.apache.org/docs/current/) files where a separate file per category of information is used.  Many interpretations such as `date / time` formating is common to all deployments, but not all.
+To enable extensibility data is interpreted into separate [`avro`](https://avro.apache.org/docs/current/) files where a separate file per category of information is used.  Many interpretations such as `date / time` formatting are common to all deployments, but not all.
 For example, in the [GBIF.org](https://www.gbif.org) deployment the scientific identification is normalised to the GBIF backbone taxonomy and stored in `/interpreted/taxonomy/interpreted*.avro` which might not be applicable to everyone.
 Separating categories allows for extensibility for custom deployments in a reasonably modular fashion.
 
@@ -78,16 +78,16 @@ The project is structured as:
 - [**pipelines**](./pipelines) - Main pipelines module
     - [**common**](./pipelines/common) - Only static string variables
     - [**beam-common**](./pipelines/beam-common) - Classes and API for using with Apache Beam
-    - [**ingest-gbif**](./pipelines/ingest-gbif) - Main GBIF pipelines for ingestion biodiversity data
-    - [**ingest-gbif-standalone**](./pipelines/ingest-gbif-standalone) - Independent GBIF pipelines for ingestion biodiversity data
-    - [**ingest-transforms**](./pipelines/ingest-transforms) - Transformations for ingestion biodiversity data
-- [**sdks**](./sdks) - Main module contains common classes, such as data models, data format interpretations, parsers, web services clients ant etc.
-    - [**core**](./sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader and etc
+    - [**ingest-gbif**](./pipelines/ingest-gbif) - Main GBIF pipelines for ingestion of biodiversity data
+    - [**ingest-gbif-standalone**](./pipelines/ingest-gbif-standalone) - Independent GBIF pipelines for ingestion of biodiversity data
+    - [**ingest-transforms**](./pipelines/ingest-transforms) - Transformations for ingestion of biodiversity data
+- [**sdks**](./sdks) - Main module contains common classes, such as data models, data format interpretations, parsers, web services clients etc.
+    - [**core**](./sdks/core) - Main API classes, such as data interpretations, converters, [DwCA](https://www.tdwg.org/standards/dwc/) reader etc.
     - [**models**](./sdks/models) - Data models represented in Avro binary format, generated from [Avro](https://avro.apache.org/docs/current/) schemas
     - [**parsers**](./sdks/parsers) - Data parsers and converters, mainly for internal usage inside of interpretations
-    - [**keygen**](./sdks/keygen) - The library to generate GBIF identifier, to support backward compatibility, the codebase (with minimum changes) was copied from occurrence/occurrence-persistence project
+    - [**keygen**](./sdks/keygen) - The library to generate GBIF identifiers, to support backward compatibility the codebase (with minimum changes) was copied from the occurrence/occurrence-persistence project
 - [**tools**](./tools) - Module for different independent tools
-    - [**archives-converters**](./tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC](https://www.tdwg.org/standards/dwc/) 1.4/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
+    - [**archives-converters**](./tools/archives-converters) - Converters from [DwCA/DWC 1.0/DWC 1.4](https://www.tdwg.org/standards/dwc/)/ABCD 1.2/ABCD 2.06 to *.[avro](https://avro.apache.org/docs/current/) format
     - [**elasticsearch-tools**](./tools/elasticsearch-tools) - Tool for creating/deleting/swapping Elasticsearch indexes
     - [**pipelines-maven-plugin**](./tools/pipelines-maven-plugin) - Maven plugin adds new annotations and interface to [avro](https://avro.apache.org/docs/current/) generated classes
 
@@ -107,8 +107,8 @@ Please read [Apache Maven how-to](https://maven.apache.org/run.html).
 
 # Codestyle and tools recommendations
 
-- Use [Intellij IDEA COMMUNITY](https://www.jetbrains.com/idea/download/) (or better)
+- Use [Intellij IDEA Community](https://www.jetbrains.com/idea/download/) (or better)
 - Use [pipelines codestyle](./pipelines-style.xml)
 - The project uses [Project Lombok](https://projectlombok.org/), please install [Lombok plugin for Intellij IDEA](https://plugins.jetbrains.com/plugin/6317-lombok-plugin).
-- Because project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during building process from IDEA, to avoid issues please install [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and allows to build project using [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to _File | Settings | Compiler | `Java Compiler`_ and select `Javac with error-prone` in `Use compiler` box.
-- Add a custom parameter to avoid debug problem To use the compiler, go to _File | Settings | Compiler | Java Compiler | Additional command line parameters_ and add `-Xep:ParameterName:OFF`
+- Because the project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during the build process from IDEA.  To avoid these issues please install the [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and build the project using the [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ and select `Javac with error-prone` in the `Use compiler` box.
+- Add a custom parameter to avoid a debugging problem.  To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ → _Additional command line parameters_ and add `-Xep:ParameterName:OFF`
