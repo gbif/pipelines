@@ -1,7 +1,11 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
@@ -14,7 +18,8 @@ import org.gbif.pipelines.parsers.parsers.location.legacy.Wgs84Projection;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
-import java.util.*;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_MISMATCH;

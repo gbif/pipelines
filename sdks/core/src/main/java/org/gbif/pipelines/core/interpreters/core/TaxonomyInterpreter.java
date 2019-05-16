@@ -1,8 +1,11 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+
 import org.gbif.api.model.checklistbank.NameUsageMatch.MatchType;
 import org.gbif.api.vocabulary.Kingdom;
 import org.gbif.dwc.terms.DwcTerm;
@@ -12,18 +15,27 @@ import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.nameparser.NameParserGBIF;
 import org.gbif.nameparser.api.NameParser;
 import org.gbif.nameparser.api.UnparsableNameException;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.Authorship;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.NamePart;
+import org.gbif.pipelines.io.avro.NameType;
+import org.gbif.pipelines.io.avro.NomCode;
+import org.gbif.pipelines.io.avro.ParsedName;
+import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.State;
+import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.species.NameUsageMatch;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.BiConsumer;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_FUZZY;
+import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_HIGHERRANK;
+import static org.gbif.api.vocabulary.OccurrenceIssue.TAXON_MATCH_NONE;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 

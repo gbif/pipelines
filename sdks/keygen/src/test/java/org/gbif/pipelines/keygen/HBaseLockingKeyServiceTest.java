@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.hbase.Columns;
+import org.gbif.pipelines.keygen.hbase.HBaseStore;
 
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.TableName;
@@ -17,7 +18,6 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.gbif.pipelines.keygen.hbase.HBaseStore;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;

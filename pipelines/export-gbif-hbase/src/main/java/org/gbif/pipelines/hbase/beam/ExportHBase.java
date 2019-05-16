@@ -1,11 +1,23 @@
 package org.gbif.pipelines.hbase.beam;
 
-import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.gbif.api.model.occurrence.VerbatimOccurrence;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.Term;
+import org.gbif.occurrence.persistence.util.OccurrenceBuilder;
+import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileIO;
@@ -16,22 +28,14 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Contextful;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.SimpleFunction;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
-import org.gbif.api.model.occurrence.VerbatimOccurrence;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.dwc.terms.Term;
-import org.gbif.occurrence.persistence.util.OccurrenceBuilder;
-import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
 /** Executes a pipeline that reads HBase and exports verbatim data into Avro using the {@link ExtendedRecord}. schema */
 public class ExportHBase {

@@ -1,9 +1,9 @@
 package org.gbif.pipelines.parsers.ws.client.metadata.response;
 
-import org.gbif.api.model.registry.MachineTag;
-
 import java.io.Serializable;
 import java.util.List;
+
+import org.gbif.api.model.registry.MachineTag;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

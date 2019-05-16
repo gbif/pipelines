@@ -1,19 +1,25 @@
 package org.gbif.pipelines.parsers.parsers.location.legacy;
 
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-import org.gbif.common.parsers.NumberParser;
-import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+import org.gbif.common.parsers.NumberParser;
+import org.gbif.kvs.geocode.LatLng;
+import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_ROUNDED;
+import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 
 /** Utilities for assisting in the parsing of latitude and longitude strings into Decimals. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

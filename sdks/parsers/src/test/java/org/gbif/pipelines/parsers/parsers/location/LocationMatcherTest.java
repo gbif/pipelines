@@ -1,17 +1,16 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
+import java.util.Collections;
+
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
+
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Collections;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES;
 
 public class LocationMatcherTest {

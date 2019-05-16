@@ -1,9 +1,7 @@
 package org.gbif.pipelines.keygen.hbase;
 
 import java.io.IOException;
-import java.util.Optional;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.hbase.util.ResultReader;
 
@@ -16,6 +14,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import com.google.common.annotations.VisibleForTesting;
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
