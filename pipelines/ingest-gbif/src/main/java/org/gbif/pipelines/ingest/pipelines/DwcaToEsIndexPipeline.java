@@ -226,7 +226,7 @@ public class DwcaToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get("id").asText()));
+            .withIdFn(input -> input.get("gbifId").asText()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
