@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
@@ -41,7 +42,7 @@ public class MetadataInterpreter {
         mdr.setDatasetTitle(dataset.getTitle());
         mdr.setInstallationKey(dataset.getInstallationKey());
         mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-        mdr.setLicense(dataset.getLicense());
+        mdr.setLicense(License.fromLicenseUrl(dataset.getLicense()).get().name());
 
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (Objects.nonNull(networkList) && !networkList.isEmpty()) {
