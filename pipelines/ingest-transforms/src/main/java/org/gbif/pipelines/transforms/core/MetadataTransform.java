@@ -153,7 +153,7 @@ public class MetadataTransform {
       Interpretation.from(context::element)
           .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(Instant.now().toEpochMilli()).build())
           .via(MetadataInterpreter.interpret(client))
-          .via(MetadataInterpreter.interpretEndointType(endpointType))
+          .via(MetadataInterpreter.interpretEndpointType(endpointType))
           .consume(context::output);
 
       counter.inc();

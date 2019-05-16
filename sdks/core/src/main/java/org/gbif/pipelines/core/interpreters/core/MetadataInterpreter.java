@@ -60,11 +60,13 @@ public class MetadataInterpreter {
     };
   }
 
-  public static Consumer<MetadataRecord> interpretEndointType(String endpointType) {
+  public static Consumer<MetadataRecord> interpretEndpointType(String endpointType) {
     return mdr -> {
       if (!Strings.isNullOrEmpty(endpointType)) {
-        EndpointType ept = VocabularyUtils.lookup(endpointType, EndpointType.class).get();
-        mdr.setProtocol(ept.name());
+        com.google.common.base.Optional<EndpointType> lookup = VocabularyUtils.lookup(endpointType, EndpointType.class);
+        if (lookup.isPresent()) {
+          mdr.setProtocol(lookup.get().name());
+        }
       }
     };
   }
