@@ -42,10 +42,10 @@ public class MetadataInterpreter {
         mdr.setDatasetTitle(dataset.getTitle());
         mdr.setInstallationKey(dataset.getInstallationKey());
         mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-        mdr.setLicense(License.fromLicenseUrl(dataset.getLicense()).get().name());
+        mdr.setLicense(getLicense(dataset.getLicense()).name());
 
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
-        if (Objects.nonNull(networkList) && !networkList.isEmpty()) {
+        if (networkList != null && !networkList.isEmpty()) {
           mdr.setNetworkKeys(networkList.stream().map(Network::getKey).collect(Collectors.toList()));
         } else {
           mdr.setNetworkKeys(Collections.emptyList());
@@ -69,9 +69,21 @@ public class MetadataInterpreter {
     };
   }
 
-  /**
-   * Gets the latest crawl attempt time, if exists.
-   */
+  /** Returns ENUM instead of url string */
+  private static License getLicense(String url) {
+    if (Strings.isNullOrEmpty(url)) {
+      return License.UNSPECIFIED;
+    } else {
+      com.google.common.base.Optional<License> licenseOptional = License.fromLicenseUrl(url);
+      if (licenseOptional.isPresent()) {
+        return licenseOptional.get();
+      } else {
+        return License.UNSUPPORTED;
+      }
+    }
+  }
+
+  /** Gets the latest crawl attempt time, if exists. */
   private static Optional<Date> getLastCrawledDate(List<MachineTag> machineTags) {
     if (Objects.nonNull(machineTags)) {
       return machineTags.stream()
