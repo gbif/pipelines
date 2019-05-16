@@ -111,7 +111,7 @@
           "classification.name":  { "type": "text", "boost": 90, "copy_to": "all" },
           "classification.synonym": { "type": "boolean"  },
           "classificationPath": { "type": "keyword"  },
-          "usage.name": { "type": "text", "boost": 100, "copy_to": "all"  },
+          "usage.name": { "type": "keyword", "boost": 100, "copy_to": "all"  },
           "acceptedUsage.name": { "type": "text", "boost": 100, "copy_to": "all" },
           "diagnostics.matchType": { "type": "keyword" },
           "diagnostics.status": { "type": "keyword" },
