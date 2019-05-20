@@ -50,11 +50,11 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaxonomyInterpreter {
 
-  private static final List<RankedName> INCERTAE_SEDIS = Collections.singletonList(RankedName.newBuilder()
-                                                                                     .setRank(Rank.KINGDOM)
-                                                                                     .setName(Kingdom.INCERTAE_SEDIS.name())
-                                                                                     .setKey(Kingdom.INCERTAE_SEDIS.nubUsageKey())
-                                                                                   .build());
+  private static final RankedName INCERTAE_SEDIS = RankedName.newBuilder()
+      .setRank(Rank.KINGDOM)
+      .setName(Kingdom.INCERTAE_SEDIS.name())
+      .setKey(Kingdom.INCERTAE_SEDIS.nubUsageKey())
+      .build();
   private static final NameParser NAME_PARSER = new NameParserGBIF();
 
   /**
@@ -94,7 +94,8 @@ public class TaxonomyInterpreter {
           // "NO_MATCHING_RESULTS". This
           // happens when we get an empty response from the WS
           addIssue(tr, TAXON_MATCH_NONE);
-          tr.setClassification(INCERTAE_SEDIS);
+          tr.setUsage(INCERTAE_SEDIS);
+          tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
         } else {
 
           MatchType matchType = usageMatch.getDiagnostics().getMatchType();
