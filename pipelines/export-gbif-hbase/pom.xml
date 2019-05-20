@@ -75,6 +75,10 @@
                                     <pattern>com.google.common</pattern>
                                     <shadedPattern>g18.com.google.common</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus.jackson</pattern>
+                                    <shadedPattern>org1912.codehaus.jackson</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
@@ -94,23 +98,30 @@
             <version>${gbif-occurrence.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.gbif.occurrence</groupId>
+            <artifactId>occurrence-common</artifactId>
+            <version>${gbif-occurrence.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.gbif.pipelines</groupId>
             <artifactId>beam-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-core</artifactId>
-            <version>${apache.beam.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-runners-spark</artifactId>
-            <version>${apache.beam.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-io-hbase</artifactId>
             <version>${apache.beam.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.beam</groupId>
+            <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
         </dependency>
 
         <!-- TODO: all following dependencies should not be needed for running on a cluster -->
