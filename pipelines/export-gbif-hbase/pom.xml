@@ -19,6 +19,7 @@
 
     <properties>
         <gbif-occurrence.version>0.95</gbif-occurrence.version>
+        <hbase.version>1.2.0-cdh5.12.0</hbase.version>
     </properties>
 
     <build>
@@ -88,6 +89,20 @@
     </build>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>${hbase.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-common</artifactId>
+            <version>${hbase.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-api</artifactId>
@@ -122,6 +137,11 @@
         <dependency>
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.beam</groupId>
+            <artifactId>beam-sdks-java-io-hadoop-format</artifactId>
+            <version>${apache.beam.version}</version>
         </dependency>
 
         <!-- TODO: all following dependencies should not be needed for running on a cluster -->
