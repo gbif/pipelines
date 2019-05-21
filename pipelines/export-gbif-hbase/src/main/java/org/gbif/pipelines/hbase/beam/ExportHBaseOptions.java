@@ -1,13 +1,13 @@
 package org.gbif.pipelines.hbase.beam;
 
+import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 
 /**
  * Pipeline settings and arguments for Hbase to Avro export.
  */
-public interface ExportHBaseOptions extends PipelineOptions {
+public interface ExportHBaseOptions extends HadoopFileSystemOptions {
 
   @Description("HBase Zookeeper ensemble")
   String getHbaseZk();
