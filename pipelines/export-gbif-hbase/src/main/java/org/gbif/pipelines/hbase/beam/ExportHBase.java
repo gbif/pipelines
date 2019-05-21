@@ -60,18 +60,19 @@ public class ExportHBase {
             "read HBase",
             HBaseIO.read().withConfiguration(hbaseConfig).withScan(scan).withTableId(table));
 
-    PCollection<KV<UUID, ExtendedRecord>> records =
+    PCollection<KV<String, ExtendedRecord>> records =
         rows.apply(
             "convert to extended record",
             ParDo.of(
-                new DoFn<Result, KV<UUID, ExtendedRecord>>() {
+                new DoFn<Result, KV<String, ExtendedRecord>>() {
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Result row = c.element();
                     try {
                       VerbatimOccurrence verbatimOccurrence = OccurrenceConverter.toVerbatimOccurrence(row);
-                      c.output(KV.of(verbatimOccurrence.getDatasetKey(), OccurrenceConverter.toExtendedRecord(verbatimOccurrence)));
+                      String datasetKeyAsString = String.valueOf(verbatimOccurrence.getDatasetKey());
+                      c.output(KV.of(datasetKeyAsString, OccurrenceConverter.toExtendedRecord(verbatimOccurrence)));
                       recordsExported.inc();
                     } catch (NullPointerException e) {
                       // Expected for bad data
@@ -80,8 +81,8 @@ public class ExportHBase {
                   }
                 }));
 
-    records.apply("write avro file per dataset", FileIO.<String, KV<UUID,ExtendedRecord>>writeDynamic()
-        .by(kv -> kv.getKey().toString())
+    records.apply("write avro file per dataset", FileIO.<String, KV<String,ExtendedRecord>>writeDynamic()
+        .by(kv -> kv.getKey())
         .via(Contextful.fn(src -> src.getValue()),
             Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
         .to(exportPath)
