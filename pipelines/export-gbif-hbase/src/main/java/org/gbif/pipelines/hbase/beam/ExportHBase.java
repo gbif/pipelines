@@ -95,12 +95,11 @@ public class ExportHBase {
                 }));
 
     records.apply("write avro file per dataset", FileIO.<String, KV<UUID,ExtendedRecord>>writeDynamic()
-        .by(kv -> kv.getValue().toString())
+        .by(kv -> kv.getKey().toString())
         .via(Contextful.fn(src -> src.getValue()),
             Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
         .to(exportPath)
         .withDestinationCoder(StringUtf8Coder.of())
-        .withNumShards(10)
         .withNaming(key -> defaultNaming(key, PipelinesVariables.Pipeline.AVRO_EXTENSION)));
 
     PipelineResult result = p.run();
