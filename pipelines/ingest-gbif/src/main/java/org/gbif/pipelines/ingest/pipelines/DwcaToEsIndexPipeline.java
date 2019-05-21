@@ -20,6 +20,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.transforms.HashIdTransform;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
@@ -214,7 +215,8 @@ public class DwcaToEsIndexPipeline {
             .and(erTag, verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", gbifJsonDoFn);
+            .apply("Merging to json", gbifJsonDoFn)
+            .apply("Filter records without gbifId", FilterMissedGbifIdTransform.create());
 
     log.info("Adding step 5: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =

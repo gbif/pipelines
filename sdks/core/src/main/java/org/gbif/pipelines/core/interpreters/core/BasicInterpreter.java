@@ -47,6 +47,8 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BasicInterpreter {
 
+  public static final String GBIF_ID_INVALID = "GBIF_ID_INVALID";
+
   private static final Parsable<String> TYPE_NAME_PARSER = org.gbif.common.parsers.TypifiedNameParser.getInstance();
 
   /** Generates or gets existing GBIF id */
@@ -74,7 +76,7 @@ public class BasicInterpreter {
 
           br.setGbifId(key.getKey());
         } else {
-          addIssue(br, "GBIF_ID_INVALID");
+          addIssue(br, GBIF_ID_INVALID);
         }
       }
     };

@@ -18,6 +18,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -181,7 +182,8 @@ public class InterpretedToEsIndexPipeline {
             .and(erTag, verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", gbifJsonDoFn);
+            .apply("Merging to json", gbifJsonDoFn)
+            .apply("Filter records without gbifId", FilterMissedGbifIdTransform.create());
 
     log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =

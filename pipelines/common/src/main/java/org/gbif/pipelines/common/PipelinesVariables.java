@@ -75,6 +75,7 @@ public class PipelinesVariables {
 
     public static final String OCCURRENCE_EXT_COUNT = "occurrenceExtCount";
     public static final String HASH_ID_COUNT = "hashIdCount";
+    public static final String MISSED_GBIF_ID_COUNT = "missedGbifIdCount";
     // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";
