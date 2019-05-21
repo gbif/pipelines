@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.beam.sdk.options.ValueProvider;
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.Term;
@@ -100,7 +101,7 @@ public class ExportHBase {
             Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
         .to(exportPath)
         .withDestinationCoder(StringUtf8Coder.of())
-        .withNaming(key -> defaultNaming(key, PipelinesVariables.Pipeline.AVRO_EXTENSION)));
+        .withNaming(key ->  defaultNaming(key + "/verbatimHBaseExport", PipelinesVariables.Pipeline.AVRO_EXTENSION)));
 
     PipelineResult result = p.run();
     result.waitUntilFinish();
