@@ -64,18 +64,19 @@ public class ExportHBaseSnapshot {
           "read HBase",
           HadoopFormatIO.<ImmutableBytesWritable, Result>read().withConfiguration(hbaseConfig));
 
-    PCollection<KV<UUID, ExtendedRecord>> records =
+    PCollection<KV<String, ExtendedRecord>> records =
         rows.apply(
             "convert to extended record",
             ParDo.of(
-                new DoFn<KV<ImmutableBytesWritable, Result>, KV<UUID, ExtendedRecord>>() {
+                new DoFn<KV<ImmutableBytesWritable, Result>, KV<String, ExtendedRecord>>() {
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Result row = c.element().getValue();
                     try {
                       VerbatimOccurrence verbatimOccurrence = OccurrenceConverter.toVerbatimOccurrence(row);
-                      c.output(KV.of(verbatimOccurrence.getDatasetKey(), OccurrenceConverter.toExtendedRecord(verbatimOccurrence)));
+                      String datasetKeyAsString = String.valueOf(verbatimOccurrence.getDatasetKey());
+                      c.output(KV.of(datasetKeyAsString, OccurrenceConverter.toExtendedRecord(verbatimOccurrence)));
                       recordsExported.inc();
                     } catch (NullPointerException e) {
                       // Expected for bad data
@@ -84,13 +85,13 @@ public class ExportHBaseSnapshot {
                   }
                 }));
 
-    records.apply("write avro file per dataset", FileIO.<String, KV<UUID,ExtendedRecord>>writeDynamic()
-        .by(kv -> kv.getValue().toString())
-        .via(Contextful.fn(KV::getValue),
-            Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
-        .to(exportPath)
-        .withDestinationCoder(StringUtf8Coder.of())
-        .withNaming(key -> defaultNaming(key, PipelinesVariables.Pipeline.AVRO_EXTENSION)));
+    records.apply("write avro file per dataset", FileIO.<String, KV<String,ExtendedRecord>>writeDynamic()
+      .by(kv -> kv.getKey())
+      .via(Contextful.fn(src -> src.getValue()),
+           Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
+      .to(exportPath)
+      .withDestinationCoder(StringUtf8Coder.of())
+      .withNaming(key ->  defaultNaming(key + "/verbatimHBaseExport", PipelinesVariables.Pipeline.AVRO_EXTENSION)));
 
     PipelineResult result = p.run();
     result.waitUntilFinish();
@@ -103,7 +104,8 @@ public class ExportHBaseSnapshot {
       hbaseConf.set("hbase.rootdir", "/hbase");
       hbaseConf.setClass("mapreduce.job.inputformat.class", TableSnapshotInputFormat.class, InputFormat.class);
       hbaseConf.setClass("key.class", ImmutableBytesWritable.class, Writable.class);
-      hbaseConf.setClass("value.class", Result.class, Writable.class);
+      hbaseConf.setClass("value.class", Result.class, Object.class);
+
       Scan scan = new Scan();
       scan.setBatch(options.getBatchSize()); // for safety
       scan.addFamily("o".getBytes());
