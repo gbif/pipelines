@@ -79,12 +79,12 @@ public class HBaseLockingKeyService implements Serializable {
   public HBaseLockingKeyService(KeygenConfig cfg, Connection connection, String datasetId) {
     this.lookupTableName = TableName.valueOf(checkNotNull(cfg.getLookupTable(), "lookupTable can't be null"));
     this.connection = checkNotNull(connection, "tablePool can't be null");
+
+    // only the lookup table is salted
     this.lookupTableStore =
         new HBaseStore<>(cfg.getLookupTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
-    this.counterTableStore =
-        new HBaseStore<>(cfg.getCounterTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
-    this.occurrenceTableStore =
-        new HBaseStore<>(cfg.getOccTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
+    this.counterTableStore = new HBaseStore<>(cfg.getCounterTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    this.occurrenceTableStore = new HBaseStore<>(cfg.getOccTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
     this.datasetId = datasetId;
   }
 
