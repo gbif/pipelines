@@ -177,7 +177,7 @@ public class BasicTransform {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> BasicRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
-          .via(BasicInterpreter.interpretGbifId(keygenService, isOccurrenceIdValid, isTripletValid))
+          .via(BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid))
           .via(BasicInterpreter::interpretBasisOfRecord)
           .via(BasicInterpreter::interpretTypifiedName)
           .via(BasicInterpreter::interpretSex)
