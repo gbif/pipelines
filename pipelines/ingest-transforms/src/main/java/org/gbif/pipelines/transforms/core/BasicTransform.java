@@ -111,8 +111,9 @@ public class BasicTransform {
   /**
    * Creates an {@link Interpreter} for {@link BasicRecord}
    */
-  public static SingleOutput<ExtendedRecord, BasicRecord> interpret(String propertiesPath, String datasetId) {
-    return ParDo.of(new Interpreter(propertiesPath, datasetId));
+  public static SingleOutput<ExtendedRecord, BasicRecord> interpret(String propertiesPath, String datasetId,
+      boolean isTripletValid, boolean isOccurrenceIdValid) {
+    return ParDo.of(new Interpreter(propertiesPath, datasetId, isTripletValid, isOccurrenceIdValid));
   }
 
   /**
@@ -125,23 +126,34 @@ public class BasicTransform {
 
     private final KeygenConfig keygenConfig;
     private final String datasetId;
+
+    private final boolean isTripletValid;
+    private final boolean isOccurrenceIdValid;
+
     private Connection connection;
     private HBaseLockingKeyService keygenService;
 
-    public Interpreter(String propertiesPath, String datasetId) {
+    public Interpreter(String propertiesPath, String datasetId, boolean isTripletValid, boolean isOccurrenceIdValid) {
       this.keygenConfig = KeygenConfigFactory.create(Paths.get(propertiesPath));
       this.datasetId = datasetId;
+      this.isTripletValid = isTripletValid;
+      this.isOccurrenceIdValid = isOccurrenceIdValid;
     }
 
-    public Interpreter(KeygenConfig keygenConfig, String datasetId) {
+    public Interpreter(KeygenConfig keygenConfig, String datasetId, boolean isTripletValid,
+        boolean isOccurrenceIdValid) {
       this.keygenConfig = keygenConfig;
       this.datasetId = datasetId;
+      this.isTripletValid = isTripletValid;
+      this.isOccurrenceIdValid = isOccurrenceIdValid;
     }
 
 
     public Interpreter() {
       this.keygenConfig = null;
       this.datasetId = null;
+      this.isTripletValid = false;
+      this.isOccurrenceIdValid = false;
     }
 
     @SneakyThrows
@@ -165,7 +177,7 @@ public class BasicTransform {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> BasicRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
-          .via(BasicInterpreter.interpretGbifId(keygenService))
+          .via(BasicInterpreter.interpretGbifId(keygenService, isOccurrenceIdValid, isTripletValid))
           .via(BasicInterpreter::interpretBasisOfRecord)
           .via(BasicInterpreter::interpretTypifiedName)
           .via(BasicInterpreter::interpretSex)

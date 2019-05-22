@@ -58,6 +58,23 @@ public interface InterpretationPipelineOptions
 
   void setCoreSiteConfig(String path);
 
+  @Description("Type of the endpoint being crawled")
+  String getEndPointType();
+
+  void setEndPointType(String id);
+
+  @Description("DWCA validation from crawler, all triplets are unique")
+  @Default.Boolean(true)
+  boolean isTripletValid();
+
+  void setTripletValid(boolean tripletValid);
+
+  @Description("DWCA validation from crawler, all occurrenceIds are unique")
+  @Default.Boolean(true)
+  boolean isOccurrenceIdValid();
+
+  void setOccurrenceIdValid(boolean occurrenceIdValid);
+
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {
 
