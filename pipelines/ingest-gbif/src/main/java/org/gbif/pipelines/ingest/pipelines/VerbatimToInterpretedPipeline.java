@@ -131,7 +131,7 @@ public class VerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check basic transform condition", BasicTransform.check(types))
-        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords

@@ -150,7 +150,7 @@ public class XmlToEsIndexPipeline {
     // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid))
+            .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
             .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =

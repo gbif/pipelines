@@ -132,7 +132,7 @@ public class DwcaToInterpretedPipeline {
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords
