@@ -51,6 +51,12 @@ public class BasicInterpreter {
 
   private static final Parsable<String> TYPE_NAME_PARSER = org.gbif.common.parsers.TypifiedNameParser.getInstance();
 
+  /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
+      boolean isTripletValid, boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
+    return useExtendedRecordId ? interpretCopyGbifId() : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
+  }
+
   /** Generates or gets existing GBIF id */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
       boolean isTripletValid, boolean isOccurrenceIdValid) {
@@ -86,6 +92,12 @@ public class BasicInterpreter {
       }
     };
   }
+
+  /** Copies GBIF id from ExtendedRecord id */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretCopyGbifId() {
+    return (er, br) -> br.setGbifId(Long.parseLong(er.getId()));
+  }
+
 
   /** {@link DwcTerm#individualCount} interpretation. */
   public static void interpretIndividualCount(ExtendedRecord er, BasicRecord br) {
@@ -197,7 +209,8 @@ public class BasicInterpreter {
     } else {
       Optional.ofNullable(er.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()))
           .ifPresent(typeStatusValue -> {
-            ParseResult<String> result = TYPE_NAME_PARSER.parse(er.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()));
+            ParseResult<String> result =
+                TYPE_NAME_PARSER.parse(er.getCoreTerms().get(DwcTerm.typeStatus.qualifiedName()));
             if (result.isSuccessful()) {
               br.setTypifiedName(result.getPayload());
             }
