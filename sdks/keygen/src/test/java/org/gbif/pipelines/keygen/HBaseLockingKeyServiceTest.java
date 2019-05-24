@@ -51,8 +51,7 @@ public class HBaseLockingKeyServiceTest {
   private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
   private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccTable());
 
-
-  private static Connection CONNECTION = null;
+  private static Connection connection = null;
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
   private HBaseLockingKeyService keyService;
 
@@ -65,7 +64,7 @@ public class HBaseLockingKeyServiceTest {
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
     TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
-    CONNECTION = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
+    connection = ConnectionFactory.createConnection(TEST_UTIL.getConfiguration());
   }
 
   @Before
@@ -74,13 +73,15 @@ public class HBaseLockingKeyServiceTest {
     TEST_UTIL.truncateTable(COUNTER_TABLE);
     TEST_UTIL.truncateTable(OCCURRENCE_TABLE);
 
-    keyService = new HBaseLockingKeyService(CFG, CONNECTION);
+    keyService = new HBaseLockingKeyService(CFG, connection);
   }
 
   @AfterClass
   public static void afterClass() throws Exception {
     TEST_UTIL.shutdownMiniCluster();
-    CONNECTION.close();
+    if (connection != null) {
+      connection.close();
+    }
   }
 
   @Test
@@ -109,7 +110,7 @@ public class HBaseLockingKeyServiceTest {
     Put put = new Put(lookupKey1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
-    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
@@ -140,7 +141,7 @@ public class HBaseLockingKeyServiceTest {
 
     // first one claimed up to 2000, then "died". On restart we claim 2000 to 3000.
     HBaseLockingKeyService keyService2 =
-        new HBaseLockingKeyService(CFG, CONNECTION);
+        new HBaseLockingKeyService(CFG, connection);
     for (int i = 0; i < 5; i++) {
       Set<String> uniqueIds = ImmutableSet.of("A" + i);
       result = keyService2.generateKey(uniqueIds, "boo");
@@ -158,7 +159,7 @@ public class HBaseLockingKeyServiceTest {
     Put put = new Put(lookupKey1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(2L));
-    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
       byte[] lock2 = Bytes.toBytes(UUID.randomUUID().toString());
       byte[] lookupKey2 = Bytes.toBytes(datasetKey + "|EFGH");
@@ -183,7 +184,7 @@ public class HBaseLockingKeyServiceTest {
     Put put = new Put(lookupKey1);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_STATUS_COLUMN), Bytes.toBytes("ALLOCATED"));
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_KEY_COLUMN), Bytes.toBytes(1L));
-    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
 
       byte[] lookupKey2 = HBaseStore.saltKey(datasetKey + "|EFGH", NUMBER_OF_BUCKETS);
@@ -209,7 +210,7 @@ public class HBaseLockingKeyServiceTest {
     byte[] lock = Bytes.toBytes(UUID.randomUUID().toString());
     Put put = new Put(lookupKey);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), 0, lock);
-    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
@@ -228,7 +229,7 @@ public class HBaseLockingKeyServiceTest {
     byte[] lock = Bytes.toBytes(UUID.randomUUID().toString());
     Put put = new Put(lookupKey);
     put.addColumn(CF, Bytes.toBytes(Columns.LOOKUP_LOCK_COLUMN), ts, lock);
-    try (Table lookupTable = CONNECTION.getTable(TableName.valueOf(LOOKUP_TABLE))) {
+    try (Table lookupTable = connection.getTable(TableName.valueOf(LOOKUP_TABLE))) {
       lookupTable.put(put);
     }
 
