@@ -1,7 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.util.Optional;
-
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.XmlIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -107,6 +105,7 @@ public class XmlToEsIndexPipeline {
     String datasetId = options.getDatasetId();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean tripletValid = options.isTripletValid();
+    boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
 
     MDC.put("datasetId", datasetId);
@@ -150,7 +149,7 @@ public class XmlToEsIndexPipeline {
     // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
+            .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId))
             .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
@@ -231,10 +230,7 @@ public class XmlToEsIndexPipeline {
 
     EsIndexUtils.swapIndexIfAliasExists(options);
 
-    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
-    });
+    MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");
 

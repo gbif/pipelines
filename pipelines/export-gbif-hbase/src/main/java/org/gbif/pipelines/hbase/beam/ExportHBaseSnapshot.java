@@ -1,11 +1,10 @@
 package org.gbif.pipelines.hbase.beam;
 
+import java.io.IOException;
+
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import java.io.IOException;
-import java.util.UUID;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.runners.spark.SparkRunner;

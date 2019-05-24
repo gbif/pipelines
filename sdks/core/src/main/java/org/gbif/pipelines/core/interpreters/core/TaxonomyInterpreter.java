@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;

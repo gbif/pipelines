@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
@@ -201,10 +200,7 @@ public class InterpretedToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
-    });
+    MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");
   }

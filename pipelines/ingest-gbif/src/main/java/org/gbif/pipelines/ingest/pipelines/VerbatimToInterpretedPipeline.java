@@ -3,7 +3,6 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -89,6 +88,7 @@ public class VerbatimToInterpretedPipeline {
     String attempt = options.getAttempt().toString();
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
+    boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
 
     FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), datasetId, attempt, options.getInterpretationTypes());
@@ -131,7 +131,7 @@ public class VerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check basic transform condition", BasicTransform.check(types))
-        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords
@@ -173,10 +173,7 @@ public class VerbatimToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
-    });
+    MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", options.getTargetPath(), datasetId, attempt);

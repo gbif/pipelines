@@ -3,7 +3,6 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.beam.DwcaIO;
@@ -89,6 +88,7 @@ public class DwcaToInterpretedPipeline {
     String endPointType = options.getEndPointType();
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
+    boolean useExtendedRecordId = options.isUseExtendedRecordId();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", options.getAttempt().toString());
@@ -132,7 +132,7 @@ public class DwcaToInterpretedPipeline {
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords
@@ -167,10 +167,7 @@ public class DwcaToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
-    });
+    MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");
   }

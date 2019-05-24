@@ -75,6 +75,12 @@ public interface InterpretationPipelineOptions
 
   void setOccurrenceIdValid(boolean occurrenceIdValid);
 
+  @Description("Skips gbif id generation and copies ids from ExtendedRecord ids")
+  @Default.Boolean(false)
+  boolean isUseExtendedRecordId();
+
+  void setUseExtendedRecordId(boolean useExtendedRecordId);
+
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {
 

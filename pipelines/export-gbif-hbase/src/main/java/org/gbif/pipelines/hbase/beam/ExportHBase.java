@@ -1,8 +1,5 @@
 package org.gbif.pipelines.hbase.beam;
 
-import java.util.UUID;
-
-import org.apache.beam.sdk.options.ValueProvider;
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

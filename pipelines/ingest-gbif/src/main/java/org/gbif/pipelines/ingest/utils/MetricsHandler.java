@@ -1,7 +1,11 @@
 package org.gbif.pipelines.ingest.utils;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Function;
+
+import org.gbif.pipelines.ingest.options.BasePipelineOptions;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.MetricQueryResults;
@@ -62,6 +66,28 @@ public class MetricsHandler {
       }
     }
 
+  }
+
+  /**
+   * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml file and
+   * save it
+   */
+  public static void saveCountersToFile(InterpretationPipelineOptions options, PipelineResult result){
+    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
+      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
+      MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
+    });
+  }
+
+  /**
+   * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml file and
+   * save it
+   */
+  public static void saveCountersToFile(BasePipelineOptions options, PipelineResult result){
+    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
+      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
+      MetricsHandler.saveCountersToFile("", metadataPath, result);
+    });
   }
 
 }

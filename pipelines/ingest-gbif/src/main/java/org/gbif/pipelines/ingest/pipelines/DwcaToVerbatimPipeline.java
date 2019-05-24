@@ -1,7 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import java.nio.file.Paths;
-import java.util.Optional;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.DwcaIO;
@@ -76,10 +75,7 @@ public class DwcaToVerbatimPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile("", metadataPath, result);
-    });
+    MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");
   }

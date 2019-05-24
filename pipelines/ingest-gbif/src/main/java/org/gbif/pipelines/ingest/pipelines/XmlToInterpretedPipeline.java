@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.beam.XmlIO;
@@ -87,6 +86,7 @@ public class XmlToInterpretedPipeline {
     String datasetId = options.getDatasetId();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean tripletValid = options.isTripletValid();
+    boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
 
     MDC.put("datasetId", datasetId);
@@ -124,7 +124,7 @@ public class XmlToInterpretedPipeline {
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords
@@ -159,10 +159,7 @@ public class XmlToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
-    });
+    MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");
   }

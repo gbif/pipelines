@@ -1,16 +1,16 @@
 package org.gbif.pipelines.hbase.beam;
 
-import org.gbif.api.model.occurrence.VerbatimOccurrence;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.dwc.terms.Term;
-import org.gbif.occurrence.persistence.util.OccurrenceBuilder;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import org.gbif.api.model.occurrence.VerbatimOccurrence;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.Term;
+import org.gbif.occurrence.persistence.util.OccurrenceBuilder;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.hadoop.hbase.client.Result;
 
