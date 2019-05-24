@@ -31,6 +31,7 @@ import lombok.NoArgsConstructor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUDUBON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUDUBON;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
@@ -49,7 +50,7 @@ public class AudubonTransform {
    * Checks if list contains {@link RecordType#AUDUBON}, else returns empty {@link PCollection<ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
-    return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, AUDUBON));
+    return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, AUDUBON, MULTIMEDIA));
   }
 
   /** Maps {@link AudubonRecord} to key value, where key is {@link AudubonRecord#getId} */

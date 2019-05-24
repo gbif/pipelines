@@ -191,11 +191,11 @@ public class AudubonInterpreter {
    */
   private static void parseAndSetType(Audubon a, String v) {
     if (!Strings.isNullOrEmpty(v)) {
-      if (v.toLowerCase().startsWith("image")) {
+      if (v.toLowerCase().startsWith("image") || v.equalsIgnoreCase(MediaType.StillImage.name())) {
         a.setType(MediaType.StillImage.name());
-      } else if (v.toLowerCase().startsWith("audio")) {
+      } else if (v.toLowerCase().startsWith("audio") || v.equalsIgnoreCase(MediaType.Sound.name())) {
         a.setType(MediaType.Sound.name());
-      } else if (v.toLowerCase().startsWith("video")) {
+      } else if (v.toLowerCase().startsWith("video") || v.equalsIgnoreCase(MediaType.MovingImage.name())) {
         a.setType(MediaType.MovingImage.name());
       }
     }

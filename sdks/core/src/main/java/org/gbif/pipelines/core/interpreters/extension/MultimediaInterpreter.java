@@ -129,11 +129,11 @@ public class MultimediaInterpreter {
    */
   private static void parseAndSetType(Multimedia m, String v) {
     if (!Strings.isNullOrEmpty(v)) {
-      if (v.toLowerCase().startsWith("image")) {
+      if (v.toLowerCase().startsWith("image") || v.equalsIgnoreCase(MediaType.StillImage.name())) {
         m.setType(MediaType.StillImage.name());
-      } else if (v.toLowerCase().startsWith("audio")) {
+      } else if (v.toLowerCase().startsWith("audio") || v.equalsIgnoreCase(MediaType.Sound.name())) {
         m.setType(MediaType.Sound.name());
-      } else if (v.toLowerCase().startsWith("video")) {
+      } else if (v.toLowerCase().startsWith("video") || v.equalsIgnoreCase(MediaType.MovingImage.name())) {
         m.setType(MediaType.MovingImage.name());
       }
     }

@@ -31,6 +31,7 @@ import lombok.NoArgsConstructor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.IMAGE;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.MULTIMEDIA;
 import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
 
 /**
@@ -49,7 +50,7 @@ public class ImageTransform {
    * Checks if list contains {@link RecordType#IMAGE}, else returns empty {@link PCollection <ExtendedRecord>}
    */
   public static CheckTransforms<ExtendedRecord> check(List<String> types) {
-    return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, IMAGE));
+    return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, IMAGE, MULTIMEDIA));
   }
 
   /** Maps {@link ImageRecord} to key value, where key is {@link ImageRecord#getId} */
