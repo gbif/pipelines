@@ -184,8 +184,6 @@ public class LocationInterpreter {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         lr.setMinimumElevationInMeters(parseResult.getPayload());
-      } else {
-        addIssue(lr, "MIN_ELEVATION_INVALID");
       }
     }
   }
@@ -197,15 +195,12 @@ public class LocationInterpreter {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         lr.setMaximumElevationInMeters(parseResult.getPayload());
-      } else {
-        addIssue(lr, "MAX_ELEVATION_INVALID");
       }
     }
   }
 
   /**
-   * {@link org.gbif.dwc.terms.GbifTerm#elevation} and {@link
-   * org.gbif.dwc.terms.GbifTerm#elevationAccuracy} interpretation.
+   * {@link GbifTerm#elevation} and {@link GbifTerm#elevationAccuracy} interpretation.
    */
   public static void interpretElevation(ExtendedRecord er, LocationRecord lr) {
     String minElevation = extractValue(er, DwcTerm.minimumElevationInMeters);
@@ -226,8 +221,6 @@ public class LocationInterpreter {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         lr.setMinimumDepthInMeters(parseResult.getPayload());
-      } else {
-        addIssue(lr, "MIN_DEPTH_INVALID");
       }
     }
   }
@@ -239,8 +232,6 @@ public class LocationInterpreter {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         lr.setMaximumDepthInMeters(parseResult.getPayload());
-      } else {
-        addIssue(lr, "MAX_DEPTH_INVALID");
       }
     }
   }
@@ -267,8 +258,6 @@ public class LocationInterpreter {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         lr.setMinimumDistanceAboveSurfaceInMeters(parseResult.getPayload());
-      } else {
-        addIssue(lr, "MIN_DISTANCE_ABOVE_SURFACE_INVALID");
       }
     }
   }
@@ -280,8 +269,6 @@ public class LocationInterpreter {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
         lr.setMaximumDistanceAboveSurfaceInMeters(parseResult.getPayload());
-      } else {
-        addIssue(lr, "MAX_DISTANCE_ABOVE_SURFACE_INVALID");
       }
     }
   }
