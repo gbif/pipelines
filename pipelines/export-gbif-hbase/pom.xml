@@ -19,6 +19,7 @@
 
     <properties>
         <gbif-occurrence.version>0.95</gbif-occurrence.version>
+        <hbase.version>1.2.0-cdh5.12.0</hbase.version>
     </properties>
 
     <build>
@@ -88,19 +89,49 @@
     </build>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>${hbase.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-core-asl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-mapper-asl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-jaxrs</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client</artifactId>
+            <version>${hbase.version}</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-mapper-asl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-common</artifactId>
+            <version>${hbase.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.gbif.occurrence</groupId>
-            <artifactId>occurrence-persistence</artifactId>
-            <version>${gbif-occurrence.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.gbif.occurrence</groupId>
-            <artifactId>occurrence-common</artifactId>
-            <version>${gbif-occurrence.version}</version>
         </dependency>
         <dependency>
             <groupId>org.gbif.pipelines</groupId>
@@ -123,6 +154,11 @@
             <groupId>org.apache.beam</groupId>
             <artifactId>beam-sdks-java-io-hadoop-file-system</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.beam</groupId>
+            <artifactId>beam-sdks-java-io-hadoop-format</artifactId>
+            <version>${apache.beam.version}</version>
+        </dependency>
 
         <!-- TODO: all following dependencies should not be needed for running on a cluster -->
         <dependency>
@@ -140,6 +176,16 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-mapper-asl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.jackson</groupId>
+                    <artifactId>jackson-jaxrs</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -166,6 +212,17 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.gbif.occurrence</groupId>
+            <artifactId>occurrence-persistence</artifactId>
+            <version>${gbif-occurrence.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gbif.occurrence</groupId>
+            <artifactId>occurrence-common</artifactId>
+            <version>${gbif-occurrence.version}</version>
         </dependency>
     </dependencies>
 </project>

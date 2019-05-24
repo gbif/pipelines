@@ -25,4 +25,9 @@ public interface ExportHBaseOptions extends HadoopFileSystemOptions {
   @Description("Occurrence table")
   String getTable();
   void setTable(String table);
+
+  @Description("Temporary directory to restore the snapshot into")
+  @Default.String("/tmp/snapshot_restore")
+  String getRestoreDir();
+  void setRestoreDir(String restoreDir);
 }

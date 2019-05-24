@@ -87,6 +87,9 @@ public class VerbatimToInterpretedPipeline {
 
     String datasetId = options.getDatasetId();
     String attempt = options.getAttempt().toString();
+    boolean tripletValid = options.isTripletValid();
+    boolean occurrenceIdValid = options.isOccurrenceIdValid();
+    String endPointType = options.getEndPointType();
 
     FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), datasetId, attempt, options.getInterpretationTypes());
 
@@ -114,7 +117,7 @@ public class VerbatimToInterpretedPipeline {
     //Create metadata
     PCollection<MetadataRecord> metadataRecordP =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()));
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType));
 
     //Write metadata
     metadataRecordP.apply("Write metadata to avro", MetadataTransform.write(pathFn));
@@ -128,7 +131,7 @@ public class VerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check basic transform condition", BasicTransform.check(types))
-        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords

@@ -111,8 +111,16 @@ public class BasicTransform {
   /**
    * Creates an {@link Interpreter} for {@link BasicRecord}
    */
-  public static SingleOutput<ExtendedRecord, BasicRecord> interpret(String propertiesPath, String datasetId) {
-    return ParDo.of(new Interpreter(propertiesPath, datasetId));
+  public static SingleOutput<ExtendedRecord, BasicRecord> interpret(String propertiesPath, String datasetId,
+      boolean isTripletValid, boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
+    return ParDo.of(new Interpreter(propertiesPath, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId));
+  }
+
+  /**
+   * Creates an {@link Interpreter} for {@link BasicRecord} that use the {@link ExtendedRecord#getId()} as the {@link BasicRecord#setId(String)}.
+   */
+  public static SingleOutput<ExtendedRecord, BasicRecord> interpretReusingIds(String datasetId) {
+    return ParDo.of(new Interpreter(datasetId, true));
   }
 
   /**
@@ -125,23 +133,47 @@ public class BasicTransform {
 
     private final KeygenConfig keygenConfig;
     private final String datasetId;
+
+    private final boolean isTripletValid;
+    private final boolean isOccurrenceIdValid;
+
+    private final boolean useExtendedRecordId;
+
     private Connection connection;
     private HBaseLockingKeyService keygenService;
 
-    public Interpreter(String propertiesPath, String datasetId) {
+    public Interpreter(String propertiesPath, String datasetId, boolean isTripletValid, boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
       this.keygenConfig = KeygenConfigFactory.create(Paths.get(propertiesPath));
       this.datasetId = datasetId;
+      this.isTripletValid = isTripletValid;
+      this.isOccurrenceIdValid = isOccurrenceIdValid;
+      this.useExtendedRecordId = useExtendedRecordId;
     }
 
-    public Interpreter(KeygenConfig keygenConfig, String datasetId) {
+    public Interpreter(String datasetId, boolean useExtendedRecordId) {
+      this.keygenConfig = null;
+      this.isTripletValid = false;
+      this.isOccurrenceIdValid = false;
+      this.datasetId = datasetId;
+      this.useExtendedRecordId = useExtendedRecordId;
+    }
+
+    public Interpreter(KeygenConfig keygenConfig, String datasetId, boolean isTripletValid,
+        boolean isOccurrenceIdValid) {
       this.keygenConfig = keygenConfig;
       this.datasetId = datasetId;
+      this.isTripletValid = isTripletValid;
+      this.isOccurrenceIdValid = isOccurrenceIdValid;
+      this.useExtendedRecordId = false;
     }
 
 
     public Interpreter() {
       this.keygenConfig = null;
       this.datasetId = null;
+      this.isTripletValid = false;
+      this.isOccurrenceIdValid = false;
+      this.useExtendedRecordId = false;
     }
 
     @SneakyThrows
@@ -165,7 +197,7 @@ public class BasicTransform {
     public void processElement(ProcessContext context) {
       Interpretation.from(context::element)
           .to(er -> BasicRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
-          .via(BasicInterpreter.interpretGbifId(keygenService))
+          .via(useExtendedRecordId? (er, br) -> br.setGbifId(Long.parseLong(er.getId())) : BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid))
           .via(BasicInterpreter::interpretBasisOfRecord)
           .via(BasicInterpreter::interpretTypifiedName)
           .via(BasicInterpreter::interpretSex)

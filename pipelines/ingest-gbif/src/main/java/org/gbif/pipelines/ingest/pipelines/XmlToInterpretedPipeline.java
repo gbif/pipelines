@@ -85,6 +85,9 @@ public class XmlToInterpretedPipeline {
   public static void run(DwcaPipelineOptions options) {
 
     String datasetId = options.getDatasetId();
+    boolean occurrenceIdValid = options.isOccurrenceIdValid();
+    boolean tripletValid = options.isTripletValid();
+    String endPointType = options.getEndPointType();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", options.getAttempt().toString());
@@ -109,7 +112,7 @@ public class XmlToInterpretedPipeline {
     //Create metadata
     PCollection<MetadataRecord> metadataRecords =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()));
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType));
 
     //Write metadata
     metadataRecords.apply("Write metadata to avro", MetadataTransform.write(pathFn));
@@ -121,7 +124,7 @@ public class XmlToInterpretedPipeline {
         .apply("Write unique verbatim to avro", VerbatimTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId))
+        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
         .apply("Write basic to avro", BasicTransform.write(pathFn));
 
     uniqueRecords

@@ -52,23 +52,28 @@ public class BasicInterpreter {
   private static final Parsable<String> TYPE_NAME_PARSER = org.gbif.common.parsers.TypifiedNameParser.getInstance();
 
   /** Generates or gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService) {
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
+      boolean isTripletValid, boolean isOccurrenceIdValid) {
     return (er, br) -> {
       if (keygenService != null) {
 
         Set<String> uniqueStrings = new HashSet<>(2);
 
         // Adds occurrenceId
-        String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
-        if (!Strings.isNullOrEmpty(occurrenceId)) {
-          uniqueStrings.add(occurrenceId);
+        if (isOccurrenceIdValid) {
+          String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
+          if (!Strings.isNullOrEmpty(occurrenceId)) {
+            uniqueStrings.add(occurrenceId);
+          }
         }
 
         // Adds triplet
-        String ic = extractValue(er, DwcTerm.institutionCode);
-        String cc = extractValue(er, DwcTerm.collectionCode);
-        String cn = extractValue(er, DwcTerm.catalogNumber);
-        OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+        if (isTripletValid) {
+          String ic = extractValue(er, DwcTerm.institutionCode);
+          String cc = extractValue(er, DwcTerm.collectionCode);
+          String cn = extractValue(er, DwcTerm.catalogNumber);
+          OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+        }
 
         if (!uniqueStrings.isEmpty()) {
           KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))

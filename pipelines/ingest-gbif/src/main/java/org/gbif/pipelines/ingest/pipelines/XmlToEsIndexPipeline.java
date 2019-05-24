@@ -105,6 +105,9 @@ public class XmlToEsIndexPipeline {
   public static void run(DwcaPipelineOptions options) {
 
     String datasetId = options.getDatasetId();
+    boolean occurrenceIdValid = options.isOccurrenceIdValid();
+    boolean tripletValid = options.isTripletValid();
+    String endPointType = options.getEndPointType();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", options.getAttempt().toString());
@@ -138,7 +141,7 @@ public class XmlToEsIndexPipeline {
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(datasetId))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, options.getEndPointType()))
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType))
             .apply("Convert into view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
@@ -147,7 +150,7 @@ public class XmlToEsIndexPipeline {
     // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId))
+            .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, false))
             .apply("Map Basic to KV", BasicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =

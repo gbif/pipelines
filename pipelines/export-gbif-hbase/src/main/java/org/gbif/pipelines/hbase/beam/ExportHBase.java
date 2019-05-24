@@ -1,16 +1,9 @@
 package org.gbif.pipelines.hbase.beam;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+import org.apache.beam.sdk.options.ValueProvider;
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.dwc.terms.Term;
-import org.gbif.occurrence.persistence.util.OccurrenceBuilder;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -67,25 +60,19 @@ public class ExportHBase {
             "read HBase",
             HBaseIO.read().withConfiguration(hbaseConfig).withScan(scan).withTableId(table));
 
-    PCollection<KV<UUID, ExtendedRecord>> records =
+    PCollection<KV<String, ExtendedRecord>> records =
         rows.apply(
             "convert to extended record",
             ParDo.of(
-                new DoFn<Result, KV<UUID, ExtendedRecord>>() {
+                new DoFn<Result, KV<String, ExtendedRecord>>() {
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Result row = c.element();
                     try {
-                      VerbatimOccurrence verbatimOccurrence = OccurrenceBuilder.buildVerbatimOccurrence(row);
-                      ExtendedRecord.Builder builder = ExtendedRecord.newBuilder()
-                          .setId(String.valueOf(verbatimOccurrence.getKey()))
-                                                          .setCoreTerms(toVerbatimMap(verbatimOccurrence.getVerbatimFields()));
-                      if (Objects.nonNull(verbatimOccurrence.getExtensions())) {
-                        builder.setExtensions(toVerbatimExtensionsMap(verbatimOccurrence.getExtensions()));
-                      }
-
-                      c.output(KV.of(verbatimOccurrence.getDatasetKey(), builder.build()));
+                      VerbatimOccurrence verbatimOccurrence = OccurrenceConverter.toVerbatimOccurrence(row);
+                      String datasetKeyAsString = String.valueOf(verbatimOccurrence.getDatasetKey());
+                      c.output(KV.of(datasetKeyAsString, OccurrenceConverter.toExtendedRecord(verbatimOccurrence)));
                       recordsExported.inc();
                     } catch (NullPointerException e) {
                       // Expected for bad data
@@ -94,35 +81,16 @@ public class ExportHBase {
                   }
                 }));
 
-    records.apply("write avro file per dataset", FileIO.<String, KV<UUID,ExtendedRecord>>writeDynamic()
-        .by(kv -> kv.getValue().toString())
+    records.apply("write avro file per dataset", FileIO.<String, KV<String,ExtendedRecord>>writeDynamic()
+        .by(kv -> kv.getKey())
         .via(Contextful.fn(src -> src.getValue()),
             Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
         .to(exportPath)
         .withDestinationCoder(StringUtf8Coder.of())
-        .withNumShards(10)
-        .withNaming(key -> defaultNaming(key, PipelinesVariables.Pipeline.AVRO_EXTENSION)));
+        .withNaming(key ->  defaultNaming(key + "/verbatimHBaseExport", PipelinesVariables.Pipeline.AVRO_EXTENSION)));
 
     PipelineResult result = p.run();
     result.waitUntilFinish();
   }
 
-  /**
-   * Transforms a Map<Term,String> into Map<Term.simpleName/String,String>.
-   */
-  private static Map<String, String> toVerbatimMap(Map<Term,String> verbatimMap) {
-    return verbatimMap.entrySet().stream()
-            .collect(HashMap::new, (m, v) -> m.put(v.getKey().simpleName(), v.getValue()), HashMap::putAll);
-  }
-
-  /**
-   * Transforms a Map<Extension, List<Map<Term, String>>> verbatimExtensions into Map<Extension.name()/String, List<Map<Term.simpleName/String, String>>> verbatimExtensions.
-   */
-  private static Map<String, List<Map<String, String>>> toVerbatimExtensionsMap(Map<Extension, List<Map<Term, String>>> verbatimExtensions) {
-    return
-            verbatimExtensions.entrySet().stream()
-              .collect(HashMap::new,
-                      (m, v) -> m.put(v.getKey().name(), v.getValue().stream().map(ExportHBase::toVerbatimMap).collect(Collectors.toList())),
-                      HashMap::putAll);
-  }
 }
