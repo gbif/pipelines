@@ -85,8 +85,8 @@ public class ExportHBaseSnapshot {
                 }));
 
     records.apply("write avro file per dataset", FileIO.<String, KV<String,ExtendedRecord>>writeDynamic()
-      .by(kv -> kv.getKey())
-      .via(Contextful.fn(src -> src.getValue()),
+      .by(KV::getKey)
+      .via(Contextful.fn(KV::getValue),
            Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
       .to(exportPath)
       .withDestinationCoder(StringUtf8Coder.of())
