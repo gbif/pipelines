@@ -63,19 +63,20 @@ class OccurrenceConverter {
    * Transforms a Map<Term,String> into Map<Term.qualifiedName/String,String>.
    */
   private static Map<String, String> toVerbatimMap(Map<Term,String> verbatimMap) {
-    return verbatimMap.entrySet().stream()
-      .collect(HashMap::new, (m, v) -> m.put(v.getKey().qualifiedName(), v.getValue()), HashMap::putAll);
+    Map<String, String> rawMap = new HashMap<>();
+    verbatimMap.forEach((k,v) -> rawMap.put(k.qualifiedName(), v));
+    return rawMap;
   }
 
   /**
    * Transforms a Map<Extension, List<Map<Term, String>>> verbatimExtensions into Map<Extension.getRowType()/String, List<Map<Term.qualifiedName/String, String>>> verbatimExtensions.
    */
   private static Map<String, List<Map<String, String>>> toVerbatimExtensionsMap(Map<Extension, List<Map<Term, String>>> verbatimExtensions) {
-    return
-      verbatimExtensions.entrySet().stream()
-        .collect(HashMap::new,
-                 (m, v) -> m.put(v.getKey().getRowType(), v.getValue().stream().map(OccurrenceConverter::toVerbatimMap).collect(
-                   Collectors.toList())),
-                 HashMap::putAll);
+    Map<String, List<Map<String, String>>> rawExtensions = new HashMap<>();
+    verbatimExtensions
+            .forEach((k,v) -> rawExtensions.put(k.getRowType(),
+                                                v.stream().map(OccurrenceConverter::toVerbatimMap)
+                                                          .collect(Collectors.toList())));
+    return rawExtensions;
   }
 }
