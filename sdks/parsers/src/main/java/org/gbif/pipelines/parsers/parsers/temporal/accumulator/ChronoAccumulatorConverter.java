@@ -63,7 +63,22 @@ public class ChronoAccumulatorConverter {
     // Check Month
     Optional<Month> optMonth = getMonth(accumulator, issues);
     if (!optMonth.isPresent() && issues.contains(DATE_INVALID)) {
-      return Optional.empty();
+
+      // Swap, maybe US format
+      Optional<String> dayOfMonth = accumulator.getChronoFileValue(DAY_OF_MONTH);
+      Optional<String> monthOfYear = accumulator.getChronoFileValue(MONTH_OF_YEAR);
+      if (dayOfMonth.isPresent() && monthOfYear.isPresent()
+          && ParsedUnitUtils.parseMonth(dayOfMonth.get()).isPresent()
+          && ParsedUnitUtils.parseDay(monthOfYear.get()).isPresent()) {
+        accumulator.setChronoField(MONTH_OF_YEAR, dayOfMonth.get());
+        accumulator.setChronoField(DAY_OF_MONTH, monthOfYear.get());
+        issues.remove(DATE_INVALID);
+
+        optMonth = getMonth(accumulator, issues);
+      } else {
+        return Optional.empty();
+      }
+
     } else if (!optMonth.isPresent()) {
       return Optional.of(year);
     }
@@ -145,7 +160,8 @@ public class ChronoAccumulatorConverter {
    * @param field one of the ChronoFields: YEAR, MONTH_OF_YEAR, DAY_OF_MONTH, HOUR_OF_DAY,
    * MINUTE_OF_HOUR, SECOND_OF_MINUTE
    */
-  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField field, Set<ParsedTemporalIssue> issues) {
+  private static Optional<Integer> convert(ChronoAccumulator accumulator, ChronoField field,
+      Set<ParsedTemporalIssue> issues) {
     Optional<String> rawValue = accumulator.getChronoFileValue(field);
     if (rawValue.isPresent()) {
       Optional<Integer> value = FN_MAP.get(field).apply(rawValue.get());

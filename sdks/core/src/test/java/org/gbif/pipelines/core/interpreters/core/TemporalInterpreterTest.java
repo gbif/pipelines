@@ -33,7 +33,7 @@ public class TemporalInterpreterTest {
     map.put(DwcTerm.year.qualifiedName(), "2000");
     map.put(DwcTerm.month.qualifiedName(), "10");
     map.put(DwcTerm.day.qualifiedName(), "10");
-    map.put(DwcTerm.dateIdentified.qualifiedName(), "1/1/2011");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "4/18/2013");
     map.put(DcTerm.modified.qualifiedName(), "2/2/2012");
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").setCoreTerms(map).build();
 
@@ -47,7 +47,7 @@ public class TemporalInterpreterTest {
         .setMonth(10)
         .setDay(10)
         .setModified("2012-02-02")
-        .setDateIdentified("2011-01-01")
+        .setDateIdentified("2013-04-18")
         .setStartDayOfYear(1)
         .setEndDayOfYear(366)
         .build();
