@@ -106,7 +106,7 @@ public class MultimediaConverter {
                   .setDescription(r.getDescription())
                   .setFormat(r.getFormat())
                   .setIdentifier(r.getAccessUri())
-                  .setLicense(r.getLicensingException())
+                  .setLicense(r.getRightsUri())
                   .setRightsHolder(r.getRights())
                   .setSource(r.getSource())
                   .setTitle(r.getTitle())

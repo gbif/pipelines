@@ -2,14 +2,13 @@ package org.gbif.pipelines.core.interpreters.extension;
 
 import java.net.URI;
 import java.time.temporal.Temporal;
-import java.util.EnumMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.AcTerm;
@@ -26,7 +25,6 @@ import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
-import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
 import com.google.common.base.Strings;
@@ -34,8 +32,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
-import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
-import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 
 /**
  * Interpreter for the Audubon extension, Interprets form {@link ExtendedRecord} to {@link AudubonRecord}.
@@ -44,13 +40,6 @@ import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DA
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AudubonInterpreter {
-
-  private static final Map<ParsedTemporalIssue, String> DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
-
-  static {
-    DATE_ISSUE_MAP.put(DATE_INVALID, MULTIMEDIA_DATE_INVALID.name());
-    DATE_ISSUE_MAP.put(DATE_UNLIKELY, MULTIMEDIA_DATE_INVALID.name());
-  }
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
 
@@ -68,7 +57,6 @@ public class AudubonInterpreter {
           .map(AcTerm.metadataProviderLiteral, Audubon::setMetadataProviderLiteral)
           .map(AcTerm.metadataProvider, Audubon::setMetadataProvider)
           .map(DcElement.rights, Audubon::setRights)
-          .map(DcTerm.rights, Audubon::setRightsUri)
           .map(XmpRightsTerm.Owner, Audubon::setOwner)
           .map(XmpRightsTerm.UsageTerms, Audubon::setUsageTerms)
           .map(XmpRightsTerm.WebStatement, Audubon::setWebStatement)
@@ -149,6 +137,7 @@ public class AudubonInterpreter {
           .map("http://ns.adobe.com/exif/1.0/PixelYDimension", Audubon::setPixelYDimension)
           .map("http://ns.adobe.com/photoshop/1.0/Credit", Audubon::setCredit)
           .map(DcTerm.type, Audubon::setTypeUri)
+          .map(DcTerm.rights, AudubonInterpreter::parseAndSetRightsUri)
           .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndSetFurtherInformationUrl)
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
           .map(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
@@ -212,10 +201,7 @@ public class AudubonInterpreter {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(a::setCreateDate);
 
-    return parsed.getIssues().stream()
-        .map(DATE_ISSUE_MAP::get)
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+    return parsed.getIssues().isEmpty() ? Collections.emptyList() : Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
   }
 
   /**
@@ -231,5 +217,21 @@ public class AudubonInterpreter {
         a.setType(MediaType.MovingImage.name());
       }
     }
+  }
+
+  /** Returns ENUM instead of url string */
+  private static void parseAndSetRightsUri(Audubon a, String v) {
+    License license;
+    if (Strings.isNullOrEmpty(v)) {
+      license = License.UNSPECIFIED;
+    } else {
+      com.google.common.base.Optional<License> licenseOptional = License.fromLicenseUrl(v);
+      if (licenseOptional.isPresent()) {
+        license = licenseOptional.get();
+      } else {
+        license = License.UNSUPPORTED;
+      }
+    }
+    a.setRightsUri(license.name());
   }
 }

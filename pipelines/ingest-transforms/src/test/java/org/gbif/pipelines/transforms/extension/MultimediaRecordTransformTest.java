@@ -92,7 +92,7 @@ public class MultimediaRecordTransformTest {
             .setFormat("image/jpeg")
             .setTitle(TITLE)
             .setDescription(DESCRIPTION)
-            .setLicense(LICENSE)
+            .setLicense("UNSUPPORTED")
             .setCreator(CREATOR)
             .setCreated(CREATED)
             .setSource(SOURCE)

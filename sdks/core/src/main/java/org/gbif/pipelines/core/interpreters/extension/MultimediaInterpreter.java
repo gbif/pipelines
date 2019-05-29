@@ -2,14 +2,13 @@ package org.gbif.pipelines.core.interpreters.extension;
 
 import java.net.URI;
 import java.time.temporal.Temporal;
-import java.util.EnumMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
@@ -22,7 +21,6 @@ import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
-import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
 import com.google.common.base.Strings;
@@ -31,8 +29,6 @@ import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
-import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
-import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
 
 /**
@@ -43,13 +39,6 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MultimediaInterpreter {
 
-  private static final Map<ParsedTemporalIssue, String> DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
-
-  static {
-    DATE_ISSUE_MAP.put(DATE_INVALID, MULTIMEDIA_DATE_INVALID.name());
-    DATE_ISSUE_MAP.put(DATE_UNLIKELY, MULTIMEDIA_DATE_INVALID.name());
-  }
-
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
 
   private static final TargetHandler<Multimedia> HANDLER =
@@ -58,17 +47,17 @@ public class MultimediaInterpreter {
           .map(DcTerm.references, MultimediaInterpreter::parseAndSetReferences)
           .map(DcTerm.identifier, MultimediaInterpreter::parseAndSetIdentifier)
           .map(DcTerm.created, MultimediaInterpreter::parseAndSetCreated)
+          .map(DcTerm.license, MultimediaInterpreter::parseAndSetLicense)
+          .map(DcTerm.format, MultimediaInterpreter::parseAndSetFormatAndType)
           .map(DcTerm.title, Multimedia::setTitle)
           .map(DcTerm.description, Multimedia::setDescription)
           .map(DcTerm.contributor, Multimedia::setContributor)
           .map(DcTerm.publisher, Multimedia::setPublisher)
           .map(DcTerm.audience, Multimedia::setAudience)
           .map(DcTerm.creator, Multimedia::setCreator)
-          .map(DcTerm.license, Multimedia::setLicense)
           .map(DcTerm.rightsHolder, Multimedia::setRightsHolder)
           .map(DcTerm.source, Multimedia::setSource)
           .map(DwcTerm.datasetID, Multimedia::setDatasetId)
-          .map(DcTerm.format, MultimediaInterpreter::parseAndSetFormatAndType)
           .skipIf(MultimediaInterpreter::checkLinks);
 
   /**
@@ -146,10 +135,7 @@ public class MultimediaInterpreter {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(m::setCreated);
 
-    return parsed.getIssues().stream()
-        .map(DATE_ISSUE_MAP::get)
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+    return parsed.getIssues().isEmpty() ? Collections.emptyList() : Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
   }
 
   /**
@@ -170,6 +156,22 @@ public class MultimediaInterpreter {
     m.setFormat(mimeType);
 
     parseAndSetType(m, m.getFormat());
+  }
+
+  /** Returns ENUM instead of url string */
+  private static void parseAndSetLicense(Multimedia m, String v) {
+    License license;
+    if (Strings.isNullOrEmpty(v)) {
+      license = License.UNSPECIFIED;
+    } else {
+      com.google.common.base.Optional<License> licenseOptional = License.fromLicenseUrl(v);
+      if (licenseOptional.isPresent()) {
+        license = licenseOptional.get();
+      } else {
+        license = License.UNSUPPORTED;
+      }
+    }
+    m.setLicense(license.name());
   }
 
   /**

@@ -3,14 +3,12 @@ package org.gbif.pipelines.core.interpreters.extension;
 import java.net.URI;
 import java.time.temporal.Temporal;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
@@ -25,17 +23,15 @@ import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
-import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
-import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
-import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 
 /**
  * Interpreter for the Image extension, Interprets form {@link ExtendedRecord} to {@link ImageRecord}.
@@ -45,19 +41,13 @@ import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DA
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ImageInterpreter {
 
-  private static final Map<ParsedTemporalIssue, String> DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
-
-  static {
-    DATE_ISSUE_MAP.put(DATE_INVALID, MULTIMEDIA_DATE_INVALID.name());
-    DATE_ISSUE_MAP.put(DATE_UNLIKELY, MULTIMEDIA_DATE_INVALID.name());
-  }
-
   private static final TargetHandler<Image> HANDLER =
       ExtensionInterpretation.extension(Extension.IMAGE)
           .to(Image::new)
           .map(DcTerm.identifier, ImageInterpreter::parseAndSetIdentifier)
           .map(DcTerm.references, ImageInterpreter::parseAndSetReferences)
           .map(DcTerm.created, ImageInterpreter::parseAndSetCreated)
+          .map(DcTerm.license, ImageInterpreter::parseAndSetLicense)
           .map(DcTerm.title, Image::setTitle)
           .map(DcTerm.description, Image::setDescription)
           .map(DcTerm.spatial, Image::setSpatial)
@@ -66,7 +56,6 @@ public class ImageInterpreter {
           .map(DcTerm.contributor, Image::setContributor)
           .map(DcTerm.publisher, Image::setPublisher)
           .map(DcTerm.audience, Image::setAudience)
-          .map(DcTerm.license, Image::setLicense)
           .map(DcTerm.rightsHolder, Image::setRightsHolder)
           .map(DwcTerm.datasetID, Image::setDatasetId)
           .mapOne("http://www.w3.org/2003/01/geo/wgs84_pos#longitude", ImageInterpreter::parseAndSetLongitude)
@@ -111,10 +100,7 @@ public class ImageInterpreter {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(i::setCreated);
 
-    return parsed.getIssues().stream()
-        .map(DATE_ISSUE_MAP::get)
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+    return parsed.getIssues().isEmpty() ? Collections.emptyList() : Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
   }
 
   /**
@@ -154,6 +140,22 @@ public class ImageInterpreter {
       i.setLongitude(result.getLongitude());
     }
     return latLng.getIssues();
+  }
+
+  /** Returns ENUM instead of url string */
+  private static void parseAndSetLicense(Image i, String v) {
+    License license;
+    if (Strings.isNullOrEmpty(v)) {
+      license = License.UNSPECIFIED;
+    } else {
+      com.google.common.base.Optional<License> licenseOptional = License.fromLicenseUrl(v);
+      if (licenseOptional.isPresent()) {
+        license = licenseOptional.get();
+      } else {
+        license = License.UNSUPPORTED;
+      }
+    }
+    i.setLicense(license.name());
   }
 
   /**

@@ -71,11 +71,11 @@ public class ImageInterpreterTest {
             + "\"http://www.gbif.org/tmp.jpg\", \"title\": \"Tt1\", \"description\": \"Desc1\", \"spatial\": \"Sp1\", "
             + "\"latitude\": -131.3, \"longitude\": 60.4, \"format\": \"jpeg\", \"created\": \"2010\", \"creator\": "
             + "\"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Pub1\", \"audience\": \"Aud1\", \"license\": "
-            + "\"Lic1\", \"rightsHolder\": \"Rh1\", \"datasetId\": \"1\"}, {\"identifier\": \"http://www.gbif.org/tmp.jpg\", "
+            + "\"UNSUPPORTED\", \"rightsHolder\": \"Rh1\", \"datasetId\": \"1\"}, {\"identifier\": \"http://www.gbif.org/tmp.jpg\", "
             + "\"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": \"Tt2\", \"description\": \"Desc2\", \"spatial\": "
             + "\"Sp2\", \"latitude\": -131.3, \"longitude\": 360.4, \"format\": \"jpeg\", \"created\": \"2010-12-12\", "
             + "\"creator\": \"Cr2\", \"contributor\": \"Cont2\", \"publisher\": \"Pub2\", \"audience\": \"Aud2\", \"license\": "
-            + "\"Lic2\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"1\"}], \"issues\": {\"issueList\": ["
+            + "\"UNSUPPORTED\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"1\"}], \"issues\": {\"issueList\": ["
             + "\"MULTIMEDIA_URI_INVALID\", \"MULTIMEDIA_DATE_INVALID\", \"COORDINATE_OUT_OF_RANGE\", \"PRESUMED_SWAPPED_COORDINATE\"]}}";
 
     ImageRecord ir = ImageRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
