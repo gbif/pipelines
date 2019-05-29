@@ -85,7 +85,7 @@ public class VerbatimToInterpretedPipeline {
   public static void run(InterpretationPipelineOptions options) {
 
     String datasetId = options.getDatasetId();
-    String attempt = options.getAttempt().toString();
+    Integer attempt = options.getAttempt();
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
@@ -94,7 +94,7 @@ public class VerbatimToInterpretedPipeline {
     FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), datasetId, attempt, options.getInterpretationTypes());
 
     MDC.put("datasetId", datasetId);
-    MDC.put("attempt", attempt);
+    MDC.put("attempt", attempt.toString());
 
     List<String> types = options.getInterpretationTypes();
     String propertiesPath = options.getProperties();
@@ -117,7 +117,7 @@ public class VerbatimToInterpretedPipeline {
     //Create metadata
     PCollection<MetadataRecord> metadataRecordP =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType));
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType, attempt));
 
     //Write metadata
     metadataRecordP.apply("Write metadata to avro", MetadataTransform.write(pathFn));
@@ -176,7 +176,7 @@ public class VerbatimToInterpretedPipeline {
     MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Deleting beam temporal folders");
-    String tempPath = String.join("/", options.getTargetPath(), datasetId, attempt);
+    String tempPath = String.join("/", options.getTargetPath(), datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(options.getHdfsSiteConfig(), tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");

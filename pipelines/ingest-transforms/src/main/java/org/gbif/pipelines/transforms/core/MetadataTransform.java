@@ -101,15 +101,15 @@ public class MetadataTransform {
   /**
    * Creates an {@link Interpreter} for {@link MetadataRecord}
    */
-  public static SingleOutput<String, MetadataRecord> interpret(WsConfig wsConfig, String endpointType) {
-    return ParDo.of(new Interpreter(wsConfig, endpointType));
+  public static SingleOutput<String, MetadataRecord> interpret(WsConfig wsConfig, String endpointType, Integer attempt) {
+    return ParDo.of(new Interpreter(wsConfig, endpointType, attempt));
   }
 
   /**
    * Creates an {@link Interpreter} for {@link MetadataRecord}
    */
-  public static SingleOutput<String, MetadataRecord> interpret(String properties, String endpointType) {
-    return ParDo.of(new Interpreter(properties, endpointType));
+  public static SingleOutput<String, MetadataRecord> interpret(String properties, String endpointType, Integer attempt) {
+    return ParDo.of(new Interpreter(properties, endpointType, attempt));
   }
 
   /**
@@ -122,6 +122,7 @@ public class MetadataTransform {
 
     private final Counter counter = Metrics.counter(MetadataTransform.class, METADATA_RECORDS_COUNT);
 
+    private final Integer attempt;
     private final WsConfig wsConfig;
     private final String endpointType;
     private MetadataServiceClient client;
@@ -129,16 +130,19 @@ public class MetadataTransform {
     public Interpreter() {
       this.wsConfig = null;
       this.endpointType = null;
+      this.attempt = null;
     }
 
-    public Interpreter(WsConfig wsConfig, String endpointType) {
+    public Interpreter(WsConfig wsConfig, String endpointType, Integer attempt) {
       this.wsConfig = wsConfig;
       this.endpointType = endpointType;
+      this.attempt = attempt;
     }
 
-    public Interpreter(String properties, String endpointType) {
+    public Interpreter(String properties, String endpointType, Integer attempt) {
       this.wsConfig = WsConfigFactory.create(WsConfigFactory.METADATA_PREFIX, Paths.get(properties));
       this.endpointType = endpointType;
+      this.attempt = attempt;
     }
 
     @Setup
@@ -153,6 +157,7 @@ public class MetadataTransform {
       Interpretation.from(context::element)
           .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(Instant.now().toEpochMilli()).build())
           .via(MetadataInterpreter.interpret(client))
+          .via(MetadataInterpreter.interpretCrawlId(attempt))
           .via(MetadataInterpreter.interpretEndpointType(endpointType))
           .consume(context::output);
 
