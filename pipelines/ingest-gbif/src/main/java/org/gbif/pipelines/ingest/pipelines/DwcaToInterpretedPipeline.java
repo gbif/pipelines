@@ -84,13 +84,14 @@ public class DwcaToInterpretedPipeline {
   public static void run(DwcaPipelineOptions options) {
 
     String datasetId = options.getDatasetId();
+    Integer attempt = options.getAttempt();
     String endPointType = options.getEndPointType();
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
 
     MDC.put("datasetId", datasetId);
-    MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("attempt", attempt.toString());
 
     String propertiesPath = options.getProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
@@ -118,7 +119,7 @@ public class DwcaToInterpretedPipeline {
     //Create metadata
     PCollection<MetadataRecord> metadataRecords =
         p.apply("Create metadata collection", Create.of(datasetId))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType));
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType, attempt));
 
     //Write metadata
     metadataRecords.apply("Write metadata to avro", MetadataTransform.write(pathFn));

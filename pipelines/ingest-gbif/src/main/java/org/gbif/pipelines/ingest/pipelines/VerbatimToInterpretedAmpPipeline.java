@@ -61,12 +61,12 @@ public class VerbatimToInterpretedAmpPipeline {
   public static void run(InterpretationPipelineOptions options) {
 
     String datasetId = options.getDatasetId();
-    String attempt = options.getAttempt().toString();
+    Integer attempt = options.getAttempt();
 
     FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), datasetId, attempt, options.getInterpretationTypes());
 
     MDC.put("datasetId", datasetId);
-    MDC.put("attempt", attempt);
+    MDC.put("attempt", attempt.toString());
 
     String wsPropertiesPath = options.getProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
@@ -87,7 +87,7 @@ public class VerbatimToInterpretedAmpPipeline {
     result.waitUntilFinish();
 
     log.info("Deleting beam temporal folders");
-    String tempPath = String.join("/", options.getTargetPath(), datasetId, attempt);
+    String tempPath = String.join("/", options.getTargetPath(), datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(options.getHdfsSiteConfig(), tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");

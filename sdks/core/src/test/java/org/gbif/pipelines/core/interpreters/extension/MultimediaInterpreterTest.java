@@ -54,7 +54,7 @@ public class MultimediaInterpreterTest {
     ext2.put(DcTerm.source.qualifiedName(), "Sr2");
 
     Map<String, String> ext3 = new HashMap<>();
-    ext3.put(DcTerm.created.qualifiedName(), "not a date");
+    ext3.put(DcTerm.created.qualifiedName(), "2020-01-12T18:33:58.000+0000");
 
     Map<String, List<Map<String, String>>> ext = new HashMap<>();
     ext.put(Extension.MULTIMEDIA.getRowType(), Arrays.asList(ext1, ext2, ext3));

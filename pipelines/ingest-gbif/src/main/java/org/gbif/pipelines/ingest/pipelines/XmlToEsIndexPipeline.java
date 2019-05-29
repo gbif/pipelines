@@ -102,13 +102,14 @@ public class XmlToEsIndexPipeline {
   public static void run(DwcaPipelineOptions options) {
 
     String datasetId = options.getDatasetId();
+    Integer attempt = options.getAttempt();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean tripletValid = options.isTripletValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
 
     MDC.put("datasetId", datasetId);
-    MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("attempt", attempt.toString());
 
     EsIndexUtils.createIndex(options);
 
@@ -138,7 +139,7 @@ public class XmlToEsIndexPipeline {
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(datasetId))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType))
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType, attempt))
             .apply("Convert into view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =

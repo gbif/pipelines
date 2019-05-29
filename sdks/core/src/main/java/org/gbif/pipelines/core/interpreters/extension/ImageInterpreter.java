@@ -49,7 +49,7 @@ public class ImageInterpreter {
 
   static {
     DATE_ISSUE_MAP.put(DATE_INVALID, MULTIMEDIA_DATE_INVALID.name());
-    DATE_ISSUE_MAP.put(DATE_UNLIKELY, "MULTIMEDIA_DATE_UNLIKELY");
+    DATE_ISSUE_MAP.put(DATE_UNLIKELY, MULTIMEDIA_DATE_INVALID.name());
   }
 
   private static final TargetHandler<Image> HANDLER =

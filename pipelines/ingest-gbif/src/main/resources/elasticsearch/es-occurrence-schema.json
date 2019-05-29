@@ -45,6 +45,7 @@
       "created": {"type": "date"},
 
       "datasetKey": {"type": "keyword"},
+      "crawlId": {"type": "integer"},
       "datasetTitle": {"type": "keyword", "copy_to": "all"},
       "installationKey": {"type": "keyword"},
       "endorsingNodeKey": {"type": "keyword"},

@@ -29,9 +29,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataInterpreter {
 
-  /**
-   * Gets information from GBIF API by datasetId
-   */
+  /** Gets information from GBIF API by datasetId */
   public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
     return (datasetId, mdr) -> {
       if (client != null) {
@@ -60,6 +58,12 @@ public class MetadataInterpreter {
     };
   }
 
+  /** Sets attempt number as crawlId */
+  public static Consumer<MetadataRecord> interpretCrawlId(Integer attempt) {
+    return mdr -> Optional.ofNullable(attempt).ifPresent(mdr::setCrawlId);
+  }
+
+  /** Gets information about dataset source endpoint type (DWC_ARCHIVE, BIOCASE_XML_ARCHIVE, TAPIR .. etc) */
   public static Consumer<MetadataRecord> interpretEndpointType(String endpointType) {
     return mdr -> {
       if (!Strings.isNullOrEmpty(endpointType)) {

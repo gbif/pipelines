@@ -23,6 +23,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFact;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
@@ -51,7 +52,7 @@ public class GbifJsonConverterTest {
             + "\"rank\":\"ABERRATION\"},\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
             + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],\"chemoformKey\":1,\"chemoform\":\"Name\","
             + "\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},"
-            + "\"gbifId\":111,\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\","
+            + "\"gbifId\":111,\"datasetKey\":\"datatesKey\",\"crawlId\":1,\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\","
             + "\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\","
             + "\"COORDINATE_OUT_OF_RANGE\",\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\","
             + "\"PRESUMED_NEGATED_LONGITUDE\",\"DEPTH_UNLIKELY\",\"IDENTIFIED_DATE_INVALID\",\"ELEVATION_MIN_MAX_SWAPPED\","
@@ -69,6 +70,8 @@ public class GbifJsonConverterTest {
     Map<String, String> erMap = new HashMap<>(2);
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
+
+    MetadataRecord mr = MetadataRecord.newBuilder().setId("777").setCrawlId(1).setDatasetKey("datatesKey").build();
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
@@ -112,7 +115,7 @@ public class GbifJsonConverterTest {
     TaxonRecord tr = TaxonRecord.newBuilder().setId("777").setClassification(rankedNameList).setUsage(name2).build();
 
     // When
-    String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, br);
+    String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, br, mr);
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));

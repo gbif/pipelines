@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.converters;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.Image;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -113,6 +114,7 @@ public class MultimediaConverterTest {
         .setMultimediaItems(Collections.singletonList(Multimedia.newBuilder()
             .setIdentifier("http://url-i1")
             .setReferences("http://url-r1")
+            .setCreated("2010-10-10")
             .build()))
         .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList("ONE", "THREE")).build())
         .build();
@@ -121,11 +123,16 @@ public class MultimediaConverterTest {
         .setImageItems(Collections.singletonList(Image.newBuilder()
             .setIdentifier("http://url-i2")
             .setReferences("http://url-r2")
+            .setCreated("2010-11-11")
             .build()))
         .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList("TWO", "THREE")).build())
         .build();
 
-    AudubonRecord ar = AudubonRecord.newBuilder().setId("777").build();
+    AudubonRecord ar = AudubonRecord.newBuilder()
+        .setId("777")
+        .setAudubonItems(Collections.singletonList(
+            Audubon.newBuilder().setAccessUri("http://url-i3").setCreateDate("2010-09-09").build()))
+        .build();
 
     MultimediaRecord result = MultimediaRecord.newBuilder()
         .setId("777")
@@ -134,11 +141,17 @@ public class MultimediaConverterTest {
                 Multimedia.newBuilder()
                     .setIdentifier("http://url-i1")
                     .setReferences("http://url-r1")
+                    .setCreated("2010-10-10")
                     .build(),
                 Multimedia.newBuilder()
                     .setType(MediaType.StillImage.name())
                     .setIdentifier("http://url-i2")
                     .setReferences("http://url-r2")
+                    .setCreated("2010-11-11")
+                    .build(),
+                Multimedia.newBuilder()
+                    .setIdentifier("http://url-i3")
+                    .setCreated("2010-09-09")
                     .build()))
         .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList("ONE", "TWO", "THREE")).build())
         .build();
