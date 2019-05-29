@@ -1,8 +1,13 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
 import java.net.URI;
+import java.time.temporal.Temporal;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.common.parsers.MediaParser;
@@ -20,10 +25,17 @@ import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
+import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue;
+import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+
+import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_INVALID;
+import static org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporalIssue.DATE_UNLIKELY;
 
 /**
  * Interpreter for the Audubon extension, Interprets form {@link ExtendedRecord} to {@link AudubonRecord}.
@@ -32,6 +44,13 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AudubonInterpreter {
+
+  private static final Map<ParsedTemporalIssue, String> DATE_ISSUE_MAP = new EnumMap<>(ParsedTemporalIssue.class);
+
+  static {
+    DATE_ISSUE_MAP.put(DATE_INVALID, MULTIMEDIA_DATE_INVALID.name());
+    DATE_ISSUE_MAP.put(DATE_UNLIKELY, MULTIMEDIA_DATE_INVALID.name());
+  }
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
 
@@ -114,7 +133,6 @@ public class AudubonInterpreter {
           .map(AcTerm.subjectOrientation, Audubon::setSubjectOrientation)
           .map(DwcTerm.preparations, Audubon::setPreparations)
           .map(DcTerm.temporal, Audubon::setTemporal)
-          .map(XmpTerm.CreateDate, Audubon::setCreateDate)
           .map(AcTerm.timeOfDay, Audubon::setTimeOfDay)
           .map(AcTerm.IDofContainingCollection, Audubon::setIdOfContainingCollection)
           .map(IPTC + "LocationCreated", Audubon::setLocationCreated)
@@ -135,6 +153,7 @@ public class AudubonInterpreter {
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
           .map(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
           .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat)
+          .map(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
           .map(DcElement.type, AudubonInterpreter::parseAndSetType);
 
   /**
@@ -184,6 +203,19 @@ public class AudubonInterpreter {
       mimeType = MEDIA_PARSER.parseMimeType(a.getIdentifier());
     }
     a.setFormat(mimeType);
+  }
+
+  /**
+   * Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value
+   */
+  private static List<String> parseAndSetCreatedDate(Audubon a, String v) {
+    ParsedTemporal parsed = TemporalParser.parse(v);
+    parsed.getFromOpt().map(Temporal::toString).ifPresent(a::setCreateDate);
+
+    return parsed.getIssues().stream()
+        .map(DATE_ISSUE_MAP::get)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
   /**
