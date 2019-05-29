@@ -3,7 +3,10 @@ package org.gbif.pipelines.core.converters;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,17 +38,20 @@ public class JsonConverterTest {
             .setDecimalLongitude(2d)
             .build();
 
+    MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId("777").setNetworkKeys(Collections.singletonList("NK1")).build();
+
     String expected =
         "{\"id\":\"777\",\"coreRowType\":\"core\",\"coreTerms\":\"{}\",\"extensions\":\"{}\",\"year\":2000,"
             + "\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},\"startDayOfYear\":1,"
             + "\"issues\":{},\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"decimalLatitude\":1.0,"
-            + "\"decimalLongitude\":2.0}";
+            + "\"decimalLongitude\":2.0,\"networkKeys\":[\"NK1\"]}";
 
     // When
     String result = JsonConverter.builder()
         .record(extendedRecord)
         .record(temporalRecord)
         .record(locationRecord)
+        .record(metadataRecord)
         .build()
         .toString();
 

@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import com.google.common.primitives.Primitives;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -107,13 +109,15 @@ public class JsonConverter {
     return toJson().toString();
   }
 
-  private void addArrayNode(ObjectNode node, Schema.Field field,Collection<?> objects) {
+  private void addArrayNode(ObjectNode node, Schema.Field field, Collection<?> objects) {
     ArrayNode arrayNode = node.putArray(field.name());
     objects.forEach( value -> {
       if(value instanceof SpecificRecordBase) {
         ObjectNode element = createObjectNode();
         addCommonFields((SpecificRecordBase)value, element);
         arrayNode.add(element);
+      } else if (value instanceof String|| value.getClass().isPrimitive() || Primitives.isWrapperType((value.getClass())) || UUID.class.isAssignableFrom(value.getClass())) {
+        arrayNode.add(value.toString());
       }
     });
   }
