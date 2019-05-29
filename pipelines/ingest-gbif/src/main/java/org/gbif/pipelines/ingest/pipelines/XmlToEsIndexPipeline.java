@@ -18,7 +18,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
-import org.gbif.pipelines.transforms.HashIdTransform;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
@@ -135,7 +134,6 @@ public class XmlToEsIndexPipeline {
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Hash ID", HashIdTransform.create(datasetId))
             .apply("Filter duplicates", UniqueIdTransform.create());
 
     log.info("Adding step 2: Reading avros");
