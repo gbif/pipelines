@@ -26,10 +26,10 @@ import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 
@@ -60,8 +60,8 @@ public class ImageInterpreter {
           .map(DcTerm.audience, Image::setAudience)
           .map(DcTerm.rightsHolder, Image::setRightsHolder)
           .map(DwcTerm.datasetID, Image::setDatasetId)
-          .mapOne("http://www.w3.org/2003/01/geo/wgs84_pos#longitude", ImageInterpreter::parseAndSetLongitude)
-          .mapOne("http://www.w3.org/2003/01/geo/wgs84_pos#latitude", ImageInterpreter::parseAndSetLatitude)
+          .map("http://www.w3.org/2003/01/geo/wgs84_pos#longitude", ImageInterpreter::parseAndSetLongitude)
+          .map("http://www.w3.org/2003/01/geo/wgs84_pos#latitude", ImageInterpreter::parseAndSetLatitude)
           .postMap(ImageInterpreter::parseAndSetLatLng)
           .skipIf(ImageInterpreter::checkLinks);
 
@@ -109,40 +109,38 @@ public class ImageInterpreter {
   /**
    * Parser for "http://www.w3.org/2003/01/geo/wgs84_pos#longitude" term value
    */
-  private static String parseAndSetLongitude(Image i, String v) {
-    Double lat = NumberParser.parseDouble(v);
-    Optional.ofNullable(lat).ifPresent(i::setLatitude);
-    return lat == null ? COORDINATE_INVALID.name() : null;
+  private static void parseAndSetLongitude(Image i, String v) {
+    if (!Strings.isNullOrEmpty(v)) {
+      Double lat = NumberParser.parseDouble(v);
+      Optional.ofNullable(lat).ifPresent(i::setLatitude);
+    }
   }
 
   /**
    * Parser for "http://www.w3.org/2003/01/geo/wgs84_pos#latitude" term value
    */
-  private static String parseAndSetLatitude(Image i, String v) {
-    Double lng = NumberParser.parseDouble(v);
-    Optional.ofNullable(lng).ifPresent(i::setLongitude);
-    return lng == null ? COORDINATE_INVALID.name() : null;
+  private static void parseAndSetLatitude(Image i, String v) {
+    if (!Strings.isNullOrEmpty(v)) {
+      Double lng = NumberParser.parseDouble(v);
+      Optional.ofNullable(lng).ifPresent(i::setLongitude);
+    }
   }
 
   /**
    * Parse and check coordinates
    */
-  private static List<String> parseAndSetLatLng(Image i) {
+  private static void parseAndSetLatLng(Image i) {
+    if (i.getLatitude() != null && i.getLongitude() != null) {
+      String lat = Optional.ofNullable(i.getLatitude()).map(Object::toString).orElse(null);
+      String lng = Optional.ofNullable(i.getLongitude()).map(Object::toString).orElse(null);
 
-    if (i.getLatitude() == null && i.getLongitude() == null) {
-      return Collections.emptyList();
+      ParsedField<LatLng> latLng = CoordinateParseUtils.parseLatLng(lat, lng);
+      if (latLng.isSuccessful()) {
+        LatLng result = latLng.getResult();
+        i.setLatitude(result.getLatitude());
+        i.setLongitude(result.getLongitude());
+      }
     }
-
-    String lat = Optional.ofNullable(i.getLatitude()).map(Object::toString).orElse(null);
-    String lng = Optional.ofNullable(i.getLongitude()).map(Object::toString).orElse(null);
-
-    ParsedField<LatLng> latLng = CoordinateParseUtils.parseLatLng(lat, lng);
-    if (latLng.isSuccessful()) {
-      LatLng result = latLng.getResult();
-      i.setLatitude(result.getLatitude());
-      i.setLongitude(result.getLongitude());
-    }
-    return latLng.getIssues();
   }
 
   /** Returns ENUM instead of url string */
