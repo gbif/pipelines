@@ -21,7 +21,7 @@ public class MultimediaInterpreterTest {
   public void multimediaTest() {
 
     // State
-    Map<String, String> ext1 = new HashMap<>();
+    Map<String, String> ext1 = new HashMap<>(14);
     ext1.put(DcTerm.references.qualifiedName(), "www.gbif.org/tmp.jpg");
     ext1.put(DcTerm.identifier.qualifiedName(), "www.gbif.org/tmp.jpg");
     ext1.put(DcTerm.format.qualifiedName(), "image/scan");
@@ -37,7 +37,7 @@ public class MultimediaInterpreterTest {
     ext1.put(DcTerm.creator.qualifiedName(), "Cr1");
     ext1.put(DcTerm.source.qualifiedName(), "Sr1");
 
-    Map<String, String> ext2 = new HashMap<>();
+    Map<String, String> ext2 = new HashMap<>(14);
     ext2.put(DcTerm.references.qualifiedName(), "www.gbif.org/tmp.jpg");
     ext2.put(DcTerm.identifier.qualifiedName(), "www.gbif.org/tmp.jpg");
     ext2.put(DcTerm.format.qualifiedName(), "jpg");
@@ -53,10 +53,10 @@ public class MultimediaInterpreterTest {
     ext2.put(DcTerm.creator.qualifiedName(), "Cr2");
     ext2.put(DcTerm.source.qualifiedName(), "Sr2");
 
-    Map<String, String> ext3 = new HashMap<>();
+    Map<String, String> ext3 = new HashMap<>(1);
     ext3.put(DcTerm.created.qualifiedName(), "2020-01-12T18:33:58.000+0000");
 
-    Map<String, List<Map<String, String>>> ext = new HashMap<>();
+    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     ext.put(Extension.MULTIMEDIA.getRowType(), Arrays.asList(ext1, ext2, ext3));
 
     ExtendedRecord record =

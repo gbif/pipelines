@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -15,6 +16,7 @@ import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
+import org.gbif.common.parsers.LicenseParser;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
@@ -77,16 +79,14 @@ public class MetadataInterpreter {
 
   /** Returns ENUM instead of url string */
   private static License getLicense(String url) {
-    if (Strings.isNullOrEmpty(url)) {
-      return License.UNSPECIFIED;
-    } else {
-      com.google.common.base.Optional<License> licenseOptional = License.fromLicenseUrl(url);
-      if (licenseOptional.isPresent()) {
-        return licenseOptional.get();
-      } else {
-        return License.UNSUPPORTED;
+    URI uri = Optional.ofNullable(url).map(x -> {
+      try {
+        return URI.create(x);
+      } catch (IllegalArgumentException ex) {
+        return null;
       }
-    }
+    }).orElse(null);
+    return LicenseParser.getInstance().parseUriThenTitle(uri, null);
   }
 
   /** Gets the latest crawl attempt time, if exists. */

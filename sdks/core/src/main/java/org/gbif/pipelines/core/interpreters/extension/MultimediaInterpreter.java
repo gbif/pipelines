@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
@@ -40,6 +41,7 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
 public class MultimediaInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
+  private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final TargetHandler<Multimedia> HANDLER =
       ExtensionInterpretation.extension(Extension.MULTIMEDIA)
@@ -135,7 +137,8 @@ public class MultimediaInterpreter {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(m::setCreated);
 
-    return parsed.getIssues().isEmpty() ? Collections.emptyList() : Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
+    return parsed.getIssues().isEmpty() ? Collections.emptyList() :
+        Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
   }
 
   /**
@@ -160,17 +163,14 @@ public class MultimediaInterpreter {
 
   /** Returns ENUM instead of url string */
   private static void parseAndSetLicense(Multimedia m, String v) {
-    License license;
-    if (Strings.isNullOrEmpty(v)) {
-      license = License.UNSPECIFIED;
-    } else {
-      com.google.common.base.Optional<License> licenseOptional = License.fromLicenseUrl(v);
-      if (licenseOptional.isPresent()) {
-        license = licenseOptional.get();
-      } else {
-        license = License.UNSUPPORTED;
+    URI uri = Optional.ofNullable(v).map(x -> {
+      try {
+        return URI.create(x);
+      } catch (IllegalArgumentException ex) {
+        return null;
       }
-    }
+    }).orElse(null);
+    License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
     m.setLicense(license.name());
   }
 

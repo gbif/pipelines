@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.AcTerm;
@@ -42,6 +43,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 public class AudubonInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
+  private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final String IPTC = "http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
 
@@ -57,6 +59,7 @@ public class AudubonInterpreter {
           .map(AcTerm.metadataProviderLiteral, Audubon::setMetadataProviderLiteral)
           .map(AcTerm.metadataProvider, Audubon::setMetadataProvider)
           .map(DcElement.rights, Audubon::setRights)
+          .map(DcTerm.rights, Audubon::setRightsUri)
           .map(XmpRightsTerm.Owner, Audubon::setOwner)
           .map(XmpRightsTerm.UsageTerms, Audubon::setUsageTerms)
           .map(XmpRightsTerm.WebStatement, Audubon::setWebStatement)
@@ -137,13 +140,13 @@ public class AudubonInterpreter {
           .map("http://ns.adobe.com/exif/1.0/PixelYDimension", Audubon::setPixelYDimension)
           .map("http://ns.adobe.com/photoshop/1.0/Credit", Audubon::setCredit)
           .map(DcTerm.type, Audubon::setTypeUri)
-          .map(DcTerm.rights, AudubonInterpreter::parseAndSetRightsUri)
           .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndSetFurtherInformationUrl)
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
           .map(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
           .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat)
           .map(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
-          .map(DcElement.type, AudubonInterpreter::parseAndSetType);
+          .map(DcElement.type, AudubonInterpreter::parseAndSetType)
+          .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri);
 
   /**
    * Interprets audubon of a {@link ExtendedRecord} and populates a {@link AudubonRecord}
@@ -201,7 +204,8 @@ public class AudubonInterpreter {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(a::setCreateDate);
 
-    return parsed.getIssues().isEmpty() ? Collections.emptyList() : Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
+    return parsed.getIssues().isEmpty() ? Collections.emptyList() :
+        Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
   }
 
   /**
@@ -220,18 +224,16 @@ public class AudubonInterpreter {
   }
 
   /** Returns ENUM instead of url string */
-  private static void parseAndSetRightsUri(Audubon a, String v) {
-    License license;
-    if (Strings.isNullOrEmpty(v)) {
-      license = License.UNSPECIFIED;
-    } else {
-      com.google.common.base.Optional<License> licenseOptional = License.fromLicenseUrl(v);
-      if (licenseOptional.isPresent()) {
-        license = licenseOptional.get();
-      } else {
-        license = License.UNSUPPORTED;
+  private static void parseAndSetRightsAndRightsUri(Audubon a) {
+    URI uri = Optional.ofNullable(a.getRightsUri()).map(x -> {
+      try {
+        return URI.create(x);
+      } catch (IllegalArgumentException ex) {
+        return null;
       }
-    }
-    a.setRightsUri(license.name());
+    }).orElse(null);
+    License license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRights());
+    a.setRights(license.name());
+    a.setRightsUri(license.getLicenseUrl());
   }
 }

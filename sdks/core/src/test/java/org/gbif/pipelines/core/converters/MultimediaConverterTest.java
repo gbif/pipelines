@@ -136,7 +136,7 @@ public class MultimediaConverterTest {
             Audubon.newBuilder()
                 .setAccessUri("http://url-i3")
                 .setCreateDate("2010-09-09")
-                .setRightsUri("license3")
+                .setRights("license3")
                 .build()))
         .build();
 

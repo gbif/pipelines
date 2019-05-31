@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.License;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -33,7 +34,7 @@ public class MultimediaRecordTransformTest {
   private static final String SOURCE = "http://farm8.staticflickr.com/7093/7039524065_8.jpg";
   private static final String TITLE = "Geranium Plume Moth 0032";
   private static final String DESCRIPTION = "Geranium Plume Moth 0032 description";
-  private static final String LICENSE = "BY-NC-SA 2.0";
+  private static final String LICENSE = "http://creativecommons.org/publicdomain/zero/1.0/legalcode";
   private static final String CREATOR = "Moayed Bahajjaj";
   private static final String CREATED = "2012-03-29";
 
@@ -92,7 +93,7 @@ public class MultimediaRecordTransformTest {
             .setFormat("image/jpeg")
             .setTitle(TITLE)
             .setDescription(DESCRIPTION)
-            .setLicense("UNSUPPORTED")
+            .setLicense(License.CC0_1_0.name())
             .setCreator(CREATOR)
             .setCreated(CREATED)
             .setSource(SOURCE)

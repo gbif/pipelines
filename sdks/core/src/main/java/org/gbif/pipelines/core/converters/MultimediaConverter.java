@@ -106,11 +106,13 @@ public class MultimediaConverter {
                   .setDescription(r.getDescription())
                   .setFormat(r.getFormat())
                   .setIdentifier(r.getAccessUri())
-                  .setLicense(r.getRightsUri())
-                  .setRightsHolder(r.getRights())
+                  .setLicense(r.getRights())
+                  .setRightsHolder(r.getOwner())
                   .setSource(r.getSource())
                   .setTitle(r.getTitle())
                   .setType(r.getType())
+                  .setSource(r.getSource())
+                  .setPublisher(r.getProviderLiteral())
                   .build();
               map.putIfAbsent(key, multimedia);
             }));

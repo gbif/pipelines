@@ -209,7 +209,7 @@ public class ExtensionInterpretation {
     public TargetHandler<T> postMap(Consumer<T> consumer) {
       return postMap(t -> {
         consumer.accept(t);
-        return null;
+        return Collections.emptyList();
       });
     }
 

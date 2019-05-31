@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.dwc.terms.DcTerm;
@@ -25,7 +26,6 @@ import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
-import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -40,6 +40,8 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ImageInterpreter {
+
+  private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final TargetHandler<Image> HANDLER =
       ExtensionInterpretation.extension(Extension.IMAGE)
@@ -100,7 +102,8 @@ public class ImageInterpreter {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(i::setCreated);
 
-    return parsed.getIssues().isEmpty() ? Collections.emptyList() : Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
+    return parsed.getIssues().isEmpty() ? Collections.emptyList() :
+        Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
   }
 
   /**
@@ -144,17 +147,14 @@ public class ImageInterpreter {
 
   /** Returns ENUM instead of url string */
   private static void parseAndSetLicense(Image i, String v) {
-    License license;
-    if (Strings.isNullOrEmpty(v)) {
-      license = License.UNSPECIFIED;
-    } else {
-      com.google.common.base.Optional<License> licenseOptional = License.fromLicenseUrl(v);
-      if (licenseOptional.isPresent()) {
-        license = licenseOptional.get();
-      } else {
-        license = License.UNSUPPORTED;
+    URI uri = Optional.ofNullable(v).map(x -> {
+      try {
+        return URI.create(x);
+      } catch (IllegalArgumentException ex) {
+        return null;
       }
-    }
+    }).orElse(null);
+    License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
     i.setLicense(license.name());
   }
 
