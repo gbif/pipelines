@@ -74,11 +74,10 @@ public class LocationInterpreter {
   /**
    * Determines if the record contains geo-spatial issues.
    */
-  private static Optional<Boolean> hasGeospatialIssues(LocationRecord lr) {
-    if (lr.getIssues() != null) {
-      return Optional.of(lr.getIssues().getIssueList().stream().anyMatch(SPATIAL_ISSUES::contains));
-    }
-    return Optional.empty();
+  static boolean hasGeospatialIssues(LocationRecord lr) {
+    return Optional.ofNullable(lr.getIssues())
+        .map(il -> il.getIssueList().stream().anyMatch(SPATIAL_ISSUES::contains))
+        .orElse(false);
   }
 
   /**
@@ -114,7 +113,7 @@ public class LocationInterpreter {
         addIssue(lr, parsedResult.getIssues());
 
         //Has geo-spatial issues
-        hasGeospatialIssues(lr).ifPresent(lr::setHasGeospatialIssue);
+        lr.setHasGeospatialIssue(hasGeospatialIssues(lr));
 
         // Interpretation that required multiple sources
         // Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
