@@ -1,8 +1,8 @@
 package org.gbif.pipelines.parsers.parsers.common;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -20,19 +20,19 @@ public class ParsedField<T> {
   private final T result;
 
   @Builder.Default
-  private final List<String> issues = new ArrayList<>();
+  private final Set<String> issues = new TreeSet<>();
 
   private final boolean successful;
 
-  public static <S> ParsedField<S> fail(S result, List<String> issues) {
+  public static <S> ParsedField<S> fail(S result, Set<String> issues) {
     return ParsedField.<S>builder().result(result).issues(issues).build();
   }
 
   public static <S> ParsedField<S> fail(String issue) {
-    return ParsedField.<S>builder().issues(Collections.singletonList(issue)).build();
+    return ParsedField.<S>builder().issues(Collections.singleton(issue)).build();
   }
 
-  public static <S> ParsedField<S> fail(List<String> issues) {
+  public static <S> ParsedField<S> fail(Set<String> issues) {
     return ParsedField.<S>builder().issues(issues).build();
   }
 
@@ -40,7 +40,7 @@ public class ParsedField<T> {
     return ParsedField.<S>builder().build();
   }
 
-  public static <S> ParsedField<S> success(S result, List<String> issues) {
+  public static <S> ParsedField<S> success(S result, Set<String> issues) {
     return ParsedField.<S>builder().successful(true).result(result).issues(issues).build();
   }
 

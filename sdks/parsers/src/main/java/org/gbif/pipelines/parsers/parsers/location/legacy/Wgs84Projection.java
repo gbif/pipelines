@@ -1,7 +1,7 @@
 package org.gbif.pipelines.parsers.parsers.location.legacy;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.DatumParser;
@@ -63,7 +63,7 @@ public class Wgs84Projection {
     Preconditions.checkArgument(lat >= -90d && lat <= 90d);
     Preconditions.checkArgument(lon >= -180d && lon <= 180d);
 
-    List<String> issues = new ArrayList<>();
+    Set<String> issues = new TreeSet<>();
 
     if (Strings.isNullOrEmpty(datum)) {
       issues.add(GEODETIC_DATUM_ASSUMED_WGS84.name());

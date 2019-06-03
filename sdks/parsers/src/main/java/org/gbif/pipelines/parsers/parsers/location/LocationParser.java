@@ -1,10 +1,10 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
@@ -37,14 +37,15 @@ public class LocationParser {
     ModelUtils.checkNullOrEmpty(er);
     Objects.requireNonNull(kvStore, "Geolookup kvStore is required");
 
-    List<String> issues = new ArrayList<>();
+    Set<String> issues = new TreeSet<>();
 
     // Parse country
     ParsedField<Country> parsedCountry = parseCountry(er, VocabularyParser.countryParser(), COUNTRY_INVALID.name());
     Optional<Country> countryName = getResult(parsedCountry, issues);
 
     // Parse country code
-    ParsedField<Country> parsedCountryCode = parseCountry(er, VocabularyParser.countryCodeParser(), COUNTRY_INVALID.name());
+    ParsedField<Country> parsedCountryCode =
+        parseCountry(er, VocabularyParser.countryCodeParser(), COUNTRY_INVALID.name());
     Optional<Country> countryCode = getResult(parsedCountryCode, issues);
 
     // Check for a mismatch between the country and the country code
@@ -113,12 +114,12 @@ public class LocationParser {
       builder.successful(true);
       builder.result(parseResult.getPayload());
     } else {
-      builder.issues(Collections.singletonList(issue));
+      builder.issues(Collections.singleton(issue));
     }
     return builder.build();
   }
 
-  private static Optional<Country> getResult(ParsedField<Country> field, List<String> issues) {
+  private static Optional<Country> getResult(ParsedField<Country> field, Set<String> issues) {
     if (!field.isSuccessful()) {
       issues.addAll(field.getIssues());
     }
@@ -143,7 +144,7 @@ public class LocationParser {
             extractValue(er, DwcTerm.geodeticDatum));
 
     // collect issues
-    List<String> issues = parsedLatLon.getIssues();
+    Set<String> issues = parsedLatLon.getIssues();
     issues.addAll(projectedLatLng.getIssues());
 
     return ParsedField.<LatLng>builder()

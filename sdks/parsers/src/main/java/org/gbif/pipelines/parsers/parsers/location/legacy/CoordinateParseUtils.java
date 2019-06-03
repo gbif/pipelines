@@ -1,7 +1,7 @@
 package org.gbif.pipelines.parsers.parsers.location.legacy;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,11 +32,9 @@ public class CoordinateParseUtils {
           + "([0-6]?\\d(?:[,.]\\d+)?)"
           + "\\s*(?:\"|''|s)?"
           + ")?\\s*";
-  private static final Pattern DMS_SINGLE =
-      Pattern.compile("^" + DMS + "$", Pattern.CASE_INSENSITIVE);
+  private static final Pattern DMS_SINGLE = Pattern.compile("^" + DMS + "$", Pattern.CASE_INSENSITIVE);
   private static final Pattern DMS_COORD =
-      Pattern.compile(
-          "^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
+      Pattern.compile( "^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
   private static final String POSITIVE = "NEO";
 
   /**
@@ -138,7 +136,7 @@ public class CoordinateParseUtils {
 
   private static ParsedField<LatLng> validateAndRound(double lat, double lon) {
     // collecting issues for result
-    List<String> issues = new ArrayList<>();
+    Set<String> issues = new TreeSet<>();
 
     // round to 6 decimals
     final double latOrig = lat;

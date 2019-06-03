@@ -93,13 +93,12 @@ class LocationMatcher {
       if (countriesFound.filter(x -> x.contains(country)).isPresent()) {
         // country found
         // Add issues from the transformation
-        return success(
-            country, latLngTransformed, CoordinatesFunction.getIssueTypes(transformation));
+        return success(country, latLngTransformed, CoordinatesFunction.getIssueTypes(transformation));
       }
     }
 
     // no result found
-    return ParsedField.fail(Collections.singletonList(COUNTRY_COORDINATE_MISMATCH.name()));
+    return ParsedField.fail(Collections.singleton(COUNTRY_COORDINATE_MISMATCH.name()));
   }
 
   private ParsedField<ParsedLocation> applyWithoutCountry() {
@@ -133,21 +132,17 @@ class LocationMatcher {
     return Optional.empty();
   }
 
-  private static Optional<Country> containsAnyCountry(
-      Set<Country> possibilities, Set<Country> countries) {
-    return Optional.ofNullable(possibilities)
-        .flatMap(set -> set.stream().filter(countries::contains).findFirst());
+  private static Optional<Country> containsAnyCountry(Set<Country> possibilities, Set<Country> countries) {
+    return Optional.ofNullable(possibilities).flatMap(set -> set.stream().filter(countries::contains).findFirst());
   }
 
-  private static ParsedField<ParsedLocation> success(
-      Country country, LatLng latLng, List<String> issues) {
+  private static ParsedField<ParsedLocation> success(Country country, LatLng latLng, Set<String> issues) {
     ParsedLocation pl = new ParsedLocation(country, latLng);
     return ParsedField.success(pl, issues);
   }
 
-  private static ParsedField<ParsedLocation> success(
-      Country country, LatLng latLng, OccurrenceIssue issue) {
-    return success(country, latLng, Collections.singletonList(issue.name()));
+  private static ParsedField<ParsedLocation> success(Country country, LatLng latLng, OccurrenceIssue issue) {
+    return success(country, latLng, Collections.singleton(issue.name()));
   }
 
   private static ParsedField<ParsedLocation> success(Country country, LatLng latLng) {

@@ -93,7 +93,7 @@ public class LocationMatcherTest {
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
     Assert.assertEquals(coordsCanada, result.getResult().getLatLng());
     Assert.assertTrue(result.isSuccessful());
-    Assert.assertEquals(result.getIssues().get(0), COUNTRY_DERIVED_FROM_COORDINATES.name());
+    Assert.assertTrue(result.getIssues().contains(COUNTRY_DERIVED_FROM_COORDINATES.name()));
   }
 
   @Test
@@ -287,7 +287,7 @@ public class LocationMatcherTest {
     Assert.assertEquals(Country.GREENLAND, match.getResult().getCountry());
     Assert.assertEquals(coords, match.getResult().getLatLng());
     Assert.assertTrue(match.isSuccessful());
-    Assert.assertEquals(match.getIssues().get(0), COUNTRY_DERIVED_FROM_COORDINATES.name());
+    Assert.assertTrue(match.getIssues().contains(COUNTRY_DERIVED_FROM_COORDINATES.name()));
   }
 
   @Test(expected = NullPointerException.class)

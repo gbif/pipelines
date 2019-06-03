@@ -3,6 +3,7 @@ package org.gbif.pipelines.parsers.utils;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.Term;
@@ -46,6 +47,10 @@ public class ModelUtils {
   }
 
   public static void addIssue(Issues model, List<String> issues) {
+    model.getIssues().getIssueList().addAll(issues);
+  }
+
+  public static void addIssue(Issues model, Set<String> issues) {
     model.getIssues().getIssueList().addAll(issues);
   }
 }

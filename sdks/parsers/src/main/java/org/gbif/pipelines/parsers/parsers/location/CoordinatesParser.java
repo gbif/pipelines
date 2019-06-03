@@ -1,8 +1,9 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 
 import org.gbif.dwc.terms.DwcTerm;
@@ -59,7 +60,7 @@ class CoordinatesParser {
    * @return {@link ParsedField<LatLng>} for the coordinates parsed.
    */
   static ParsedField<LatLng> parseCoords(ExtendedRecord extendedRecord) {
-    List<String> issues = new ArrayList<>();
+    Set<String> issues = new TreeSet<>();
     for (Function<ExtendedRecord, ParsedField<LatLng>> parsingFunction : PARSING_FUNCTIONS) {
       ParsedField<LatLng> result = parsingFunction.apply(extendedRecord);
 
