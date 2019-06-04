@@ -25,17 +25,23 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CoordinateParseUtils {
 
-  private static final String DMS =
-      "\\s*(\\d{1,3})\\s*[°d ]"
-          + "\\s*([0-6]?\\d)\\s*['m ]"
-          + "\\s*(?:"
-          + "([0-6]?\\d(?:[,.]\\d+)?)"
-          + "\\s*(?:\"|''|s)?"
-          + ")?\\s*";
-  private static final Pattern DMS_SINGLE = Pattern.compile("^" + DMS + "$", Pattern.CASE_INSENSITIVE);
-  private static final Pattern DMS_COORD =
-      Pattern.compile( "^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
-  private static final String POSITIVE = "NEO";
+  private final static String DMS = "\\s*(\\d{1,3})\\s*[°dº go]"    // The degrees
+      + "\\s*([0-6]?\\d)\\s*['m ´’′]"                               // The minutes
+      + "\\s*(?:"                                                   // Non-capturing group
+      + "([0-6]?\\d(?:[,.]\\d+)?)"                                  // Seconds and optional decimal
+      + "\\s*(?:\"|''|s|´´|″)?"
+      + ")?\\s*";
+  private final static String DM = "\\s*(\\d{1,3})\\s*[°dº go]"     // The degrees
+      + "\\s*(?:"                                                   // Non-capturing group
+      + "([0-6]?\\d(?:[,.]\\d+)?)"                                  // Minutes and optional decimal
+      + "\\s*['m ´’′]?"
+      + ")?\\s*";
+  private final static String D = "\\s*(\\d{1,3}(?:[,.]\\d+)?)\\s*(?:°|d|º| |g|o|)\\s*";  // The degrees and optional decimal
+  private final static Pattern DMS_SINGLE = Pattern.compile("^" + DMS + "$", Pattern.CASE_INSENSITIVE);
+  private final static Pattern DM_SINGLE = Pattern.compile("^" + DM + "$", Pattern.CASE_INSENSITIVE);
+  private final static Pattern D_SINGLE = Pattern.compile("^" + D + "$", Pattern.CASE_INSENSITIVE);
+  private final static Pattern DMS_COORD = Pattern.compile("^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
+  private final static String POSITIVE = "NEO";
 
   /**
    * This parses string representations of latitude and longitude values. It tries its best to
@@ -49,11 +55,13 @@ public class CoordinateParseUtils {
    * marker:
    *
    * <ul>
-   *   <li>43.63871944444445
-   *   <li>N43°38'19.39"
-   *   <li>43°38'19.39"N
-   *   <li>43d 38m 19.39s N
-   *   <li>43 38 19.39
+   * <li>43.63871944444445</li>
+   * <li>N43°38'19.39"</li>
+   * <li>43°38'19.39"N</li>
+   * <li>43°38.3232'N</li>
+   * <li>43d 38m 19.39s N</li>
+   * <li>43 38 19.39</li>
+   * <li>433819N</li>
    * </ul>
    *
    * @param latitude The decimal latitude
@@ -124,7 +132,7 @@ public class CoordinateParseUtils {
         int cnt = StringUtils.countMatches(coordinates, String.valueOf(delim));
         if (cnt == 1) {
           String[] latlon = StringUtils.split(coordinates, delim);
-          if (latlon.length > 1) {
+          if (latlon.length == 2) {
             return parseLatLng(latlon[0], latlon[1]);
           }
         }
@@ -201,18 +209,35 @@ public class CoordinateParseUtils {
       Matcher m = DMS_SINGLE.matcher(coord);
       if (m.find()) {
         return coordFromMatcher(m, 1, 2, 3, String.valueOf(dir));
+      } else {
+        m = DM_SINGLE.matcher(coord);
+        if (m.find()) {
+          return coordFromMatcher(m, 1, 2, String.valueOf(dir));
+        } else {
+          m = D_SINGLE.matcher(coord);
+          if (m.find()) {
+            return coordFromMatcher(m, 1, String.valueOf(dir));
+          }
+        }
       }
     }
     throw new IllegalArgumentException("Coordinates could not be parsed: " + coord);
   }
 
   private static double coordFromMatcher(Matcher m, int idx1, int idx2, int idx3, String sign) {
-    return roundTo6decimals(
-        coordSign(sign)
-            * dmsToDecimal(
-                NumberParser.parseDouble(m.group(idx1)),
-                NumberParser.parseDouble(m.group(idx2)),
-                NumberParser.parseDouble(m.group(idx3))));
+    return roundTo6decimals(coordSign(sign) *
+        dmsToDecimal(NumberParser.parseDouble(m.group(idx1)), NumberParser.parseDouble(m.group(idx2)),
+            NumberParser.parseDouble(m.group(idx3))));
+  }
+
+  private static double coordFromMatcher(Matcher m, int idx1, int idx2, String sign) {
+    return roundTo6decimals(coordSign(sign) *
+        dmsToDecimal(NumberParser.parseDouble(m.group(idx1)), NumberParser.parseDouble(m.group(idx2)), 0.0));
+  }
+
+  private static double coordFromMatcher(Matcher m, int idx1, String sign) {
+    return roundTo6decimals(coordSign(sign) *
+        dmsToDecimal(NumberParser.parseDouble(m.group(idx1)), 0.0, 0.0));
   }
 
   private static double dmsToDecimal(double degree, Double minutes, Double seconds) {
@@ -221,8 +246,7 @@ public class CoordinateParseUtils {
     return degree + (minutes / 60) + (seconds / 3600);
   }
 
-  // round to 6 decimals (~1m precision) since no way we're getting anything legitimately more
-  // precise
+  // Round to 6 decimals (~1m precision) since no way we're getting anything legitimately more precise
   private static Double roundTo6decimals(Double x) {
     return x == null ? null : Math.round(x * Math.pow(10, 6)) / Math.pow(10, 6);
   }

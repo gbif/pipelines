@@ -43,6 +43,7 @@ public class LocationInterpreterTest {
     TEST_STORE.put(new LatLng(34.69545d, -94.65836d), toGeocodeResponse(Country.UNITED_STATES));
     TEST_STORE.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
     TEST_STORE.put(new LatLng(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
+    TEST_STORE.put(new LatLng(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
