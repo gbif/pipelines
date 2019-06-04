@@ -96,7 +96,7 @@
     <elasticsearch.version>6.5.4</elasticsearch.version>
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
 
-    <jackson.version>2.9.8</jackson.version>
+    <jackson.version>2.9.9</jackson.version>
     <jackson-dataformat-avro.version>2.8.6</jackson-dataformat-avro.version>
 
     <retrofit.version>2.5.0</retrofit.version>
