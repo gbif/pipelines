@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.config.LockConfigFactory;
 import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
@@ -227,7 +228,7 @@ public class XmlToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    EsIndexUtils.swapIndexIfAliasExists(options);
+    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(propertiesPath));
 
     MetricsHandler.saveCountersToFile(options, result);
 

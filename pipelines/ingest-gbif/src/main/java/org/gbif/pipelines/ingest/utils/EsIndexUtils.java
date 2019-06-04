@@ -10,6 +10,7 @@ import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsConstants;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
+import org.gbif.pipelines.parsers.config.LockConfig;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -50,14 +51,14 @@ public class EsIndexUtils {
   }
 
   /** Connects to Elasticsearch instance and swaps an index and an alias */
-  public static void swapIndex(EsIndexingPipelineOptions options) {
+  public static void swapIndex(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
     String[] aliases = options.getEsAlias();
     String index = options.getEsIndexName();
 
     //Lock the index to avoid modifications and stop reads.
-    SharedLockUtils.doInWriteLock(options, () -> {
+    SharedLockUtils.doInWriteLock(lockConfig, () -> {
 
       EsIndex.swapIndexInAliases(config, aliases, index);
       log.info("ES index {} added to alias {}", index, aliases);
@@ -69,10 +70,10 @@ public class EsIndexUtils {
   }
 
   /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists */
-  public static void swapIndexIfAliasExists(EsIndexingPipelineOptions options) {
+  public static void swapIndexIfAliasExists(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     String[] aliases = options.getEsAlias();
     if (aliases != null && aliases.length > 0) {
-      swapIndex(options);
+      swapIndex(options, lockConfig);
     }
   }
 
