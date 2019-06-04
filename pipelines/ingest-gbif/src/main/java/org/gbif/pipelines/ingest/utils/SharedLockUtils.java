@@ -25,7 +25,7 @@ public class SharedLockUtils {
    */
   private static CuratorFramework curator(SharedLockOptions options) {
     return CuratorFrameworkFactory.builder().namespace(options.getLockNamespace())
-      .retryPolicy(new ExponentialBackoffRetry(options.getLockConnectionSleepTimeMs(), options.getMaxRetries()))
+      .retryPolicy(new ExponentialBackoffRetry(options.getLockConnectionSleepTimeMs(), options.getLockConnectionMaxRetries()))
       .connectString(options.getLockZkConnectionString())
       .build();
   }
