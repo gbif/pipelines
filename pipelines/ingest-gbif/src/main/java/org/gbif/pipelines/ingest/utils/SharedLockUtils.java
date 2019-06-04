@@ -24,9 +24,9 @@ public class SharedLockUtils {
    * Creates an non-started instance of {@link CuratorFramework}.
    */
   private static CuratorFramework curator(SharedLockOptions options) {
-    return CuratorFrameworkFactory.builder().namespace(options.getNamespace())
-      .retryPolicy(new ExponentialBackoffRetry(options.getSleepTimeMs(), options.getMaxRetries()))
-      .connectString(options.getZkConnectionString())
+    return CuratorFrameworkFactory.builder().namespace(options.getLockNamespace())
+      .retryPolicy(new ExponentialBackoffRetry(options.getLockConnectionSleepTimeMs(), options.getMaxRetries()))
+      .connectString(options.getLockZkConnectionString())
       .build();
   }
 
