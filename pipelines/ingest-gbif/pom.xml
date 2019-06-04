@@ -116,6 +116,16 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>keygen</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-wrangler</artifactId>
+    </dependency>
+
+    <!-- Curator Framework used for Zookeeper Locks -->
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-framework</artifactId>
+    </dependency>
 
     <!-- Beam -->
     <dependency>

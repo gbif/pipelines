@@ -56,10 +56,14 @@ public class EsIndexUtils {
     String[] aliases = options.getEsAlias();
     String index = options.getEsIndexName();
 
-    EsIndex.swapIndexInAliases(config, aliases, index);
-    log.info("ES index {} added to alias {}", index, aliases);
+    //Lock the index to avoid modifications and stop reads.
+    SharedLockUtils.doInWriteLock(options, () -> {
 
-    EsIndex.refresh(config, index);
+      EsIndex.swapIndexInAliases(config, aliases, index);
+      log.info("ES index {} added to alias {}", index, aliases);
+
+      EsIndex.refresh(config, index);
+    });
     long count = EsIndex.countDocuments(config, index);
     log.info("Index name - {}, Alias - {}, Number of records -  {}", index, aliases, count);
   }

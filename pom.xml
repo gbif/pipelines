@@ -73,6 +73,7 @@
     <dwc-api.version>1.22</dwc-api.version>
     <kvs.version>1.2</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
+    <gbif-wrangler.version>0.3-SNAPSHOT</gbif-wrangler.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
@@ -80,6 +81,7 @@
     <hadoop.version>2.6.0-cdh5.12.0</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.12.0</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.12.0</hbase.version>
+    <curator.version>2.9.0</curator.version>
 
     <geotools.version>12.1</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
@@ -371,6 +373,11 @@
             <groupId>hadoop-core</groupId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-wrangler</artifactId>
+        <version>${gbif-wrangler.version}</version>
       </dependency>
 
       <!-- Avro -->
@@ -692,6 +699,13 @@
         <groupId>net.jpountz.lz4</groupId>
         <artifactId>lz4</artifactId>
         <version>${lz4.version}</version>
+      </dependency>
+
+      <!-- Used for indexing locks -->
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-framework</artifactId>
+        <version>${curator.version}</version>
       </dependency>
 
       <!-- Maven plugin -->
