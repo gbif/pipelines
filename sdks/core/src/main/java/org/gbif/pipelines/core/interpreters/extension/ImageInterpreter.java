@@ -10,8 +10,10 @@ import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.LicenseParser;
+import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
@@ -41,6 +43,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ImageInterpreter {
 
+  private static final LicenseUriParser LICENSE_URI_PARSER = LicenseUriParser.getInstance();
   private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final TargetHandler<Image> HANDLER =
@@ -153,7 +156,12 @@ public class ImageInterpreter {
       }
     }).orElse(null);
     License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
-    i.setLicense(license.name());
+    String result = license.name();
+    if (license == License.UNSUPPORTED) {
+      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(v);
+      result = parsed.isSuccessful() ? parsed.getPayload().toString() : v;
+    }
+    i.setLicense(result);
   }
 
   /**

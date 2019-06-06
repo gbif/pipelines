@@ -10,8 +10,10 @@ import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.LicenseParser;
+import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.ExtensionInterpretation;
@@ -41,6 +43,7 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
 public class MultimediaInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
+  private static final LicenseUriParser LICENSE_URI_PARSER = LicenseUriParser.getInstance();
   private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final TargetHandler<Multimedia> HANDLER =
@@ -171,7 +174,12 @@ public class MultimediaInterpreter {
       }
     }).orElse(null);
     License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
-    m.setLicense(license.name());
+    String result = license.name();
+    if (license == License.UNSUPPORTED) {
+      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(v);
+      result = parsed.isSuccessful() ? parsed.getPayload().toString() : v;
+    }
+    m.setLicense(result);
   }
 
   /**

@@ -31,7 +31,7 @@ public class MultimediaInterpreterTest {
     ext1.put(DcTerm.contributor.qualifiedName(), "Cont1");
     ext1.put(DcTerm.publisher.qualifiedName(), "Publ1");
     ext1.put(DcTerm.audience.qualifiedName(), "Audi1");
-    ext1.put(DcTerm.license.qualifiedName(), "Lice1");
+    ext1.put(DcTerm.license.qualifiedName(), "http://creativecommons.org/licenses/by-nc-sa/4.0/");
     ext1.put(DwcTerm.datasetID.qualifiedName(), "1");
     ext1.put(DcTerm.rightsHolder.qualifiedName(), "Rh1");
     ext1.put(DcTerm.creator.qualifiedName(), "Cr1");
@@ -47,7 +47,7 @@ public class MultimediaInterpreterTest {
     ext2.put(DcTerm.contributor.qualifiedName(), "Cont2");
     ext2.put(DcTerm.publisher.qualifiedName(), "Pub2");
     ext2.put(DcTerm.audience.qualifiedName(), "Aud2");
-    ext2.put(DcTerm.license.qualifiedName(), "Lice2");
+    ext2.put(DcTerm.license.qualifiedName(), "http://creativecommons.org/publicdomain/zero/1.0/legalcode");
     ext2.put(DwcTerm.datasetID.qualifiedName(), "2");
     ext2.put(DcTerm.rightsHolder.qualifiedName(), "Rh2");
     ext2.put(DcTerm.creator.qualifiedName(), "Cr2");
@@ -70,12 +70,12 @@ public class MultimediaInterpreterTest {
         "{\"id\": \"id\", \"created\": 0, \"multimediaItems\": [{\"type\": \"StillImage\", \"format\": \"image/scan\", \"identifier\": "
             + "\"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": \"Title1\", "
             + "\"description\": \"Desc1\", \"source\": \"Sr1\", \"audience\": \"Audi1\", \"created\": \"2000-11-21\", "
-            + "\"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Publ1\", \"license\": \"UNSUPPORTED\", "
+            + "\"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Publ1\", \"license\": \"http://creativecommons.org/licenses/by-nc-sa/4.0/\", "
             + "\"rightsHolder\": \"Rh1\", \"datasetId\": \"1\"}, {\"type\": \"StillImage\", \"format\": \"image/jpeg\", "
             + "\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", "
             + "\"title\": \"Title2\", \"description\": \"Desc2\", \"source\": \"Sr2\", \"audience\": \"Aud2\", "
             + "\"created\": \"2010\", \"creator\": \"Cr2\", \"contributor\": \"Cont2\", \"publisher\": \"Pub2\", "
-            + "\"license\": \"UNSUPPORTED\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"2\"}, {\"type\": \"StillImage\", "
+            + "\"license\": \"CC0_1_0\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"2\"}, {\"type\": \"StillImage\", "
             + "\"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp22.jpg\", \"references\": null, \"title\": null, "
             + "\"description\": null, \"source\": null, \"audience\": null, \"created\": null, \"creator\": null, \"contributor\": null, "
             + "\"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}], \"issues\": {\"issueList\": "

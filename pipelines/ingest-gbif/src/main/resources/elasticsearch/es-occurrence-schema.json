@@ -123,7 +123,11 @@
       },
 
       "mediaTypes": {"type":  "keyword", "copy_to": "all"},
-      "multimediaItems": {"type": "nested", "enabled": false},
+      "multimediaItems": {"type": "nested", "enabled": false,
+        "properties": {
+          "license": { "type": "keyword" }
+        }
+      },
 
       "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},

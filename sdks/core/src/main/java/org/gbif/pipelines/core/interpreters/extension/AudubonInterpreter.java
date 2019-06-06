@@ -10,8 +10,10 @@ import java.util.Optional;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.common.parsers.LicenseParser;
+import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.AcTerm;
 import org.gbif.dwc.terms.DcElement;
 import org.gbif.dwc.terms.DcTerm;
@@ -43,6 +45,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 public class AudubonInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
+  private static final LicenseUriParser LICENSE_URI_PARSER = LicenseUriParser.getInstance();
   private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final String IPTC = "http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
@@ -233,7 +236,13 @@ public class AudubonInterpreter {
       }
     }).orElse(null);
     License license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRights());
-    a.setRights(license.name());
-    a.setRightsUri(license.getLicenseUrl());
+    String resultUrl = license.getLicenseUrl();
+    String resultName = license.name();
+    if (license == License.UNSUPPORTED) {
+      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(a.getRightsUri());
+      resultUrl = resultName = parsed.isSuccessful() ? parsed.getPayload().toString() : a.getRightsUri();
+    }
+    a.setRights(resultName);
+    a.setRightsUri(resultUrl);
   }
 }
