@@ -16,7 +16,6 @@ import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
@@ -245,16 +244,17 @@ public class GbifJsonConverter {
 
       // Core
       ObjectNode coreNode = JsonConverter.createObjectNode();
-      core.forEach((k, v) -> jc.addJsonRawField(coreNode, k, v));
+      core.forEach((k, v) -> Optional.ofNullable(v).ifPresent(x -> jc.addJsonRawField(coreNode, k, x)));
 
       // Extensions
       ObjectNode extNode = JsonConverter.createObjectNode();
       ext.forEach((k, v) -> {
-        if (!v.isEmpty()) {
+        if (v != null && !v.isEmpty()) {
           ArrayNode extArrayNode = JsonConverter.createArrayNode();
           v.forEach(m -> {
             ObjectNode ns = JsonConverter.createObjectNode();
-            m.forEach((ks, vs) -> jc.addJsonRawField(ns, ks, vs));
+            m.forEach((ks, vs) -> Optional.ofNullable(vs).filter(v1 -> !v1.isEmpty())
+                .ifPresent(x -> jc.addJsonRawField(ns, ks, x)));
             extArrayNode.add(ns);
           });
           extNode.set(k, extArrayNode);
@@ -267,11 +267,12 @@ public class GbifJsonConverter {
       verbatimNode.set("extensions", extNode);
 
       //Copy to all field
-      Set<TextNode> allFieldValues = Stream.concat(er.getCoreTerms().values().stream(),
-          er.getExtensions().values().stream()
-              .flatMap(v -> v.stream().filter(Objects::nonNull).flatMap(m -> m.values().stream())))
-          .map(TextNode::new)
-          .collect(Collectors.toSet());
+      Set<TextNode> allFieldValues = new HashSet<>();
+      core.forEach((k, v) -> Optional.ofNullable(v).ifPresent(v1 -> allFieldValues.add(new TextNode(v1))));
+      ext.forEach((k, v) -> Optional.ofNullable(v).ifPresent(v1 ->
+          v1.forEach(v2 -> {
+            v2.forEach((k2, v3) -> Optional.ofNullable(v3).ifPresent(v4 -> allFieldValues.add(new TextNode(v4))));
+          })));
       jc.getMainNode().putArray("all").addAll(allFieldValues);
 
       // Main node
@@ -616,20 +617,20 @@ public class GbifJsonConverter {
                           .filter(v -> !v.isEmpty())
                           .ifPresent(v -> node.put(field, v));
 
-              addField.accept("type", item.getType());
-              addField.accept("format", item.getFormat());
-              addField.accept("identifier", item.getIdentifier());
-              addField.accept("audience", item.getAudience());
-              addField.accept("contributor", item.getContributor());
-              addField.accept("created", item.getCreated());
-              addField.accept("creator", item.getCreator());
-              addField.accept("description", item.getDescription());
-              addField.accept("license", item.getLicense());
-              addField.accept("publisher", item.getPublisher());
-              addField.accept("references", item.getReferences());
-              addField.accept("rightsHolder", item.getRightsHolder());
-              addField.accept("source", item.getSource());
-              addField.accept("title", item.getTitle());
+              Optional.ofNullable(item.getType()).ifPresent(x -> addField.accept("type", x));
+              Optional.ofNullable(item.getFormat()).ifPresent(x -> addField.accept("format", x));
+              Optional.ofNullable(item.getIdentifier()).ifPresent(x -> addField.accept("identifier", x));
+              Optional.ofNullable(item.getAudience()).ifPresent(x -> addField.accept("audience", x));
+              Optional.ofNullable(item.getContributor()).ifPresent(x -> addField.accept("contributor", x));
+              Optional.ofNullable(item.getCreated()).ifPresent(x -> addField.accept("created", x));
+              Optional.ofNullable(item.getCreator()).ifPresent(x -> addField.accept("creator", x));
+              Optional.ofNullable(item.getDescription()).ifPresent(x -> addField.accept("description", x));
+              Optional.ofNullable(item.getLicense()).ifPresent(x -> addField.accept("license", x));
+              Optional.ofNullable(item.getPublisher()).ifPresent(x -> addField.accept("publisher", x));
+              Optional.ofNullable(item.getReferences()).ifPresent(x -> addField.accept("references", x));
+              Optional.ofNullable(item.getRightsHolder()).ifPresent(x -> addField.accept("rightsHolder", x));
+              Optional.ofNullable(item.getSource()).ifPresent(x -> addField.accept("source", x));
+              Optional.ofNullable(item.getTitle()).ifPresent(x -> addField.accept("title", x));
 
               return node;
             })

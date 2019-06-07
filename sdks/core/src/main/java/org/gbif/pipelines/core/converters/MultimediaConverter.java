@@ -24,7 +24,7 @@ public class MultimediaConverter {
   public static MultimediaRecord merge(@NonNull MultimediaRecord mr, @NonNull ImageRecord ir,
       @NonNull AudubonRecord ar) {
 
-    MultimediaRecord record = MultimediaRecord.newBuilder().setId(mr.getId()).build();
+    MultimediaRecord record = MultimediaRecord.newBuilder().setId(mr.getId()).setCreated(mr.getCreated()).build();
 
     boolean isMrEmpty = mr.getMultimediaItems() == null && mr.getIssues().getIssueList().isEmpty();
     boolean isIrEmpty = ir.getImageItems() == null && ir.getIssues().getIssueList().isEmpty();
