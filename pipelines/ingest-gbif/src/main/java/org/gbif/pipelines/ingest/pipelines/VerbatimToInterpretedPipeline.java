@@ -89,14 +89,16 @@ public class VerbatimToInterpretedPipeline {
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
+    List<String> types = options.getInterpretationTypes();
+    String propertiesPath = options.getProperties();
+    String targetPath = options.getTargetPath();
+    String hdfsSiteConfig = options.getHdfsSiteConfig();
 
-    FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), datasetId, attempt, options.getInterpretationTypes());
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
 
-    List<String> types = options.getInterpretationTypes();
-    String propertiesPath = options.getProperties();
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
@@ -174,8 +176,8 @@ public class VerbatimToInterpretedPipeline {
     MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Deleting beam temporal folders");
-    String tempPath = String.join("/", options.getTargetPath(), datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(options.getHdfsSiteConfig(), tempPath, ".temp-beam");
+    String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
+    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
   }

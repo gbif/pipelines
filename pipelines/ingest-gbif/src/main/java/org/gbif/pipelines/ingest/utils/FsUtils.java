@@ -216,11 +216,11 @@ public final class FsUtils {
   /**
    * Deletes directories if a dataset with the same attempt was interpreted before
    */
-  public static void deleteInterpretIfExist(String hdfsSiteConfig, String datasetId, Integer attempt,
+  public static void deleteInterpretIfExist(String hdfsSiteConfig, String basePath, String datasetId, Integer attempt,
       List<String> steps) {
     if (steps != null && !steps.isEmpty()) {
 
-      String path = String.join("/", hdfsSiteConfig, datasetId, attempt.toString(), Interpretation.DIRECTORY_NAME);
+      String path = String.join("/", basePath, datasetId, attempt.toString(), Interpretation.DIRECTORY_NAME);
 
       if (steps.contains(ALL.name())) {
         log.info("Delete interpretation directory - {}", path);
