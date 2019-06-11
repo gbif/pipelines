@@ -132,4 +132,18 @@ public class TemporalUtilsTest {
     assertEquals(expected, temporal.get());
   }
 
+  @Test
+  public void wrongDayMonthTest() {
+
+    // State
+    Integer year = 2000;
+    Integer month = 11;
+    Integer day = 31;
+    // When
+    Optional<Temporal> temporal = TemporalUtils.getTemporal(year, month, day);
+
+    // Should
+    assertFalse(temporal.isPresent());
+  }
+
 }

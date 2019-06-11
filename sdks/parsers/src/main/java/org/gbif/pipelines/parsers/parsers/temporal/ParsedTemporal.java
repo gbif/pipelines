@@ -81,14 +81,18 @@ public class ParsedTemporal {
   }
 
   public void setFromDate(Year year, Month month, Integer day, LocalTime time) {
-    if (year != null && month != null && day != null && time != null) {
-      this.fromDate = LocalDateTime.of(LocalDate.of(year.getValue(), month, day), time);
-    } else if (year != null && month != null && day != null) {
-      this.fromDate = LocalDate.of(year.getValue(), month, day);
-    } else if (year != null && month != null) {
-      this.fromDate = YearMonth.of(year.getValue(), month);
-    } else if (year != null) {
-      this.fromDate = Year.of(year.getValue());
+    try {
+      if (year != null && month != null && day != null && time != null) {
+        this.fromDate = LocalDateTime.of(LocalDate.of(year.getValue(), month, day), time);
+      } else if (year != null && month != null && day != null) {
+        this.fromDate = LocalDate.of(year.getValue(), month, day);
+      } else if (year != null && month != null) {
+        this.fromDate = YearMonth.of(year.getValue(), month);
+      } else if (year != null) {
+        this.fromDate = Year.of(year.getValue());
+      }
+    } catch (RuntimeException ex) {
+      issues.add(ParsedTemporalIssue.DATE_INVALID);
     }
   }
 }
