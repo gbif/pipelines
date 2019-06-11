@@ -27,26 +27,28 @@ import org.junit.runners.JUnit4;
 @Category(NeedsRunner.class)
 public class BasicRecordTransformTest {
 
-  @Rule public final transient TestPipeline p = TestPipeline.create();
+  @Rule
+  public final transient TestPipeline p = TestPipeline.create();
 
-    private static class CleanDateCreate extends DoFn<BasicRecord, BasicRecord> {
-        @ProcessElement
-        public void processElement(ProcessContext context) {
-            BasicRecord br = BasicRecord.newBuilder(context.element()).build();
-            br.setCreated(0L);
-            context.output(br);
-        }
+  private static class CleanDateCreate extends DoFn<BasicRecord, BasicRecord> {
+
+    @ProcessElement
+    public void processElement(ProcessContext context) {
+      BasicRecord br = BasicRecord.newBuilder(context.element()).build();
+      br.setCreated(0L);
+      context.output(br);
     }
+  }
 
   @Test
   public void transformationTest() {
 
     // State
     final String[] one = {
-      "0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", "http://refs.com"
+        "0", "OBSERVATION", "MALE", "INTRODUCED", "SPOROPHYTE", "HOLOTYPE", "2", "http://refs.com"
     };
     final String[] two = {
-      "1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", "http://refs.com"
+        "1", "UNKNOWN", "HERMAPHRODITE", "INTRODUCED", "GAMETE", "HAPANTOTYPE", "1", "http://refs.com"
     };
     final List<ExtendedRecord> records = createExtendedRecordList(one, two);
 
@@ -60,6 +62,23 @@ public class BasicRecordTransformTest {
 
     // Should
     PAssert.that(recordCollection).containsInAnyOrder(basicRecords);
+    p.run();
+  }
+
+  @Test
+  public void emptyErTest() {
+    // Expected
+    BasicRecord expected = BasicRecord.newBuilder().setId("777").setCreated(0L).build();
+
+    // State
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
+
+    PCollection<BasicRecord> recordCollection =
+        p.apply(Create.of(er)).apply(ParDo.of(new Interpreter()))
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(recordCollection).containsInAnyOrder(expected);
     p.run();
   }
 

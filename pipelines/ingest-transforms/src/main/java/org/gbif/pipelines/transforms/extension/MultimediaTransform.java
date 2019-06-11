@@ -112,14 +112,14 @@ public class MultimediaTransform {
     private final Counter counter = Metrics.counter(MultimediaTransform.class, MULTIMEDIA_RECORDS_COUNT);
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
+    public void processElement(@Element ExtendedRecord source, OutputReceiver<MultimediaRecord> out) {
+      Interpretation.from(source)
           .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.MULTIMEDIA.getRowType()))
               .filter(l -> !l.isEmpty())
               .isPresent())
           .via(MultimediaInterpreter::interpret)
-          .consume(context::output);
+          .consume(out::output);
 
       counter.inc();
     }

@@ -113,11 +113,13 @@ public class BasicTransform {
    */
   public static SingleOutput<ExtendedRecord, BasicRecord> interpret(String propertiesPath, String datasetId,
       boolean isTripletValid, boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
-    return ParDo.of(new Interpreter(propertiesPath, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId));
+    return ParDo.of(
+        new Interpreter(propertiesPath, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId));
   }
 
   /**
-   * Creates an {@link Interpreter} for {@link BasicRecord} that use the {@link ExtendedRecord#getId()} as the {@link BasicRecord#setId(String)}.
+   * Creates an {@link Interpreter} for {@link BasicRecord} that use the {@link ExtendedRecord#getId()} as the {@link
+   * BasicRecord#setId(String)}.
    */
   public static SingleOutput<ExtendedRecord, BasicRecord> interpretReusingIds(String datasetId) {
     return ParDo.of(new Interpreter(datasetId, true));
@@ -142,7 +144,8 @@ public class BasicTransform {
     private Connection connection;
     private HBaseLockingKeyService keygenService;
 
-    public Interpreter(String propertiesPath, String datasetId, boolean isTripletValid, boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
+    public Interpreter(String propertiesPath, String datasetId, boolean isTripletValid, boolean isOccurrenceIdValid,
+        boolean useExtendedRecordId) {
       this.keygenConfig = KeygenConfigFactory.create(Paths.get(propertiesPath));
       this.datasetId = datasetId;
       this.isTripletValid = isTripletValid;
@@ -194,9 +197,17 @@ public class BasicTransform {
     }
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
-          .to(er -> BasicRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
+    public void processElement(@Element ExtendedRecord source, OutputReceiver<BasicRecord> out) {
+
+      BasicRecord br = BasicRecord.newBuilder()
+          .setId(source.getId())
+          .setGbifId(useExtendedRecordId && source.getCoreTerms().isEmpty() ? Long.parseLong(source.getId()) : null)
+          .setCreated(Instant.now().toEpochMilli())
+          .build();
+
+      Interpretation.from(source)
+          .to(br)
+          .when(er -> !er.getCoreTerms().isEmpty())
           .via(BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, useExtendedRecordId))
           .via(BasicInterpreter::interpretBasisOfRecord)
           .via(BasicInterpreter::interpretTypifiedName)
@@ -205,8 +216,9 @@ public class BasicTransform {
           .via(BasicInterpreter::interpretLifeStage)
           .via(BasicInterpreter::interpretTypeStatus)
           .via(BasicInterpreter::interpretIndividualCount)
-          .via(BasicInterpreter::interpretReferences)
-          .consume(context::output);
+          .via(BasicInterpreter::interpretReferences);
+
+      out.output(br);
 
       counter.inc();
     }

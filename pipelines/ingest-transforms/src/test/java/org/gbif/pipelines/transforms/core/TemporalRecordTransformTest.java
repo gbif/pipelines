@@ -99,6 +99,25 @@ public class TemporalRecordTransformTest {
     p.run();
   }
 
+  @Test
+  public void emptyErTest() {
+    // Expected
+    TemporalRecord expected = TemporalRecord.newBuilder().setId("777").setCreated(0L).build();
+
+    // State
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
+
+    // When
+    PCollection<TemporalRecord> dataStream = p
+        .apply(Create.of(er))
+        .apply(ParDo.of(new Interpreter()))
+        .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(expected);
+    p.run();
+  }
+
   private List<ExtendedRecord> createExtendedRecordList(String... events) {
     return Arrays.stream(events)
         .map(
