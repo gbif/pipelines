@@ -2,8 +2,10 @@ package org.gbif.pipelines.core.converters;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -11,7 +13,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import com.google.common.primitives.Primitives;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.POJONode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.primitives.Primitives;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +59,8 @@ import static org.apache.avro.Schema.Type.UNION;
 public class JsonConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  private static final Map<Character, Character> CHAR_MAP = Collections.singletonMap('\u001E', ',');
 
   // Utility predicates to check if a node is a complex element
   private static final Predicate<String> IS_OBJECT = value -> value.startsWith("{\"") && value.endsWith("}");
@@ -111,16 +115,18 @@ public class JsonConverter {
 
   private void addArrayNode(ObjectNode node, Schema.Field field, Collection<?> objects) {
     ArrayNode arrayNode = node.putArray(field.name());
-    objects.forEach( value -> {
-      if(value instanceof SpecificRecordBase) {
+    objects.forEach(value -> {
+      if (value instanceof SpecificRecordBase) {
         ObjectNode element = createObjectNode();
-        addCommonFields((SpecificRecordBase)value, element);
+        addCommonFields((SpecificRecordBase) value, element);
         arrayNode.add(element);
-      } else if (value instanceof String|| value.getClass().isPrimitive() || Primitives.isWrapperType((value.getClass())) || UUID.class.isAssignableFrom(value.getClass())) {
+      } else if (value instanceof String || value.getClass().isPrimitive() || Primitives.isWrapperType(
+          (value.getClass())) || UUID.class.isAssignableFrom(value.getClass())) {
         arrayNode.add(value.toString());
       }
     });
   }
+
   /**
    * Common way how to convert {@link SpecificRecordBase} to json string
    * Converts {@link SpecificRecordBase} by fields type and adds into {@link ObjectNode}
@@ -159,9 +165,9 @@ public class JsonConverter {
                     }
                     break;
                   case ARRAY:
-                    Collection values = (Collection)r;
-                    if(!values.isEmpty()) {
-                      addArrayNode(node, f, (Collection)r);
+                    Collection values = (Collection) r;
+                    if (!values.isEmpty()) {
+                      addArrayNode(node, f, (Collection) r);
                     }
                     break;
                   default:
@@ -178,32 +184,9 @@ public class JsonConverter {
     addCommonFields(base, mainNode);
   }
 
-  /** Common way how to convert {@link SpecificRecordBase} to json string */
-  void addCommonFields(String key, SpecificRecordBase base) {
-    ObjectNode node = MAPPER.createObjectNode();
-    addCommonFields(base, node);
-    mainNode.set(key, node);
-  }
-
   void addJsonObject(String key, ObjectNode... nodes) {
     ObjectNode node = MAPPER.createObjectNode();
     Arrays.stream(nodes).forEach(node::setAll);
-    mainNode.set(key, node);
-  }
-
-  void addSingleJsonObject(String key, ObjectNode node) {
-    mainNode.set(key, node);
-  }
-
-  void addJsonComplexObject(String key, Map<String, String> fields) {
-    ObjectNode node = MAPPER.createObjectNode();
-    fields.forEach((k, v) -> addJsonField(node, k, v));
-    mainNode.set(key, node);
-  }
-
-  void addJsonRawObject(String key, Map<String, String> fields) {
-    ObjectNode node = MAPPER.createObjectNode();
-    fields.forEach((k, v) -> addJsonRawField(node, k, v));
     mainNode.set(key, node);
   }
 
@@ -213,60 +196,46 @@ public class JsonConverter {
   }
 
   /** Checks field in skipKeys and convert - "key":"value" */
-  void addJsonField(ObjectNode node, String key, String value) {
-    if (!skipKeys.contains(key)) {
-      addJsonFieldNoCheck(node, key, value);
-    }
-  }
-
-  /** Checks field in skipKeys and convert - "key":"value" */
   void addJsonRawField(ObjectNode node, String key, String value) {
     if (!skipKeys.contains(key)) {
       addJsonRawFieldNoCheck(node, key, value);
     }
   }
 
-  /** Checks field in skipKeys and convert - "key":"value" */
-  void addJsonField(String key, String value) {
-    addJsonField(mainNode, key, value);
-  }
-
   /** Adds text field without any skip checks */
   void addJsonTextFieldNoCheck(String key, String value) {
-    mainNode.set(sanitizeValue(key), new TextNode(value));
+    mainNode.set(sanitizeValue(key), getEscapedTextNode(value));
   }
 
   /** Converts - "key":"value" and check some incorrect symbols for json */
   void addJsonFieldNoCheck(ObjectNode node, String key, String value) {
     // Can be a json  or a string
-    node.set(sanitizeValue(key), IS_COMPLEX_OBJECT.test(value) ? new POJONode(value) : new TextNode(value));
+    node.set(sanitizeValue(key), IS_COMPLEX_OBJECT.test(value) ? new POJONode(value) : getEscapedTextNode(value));
   }
 
   /** Converts - "key":"value" and check some incorrect symbols for json */
   void addJsonRawFieldNoCheck(ObjectNode node, String key, String value) {
     // Can be a json  or a string
-    node.set(sanitizeValue(key), new TextNode(value));
+    node.set(sanitizeValue(key), getEscapedTextNode(value));
   }
 
-  /** Converts - "key":"value" and check some incorrect symbols for json */
-  void addJsonFieldNoCheck(String key, String value) {
-    addJsonFieldNoCheck(mainNode, key, value);
-  }
-
-  public ObjectNode getMainNode() {
+  ObjectNode getMainNode() {
     return mainNode;
   }
 
-  /**
-   * Creates a empty ArrayNode.
-   */
+  static TextNode getEscapedTextNode(String value) {
+    for (Entry<Character, Character> rule : CHAR_MAP.entrySet()) {
+      value = value.replace(rule.getKey(), rule.getValue());
+    }
+    return new TextNode(value);
+  }
+
+  /** Creates a empty ArrayNode. */
   static ArrayNode createArrayNode() {
     return MAPPER.createArrayNode();
   }
 
-  /**
-   * Creates an empty ObjecNode.
-   */
+  /** Creates an empty ObjectNode. */
   static ObjectNode createObjectNode() {
     return MAPPER.createObjectNode();
   }
@@ -277,9 +246,5 @@ public class JsonConverter {
       value = rule.matcher(value).replaceAll("");
     }
     return value;
-  }
-
-  public static ObjectMapper mapper() {
-    return MAPPER;
   }
 }

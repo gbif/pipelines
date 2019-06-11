@@ -41,8 +41,9 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"all\":[\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"something:{something}\"],"
-            + "\"verbatim\":{\"core\":{\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
+        "{\"id\":\"777\",\"recordedBy\":\"Jeremia garde ,à elfutsone\",\"all\":[\"Jeremia garde ,à elfutsone\","
+            + "\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"something:{something}\"],\"verbatim\":{\"core\":{\"http://purl.org/dc/terms/remark\":"
+            + "\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"Jeremia garde ,à elfutsone\","
             + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},\"extensions\":{}},"
             + "\"eventDateSingle\":\"2011-01-01\",\"year\":2011,\"month\":1,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\","
             + "\"lte\":\"01-01-2018\"},\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],"
@@ -70,6 +71,7 @@ public class GbifJsonConverterTest {
     Map<String, String> erMap = new HashMap<>(2);
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
+    erMap.put(DwcTerm.recordedBy.qualifiedName(), "Jeremia garde \u001Eà elfutsone");
 
     MetadataRecord mr = MetadataRecord.newBuilder().setId("777").setCrawlId(1).setDatasetKey("datatesKey").build();
 
