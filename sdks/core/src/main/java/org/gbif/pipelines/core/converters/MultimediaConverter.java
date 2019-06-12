@@ -100,12 +100,15 @@ public class MultimediaConverter {
             .filter(m -> !Strings.isNullOrEmpty(m.getAccessUri()))
             .forEach(r -> {
               String key = r.getAccessUri();
+              String desc = Strings.isNullOrEmpty(r.getDescription()) ? r.getCaption() : r.getDescription();
+              String creator = Strings.isNullOrEmpty(r.getCreator()) ? r.getCreatorUri() : r.getCreator();
+              String identifier = Strings.isNullOrEmpty(r.getAccessUri()) ? r.getIdentifier() : r.getAccessUri();
               Multimedia multimedia = Multimedia.newBuilder()
                   .setCreated(r.getCreateDate())
-                  .setCreator(r.getCreator())
-                  .setDescription(r.getDescription())
+                  .setCreator(creator)
+                  .setDescription(desc)
                   .setFormat(r.getFormat())
-                  .setIdentifier(r.getAccessUri())
+                  .setIdentifier(identifier)
                   .setLicense(r.getRights())
                   .setRightsHolder(r.getOwner())
                   .setSource(r.getSource())
