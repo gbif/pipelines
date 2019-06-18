@@ -12,6 +12,7 @@ import java.util.function.Function;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
@@ -171,9 +172,20 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://rs.tdwg.org/ac/terms/accessURI" term value
    */
-  private static void parseAndSetAccessUri(Audubon a, String v) {
+  private static List<String> parseAndSetAccessUri(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
-    Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setAccessUri);
+    Optional<URI> uriOpt = Optional.ofNullable(uri);
+    if (uriOpt.isPresent()) {
+      Optional<String> opt = uriOpt.map(URI::toString);
+      if (opt.isPresent()) {
+        opt.ifPresent(a::setAccessUri);
+      } else {
+        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      }
+    } else {
+      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+    }
+    return Collections.emptyList();
   }
 
   /**

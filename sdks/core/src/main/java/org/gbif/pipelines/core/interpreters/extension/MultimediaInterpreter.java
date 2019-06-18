@@ -10,6 +10,7 @@ import java.util.function.BiPredicate;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
@@ -114,9 +115,20 @@ public class MultimediaInterpreter {
   /**
    * Parser for "http://purl.org/dc/terms/identifier" term value
    */
-  private static void parseAndSetIdentifier(Multimedia m, String v) {
+  private static List<String> parseAndSetIdentifier(Multimedia m, String v) {
     URI uri = UrlParser.parse(v);
-    Optional.ofNullable(uri).map(URI::toString).ifPresent(m::setIdentifier);
+    Optional<URI> uriOpt = Optional.ofNullable(uri);
+    if (uriOpt.isPresent()) {
+      Optional<String> opt = uriOpt.map(URI::toString);
+      if (opt.isPresent()) {
+        opt.ifPresent(m::setIdentifier);
+      } else {
+        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      }
+    } else {
+      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+    }
+    return Collections.emptyList();
   }
 
   /**
