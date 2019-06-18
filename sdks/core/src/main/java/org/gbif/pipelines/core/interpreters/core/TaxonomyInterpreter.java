@@ -51,7 +51,7 @@ public class TaxonomyInterpreter {
 
   private static final RankedName INCERTAE_SEDIS = RankedName.newBuilder()
       .setRank(Rank.KINGDOM)
-      .setName(Kingdom.INCERTAE_SEDIS.name())
+      .setName(Kingdom.INCERTAE_SEDIS.scientificName())
       .setKey(Kingdom.INCERTAE_SEDIS.nubUsageKey())
       .build();
   private static final NameParser NAME_PARSER = new NameParserGBIF();
