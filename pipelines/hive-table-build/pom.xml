@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>pipelines</artifactId>
+    <groupId>org.gbif.pipelines</groupId>
+    <version>2.1.4-SNAPSHOT</version>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.gbif.pipelines</groupId>
-    <artifactId>pipelines</artifactId>
-    <version>2.1.4-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
-  </parent>
-
-  <artifactId>ingest-gbif</artifactId>
+  <artifactId>hive-table-build</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: Pipelines :: Ingest-GBIF</name>
-  <description>Base Apache Beam pipelines for ingestion biodiversity data</description>
+  <name>Pipelines :: Pipelines :: Hive table build</name>
+  <description>Apache Beam pipelines to build a single view of a Hive table</description>
 
   <build>
     <plugins>
@@ -144,16 +144,6 @@
       <groupId>org.apache.beam</groupId>
       <artifactId>beam-sdks-java-io-elasticsearch</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.beam</groupId>
-      <artifactId>beam-sdks-java-io-hcatalog</artifactId>
-      <version>${apache.beam.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-core</artifactId>
-      <version>1.1.0-cdh5.12.1</version>
-    </dependency>
 
     <!-- Hadoop -->
     <dependency>
@@ -164,6 +154,7 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-hdfs</artifactId>
+      <scope>compile</scope>
     </dependency>
 
     <!-- Common -->
@@ -199,6 +190,5 @@
     </dependency>
 
   </dependencies>
-
 
 </project>
