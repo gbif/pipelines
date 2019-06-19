@@ -121,6 +121,12 @@
       <artifactId>gbif-wrangler</artifactId>
     </dependency>
 
+    <!-- HDFS Table -->
+    <dependency>
+      <groupId>org.gbif.occurrence</groupId>
+      <artifactId>occurrence-hdfs-table</artifactId>
+    </dependency>
+
     <!-- Curator Framework used for Zookeeper Locks -->
     <dependency>
       <groupId>org.apache.curator</groupId>

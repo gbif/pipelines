@@ -74,6 +74,7 @@
     <kvs.version>1.2</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3-SNAPSHOT</gbif-wrangler.version>
+    <gbif-occurrence.version>0.96-SNAPSHOT</gbif-occurrence.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
@@ -301,6 +302,11 @@
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>archives-converters</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>occurrence-hdfs-table</artifactId>
+        <version>${gbif-occurrence.version}</version>
       </dependency>
 
       <!-- GBIF -->
