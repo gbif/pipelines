@@ -168,6 +168,9 @@ public class ImageInterpreter {
       }
     }).orElse(null);
     License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
+    if (license == License.UNSPECIFIED && !Strings.isNullOrEmpty(v)) {
+      license = LICENSE_PARSER.parseUriThenTitle(uri, v);
+    }
     String result = license.name();
     if (license == License.UNSUPPORTED) {
       ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(v);
