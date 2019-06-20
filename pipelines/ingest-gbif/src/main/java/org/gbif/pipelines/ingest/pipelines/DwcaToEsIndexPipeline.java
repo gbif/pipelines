@@ -109,6 +109,7 @@ public class DwcaToEsIndexPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
+    String propertiesPath = options.getProperties();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -116,7 +117,6 @@ public class DwcaToEsIndexPipeline {
     EsIndexUtils.createIndex(options);
 
     log.info("Adding step 1: Options");
-    String propertiesPath = options.getProperties();
 
     // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};

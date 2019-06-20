@@ -190,7 +190,7 @@ public class TemporalParser {
     return yearMonthDayParsed;
   }
 
-  /** Merge from date from/to event and date from yaer-month-day */
+  /** Merge from date from/to event and date from year-month-day */
   private static ParsedTemporal mergeYmd(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
     Temporal fromTemporal = eventDateParsed.getFromDate();
     Temporal toTemporal = eventDateParsed.getToDate();

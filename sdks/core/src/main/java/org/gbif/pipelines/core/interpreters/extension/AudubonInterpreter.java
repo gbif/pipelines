@@ -6,9 +6,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
@@ -142,12 +146,12 @@ public class AudubonInterpreter {
           .map("http://ns.adobe.com/exif/1.0/PixelXDimension", Audubon::setPixelXDimension)
           .map("http://ns.adobe.com/exif/1.0/PixelYDimension", Audubon::setPixelYDimension)
           .map("http://ns.adobe.com/photoshop/1.0/Credit", Audubon::setCredit)
-          .map(DcTerm.type, Audubon::setTypeUri)
+          .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat)
           .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndSetFurtherInformationUrl)
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
           .map(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
-          .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat)
           .map(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
+          .map(DcTerm.type, AudubonInterpreter::parseAndSetTypeUri)
           .map(DcElement.type, AudubonInterpreter::parseAndSetType)
           .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri);
 
@@ -168,9 +172,20 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://rs.tdwg.org/ac/terms/accessURI" term value
    */
-  private static void parseAndSetAccessUri(Audubon a, String v) {
+  private static List<String> parseAndSetAccessUri(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
-    Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setAccessUri);
+    Optional<URI> uriOpt = Optional.ofNullable(uri);
+    if (uriOpt.isPresent()) {
+      Optional<String> opt = uriOpt.map(URI::toString);
+      if (opt.isPresent()) {
+        opt.ifPresent(a::setAccessUri);
+      } else {
+        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      }
+    } else {
+      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+    }
+    return Collections.emptyList();
   }
 
   /**
@@ -215,27 +230,47 @@ public class AudubonInterpreter {
    * Parser for "http://purl.org/dc/elements/1.1/type" term value
    */
   private static void parseAndSetType(Audubon a, String v) {
-    if (!Strings.isNullOrEmpty(v)) {
-      if (v.toLowerCase().startsWith("image") || v.equalsIgnoreCase(MediaType.StillImage.name())) {
-        a.setType(MediaType.StillImage.name());
-      } else if (v.toLowerCase().startsWith("audio") || v.equalsIgnoreCase(MediaType.Sound.name())) {
-        a.setType(MediaType.Sound.name());
-      } else if (v.toLowerCase().startsWith("video") || v.equalsIgnoreCase(MediaType.MovingImage.name())) {
-        a.setType(MediaType.MovingImage.name());
-      }
+    String v1 = Optional.ofNullable(v).orElse("");
+    String format = Optional.ofNullable(a.getFormat()).orElse("");
+    BiPredicate<String, MediaType> prFn = (s, mt) -> format.startsWith(s) || v1.toLowerCase().startsWith(s)
+        || v1.toLowerCase().startsWith(mt.name().toLowerCase());
+
+    if (prFn.test("image", MediaType.StillImage)) {
+      a.setType(MediaType.StillImage.name());
+    } else if (prFn.test("audio", MediaType.Sound)) {
+      a.setType(MediaType.Sound.name());
+    } else if (prFn.test("video", MediaType.MovingImage)) {
+      a.setType(MediaType.MovingImage.name());
     }
+  }
+
+  /**
+   * Parser for "http://purl.org/dc/terms/type" term value
+   */
+  private static void parseAndSetTypeUri(Audubon a, String v) {
+    parseAndSetType(a, v);
   }
 
   /** Returns ENUM instead of url string */
   private static void parseAndSetRightsAndRightsUri(Audubon a) {
-    URI uri = Optional.ofNullable(a.getRightsUri()).map(x -> {
+    Function<String, URI> uriFn = v -> Optional.ofNullable(v).map(x -> {
       try {
         return URI.create(x);
       } catch (IllegalArgumentException ex) {
         return null;
       }
     }).orElse(null);
-    License license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRights());
+
+    BiFunction<URI, String, License> licenseFn = LICENSE_PARSER::parseUriThenTitle;
+
+    URI uri = uriFn.apply(a.getRightsUri());
+    License license = licenseFn.apply(uri, a.getRights());
+
+    if (uri == null && license == License.UNSPECIFIED) {
+      uri = uriFn.apply(a.getRights());
+      license = licenseFn.apply(uri, a.getRightsUri());
+    }
+
     String resultUrl = license.getLicenseUrl();
     String resultName = license.name();
     if (license == License.UNSUPPORTED) {

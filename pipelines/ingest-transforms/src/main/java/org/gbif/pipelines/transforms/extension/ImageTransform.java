@@ -113,14 +113,14 @@ public class ImageTransform {
     private final Counter counter = Metrics.counter(ImageTransform.class, IMAGE_RECORDS_COUNT);
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
+    public void processElement(@Element ExtendedRecord source, OutputReceiver<ImageRecord> out) {
+      Interpretation.from(source)
           .to(er -> ImageRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.IMAGE.getRowType()))
               .filter(l -> !l.isEmpty())
               .isPresent())
           .via(ImageInterpreter::interpret)
-          .consume(context::output);
+          .consume(out::output);
 
       counter.inc();
     }

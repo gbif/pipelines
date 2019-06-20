@@ -56,11 +56,11 @@ class LocationMatcher {
 
   private ParsedField<ParsedLocation> applyWithCountry() {
 
-    Optional<Set<Country>> countriesKv = getCountryFromCoordinates(latLng);
+    Optional<List<Country>> countriesKv = getCountryFromCoordinates(latLng);
 
     // if the WS returned countries we try to match with them
     if (countriesKv.isPresent()) {
-      Set<Country> countries = countriesKv.get();
+      List<Country> countries = countriesKv.get();
       if (countries.contains(this.country)) {
         // country found
         return success(this.country, latLng);
@@ -89,7 +89,7 @@ class LocationMatcher {
       LatLng latLngTransformed = transformation.apply(latLng);
 
       // call ws
-      Optional<Set<Country>> countriesFound = getCountryFromCoordinates(latLngTransformed);
+      Optional<List<Country>> countriesFound = getCountryFromCoordinates(latLngTransformed);
       if (countriesFound.filter(x -> x.contains(country)).isPresent()) {
         // country found
         // Add issues from the transformation
@@ -110,7 +110,7 @@ class LocationMatcher {
         .orElse(ParsedField.fail());
   }
 
-  private Optional<Set<Country>> getCountryFromCoordinates(LatLng latLng) {
+  private Optional<List<Country>> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = null;
       try {
@@ -123,16 +123,16 @@ class LocationMatcher {
             geocodeResponse.getLocations().stream()
                 .map(Location::getIsoCountryCode2Digit)
                 .map(Country::fromIsoCode)
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toList()));
       }
       if (isAntarctica(latLng.getLatitude(), this.country)) {
-        return Optional.of(Collections.singleton(Country.ANTARCTICA));
+        return Optional.of(Collections.singletonList(Country.ANTARCTICA));
       }
     }
     return Optional.empty();
   }
 
-  private static Optional<Country> containsAnyCountry(Set<Country> possibilities, Set<Country> countries) {
+  private static Optional<Country> containsAnyCountry(Set<Country> possibilities, List<Country> countries) {
     return Optional.ofNullable(possibilities).flatMap(set -> set.stream().filter(countries::contains).findFirst());
   }
 

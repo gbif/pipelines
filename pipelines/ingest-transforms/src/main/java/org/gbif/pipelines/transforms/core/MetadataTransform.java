@@ -153,13 +153,13 @@ public class MetadataTransform {
     }
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
+    public void processElement(@Element String source, OutputReceiver<MetadataRecord> out) {
+      Interpretation.from(source)
           .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(Instant.now().toEpochMilli()).build())
           .via(MetadataInterpreter.interpret(client))
           .via(MetadataInterpreter.interpretCrawlId(attempt))
           .via(MetadataInterpreter.interpretEndpointType(endpointType))
-          .consume(context::output);
+          .consume(out::output);
 
       counter.inc();
     }

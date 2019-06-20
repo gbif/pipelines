@@ -113,14 +113,14 @@ public class AudubonTransform {
     private final Counter counter = Metrics.counter(AudubonTransform.class, AUDUBON_RECORDS_COUNT);
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
+    public void processElement(@Element ExtendedRecord source, OutputReceiver<AudubonRecord> out) {
+      Interpretation.from(source)
           .to(er -> AudubonRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.AUDUBON.getRowType()))
               .filter(l -> !l.isEmpty())
               .isPresent())
           .via(AudubonInterpreter::interpret)
-          .consume(context::output);
+          .consume(out::output);
 
       counter.inc();
     }

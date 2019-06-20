@@ -2,8 +2,9 @@ package org.gbif.pipelines.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -100,11 +101,11 @@ public class ExtensionInterpretation {
 
     private final Supplier<T> supplier;
 
-    private Map<String, BiFunction<T, String, List<String>>> mapperMap = new HashMap<>();
+    private Map<String, BiFunction<T, String, List<String>>> mapperMap = new LinkedHashMap<>();
 
-    private Set<Function<T, List<String>>> postMapperSet = new HashSet<>();
+    private Set<Function<T, List<String>>> postMapperSet = new LinkedHashSet<>();
 
-    private Set<Function<T, Optional<String>>> validatorSet = new HashSet<>();
+    private Set<Function<T, Optional<String>>> validatorSet = new LinkedHashSet<>();
 
     /**
      * @param supplier of a target object, as example - Image::new
@@ -262,9 +263,10 @@ public class ExtensionInterpretation {
                 T t = supplier.get();
 
                 // Calls sequence of mappers
-                ext.forEach((k, v) -> {
-                  BiFunction<T, String, List<String>> fn = mapperMap.get(k);
-                  Optional.ofNullable(fn).map(c -> fn.apply(t, v)).ifPresent(issues::addAll);
+                mapperMap.forEach((term, fn) -> {
+                  if (ext.containsKey(term)) {
+                    Optional.ofNullable(fn).map(c -> fn.apply(t, ext.get(term))).ifPresent(issues::addAll);
+                  }
                 });
 
                 // Calls sequence of post mappers

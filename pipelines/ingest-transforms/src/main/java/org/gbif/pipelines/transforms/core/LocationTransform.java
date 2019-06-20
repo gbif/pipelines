@@ -119,21 +119,24 @@ public class LocationTransform {
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KvConfig kvConfig, PCollectionView<MetadataRecord> metadataView) {
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KvConfig kvConfig,
+      PCollectionView<MetadataRecord> metadataView) {
     return ParDo.of(new Interpreter(kvConfig, metadataView)).withSideInputs(metadataView);
   }
 
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KeyValueStore<LatLng, GeocodeResponse> kvStore, PCollectionView<MetadataRecord> metadataView) {
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(KeyValueStore<LatLng, GeocodeResponse> kvStore,
+      PCollectionView<MetadataRecord> metadataView) {
     return ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView);
   }
 
   /**
    * Creates an {@link Interpreter} for {@link LocationRecord}
    */
-  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(String properties, PCollectionView<MetadataRecord> metadataView) {
+  public static SingleOutput<ExtendedRecord, LocationRecord> interpret(String properties,
+      PCollectionView<MetadataRecord> metadataView) {
     return ParDo.of(new Interpreter(properties, metadataView)).withSideInputs(metadataView);
   }
 
@@ -189,7 +192,8 @@ public class LocationTransform {
               .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
                   .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
                   .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
+                  .withNumOfKeyBuckets(
+                      kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
                   .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
                   .build())
               .withCacheCapacity(15_000L)
@@ -215,10 +219,17 @@ public class LocationTransform {
     }
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
-          .to(er -> LocationRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
-          .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, context.sideInput(metadataView)))
+    public void processElement(@Element ExtendedRecord source, OutputReceiver<LocationRecord> out, ProcessContext c) {
+
+      LocationRecord lr = LocationRecord.newBuilder()
+          .setId(source.getId())
+          .setCreated(Instant.now().toEpochMilli())
+          .build();
+
+      Interpretation.from(source)
+          .to(lr)
+          .when(er -> !er.getCoreTerms().isEmpty())
+          .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, c.sideInput(metadataView)))
           .via(LocationInterpreter::interpretContinent)
           .via(LocationInterpreter::interpretWaterBody)
           .via(LocationInterpreter::interpretStateProvince)
@@ -231,8 +242,9 @@ public class LocationTransform {
           .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
           .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
           .via(LocationInterpreter::interpretCoordinatePrecision)
-          .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
-          .consume(context::output);
+          .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters);
+
+      out.output(lr);
 
       counter.inc();
     }

@@ -14,7 +14,7 @@ public class PipelinesVariables {
 
     public static final String AVRO_EXTENSION = ".avro";
 
-    public static final String DWCA_TO_VERBATIM = "dwca-to-verbatim";
+    public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
     public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
 
@@ -66,8 +66,7 @@ public class PipelinesVariables {
   public static class Metrics {
 
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
-    public static final String DWCA_TO_ER_COUNT = "dwcaToErCount";
-    public static final String XML_TO_ER_COUNT = "xmlToErCount";
+    public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
 
     public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";

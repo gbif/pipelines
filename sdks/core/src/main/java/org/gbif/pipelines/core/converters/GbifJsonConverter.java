@@ -45,6 +45,8 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.pipelines.core.converters.JsonConverter.getEscapedTextNode;
+
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase} objects(Avro
  * generated)
@@ -268,10 +270,10 @@ public class GbifJsonConverter {
 
       //Copy to all field
       Set<TextNode> allFieldValues = new HashSet<>();
-      core.forEach((k, v) -> Optional.ofNullable(v).ifPresent(v1 -> allFieldValues.add(new TextNode(v1))));
+      core.forEach((k, v) -> Optional.ofNullable(v).ifPresent(v1 -> allFieldValues.add(getEscapedTextNode(v1))));
       ext.forEach((k, v) -> Optional.ofNullable(v).ifPresent(v1 ->
           v1.forEach(v2 -> {
-            v2.forEach((k2, v3) -> Optional.ofNullable(v3).ifPresent(v4 -> allFieldValues.add(new TextNode(v4))));
+            v2.forEach((k2, v3) -> Optional.ofNullable(v3).ifPresent(v4 -> allFieldValues.add(getEscapedTextNode(v4))));
           })));
       jc.getMainNode().putArray("all").addAll(allFieldValues);
 

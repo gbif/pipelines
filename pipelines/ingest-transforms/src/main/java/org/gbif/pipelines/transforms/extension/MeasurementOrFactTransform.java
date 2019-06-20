@@ -117,14 +117,14 @@ public class MeasurementOrFactTransform {
     private final Counter counter = Metrics.counter(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT);
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
+    public void processElement(@Element ExtendedRecord source, OutputReceiver<MeasurementOrFactRecord> out) {
+      Interpretation.from(source)
           .to(er -> MeasurementOrFactRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.MEASUREMENT_OR_FACT.getRowType()))
               .filter(l -> !l.isEmpty())
               .isPresent())
           .via(MeasurementOrFactInterpreter::interpret)
-          .consume(context::output);
+          .consume(out::output);
 
       counter.inc();
     }

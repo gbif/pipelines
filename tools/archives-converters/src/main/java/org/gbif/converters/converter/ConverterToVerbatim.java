@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Objects;
 
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.CodecFactory;
@@ -109,7 +110,7 @@ public abstract class ConverterToVerbatim {
 
   private void createMetafile(FileSystem fs, Path metaPath, long numberOfRecords) throws IOException {
     if (metaPath != null) {
-      String info = "dwcaToAvroCount: " + numberOfRecords + "\n";
+      String info = Metrics.ARCHIVE_TO_ER_COUNT + ": " + numberOfRecords + "\n";
       FsUtils.createFile(fs, metaPath, info);
     }
   }

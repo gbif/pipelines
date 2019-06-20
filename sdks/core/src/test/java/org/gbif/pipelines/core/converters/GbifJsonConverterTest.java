@@ -13,12 +13,14 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.DeterminedDate;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFact;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
@@ -41,8 +43,9 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"all\":[\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"something:{something}\"],"
-            + "\"verbatim\":{\"core\":{\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
+        "{\"id\":\"777\",\"recordedBy\":\"Jeremia garde ,à elfutsone\",\"all\":[\"Jeremia garde ,à elfutsone\","
+            + "\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"something:{something}\"],\"verbatim\":{\"core\":{\"http://purl.org/dc/terms/remark\":"
+            + "\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"Jeremia garde ,à elfutsone\","
             + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},\"extensions\":{}},"
             + "\"eventDateSingle\":\"2011-01-01\",\"year\":2011,\"month\":1,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\","
             + "\"lte\":\"01-01-2018\"},\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],"
@@ -70,6 +73,7 @@ public class GbifJsonConverterTest {
     Map<String, String> erMap = new HashMap<>(2);
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
+    erMap.put(DwcTerm.recordedBy.qualifiedName(), "Jeremia garde \u001Eà elfutsone");
 
     MetadataRecord mr = MetadataRecord.newBuilder().setId("777").setCrawlId(1).setDatasetKey("datatesKey").build();
 
@@ -555,6 +559,52 @@ public class GbifJsonConverterTest {
     // Should
     Assert.assertEquals(expected, result);
     Assert.assertTrue(JsonValidationUtils.isValid(result));
+  }
+
+  @Test
+  public void emptyAvroWithIdTest() {
+    // Expected
+    String expected = "{\"datasetKey\":\"key\",\"crawlId\":1,\"license\":\"l\",\"datasetPublishingCountry\":\"PC\","
+        + "\"issues\":[],\"gbifClassification\":{},\"measurementOrFactItems\":[],\"id\":\"777\",\"all\":[],"
+        + "\"verbatim\":{\"core\":{},\"extensions\":{}},\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
+        + "\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
+        + "\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\",\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\","
+        + "\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\",\"DEPTH_UNLIKELY\",\"IDENTIFIED_DATE_INVALID\","
+        + "\"ELEVATION_MIN_MAX_SWAPPED\",\"TAXON_MATCH_NONE\",\"BASIS_OF_RECORD_INVALID\",\"TYPE_STATUS_INVALID\","
+        + "\"TAXON_MATCH_FUZZY\",\"CONTINENT_INVALID\",\"GEODETIC_DATUM_INVALID\",\"MODIFIED_DATE_UNLIKELY\","
+        + "\"COORDINATE_REPROJECTED\",\"PRESUMED_SWAPPED_COORDINATE\",\"REFERENCES_URI_INVALID\",\"COORDINATE_ROUNDED\","
+        + "\"IDENTIFIED_DATE_UNLIKELY\",\"COUNTRY_COORDINATE_MISMATCH\",\"DEPTH_NON_NUMERIC\",\"COUNTRY_DERIVED_FROM_COORDINATES\","
+        + "\"COORDINATE_REPROJECTION_FAILED\",\"COORDINATE_UNCERTAINTY_METERS_INVALID\",\"PRESUMED_NEGATED_LATITUDE\","
+        + "\"MULTIMEDIA_URI_INVALID\",\"COORDINATE_ACCURACY_INVALID\",\"GEODETIC_DATUM_ASSUMED_WGS84\",\"TAXON_MATCH_HIGHERRANK\","
+        + "\"ELEVATION_UNLIKELY\",\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\",\"RECORDED_DATE_INVALID\","
+        + "\"INDIVIDUAL_COUNT_INVALID\",\"RECORDED_DATE_MISMATCH\",\"DEPTH_NOT_METRIC\",\"MULTIMEDIA_DATE_INVALID\","
+        + "\"INTERPRETATION_ERROR\",\"ZERO_COORDINATE\",\"RECORDED_DATE_UNLIKELY\",\"COUNTRY_MISMATCH\"]}";
+
+    // State
+    String k = "777";
+    MetadataRecord mdr = MetadataRecord.newBuilder()
+        .setId(k)
+        .setDatasetKey("key")
+        .setCrawlId(1)
+        .setDatasetPublishingCountry("PC")
+        .setLicense("l")
+        .build();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(k).build();
+    BasicRecord br = BasicRecord.newBuilder().setId(k).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId(k).build();
+    LocationRecord lr = LocationRecord.newBuilder().setId(k).build();
+    TaxonRecord txr = TaxonRecord.newBuilder().setId(k).build();
+    MultimediaRecord mr = MultimediaRecord.newBuilder().setId(k).build();
+    ImageRecord ir = ImageRecord.newBuilder().setId(k).build();
+    AudubonRecord ar = AudubonRecord.newBuilder().setId(k).build();
+    MeasurementOrFactRecord mfr = MeasurementOrFactRecord.newBuilder().setId(k).build();
+
+    // When
+    MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
+    String result = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er);
+
+    // Should
+    Assert.assertEquals(expected, result);
   }
 
 }

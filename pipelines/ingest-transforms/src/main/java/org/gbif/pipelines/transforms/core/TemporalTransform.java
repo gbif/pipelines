@@ -110,14 +110,22 @@ public class TemporalTransform {
     private final Counter counter = Metrics.counter(TemporalTransform.class, TEMPORAL_RECORDS_COUNT);
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
-          .to(er -> TemporalRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
+    public void processElement(@Element ExtendedRecord source, OutputReceiver<TemporalRecord> out) {
+
+      TemporalRecord tr = TemporalRecord.newBuilder()
+          .setId(source.getId())
+          .setCreated(Instant.now().toEpochMilli())
+          .build();
+
+      Interpretation.from(source)
+          .to(tr)
+          .when(er -> !er.getCoreTerms().isEmpty())
           .via(TemporalInterpreter::interpretEventDate)
           .via(TemporalInterpreter::interpretDateIdentified)
           .via(TemporalInterpreter::interpretModifiedDate)
-          .via(TemporalInterpreter::interpretDayOfYear)
-          .consume(context::output);
+          .via(TemporalInterpreter::interpretDayOfYear);
+
+      out.output(tr);
 
       counter.inc();
     }

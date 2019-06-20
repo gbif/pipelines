@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.NumberParser;
@@ -93,9 +94,20 @@ public class ImageInterpreter {
   /**
    * Parser for "http://purl.org/dc/terms/identifier" term value
    */
-  private static void parseAndSetIdentifier(Image i, String v) {
+  private static List<String> parseAndSetIdentifier(Image i, String v) {
     URI uri = UrlParser.parse(v);
-    Optional.ofNullable(uri).map(URI::toString).ifPresent(i::setIdentifier);
+    Optional<URI> uriOpt = Optional.ofNullable(uri);
+    if (uriOpt.isPresent()) {
+      Optional<String> opt = uriOpt.map(URI::toString);
+      if (opt.isPresent()) {
+        opt.ifPresent(i::setIdentifier);
+      } else {
+        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      }
+    } else {
+      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+    }
+    return Collections.emptyList();
   }
 
   /**
@@ -156,6 +168,9 @@ public class ImageInterpreter {
       }
     }).orElse(null);
     License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
+    if (license == License.UNSPECIFIED && !Strings.isNullOrEmpty(v)) {
+      license = LICENSE_PARSER.parseUriThenTitle(uri, v);
+    }
     String result = license.name();
     if (license == License.UNSUPPORTED) {
       ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(v);

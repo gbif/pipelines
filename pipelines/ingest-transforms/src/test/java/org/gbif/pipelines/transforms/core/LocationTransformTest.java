@@ -57,6 +57,32 @@ public class LocationTransformTest {
     }
 
   @Test
+  public void emptyErTest() {
+    // Expected
+    LocationRecord expected = LocationRecord.newBuilder().setId("777").setCreated(0L).build();
+
+    // State
+    KeyValueTestStore<LatLng, GeocodeResponse> kvStore = new KeyValueTestStore<>();
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
+
+    MetadataRecord mdr = MetadataRecord.newBuilder().setId("777").build();
+
+    PCollectionView<MetadataRecord> metadataView =
+        p.apply("Create test metadata",Create.of(mdr))
+            .apply("Convert into view", View.asSingleton());
+
+    // When
+    PCollection<LocationRecord> recordCollection =
+        p.apply(Create.of(er)).apply(ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView))
+            .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
+
+    // Should
+    PAssert.that(recordCollection).containsInAnyOrder(expected);
+    p.run();
+  }
+
+  @Test
   public void transformationTest() {
 
     // State

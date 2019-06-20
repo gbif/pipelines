@@ -6,9 +6,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
@@ -113,23 +115,37 @@ public class MultimediaInterpreter {
   /**
    * Parser for "http://purl.org/dc/terms/identifier" term value
    */
-  private static void parseAndSetIdentifier(Multimedia m, String v) {
+  private static List<String> parseAndSetIdentifier(Multimedia m, String v) {
     URI uri = UrlParser.parse(v);
-    Optional.ofNullable(uri).map(URI::toString).ifPresent(m::setIdentifier);
+    Optional<URI> uriOpt = Optional.ofNullable(uri);
+    if (uriOpt.isPresent()) {
+      Optional<String> opt = uriOpt.map(URI::toString);
+      if (opt.isPresent()) {
+        opt.ifPresent(m::setIdentifier);
+      } else {
+        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      }
+    } else {
+      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+    }
+    return Collections.emptyList();
   }
 
   /**
    * Parser for "http://purl.org/dc/terms/type" term value
    */
   private static void parseAndSetType(Multimedia m, String v) {
-    if (!Strings.isNullOrEmpty(v)) {
-      if (v.toLowerCase().startsWith("image") || v.equalsIgnoreCase(MediaType.StillImage.name())) {
-        m.setType(MediaType.StillImage.name());
-      } else if (v.toLowerCase().startsWith("audio") || v.equalsIgnoreCase(MediaType.Sound.name())) {
-        m.setType(MediaType.Sound.name());
-      } else if (v.toLowerCase().startsWith("video") || v.equalsIgnoreCase(MediaType.MovingImage.name())) {
-        m.setType(MediaType.MovingImage.name());
-      }
+    String v1 = Optional.ofNullable(v).orElse("");
+    String format = Optional.ofNullable(m.getFormat()).orElse("");
+    BiPredicate<String, MediaType> prFn = (s, mt) -> format.startsWith(s) || v1.toLowerCase().startsWith(s)
+        || v1.toLowerCase().startsWith(mt.name().toLowerCase());
+
+    if (prFn.test("image", MediaType.StillImage)) {
+      m.setType(MediaType.StillImage.name());
+    } else if (prFn.test("audio", MediaType.Sound)) {
+      m.setType(MediaType.Sound.name());
+    } else if (prFn.test("video", MediaType.MovingImage)) {
+      m.setType(MediaType.MovingImage.name());
     }
   }
 
@@ -174,6 +190,9 @@ public class MultimediaInterpreter {
       }
     }).orElse(null);
     License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
+    if (license == License.UNSPECIFIED && !Strings.isNullOrEmpty(v)) {
+      license = LICENSE_PARSER.parseUriThenTitle(uri, v);
+    }
     String result = license.name();
     if (license == License.UNSUPPORTED) {
       ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(v);

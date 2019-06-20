@@ -153,14 +153,14 @@ public class AmplificationTransform {
     }
 
     @ProcessElement
-    public void processElement(ProcessContext context) {
-      Interpretation.from(context::element)
+    public void processElement(@Element ExtendedRecord source, OutputReceiver<AmplificationRecord> out) {
+      Interpretation.from(source)
           .to(er -> AmplificationRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(AmplificationInterpreter.EXTENSION_ROW_TYPE))
               .filter(l -> !l.isEmpty())
               .isPresent())
           .via(AmplificationInterpreter.interpret(client))
-          .consume(context::output);
+          .consume(out::output);
 
       counter.inc();
     }
