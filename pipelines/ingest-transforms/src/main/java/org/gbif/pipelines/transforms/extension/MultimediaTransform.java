@@ -6,12 +6,14 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.vocabulary.Extension;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.pipelines.transforms.CheckTransforms;
 
 import org.apache.avro.file.CodecFactory;
@@ -117,8 +119,9 @@ public class MultimediaTransform {
           .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
           .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.MULTIMEDIA.getRowType()))
               .filter(l -> !l.isEmpty())
-              .isPresent())
+              .isPresent() || ModelUtils.extractOptValue(er, DwcTerm.associatedMedia).isPresent())
           .via(MultimediaInterpreter::interpret)
+          .via(MultimediaInterpreter::interpretAssociatedMedia)
           .consume(out::output);
 
       counter.inc();

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
@@ -77,31 +78,28 @@ public class MultimediaInterpreter {
 
     Result<Multimedia> result = HANDLER.convert(er);
 
-    parseAssociatedMedia(result, er);
-
     mr.setMultimediaItems(result.getList());
     mr.getIssues().setIssueList(result.getIssuesAsList());
   }
 
-  private static void parseAssociatedMedia(Result<Multimedia> result, ExtendedRecord er) {
-    extractOptValue(er, DwcTerm.associatedMedia).ifPresent(v ->
-        UrlParser.parseUriList(v).forEach(uri -> {
-          if (uri == null) {
-            result.getIssues().add(MULTIMEDIA_URI_INVALID.name());
-          } else if (!containsUri(result, uri)) {
-            Multimedia multimedia = new Multimedia();
-            multimedia.setIdentifier(uri.toString());
-            parseAndSetFormatAndType(multimedia, null);
-            result.getList().add(multimedia);
-          }
-        }));
-  }
+  public static void interpretAssociatedMedia(ExtendedRecord er, MultimediaRecord mr) {
 
-  private static boolean containsUri(Result<Multimedia> result, URI uri) {
-    return result.getList().stream()
+    Predicate<URI> prFn = uri -> mr.getMultimediaItems().stream()
         .anyMatch(v ->
             (!Strings.isNullOrEmpty(v.getIdentifier()) && uri.equals(URI.create(v.getIdentifier())))
                 || (!Strings.isNullOrEmpty(v.getReferences()) && uri.equals(URI.create(v.getReferences()))));
+
+    extractOptValue(er, DwcTerm.associatedMedia).ifPresent(v ->
+        UrlParser.parseUriList(v).forEach(uri -> {
+          if (uri == null) {
+            mr.getIssues().getIssueList().add(MULTIMEDIA_URI_INVALID.name());
+          } else if (!prFn.test(uri)) {
+            Multimedia multimedia = new Multimedia();
+            multimedia.setIdentifier(uri.toString());
+            parseAndSetFormatAndType(multimedia, null);
+            mr.getMultimediaItems().add(multimedia);
+          }
+        }));
   }
 
   /**

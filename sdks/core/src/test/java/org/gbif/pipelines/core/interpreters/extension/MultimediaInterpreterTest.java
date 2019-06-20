@@ -85,6 +85,7 @@ public class MultimediaInterpreterTest {
 
     // When
     MultimediaInterpreter.interpret(record, mr);
+    MultimediaInterpreter.interpretAssociatedMedia(record, mr);
 
     //Should
     Assert.assertEquals(result, mr.toString());
