@@ -40,9 +40,10 @@ public class MultimediaConverter {
     issues.addAll(ar.getIssues().getIssueList());
 
     Map<String, Multimedia> multimediaMap = new HashMap<>();
-    putAllMultimediaRecord(multimediaMap, mr);
-    putAllImageRecord(multimediaMap, ir);
+    // The orders of puts is important
     putAllAudubonRecord(multimediaMap, ar);
+    putAllImageRecord(multimediaMap, ir);
+    putAllMultimediaRecord(multimediaMap, mr);
 
     if (!multimediaMap.isEmpty()) {
       record.setMultimediaItems(new ArrayList<>(multimediaMap.values()));
@@ -62,7 +63,7 @@ public class MultimediaConverter {
             .filter(m -> !Strings.isNullOrEmpty(m.getReferences()) || !Strings.isNullOrEmpty(m.getIdentifier()))
             .forEach(r -> {
               String key = Optional.ofNullable(r.getIdentifier()).orElse(r.getReferences());
-              map.put(key, r);
+              map.putIfAbsent(key, r);
             }));
   }
 
