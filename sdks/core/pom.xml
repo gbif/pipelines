@@ -65,6 +65,12 @@
       <artifactId>keygen</artifactId>
     </dependency>
 
+    <!-- HDFS Table -->
+    <dependency>
+      <groupId>org.gbif.occurrence</groupId>
+      <artifactId>occurrence-hdfs-table</artifactId>
+    </dependency>
+
     <!-- Common -->
     <dependency>
       <groupId>org.apache.avro</groupId>

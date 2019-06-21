@@ -1,7 +1,7 @@
 {
   "type" : "record",
   "name" : "OccurrenceHdfsRecord",
-  "namespace" : "org.gbif.occurrence.hdfs",
+  "namespace" : "org.gbif.pipelines.io.avro",
   "fields" : [ {
     "name" : "gbifid",
     "type" : "long"
