@@ -2,8 +2,6 @@ package org.gbif.pipelines.core.interpreters.extension;
 
 import java.net.URI;
 import java.time.temporal.Temporal;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
@@ -148,8 +146,8 @@ public class AudubonInterpreter {
           .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat)
           .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndSetFurtherInformationUrl)
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
-          .map(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
-          .map(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
+          .mapOne(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
+          .mapOne(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
           .map(DcTerm.type, AudubonInterpreter::parseAndSetTypeUri)
           .map(DcElement.type, AudubonInterpreter::parseAndSetType)
           .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri);
@@ -171,7 +169,7 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://rs.tdwg.org/ac/terms/accessURI" term value
    */
-  private static List<String> parseAndSetAccessUri(Audubon a, String v) {
+  private static String parseAndSetAccessUri(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
     Optional<URI> uriOpt = Optional.ofNullable(uri);
     if (uriOpt.isPresent()) {
@@ -179,12 +177,12 @@ public class AudubonInterpreter {
       if (opt.isPresent()) {
         opt.ifPresent(a::setAccessUri);
       } else {
-        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+        return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
       }
     } else {
-      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
     }
-    return Collections.emptyList();
+    return "";
   }
 
   /**
@@ -217,12 +215,11 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value
    */
-  private static List<String> parseAndSetCreatedDate(Audubon a, String v) {
+  private static String parseAndSetCreatedDate(Audubon a, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(a::setCreateDate);
 
-    return parsed.getIssues().isEmpty() ? Collections.emptyList() :
-        Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
+    return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();
   }
 
   /**

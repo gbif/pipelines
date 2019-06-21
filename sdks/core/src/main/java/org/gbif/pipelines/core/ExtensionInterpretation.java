@@ -2,13 +2,13 @@ package org.gbif.pipelines.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -249,7 +249,7 @@ public class ExtensionInterpretation {
      */
     public Result<T> convert(List<Map<String, String>> extensions) {
       List<T> result = new ArrayList<>();
-      Set<String> issues = new HashSet<>();
+      Set<String> issues = new TreeSet<>();
 
       // Tries to get an extension from map by the name
       Optional.ofNullable(extensions)
