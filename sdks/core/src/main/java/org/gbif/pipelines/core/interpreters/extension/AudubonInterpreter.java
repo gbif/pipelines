@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
@@ -261,21 +260,20 @@ public class AudubonInterpreter {
       }
     }).orElse(null);
 
-    BiFunction<URI, String, License> licenseFn = LICENSE_PARSER::parseUriThenTitle;
-
     URI uri = uriFn.apply(a.getRightsUri());
-    License license = licenseFn.apply(uri, a.getRights());
+    License license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRights());
 
     if (uri == null && license == License.UNSPECIFIED) {
       uri = uriFn.apply(a.getRights());
-      license = licenseFn.apply(uri, a.getRightsUri());
+      license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRightsUri());
     }
 
     String resultUrl = license.getLicenseUrl();
     String resultName = license.name();
     if (license == License.UNSUPPORTED) {
-      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(a.getRightsUri());
-      resultUrl = resultName = parsed.isSuccessful() ? parsed.getPayload().toString() : a.getRightsUri();
+      String rightsUri = Strings.isNullOrEmpty(a.getRightsUri()) ? a.getRights() : a.getRightsUri();
+      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(rightsUri);
+      resultUrl = resultName = parsed.isSuccessful() ? parsed.getPayload().toString() : rightsUri;
     }
     a.setRights(resultName);
     a.setRightsUri(resultUrl);
