@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
@@ -223,26 +224,19 @@ public class GbifJsonConverter {
       Map<String, String> core = er.getCoreTerms();
       Map<String, List<Map<String, String>>> ext = er.getExtensions();
 
-      Optional.ofNullable(core.get(DwcTerm.recordedBy.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("recordedBy", x));
-      Optional.ofNullable(core.get(DwcTerm.recordNumber.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("recordNumber", x));
-      Optional.ofNullable(core.get(DwcTerm.organismID.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("organismId", x));
-      Optional.ofNullable(core.get(DwcTerm.samplingProtocol.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("samplingProtocol", x));
-      Optional.ofNullable(core.get(DwcTerm.eventID.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventId", x));
-      Optional.ofNullable(core.get(DwcTerm.parentEventID.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("parentEventId", x));
-      Optional.ofNullable(core.get(DwcTerm.institutionCode.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("institutionCode", x));
-      Optional.ofNullable(core.get(DwcTerm.collectionCode.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("collectionCode", x));
-      Optional.ofNullable(core.get(DwcTerm.catalogNumber.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("catalogNumber", x));
-      Optional.ofNullable(core.get(DwcTerm.occurrenceID.qualifiedName()))
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("occurrenceId", x));
+      BiConsumer<Term, String> fieldFn = (t, k) ->
+          Optional.ofNullable(core.get(t.qualifiedName())).ifPresent(r -> jc.addJsonTextFieldNoCheck(k, r));
+
+      fieldFn.accept(DwcTerm.recordedBy, "recordedBy");
+      fieldFn.accept(DwcTerm.recordNumber, "recordNumber");
+      fieldFn.accept(DwcTerm.organismID, "organismId");
+      fieldFn.accept(DwcTerm.samplingProtocol, "samplingProtocol");
+      fieldFn.accept(DwcTerm.eventID, "eventId");
+      fieldFn.accept(DwcTerm.parentEventID, "parentEventId");
+      fieldFn.accept(DwcTerm.institutionCode, "institutionCode");
+      fieldFn.accept(DwcTerm.collectionCode, "collectionCode");
+      fieldFn.accept(DwcTerm.catalogNumber, "catalogNumber");
+      fieldFn.accept(DwcTerm.occurrenceID, "occurrenceId");
 
       // Core
       ObjectNode coreNode = JsonConverter.createObjectNode();
@@ -613,26 +607,23 @@ public class GbifJsonConverter {
             .map(item -> {
               ObjectNode node = JsonConverter.createObjectNode();
 
-              final BiConsumer<String, String> addField =
-                  (field, value) ->
-                      Optional.ofNullable(value)
-                          .filter(v -> !v.isEmpty())
-                          .ifPresent(v -> node.put(field, v));
+              BiConsumer<String, String> addField = (k, v) ->
+                  Optional.ofNullable(v).filter(f -> !f.isEmpty()).ifPresent(r -> node.put(k, r));
 
-              Optional.ofNullable(item.getType()).ifPresent(x -> addField.accept("type", x));
-              Optional.ofNullable(item.getFormat()).ifPresent(x -> addField.accept("format", x));
-              Optional.ofNullable(item.getIdentifier()).ifPresent(x -> addField.accept("identifier", x));
-              Optional.ofNullable(item.getAudience()).ifPresent(x -> addField.accept("audience", x));
-              Optional.ofNullable(item.getContributor()).ifPresent(x -> addField.accept("contributor", x));
-              Optional.ofNullable(item.getCreated()).ifPresent(x -> addField.accept("created", x));
-              Optional.ofNullable(item.getCreator()).ifPresent(x -> addField.accept("creator", x));
-              Optional.ofNullable(item.getDescription()).ifPresent(x -> addField.accept("description", x));
-              Optional.ofNullable(item.getLicense()).ifPresent(x -> addField.accept("license", x));
-              Optional.ofNullable(item.getPublisher()).ifPresent(x -> addField.accept("publisher", x));
-              Optional.ofNullable(item.getReferences()).ifPresent(x -> addField.accept("references", x));
-              Optional.ofNullable(item.getRightsHolder()).ifPresent(x -> addField.accept("rightsHolder", x));
-              Optional.ofNullable(item.getSource()).ifPresent(x -> addField.accept("source", x));
-              Optional.ofNullable(item.getTitle()).ifPresent(x -> addField.accept("title", x));
+              addField.accept("type", item.getType());
+              addField.accept("format", item.getFormat());
+              addField.accept("identifier", item.getIdentifier());
+              addField.accept("audience", item.getAudience());
+              addField.accept("contributor", item.getContributor());
+              addField.accept("created", item.getCreated());
+              addField.accept("creator", item.getCreator());
+              addField.accept("description", item.getDescription());
+              addField.accept("license", item.getLicense());
+              addField.accept("publisher", item.getPublisher());
+              addField.accept("references", item.getReferences());
+              addField.accept("rightsHolder", item.getRightsHolder());
+              addField.accept("source", item.getSource());
+              addField.accept("title", item.getTitle());
 
               return node;
             })

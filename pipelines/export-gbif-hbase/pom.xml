@@ -10,7 +10,6 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-
   <artifactId>export-gbif-hbase</artifactId>
 
   <packaging>jar</packaging>
