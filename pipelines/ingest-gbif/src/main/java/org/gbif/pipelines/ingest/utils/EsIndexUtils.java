@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.utils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -96,7 +95,7 @@ public class EsIndexUtils {
         .collect(Collectors.toSet());
 
     SharedLockUtils.doInWriteLock(lockConfig, () -> {
-      EsIndex.swapIndexesInAliases(config, options.getEsAlias(), Collections.singleton(idxToAdd), idxToRemove);
+      EsIndex.swapIndexInAliases(config, options.getEsAlias(), idxToAdd, idxToRemove);
 
       Optional.ofNullable(idxToAdd).ifPresent(idx -> EsIndex.refresh(config, idx));
     });

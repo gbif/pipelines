@@ -182,7 +182,7 @@ public class EsIndex {
   public static void swapIndexInAlias(EsConfig config, String alias, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-    swapIndexInAliases(config, new String[] {alias}, index);
+    swapIndexInAliases(config, new String[]{alias}, index, Collections.emptySet());
   }
 
   /**
@@ -194,13 +194,25 @@ public class EsIndex {
    *
    * @param config configuration of the ES instance.
    * @param aliases aliases that will be modified.
-   * @param index index to add to the alias that will become the only index of the alias for the dataset.
+   * @param index index to add to the aliases that will become the only index of the aliases for the dataset.
    */
   public static void swapIndexInAliases(EsConfig config, String[] aliases, String index) {
     Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
+    swapIndexInAliases(config, aliases, index, Collections.emptySet());
+  }
 
-    log.info("Swapping index {} in alias {}", index, aliases);
+  /**
+   * Swaps indexes in alias. It adds the given index to the alias and removes all the indexes that match the dataset
+   * pattern plus some extra indexes that can be passed as parameter.
+   *
+   * @param config configuration of the ES instance.
+   * @param aliases aliases that will be modified.
+   * @param index index to add to the aliases that will become the only index of the alias for the dataset.
+   * @param extraIdxToRemove extra indexes to be removed from the aliases
+   */
+  public static void swapIndexInAliases(EsConfig config, String[] aliases, String index, Set<String> extraIdxToRemove) {
+    Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
 
     // get dataset id
     String datasetId = getDatasetIdFromIndex(index);
@@ -210,9 +222,13 @@ public class EsIndex {
       Arrays.stream(aliases)
           .forEach(
               alias -> {
-                // check if there are indexes to remove
+                // check if there are indexes to remove for the dataset
                 Set<String> idxToRemove =
                     getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
+                // add extra indexes to remove
+                idxToRemove.addAll(extraIdxToRemove);
+
+                log.info("Removing indexes {} and adding index {} from alias {}", idxToRemove, index, alias);
 
                 // swap the indexes
                 swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
@@ -220,17 +236,6 @@ public class EsIndex {
 
       // change index settings to search settings
       updateIndexSettings(esClient, index, SettingsType.SEARCH);
-    }
-  }
-
-  public static void swapIndexesInAliases(EsConfig config, String[] aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
-    Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
-
-    try (EsClient esClient = EsClient.from(config)) {
-      // swap indexes
-      Arrays.stream(aliases).forEach(alias -> swapIndexes(esClient, alias, idxToAdd, idxToRemove));
-      // change index settings to search settings
-      idxToAdd.forEach(index -> updateIndexSettings(esClient, index, SettingsType.SEARCH));
     }
   }
 
