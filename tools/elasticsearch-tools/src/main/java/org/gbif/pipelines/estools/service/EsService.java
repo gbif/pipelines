@@ -197,7 +197,7 @@ public class EsService {
    * Swaps indexes in an alias.
    *
    * <p>In this method we can add or remove indexes in an alias. Also note that in the case of
-   * removing indixes, they are <strong>completely removed</strong> from the ES instance, and not
+   * removing indexes, they are <strong>completely removed</strong> from the ES instance, and not
    * only from the alias.
    *
    * @param esClient client to call ES. It is required.
@@ -313,6 +313,33 @@ public class EsService {
     String endpoint = buildEndpoint(idxName, "_delete_by_query?scroll_size=5000");
     HttpEntity body = createBodyFromString(query);
     esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
+  }
+
+  /**
+   * Finds the indexes in an alias where a given dataset is present.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param alias name of the alias to search in.
+   */
+  public static Set<String> findDatasetIndexesInAlias(@NonNull EsClient esClient, String alias, String datasetKey) {
+    Response response =
+        EsService.executeQuery(esClient, alias, String.format(EsQueries.FIND_DATASET_INDEXES_QUERY, datasetKey));
+    return HttpResponseParser.parseFindDatasetIndexesInAliasResponse(response.getEntity());
+  }
+
+  /**
+   * Executes a given DSL query.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxName name of the index to search in.
+   * @param query ES DSL query.
+   * @return {@link Response}
+   */
+  @SneakyThrows
+  private static Response executeQuery(@NonNull EsClient esClient, String idxName, String query) {
+    String endpoint = buildEndpoint(idxName, "_search");
+    HttpEntity body = createBodyFromString(query);
+    return esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
   }
 
   static String buildEndpoint(Object... strings) {

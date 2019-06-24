@@ -182,35 +182,19 @@ public class EsIndex {
   public static void swapIndexInAlias(EsConfig config, String alias, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-
-    log.info("Swapping index {} in alias {}", index, alias);
-
-    // get dataset id
-    String datasetId = getDatasetIdFromIndex(index);
-
-    try (EsClient esClient = EsClient.from(config)) {
-      // check if there are indexes to remove
-      Set<String> idxToRemove = getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
-
-      // swap the indexes
-      swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
-
-      // change index settings to search settings
-      updateIndexSettings(esClient, index, SettingsType.SEARCH);
-    }
-
+    swapIndexInAliases(config, new String[] {alias}, index);
   }
 
   /**
    * Swaps an index in a aliases.
    *
-   * <p>The index received will be the only index associated to the alias after performing this
+   * <p>The index received will be the only index associated to the alias for the dataset after performing this
    * call. All the indexes that were associated to this alias before will be removed from the ES
    * instance.
    *
    * @param config configuration of the ES instance.
    * @param aliases aliases that will be modified.
-   * @param index index to add to the alias that will become the only index of the alias.
+   * @param index index to add to the alias that will become the only index of the alias for the dataset.
    */
   public static void swapIndexInAliases(EsConfig config, String[] aliases, String index) {
     Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
@@ -236,6 +220,17 @@ public class EsIndex {
 
       // change index settings to search settings
       updateIndexSettings(esClient, index, SettingsType.SEARCH);
+    }
+  }
+
+  public static void swapIndexesInAliases(EsConfig config, String[] aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
+    Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
+
+    try (EsClient esClient = EsClient.from(config)) {
+      // swap indexes
+      Arrays.stream(aliases).forEach(alias -> swapIndexes(esClient, alias, idxToAdd, idxToRemove));
+      // change index settings to search settings
+      idxToAdd.forEach(index -> updateIndexSettings(esClient, index, SettingsType.SEARCH));
     }
   }
 
@@ -292,6 +287,20 @@ public class EsIndex {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
     try (EsClient esClient = EsClient.from(config)) {
       EsService.deleteRecordsByQuery(esClient, index, query);
+    }
+  }
+
+  /**
+   * Finds the indexes in an alias where a given dataset is present.
+   *
+   * @param config configuration of the ES instance.
+   * @param alias name of the alias to search in.
+   */
+  public static Set<String> findDatasetIndexesInAlias(EsConfig config, String alias, String datasetKey) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(datasetKey), "datasetKey is required");
+    try (EsClient esClient = EsClient.from(config)) {
+      return EsService.findDatasetIndexesInAlias(esClient, alias, datasetKey);
     }
   }
 

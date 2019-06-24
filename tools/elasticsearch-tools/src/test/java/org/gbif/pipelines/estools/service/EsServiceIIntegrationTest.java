@@ -290,4 +290,45 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), idx1));
     assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), idx2));
   }
+
+  @Test
+  public void findDatasetIndexesInAliasTest() {
+
+    // State
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
+    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(), "idx2", INDEXING);
+    Set<String> indexes = new HashSet<>();
+    indexes.add(idx1);
+    indexes.add(idx2);
+
+    // we create another empty set to check that it's discarded
+    String idx3 = EsService.createIndex(ES_SERVER.getEsClient(), "idx3", INDEXING);
+
+    // index some documents
+    final String type = "doc";
+    final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
+    String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
+
+    for (String index : indexes) {
+      EsService.indexDocument(ES_SERVER.getEsClient(), index, type, 1, document);
+      EsService.refreshIndex(ES_SERVER.getEsClient(), index);
+    }
+
+    final String alias = "alias1";
+    EsService.swapIndexes(ES_SERVER.getEsClient(), alias, indexes, Collections.emptySet());
+
+    // When
+    Set<String> indexesFound = EsService.findDatasetIndexesInAlias(ES_SERVER.getEsClient(), alias, datasetKey);
+
+    // Should
+    assertTrue(indexesFound.size() == 2);
+    assertTrue(indexesFound.contains(idx1));
+    assertTrue(indexesFound.contains(idx2));
+
+    // When
+    indexesFound = EsService.findDatasetIndexesInAlias(ES_SERVER.getEsClient(), alias, "fakeDataset");
+
+    // State
+    assertTrue(indexesFound.isEmpty());
+  }
 }

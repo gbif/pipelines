@@ -1,13 +1,17 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.util.Set;
+
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.parsers.config.LockConfig;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
 
 import org.slf4j.MDC;
 
+import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,12 +69,17 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
 
+    LockConfig lockConfig = LockConfigFactory.create(options.getProperties());
+
+    // find indexes where the dataset is currently indexed
+    Set<String> existingDatasetIndexes = EsIndexUtils.findDatasetIndexesInAlias(options);
+
+    EsIndexUtils.deleteRecordsByDatasetId(options, existingDatasetIndexes, lockConfig);
     EsIndexUtils.createIndexIfNotExist(options);
-    EsIndexUtils.deleteRecordsByDatasetId(options);
 
     InterpretedToEsIndexPipeline.run(options);
 
-    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(options.getProperties()));
+    EsIndexUtils.updateAlias(options, existingDatasetIndexes, lockConfig);
 
     FsUtils.removeTmpDirectory(options);
     log.info("Finished main indexing pipeline");
