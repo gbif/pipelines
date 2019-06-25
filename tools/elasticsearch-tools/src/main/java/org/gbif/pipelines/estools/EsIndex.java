@@ -3,6 +3,7 @@ package org.gbif.pipelines.estools;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -215,24 +216,33 @@ public class EsIndex {
   public static void swapIndexInAliases(EsConfig config, String[] aliases, String index, Set<String> extraIdxToRemove) {
     Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
 
-    // get dataset id
-    String datasetId = getDatasetIdFromIndex(index);
-
     try (EsClient esClient = EsClient.from(config)) {
 
       Arrays.stream(aliases)
           .forEach(
               alias -> {
-                // check if there are indexes to remove for the dataset
-                Set<String> idxToRemove =
-                    getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
+
+                Set<String> idxToAdd = new HashSet<>();
+                Set<String> idxToRemove = new HashSet<>();
+
+                // the index to add is optional
+                Optional.ofNullable(index).ifPresent(idx -> {
+                  idxToAdd.add(idx);
+
+                  // look for old indexes for this datasetId to remove them from the alias
+                  String datasetId = getDatasetIdFromIndex(idx);
+                  Optional.ofNullable(
+                      getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias))
+                      .ifPresent(idxToRemove::addAll);
+                });
+
                 // add extra indexes to remove
                 Optional.ofNullable(extraIdxToRemove).ifPresent(idxToRemove::addAll);
 
                 log.info("Removing indexes {} and adding index {} from alias {}", idxToRemove, index, alias);
 
                 // swap the indexes
-                swapIndexes(esClient, alias, Collections.singleton(index), idxToRemove);
+                swapIndexes(esClient, alias, idxToAdd, idxToRemove);
               });
 
       // change index settings to search settings

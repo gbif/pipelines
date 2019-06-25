@@ -208,6 +208,10 @@ public class EsService {
   @SneakyThrows
   public static void swapIndexes(
       @NonNull EsClient esClient, String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
+    if ((idxToAdd == null || idxToAdd.isEmpty()) && (idxToRemove == null || idxToRemove.isEmpty())) {
+      // nothing to swap
+      return;
+    }
 
     HttpEntity body = HttpRequestBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
     String endpoint = buildEndpoint("_aliases");

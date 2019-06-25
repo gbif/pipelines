@@ -20,6 +20,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_QUERY;
+
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsIndexUtils {
@@ -95,11 +97,14 @@ public class EsIndexUtils {
         .filter(i -> i.startsWith(options.getDatasetId()))
         .collect(Collectors.toSet());
 
-    SharedLockUtils.doInWriteLock(lockConfig, () -> {
-      EsIndex.swapIndexInAliases(config, options.getEsAlias(), idxToAdd, idxToRemove);
+    // we first check if there are indexes to swap to avoid unnecessary locks
+    if (idxToAdd != null || !idxToRemove.isEmpty()) {
+      SharedLockUtils.doInWriteLock(lockConfig, () -> {
+        EsIndex.swapIndexInAliases(config, options.getEsAlias(), idxToAdd, idxToRemove);
 
-      Optional.ofNullable(idxToAdd).ifPresent(idx -> EsIndex.refresh(config, idx));
-    });
+        Optional.ofNullable(idxToAdd).ifPresent(idx -> EsIndex.refresh(config, idx));
+      });
+    }
 
     Optional.ofNullable(idxToAdd).ifPresent(idx -> {
       long count = EsIndex.countDocuments(config, idx);
@@ -116,7 +121,7 @@ public class EsIndexUtils {
     }
 
     EsConfig config = EsConfig.from(options.getEsHosts());
-    String query = "{\"query\":{\"match\":{\"datasetKey\":\"" + options.getDatasetId() + "\"}}}";
+    String query = String.format(DELETE_BY_DATASET_QUERY, options.getDatasetId());
 
     existingDatasetIndexes.stream()
         .filter(i -> !i.startsWith(options.getDatasetId()))

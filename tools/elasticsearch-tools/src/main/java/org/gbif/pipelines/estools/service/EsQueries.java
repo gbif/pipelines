@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 /** Utility class to store ES queries. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-class EsQueries {
+public class EsQueries {
 
   static final String AGG_BY_INDEX = "index_agg";
 
@@ -23,5 +23,7 @@ class EsQueries {
       + "  },"
       + "  \"stored_fields\": [\"_index\"]"
       + "}";
+
+  public static final String DELETE_BY_DATASET_QUERY = "{\"query\":{\"match\":{\"datasetKey\":\"%s\"}}}";
 
 }
