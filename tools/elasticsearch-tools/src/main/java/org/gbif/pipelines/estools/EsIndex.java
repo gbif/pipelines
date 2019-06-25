@@ -239,7 +239,7 @@ public class EsIndex {
                 // add extra indexes to remove
                 Optional.ofNullable(extraIdxToRemove).ifPresent(idxToRemove::addAll);
 
-                log.info("Removing indexes {} and adding index {} from alias {}", idxToRemove, index, alias);
+                log.info("Removing indexes {} and adding index {} in alias {}", idxToRemove, index, alias);
 
                 // swap the indexes
                 swapIndexes(esClient, alias, idxToAdd, idxToRemove);
