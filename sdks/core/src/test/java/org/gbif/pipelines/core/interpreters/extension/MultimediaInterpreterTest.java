@@ -79,7 +79,7 @@ public class MultimediaInterpreterTest {
             + "\"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp22.jpg\", \"references\": null, \"title\": null, "
             + "\"description\": null, \"source\": null, \"audience\": null, \"created\": null, \"creator\": null, \"contributor\": null, "
             + "\"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}], \"issues\": {\"issueList\": "
-            + "[\"MULTIMEDIA_URI_INVALID\", \"MULTIMEDIA_DATE_INVALID\"]}}";
+            + "[\"MULTIMEDIA_DATE_INVALID\", \"MULTIMEDIA_URI_INVALID\"]}}";
 
     MultimediaRecord mr = MultimediaRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 

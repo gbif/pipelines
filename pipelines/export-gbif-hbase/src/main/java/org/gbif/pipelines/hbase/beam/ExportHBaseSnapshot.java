@@ -9,7 +9,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileIO;
@@ -40,7 +39,10 @@ import org.apache.hadoop.mapreduce.Job;
 
 import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
-/** Executes a pipeline that reads an HBase snapshot and exports verbatim data into Avro using the {@link ExtendedRecord}. schema */
+/**
+ * Executes a pipeline that reads an HBase snapshot and exports verbatim data into Avro using
+ * the {@link ExtendedRecord}. schema
+ */
 public class ExportHBaseSnapshot {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
@@ -60,12 +62,12 @@ public class ExportHBaseSnapshot {
 
     PCollection<KV<ImmutableBytesWritable, Result>> rows =
         p.apply(
-          "read HBase",
-          HadoopFormatIO.<ImmutableBytesWritable, Result>read().withConfiguration(hbaseConfig));
+            "Read HBase",
+            HadoopFormatIO.<ImmutableBytesWritable, Result>read().withConfiguration(hbaseConfig));
 
     PCollection<KV<String, ExtendedRecord>> records =
         rows.apply(
-            "convert to extended record",
+            "Convert to extended record",
             ParDo.of(
                 new DoFn<KV<ImmutableBytesWritable, Result>, KV<String, ExtendedRecord>>() {
 
@@ -84,16 +86,14 @@ public class ExportHBaseSnapshot {
                   }
                 }));
 
-    records.apply("write avro file per dataset", FileIO.<String, KV<String,ExtendedRecord>>writeDynamic()
-      .by(KV::getKey)
-      .via(Contextful.fn(KV::getValue),
-           Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
-      .to(exportPath)
-      .withDestinationCoder(StringUtf8Coder.of())
-      .withNaming(key ->  defaultNaming(key + "/verbatimHBaseExport", PipelinesVariables.Pipeline.AVRO_EXTENSION)));
+    records.apply("Write avro file per dataset", FileIO.<String, KV<String, ExtendedRecord>>writeDynamic()
+        .by(KV::getKey)
+        .via(Contextful.fn(KV::getValue), Contextful.fn(x -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
+        .to(exportPath)
+        .withDestinationCoder(StringUtf8Coder.of())
+        .withNaming(key -> defaultNaming(key + "/verbatimHBaseExport", PipelinesVariables.Pipeline.AVRO_EXTENSION)));
 
-    PipelineResult result = p.run();
-    result.waitUntilFinish();
+    p.run().waitUntilFinish();
   }
 
   private static Configuration hbaseSnapshotConfig(ExportHBaseOptions options) {

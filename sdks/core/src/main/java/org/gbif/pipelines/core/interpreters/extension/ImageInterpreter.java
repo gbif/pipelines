@@ -2,8 +2,6 @@ package org.gbif.pipelines.core.interpreters.extension;
 
 import java.net.URI;
 import java.time.temporal.Temporal;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -50,9 +48,9 @@ public class ImageInterpreter {
   private static final TargetHandler<Image> HANDLER =
       ExtensionInterpretation.extension(Extension.IMAGE)
           .to(Image::new)
-          .map(DcTerm.identifier, ImageInterpreter::parseAndSetIdentifier)
+          .mapOne(DcTerm.identifier, ImageInterpreter::parseAndSetIdentifier)
           .map(DcTerm.references, ImageInterpreter::parseAndSetReferences)
-          .map(DcTerm.created, ImageInterpreter::parseAndSetCreated)
+          .mapOne(DcTerm.created, ImageInterpreter::parseAndSetCreated)
           .map(DcTerm.license, ImageInterpreter::parseAndSetLicense)
           .map(DcTerm.title, Image::setTitle)
           .map(DcTerm.description, Image::setDescription)
@@ -94,7 +92,7 @@ public class ImageInterpreter {
   /**
    * Parser for "http://purl.org/dc/terms/identifier" term value
    */
-  private static List<String> parseAndSetIdentifier(Image i, String v) {
+  private static String parseAndSetIdentifier(Image i, String v) {
     URI uri = UrlParser.parse(v);
     Optional<URI> uriOpt = Optional.ofNullable(uri);
     if (uriOpt.isPresent()) {
@@ -102,23 +100,22 @@ public class ImageInterpreter {
       if (opt.isPresent()) {
         opt.ifPresent(i::setIdentifier);
       } else {
-        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+        return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
       }
     } else {
-      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
     }
-    return Collections.emptyList();
+    return "";
   }
 
   /**
    * Parser for "http://purl.org/dc/terms/created" term value
    */
-  private static List<String> parseAndSetCreated(Image i, String v) {
+  private static String parseAndSetCreated(Image i, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(i::setCreated);
 
-    return parsed.getIssues().isEmpty() ? Collections.emptyList() :
-        Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
+    return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();
   }
 
   /**

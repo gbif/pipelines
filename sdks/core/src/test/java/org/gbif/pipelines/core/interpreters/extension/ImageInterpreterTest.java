@@ -76,7 +76,7 @@ public class ImageInterpreterTest {
             + "\"Sp2\", \"latitude\": -131.3, \"longitude\": 360.4, \"format\": \"jpeg\", \"created\": \"2010-12-12\", "
             + "\"creator\": \"Cr2\", \"contributor\": \"Cont2\", \"publisher\": \"Pub2\", \"audience\": \"Aud2\", \"license\": "
             + "\"Lic2\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"1\"}], \"issues\": {\"issueList\": ["
-            + "\"MULTIMEDIA_URI_INVALID\", \"MULTIMEDIA_DATE_INVALID\"]}}";
+            + "\"MULTIMEDIA_DATE_INVALID\", \"MULTIMEDIA_URI_INVALID\"]}}";
 
     ImageRecord ir = ImageRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 

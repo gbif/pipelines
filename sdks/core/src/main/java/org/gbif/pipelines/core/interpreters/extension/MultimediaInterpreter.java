@@ -2,8 +2,6 @@ package org.gbif.pipelines.core.interpreters.extension;
 
 import java.net.URI;
 import java.time.temporal.Temporal;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
@@ -53,8 +51,8 @@ public class MultimediaInterpreter {
       ExtensionInterpretation.extension(Extension.MULTIMEDIA)
           .to(Multimedia::new)
           .map(DcTerm.references, MultimediaInterpreter::parseAndSetReferences)
-          .map(DcTerm.identifier, MultimediaInterpreter::parseAndSetIdentifier)
-          .map(DcTerm.created, MultimediaInterpreter::parseAndSetCreated)
+          .mapOne(DcTerm.identifier, MultimediaInterpreter::parseAndSetIdentifier)
+          .mapOne(DcTerm.created, MultimediaInterpreter::parseAndSetCreated)
           .map(DcTerm.license, MultimediaInterpreter::parseAndSetLicense)
           .map(DcTerm.format, MultimediaInterpreter::parseAndSetFormatAndType)
           .map(DcTerm.title, Multimedia::setTitle)
@@ -113,7 +111,7 @@ public class MultimediaInterpreter {
   /**
    * Parser for "http://purl.org/dc/terms/identifier" term value
    */
-  private static List<String> parseAndSetIdentifier(Multimedia m, String v) {
+  private static String parseAndSetIdentifier(Multimedia m, String v) {
     URI uri = UrlParser.parse(v);
     Optional<URI> uriOpt = Optional.ofNullable(uri);
     if (uriOpt.isPresent()) {
@@ -121,12 +119,12 @@ public class MultimediaInterpreter {
       if (opt.isPresent()) {
         opt.ifPresent(m::setIdentifier);
       } else {
-        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+        return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
       }
     } else {
-      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
     }
-    return Collections.emptyList();
+    return "";
   }
 
   /**
@@ -150,12 +148,11 @@ public class MultimediaInterpreter {
   /**
    * Parser for "http://purl.org/dc/terms/created" term value
    */
-  private static List<String> parseAndSetCreated(Multimedia m, String v) {
+  private static String parseAndSetCreated(Multimedia m, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(m::setCreated);
 
-    return parsed.getIssues().isEmpty() ? Collections.emptyList() :
-        Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
+    return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();
   }
 
   /**
