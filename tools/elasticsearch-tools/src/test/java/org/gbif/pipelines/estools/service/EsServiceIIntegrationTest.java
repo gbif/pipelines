@@ -301,7 +301,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     indexes.add(idx1);
     indexes.add(idx2);
 
-    // we create another empty set to check that it's discarded
+    // we create another empty index to check that it's discarded
     String idx3 = EsService.createIndex(ES_SERVER.getEsClient(), "idx3", INDEXING);
 
     // index some documents
@@ -321,7 +321,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     Set<String> indexesFound = EsService.findDatasetIndexesInAlias(ES_SERVER.getEsClient(), alias, datasetKey);
 
     // Should
-    assertTrue(indexesFound.size() == 2);
+    assertEquals(2, indexesFound.size());
     assertTrue(indexesFound.contains(idx1));
     assertTrue(indexesFound.contains(idx2));
 
