@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.gbif.pipelines.estools.client.EsClient;
@@ -226,7 +227,7 @@ public class EsIndex {
                 Set<String> idxToRemove =
                     getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias);
                 // add extra indexes to remove
-                idxToRemove.addAll(extraIdxToRemove);
+                Optional.ofNullable(extraIdxToRemove).ifPresent(idxToRemove::addAll);
 
                 log.info("Removing indexes {} and adding index {} from alias {}", idxToRemove, index, alias);
 

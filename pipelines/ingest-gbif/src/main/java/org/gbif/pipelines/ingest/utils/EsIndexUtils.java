@@ -85,6 +85,7 @@ public class EsIndexUtils {
       LockConfig lockConfig) {
     Preconditions.checkArgument(options.getEsAlias() != null && options.getEsAlias().length > 0,
         "ES alias is required");
+    Preconditions.checkArgument(existingDatasetIndexes != null, "The set with existing datasets cannot be null");
 
     EsConfig config = EsConfig.from(options.getEsHosts());
 
@@ -110,7 +111,7 @@ public class EsIndexUtils {
   /** Connects to Elasticsearch instance and deletes records in an index by datasetId */
   public static void deleteRecordsByDatasetId(EsIndexingPipelineOptions options, Set<String> existingDatasetIndexes,
       LockConfig lockConfig) {
-    if (existingDatasetIndexes.isEmpty()) {
+    if (existingDatasetIndexes == null || existingDatasetIndexes.isEmpty()) {
       return;
     }
 
