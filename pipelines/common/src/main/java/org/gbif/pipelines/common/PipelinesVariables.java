@@ -67,6 +67,7 @@ public class PipelinesVariables {
 
     public static final String AVRO_TO_JSON_COUNT = "avroToJsonCount";
     public static final String ARCHIVE_TO_ER_COUNT = "archiveToErCount";
+    public static final String AVRO_TO_HDFS_COUNT = "avroToHdfsCount";
 
     public static final String UNIQUE_IDS_COUNT = "uniqueIdsCount";
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";

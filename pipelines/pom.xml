@@ -22,7 +22,7 @@
     <module>ingest-gbif</module>
     <module>ingest-gbif-standalone</module>
     <module>export-gbif-hbase</module>
-    <module>hive-table-build</module>
+    <module>ingest-hdfs-table</module>
   </modules>
 
 </project>

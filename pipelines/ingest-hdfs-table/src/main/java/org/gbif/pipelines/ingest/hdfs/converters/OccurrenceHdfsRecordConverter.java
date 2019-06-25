@@ -1,14 +1,10 @@
-package org.gbif.pipelines.ingest.utils;
+package org.gbif.pipelines.ingest.hdfs.converters;
 
-import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.download.hive.HiveColumns;
-import org.gbif.occurrence.download.hive.HiveDataTypes;
-import org.gbif.occurrence.download.hive.OccurrenceHDFSTableDefinition;
 import org.gbif.occurrence.download.hive.Terms;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -38,27 +34,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
-import lombok.Builder;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("FallThrough")
-@Slf4j
-@Builder
-public class AvroHdfsView {
-
+public class OccurrenceHdfsRecordConverter {
 
   private static Map<Class<? extends SpecificRecordBase>, BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase>>
     converters;
@@ -113,10 +101,10 @@ public class AvroHdfsView {
       return TEMPORAL_TO_DATE.apply(temporalAccessor);
     };
 
-  private static final  TermFactory TERM_FACTORY =  TermFactory.instance();
+  private static final TermFactory TERM_FACTORY =  TermFactory.instance();
 
 
-  private static final Logger LOG = LoggerFactory.getLogger(AvroHdfsView.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OccurrenceHdfsRecordConverter.class);
 
   private static void addIssues(IssueRecord issueRecord, OccurrenceHdfsRecord hr) {
     if (Objects.nonNull(issueRecord) && Objects.nonNull(issueRecord.getIssueList())) {
@@ -125,40 +113,6 @@ public class AvroHdfsView {
       hr.setIssue(currentIssues);
     }
   }
-
-  public static Schema avroDefinition() {
-    SchemaBuilder.FieldAssembler<Schema> builder = SchemaBuilder
-      .record("OccurrenceHdfsRecord")
-      .namespace("org.gbif.pipelines.io.avro").fields();
-    OccurrenceHDFSTableDefinition.definition().forEach(initializableField -> {
-      switch (initializableField.getHiveDataType()) {
-        case HiveDataTypes.TYPE_INT:
-          builder.name(initializableField.getHiveField()).type().nullable().intType().noDefault();
-          break;
-        case HiveDataTypes.TYPE_BIGINT:
-          if (initializableField.getHiveField().equalsIgnoreCase("gbifid")) {
-            builder.name(initializableField.getHiveField()).type().longType().noDefault();
-          } else {
-            builder.name(initializableField.getHiveField()).type().nullable().longType().noDefault();
-          }
-          break;
-        case HiveDataTypes.TYPE_BOOLEAN:
-          builder.name(initializableField.getHiveField()).type().nullable().booleanType().noDefault();
-          break;
-        case HiveDataTypes.TYPE_DOUBLE:
-          builder.name(initializableField.getHiveField()).type().nullable().doubleType().noDefault();
-          break;
-        case HiveDataTypes.TYPE_ARRAY_STRING:
-          builder.name(initializableField.getHiveField()).type().nullable().array().items().nullable().stringType().noDefault();
-          break;
-        default:
-          builder.name(initializableField.getHiveField()).type().nullable().stringType().noDefault();
-          break;
-      }
-    });
-    return builder.endRecord();
-  }
-
 
   private static BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase> locationMapper() {
     return (hr, sr) -> {
@@ -175,11 +129,11 @@ public class AvroHdfsView {
       hr.setElevationaccuracy(lr.getElevationAccuracy());
       if (Objects.nonNull(lr.getMaximumDistanceAboveSurfaceInMeters())) {
         hr.setMaximumdistanceabovesurfaceinmeters(lr.getMaximumDistanceAboveSurfaceInMeters()
-                                                                      .toString());
+                                                    .toString());
       }
       if (Objects.nonNull(lr.getMinimumDistanceAboveSurfaceInMeters())) {
         hr.setMinimumdistanceabovesurfaceinmeters(lr.getMinimumDistanceAboveSurfaceInMeters()
-                                                                      .toString());
+                                                    .toString());
       }
       hr.setStateprovince(lr.getStateProvince());
       hr.setWaterbody(lr.getWaterBody());
@@ -288,8 +242,8 @@ public class AvroHdfsView {
 
       if (Objects.nonNull(tr.getUsageParsedName())) {
         hr.setGenericname(Objects.nonNull(tr.getUsageParsedName().getGenus())
-                                              ? tr.getUsageParsedName().getGenus()
-                                              : tr.getUsageParsedName().getUninomial());
+                            ? tr.getUsageParsedName().getGenus()
+                            : tr.getUsageParsedName().getUninomial());
         hr.setSpecificepithet(tr.getUsageParsedName().getSpecificEpithet());
         hr.setInfraspecificepithet(tr.getUsageParsedName().getInfraspecificEpithet());
       }
@@ -355,7 +309,7 @@ public class AvroHdfsView {
       er.getCoreTerms().forEach((k, v) -> Optional.ofNullable(TERM_FACTORY.findTerm(k)).ifPresent(term -> {
 
         if (Terms.verbatimTerms().contains(term)) {
-          Optional.ofNullable(AvroHdfsView.verbatimSchemaField(term)).ifPresent(field -> {
+          Optional.ofNullable(verbatimSchemaField(term)).ifPresent(field -> {
             String verbatimField = "V" + field.name().substring(2, 3).toUpperCase() + field.name().substring(3);
             setHdfsRecordField(hr, field, verbatimField, v);
           });
@@ -406,21 +360,4 @@ public class AvroHdfsView {
   private static Schema.Field interpretedSchemaField(Term term) {
     return OccurrenceHdfsRecord.SCHEMA$.getField(HiveColumns.columnFor(term));
   }
-
-  public static void main(String[] args) throws Exception {
-    Schema schema = avroDefinition();
-    ExtendedRecord extendedRecord = new ExtendedRecord();
-    extendedRecord.setId("1");
-    HashMap<String,String> terms = new HashMap<>();
-    terms.put(DwcTerm.decimalLongitude.simpleName(), "77.2");
-    terms.put(DwcTerm.decimalLatitude.simpleName(), "37.2");
-    terms.put(DwcTerm.countryCode.simpleName(), Country.DENMARK.getIso2LetterCode());
-    terms.put(DcTerm.abstract_.simpleName(), "abbbbbssssssstraaacttt");
-    terms.put(DwcTerm.class_.simpleName(), "classsss");
-    terms.put(DcTerm.format.simpleName(), "format");
-    extendedRecord.setCoreTerms(terms);
-    OccurrenceHdfsRecord occurrenceHdfsRecord = toOccurrenceHdfsRecord(extendedRecord);
-    System.out.println(occurrenceHdfsRecord);
-  }
-
 }

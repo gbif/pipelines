@@ -114,17 +114,16 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
+      <artifactId>ingest-hdfs-table</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>keygen</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-wrangler</artifactId>
-    </dependency>
-
-    <!-- HDFS Table -->
-    <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-hdfs-table</artifactId>
     </dependency>
 
     <!-- Curator Framework used for Zookeeper Locks -->

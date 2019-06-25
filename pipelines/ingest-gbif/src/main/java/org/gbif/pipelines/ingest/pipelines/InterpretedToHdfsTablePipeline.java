@@ -1,20 +1,15 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
+import org.gbif.pipelines.ingest.hdfs.converters.OccurrenceHdfsRecordTransform;
+import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -92,14 +87,21 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 public class InterpretedToHdfsTablePipeline {
 
   public static void main(String[] args) {
-    EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
   }
 
-  public static void run(EsIndexingPipelineOptions options) {
+  public static void run(InterpretationPipelineOptions options) {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+
+    String targetPath = FsUtils.buildPath(options.getTargetPath(), options.getDatasetId(),
+                                          OccurrenceHdfsRecord.class.getName().toLowerCase())
+                          .toString();
+
+    //Deletes the target path if it exists
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), targetPath);
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
@@ -159,12 +161,12 @@ public class InterpretedToHdfsTablePipeline {
         p.apply("Read Measurement", MeasurementOrFactTransform.read(pathFn))
             .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
 
-    log.info("Adding step 3: Converting into a json object");
-    SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
+    log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
+    SingleOutput<KV<String, CoGbkResult>, OccurrenceHdfsRecord> toHdfsRecordDoFn =
+        OccurrenceHdfsRecordTransform.Transform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
             .converter();
 
-    PCollection<String> jsonCollection =
+    PCollection<OccurrenceHdfsRecord> hdfsRecordPCollection =
         KeyedPCollectionTuple
             // Core
             .of(brTag, basicCollection)
@@ -180,20 +182,10 @@ public class InterpretedToHdfsTablePipeline {
             .and(erTag, verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", gbifJsonDoFn)
-            .apply("Filter records without gbifId", FilterMissedGbifIdTransform.create());
+            .apply("Merging to HdfsRecord", toHdfsRecordDoFn);
 
-    log.info("Adding step 4: Elasticsearch indexing");
-    ElasticsearchIO.ConnectionConfiguration esConfig =
-        ElasticsearchIO.ConnectionConfiguration.create(
-            options.getEsHosts(), options.getEsIndexName(), Indexing.INDEX_TYPE);
 
-    jsonCollection.apply(
-        ElasticsearchIO.write()
-            .withConnectionConfiguration(esConfig)
-            .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
-            .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get("gbifId").asText()));
+    hdfsRecordPCollection.apply(OccurrenceHdfsRecordTransform.write(targetPath));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
