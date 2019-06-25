@@ -2,11 +2,8 @@ package org.gbif.pipelines.core.interpreters.extension;
 
 import java.net.URI;
 import java.time.temporal.Temporal;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
@@ -149,8 +146,8 @@ public class AudubonInterpreter {
           .map(DcTerm.format, AudubonInterpreter::parseAndSetFormat)
           .map(AcTerm.furtherInformationURL, AudubonInterpreter::parseAndSetFurtherInformationUrl)
           .map(AcTerm.attributionLinkURL, AudubonInterpreter::parseAndSetAttributionLinkUrl)
-          .map(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
-          .map(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
+          .mapOne(AcTerm.accessURI, AudubonInterpreter::parseAndSetAccessUri)
+          .mapOne(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
           .map(DcTerm.type, AudubonInterpreter::parseAndSetTypeUri)
           .map(DcElement.type, AudubonInterpreter::parseAndSetType)
           .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri);
@@ -172,7 +169,7 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://rs.tdwg.org/ac/terms/accessURI" term value
    */
-  private static List<String> parseAndSetAccessUri(Audubon a, String v) {
+  private static String parseAndSetAccessUri(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
     Optional<URI> uriOpt = Optional.ofNullable(uri);
     if (uriOpt.isPresent()) {
@@ -180,12 +177,12 @@ public class AudubonInterpreter {
       if (opt.isPresent()) {
         opt.ifPresent(a::setAccessUri);
       } else {
-        return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+        return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
       }
     } else {
-      return Collections.singletonList(OccurrenceIssue.MULTIMEDIA_URI_INVALID.name());
+      return OccurrenceIssue.MULTIMEDIA_URI_INVALID.name();
     }
-    return Collections.emptyList();
+    return "";
   }
 
   /**
@@ -218,12 +215,11 @@ public class AudubonInterpreter {
   /**
    * Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value
    */
-  private static List<String> parseAndSetCreatedDate(Audubon a, String v) {
+  private static String parseAndSetCreatedDate(Audubon a, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(a::setCreateDate);
 
-    return parsed.getIssues().isEmpty() ? Collections.emptyList() :
-        Collections.singletonList(MULTIMEDIA_DATE_INVALID.name());
+    return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();
   }
 
   /**
@@ -261,21 +257,20 @@ public class AudubonInterpreter {
       }
     }).orElse(null);
 
-    BiFunction<URI, String, License> licenseFn = LICENSE_PARSER::parseUriThenTitle;
-
     URI uri = uriFn.apply(a.getRightsUri());
-    License license = licenseFn.apply(uri, a.getRights());
+    License license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRights());
 
     if (uri == null && license == License.UNSPECIFIED) {
       uri = uriFn.apply(a.getRights());
-      license = licenseFn.apply(uri, a.getRightsUri());
+      license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRightsUri());
     }
 
     String resultUrl = license.getLicenseUrl();
     String resultName = license.name();
     if (license == License.UNSUPPORTED) {
-      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(a.getRightsUri());
-      resultUrl = resultName = parsed.isSuccessful() ? parsed.getPayload().toString() : a.getRightsUri();
+      String rightsUri = Strings.isNullOrEmpty(a.getRightsUri()) ? a.getRights() : a.getRightsUri();
+      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(rightsUri);
+      resultUrl = resultName = parsed.isSuccessful() ? parsed.getPayload().toString() : rightsUri;
     }
     a.setRights(resultName);
     a.setRightsUri(resultUrl);

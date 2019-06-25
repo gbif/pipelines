@@ -7,7 +7,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.AvroIO;
 import org.apache.beam.sdk.io.FileIO;
@@ -25,9 +24,13 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
 /** Executes a pipeline that reads HBase and exports verbatim data into Avro using the {@link ExtendedRecord}. schema */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExportHBase {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
@@ -38,12 +41,12 @@ public class ExportHBase {
     options.setRunner(SparkRunner.class);
     Pipeline p = Pipeline.create(options);
 
-    Counter recordsExported = Metrics.counter(ExportHBase.class,"recordsExported");
-    Counter recordsFailed = Metrics.counter(ExportHBase.class,"recordsFailed");
+    Counter recordsExported = Metrics.counter(ExportHBase.class, "recordsExported");
+    Counter recordsFailed = Metrics.counter(ExportHBase.class, "recordsFailed");
 
     //Params
     String exportPath = options.getExportPath();
-    String table =  options.getTable();
+    String table = options.getTable();
 
     Configuration hbaseConfig = HBaseConfiguration.create();
     hbaseConfig.set("hbase.zookeeper.quorum", options.getHbaseZk());
@@ -54,12 +57,12 @@ public class ExportHBase {
 
     PCollection<Result> rows =
         p.apply(
-            "read HBase",
+            "Read HBase",
             HBaseIO.read().withConfiguration(hbaseConfig).withScan(scan).withTableId(table));
 
     PCollection<KV<String, ExtendedRecord>> records =
         rows.apply(
-            "convert to extended record",
+            "Convert to extended record",
             ParDo.of(
                 new DoFn<Result, KV<String, ExtendedRecord>>() {
 
@@ -78,16 +81,14 @@ public class ExportHBase {
                   }
                 }));
 
-    records.apply("write avro file per dataset", FileIO.<String, KV<String,ExtendedRecord>>writeDynamic()
+    records.apply("Write avro file per dataset", FileIO.<String, KV<String, ExtendedRecord>>writeDynamic()
         .by(KV::getKey)
-        .via(Contextful.fn(KV::getValue),
-            Contextful.fn(dest -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
+        .via(Contextful.fn(KV::getValue), Contextful.fn(x -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
         .to(exportPath)
         .withDestinationCoder(StringUtf8Coder.of())
-        .withNaming(key ->  defaultNaming(key + "/verbatimHBaseExport", PipelinesVariables.Pipeline.AVRO_EXTENSION)));
+        .withNaming(key -> defaultNaming(key + "/verbatimHBaseExport", PipelinesVariables.Pipeline.AVRO_EXTENSION)));
 
-    PipelineResult result = p.run();
-    result.waitUntilFinish();
+    p.run().waitUntilFinish();
   }
 
 }

@@ -95,6 +95,7 @@ public class MultimediaConverterTest {
         .setMultimediaItems(Collections.singletonList(Multimedia.newBuilder()
             .setIdentifier("http://url-i1")
             .setReferences("http://url-r1")
+            .setType("StillImage")
             .build()))
         .build();
 
@@ -111,12 +112,17 @@ public class MultimediaConverterTest {
     // State
     MultimediaRecord mr = MultimediaRecord.newBuilder()
         .setId("777")
-        .setMultimediaItems(Collections.singletonList(Multimedia.newBuilder()
-            .setIdentifier("http://url-i1")
-            .setReferences("http://url-r1")
-            .setCreated("2010-10-10")
-            .setLicense("license1")
-            .build()))
+        .setMultimediaItems(Arrays.asList(
+            Multimedia.newBuilder()
+                .setIdentifier("http://url-i1")
+                .setReferences("http://url-r1")
+                .setCreated("2010-10-10")
+                .setLicense("license1")
+                .build(),
+            Multimedia.newBuilder()
+                .setIdentifier("http://url-i3")
+                .build()
+        ))
         .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList("ONE", "THREE")).build())
         .build();
 

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -21,7 +22,8 @@ public class AudubonInterpreterTest {
     String expected = "{\"id\": \"id\", \"created\": null, \"audubonItems\": [{\"creator\": \"Jose Padial\", "
         + "\"creatorUri\": null, \"providerLiteral\": \"CM\", \"provider\": null, \"metadataCreatorLiteral\": null, "
         + "\"metadataCreator\": null, \"metadataProviderLiteral\": null, \"metadataProvider\": null, \"rights\": \"CC0_1_0\", "
-        + "\"rightsUri\": \"http://creativecommons.org/publicdomain/zero/1.0/legalcode\", \"owner\": \"Carnegie Museum of Natural History Herps Collection (CM:Herps)\", \"usageTerms\": "
+        + "\"rightsUri\": \"http://creativecommons.org/publicdomain/zero/1.0/legalcode\", \"owner\": "
+        + "\"Carnegie Museum of Natural History Herps Collection (CM:Herps)\", \"usageTerms\": "
         + "\"CC0 1.0 (Public-domain)\", \"webStatement\": null, \"licenseLogoUrl\": null, \"credit\": null, "
         + "\"attributionLogoUrl\": null, \"attributionLinkUrl\": null, \"fundingAttribution\": null, \"source\": null, "
         + "\"sourceUri\": null, \"description\": \"Photo taken in 2013\", \"caption\": null, \"language\": null, "
@@ -217,6 +219,111 @@ public class AudubonInterpreterTest {
 
     // Should
     Assert.assertEquals(expected, ar.toString());
+
+  }
+
+  @Test
+  public void licensePriorityTest() {
+
+    // State
+    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
+    Map<String, String> audubon1 = new HashMap<>(2);
+    audubon1.put("http://purl.org/dc/elements/1.1/rights",
+        "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode");
+    audubon1.put("http://purl.org/dc/terms/rights", "http://creativecommons.org/licences/by-nc-sa/3.0/legalcode");
+
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
+
+    AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
+
+    AudubonRecord expected = AudubonRecord.newBuilder()
+        .setId("id")
+        .setAudubonItems(
+            Collections.singletonList(
+                Audubon.newBuilder()
+                    .setRights("http://creativecommons.org/licenses/by-nc-sa/3.0/")
+                    .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/3.0/")
+                    .build()
+            )
+        )
+        .build();
+
+    // When
+    AudubonInterpreter.interpret(er, ar);
+
+    // Should
+    Assert.assertEquals(expected, ar);
+
+  }
+
+  @Test
+  public void licenseTest() {
+
+    // State
+    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
+    Map<String, String> audubon1 = new HashMap<>(1);
+    audubon1.put("http://purl.org/dc/terms/rights", "http://creativecommons.org/licences/by-nc-sa/3.0/legalcode");
+
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
+
+    AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
+
+    AudubonRecord expected = AudubonRecord.newBuilder()
+        .setId("id")
+        .setAudubonItems(
+            Collections.singletonList(
+                Audubon.newBuilder()
+                    .setRights("http://creativecommons.org/licenses/by-nc-sa/3.0/")
+                    .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/3.0/")
+                    .build()
+            )
+        )
+        .build();
+
+    // When
+    AudubonInterpreter.interpret(er, ar);
+
+    // Should
+    Assert.assertEquals(expected, ar);
+
+  }
+
+  @Test
+  public void licenseUriTest() {
+
+    // State
+    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
+    Map<String, String> audubon1 = new HashMap<>(1);
+    audubon1.put("http://purl.org/dc/elements/1.1/rights",
+        "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode");
+
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
+
+    AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
+
+    AudubonRecord expected = AudubonRecord.newBuilder()
+        .setId("id")
+        .setAudubonItems(
+            Collections.singletonList(
+                Audubon.newBuilder()
+                    .setRights("http://creativecommons.org/licenses/by-nc-sa/4.0/")
+                    .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/4.0/")
+                    .build()
+            )
+        )
+        .build();
+
+    // When
+    AudubonInterpreter.interpret(er, ar);
+
+    // Should
+    Assert.assertEquals(expected, ar);
 
   }
 
