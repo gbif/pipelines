@@ -20,8 +20,7 @@ public class EsQueries {
       + "    \"match\": {"
       + "      \"datasetKey\": \"%s\""
       + "    }"
-      + "  },"
-      + "  \"stored_fields\": [\"_index\"]"
+      + "  }"
       + "}";
 
   public static final String DELETE_BY_DATASET_QUERY = "{\"query\":{\"match\":{\"datasetKey\":\"%s\"}}}";
