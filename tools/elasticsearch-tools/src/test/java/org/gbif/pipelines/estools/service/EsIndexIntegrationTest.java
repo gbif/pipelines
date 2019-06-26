@@ -64,7 +64,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   }
 
   @Test
-  public void swpaIndexInEmptyAliasTest() {
+  public void swapIndexInEmptyAliasTest() {
     // create index
     String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 1);
 
