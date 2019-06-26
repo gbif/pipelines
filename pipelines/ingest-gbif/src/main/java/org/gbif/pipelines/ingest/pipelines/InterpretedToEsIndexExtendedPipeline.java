@@ -1,5 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.util.Set;
+
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
@@ -65,12 +67,15 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
 
+    // find indexes where the dataset is currently indexed
+    Set<String> existingDatasetIndexes = EsIndexUtils.findDatasetIndexesInAlias(options);
+
+    EsIndexUtils.deleteRecordsByDatasetId(options, existingDatasetIndexes);
     EsIndexUtils.createIndexIfNotExist(options);
-    EsIndexUtils.deleteRecordsByDatasetId(options);
 
     InterpretedToEsIndexPipeline.run(options);
 
-    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(options.getProperties()));
+    EsIndexUtils.updateAlias(options, existingDatasetIndexes, LockConfigFactory.create(options.getProperties()));
 
     FsUtils.removeTmpDirectory(options);
     log.info("Finished main indexing pipeline");

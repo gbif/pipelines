@@ -119,7 +119,7 @@
     <mockwebserver.version>3.11.0</mockwebserver.version>
     <hamcrest-core.version>1.3</hamcrest-core.version>
     <hamcrest-java.version>2.0.0.0</hamcrest-java.version>
-    <embedded.elasticsearch.version>2.7.1</embedded.elasticsearch.version>
+    <embedded.elasticsearch.version>2.10.0</embedded.elasticsearch.version>
     <log4j-over-slf4j.version>1.7.16</log4j-over-slf4j.version>
 
     <!-- Maven plugin -->

@@ -33,7 +33,8 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   private static final String SEARCH = DATASET_TEST + INDEX_SEPARATOR + "*";
 
   /** {@link Rule} requires this field to be public. */
-  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @After
   public void cleanIndexes() {
@@ -63,7 +64,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   }
 
   @Test
-  public void swpaIndexInEmptyAliasTest() {
+  public void swapIndexInEmptyAliasTest() {
     // create index
     String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 1);
 
@@ -147,7 +148,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     assertEquals(n, EsIndex.countDocuments(ES_SERVER.getEsConfig(), idx));
   }
 
-  /** Utility mehtod to assert a newly created index. */
+  /** Utility method to assert a newly created index. */
   private static void assertIndexWithSettingsAndIndexName(String idxCreated, String datasetId, int attempt) {
     // assert index created
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxCreated));
@@ -156,4 +157,29 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     // assert idx name
     assertEquals(datasetId + INDEX_SEPARATOR + attempt, idxCreated);
   }
+
+  @Test
+  public void findDatasetIndexesInAliasesTest() {
+    // create index
+    final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
+    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey, 1);
+
+    // index some documents
+    String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
+    EsService.indexDocument(ES_SERVER.getEsClient(), idx1, "doc", 1, document);
+    EsService.refreshIndex(ES_SERVER.getEsClient(), idx1);
+
+    // add index to alias
+    final String alias = "alias1";
+    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), alias, idx1);
+
+    // When
+    Set<String> indexesFound =
+        EsIndex.findDatasetIndexesInAliases(ES_SERVER.getEsConfig(), new String[]{alias, "fakeAlias"}, datasetKey);
+
+    // Should
+    assertEquals(1, indexesFound.size());
+    assertTrue(indexesFound.contains(idx1));
+  }
+
 }
