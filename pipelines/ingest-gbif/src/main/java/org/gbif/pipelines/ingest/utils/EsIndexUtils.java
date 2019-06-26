@@ -136,6 +136,6 @@ public class EsIndexUtils {
 
   public static Set<String> findDatasetIndexesInAlias(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    return EsIndex.findDatasetIndexesInAlias(config, String.join(",", options.getEsAlias()), options.getDatasetId());
+    return EsIndex.findDatasetIndexesInAliases(config, options.getEsAlias(), options.getDatasetId());
   }
 }

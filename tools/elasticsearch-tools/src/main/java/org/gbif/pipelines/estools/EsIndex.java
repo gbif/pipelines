@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
@@ -307,16 +308,23 @@ public class EsIndex {
   }
 
   /**
-   * Finds the indexes in an alias where a given dataset is present.
+   * Finds the indexes in an alias where a given dataset is present. This method checks that the aliases exist before
+   * querying ES.
    *
    * @param config configuration of the ES instance.
-   * @param alias name of the alias to search in.
+   * @param aliases name of the alias to search in.
    */
-  public static Set<String> findDatasetIndexesInAlias(EsConfig config, String alias, String datasetKey) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
+  public static Set<String> findDatasetIndexesInAliases(EsConfig config, String[] aliases, String datasetKey) {
+    Preconditions.checkArgument(aliases != null && aliases.length > 0, "aliases are required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(datasetKey), "datasetKey is required");
+
     try (EsClient esClient = EsClient.from(config)) {
-      return EsService.findDatasetIndexesInAlias(esClient, alias, datasetKey);
+      // we check if the aliases exist, otherwise ES throws an error.
+      String existingAlias = Arrays.stream(aliases)
+          .filter(alias -> EsService.existsIndex(esClient, alias))
+          .collect(Collectors.joining(","));
+
+      return EsService.findDatasetIndexesInAlias(esClient, existingAlias, datasetKey);
     }
   }
 
