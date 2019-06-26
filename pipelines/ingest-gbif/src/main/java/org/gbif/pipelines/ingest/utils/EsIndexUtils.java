@@ -114,8 +114,7 @@ public class EsIndexUtils {
   }
 
   /** Connects to Elasticsearch instance and deletes records in an index by datasetId */
-  public static void deleteRecordsByDatasetId(EsIndexingPipelineOptions options, Set<String> existingDatasetIndexes,
-      LockConfig lockConfig) {
+  public static void deleteRecordsByDatasetId(EsIndexingPipelineOptions options, Set<String> existingDatasetIndexes) {
     if (existingDatasetIndexes == null || existingDatasetIndexes.isEmpty()) {
       return;
     }
@@ -125,12 +124,10 @@ public class EsIndexUtils {
 
     existingDatasetIndexes.stream()
         .filter(i -> !i.startsWith(options.getDatasetId()))
-        .forEach(idx ->
-            //Lock the index to avoid modifications and stop reads.
-            SharedLockUtils.doInWriteLock(lockConfig, () -> {
+        .forEach(idx -> {
               log.info("ES alias {} delete records by query {}", idx, query);
               EsIndex.deleteRecordsByQuery(config, idx, query);
-            })
+            }
         );
   }
 
