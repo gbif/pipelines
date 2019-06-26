@@ -1,17 +1,11 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.ingest.hdfs.converters.OccurrenceHdfsRecordTransform;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
-import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
-import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
@@ -23,6 +17,8 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.function.UnaryOperator;
 
 import lombok.AccessLevel;
@@ -30,7 +26,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
@@ -95,10 +90,11 @@ public class InterpretedToHdfsTablePipeline {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    String targetPath = FsUtils.buildPath(options.getTargetPath(), options.getDatasetId(),
-                                          OccurrenceHdfsRecord.class.getName().toLowerCase())
-                          .toString();
+    String targetPath = FsUtils.buildPathInterpret(options,
+                                                   OccurrenceHdfsRecord.class.getName().toLowerCase(),
+                                                   id);
 
     //Deletes the target path if it exists
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), targetPath);
