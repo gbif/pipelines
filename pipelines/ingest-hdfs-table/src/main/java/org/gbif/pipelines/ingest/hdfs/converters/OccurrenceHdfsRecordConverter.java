@@ -57,6 +57,7 @@ public class OccurrenceHdfsRecordConverter {
     converters.put(BasicRecord.class, basicRecordMapper());
     converters.put(LocationRecord.class, locationMapper());
     converters.put(TaxonRecord.class, taxonMapper());
+    converters.put(TemporalRecord.class, temporalMapper());
     converters.put(MetadataRecord.class, metadataMapper());
     converters.put(MultimediaRecord.class, multimediaMapper());
   }
@@ -118,6 +119,7 @@ public class OccurrenceHdfsRecordConverter {
     return (hr, sr) -> {
       LocationRecord lr = (LocationRecord)sr;
       hr.setCountrycode(lr.getCountryCode());
+      hr.setCounty(lr.getCountry());
       hr.setContinent(lr.getContinent());
       hr.setDecimallatitude(lr.getDecimalLatitude());
       hr.setDecimallongitude(lr.getDecimalLongitude());
@@ -167,6 +169,7 @@ public class OccurrenceHdfsRecordConverter {
     return (hr, sr) -> {
       TemporalRecord tr = (TemporalRecord)sr;
       Optional.ofNullable(tr.getDateIdentified()).map(STRING_TO_DATE).ifPresent(date -> hr.setDateidentified(date.getTime()));
+      Optional.ofNullable(tr.getModified()).map(STRING_TO_DATE).ifPresent(date -> hr.setModified(date.getTime()));
       hr.setDay(tr.getDay());
       hr.setMonth(tr.getMonth());
       hr.setYear(tr.getYear());
@@ -174,6 +177,7 @@ public class OccurrenceHdfsRecordConverter {
       if (Objects.nonNull(tr.getStartDayOfYear())) {
         hr.setStartdayofyear(tr.getStartDayOfYear().toString());
       }
+
 
       if (Objects.nonNull(tr.getEndDayOfYear())) {
         hr.setEnddayofyear(tr.getEndDayOfYear().toString());
@@ -195,7 +199,7 @@ public class OccurrenceHdfsRecordConverter {
           switch (rankedName.getRank()) {
             case KINGDOM:
               hr.setKingdom(rankedName.getName());
-              hr.setTaxonkey(rankedName.getKey());
+              hr.setKingdomkey(rankedName.getKey());
               break;
             case PHYLUM:
               hr.setPhylum(rankedName.getName());
@@ -261,7 +265,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setReferences(br.getReferences());
       hr.setSex(br.getSex());
       hr.setTypestatus(br.getTypeStatus());
-      hr.setVTypestatus(br.getTypifiedName());
+      hr.setTypifiedname(br.getTypifiedName());
       if (Objects.nonNull(br.getCreated())) {
         hr.setLastcrawled(br.getCreated());
         hr.setLastinterpreted(br.getCreated());
@@ -320,6 +324,14 @@ public class OccurrenceHdfsRecordConverter {
             interpretedFieldname = "abstract$";
           } else if (DwcTerm.class_ == term) {
             interpretedFieldname = "class$";
+          } else if (DwcTerm.group == term) {
+            interpretedFieldname = "group";
+          } else if (DwcTerm.order == term) {
+            interpretedFieldname = "order";
+          } else if (DcTerm.date == term) {
+            interpretedFieldname = "date";
+          } else if (DcTerm.format == term) {
+            interpretedFieldname = "format";
           } else if (DcTerm.format == term) {
             interpretedFieldname = interpretedFieldname.substring(0, interpretedFieldname.length() - 1);
           }
