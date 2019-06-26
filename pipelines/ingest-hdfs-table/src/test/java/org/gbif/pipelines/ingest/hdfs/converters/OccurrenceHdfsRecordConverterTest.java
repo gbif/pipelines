@@ -144,6 +144,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
         Assert.assertEquals("2492483", hdfsRecord.getAcceptednameusageid());
         Assert.assertEquals("Caldisphaera lagunensis Itoh & al., 2003", hdfsRecord.getAcceptedscientificname());
+        Assert.assertEquals(new Integer(2492483), hdfsRecord.getAcceptedtaxonkey());
 
         Assert.assertEquals("Caldisphaera", hdfsRecord.getGenericname());
         Assert.assertEquals("lagunensis", hdfsRecord.getSpecificepithet());
