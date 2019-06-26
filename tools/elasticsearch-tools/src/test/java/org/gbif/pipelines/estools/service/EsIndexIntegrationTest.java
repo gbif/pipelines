@@ -148,7 +148,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     assertEquals(n, EsIndex.countDocuments(ES_SERVER.getEsConfig(), idx));
   }
 
-  /** Utility mehtod to assert a newly created index. */
+  /** Utility method to assert a newly created index. */
   private static void assertIndexWithSettingsAndIndexName(String idxCreated, String datasetId, int attempt) {
     // assert index created
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxCreated));
