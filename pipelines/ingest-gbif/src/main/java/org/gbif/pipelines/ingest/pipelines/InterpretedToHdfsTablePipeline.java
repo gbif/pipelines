@@ -215,7 +215,10 @@ public class InterpretedToHdfsTablePipeline {
     result.waitUntilFinish();
 
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), hdfsTargetPath);
-    FsUtils.moveDirectory(options.getHdfsSiteConfig(), targetPath(options, "*.avro"), hdfsTargetPath);
+    String filter = targetPath(options, "*.avro");
+    log.info("File selector {}", filter);
+    log.info("Target path {}", hdfsTargetPath);
+    FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsTargetPath);
     MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");

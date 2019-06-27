@@ -148,6 +148,28 @@ public final class FsUtils {
     return FileSystem.get(URI.create(path), config);
   }
 
+    /**
+     * Helper method to get file system based on provided configuration.
+     */
+    @SneakyThrows
+    public static FileSystem getFileSystem(String hdfsSiteConfig) {
+
+        Configuration config = new Configuration();
+
+        // check if the hdfs-site.xml is provided
+        if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+            File hdfsSite = new File(hdfsSiteConfig);
+            if (hdfsSite.exists() && hdfsSite.isFile()) {
+                log.info("using hdfs-site.xml");
+                config.addResource(hdfsSite.toURI().toURL());
+            } else {
+                log.warn("hdfs-site.xml does not exist");
+            }
+        }
+
+        return FileSystem.get(config);
+    }
+
   /**
    * Helper method to write/overwrite a file
    */
@@ -182,7 +204,7 @@ public final class FsUtils {
    * @param targetPath target directory
    */
   public static void moveDirectory(String hdfsSiteConfig, String globFilter, String targetPath) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, "/");
+    FileSystem fs = getFileSystem(hdfsSiteConfig);
     try {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
