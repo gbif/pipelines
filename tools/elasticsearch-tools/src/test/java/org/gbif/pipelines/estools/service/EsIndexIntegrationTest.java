@@ -22,6 +22,7 @@ import static org.gbif.pipelines.estools.EsIndex.INDEX_SEPARATOR;
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
 import static org.gbif.pipelines.estools.service.EsConstants.Searching;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link EsIndex}. */
@@ -159,7 +160,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   }
 
   @Test
-  public void findDatasetIndexesInAliasesTest() {
+  public void findDatasetIndexesInAliasTest() {
     // create index
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
     String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey, 1);
@@ -176,6 +177,33 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     // When
     Set<String> indexesFound =
         EsIndex.findDatasetIndexesInAliases(ES_SERVER.getEsConfig(), new String[]{alias, "fakeAlias"}, datasetKey);
+
+    // Should
+    assertEquals(1, indexesFound.size());
+    assertTrue(indexesFound.contains(idx1));
+  }
+
+  @Test
+  public void findDatasetIndexesInAliasesTest() {
+    // create index
+    final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
+    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey, 1);
+
+    // index some documents
+    String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
+    EsService.indexDocument(ES_SERVER.getEsClient(), idx1, "doc", 1, document);
+    EsService.refreshIndex(ES_SERVER.getEsClient(), idx1);
+
+    // add index to aliases
+    final String alias1 = "alias1";
+    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), alias1, idx1);
+
+    final String alias2 = "alias2";
+    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), alias2, idx1);
+
+    // When
+    Set<String> indexesFound =
+        EsIndex.findDatasetIndexesInAliases(ES_SERVER.getEsConfig(), new String[]{alias1, alias2}, datasetKey);
 
     // Should
     assertEquals(1, indexesFound.size());

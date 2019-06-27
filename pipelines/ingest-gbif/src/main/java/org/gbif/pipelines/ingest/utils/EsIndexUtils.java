@@ -16,6 +16,7 @@ import org.gbif.pipelines.parsers.config.LockConfig;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +60,7 @@ public class EsIndexUtils {
   public static void swapIndex(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
-    String[] aliases = options.getEsAlias();
+    Set<String> aliases = Sets.newHashSet(options.getEsAlias());
     String index = options.getEsIndexName();
 
     //Lock the index to avoid modifications and stop reads.
@@ -100,7 +101,7 @@ public class EsIndexUtils {
     // we first check if there are indexes to swap to avoid unnecessary locks
     if (idxToAdd != null || !idxToRemove.isEmpty()) {
       SharedLockUtils.doInWriteLock(lockConfig, () -> {
-        EsIndex.swapIndexInAliases(config, options.getEsAlias(), idxToAdd, idxToRemove);
+        EsIndex.swapIndexInAliases(config, Sets.newHashSet(options.getEsAlias()), idxToAdd, idxToRemove);
 
         Optional.ofNullable(idxToAdd).ifPresent(idx -> EsIndex.refresh(config, idx));
       });

@@ -37,7 +37,8 @@ import static org.junit.Assert.assertTrue;
 public abstract class EsApiIntegration {
 
   /** {@link ClassRule} requires this field to be public. */
-  @ClassRule public static final EsServer ES_SERVER = new EsServer();
+  @ClassRule
+  public static final EsServer ES_SERVER = new EsServer();
 
   // files for testing
   static final Path TEST_MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");
@@ -90,12 +91,21 @@ public abstract class EsApiIntegration {
   /** Asserts that the swap operation was done as expected in the embedded ES instance. */
   static void assertSwapResults(
       String idxAdded, String idxPattern, String alias, Set<String> idxRemoved) {
-    // get indexes of the alias again.
-    Set<String> indexesFoundInAlias =
-        EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), idxPattern, alias);
-    // Only the last index should be returned.
-    assertEquals(1, indexesFoundInAlias.size());
-    assertTrue(indexesFoundInAlias.contains(idxAdded));
+    assertSwapResults(idxAdded, idxPattern, Collections.singleton(alias), idxRemoved);
+  }
+
+  /** Asserts that the swap operation was done as expected in the embedded ES instance. */
+  static void assertSwapResults(
+      String idxAdded, String idxPattern, Set<String> aliases, Set<String> idxRemoved) {
+
+    aliases.forEach(alias -> {
+      // get indexes of the alias again.
+      Set<String> indexesFoundInAlias =
+          EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), idxPattern, alias);
+      // Only the last index should be returned.
+      assertEquals(1, indexesFoundInAlias.size());
+      assertTrue(indexesFoundInAlias.contains(idxAdded));
+    });
 
     // the other indexes shoudn't exist
     for (String removed : idxRemoved) {
@@ -105,10 +115,15 @@ public abstract class EsApiIntegration {
 
   /** Utility method to add an index to an alias. */
   static void addIndexesToAlias(String alias, Set<String> idxToAdd) {
+    addIndexesToAliases(Collections.singleton(alias), idxToAdd);
+  }
+
+  /** Utility method to add an index to some aliases. */
+  static void addIndexesToAliases(Set<String> aliases, Set<String> idxToAdd) {
     // add them to the same alias
     HttpEntity entityBody =
         HttpRequestBuilder.newInstance()
-            .withIndexAliasAction(alias, idxToAdd, Collections.emptySet())
+            .withIndexAliasAction(aliases, idxToAdd, Collections.emptySet())
             .build();
 
     try {

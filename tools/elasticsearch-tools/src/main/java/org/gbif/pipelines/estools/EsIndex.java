@@ -185,7 +185,7 @@ public class EsIndex {
   public static void swapIndexInAlias(EsConfig config, String alias, String index) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-    swapIndexInAliases(config, new String[]{alias}, index, Collections.emptySet());
+    swapIndexInAliases(config, Collections.singleton(alias), index, Collections.emptySet());
   }
 
   /**
@@ -199,8 +199,8 @@ public class EsIndex {
    * @param aliases aliases that will be modified.
    * @param index index to add to the aliases that will become the only index of the aliases for the dataset.
    */
-  public static void swapIndexInAliases(EsConfig config, String[] aliases, String index) {
-    Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
+  public static void swapIndexInAliases(EsConfig config, Set<String> aliases, String index) {
+    Preconditions.checkArgument(aliases != null && !aliases.isEmpty(), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
     swapIndexInAliases(config, aliases, index, Collections.emptySet());
   }
@@ -214,37 +214,33 @@ public class EsIndex {
    * @param index index to add to the aliases that will become the only index of the alias for the dataset.
    * @param extraIdxToRemove extra indexes to be removed from the aliases
    */
-  public static void swapIndexInAliases(EsConfig config, String[] aliases, String index, Set<String> extraIdxToRemove) {
-    Preconditions.checkArgument(aliases != null && aliases.length > 0, "alias is required");
+  public static void swapIndexInAliases(EsConfig config, Set<String> aliases, String index,
+      Set<String> extraIdxToRemove) {
+    Preconditions.checkArgument(aliases != null && !aliases.isEmpty(), "alias is required");
 
     try (EsClient esClient = EsClient.from(config)) {
 
-      Arrays.stream(aliases)
-          .forEach(
-              alias -> {
+      Set<String> idxToAdd = new HashSet<>();
+      Set<String> idxToRemove = new HashSet<>();
 
-                Set<String> idxToAdd = new HashSet<>();
-                Set<String> idxToRemove = new HashSet<>();
+      // the index to add is optional
+      Optional.ofNullable(index).ifPresent(idx -> {
+        idxToAdd.add(idx);
 
-                // the index to add is optional
-                Optional.ofNullable(index).ifPresent(idx -> {
-                  idxToAdd.add(idx);
+        // look for old indexes for this datasetId to remove them from the alias
+        String datasetId = getDatasetIdFromIndex(idx);
+        Optional.ofNullable(
+            getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), aliases))
+            .ifPresent(idxToRemove::addAll);
+      });
 
-                  // look for old indexes for this datasetId to remove them from the alias
-                  String datasetId = getDatasetIdFromIndex(idx);
-                  Optional.ofNullable(
-                      getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), alias))
-                      .ifPresent(idxToRemove::addAll);
-                });
+      // add extra indexes to remove
+      Optional.ofNullable(extraIdxToRemove).ifPresent(idxToRemove::addAll);
 
-                // add extra indexes to remove
-                Optional.ofNullable(extraIdxToRemove).ifPresent(idxToRemove::addAll);
+      log.info("Removing indexes {} and adding index {} in alias {}", idxToRemove, index, aliases);
 
-                log.info("Removing indexes {} and adding index {} in alias {}", idxToRemove, index, alias);
-
-                // swap the indexes
-                swapIndexes(esClient, alias, idxToAdd, idxToRemove);
-              });
+      // swap the indexes
+      swapIndexes(esClient, aliases, idxToAdd, idxToRemove);
 
       // change index settings to search settings
       updateIndexSettings(esClient, index, SettingsType.SEARCH);

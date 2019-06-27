@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Sets;
 
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.gbif.pipelines.estools.common.SettingsType.SEARCH;
@@ -31,6 +32,7 @@ import static org.junit.Assert.assertTrue;
 public class EsServiceIIntegrationTest extends EsApiIntegration {
 
   private static final String ALIAS_TEST = "alias";
+  private static final String ANOTHER_ALIAS_TEST = "alias2";
 
   /** {@link Rule} requires this field to be public. */
   @Rule
@@ -142,17 +144,56 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     assertTrue(indexes.containsAll(initialIndexes));
 
     // When
-    EsService.swapIndexes(ES_SERVER.getEsClient(), ALIAS_TEST, Collections.singleton(idx4), initialIndexes);
+    EsService.swapIndexes(ES_SERVER.getEsClient(), Collections.singleton(ALIAS_TEST), Collections.singleton(idx4),
+        initialIndexes);
 
     // Should
     assertSwapResults(idx4, "idx*", ALIAS_TEST, initialIndexes);
 
     // When
-    EsService.swapIndexes(ES_SERVER.getEsClient(), ALIAS_TEST, Collections.singleton(idx5),
+    EsService.swapIndexes(ES_SERVER.getEsClient(), Collections.singleton(ALIAS_TEST), Collections.singleton(idx5),
         Collections.singleton(idx4));
 
     // Should
     assertSwapResults(idx5, "idx*", ALIAS_TEST, Collections.singleton(idx4));
+  }
+
+  @Test
+  public void swapInMultipleAliasesTest() {
+
+    // State
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
+    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(), "idx2", INDEXING);
+    String idx3 = EsService.createIndex(ES_SERVER.getEsClient(), "idx3", INDEXING);
+    Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
+
+    Set<String> aliases = Sets.newHashSet(ALIAS_TEST, ANOTHER_ALIAS_TEST);
+    addIndexesToAliases(aliases, initialIndexes);
+
+    String idx4 = EsService.createIndex(ES_SERVER.getEsClient(), "idx4", INDEXING);
+    String idx5 = EsService.createIndex(ES_SERVER.getEsClient(), "idx5", INDEXING);
+
+    // When
+    Set<String> indexes =
+        EsService.getIndexesByAliasAndIndexPattern(ES_SERVER.getEsClient(), "idx*", aliases);
+
+    // Should
+    assertEquals(3, indexes.size());
+    assertTrue(indexes.containsAll(initialIndexes));
+
+    // When
+    EsService.swapIndexes(ES_SERVER.getEsClient(), aliases, Collections.singleton(idx4),
+        initialIndexes);
+
+    // Should
+    assertSwapResults(idx4, "idx*", aliases, initialIndexes);
+
+    // When
+    EsService.swapIndexes(ES_SERVER.getEsClient(), aliases, Collections.singleton(idx5),
+        Collections.singleton(idx4));
+
+    // Should
+    assertSwapResults(idx5, "idx*", aliases, Collections.singleton(idx4));
   }
 
   @Test
@@ -172,7 +213,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
 
     // When
-    EsService.swapIndexes(ES_SERVER.getEsClient(), ALIAS_TEST, Collections.singleton(idx1), Collections.emptySet());
+    EsService.swapIndexes(ES_SERVER.getEsClient(), Collections.singleton(ALIAS_TEST), Collections.singleton(idx1),
+        Collections.emptySet());
 
     // Should
     assertSwapResults(idx1, "idx*", ALIAS_TEST, Collections.emptySet());
@@ -182,8 +224,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void swapMissingIndexTest() {
 
     // When
-    EsService.swapIndexes(ES_SERVER.getEsClient(), "fake-alias", Collections.singleton("fake-index"),
-        Collections.emptySet());
+    EsService.swapIndexes(ES_SERVER.getEsClient(), Collections.singleton("fake-alias"),
+        Collections.singleton("fake-index"), Collections.emptySet());
 
     // Should
     thrown.expectMessage(CoreMatchers.containsString("afwfawf"));
@@ -315,7 +357,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     }
 
     final String alias = "alias1";
-    EsService.swapIndexes(ES_SERVER.getEsClient(), alias, indexes, Collections.emptySet());
+    EsService.swapIndexes(ES_SERVER.getEsClient(), Collections.singleton(alias), indexes, Collections.emptySet());
 
     // When
     Set<String> indexesFound = EsService.findDatasetIndexesInAlias(ES_SERVER.getEsClient(), alias, datasetKey);

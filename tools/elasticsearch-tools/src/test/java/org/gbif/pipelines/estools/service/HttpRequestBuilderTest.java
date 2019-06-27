@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Sets;
 
 import static org.gbif.pipelines.estools.service.HttpRequestBuilder.loadFile;
 import static org.gbif.pipelines.estools.service.JsonHandler.readTree;
@@ -35,7 +36,8 @@ public class HttpRequestBuilderTest {
   private static final String TEST_MAPPINGS_PATH = "mappings/simple-mapping.json";
 
   /** {@link Rule} requires this field to be public. */
-  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void bodyIndexingTest() {
@@ -108,12 +110,16 @@ public class HttpRequestBuilderTest {
   public void bodyIndexAliasActionsTest() {
 
     // State
-    String alias = "alias";
+    String alias1 = "alias1";
+    String alias2 = "alias2";
+    Set<String> aliases = Sets.newHashSet(alias1, alias2);
     Set<String> idxToAdd = new HashSet<>(Arrays.asList("add1", "add2"));
     Set<String> idxToRemove = new HashSet<>(Arrays.asList("remove1", "remove2"));
 
     HttpEntity entity =
-        HttpRequestBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
+        HttpRequestBuilder.newInstance()
+            .withIndexAliasAction(aliases, idxToAdd, idxToRemove)
+            .build();
 
     // When
     JsonNode node = readTree(entity);
@@ -126,6 +132,11 @@ public class HttpRequestBuilderTest {
             .stream()
             .map(jsonNode -> jsonNode.get(Field.INDEX).asText())
             .collect(Collectors.toSet());
+    Set<String> aliasesModified =
+        addActions
+            .stream()
+            .map(jsonNode -> jsonNode.get(Field.ALIAS).asText())
+            .collect(Collectors.toSet());
 
     // remove index actions
     List<JsonNode> removeActions = actions.findValues(Action.REMOVE_INDEX);
@@ -137,14 +148,13 @@ public class HttpRequestBuilderTest {
 
     // Should
     assertTrue(node.has(Field.ACTIONS));
-    assertEquals(4, node.path(Field.ACTIONS).size());
+    assertEquals(6, node.path(Field.ACTIONS).size());
 
     // add actions
-    assertEquals(2, addActions.size());
+    assertEquals(4, addActions.size());
     assertTrue(indexesAdded.containsAll(idxToAdd));
+    assertTrue(aliasesModified.containsAll(aliases));
     assertEquals(idxToAdd.size(), indexesAdded.size());
-    assertEquals(alias, addActions.get(0).get(Field.ALIAS).asText());
-    assertEquals(alias, addActions.get(1).get(Field.ALIAS).asText());
 
     // remove index actions
     assertEquals(2, removeActions.size());

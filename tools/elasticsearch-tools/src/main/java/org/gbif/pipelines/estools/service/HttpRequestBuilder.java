@@ -89,17 +89,17 @@ class HttpRequestBuilder {
   }
 
   /**
-   * Adds actions to add and remove index from an alias. Note that the indexes to be removed will be
+   * Adds actions to add and remove index from the aliases. Note that the indexes to be removed will be
    * removed completely from the ES instance.
    *
-   * @param alias alias that wil be modify. This parameter is required.
-   * @param idxToAdd indexes to add to the alias.
-   * @param idxToRemove indexes to remove from the alias. These indexes will be completely removed
-   *     form the ES instance.
+   * @param aliases aliases that wil be modify. This parameter is required.
+   * @param idxToAdd indexes to add to the aliases.
+   * @param idxToRemove indexes to remove. Note that these indexes will be completely removed
+   * form the ES instance.
    */
   HttpRequestBuilder withIndexAliasAction(
-      String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
-    this.indexAliasAction = new IndexAliasAction(alias, idxToAdd, idxToRemove);
+      Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
+    this.indexAliasAction = new IndexAliasAction(aliases, idxToAdd, idxToRemove);
     return this;
   }
 
@@ -130,7 +130,7 @@ class HttpRequestBuilder {
    * alias.
    */
   private ArrayNode createIndexAliasActions(IndexAliasAction indexAliasAction) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(indexAliasAction.alias));
+    Preconditions.checkArgument(indexAliasAction.aliases != null && !indexAliasAction.aliases.isEmpty());
 
     ArrayNode actions = createArrayNode();
 
@@ -141,7 +141,7 @@ class HttpRequestBuilder {
     // add index action
     if (indexAliasAction.idxToAdd != null) {
       indexAliasAction.idxToAdd.forEach(
-          idx -> addIndexToAliasAction(indexAliasAction.alias, idx, actions));
+          idx -> addIndexToAliasAction(indexAliasAction.aliases, idx, actions));
     }
 
     return actions;
@@ -158,16 +158,18 @@ class HttpRequestBuilder {
     actions.add(action);
   }
 
-  private static void addIndexToAliasAction(String alias, String idx, ArrayNode actions) {
-    // create swap node
-    ObjectNode swapNode = createObjectNode();
-    swapNode.put(Field.INDEX, idx);
-    swapNode.put(Field.ALIAS, alias);
+  private static void addIndexToAliasAction(Set<String> aliases, String idx, ArrayNode actions) {
+    aliases.forEach(alias -> {
+      // create swap node
+      ObjectNode swapNode = createObjectNode();
+      swapNode.put(Field.INDEX, idx);
+      swapNode.put(Field.ALIAS, alias);
 
-    // add the node to the action
-    ObjectNode action = createObjectNode();
-    action.set(Action.ADD, swapNode);
-    actions.add(action);
+      // add the node to the action
+      ObjectNode action = createObjectNode();
+      action.set(Action.ADD, swapNode);
+      actions.add(action);
+    });
   }
 
   private static HttpEntity createEntity(ObjectNode entityNode) {
@@ -181,12 +183,12 @@ class HttpRequestBuilder {
 
   private static class IndexAliasAction {
 
-    final String alias;
+    final Set<String> aliases;
     final Set<String> idxToAdd;
     final Set<String> idxToRemove;
 
-    IndexAliasAction(String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
-      this.alias = alias;
+    IndexAliasAction(Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
+      this.aliases = aliases;
       this.idxToAdd = idxToAdd;
       this.idxToRemove = idxToRemove;
     }
