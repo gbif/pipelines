@@ -258,6 +258,7 @@ public class OccurrenceHdfsRecordConverter {
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> basicRecordMapper() {
     return (hr, sr) -> {
       BasicRecord br = (BasicRecord)sr;
+      hr.setGbifid(br.getGbifId());
       hr.setBasisofrecord(br.getBasisOfRecord());
       hr.setEstablishmentmeans(br.getEstablishmentMeans());
       hr.setIndividualcount(br.getIndividualCount());
@@ -309,7 +310,6 @@ public class OccurrenceHdfsRecordConverter {
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> extendedRecordMapper() {
     return (hr, sr) -> {
       ExtendedRecord er = (ExtendedRecord)sr;
-      hr.setGbifid(Long.parseLong(er.getId()));
       er.getCoreTerms().forEach((k, v) -> Optional.ofNullable(TERM_FACTORY.findTerm(k)).ifPresent(term -> {
 
         if (Terms.verbatimTerms().contains(term)) {
