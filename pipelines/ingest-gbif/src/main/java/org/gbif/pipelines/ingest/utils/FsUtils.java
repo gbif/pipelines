@@ -184,7 +184,7 @@ public final class FsUtils {
   public static void moveDirectory(String hdfsSiteConfig, String globFilter, String targetPath) {
     FileSystem fs = getFileSystem(hdfsSiteConfig, "/");
     try {
-      FileStatus[] status = fs.globStatus(globFilter);
+      FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
         fs.rename(path, new Path(targetPath, path.getName()));
