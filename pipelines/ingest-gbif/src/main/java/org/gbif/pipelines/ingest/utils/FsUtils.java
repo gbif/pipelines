@@ -209,6 +209,7 @@ public final class FsUtils {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
+        log.info("Moving path {}", path.toString());
         fs.rename(path, new Path(targetPath, path.getName()));
       }
     } catch (IOException e) {
