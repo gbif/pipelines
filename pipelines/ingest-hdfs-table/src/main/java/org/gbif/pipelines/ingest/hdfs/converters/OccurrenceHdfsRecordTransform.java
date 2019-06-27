@@ -7,6 +7,7 @@ import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.*;
 
 import java.io.Serializable;
+import java.util.function.UnaryOperator;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -19,12 +20,14 @@ import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
+import org.gbif.pipelines.transforms.core.BasicTransform;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
 public class OccurrenceHdfsRecordTransform  {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private static final String BASE_NAME = "hdfsview";
 
   /**
    * Reads avro files from path, which contains {@link OccurrenceHdfsRecord}
@@ -43,6 +46,16 @@ public class OccurrenceHdfsRecordTransform  {
    */
   public static AvroIO.Write<OccurrenceHdfsRecord> write(String toPath) {
     return AvroIO.write(OccurrenceHdfsRecord.class).to(toPath).withSuffix(PipelinesVariables.Pipeline.AVRO_EXTENSION).withCodec(BASE_CODEC);
+  }
+
+  /**
+   * Writes {@link BasicRecord} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link BasicTransform#BASE_NAME}
+   */
+  public static AvroIO.Write<OccurrenceHdfsRecord> write(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(BASE_NAME));
   }
 
   /**

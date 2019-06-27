@@ -10,15 +10,12 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -175,6 +172,25 @@ public final class FsUtils {
       deleteDirectoryByPrefix(fs, new Path(directoryPath), filePrefix);
     } catch (IOException e) {
       log.warn("Can't delete folder - {}, prefix - {}", directoryPath, filePrefix);
+    }
+  }
+
+  /**
+   * Moves a list files that match against a glob filter into a target directory.
+   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param globFilter filter used to filter files and paths
+   * @param targetPath target directory
+   */
+  public static void moveDirectory(String hdfsSiteConfig, String globFilter, String targetPath) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, "/");
+    try {
+      FileStatus[] status = fs.globStatus(globFilter);
+      Path[] paths = FileUtil.stat2Paths(status);
+      for (Path path : paths) {
+        fs.rename(path, new Path(targetPath, path.getName()));
+      }
+    } catch (IOException e) {
+      log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
     }
   }
 

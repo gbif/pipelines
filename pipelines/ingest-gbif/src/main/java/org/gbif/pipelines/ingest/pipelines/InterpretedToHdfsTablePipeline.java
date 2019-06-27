@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.hdfs.converters.OccurrenceHdfsRecordTransform;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -86,18 +87,44 @@ public class InterpretedToHdfsTablePipeline {
     run(options);
   }
 
+  /**
+   * Builds the target path based on a file name or else in file selector.
+   * @param options pipeline options
+   * @param fileSelector pattern of target name or file selector
+   * @return path to the target file or pattern
+   */
+  private static String targetPath(InterpretationPipelineOptions options, String fileSelector) {
+    return FsUtils.buildPath(hdfsViewTargetPath(options),
+                            "view_occurrence" + fileSelector)
+                            .toString();
+  }
+
+  /**
+   * Builds the target base path of the hdfs view.
+   * @param options options pipeline options
+   * @return path to the directory where the hdfs view is stored
+   */
+  private static String hdfsViewTargetPath(InterpretationPipelineOptions options) {
+    return FsUtils.buildPath(options.getTargetPath(),
+                            options.getDatasetId(),
+                            options.getAttempt().toString(),
+                            PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME,
+                            OccurrenceHdfsRecord.class.getName().toLowerCase())
+                            .toString();
+  }
+
   public static void run(InterpretationPipelineOptions options) {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    String targetPath = FsUtils.buildPathInterpret(options,
-                                                   OccurrenceHdfsRecord.class.getName().toLowerCase(),
-                                                   id);
+    String targetPath = targetPath(options, id);
+
+    String hdfsTargetPath = FsUtils.buildPath(options.getTargetPath(), options.getDatasetId(), "hdfsview").toString();
 
     //Deletes the target path if it exists
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), targetPath);
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), hdfsViewTargetPath(options));
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
@@ -187,6 +214,8 @@ public class InterpretedToHdfsTablePipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), hdfsTargetPath);
+    FsUtils.moveDirectory(options.getHdfsSiteConfig(), targetPath(options, "*.avro"), hdfsTargetPath);
     MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");
