@@ -62,11 +62,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline some.properties
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToHdfsTablePipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToHdfsTablePipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
@@ -109,7 +109,7 @@ public class InterpretedToHdfsTablePipeline {
                             options.getDatasetId(),
                             options.getAttempt().toString(),
                             PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME,
-                            OccurrenceHdfsRecord.class.getName().toLowerCase())
+                            OccurrenceHdfsRecord.class.getSimpleName().toLowerCase())
                             .toString();
   }
 
