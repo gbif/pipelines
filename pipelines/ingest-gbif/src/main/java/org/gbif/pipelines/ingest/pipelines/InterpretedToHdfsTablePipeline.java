@@ -117,7 +117,7 @@ public class InterpretedToHdfsTablePipeline {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
-    String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+    String id = options.getDatasetId() + '_' +Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     String targetPath = targetPath(options, id);
 
@@ -214,7 +214,8 @@ public class InterpretedToHdfsTablePipeline {
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
       //Moving files to the directory of latest records
-      FsUtils.mkdirs(options.getHdfsSiteConfig(), hdfsTargetPath);
+      String hdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
+      FsUtils.deleteByPattern(options.getHdfsSiteConfig(), hdfsViewPath + '*' + options.getDatasetId() + '*');
       String filter = targetPath(options, "*.avro");
       log.info("Moving files with pattern {} to {}", filter, hdfsTargetPath);
       FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsTargetPath);
