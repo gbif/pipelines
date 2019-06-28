@@ -252,6 +252,13 @@ public final class FsUtils {
     }
   }
 
+  @SneakyThrows
+  public static void mkdirs(String hdfsSiteConfig, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig);
+    deleteIfExist(hdfsSiteConfig, path);
+    fs.mkdirs(new Path(path));
+  }
+
   /**
    * Deletes directories if a dataset with the same attempt was interpreted before
    */

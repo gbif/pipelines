@@ -214,6 +214,7 @@ public class InterpretedToHdfsTablePipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
+    FsUtils.mkdirs(options.getHdfsSiteConfig(), hdfsTargetPath);
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), hdfsTargetPath);
     String filter = targetPath(options, "*.avro");
     log.info("File selector {}", filter);
