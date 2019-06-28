@@ -24,9 +24,13 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 
+/**
+ * Apache Beam functions and I/O methods to handle {@link OccurrenceHdfsRecord}.
+ */
 public class OccurrenceHdfsRecordTransform  {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
   private static final String BASE_NAME = "hdfsview";
 
   /**
@@ -89,27 +93,9 @@ public class OccurrenceHdfsRecordTransform  {
    * PCollection<KV<String, AudubonRecord>> audubonCollection = ...
    * PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection = ...
    *
-   * SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-   *     GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
-   *         .converter();
+   * OccurrenceHdfsRecord record = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(mdr, br, tr, lr, txr, mmr, mfr, er);
    *
-   * PCollection<String> jsonCollection =
-   *     KeyedPCollectionTuple
-   *         // Core
-   *         .of(brTag, basicCollection)
-   *         .and(trTag, temporalCollection)
-   *         .and(lrTag, locationCollection)
-   *         .and(txrTag, taxonCollection)
-   *         // Extension
-   *         .and(mrTag, multimediaCollection)
-   *         .and(irTag, imageCollection)
-   *         .and(arTag, audubonCollection)
-   *         .and(mfrTag, measurementCollection)
-   *         // Raw
-   *         .and(erTag, verbatimCollection)
-   *         // Apply
-   *         .apply("Grouping objects", CoGroupByKey.create())
-   *         .apply("Merging to json", gbifJsonDoFn);
+   *  c.output(record);
    * }</pre>
    */
   @AllArgsConstructor(staticName = "create")

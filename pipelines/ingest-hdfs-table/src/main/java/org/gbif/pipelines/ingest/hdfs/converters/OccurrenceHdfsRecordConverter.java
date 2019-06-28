@@ -46,11 +46,16 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}.
+ */
 public class OccurrenceHdfsRecordConverter {
 
+  //Registered converters
   private static Map<Class<? extends SpecificRecordBase>, BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase>>
     converters;
 
+  //Converters
   static {
     converters = new HashMap<>();
     converters.put(ExtendedRecord.class, extendedRecordMapper());
@@ -62,6 +67,7 @@ public class OccurrenceHdfsRecordConverter {
     converters.put(MultimediaRecord.class, multimediaMapper());
   }
 
+  //Converts a TemporalAccessor into Date
   static final Function<TemporalAccessor, Date> TEMPORAL_TO_DATE =
     temporalAccessor -> {
       if (temporalAccessor instanceof ZonedDateTime) {
@@ -79,6 +85,7 @@ public class OccurrenceHdfsRecordConverter {
       }
     };
 
+  //Supported Date formats
   private static final DateTimeFormatter FORMATTER =
     DateTimeFormatter.ofPattern(
       "[yyyy-MM-dd'T'HH:mm:ss.SSS XXX][yyyy-MM-dd'T'HH:mm:ss.SSSXXX][yyyy-MM-dd'T'HH:mm:ss.SSS]"
@@ -86,6 +93,7 @@ public class OccurrenceHdfsRecordConverter {
       + "[yyyy-MM-dd'T'HH:mm][yyyy-MM-dd][yyyy-MM][yyyy]")
       .withZone(ZoneId.of("UTC"));
 
+  //Converts a String into Date
   private static final Function<String, Date> STRING_TO_DATE =
     dateAsString -> {
       if (Strings.isNullOrEmpty(dateAsString)) {
@@ -107,6 +115,11 @@ public class OccurrenceHdfsRecordConverter {
 
   private static final Logger LOG = LoggerFactory.getLogger(OccurrenceHdfsRecordConverter.class);
 
+  /**
+   * Adds the list of issues to the list of issues in the {@link OccurrenceHdfsRecord}.
+   * @param issueRecord
+   * @param hr target object
+   */
   private static void addIssues(IssueRecord issueRecord, OccurrenceHdfsRecord hr) {
     if (Objects.nonNull(issueRecord) && Objects.nonNull(issueRecord.getIssueList())) {
       List<String> currentIssues =  hr.getIssue();
@@ -115,6 +128,9 @@ public class OccurrenceHdfsRecordConverter {
     }
   }
 
+  /**
+   * Copies the {@link LocationRecord} data into the {@link OccurrenceHdfsRecord}.
+   */
   private static BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase> locationMapper() {
     return (hr, sr) -> {
       LocationRecord lr = (LocationRecord)sr;
@@ -146,6 +162,9 @@ public class OccurrenceHdfsRecordConverter {
     };
   }
 
+  /**
+   * Copies the {@link MetadataRecord} data into the {@link OccurrenceHdfsRecord}.
+   */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> metadataMapper() {
     return (hr, sr) -> {
       MetadataRecord mr = (MetadataRecord)sr;
@@ -165,6 +184,10 @@ public class OccurrenceHdfsRecordConverter {
     };
   }
 
+
+  /**
+   * Copies the {@link TemporalRecord} data into the {@link OccurrenceHdfsRecord}.
+   */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> temporalMapper() {
     return (hr, sr) -> {
       TemporalRecord tr = (TemporalRecord)sr;
@@ -190,6 +213,9 @@ public class OccurrenceHdfsRecordConverter {
     };
   }
 
+  /**
+   * Copies the {@link TaxonRecord} data into the {@link OccurrenceHdfsRecord}.
+   */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> taxonMapper() {
     return (hr, sr) -> {
       TaxonRecord tr = (TaxonRecord)sr;
@@ -255,6 +281,9 @@ public class OccurrenceHdfsRecordConverter {
     };
   }
 
+  /**
+   * Copies the {@link BasicRecord} data into the {@link OccurrenceHdfsRecord}.
+   */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> basicRecordMapper() {
     return (hr, sr) -> {
       BasicRecord br = (BasicRecord)sr;
@@ -277,6 +306,13 @@ public class OccurrenceHdfsRecordConverter {
     };
   }
 
+  /**
+   * From a {@link Schema.Field} copies it value into a the {@link OccurrenceHdfsRecord} field using the recognized data type.
+   * @param occurrenceHdfsRecord target record
+   * @param avroField field to be copied
+   * @param fieldName {@link OccurrenceHdfsRecord} field/property name
+   * @param value field data/value
+   */
   private static void setHdfsRecordField(OccurrenceHdfsRecord occurrenceHdfsRecord, Schema.Field avroField, String fieldName, String value) {
     try {
       Schema.Type fieldType = avroField.schema().getType();
@@ -307,6 +343,11 @@ public class OccurrenceHdfsRecordConverter {
       LOG.error("Ignoring error setting field {}", avroField, ex);
     }
   }
+
+
+  /**
+   * Copies the {@link ExtendedRecord} data into the {@link OccurrenceHdfsRecord}.
+   */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> extendedRecordMapper() {
     return (hr, sr) -> {
       ExtendedRecord er = (ExtendedRecord)sr;
@@ -341,15 +382,25 @@ public class OccurrenceHdfsRecordConverter {
     };
   }
 
+
+  /**
+   * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
+   * @param records list of input records
+   * @return a {@link OccurrenceHdfsRecord} instance based on the input records
+   */
   public static OccurrenceHdfsRecord toOccurrenceHdfsRecord(SpecificRecordBase...records) {
     OccurrenceHdfsRecord occurrenceHdfsRecord = new OccurrenceHdfsRecord();
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
     for (SpecificRecordBase record : records) {
-      Optional.ofNullable(converters.get(record.getClass())).ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord,record));
+      Optional.ofNullable(converters.get(record.getClass()))
+              .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
     }
     return occurrenceHdfsRecord;
   }
 
+  /**
+   * Collects the {@link MultimediaRecord}  mediaTypes data into the {@link OccurrenceHdfsRecord#setMediatype(List)}.
+   */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> multimediaMapper() {
     return (hr, sr) -> {
       MultimediaRecord mr = (MultimediaRecord)sr;

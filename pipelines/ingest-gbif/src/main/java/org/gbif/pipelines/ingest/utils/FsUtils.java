@@ -127,11 +127,11 @@ public final class FsUtils {
   }
 
   /**
-   * Helper method to get file system based on provided configuration.
+   * Creates an instances of a {@link Configuration} using a xml HDFS configuration file.
+   * @param hdfsSiteConfig path to the hdfs-site.xml or HDFS config file
+   * @return a {@link Configuration} based on the provided config file
    */
-  @SneakyThrows
-  public static FileSystem getFileSystem(String hdfsSiteConfig, String path) {
-
+  private static Configuration  getHdfsConfiguration(String hdfsSiteConfig) {
     Configuration config = new Configuration();
 
     // check if the hdfs-site.xml is provided
@@ -144,8 +144,15 @@ public final class FsUtils {
         log.warn("hdfs-site.xml does not exist");
       }
     }
+    return  config;
+  }
 
-    return FileSystem.get(URI.create(path), config);
+  /**
+   * Helper method to get file system based on provided configuration.
+   */
+  @SneakyThrows
+  public static FileSystem getFileSystem(String hdfsSiteConfig, String path) {
+    return FileSystem.get(URI.create(path), getHdfsConfiguration(hdfsSiteConfig));
   }
 
     /**
@@ -153,21 +160,7 @@ public final class FsUtils {
      */
     @SneakyThrows
     public static FileSystem getFileSystem(String hdfsSiteConfig) {
-
-        Configuration config = new Configuration();
-
-        // check if the hdfs-site.xml is provided
-        if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-            File hdfsSite = new File(hdfsSiteConfig);
-            if (hdfsSite.exists() && hdfsSite.isFile()) {
-                log.info("using hdfs-site.xml");
-                config.addResource(hdfsSite.toURI().toURL());
-            } else {
-                log.warn("hdfs-site.xml does not exist");
-            }
-        }
-
-        return FileSystem.get(config);
+      return FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
     }
 
   /**
@@ -209,7 +202,6 @@ public final class FsUtils {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
-        log.info("Moving path {}", path.toString());
         fs.rename(path, new Path(targetPath, path.getName()));
       }
     } catch (IOException e) {
@@ -252,6 +244,11 @@ public final class FsUtils {
     }
   }
 
+  /**
+   * Creates a directory, it it exists it is removed first.
+   * @param hdfsSiteConfig HDFS config file
+   * @param path directory to be created
+   */
   @SneakyThrows
   public static void mkdirs(String hdfsSiteConfig, String path) {
     FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig);

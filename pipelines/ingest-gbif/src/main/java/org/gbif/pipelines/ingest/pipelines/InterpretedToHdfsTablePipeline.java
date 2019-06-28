@@ -55,8 +55,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
  *      {@link TaxonRecord},
  *      {@link LocationRecord}
  *    2) Joins avro files
- *    3) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
- *    4) Pushes data to Elasticsearch instance
+ *    3) Converts to a {@link OccurrenceHdfsRecord} based on the input files
+ *    4) Moves the produced files to a directory where the latest version of HDFS records are kept
  * </pre>
  *
  * <p>How to run:
@@ -207,18 +207,20 @@ public class InterpretedToHdfsTablePipeline {
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Merging to HdfsRecord", toHdfsRecordDoFn);
 
-
     hdfsRecordPCollection.apply(OccurrenceHdfsRecordTransform.write(targetPath));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
-    result.waitUntilFinish();
 
-    FsUtils.mkdirs(options.getHdfsSiteConfig(), hdfsTargetPath);
-    String filter = targetPath(options, "*.avro");
-    log.info("File selector {}", filter);
-    log.info("Target path {}", hdfsTargetPath);
-    FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsTargetPath);
+    if (PipelineResult.State.DONE == result.waitUntilFinish()) {
+      //Moving files to the directory of latest records
+      FsUtils.mkdirs(options.getHdfsSiteConfig(), hdfsTargetPath);
+      String filter = targetPath(options, "*.avro");
+      log.info("Moving files with pattern {} to {}", filter, hdfsTargetPath);
+      FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsTargetPath);
+    }
+
+    //Metrics
     MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");
