@@ -131,6 +131,7 @@ public final class FsUtils {
    * @param hdfsSiteConfig path to the hdfs-site.xml or HDFS config file
    * @return a {@link Configuration} based on the provided config file
    */
+  @SneakyThrows
   private static Configuration  getHdfsConfiguration(String hdfsSiteConfig) {
     Configuration config = new Configuration();
 
@@ -206,6 +207,24 @@ public final class FsUtils {
       }
     } catch (IOException e) {
       log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
+    }
+  }
+
+  /**
+   * Deletes a list files that match against a glob filter into a target directory.
+   * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param globFilter filter used to filter files and paths
+   */
+  public static void deleteByPattern(String hdfsSiteConfig, String globFilter) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig);
+    try {
+      FileStatus[] status = fs.globStatus(new Path(globFilter));
+      Path[] paths = FileUtil.stat2Paths(status);
+      for (Path path : paths) {
+        fs.delete(path, Boolean.TRUE);
+      }
+    } catch (IOException e) {
+      log.warn("Can't delete files using filter - {}", globFilter);
     }
   }
 
