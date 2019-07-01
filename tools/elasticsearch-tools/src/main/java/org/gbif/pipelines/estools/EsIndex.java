@@ -331,7 +331,7 @@ public class EsIndex {
   private static String getDatasetIdFromIndex(String index) {
     List<String> pieces = Arrays.asList(index.split(INDEX_SEPARATOR));
 
-    if (pieces.size() != 2) {
+    if (pieces.size() < 2) {
       log.error("Index {} doesn't follow the pattern \"{datasetId}_{attempt}\"", index);
       throw new IllegalArgumentException("index has to follow the pattern \"{datasetId}_{attempt}\"");
     }
