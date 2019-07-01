@@ -1,12 +1,12 @@
 package org.gbif.pipelines.core.converters;
 
+import java.util.Collections;
+
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-
-import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Test;

@@ -2,8 +2,8 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -51,7 +51,7 @@ public class AmplificationTransform {
   /**
    * Checks if list contains {@link RecordType#AMPLIFICATION}, else returns empty {@link PCollection<ExtendedRecord>}
    */
-  public static CheckTransforms<ExtendedRecord> check(List<String> types) {
+  public static CheckTransforms<ExtendedRecord> check(Set<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, AMPLIFICATION));
   }
 

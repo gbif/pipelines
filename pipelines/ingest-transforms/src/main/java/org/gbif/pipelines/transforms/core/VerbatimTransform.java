@@ -1,6 +1,6 @@
 package org.gbif.pipelines.transforms.core;
 
-import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -10,8 +10,10 @@ import org.gbif.pipelines.transforms.CheckTransforms;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
@@ -34,8 +36,13 @@ public class VerbatimTransform {
   /**
    * Checks if list contains {@link RecordType#VERBATIM}, else returns empty {@link PCollection<ExtendedRecord>}
    */
-  public static CheckTransforms<ExtendedRecord> check(List<String> types) {
+  public static CheckTransforms<ExtendedRecord> check(Set<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, VERBATIM));
+  }
+
+  /** Create an empty collection of {@link PCollection<ExtendedRecord>} */
+  public static PCollection<ExtendedRecord> emptyCollection(org.apache.beam.sdk.Pipeline p) {
+    return Create.empty(TypeDescriptor.of(ExtendedRecord.class)).expand(PBegin.in(p));
   }
 
   /** Maps {@link ExtendedRecord} to key value, where key is {@link ExtendedRecord#getId} */

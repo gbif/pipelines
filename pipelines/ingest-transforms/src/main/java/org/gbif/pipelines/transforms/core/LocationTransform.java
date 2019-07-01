@@ -3,8 +3,8 @@ package org.gbif.pipelines.transforms.core;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.kvs.KeyValueStore;
@@ -61,7 +61,7 @@ public class LocationTransform {
   /**
    * Checks if list contains {@link RecordType#LOCATION}, else returns empty {@link PCollection<ExtendedRecord>}
    */
-  public static CheckTransforms<ExtendedRecord> check(List<String> types) {
+  public static CheckTransforms<ExtendedRecord> check(Set<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, LOCATION));
   }
 

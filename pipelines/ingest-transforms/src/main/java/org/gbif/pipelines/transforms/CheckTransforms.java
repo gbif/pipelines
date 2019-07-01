@@ -1,7 +1,7 @@
 package org.gbif.pipelines.transforms;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 
@@ -34,7 +34,7 @@ public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T
     return condition ? input : Create.empty(TypeDescriptor.of(clazz)).expand(PBegin.in(input.getPipeline()));
   }
 
-  public static boolean checkRecordType(List<String> types, RecordType... type) {
+  public static boolean checkRecordType(Set<String> types, RecordType... type) {
     boolean matchType = Arrays.stream(type).anyMatch(x -> types.contains(x.name()));
     return types.contains(ALL.name()) || matchType;
   }

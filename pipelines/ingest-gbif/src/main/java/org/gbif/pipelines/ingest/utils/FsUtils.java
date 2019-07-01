@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -217,7 +218,7 @@ public final class FsUtils {
    * Deletes directories if a dataset with the same attempt was interpreted before
    */
   public static void deleteInterpretIfExist(String hdfsSiteConfig, String basePath, String datasetId, Integer attempt,
-      List<String> steps) {
+      Set<String> steps) {
     if (steps != null && !steps.isEmpty()) {
 
       String path = String.join("/", basePath, datasetId, attempt.toString(), Interpretation.DIRECTORY_NAME);

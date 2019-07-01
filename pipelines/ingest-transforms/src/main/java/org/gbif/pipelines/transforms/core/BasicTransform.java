@@ -2,7 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -53,7 +53,7 @@ public class BasicTransform {
   /**
    * Checks if list contains {@link RecordType#BASIC}, else returns empty {@link PCollection<ExtendedRecord>}
    */
-  public static CheckTransforms<ExtendedRecord> check(List<String> types) {
+  public static CheckTransforms<ExtendedRecord> check(Set<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, BASIC));
   }
 

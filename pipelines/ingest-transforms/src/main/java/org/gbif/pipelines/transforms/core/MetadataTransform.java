@@ -2,7 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -43,10 +43,17 @@ public class MetadataTransform {
   private static final String BASE_NAME = METADATA.name().toLowerCase();
 
   /**
+   * Checks if list contains metadata type only
+   */
+  public static boolean metadataOnly(Set<String> types) {
+    return types.size() == 1 && types.contains(METADATA.name());
+  }
+
+  /**
    * Checks if list contains {@link RecordType#METADATA}, else returns empty {@link PCollection<String>}
    */
-  public static CheckTransforms<String> check(List<String> types) {
-    return CheckTransforms.create(String.class, checkRecordType(types, METADATA));
+  public static CheckTransforms<MetadataRecord> check(Set<String> types) {
+    return CheckTransforms.create(MetadataRecord.class, checkRecordType(types, METADATA));
   }
 
   /**

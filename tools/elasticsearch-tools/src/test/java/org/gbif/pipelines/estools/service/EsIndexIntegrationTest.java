@@ -22,7 +22,6 @@ import static org.gbif.pipelines.estools.EsIndex.INDEX_SEPARATOR;
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
 import static org.gbif.pipelines.estools.service.EsConstants.Searching;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link EsIndex}. */

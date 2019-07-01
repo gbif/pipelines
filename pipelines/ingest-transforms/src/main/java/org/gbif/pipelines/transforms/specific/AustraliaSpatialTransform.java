@@ -3,9 +3,9 @@ package org.gbif.pipelines.transforms.specific;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.vocabulary.Country;
@@ -59,7 +59,7 @@ public class AustraliaSpatialTransform {
    * Checks if list contains {@link RecordType#AUSTRALIA_SPATIAL}, else returns empty {@link
    * PCollection<LocationRecord>}
    */
-  public static CheckTransforms<LocationRecord> check(List<String> types) {
+  public static CheckTransforms<LocationRecord> check(Set<String> types) {
     return CheckTransforms.create(LocationRecord.class, checkRecordType(types, AUSTRALIA_SPATIAL));
   }
 

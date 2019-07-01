@@ -2,7 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -89,7 +89,7 @@ public class VerbatimToInterpretedPipeline {
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
-    List<String> types = options.getInterpretationTypes();
+    Set<String> types = options.getInterpretationTypes();
     String propertiesPath = options.getProperties();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
@@ -106,24 +106,27 @@ public class VerbatimToInterpretedPipeline {
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
+    //Create and write metadata
+    PCollection<MetadataRecord> metadataRecord =
+        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType, attempt));
+
+    metadataRecord.apply("Write metadata to avro", MetadataTransform.write(pathFn));
+
+    //Create View for further use
+    PCollectionView<MetadataRecord> metadataView =
+        metadataRecord
+            .apply("Check verbatim transform condition", MetadataTransform.check(types))
+            .apply("Convert into view", View.asSingleton());
+
     log.info("Reading avro files");
-    PCollection<ExtendedRecord> uniqueRecords =
+    PCollection<ExtendedRecord> uniqueRecords = MetadataTransform.metadataOnly(types) ?
+        VerbatimTransform.emptyCollection(p) :
         p.apply("Read ExtendedRecords", VerbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create());
 
     log.info("Adding interpretations");
-
-    //Create metadata
-    PCollection<MetadataRecord> metadataRecordP =
-        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType, attempt));
-
-    //Write metadata
-    metadataRecordP.apply("Write metadata to avro", MetadataTransform.write(pathFn));
-
-    //Create View for further use
-    PCollectionView<MetadataRecord> metadataView = metadataRecordP.apply("Convert into view", View.asSingleton());
 
     uniqueRecords
         .apply("Check verbatim transform condition", VerbatimTransform.check(types))

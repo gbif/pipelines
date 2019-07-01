@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transforms.extension;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.vocabulary.Extension;
@@ -50,7 +50,7 @@ public class MultimediaTransform {
   /**
    * Checks if list contains {@link RecordType#MULTIMEDIA}, else returns empty {@link PCollection<ExtendedRecord>}
    */
-  public static CheckTransforms<ExtendedRecord> check(List<String> types) {
+  public static CheckTransforms<ExtendedRecord> check(Set<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, checkRecordType(types, MULTIMEDIA));
   }
 
