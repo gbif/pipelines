@@ -6,7 +6,10 @@ import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.parsers.config.LockConfig;
+import org.gbif.pipelines.parsers.config.LockConfigFactory;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
@@ -36,6 +39,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
+import org.gbif.wrangler.lock.LockFactory;
 import org.slf4j.MDC;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
@@ -213,12 +217,15 @@ public class InterpretedToHdfsTablePipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      //Moving files to the directory of latest records
-      String hdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
-      FsUtils.deleteByPattern(options.getHdfsSiteConfig(), hdfsViewPath + '*' + options.getDatasetId() + '*');
-      String filter = targetPath(options, "*.avro");
-      log.info("Moving files with pattern {} to {}", filter, hdfsTargetPath);
-      FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsTargetPath);
+      //A Read/Soft lock is acquired to avoid concurrent modifications while this operation is done
+      SharedLockUtils.doInReadLock(LockConfigFactory.create(options.getProperties()), () -> {
+        //Moving files to the directory of latest records
+        String hdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
+        FsUtils.deleteByPattern(options.getHdfsSiteConfig(), hdfsViewPath + '*' + options.getDatasetId() + '*');
+        String filter = targetPath(options, "*.avro");
+        log.info("Moving files with pattern {} to {}", filter, hdfsTargetPath);
+        FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsTargetPath);
+      });
     }
 
     //Metrics

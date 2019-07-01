@@ -145,7 +145,7 @@ public final class FsUtils {
         log.warn("hdfs-site.xml does not exist");
       }
     }
-    return  config;
+    return config;
   }
 
   /**

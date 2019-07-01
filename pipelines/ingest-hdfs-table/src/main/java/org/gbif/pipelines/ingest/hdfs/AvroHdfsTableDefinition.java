@@ -48,4 +48,8 @@ public class AvroHdfsTableDefinition {
     });
     return builder.endRecord();
   }
+
+  public static void main(String[] args) {
+    System.out.println(avroDefinition().toString(Boolean.TRUE));
+  }
 }
