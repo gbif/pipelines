@@ -8,7 +8,6 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.parsers.config.LockConfig;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -39,7 +38,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.gbif.wrangler.lock.LockFactory;
 import org.slf4j.MDC;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
@@ -125,7 +123,7 @@ public class InterpretedToHdfsTablePipeline {
 
     String targetPath = targetPath(options, id);
 
-    String hdfsTargetPath = FsUtils.buildPath(options.getTargetPath(), options.getDatasetId(), "hdfsview").toString();
+    String hdfsTargetPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
 
     //Deletes the target path if it exists
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), hdfsViewTargetPath(options));
