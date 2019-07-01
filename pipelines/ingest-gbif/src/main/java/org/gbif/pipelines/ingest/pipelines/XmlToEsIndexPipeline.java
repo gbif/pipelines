@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.XmlIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -228,7 +229,7 @@ public class XmlToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(propertiesPath));
+    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(propertiesPath, PipelinesVariables.Lock.ES_LOCK_PREFIX));
 
     MetricsHandler.saveCountersToFile(options, result);
 

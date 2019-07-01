@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.nio.file.Paths;
 
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -236,7 +237,7 @@ public class DwcaToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(propertiesPath));
+    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(propertiesPath, PipelinesVariables.Lock.ES_LOCK_PREFIX));
 
     MetricsHandler.saveCountersToFile(options, result);
 

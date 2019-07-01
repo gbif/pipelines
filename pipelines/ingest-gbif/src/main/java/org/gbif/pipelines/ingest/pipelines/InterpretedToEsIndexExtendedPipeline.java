@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
@@ -70,7 +71,7 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     InterpretedToEsIndexPipeline.run(options);
 
-    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(options.getProperties()));
+    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.ES_LOCK_PREFIX));
 
     FsUtils.removeTmpDirectory(options);
     log.info("Finished main indexing pipeline");
