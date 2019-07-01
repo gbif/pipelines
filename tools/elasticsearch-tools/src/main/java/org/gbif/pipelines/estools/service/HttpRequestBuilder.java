@@ -14,6 +14,7 @@ import org.apache.http.nio.entity.NStringEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.POJONode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -28,7 +29,6 @@ import static org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import static org.gbif.pipelines.estools.service.EsConstants.Searching;
 import static org.gbif.pipelines.estools.service.JsonHandler.createArrayNode;
 import static org.gbif.pipelines.estools.service.JsonHandler.createObjectNode;
-import static org.gbif.pipelines.estools.service.JsonHandler.writeToString;
 
 /** Class that builds {@link HttpEntity} instances with JSON content. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -47,6 +47,7 @@ class HttpRequestBuilder {
     INDEXING_SETTINGS.put(Field.INDEX_NUMBER_SHARDS, Constant.NUMBER_SHARDS);
     INDEXING_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Indexing.NUMBER_REPLICAS);
     INDEXING_SETTINGS.put(Field.INDEX_TRANSLOG_DURABILITY, Constant.TRANSLOG_DURABILITY);
+    INDEXING_SETTINGS.putPOJO(Field.INDEX_ANALYSIS, new POJONode(Indexing.NORMALIZER));
 
     SEARCH_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Searching.REFRESH_INTERVAL);
     SEARCH_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
@@ -76,8 +77,7 @@ class HttpRequestBuilder {
 
   /** Adds ES mappings in JSON format to the body. */
   HttpRequestBuilder withMappings(String mappings) {
-    Preconditions.checkArgument(
-        !Strings.isNullOrEmpty(mappings), "Mappings cannot be null or empty");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(mappings), "Mappings cannot be null or empty");
     this.mappings = JsonHandler.readTree(mappings);
     return this;
   }
@@ -97,8 +97,7 @@ class HttpRequestBuilder {
    * @param idxToRemove indexes to remove. Note that these indexes will be completely removed
    * form the ES instance.
    */
-  HttpRequestBuilder withIndexAliasAction(
-      Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
+  HttpRequestBuilder withIndexAliasAction(Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
     this.indexAliasAction = new IndexAliasAction(aliases, idxToAdd, idxToRemove);
     return this;
   }
@@ -134,7 +133,7 @@ class HttpRequestBuilder {
 
     ArrayNode actions = createArrayNode();
 
-    // remove all indixes from alias action
+    // remove all indices from alias action
     if (indexAliasAction.idxToRemove != null) {
       indexAliasAction.idxToRemove.forEach(idx -> removeIndexFromAliasAction(idx, actions));
     }
@@ -173,7 +172,7 @@ class HttpRequestBuilder {
   }
 
   private static HttpEntity createEntity(ObjectNode entityNode) {
-    return createEntity(writeToString(entityNode));
+    return createEntity(entityNode.toString());
   }
 
   @SneakyThrows

@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.service.EsConstants;
+import org.gbif.pipelines.estools.service.EsConstants.Field;
+import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.parsers.config.LockConfig;
 
@@ -36,6 +38,7 @@ public class EsIndexUtils {
     map.put(EsConstants.Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
     map.put(EsConstants.Field.INDEX_NUMBER_SHARDS, options.getIndexNumberShards().toString());
     map.put(EsConstants.Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
+    map.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
 
     String idx;
     if (Strings.isNullOrEmpty(options.getEsIndexName())) {

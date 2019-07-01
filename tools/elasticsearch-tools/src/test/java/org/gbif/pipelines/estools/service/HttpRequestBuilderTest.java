@@ -51,7 +51,7 @@ public class HttpRequestBuilderTest {
 
     // Should
     assertTrue(node.has(Field.SETTINGS));
-    assertEquals(4, node.path(Field.SETTINGS).size());
+    assertEquals(5, node.path(Field.SETTINGS).size());
     assertEquals(
         Indexing.REFRESH_INTERVAL,
         node.path(Field.SETTINGS).path(Field.INDEX_REFRESH_INTERVAL).asText());
@@ -180,7 +180,7 @@ public class HttpRequestBuilderTest {
   public void bodyWithMappingsAsStringTest() {
 
     // State
-    String jsonMappings = JsonHandler.writeToString(loadFile(Paths.get(TEST_MAPPINGS_PATH)));
+    String jsonMappings = JsonHandler.toString(loadFile(Paths.get(TEST_MAPPINGS_PATH)));
 
     HttpEntity entity = HttpRequestBuilder.newInstance().withMappings(jsonMappings).build();
 
