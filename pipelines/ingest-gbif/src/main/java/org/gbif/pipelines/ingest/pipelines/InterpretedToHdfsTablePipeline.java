@@ -219,7 +219,7 @@ public class InterpretedToHdfsTablePipeline {
       SharedLockUtils.doInReadLock(LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.HDFS_LOCK_PREFIX), () -> {
         //Moving files to the directory of latest records
         String hdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
-        FsUtils.deleteByPattern(options.getHdfsSiteConfig(), hdfsViewPath + '*' + options.getDatasetId() + '*');
+        FsUtils.deleteByPattern(options.getHdfsSiteConfig(), hdfsViewPath + "/*" + options.getDatasetId() + '*');
         String filter = targetPath(options, "*.avro");
         log.info("Moving files with pattern {} to {}", filter, hdfsViewPath);
         FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsViewPath);
