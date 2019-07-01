@@ -123,7 +123,7 @@ public class InterpretedToHdfsTablePipeline {
 
     String targetPath = targetPath(options, id);
 
-    String hdfsTargetPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
+    String hdfsTargetPath = FsUtils.buildPath(options.getTargetPath(), options.getDatasetId(), "hdfsview").toString();
 
     //Deletes the target path if it exists
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), hdfsViewTargetPath(options));
@@ -221,8 +221,8 @@ public class InterpretedToHdfsTablePipeline {
         String hdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
         FsUtils.deleteByPattern(options.getHdfsSiteConfig(), hdfsViewPath + '*' + options.getDatasetId() + '*');
         String filter = targetPath(options, "*.avro");
-        log.info("Moving files with pattern {} to {}", filter, hdfsTargetPath);
-        FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsTargetPath);
+        log.info("Moving files with pattern {} to {}", filter, hdfsViewPath);
+        FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsViewPath);
       });
     }
 
