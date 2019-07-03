@@ -37,7 +37,7 @@ public class SharedLockUtils {
 
   @SneakyThrows
   public static void doInBarrier(LockConfig config, Mutex.Action action) {
-    @Cleanup CuratorFramework curator = curator(config))
+    @Cleanup CuratorFramework curator = curator(config);
     curator.start();
     String lockPath  =  config.getLockingPath() + config.getLockName();
     DistributedBarrier barrier = new DistributedBarrier(curator, lockPath);
