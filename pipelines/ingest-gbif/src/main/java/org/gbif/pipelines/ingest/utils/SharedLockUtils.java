@@ -38,9 +38,12 @@ public class SharedLockUtils {
   public static void doInBarrier(LockConfig config, Mutex.Action action) {
     try (CuratorFramework curator = curator(config)) {
       DistributedBarrier barrier = new DistributedBarrier(curator, config.getLockingPath());
+      log.info("Acquiring barrier {}", config.getLockingPath());
       barrier.waitOnBarrier();
+      log.info("Setting barrier {}", config.getLockingPath());
       barrier.setBarrier();
       action.execute();
+      log.info("Removing barrier {}", config.getLockingPath());
       barrier.removeBarrier();
     } catch (Exception ex) {
       log.error("Error handling barrier", ex);
