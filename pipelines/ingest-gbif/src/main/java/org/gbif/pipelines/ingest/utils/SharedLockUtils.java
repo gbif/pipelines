@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.utils;
 
+import lombok.SneakyThrows;
 import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.gbif.pipelines.parsers.config.LockConfig;
 import org.gbif.wrangler.lock.Mutex;
@@ -33,6 +34,7 @@ public class SharedLockUtils {
   }
 
 
+  @SneakyThrows
   public static void doInBarrier(LockConfig config, Mutex.Action action) {
     try (CuratorFramework curator = curator(config)) {
       DistributedBarrier barrier = new DistributedBarrier(curator, config.getLockingPath());
@@ -42,6 +44,7 @@ public class SharedLockUtils {
       barrier.removeBarrier();
     } catch (Exception ex) {
       log.error("Error handling barrier", ex);
+      throw new RuntimeException(ex);
     }
   }
 
