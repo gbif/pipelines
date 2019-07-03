@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.utils;
 
+import lombok.Cleanup;
 import lombok.SneakyThrows;
 import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.gbif.pipelines.parsers.config.LockConfig;
@@ -36,28 +37,23 @@ public class SharedLockUtils {
 
   @SneakyThrows
   public static void doInBarrier(LockConfig config, Mutex.Action action) {
-    try (CuratorFramework curator = curator(config)) {
-      curator.start();
-      String lockPath  =  config.getLockingPath() + config.getLockName();
-      DistributedBarrier barrier = new DistributedBarrier(curator, lockPath);
-      log.info("Acquiring barrier {}", lockPath);
-      barrier.waitOnBarrier();
-      log.info("Setting barrier {}", lockPath);
-      barrier.setBarrier();
-      action.execute();
-      log.info("Removing barrier {}", lockPath);
-      barrier.removeBarrier();
-    } catch (Exception ex) {
-      log.error("Error handling barrier", ex);
-      throw new RuntimeException(ex);
-    }
+    @Cleanup CuratorFramework curator = curator(config))
+    curator.start();
+    String lockPath  =  config.getLockingPath() + config.getLockName();
+    DistributedBarrier barrier = new DistributedBarrier(curator, lockPath);
+    log.info("Acquiring barrier {}", lockPath);
+    barrier.waitOnBarrier();
+    log.info("Setting barrier {}", lockPath);
+    barrier.setBarrier();
+    action.execute();
+    log.info("Removing barrier {}", lockPath);
+    barrier.removeBarrier();
   }
 
   /**
    *
    * @param config lock configuration
    * @param action action to be executed
-   * @return
    */
   private static void doInCurator(LockConfig config, Mutex.Action action, Function<ZookeeperSharedReadWriteMutex,Mutex> mutexCreate) {
     if (config.getLockName() == null) {
