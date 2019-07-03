@@ -216,7 +216,7 @@ public class InterpretedToHdfsTablePipeline {
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
       //A write lock is acquired to avoid concurrent modifications while this operation is running
-      SharedLockUtils.doInBarrier(LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.HDFS_LOCK_PREFIX), () -> {
+      SharedLockUtils.doAfterBarrier(LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.HDFS_LOCK_PREFIX), () -> {
         //Moving files to the directory of latest records
         String hdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
         FsUtils.deleteByPattern(options.getHdfsSiteConfig(), hdfsViewPath + "/*" + options.getDatasetId() + '*');
