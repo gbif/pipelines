@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.utils;
 
+import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.gbif.pipelines.parsers.config.LockConfig;
 import org.gbif.wrangler.lock.Mutex;
 import org.gbif.wrangler.lock.zookeeper.ZookeeperSharedReadWriteMutex;
@@ -29,6 +30,19 @@ public class SharedLockUtils {
         .retryPolicy(new ExponentialBackoffRetry(config.getSleepTimeMs(), config.getMaxRetries()))
         .connectString(config.getZkConnectionString())
         .build();
+  }
+
+
+  public static void doInBarrier(LockConfig config, Mutex.Action action) {
+    try (CuratorFramework curator = curator(config)) {
+      DistributedBarrier barrier = new DistributedBarrier(curator, config.getLockingPath());
+      barrier.waitOnBarrier();
+      barrier.setBarrier();
+      action.execute();
+      barrier.removeBarrier();
+    } catch (Exception ex) {
+      log.error("Error handling barrier", ex);
+    }
   }
 
   /**
