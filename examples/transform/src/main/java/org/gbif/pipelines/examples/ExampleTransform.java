@@ -34,7 +34,7 @@ class ExampleTransform {
                 // Create an instance using an anonymous class or just pass an instance
                 // .to(new ExampleRecord())
                 // Or use Java 8 java.util.function.Supplier to create an instance
-                // .to(()-> ExampleRecord())
+                // .to(()-> new ExampleRecord())
                 // Or use Java 8 method reference to create an instance
                 // .to(ExtendedRecord::new)
                 // Or use Java 8 java.util.function.Function to create and set values, such as id or

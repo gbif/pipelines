@@ -52,6 +52,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
+
 /**
  * Pipeline sequence:
  *
@@ -131,6 +133,17 @@ public class XmlToEsIndexPipeline {
 
     Pipeline p = Pipeline.create(options);
 
+    VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    AudubonTransform audubonTransform = AudubonTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.create();
+    ImageTransform imageTransform = ImageTransform.create();
+    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
+    LocationTransform locationTransform = LocationTransform.create(propertiesPath);
+
     log.info("Reading xml files");
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
@@ -140,53 +153,53 @@ public class XmlToEsIndexPipeline {
     log.info("Adding step 2: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(datasetId))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType, attempt))
+            .apply("Interpret metadata", metadataTransform.interpret())
             .apply("Convert into view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        uniqueRecords.apply("Map Verbatim to KV", VerbatimTransform.toKv());
+        uniqueRecords.apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
         uniqueRecords
-            .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId))
-            .apply("Map Basic to KV", BasicTransform.toKv());
+            .apply("Interpret basic", basicTransform.interpret())
+            .apply("Map Basic to KV", basicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
         uniqueRecords
-            .apply("Interpret temporal", TemporalTransform.interpret())
-            .apply("Map Temporal to KV", TemporalTransform.toKv());
+            .apply("Interpret temporal", temporalTransform.interpret())
+            .apply("Map Temporal to KV", temporalTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
         uniqueRecords
-            .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView))
-            .apply("Map Location to KV", LocationTransform.toKv());
+            .apply("Interpret location", locationTransform.interpret(metadataView))
+            .apply("Map Location to KV", locationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
         uniqueRecords
-            .apply("Interpret taxonomy", TaxonomyTransform.interpret(propertiesPath))
-            .apply("Map Taxon to KV", TaxonomyTransform.toKv());
+            .apply("Interpret taxonomy", taxonomyTransform.interpret())
+            .apply("Map Taxon to KV", taxonomyTransform.toKv());
 
     // Extension
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         uniqueRecords
-            .apply("Interpret multimedia", MultimediaTransform.interpret())
-            .apply("Map Multimedia to KV", MultimediaTransform.toKv());
+            .apply("Interpret multimedia", multimediaTransform.interpret())
+            .apply("Map Multimedia to KV", multimediaTransform.toKv());
 
     PCollection<KV<String, ImageRecord>> imageCollection =
         uniqueRecords
-            .apply("Interpret image", ImageTransform.interpret())
-            .apply("Map Image to KV", ImageTransform.toKv());
+            .apply("Interpret image", imageTransform.interpret())
+            .apply("Map Image to KV", imageTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
         uniqueRecords
-            .apply("Interpret audubon", AudubonTransform.interpret())
-            .apply("Map Audubon to KV", AudubonTransform.toKv());
+            .apply("Interpret audubon", audubonTransform.interpret())
+            .apply("Map Audubon to KV", audubonTransform.toKv());
 
     PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
         uniqueRecords
-            .apply("Interpret measurement", MeasurementOrFactTransform.interpret())
-            .apply("Map MeasurementOrFact to KV", MeasurementOrFactTransform.toKv());
+            .apply("Interpret measurement", measurementOrFactTransform.interpret())
+            .apply("Map MeasurementOrFact to KV", measurementOrFactTransform.toKv());
 
     log.info("Adding step 4: Group and convert object into a json");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
@@ -222,7 +235,7 @@ public class XmlToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get("gbifId").asText()));
+            .withIdFn(input -> input.get(GBIF_ID).asText()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

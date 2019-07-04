@@ -68,8 +68,11 @@ public class DwcaToVerbatimPipeline {
     log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);
 
+    log.info("Adding step 3: Creating transformations");
+    VerbatimTransform verbatimTransform = VerbatimTransform.create();
+
     p.apply("Read from Darwin Core Archive", reader)
-        .apply("Write to avro", VerbatimTransform.write(targetPath).withoutSharding());
+        .apply("Write to avro", verbatimTransform.write(targetPath).withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

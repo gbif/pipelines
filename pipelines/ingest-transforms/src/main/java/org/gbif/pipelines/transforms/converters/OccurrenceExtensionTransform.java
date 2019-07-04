@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_COUNT;
 
 /**
- * Beam level transformation for samplong event where occurrence records stored in extensions
+ * Beam level transformation for sampling event where occurrence records stored in extensions
  *
  * @see <a href="https://github.com/gbif/ipt/wiki/BestPracticesSamplingEventData>Sampling event</a>
  */

@@ -15,7 +15,6 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.core.LocationTransform.Interpreter;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -74,7 +73,7 @@ public class LocationTransformTest {
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(er)).apply(ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView))
+        p.apply(Create.of(er)).apply(LocationTransform.create(kvStore).interpret(metadataView))
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should
@@ -153,7 +152,7 @@ public class LocationTransformTest {
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter(kvStore, metadataView)).withSideInputs(metadataView))
+        p.apply(Create.of(records)).apply(LocationTransform.create(kvStore).interpret(metadataView))
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should

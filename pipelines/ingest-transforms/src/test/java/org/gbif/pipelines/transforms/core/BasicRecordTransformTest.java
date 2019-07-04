@@ -8,7 +8,6 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -57,7 +56,7 @@ public class BasicRecordTransformTest {
 
     // When
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(records)).apply(ParDo.of(new Interpreter()))
+        p.apply(Create.of(records)).apply(BasicTransform.create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -74,7 +73,7 @@ public class BasicRecordTransformTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(er)).apply(ParDo.of(new Interpreter()))
+        p.apply(Create.of(er)).apply(BasicTransform.create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
