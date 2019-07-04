@@ -96,17 +96,17 @@ public class InterpretedToHdfsTablePipeline {
    * @return path to the target file or pattern
    */
   private static String targetPath(InterpretationPipelineOptions options, String fileSelector) {
-    return FsUtils.buildPath(hdfsViewTargetPath(options),
+    return FsUtils.buildPath(occurrenceHdfsViewTargetPath(options),
                             "view_occurrence" + fileSelector)
                             .toString();
   }
 
   /**
-   * Builds the target base path of the hdfs view.
+   * Builds the target base path of the Occurrence hdfs view.
    * @param options options pipeline options
-   * @return path to the directory where the hdfs view is stored
+   * @return path to the directory where the occurrence hdfs view is stored
    */
-  private static String hdfsViewTargetPath(InterpretationPipelineOptions options) {
+  private static String occurrenceHdfsViewTargetPath(InterpretationPipelineOptions options) {
     return FsUtils.buildPath(options.getTargetPath(),
                             options.getDatasetId(),
                             options.getAttempt().toString(),
@@ -115,18 +115,31 @@ public class InterpretedToHdfsTablePipeline {
                             .toString();
   }
 
+
+  /**
+   * Builds the target base path of the multimedia hdfs view.
+   * @param options options pipeline options
+   * @return path to the directory where the multimedia  is stored
+   */
+  private static String interpretedMultimediaPath(InterpretationPipelineOptions options) {
+    return FsUtils.buildPath(options.getTargetPath(),
+                             options.getDatasetId(),
+                             options.getAttempt().toString(),
+                             PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME,
+                             Multimedia.class.getSimpleName().toLowerCase())
+      .toString();
+  }
+
   public static void run(InterpretationPipelineOptions options) {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
-    String id = options.getDatasetId() + '_' +Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+    String id = options.getDatasetId() + '_' + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
 
     String targetPath = targetPath(options, id);
 
-    String hdfsTargetPath = FsUtils.buildPath(options.getTargetPath(), options.getDatasetId(), "hdfsview").toString();
-
     //Deletes the target path if it exists
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), hdfsViewTargetPath(options));
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), occurrenceHdfsViewTargetPath(options));
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
@@ -217,12 +230,8 @@ public class InterpretedToHdfsTablePipeline {
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
       //A write lock is acquired to avoid concurrent modifications while this operation is running
       SharedLockUtils.doInBarrier(LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.HDFS_LOCK_PREFIX), () -> {
-        //Moving files to the directory of latest records
-        String hdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview").toString();
-        FsUtils.deleteByPattern(options.getHdfsSiteConfig(), hdfsViewPath + "/*" + options.getDatasetId() + '*');
-        String filter = targetPath(options, "*.avro");
-        log.info("Moving files with pattern {} to {}", filter, hdfsViewPath);
-        FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, hdfsViewPath);
+        copyOccurrenceRecords(options);
+        copyMultimediaRecords(options);
       });
     }
 
@@ -230,5 +239,26 @@ public class InterpretedToHdfsTablePipeline {
     MetricsHandler.saveCountersToFile(options, result);
 
     log.info("Pipeline has been finished");
+  }
+
+  private static void copyMultimediaRecords(InterpretationPipelineOptions options) {
+    String multimediaHdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview/multimedia").toString();
+    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), multimediaHdfsViewPath + '/' + options.getDatasetId() + '*');
+    FsUtils.copyDirectory(options.getHdfsSiteConfig(), interpretedMultimediaPath(options) + "/*.avro", multimediaHdfsViewPath ,options.getDatasetId());
+  }
+
+  /**
+   * Copies all occurrence records into the "hdfsview/occurrence" directory.
+   * Deletes pre-existing data of the dataset being processed.
+   */
+  private static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
+    //Moving files to the directory of latest records
+    String occurrenceHdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview/occurrence").toString();
+
+    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), occurrenceHdfsViewPath + "/*" + options.getDatasetId() + '*');
+    String filter = targetPath(options, "*.avro");
+
+    log.info("Moving files with pattern {} to {}", filter, occurrenceHdfsViewPath);
+    FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, occurrenceHdfsViewPath);
   }
 }
