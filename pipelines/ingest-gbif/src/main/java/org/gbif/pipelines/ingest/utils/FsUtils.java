@@ -224,7 +224,7 @@ public final class FsUtils {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
-        FileUtil.copy(fs,path, fs, new Path(targetPath, prefix + path.getName()), true, getHdfsConfiguration(hdfsSiteConfig));
+        FileUtil.copy(fs,path, fs, new Path(targetPath, prefix + path.getName()), false, getHdfsConfiguration(hdfsSiteConfig));
       }
     } catch (IOException e) {
       log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
