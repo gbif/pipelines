@@ -15,17 +15,7 @@
         "gbif_classification_rank": {
           "path_match": "gbifClassification.*.rank",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
-          }
-        }
-      },
-      {
-        "gbif_classification_keys": {
-          "path_match": "gbifClassification.classification.*Key",
-          "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       },
@@ -33,8 +23,7 @@
         "gbif_parsed_name_year": {
           "path_match": "gbifClassification.usageParsedName.*Authorship.year",
           "mapping": {
-            "type": "keyword",
-            "normalizer": "lowercase_normalizer"
+            "type": "keyword"
           }
         }
       }
@@ -54,18 +43,18 @@
       "installationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "endorsingNodeKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "publisherTitle": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-      "license": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-      "protocol": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-      "publishingCountry": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-      "datasetPublishingCountry": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "license": {"type": "keyword", "copy_to": "all"},
+      "protocol": {"type": "keyword", "copy_to": "all"},
+      "publishingCountry": {"type": "keyword", "copy_to": "all"},
+      "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
       "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
-      "basisOfRecord": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-      "sex": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-      "lifeStage": {"type":  "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-      "establishmentMeans": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "basisOfRecord": {"type": "keyword"},
+      "sex": {"type": "keyword", "copy_to": "all"},
+      "lifeStage": {"type":  "keyword", "copy_to": "all"},
+      "establishmentMeans": {"type": "keyword", "copy_to": "all"},
       "individualCount": {"type": "integer"},
-      "typeStatus": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "typeStatus": {"type": "keyword", "copy_to": "all"},
       "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
       "recordedBy": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
@@ -79,9 +68,9 @@
       "catalogNumber":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "occurrenceId":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
 
-      "continent": {"type":"keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "continent": {"type":"keyword", "copy_to": "all"},
       "waterBody": {"type":"keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
-      "countryCode": {"type":"keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "countryCode": {"type":"keyword", "copy_to": "all"},
       "country": {"type":"text", "copy_to": "all"},
       "stateProvince": {"type":"keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "minimumElevationInMeters": {"type":"double"},
@@ -114,22 +103,22 @@
         "type": "object",
         "properties": {
           "classification.name":  { "type": "text", "boost": 90, "copy_to": "all" },
-          "classification.synonym": { "type": "boolean"  },
-          "classificationPath": { "type": "keyword", "normalizer": "lowercase_normalizer" },
+          "classification.synonym": { "type": "boolean" },
+          "classificationPath": { "type": "keyword" },
           "usage.name": { "type": "keyword", "normalizer": "lowercase_normalizer", "boost": 100, "copy_to": "all"  },
           "acceptedUsage.name": { "type": "text", "boost": 100, "copy_to": "all" },
-          "diagnostics.matchType": { "type": "keyword", "normalizer": "lowercase_normalizer" },
-          "diagnostics.status": { "type": "keyword", "normalizer": "lowercase_normalizer" },
-          "usageParsedName.state": { "type": "keyword", "normalizer": "lowercase_normalizer" },
-          "usageParsedName.type": { "type": "keyword", "normalizer": "lowercase_normalizer" },
-          "usageParsedName.notho": { "type": "keyword", "normalizer": "lowercase_normalizer" }
+          "diagnostics.matchType": { "type": "keyword" },
+          "diagnostics.status": { "type": "keyword" },
+          "usageParsedName.state": { "type": "keyword" },
+          "usageParsedName.type": { "type": "keyword" },
+          "usageParsedName.notho": { "type": "keyword" }
         }
       },
 
-      "mediaTypes": {"type":  "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "mediaTypes": {"type":  "keyword", "copy_to": "all"},
       "multimediaItems": {"type": "nested", "enabled": false,
         "properties": {
-          "license": { "type": "keyword", "normalizer": "lowercase_normalizer" }
+          "license": { "type": "keyword" }
         }
       },
 
