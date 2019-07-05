@@ -43,7 +43,7 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
   }
 
   /** Maps {@link MultimediaRecord} to key value, where key is {@link MultimediaRecord#getId} */
-  public static MapElements<MultimediaRecord, KV<String, MultimediaRecord>> toKv() {
+  public MapElements<MultimediaRecord, KV<String, MultimediaRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, MultimediaRecord>>() {})
         .via((MultimediaRecord mr) -> KV.of(mr.getId(), mr));
   }

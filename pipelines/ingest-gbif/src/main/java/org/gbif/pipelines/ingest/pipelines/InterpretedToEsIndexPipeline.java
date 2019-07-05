@@ -121,16 +121,18 @@ public class InterpretedToEsIndexPipeline {
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding step 2: Creating transformations");
+    // Core
     BasicTransform basicTransform = BasicTransform.create();
     MetadataTransform metadataTransform = MetadataTransform.create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    LocationTransform locationTransform = LocationTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    ImageTransform imageTransform = ImageTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
+    LocationTransform locationTransform = LocationTransform.create();
+    // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.create();
+    AudubonTransform audubonTransform = AudubonTransform.create();
+    ImageTransform imageTransform = ImageTransform.create();
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =

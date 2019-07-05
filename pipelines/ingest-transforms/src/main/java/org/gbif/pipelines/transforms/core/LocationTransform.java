@@ -82,7 +82,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   }
 
   /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getId} */
-  public static MapElements<LocationRecord, KV<String, LocationRecord>> toKv() {
+  public MapElements<LocationRecord, KV<String, LocationRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
         .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
   }

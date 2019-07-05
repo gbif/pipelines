@@ -142,16 +142,18 @@ public class DwcaToEsIndexPipeline {
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding step 2: Creating transformations");
+    // Core
+    MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
+    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
+    LocationTransform locationTransform = LocationTransform.create(propertiesPath);
+    // Extension
+    AudubonTransform audubonTransform = AudubonTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
-    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
-    MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
-    LocationTransform locationTransform = LocationTransform.create(propertiesPath);
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollection<ExtendedRecord> uniqueRecords =

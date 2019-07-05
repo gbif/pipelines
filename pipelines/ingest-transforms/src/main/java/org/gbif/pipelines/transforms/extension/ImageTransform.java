@@ -41,7 +41,7 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
   }
 
   /** Maps {@link ImageRecord} to key value, where key is {@link ImageRecord#getId} */
-  public static MapElements<ImageRecord, KV<String, ImageRecord>> toKv() {
+  public MapElements<ImageRecord, KV<String, ImageRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})
         .via((ImageRecord ir) -> KV.of(ir.getId(), ir));
   }

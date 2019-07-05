@@ -72,7 +72,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
-  public static MapElements<TaxonRecord, KV<String, TaxonRecord>> toKv() {
+  public MapElements<TaxonRecord, KV<String, TaxonRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, TaxonRecord>>() {})
         .via((TaxonRecord tr) -> KV.of(tr.getId(), tr));
   }

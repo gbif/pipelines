@@ -60,10 +60,8 @@ public class XmlToVerbatimPipeline {
     log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);
 
-    VerbatimTransform verbatimTransform = VerbatimTransform.create();
-
     p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
-        .apply("Write to avro", verbatimTransform.write(targetPath).withoutSharding());
+        .apply("Write to avro", VerbatimTransform.create().write(targetPath).withoutSharding());
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
