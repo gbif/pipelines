@@ -54,6 +54,10 @@ public class OccurrenceHdfsRecordConverterTest {
         multimedia.setSource("image.jpg");
         multimediaRecord.setMultimediaItems(Collections.singletonList(multimedia));
         OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(multimediaRecord);
+
+        //Testing de-serialization
+        List<Multimedia> media = MediaSerDeserUtils.fromJson(hdfsRecord.getExtMultimedia());
+        Assert.assertEquals(media.get(0), multimedia);
         Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
     }
 
