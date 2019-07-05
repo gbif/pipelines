@@ -411,6 +411,7 @@ public class OccurrenceHdfsRecordConverter {
         .map(TextNode::valueOf)
         .map(TextNode::asText)
         .collect(Collectors.toList());
+      hr.setExtMultimedia(MediaSerDeserUtils.toJson(mr.getMultimediaItems()));
 
       hr.setMediatype(mediaTypes);
     };
