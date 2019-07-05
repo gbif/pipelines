@@ -115,21 +115,6 @@ public class InterpretedToHdfsTablePipeline {
                             .toString();
   }
 
-
-  /**
-   * Builds the target base path of the multimedia hdfs view.
-   * @param options options pipeline options
-   * @return path to the directory where the multimedia  is stored
-   */
-  private static String interpretedMultimediaPath(InterpretationPipelineOptions options) {
-    return FsUtils.buildPath(options.getTargetPath(),
-                             options.getDatasetId(),
-                             options.getAttempt().toString(),
-                             PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME,
-                             Multimedia.class.getSimpleName().toLowerCase())
-      .toString();
-  }
-
   public static void run(InterpretationPipelineOptions options) {
 
     MDC.put("datasetId", options.getDatasetId());
@@ -231,7 +216,6 @@ public class InterpretedToHdfsTablePipeline {
       //A write lock is acquired to avoid concurrent modifications while this operation is running
       SharedLockUtils.doInBarrier(LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.HDFS_LOCK_PREFIX), () -> {
         copyOccurrenceRecords(options);
-        copyMultimediaRecords(options);
       });
     }
 
@@ -241,11 +225,6 @@ public class InterpretedToHdfsTablePipeline {
     log.info("Pipeline has been finished");
   }
 
-  private static void copyMultimediaRecords(InterpretationPipelineOptions options) {
-    String multimediaHdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview/multimedia").toString();
-    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), multimediaHdfsViewPath + '/' + options.getDatasetId() + '*');
-    FsUtils.copyDirectory(options.getHdfsSiteConfig(), interpretedMultimediaPath(options) + "/*.avro", multimediaHdfsViewPath ,options.getDatasetId());
-  }
 
   /**
    * Copies all occurrence records into the "hdfsview/occurrence" directory.
