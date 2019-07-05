@@ -90,7 +90,7 @@ public class LocationInterpreterTest {
   }
 
   private static LocationRecord interpret(ExtendedRecord source) {
-    MetadataRecord mdr = MetadataRecord.newBuilder().setId("777").build();
+    MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
     return Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
         .via(LocationInterpreter.interpretCountryAndCoordinates(TEST_STORE, mdr))

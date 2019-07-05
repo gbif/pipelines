@@ -69,7 +69,7 @@ public class ImageInterpreterTest {
     String result =
         "{\"id\": \"id\", \"created\": 0, \"imageItems\": [{\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
             + "\"http://www.gbif.org/tmp.jpg\", \"title\": \"Tt1\", \"description\": \"Desc1\", \"spatial\": \"Sp1\", "
-            + "\"latitude\": -131.3, \"longitude\": 60.4, \"format\": \"jpeg\", \"created\": \"2010\", \"creator\": "
+            + "\"latitude\": 60.4, \"longitude\": -131.3, \"format\": \"jpeg\", \"created\": \"2010\", \"creator\": "
             + "\"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Pub1\", \"audience\": \"Aud1\", \"license\": "
             + "\"Lic1\", \"rightsHolder\": \"Rh1\", \"datasetId\": \"1\"}, {\"identifier\": \"http://www.gbif.org/tmp.jpg\", "
             + "\"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": \"Tt2\", \"description\": \"Desc2\", \"spatial\": "

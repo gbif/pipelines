@@ -178,7 +178,7 @@ public class CoordinateParseUtils {
     // capabilities of this method
     if ((Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) && inRange(lon, lat)) {
       issues.add(PRESUMED_SWAPPED_COORDINATE.name());
-      return ParsedField.fail(new LatLng(lat, lon), issues);
+      return ParsedField.success(new LatLng(lon, lat), issues);
     }
 
     // then something is out of range
