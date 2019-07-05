@@ -41,7 +41,7 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
   }
 
   /** Maps {@link MeasurementOrFactRecord} to key value, where key is {@link MeasurementOrFactRecord#getId} */
-  public static MapElements<MeasurementOrFactRecord, KV<String, MeasurementOrFactRecord>> toKv() {
+  public MapElements<MeasurementOrFactRecord, KV<String, MeasurementOrFactRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, MeasurementOrFactRecord>>() {})
         .via((MeasurementOrFactRecord mr) -> KV.of(mr.getId(), mr));
   }

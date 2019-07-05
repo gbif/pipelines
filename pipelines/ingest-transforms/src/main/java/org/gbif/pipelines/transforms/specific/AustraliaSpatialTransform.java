@@ -71,7 +71,7 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
   }
 
   /** Maps {@link AustraliaSpatialRecord} to key value, where key is {@link AustraliaSpatialRecord#getId} */
-  public static MapElements<AustraliaSpatialRecord, KV<String, AustraliaSpatialRecord>> toKv() {
+  public MapElements<AustraliaSpatialRecord, KV<String, AustraliaSpatialRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, AustraliaSpatialRecord>>() {})
         .via((AustraliaSpatialRecord ar) -> KV.of(ar.getId(), ar));
   }

@@ -57,7 +57,7 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
   }
 
   /** Maps {@link AmplificationRecord} to key value, where key is {@link AmplificationRecord#getId} */
-  public static MapElements<AmplificationRecord, KV<String, AmplificationRecord>> toKv() {
+  public MapElements<AmplificationRecord, KV<String, AmplificationRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, AmplificationRecord>>() {})
         .via((AmplificationRecord ar) -> KV.of(ar.getId(), ar));
   }

@@ -65,7 +65,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
-  public static MapElements<BasicRecord, KV<String, BasicRecord>> toKv() {
+  public MapElements<BasicRecord, KV<String, BasicRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, BasicRecord>>() {})
         .via((BasicRecord br) -> KV.of(br.getId(), br));
   }

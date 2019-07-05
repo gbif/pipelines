@@ -100,16 +100,19 @@ public class XmlToInterpretedPipeline {
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
-    VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    ImageTransform imageTransform = ImageTransform.create();
-    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
-    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    log.info("Creating transformations");
+    // Core
     MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
+    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
     LocationTransform locationTransform = LocationTransform.create(propertiesPath);
+    // Extension
+    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.create();
+    AudubonTransform audubonTransform = AudubonTransform.create();
+    ImageTransform imageTransform = ImageTransform.create();
 
     log.info("Reading xml files");
     PCollection<ExtendedRecord> uniqueRecords =

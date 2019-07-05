@@ -27,13 +27,13 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
   }
 
   /** Maps {@link ExtendedRecord} to key value, where key is {@link ExtendedRecord#getId} */
-  public static MapElements<ExtendedRecord, KV<String, ExtendedRecord>> toKv() {
+  public MapElements<ExtendedRecord, KV<String, ExtendedRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, ExtendedRecord>>() {})
         .via((ExtendedRecord er) -> KV.of(er.getId(), er));
   }
 
   /** Create an empty collection of {@link PCollection<ExtendedRecord>} */
-  public static PCollection<ExtendedRecord> emptyCollection(org.apache.beam.sdk.Pipeline p) {
+  public PCollection<ExtendedRecord> emptyCollection(org.apache.beam.sdk.Pipeline p) {
     return Create.empty(TypeDescriptor.of(ExtendedRecord.class)).expand(PBegin.in(p));
   }
 

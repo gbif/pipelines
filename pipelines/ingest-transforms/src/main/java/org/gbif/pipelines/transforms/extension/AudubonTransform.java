@@ -41,7 +41,7 @@ public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
   }
 
   /** Maps {@link AudubonRecord} to key value, where key is {@link AudubonRecord#getId} */
-  public static MapElements<AudubonRecord, KV<String, AudubonRecord>> toKv() {
+  public MapElements<AudubonRecord, KV<String, AudubonRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, AudubonRecord>>() {})
         .via((AudubonRecord ar) -> KV.of(ar.getId(), ar));
   }

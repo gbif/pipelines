@@ -39,7 +39,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
   }
 
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */
-  public static MapElements<TemporalRecord, KV<String, TemporalRecord>> toKv() {
+  public MapElements<TemporalRecord, KV<String, TemporalRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, TemporalRecord>>() {})
         .via((TemporalRecord tr) -> KV.of(tr.getId(), tr));
   }
