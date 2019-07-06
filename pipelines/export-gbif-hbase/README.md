@@ -24,4 +24,9 @@ nohup sudo -u hdfs spark2-submit \
   --table=prod_g_occurrence_snapshot &
 ```
 
-Once complete remove the `.temp-beam-*` files from the HDFS folder.
+Once complete remove the `.temp-beam-*` files from the HDFS folder:
+```
+sudo -u hdfs hdfs dfs -rm -r /pipelines/export-20190707/.temp*
+```
+
+This configuration runs in around 3.5hrs in production.
