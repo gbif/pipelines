@@ -14,7 +14,7 @@ nohup sudo -u hdfs spark2-submit \
   --conf spark.executor.cores=1 \
   --conf spark.dynamicAllocation.enabled=false \
   --conf spark.default.parallelism=500 \
-  --conf spark.network.timeout=6000s \
+  --conf spark.network.timeout=360s \
   --conf spark.executor.heartbeatInterval=120s \
   --conf "spark.executor.extraJavaOptions=-XX:+UseG1GC" \
   export-gbif-hbase-2.2.1-SNAPSHOT-shaded.jar \
