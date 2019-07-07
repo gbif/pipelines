@@ -24,7 +24,7 @@ nohup sudo -u hdfs spark2-submit \
   --table=prod_g_occurrence_snapshot &
 ```
 
-Once complete remove the `.temp-beam-*` files from the HDFS folder:
+If an attempt fails then `.temp-beam-*` will remain in the HDFS folder and can be removed with:
 ```
 sudo -u hdfs hdfs dfs -rm -r /pipelines/export-20190707/.temp*
 ```
