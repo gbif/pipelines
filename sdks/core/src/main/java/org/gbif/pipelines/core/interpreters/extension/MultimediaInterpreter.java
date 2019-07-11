@@ -136,12 +136,12 @@ public class MultimediaInterpreter {
     BiPredicate<String, MediaType> prFn = (s, mt) -> format.startsWith(s) || v1.toLowerCase().startsWith(s)
         || v1.toLowerCase().startsWith(mt.name().toLowerCase());
 
-    if (prFn.test("image", MediaType.StillImage)) {
-      m.setType(MediaType.StillImage.name());
+    if (prFn.test("video", MediaType.MovingImage)) {
+      m.setType(MediaType.MovingImage.name());
     } else if (prFn.test("audio", MediaType.Sound)) {
       m.setType(MediaType.Sound.name());
-    } else if (prFn.test("video", MediaType.MovingImage)) {
-      m.setType(MediaType.MovingImage.name());
+    } else if (prFn.test("image", MediaType.StillImage)) {
+      m.setType(MediaType.StillImage.name());
     }
   }
 

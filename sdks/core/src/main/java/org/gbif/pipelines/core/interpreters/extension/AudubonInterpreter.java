@@ -231,12 +231,12 @@ public class AudubonInterpreter {
     BiPredicate<String, MediaType> prFn = (s, mt) -> format.startsWith(s) || v1.toLowerCase().startsWith(s)
         || v1.toLowerCase().startsWith(mt.name().toLowerCase());
 
-    if (prFn.test("image", MediaType.StillImage)) {
-      a.setType(MediaType.StillImage.name());
+    if (prFn.test("video", MediaType.MovingImage)) {
+      a.setType(MediaType.MovingImage.name());
     } else if (prFn.test("audio", MediaType.Sound)) {
       a.setType(MediaType.Sound.name());
-    } else if (prFn.test("video", MediaType.MovingImage)) {
-      a.setType(MediaType.MovingImage.name());
+    } else if (prFn.test("image", MediaType.StillImage)) {
+      a.setType(MediaType.StillImage.name());
     }
   }
 
