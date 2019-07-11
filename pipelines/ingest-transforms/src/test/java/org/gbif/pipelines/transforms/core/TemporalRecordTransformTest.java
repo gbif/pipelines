@@ -17,7 +17,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
-import org.gbif.pipelines.transforms.core.TemporalTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -91,7 +90,7 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream = p
         .apply(Create.of(input))
-        .apply(ParDo.of(new Interpreter()))
+        .apply(TemporalTransform.create().interpret())
         .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -110,7 +109,7 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream = p
         .apply(Create.of(er))
-        .apply(ParDo.of(new Interpreter()))
+        .apply(TemporalTransform.create().interpret())
         .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should

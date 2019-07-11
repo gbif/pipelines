@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.options;
 
 import java.io.File;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.beam.runners.spark.SparkPipelineOptions;
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
@@ -38,9 +38,9 @@ public interface InterpretationPipelineOptions
   void setHdfsTempLocation(String value);
 
   @Description("Types for an interpretation - ALL, TAXON, LOCATION and etc.")
-  List<String> getInterpretationTypes();
+  Set<String> getInterpretationTypes();
 
-  void setInterpretationTypes(List<String> types);
+  void setInterpretationTypes(Set<String> types);
 
   @Description("Properties for interpretations that require the use of external web services")
   @JsonIgnore

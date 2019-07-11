@@ -10,7 +10,6 @@ import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.transforms.extension.MultimediaTransform.Interpreter;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -77,7 +76,7 @@ public class MultimediaRecordTransformTest {
 
     // When
     PCollection<MultimediaRecord> dataStream =
-        p.apply(Create.of(extendedRecord)).apply(ParDo.of(new Interpreter()))
+        p.apply(Create.of(extendedRecord)).apply(MultimediaTransform.create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should

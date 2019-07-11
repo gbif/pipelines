@@ -32,7 +32,7 @@ public class UniqueIdTransform extends PTransform<PCollection<ExtendedRecord>, P
     // Convert from list to map where, key - occurrenceId, value - object instance and group by key
     PCollection<KV<String, Iterable<ExtendedRecord>>> groupedCollection =
         input
-            .apply("Mapping to KV", VerbatimTransform.toKv())
+            .apply("Mapping to KV", VerbatimTransform.create().toKv())
             .apply("Grouping by occurrenceId", GroupByKey.create());
 
     // Filter duplicate occurrenceIds, all groups where value size != 1

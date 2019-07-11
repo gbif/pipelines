@@ -82,6 +82,63 @@ public class AudubonInterpreterTest {
   }
 
   @Test
+  public void wrongFormatTest() {
+
+    // Expected
+    String expected = "{\"id\": \"id\", \"created\": null, \"audubonItems\": [{\"creator\": null, \"creatorUri\": null, "
+        + "\"providerLiteral\": null, \"provider\": null, \"metadataCreatorLiteral\": null, \"metadataCreator\": null, "
+        + "\"metadataProviderLiteral\": null, \"metadataProvider\": null, \"rights\": \"CC0 4.0\", \"rightsUri\": \"CC0 4.0\", "
+        + "\"owner\": \"Naturalis Biodiversity Center\", \"usageTerms\": null, \"webStatement\": null, \"licenseLogoUrl\": null, "
+        + "\"credit\": null, \"attributionLogoUrl\": null, \"attributionLinkUrl\": null, \"fundingAttribution\": null, "
+        + "\"source\": null, \"sourceUri\": null, \"description\": null, \"caption\": \"ZMA.AVES.11080\", \"language\": null, "
+        + "\"languageUri\": null, \"physicalSetting\": null, \"cvTerm\": null, \"subjectCategoryVocabulary\": null, \"tag\": null, "
+        + "\"locationShown\": null, \"worldRegion\": null, \"countryCode\": null, \"countryName\": null, \"provinceState\": null, "
+        + "\"city\": null, \"sublocation\": null, \"identifier\": \"http://medialib.naturalis.nl/file/id/ZMA.AVES.11080/format/large\", "
+        + "\"type\": \"MovingImage\", \"typeUri\": null, \"subtypeLiteral\": null, \"subtype\": null, \"title\": null, \"modified\": null, "
+        + "\"metadataDate\": null, \"metadataLanguageLiteral\": null, \"metadataLanguage\": null, \"providerManagedId\": null, "
+        + "\"rating\": null, \"commenterLiteral\": null, \"commenter\": null, \"comments\": null, \"reviewerLiteral\": null, "
+        + "\"reviewer\": null, \"reviewerComments\": null, \"available\": null, \"hasServiceAccessPoint\": null, "
+        + "\"idOfContainingCollection\": null, \"relatedResourceId\": null, \"providerId\": null, \"derivedFrom\": null, "
+        + "\"associatedSpecimenReference\": null, \"associatedObservationReference\": null, \"locationCreated\": null, "
+        + "\"digitizationDate\": null, \"captureDevice\": null, \"resourceCreationTechnique\": null, \"accessUri\": "
+        + "\"http://medialib.naturalis.nl/file/id/ZMA.AVES.11080/format/large\", \"format\": \"video/mp4\", \"formatUri\": null, "
+        + "\"variantLiteral\": null, \"variant\": \"ac:GoodQuality\", \"variantDescription\": null, \"furtherInformationUrl\": null, "
+        + "\"licensingException\": null, \"serviceExpectation\": null, \"hashFunction\": null, \"hashValue\": null, "
+        + "\"PixelXDimension\": null, \"PixelYDimension\": null, \"taxonCoverage\": null, \"scientificName\": null, "
+        + "\"identificationQualifier\": null, \"vernacularName\": null, \"nameAccordingTo\": null, \"scientificNameId\": null, "
+        + "\"otherScientificName\": null, \"identifiedBy\": null, \"dateIdentified\": null, \"taxonCount\": null, "
+        + "\"subjectPart\": null, \"sex\": null, \"lifeStage\": null, \"subjectOrientation\": null, \"preparations\": null, "
+        + "\"temporal\": null, \"createDate\": null, \"timeOfDay\": null}], \"issues\": {\"issueList\": []}}";
+
+    // State
+    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
+    Map<String, String> audubon1 = new HashMap<>(8);
+
+    audubon1.put("http://purl.org/dc/terms/format", "video/mp4");
+    audubon1.put("http://purl.org/dc/terms/identifier",
+        "http://medialib.naturalis.nl/file/id/ZMA.AVES.11080/format/large");
+    audubon1.put("http://rs.tdwg.org/ac/terms/caption", "ZMA.AVES.11080");
+    audubon1.put("http://rs.tdwg.org/ac/terms/variant", "ac:GoodQuality");
+    audubon1.put("http://purl.org/dc/terms/type", "StillImage");
+    audubon1.put("http://rs.tdwg.org/ac/terms/accessURI",
+        "http://medialib.naturalis.nl/file/id/ZMA.AVES.11080/format/large");
+    audubon1.put("http://purl.org/dc/terms/rights", "CC0 4.0");
+    audubon1.put("http://ns.adobe.com/xap/1.0/rights/Owner", "Naturalis Biodiversity Center");
+
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
+
+    AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
+
+    // When
+    AudubonInterpreter.interpret(er, ar);
+
+    // Should
+    Assert.assertEquals(expected, ar.toString());
+  }
+
+  @Test
   public void dateIssueTest() {
 
     // Expected

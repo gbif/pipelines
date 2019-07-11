@@ -7,6 +7,8 @@ import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
 
+import java.util.Set;
+
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -66,12 +68,15 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
 
+    // find indexes where the dataset is currently indexed
+    Set<String> existingDatasetIndexes = EsIndexUtils.findDatasetIndexesInAlias(options);
+
+    EsIndexUtils.deleteRecordsByDatasetId(options, existingDatasetIndexes);
     EsIndexUtils.createIndexIfNotExist(options);
-    EsIndexUtils.deleteRecordsByDatasetId(options);
 
     InterpretedToEsIndexPipeline.run(options);
 
-    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.ES_LOCK_PREFIX));
+    EsIndexUtils.updateAlias(options, existingDatasetIndexes, LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.ES_LOCK_PREFIX));
 
     FsUtils.removeTmpDirectory(options);
     log.info("Finished main indexing pipeline");

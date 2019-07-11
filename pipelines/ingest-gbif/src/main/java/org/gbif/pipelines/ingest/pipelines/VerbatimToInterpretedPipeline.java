@@ -2,7 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -89,7 +89,7 @@ public class VerbatimToInterpretedPipeline {
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
-    List<String> types = options.getInterpretationTypes();
+    Set<String> types = options.getInterpretationTypes();
     String propertiesPath = options.getProperties();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
@@ -106,68 +106,83 @@ public class VerbatimToInterpretedPipeline {
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
-    log.info("Reading avro files");
-    PCollection<ExtendedRecord> uniqueRecords =
-        p.apply("Read ExtendedRecords", VerbatimTransform.read(options.getInputPath()))
+
+    // Core
+    MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
+    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
+    LocationTransform locationTransform = LocationTransform.create(propertiesPath);
+    // Extension
+    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.create();
+    AudubonTransform audubonTransform = AudubonTransform.create();
+    ImageTransform imageTransform = ImageTransform.create();
+
+    log.info("Creating beam pipeline");
+    //Create and write metadata
+    PCollection<MetadataRecord> metadataRecord =
+        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
+            .apply("Interpret metadata", metadataTransform.interpret());
+
+    metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
+
+    //Create View for further use
+    PCollectionView<MetadataRecord> metadataView =
+        metadataRecord
+            .apply("Check verbatim transform condition", metadataTransform.checkMetadata(types))
+            .apply("Convert into view", View.asSingleton());
+
+    PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?
+        verbatimTransform.emptyCollection(p) :
+        p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create());
 
-    log.info("Adding interpretations");
-
-    //Create metadata
-    PCollection<MetadataRecord> metadataRecordP =
-        p.apply("Create metadata collection", Create.of(options.getDatasetId()))
-            .apply("Interpret metadata", MetadataTransform.interpret(propertiesPath, endPointType, attempt));
-
-    //Write metadata
-    metadataRecordP.apply("Write metadata to avro", MetadataTransform.write(pathFn));
-
-    //Create View for further use
-    PCollectionView<MetadataRecord> metadataView = metadataRecordP.apply("Convert into view", View.asSingleton());
+    uniqueRecords
+        .apply("Check verbatim transform condition", verbatimTransform.check(types))
+        .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Check verbatim transform condition", VerbatimTransform.check(types))
-        .apply("Write verbatim to avro", VerbatimTransform.write(pathFn));
+        .apply("Check basic transform condition", basicTransform.check(types))
+        .apply("Interpret basic", basicTransform.interpret())
+        .apply("Write basic to avro", basicTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Check basic transform condition", BasicTransform.check(types))
-        .apply("Interpret basic", BasicTransform.interpret(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId))
-        .apply("Write basic to avro", BasicTransform.write(pathFn));
+        .apply("Check temporal transform condition", temporalTransform.check(types))
+        .apply("Interpret temporal", temporalTransform.interpret())
+        .apply("Write temporal to avro", temporalTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Check temporal transform condition", TemporalTransform.check(types))
-        .apply("Interpret temporal", TemporalTransform.interpret())
-        .apply("Write temporal to avro", TemporalTransform.write(pathFn));
+        .apply("Check multimedia transform condition", multimediaTransform.check(types))
+        .apply("Interpret multimedia", multimediaTransform.interpret())
+        .apply("Write multimedia to avro", multimediaTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Check multimedia transform condition", MultimediaTransform.check(types))
-        .apply("Interpret multimedia", MultimediaTransform.interpret())
-        .apply("Write multimedia to avro", MultimediaTransform.write(pathFn));
+        .apply("Check image transform condition", imageTransform.check(types))
+        .apply("Interpret image", imageTransform.interpret())
+        .apply("Write image to avro", imageTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Check image transform condition", ImageTransform.check(types))
-        .apply("Interpret image", ImageTransform.interpret())
-        .apply("Write image to avro", ImageTransform.write(pathFn));
+        .apply("Check audubon transform condition", audubonTransform.check(types))
+        .apply("Interpret audubon", audubonTransform.interpret())
+        .apply("Write audubon to avro", audubonTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Check audubon transform condition", AudubonTransform.check(types))
-        .apply("Interpret audubon", AudubonTransform.interpret())
-        .apply("Write audubon to avro", AudubonTransform.write(pathFn));
+        .apply("Check measurement transform condition", measurementOrFactTransform.check(types))
+        .apply("Interpret measurement", measurementOrFactTransform.interpret())
+        .apply("Write measurement to avro", measurementOrFactTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Check measurement transform condition", MeasurementOrFactTransform.check(types))
-        .apply("Interpret measurement", MeasurementOrFactTransform.interpret())
-        .apply("Write measurement to avro", MeasurementOrFactTransform.write(pathFn));
+        .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
+        .apply("Interpret taxonomy", taxonomyTransform.interpret())
+        .apply("Write taxon to avro", taxonomyTransform.write(pathFn));
 
     uniqueRecords
-        .apply("Check taxonomy transform condition", TaxonomyTransform.check(types))
-        .apply("Interpret taxonomy", TaxonomyTransform.interpret(propertiesPath))
-        .apply("Write taxon to avro", TaxonomyTransform.write(pathFn));
-
-    uniqueRecords
-        .apply("Check location transform condition", LocationTransform.check(types))
-        .apply("Interpret location", LocationTransform.interpret(propertiesPath, metadataView))
-        .apply("Write location to avro", LocationTransform.write(pathFn));
+        .apply("Check location transform condition", locationTransform.check(types))
+        .apply("Interpret location", locationTransform.interpret(metadataView))
+        .apply("Write location to avro", locationTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

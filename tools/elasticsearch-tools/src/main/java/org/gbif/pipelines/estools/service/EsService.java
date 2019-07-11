@@ -176,7 +176,25 @@ public class EsService {
    * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a
    * single index, or a pattern using wildcards. For example, "idx*" matches with all the
    * indexes whose name starts with "idx".
-   * @param alias alias that has to be associated to the indexes retrieved.
+   * @param aliases aliases that has to be associated to the indexes retrieved.
+   * @return {@link Set} with all the indexes that are in the alias specified and match with the
+   * pattern received.
+   */
+  public static Set<String> getIndexesByAliasAndIndexPattern(
+      @NonNull EsClient esClient, String idxPattern, Set<String> aliases) {
+    return getIndexesByAliasAndIndexPattern(esClient, idxPattern, String.join(",", aliases));
+  }
+
+  /**
+   * Gets all the indexes associated to a specific alias and whose names match with a specified
+   * pattern.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxPattern index to pattern. It can be the exact name of an index to do the query for a
+   * single index, or a pattern using wildcards. For example, "idx*" matches with all the
+   * indexes whose name starts with "idx".
+   * @param alias alias that has to be associated to the indexes retrieved. To pass more than one alias they have to be
+   * separated by commas. E.g.: alias1,alias2.
    * @return {@link Set} with all the indexes that are in the alias specified and match with the
    * pattern received.
    */
@@ -194,22 +212,26 @@ public class EsService {
   }
 
   /**
-   * Swaps indexes in an alias.
+   * Swaps indexes in aliases.
    *
    * <p>In this method we can add or remove indexes in an alias. Also note that in the case of
-   * removing indixes, they are <strong>completely removed</strong> from the ES instance, and not
+   * removing indexes, they are <strong>completely removed</strong> from the ES instance, and not
    * only from the alias.
    *
    * @param esClient client to call ES. It is required.
-   * @param alias alias that will be modified
+   * @param aliases aliases that will be modified
    * @param idxToAdd indexes to add to the alias.
    * @param idxToRemove indexes to remove from the alias.
    */
   @SneakyThrows
   public static void swapIndexes(
-      @NonNull EsClient esClient, String alias, Set<String> idxToAdd, Set<String> idxToRemove) {
+      @NonNull EsClient esClient, Set<String> aliases, Set<String> idxToAdd, Set<String> idxToRemove) {
+    if ((idxToAdd == null || idxToAdd.isEmpty()) && (idxToRemove == null || idxToRemove.isEmpty())) {
+      // nothing to swap
+      return;
+    }
 
-    HttpEntity body = HttpRequestBuilder.newInstance().withIndexAliasAction(alias, idxToAdd, idxToRemove).build();
+    HttpEntity body = HttpRequestBuilder.newInstance().withIndexAliasAction(aliases, idxToAdd, idxToRemove).build();
     String endpoint = buildEndpoint("_aliases");
     esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
   }
@@ -313,6 +335,33 @@ public class EsService {
     String endpoint = buildEndpoint(idxName, "_delete_by_query?scroll_size=5000");
     HttpEntity body = createBodyFromString(query);
     esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
+  }
+
+  /**
+   * Finds the indexes in an alias where a given dataset is present.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param alias name of the alias to search in.
+   */
+  public static Set<String> findDatasetIndexesInAlias(@NonNull EsClient esClient, String alias, String datasetKey) {
+    Response response =
+        EsService.executeQuery(esClient, alias, String.format(EsQueries.FIND_DATASET_INDEXES_QUERY, datasetKey));
+    return HttpResponseParser.parseFindDatasetIndexesInAliasResponse(response.getEntity());
+  }
+
+  /**
+   * Executes a given DSL query.
+   *
+   * @param esClient client to call ES. It is required.
+   * @param idxName name of the index to search in.
+   * @param query ES DSL query.
+   * @return {@link Response}
+   */
+  @SneakyThrows
+  private static Response executeQuery(@NonNull EsClient esClient, String idxName, String query) {
+    String endpoint = buildEndpoint(idxName, "_search");
+    HttpEntity body = createBodyFromString(query);
+    return esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
   }
 
   static String buildEndpoint(Object... strings) {

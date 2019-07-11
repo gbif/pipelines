@@ -43,7 +43,7 @@ public class HttpResponseParserTest {
   }
 
   private HttpEntity getEntityFromResponse(String path) {
-    String json = JsonHandler.writeToString(getClass().getResourceAsStream(path));
+    String json = JsonHandler.toString(getClass().getResourceAsStream(path));
     try {
       return new NStringEntity(json);
     } catch (UnsupportedEncodingException ex) {

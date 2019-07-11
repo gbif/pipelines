@@ -57,7 +57,7 @@ public class PipelinesVariables {
     public static class Indexing {
 
       public static final String INDEX_TYPE = "record";
-
+      public static final String GBIF_ID = "gbifId";
     }
 
   }

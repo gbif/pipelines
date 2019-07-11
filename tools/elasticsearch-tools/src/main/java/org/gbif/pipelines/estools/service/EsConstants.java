@@ -21,12 +21,14 @@ public final class EsConstants {
     public static final String MAPPINGS = "mappings";
     public static final String ALIAS = "alias";
     public static final String COUNT = "count";
+    public static final String ANALYSIS = "analysis";
 
     public static final String INDEX_REFRESH_INTERVAL = Util.INDEX_PREFIX + Field.REFRESH_INTERVAL;
     public static final String INDEX_NUMBER_SHARDS = Util.INDEX_PREFIX + Field.NUMBER_SHARDS;
     public static final String INDEX_NUMBER_REPLICAS = Util.INDEX_PREFIX + Field.NUMBER_REPLICAS;
     public static final String INDEX_TRANSLOG_DURABILITY =
         Util.INDEX_PREFIX + Field.TRANSLOG + Util.JSON_CONCATENATOR + Field.DURABILITY;
+    public static final String INDEX_ANALYSIS = Util.INDEX_PREFIX + Field.ANALYSIS;
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -48,6 +50,7 @@ public final class EsConstants {
 
     public static final String REFRESH_INTERVAL = "-1";
     public static final String NUMBER_REPLICAS = "0";
+    public static final String NORMALIZER = "{\"normalizer\":{\"lowercase_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\"]}}}";
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)

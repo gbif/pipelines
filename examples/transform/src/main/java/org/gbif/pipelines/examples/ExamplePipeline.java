@@ -5,11 +5,10 @@ import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.transforms.core.TemporalTransform.Interpreter;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.transforms.ParDo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +49,7 @@ public class ExamplePipeline {
     // Reads DwCA archive and convert to ExtendedRecord
     p.apply("Read DwCA zip archive", DwcaIO.Read.fromCompressed(inputPath, tmpDir))
         // Interprets and transforms from ExtendedRecord to TemporalRecord using GBIF TemporalInterpreter
-        .apply("Interpret TemporalRecord", ParDo.of(new Interpreter()))
+        .apply("Interpret TemporalRecord", TemporalTransform.create().interpret())
         // Interprets and Transforms from ExtendedRecord to ExampleRecord using ExampleInterpreter
         .apply("Interpret ExampleRecord", ExampleTransform.exampleOne())
         // Write ExampleRecords as Avro files using AvroIO.Write

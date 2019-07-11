@@ -144,45 +144,59 @@ public class InterpretedToHdfsTablePipeline {
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding step 2: Reading avros");
+    // Core
+    BasicTransform basicTransform = BasicTransform.create();
+    MetadataTransform metadataTransform = MetadataTransform.create();
+    VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    TemporalTransform temporalTransform = TemporalTransform.create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
+    LocationTransform locationTransform = LocationTransform.create();
+    // Extension
+    MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+    MultimediaTransform multimediaTransform = MultimediaTransform.create();
+    AudubonTransform audubonTransform = AudubonTransform.create();
+    ImageTransform imageTransform = ImageTransform.create();
+
+    log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Read Metadata", MetadataTransform.read(pathFn))
-            .apply("Convert to view", View.asSingleton());
+      p.apply("Read Metadata", metadataTransform.read(pathFn))
+        .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        p.apply("Read Verbatim", VerbatimTransform.read(pathFn))
-            .apply("Map Verbatim to KV", VerbatimTransform.toKv());
+      p.apply("Read Verbatim", verbatimTransform.read(pathFn))
+        .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
-        p.apply("Read Basic", BasicTransform.read(pathFn))
-            .apply("Map Basic to KV", BasicTransform.toKv());
+      p.apply("Read Basic", basicTransform.read(pathFn))
+        .apply("Map Basic to KV", basicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
-        p.apply("Read Temporal", TemporalTransform.read(pathFn))
-            .apply("Map Temporal to KV", TemporalTransform.toKv());
+      p.apply("Read Temporal", temporalTransform.read(pathFn))
+        .apply("Map Temporal to KV", temporalTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
-        p.apply("Read Location", LocationTransform.read(pathFn))
-            .apply("Map Location to KV", LocationTransform.toKv());
+      p.apply("Read Location", locationTransform.read(pathFn))
+        .apply("Map Location to KV", locationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
-        p.apply("Read Taxon", TaxonomyTransform.read(pathFn))
-            .apply("Map Taxon to KV", TaxonomyTransform.toKv());
+      p.apply("Read Taxon", taxonomyTransform.read(pathFn))
+        .apply("Map Taxon to KV", taxonomyTransform.toKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
-        p.apply("Read Multimedia", MultimediaTransform.read(pathFn))
-            .apply("Map Multimedia to KV", MultimediaTransform.toKv());
+      p.apply("Read Multimedia", multimediaTransform.read(pathFn))
+        .apply("Map Multimedia to KV", multimediaTransform.toKv());
 
     PCollection<KV<String, ImageRecord>> imageCollection =
-        p.apply("Read Image", ImageTransform.read(pathFn))
-            .apply("Map Image to KV", ImageTransform.toKv());
+      p.apply("Read Image", imageTransform.read(pathFn))
+        .apply("Map Image to KV", imageTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
-        p.apply("Read Audubon", AudubonTransform.read(pathFn))
-            .apply("Map Audubon to KV", AudubonTransform.toKv());
+      p.apply("Read Audubon", audubonTransform.read(pathFn))
+        .apply("Map Audubon to KV", audubonTransform.toKv());
 
     PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-        p.apply("Read Measurement", MeasurementOrFactTransform.read(pathFn))
-            .apply("Map Measurement to KV", MeasurementOrFactTransform.toKv());
+      p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
+        .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
 
     log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
     SingleOutput<KV<String, CoGbkResult>, OccurrenceHdfsRecord> toHdfsRecordDoFn =

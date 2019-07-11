@@ -28,6 +28,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84;
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LONGITUDE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
 import static org.gbif.pipelines.core.interpreters.core.LocationInterpreter.hasGeospatialIssues;
 import static org.junit.Assert.assertEquals;
 
@@ -44,6 +45,7 @@ public class LocationInterpreterTest {
     TEST_STORE.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
     TEST_STORE.put(new LatLng(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
     TEST_STORE.put(new LatLng(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
+    TEST_STORE.put(new LatLng(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
@@ -90,7 +92,7 @@ public class LocationInterpreterTest {
   }
 
   private static LocationRecord interpret(ExtendedRecord source) {
-    MetadataRecord mdr = MetadataRecord.newBuilder().setId("777").build();
+    MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
     return Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
         .via(LocationInterpreter.interpretCountryAndCoordinates(TEST_STORE, mdr))
@@ -244,6 +246,21 @@ public class LocationInterpreterTest {
     // State
     ExtendedRecord source = createEr("Bolivia", null, "17 03  S", "066   W", null, null);
     LocationRecord expected = createLr(Country.BOLIVIA, -17.05d, -66d, GEODETIC_DATUM_ASSUMED_WGS84);
+
+    // When
+    LocationRecord result = interpret(source);
+
+    // Should
+    assertEquals(expected, result);
+
+  }
+
+  @Test
+  public void presumedSwappedCoordinatesTest() {
+
+    // State
+    ExtendedRecord source = createEr("Indonesia", "ID", null, null, "110.279078", "-8.023319");
+    LocationRecord expected = createLr(Country.INDONESIA, -8.023319, 110.279078, GEODETIC_DATUM_ASSUMED_WGS84, PRESUMED_SWAPPED_COORDINATE);
 
     // When
     LocationRecord result = interpret(source);

@@ -79,10 +79,14 @@ public class VerbatimToInterpretedAmpPipeline {
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
+    log.info("Creating transformations");
+    VerbatimTransform verbatimTransform = VerbatimTransform.create();
+    AmplificationTransform amplificationTransform = AmplificationTransform.create(wsPropertiesPath);
+
     log.info("Adding pipeline transforms");
-    p.apply("Read Verbatim", VerbatimTransform.read(pathVerbatimFn))
-        .apply("Interpret amplification", AmplificationTransform.interpret(wsPropertiesPath))
-        .apply("Write amplification to avro", AmplificationTransform.write(pathFn));
+    p.apply("Read Verbatim", verbatimTransform.read(pathVerbatimFn))
+        .apply("Interpret amplification", amplificationTransform.interpret())
+        .apply("Write amplification to avro", amplificationTransform.write(pathFn));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

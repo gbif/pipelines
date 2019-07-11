@@ -1,16 +1,12 @@
 package org.gbif.pipelines.hbase.beam;
 
-import java.io.IOException;
-
-import org.gbif.api.model.occurrence.VerbatimOccurrence;
-import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
+import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.hadoop.format.HadoopFormatIO;
 import org.apache.beam.sdk.metrics.Counter;
@@ -36,14 +32,18 @@ import org.apache.hadoop.hbase.util.Base64;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
-
-import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
+import org.gbif.api.model.occurrence.VerbatimOccurrence;
+import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Executes a pipeline that reads an HBase snapshot and exports verbatim data into Avro using
- * the {@link ExtendedRecord}. schema and stored as an avro file per dataset.
+ * Executes a pipeline that reads an HBase snapshot and exports verbatim data into a single Avro file
+ * using the {@link ExtendedRecord}. schema.
  */
-public class ExportHBaseSnapshot {
+public class ExportHBaseSnapshotSingle {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -53,8 +53,8 @@ public class ExportHBaseSnapshot {
     options.setRunner(SparkRunner.class);
     Pipeline p = Pipeline.create(options);
 
-    Counter recordsExported = Metrics.counter(ExportHBaseSnapshot.class, "recordsExported");
-    Counter recordsFailed = Metrics.counter(ExportHBaseSnapshot.class, "recordsFailed");
+    Counter recordsExported = Metrics.counter(ExportHBaseSnapshotSingle.class, "recordsExported");
+    Counter recordsFailed = Metrics.counter(ExportHBaseSnapshotSingle.class, "recordsFailed");
 
     //Params
     String exportPath = options.getExportPath();
@@ -65,19 +65,19 @@ public class ExportHBaseSnapshot {
             "Read HBase",
             HadoopFormatIO.<ImmutableBytesWritable, Result>read().withConfiguration(hbaseConfig));
 
-    PCollection<KV<String, ExtendedRecord>> records =
+    PCollection<ExtendedRecord> records =
         rows.apply(
             "Convert to extended record",
             ParDo.of(
-                new DoFn<KV<ImmutableBytesWritable, Result>, KV<String, ExtendedRecord>>() {
+                new DoFn<KV<ImmutableBytesWritable, Result>, ExtendedRecord>() {
 
                   @ProcessElement
                   public void processElement(ProcessContext c) {
                     Result row = c.element().getValue();
                     try {
-                      VerbatimOccurrence verbatimOccurrence = OccurrenceConverter.toVerbatimOccurrence(row);
-                      String datasetKeyAsString = String.valueOf(verbatimOccurrence.getDatasetKey());
-                      c.output(KV.of(datasetKeyAsString, OccurrenceConverter.toExtendedRecord(verbatimOccurrence)));
+                      VerbatimOccurrence verbatimOccurrence =
+                          OccurrenceConverter.toVerbatimOccurrence(row);
+                      c.output(OccurrenceConverter.toExtendedRecord(verbatimOccurrence));
                       recordsExported.inc();
                     } catch (NullPointerException e) {
                       // Expected for bad data
@@ -86,12 +86,10 @@ public class ExportHBaseSnapshot {
                   }
                 }));
 
-    records.apply("Write avro file per dataset", FileIO.<String, KV<String, ExtendedRecord>>writeDynamic()
-        .by(KV::getKey)
-        .via(Contextful.fn(KV::getValue), Contextful.fn(x -> AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC)))
-        .to(exportPath)
-        .withDestinationCoder(StringUtf8Coder.of())
-        .withNaming(key -> defaultNaming(key + "/verbatimHBaseExport", PipelinesVariables.Pipeline.AVRO_EXTENSION)));
+    records.apply("Write single avro file",
+        FileIO.<ExtendedRecord>write()
+        .via(AvroIO.sink(ExtendedRecord.class).withCodec(BASE_CODEC))
+        .to(exportPath));
 
     p.run().waitUntilFinish();
   }

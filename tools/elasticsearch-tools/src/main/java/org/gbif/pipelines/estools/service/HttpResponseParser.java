@@ -1,6 +1,8 @@
 package org.gbif.pipelines.estools.service;
 
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.common.SettingsType;
@@ -12,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
+import static org.gbif.pipelines.estools.service.EsQueries.AGG_BY_INDEX;
 
 /** Parser for the ES responses encapsulated in a {@link HttpEntity}. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -53,5 +56,18 @@ class HttpResponseParser {
   static long parseIndexCountResponse(HttpEntity entity) {
     JsonNode node = JsonHandler.readTree(entity);
     return node.has(Field.COUNT) ? node.path(Field.COUNT).asLong() : 0L;
+  }
+
+  /**
+   * Parses the response from a request that finds the indexes where a dataset is indexed.
+   *
+   * @param entity {@link HttpEntity} from the response.
+   * @return indexes found
+   */
+  static Set<String> parseFindDatasetIndexesInAliasResponse(HttpEntity entity) {
+    JsonNode node = JsonHandler.readTree(entity);
+    return StreamSupport.stream(node.get("aggregations").get(AGG_BY_INDEX).get("buckets").spliterator(), false)
+        .map(n -> n.get("key").asText())
+        .collect(Collectors.toSet());
   }
 }

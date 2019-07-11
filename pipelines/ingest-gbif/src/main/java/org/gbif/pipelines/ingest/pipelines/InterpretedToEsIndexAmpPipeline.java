@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 /**
  * NOTE: REMEMBER THAT THIS PIPELINE MUST BE STARTED AFTER {@link InterpretedToEsIndexPipeline}
@@ -78,7 +79,7 @@ public class InterpretedToEsIndexAmpPipeline {
 
     log.info("Adding step 2: Reading avros and converting into a json object");
     PCollection<String> jsonCollection =
-        p.apply("Read Amplification", AmplificationTransform.read(pathFn))
+        p.apply("Read Amplification", AmplificationTransform.create().read(pathFn))
             .apply("Merging into json", ParDo.of(new DoFn<AmplificationRecord, String>() {
 
               private final Counter counter = Metrics.counter(GbifJsonConverter.class, AVRO_TO_JSON_COUNT);
@@ -102,7 +103,7 @@ public class InterpretedToEsIndexAmpPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get("gbifId").asText()));
+            .withIdFn(input -> input.get(GBIF_ID).asText()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

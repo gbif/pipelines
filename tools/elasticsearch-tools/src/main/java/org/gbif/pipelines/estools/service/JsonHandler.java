@@ -2,19 +2,22 @@ package org.gbif.pipelines.estools.service;
 
 import java.io.InputStream;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.apache.http.HttpEntity;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.POJONode;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Handler to work with JSON.
@@ -22,12 +25,32 @@ import lombok.SneakyThrows;
  * <p>This class handles all the exceptions thrown when working with JSON and rethrows the checked
  * exceptions as unchecked.
  */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 final class JsonHandler {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final ObjectWriter WRITER = MAPPER.writer();
   private static final ObjectReader READER = MAPPER.readerFor(Map.class);
+
+  // Utility predicates to check if a node is a complex element
+  private static final Predicate<String> IS_OBJECT = value -> value.startsWith("{\"") && value.endsWith("}");
+  private static final Predicate<String> IS_ARRAY_ONE = value -> value.startsWith("[") && value.endsWith("]");
+  private static final Predicate<String> IS_ARRAY_TWO = value -> value.startsWith("[{") && value.endsWith("}]");
+  private static final Predicate<String> IS_VALID_JSON =
+      value -> {
+        try (JsonParser parser = MAPPER.getFactory().createParser(value)) {
+          while (parser.nextToken() != null) {
+            // NOP
+          }
+        } catch (Exception ex) {
+          log.warn("JSON is invalid - {}", value);
+          return false;
+        }
+        return true;
+      };
+
+  private static final Predicate<String> IS_COMPLEX_OBJECT =
+      IS_OBJECT.or(IS_ARRAY_ONE).or(IS_ARRAY_TWO).and(IS_VALID_JSON);
 
   /** Creates a {@link ObjectNode}. */
   static ObjectNode createObjectNode() {
@@ -39,16 +62,10 @@ final class JsonHandler {
     return MAPPER.createArrayNode();
   }
 
-  /** Writes a {@link Object} to String. */
-  @SneakyThrows
-  static String writeToString(Object obj) {
-    return WRITER.writeValueAsString(obj);
-  }
-
   /** Writes a {@link InputStream} to String . */
   @SneakyThrows
-  static String writeToString(InputStream inputStream) {
-    return writeToString(READER.readTree(inputStream));
+  static String toString(InputStream inputStream) {
+    return READER.readTree(inputStream).toString();
   }
 
   /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link Map}. */
@@ -77,6 +94,16 @@ final class JsonHandler {
 
   /** Converts a {@link Map} into a {@link JsonNode}. */
   static JsonNode convertToJsonNode(Map<String, String> map) {
-    return MAPPER.valueToTree(map);
+    ObjectNode objectNode = MAPPER.createObjectNode();
+
+    map.entrySet().stream()
+        .filter(x -> !IS_COMPLEX_OBJECT.test(x.getValue()))
+        .forEach(e -> objectNode.put(e.getKey(), e.getValue()));
+
+    map.entrySet().stream()
+        .filter(x -> IS_COMPLEX_OBJECT.test(x.getValue()))
+        .forEach(e -> objectNode.putPOJO(e.getKey(), new POJONode(e.getValue())));
+
+    return objectNode;
   }
 }
