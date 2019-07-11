@@ -73,6 +73,7 @@ public class OccurrenceHdfsRecordConverterTest {
         basicRecord.setTypifiedName("noName");
         basicRecord.setEstablishmentMeans(EstablishmentMeans.INVASIVE.name());
         basicRecord.setCreated(now);
+        basicRecord.setGbifId(1L);
         OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord);
         Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
         Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());

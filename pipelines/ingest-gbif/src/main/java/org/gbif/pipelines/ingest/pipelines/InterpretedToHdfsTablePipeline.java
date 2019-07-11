@@ -228,9 +228,8 @@ public class InterpretedToHdfsTablePipeline {
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
       //A write lock is acquired to avoid concurrent modifications while this operation is running
-      SharedLockUtils.doInBarrier(LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.HDFS_LOCK_PREFIX), () -> {
-        copyOccurrenceRecords(options);
-      });
+      SharedLockUtils.doInBarrier(LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.HDFS_LOCK_PREFIX),
+                                  () -> copyOccurrenceRecords(options));
     }
 
     //Metrics
