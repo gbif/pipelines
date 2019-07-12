@@ -8,13 +8,13 @@ import org.apache.beam.sdk.options.PipelineOptions;
 public interface EsPipelineOptions extends PipelineOptions {
 
   @Description("Target ES Max Batch Size bytes")
-  @Default.Long(8_388_608L) // 10mb
+  @Default.Long(10_485_760L) // 10mb
   Long getEsMaxBatchSizeBytes();
 
   void setEsMaxBatchSizeBytes(Long batchSize);
 
   @Description("Es max batch size")
-  @Default.Long(8_000L)
+  @Default.Long(10_000L)
   long getEsMaxBatchSize();
 
   void setEsMaxBatchSize(long esBatchSize);
@@ -41,7 +41,7 @@ public interface EsPipelineOptions extends PipelineOptions {
   void setEsSchemaPath(String esSchemaPath);
 
   @Description("How often to perform a refresh operation, which makes recent changes to the index visible to search. Defaults to 30s")
-  @Default.String("30s")
+  @Default.String("40s")
   String getIndexRefreshInterval();
 
   void setIndexRefreshInterval(String indexRefreshInterval);
