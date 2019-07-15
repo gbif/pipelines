@@ -100,8 +100,8 @@
       "dateIdentified": {"type": "date"},
       "eventDateSingle": {"type": "date"},
 
-      "issues": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-      "notIssues": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "issues": {"type": "keyword" },
+      "notIssues": {"type": "keyword" },
 
       "gbifClassification": {
         "type": "object",
