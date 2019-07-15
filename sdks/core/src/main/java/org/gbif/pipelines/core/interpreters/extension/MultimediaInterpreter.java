@@ -64,6 +64,7 @@ public class MultimediaInterpreter {
           .map(DcTerm.rightsHolder, Multimedia::setRightsHolder)
           .map(DcTerm.source, Multimedia::setSource)
           .map(DwcTerm.datasetID, Multimedia::setDatasetId)
+          .postMap(MultimediaInterpreter::parseAndSetTypeFromReferences)
           .skipIf(MultimediaInterpreter::checkLinks);
 
   /**
@@ -204,5 +205,13 @@ public class MultimediaInterpreter {
       return Optional.of(MULTIMEDIA_URI_INVALID.name());
     }
     return Optional.empty();
+  }
+
+  /** Parses type in case if type is null, but maybe references contains type, like - *.jpg */
+  private static void parseAndSetTypeFromReferences(Multimedia m) {
+    if (m.getType() == null && (m.getReferences() != null || m.getIdentifier() != null)) {
+      String value = m.getReferences() != null ? m.getReferences() : m.getIdentifier();
+      parseAndSetFormatAndType(m, value);
+    }
   }
 }

@@ -384,4 +384,49 @@ public class AudubonInterpreterTest {
 
   }
 
+  @Test
+  public void accessUriTest() {
+
+    // State
+    Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
+    Map<String, String> audubon1 = new HashMap<>(4);
+    audubon1.put("http://purl.org/dc/elements/1.1/rights",
+        "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode");
+    audubon1.put("http://purl.org/dc/terms/identifier",
+        "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
+    audubon1.put("http://rs.tdwg.org/ac/terms/accessURI",
+        "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
+    audubon1.put("http://ns.adobe.com/xap/1.0/MetadataDate", "2019-07-12 06:30:57.0");
+
+    ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon1));
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
+
+    AudubonRecord ar = AudubonRecord.newBuilder().setId("id").build();
+
+    AudubonRecord expected = AudubonRecord.newBuilder()
+        .setId("id")
+        .setAudubonItems(
+            Collections.singletonList(
+                Audubon.newBuilder()
+                    .setRights("http://creativecommons.org/licenses/by-nc-sa/4.0/")
+                    .setRightsUri("http://creativecommons.org/licenses/by-nc-sa/4.0/")
+                    .setAccessUri("https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg")
+                    .setIdentifier("https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg")
+                    .setFormat("image/jpeg")
+                    .setType("StillImage")
+                    .setMetadataDate("2019-07-12 06:30:57.0")
+                    .build()
+            )
+        )
+        .build();
+
+    // When
+    AudubonInterpreter.interpret(er, ar);
+
+    // Should
+    Assert.assertEquals(expected, ar);
+
+  }
+
 }

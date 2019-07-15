@@ -150,7 +150,8 @@ public class AudubonInterpreter {
           .mapOne(XmpTerm.CreateDate, AudubonInterpreter::parseAndSetCreatedDate)
           .map(DcTerm.type, AudubonInterpreter::parseAndSetTypeUri)
           .map(DcElement.type, AudubonInterpreter::parseAndSetType)
-          .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri);
+          .postMap(AudubonInterpreter::parseAndSetRightsAndRightsUri)
+          .postMap(AudubonInterpreter::parseAndSetTypeFromAccessUri);
 
   /**
    * Interprets audubon of a {@link ExtendedRecord} and populates a {@link AudubonRecord}
@@ -206,9 +207,14 @@ public class AudubonInterpreter {
    */
   private static void parseAndSetFormat(Audubon a, String v) {
     String mimeType = MEDIA_PARSER.parseMimeType(v);
-    if (Strings.isNullOrEmpty(mimeType)) {
-      mimeType = MEDIA_PARSER.parseMimeType(a.getIdentifier());
+    if (Strings.isNullOrEmpty(mimeType) && !Strings.isNullOrEmpty(a.getIdentifier())) {
+      mimeType = MEDIA_PARSER.parseMimeType(URI.create(a.getIdentifier()));
     }
+    if ("text/html".equalsIgnoreCase(mimeType) && a.getIdentifier() != null) {
+      a.setIdentifier(null);
+      mimeType = null;
+    }
+
     a.setFormat(mimeType);
   }
 
@@ -274,5 +280,14 @@ public class AudubonInterpreter {
     }
     a.setRights(resultName);
     a.setRightsUri(resultUrl);
+  }
+
+  /** Parses type in case if type is null, but maybe accessUri contains type, like - *.jpg */
+  private static void parseAndSetTypeFromAccessUri(Audubon a) {
+    if (a.getType() == null && (a.getAccessUri() != null || a.getIdentifier() != null)) {
+      String value = a.getAccessUri() != null ? a.getAccessUri() : a.getIdentifier();
+      parseAndSetFormat(a, value);
+      parseAndSetType(a, a.getFormat());
+    }
   }
 }

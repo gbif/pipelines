@@ -56,8 +56,11 @@ public class MultimediaInterpreterTest {
     Map<String, String> ext3 = new HashMap<>(1);
     ext3.put(DcTerm.created.qualifiedName(), "2020-01-12T18:33:58.000+0000");
 
+    Map<String, String> ext4 = new HashMap<>(4);
+    ext3.put(DcTerm.identifier.qualifiedName(), "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
+
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
-    ext.put(Extension.MULTIMEDIA.getRowType(), Arrays.asList(ext1, ext2, ext3));
+    ext.put(Extension.MULTIMEDIA.getRowType(), Arrays.asList(ext1, ext2, ext3, ext4));
 
     ExtendedRecord record =
         ExtendedRecord.newBuilder()
@@ -67,17 +70,20 @@ public class MultimediaInterpreterTest {
             .build();
 
     String result =
-        "{\"id\": \"id\", \"created\": 0, \"multimediaItems\": [{\"type\": \"StillImage\", \"format\": \"image/scan\", \"identifier\": "
-            + "\"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": \"Title1\", "
-            + "\"description\": \"Desc1\", \"source\": \"Sr1\", \"audience\": \"Audi1\", \"created\": \"2000-11-21\", "
-            + "\"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Publ1\", \"license\": \"http://creativecommons.org/licenses/by-nc-sa/4.0/\", "
-            + "\"rightsHolder\": \"Rh1\", \"datasetId\": \"1\"}, {\"type\": \"StillImage\", \"format\": \"image/jpeg\", "
-            + "\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", "
-            + "\"title\": \"Title2\", \"description\": \"Desc2\", \"source\": \"Sr2\", \"audience\": \"Aud2\", "
-            + "\"created\": \"2010\", \"creator\": \"Cr2\", \"contributor\": \"Cont2\", \"publisher\": \"Pub2\", "
-            + "\"license\": \"CC0_1_0\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"2\"}, {\"type\": \"StillImage\", "
-            + "\"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp22.jpg\", \"references\": null, \"title\": null, "
-            + "\"description\": null, \"source\": null, \"audience\": null, \"created\": null, \"creator\": null, \"contributor\": null, "
+        "{\"id\": \"id\", \"created\": 0, \"multimediaItems\": [{\"type\": \"StillImage\", \"format\": \"image/scan\", "
+            + "\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": \"http://www.gbif.org/tmp.jpg\", \"title\": "
+            + "\"Title1\", \"description\": \"Desc1\", \"source\": \"Sr1\", \"audience\": \"Audi1\", \"created\": \"2000-11-21\", "
+            + "\"creator\": \"Cr1\", \"contributor\": \"Cont1\", \"publisher\": \"Publ1\", \"license\": "
+            + "\"http://creativecommons.org/licenses/by-nc-sa/4.0/\", \"rightsHolder\": \"Rh1\", \"datasetId\": \"1\"}, {\"type\": "
+            + "\"StillImage\", \"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
+            + "\"http://www.gbif.org/tmp.jpg\", \"title\": \"Title2\", \"description\": \"Desc2\", \"source\": \"Sr2\", "
+            + "\"audience\": \"Aud2\", \"created\": \"2010\", \"creator\": \"Cr2\", \"contributor\": \"Cont2\", \"publisher\": "
+            + "\"Pub2\", \"license\": \"CC0_1_0\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"2\"}, {\"type\": \"StillImage\", "
+            + "\"format\": \"image/jpeg\", \"identifier\": \"https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg\", "
+            + "\"references\": null, \"title\": null, \"description\": null, \"source\": null, \"audience\": null, \"created\": null, "
+            + "\"creator\": null, \"contributor\": null, \"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}, "
+            + "{\"type\": \"StillImage\", \"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp22.jpg\", \"references\": null, "
+            + "\"title\": null, \"description\": null, \"source\": null, \"audience\": null, \"created\": null, \"creator\": null, \"contributor\": null, "
             + "\"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}], \"issues\": {\"issueList\": "
             + "[\"MULTIMEDIA_DATE_INVALID\", \"MULTIMEDIA_URI_INVALID\"]}}";
 
