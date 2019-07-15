@@ -332,7 +332,7 @@ public class EsService {
    */
   @SneakyThrows
   public static void deleteRecordsByQuery(@NonNull EsClient esClient, String idxName, String query) {
-    String endpoint = buildEndpoint(idxName, "_delete_by_query?scroll_size=5000");
+    String endpoint = buildEndpoint(idxName, "_delete_by_query?conflicts=proceed&scroll_size=5000");
     HttpEntity body = createBodyFromString(query);
     esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
   }
