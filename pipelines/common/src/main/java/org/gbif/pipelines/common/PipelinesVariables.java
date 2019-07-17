@@ -17,6 +17,7 @@ public class PipelinesVariables {
     public static final String ARCHIVE_TO_VERBATIM = "archive-to-verbatim";
     public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
+    public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {
