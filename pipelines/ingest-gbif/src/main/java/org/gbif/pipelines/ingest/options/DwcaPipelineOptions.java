@@ -15,9 +15,9 @@ public interface DwcaPipelineOptions extends EsIndexingPipelineOptions, Interpre
     XML_TO_INTERPRETED, // reads XML files and interprets it
     XML_TO_ES_INDEX, // reads XML files, interprets it and indexes it to ES
     INTERPRETED_TO_ES_INDEX, // reads interpreted avro files and indexes them to ES
-    VERBATIM_TO_INTERPRETED,
-    VERBATIM_TO_INTERPRETED_AMP,
-    INTERPRETED_TO_ES_INDEX_AMP
+    VERBATIM_TO_INTERPRETED, // reads ExtendedRecord avro file and interprets it
+    VERBATIM_TO_INTERPRETED_AMP, // reads ExtendedRecord avro file and interprets amplification extension
+    INTERPRETED_TO_ES_INDEX_AMP, // reads interpreted amplification extension and update ES index
   }
 
   @Override
