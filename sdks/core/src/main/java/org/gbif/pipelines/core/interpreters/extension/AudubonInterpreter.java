@@ -208,7 +208,11 @@ public class AudubonInterpreter {
   private static void parseAndSetFormat(Audubon a, String v) {
     String mimeType = MEDIA_PARSER.parseMimeType(v);
     if (Strings.isNullOrEmpty(mimeType) && !Strings.isNullOrEmpty(a.getIdentifier())) {
-      mimeType = MEDIA_PARSER.parseMimeType(URI.create(a.getIdentifier()));
+      try {
+        mimeType = MEDIA_PARSER.parseMimeType(URI.create(a.getIdentifier()));
+      } catch (IllegalArgumentException ex) {
+        mimeType = null;
+      }
     }
     if ("text/html".equalsIgnoreCase(mimeType) && a.getIdentifier() != null) {
       a.setIdentifier(null);

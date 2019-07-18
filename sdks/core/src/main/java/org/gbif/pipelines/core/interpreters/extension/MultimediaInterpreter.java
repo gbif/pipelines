@@ -162,7 +162,11 @@ public class MultimediaInterpreter {
   private static void parseAndSetFormatAndType(Multimedia m, String v) {
     String mimeType = MEDIA_PARSER.parseMimeType(v);
     if (Strings.isNullOrEmpty(mimeType) && !Strings.isNullOrEmpty(m.getIdentifier())) {
-      mimeType = MEDIA_PARSER.parseMimeType(URI.create(m.getIdentifier()));
+      try {
+        mimeType = MEDIA_PARSER.parseMimeType(URI.create(m.getIdentifier()));
+      } catch (IllegalArgumentException ex) {
+        mimeType = null;
+      }
     }
     if ("text/html".equalsIgnoreCase(mimeType) && m.getIdentifier() != null) {
       // make file URI the references link URL instead
