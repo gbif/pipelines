@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
@@ -89,8 +88,7 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
-    String endPointType = Optional.ofNullable(options.getEndPointType())
-        .orElseThrow(() -> new IllegalArgumentException("endPointType can't be NULL!"));
+    String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
     String propertiesPath = options.getProperties();
     String targetPath = options.getTargetPath();
