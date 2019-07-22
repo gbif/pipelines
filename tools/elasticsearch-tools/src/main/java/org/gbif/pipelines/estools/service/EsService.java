@@ -9,12 +9,15 @@ import java.util.StringJoiner;
 
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.model.DeleteByQueryTask;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -324,17 +327,28 @@ public class EsService {
   }
 
   /**
-   * Deletes records in an index by some ES DSL query
+   * Deletes records in an index by some ES DSL query and returns the ID of the task which is doing the deletion.
    *
    * @param esClient client to call ES. It is required.
    * @param idxName name of the index to delete records.
    * @param query ES DSL query
+   * @return the task ID
    */
   @SneakyThrows
-  public static void deleteRecordsByQuery(@NonNull EsClient esClient, String idxName, String query) {
-    String endpoint = buildEndpoint(idxName, "_delete_by_query?conflicts=proceed&scroll_size=5000");
+  public static String deleteRecordsByQuery(@NonNull EsClient esClient, String idxName, String query) {
+    String endpoint =
+        buildEndpoint(idxName, "_delete_by_query?conflicts=proceed&scroll_size=5000&wait_for_completion=false");
     HttpEntity body = createBodyFromString(query);
-    esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
+    return HttpResponseParser.parseDeleteByQueryResponse(
+        esClient.performPostRequest(endpoint, Collections.emptyMap(), body).getEntity());
+  }
+
+  @SneakyThrows
+  public static DeleteByQueryTask getDeletedByQueryTask(@NonNull EsClient esClient, String taskId) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(taskId), "DeleteByQueryTask ID cannot be null or empty");
+
+    return HttpResponseParser.parseDeleteByQueryTask(
+        esClient.performGetRequest(buildEndpoint("_tasks", taskId)).getEntity());
   }
 
   /**

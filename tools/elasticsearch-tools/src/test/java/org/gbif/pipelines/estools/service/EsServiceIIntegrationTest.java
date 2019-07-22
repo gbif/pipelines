@@ -5,7 +5,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
+import org.gbif.pipelines.estools.model.DeleteByQueryTask;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 
 import org.apache.http.HttpStatus;
@@ -20,12 +23,15 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.gbif.pipelines.estools.common.SettingsType.SEARCH;
+import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_QUERY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link EsService}. */
@@ -372,5 +378,54 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
 
     // State
     assertTrue(indexesFound.isEmpty());
+  }
+
+  @Test
+  public void deleteByQueryTest() {
+
+    // State
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", SEARCH);
+
+    // index some documents
+    final String type = "doc";
+    final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
+    String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
+    IntStream.range(1, 4).forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, type, i, document));
+
+    // When
+    String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
+    String taskId = EsService.deleteRecordsByQuery(ES_SERVER.getEsClient(), idx1, query);
+
+    // Should
+    assertFalse(Strings.isNullOrEmpty(taskId));
+  }
+
+  @Test
+  public void getDeleteByQueryTaskTest() throws InterruptedException {
+
+    // State
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", SEARCH);
+
+    // index some documents
+    final String type = "doc";
+    final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
+    String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
+    IntStream.range(1, 6).forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, type, i, document));
+    EsService.refreshIndex(ES_SERVER.getEsClient(), idx1);
+
+    // When
+    String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
+    String taskId = EsService.deleteRecordsByQuery(ES_SERVER.getEsClient(), idx1, query);
+    DeleteByQueryTask task = EsService.getDeletedByQueryTask(ES_SERVER.getEsClient(), taskId);
+
+    // Should
+    assertNotNull(task);
+    assertFalse(task.isCompleted());
+
+    // When
+    TimeUnit.SECONDS.sleep(1);
+    task = EsService.getDeletedByQueryTask(ES_SERVER.getEsClient(), taskId);
+    assertTrue(task.isCompleted());
+    assertEquals(5, task.getRecordsDeleted());
   }
 }

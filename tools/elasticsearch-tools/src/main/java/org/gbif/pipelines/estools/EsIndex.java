@@ -8,17 +8,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.model.DeleteByQueryTask;
 import org.gbif.pipelines.estools.service.EsService;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.estools.service.EsService.getIndexesByAliasAndIndexPattern;
@@ -290,16 +293,25 @@ public class EsIndex {
   }
 
   /**
-   * Deletes records in the index by some ES DSL query
+   * Deletes records in the index by some ES DSL query and returns the ID of the task that is doing the deletion.
    *
    * @param config configuration of the ES instance.
    * @param index name of the index to refresh.
    * @param query ES DSL query.
    **/
-  public static void deleteRecordsByQuery(EsConfig config, String index, String query) {
+  @SneakyThrows
+  public static void deleteRecordsByQueryAndWaitTillCompletion(EsConfig config, String index, String query) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
     try (EsClient esClient = EsClient.from(config)) {
-      EsService.deleteRecordsByQuery(esClient, index, query);
+      String taskId = EsService.deleteRecordsByQuery(esClient, index, query);
+
+      DeleteByQueryTask task = EsService.getDeletedByQueryTask(esClient, taskId);
+      while (!task.isCompleted()) {
+        TimeUnit.SECONDS.sleep(20);
+        task = EsService.getDeletedByQueryTask(esClient, taskId);
+      }
+
+      log.info("{} records deleted from ES index {}", task.getRecordsDeleted(), index);
     }
   }
 

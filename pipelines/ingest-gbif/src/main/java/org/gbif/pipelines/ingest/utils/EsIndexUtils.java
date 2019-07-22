@@ -123,16 +123,13 @@ public class EsIndexUtils {
       return;
     }
 
+    // prepare parameters
     EsConfig config = EsConfig.from(options.getEsHosts());
     String query = String.format(DELETE_BY_DATASET_QUERY, options.getDatasetId());
+    String indexes = String.join(",", existingDatasetIndexes);
 
-    existingDatasetIndexes.stream()
-        .filter(i -> !i.startsWith(options.getDatasetId()))
-        .forEach(idx -> {
-              log.info("ES alias {} delete records by query {}", idx, query);
-              EsIndex.deleteRecordsByQuery(config, idx, query);
-            }
-        );
+    log.info("ES indexes {} delete records by query {}", indexes, query);
+    EsIndex.deleteRecordsByQueryAndWaitTillCompletion(config, indexes, query);
   }
 
   public static Set<String> findDatasetIndexesInAlias(EsIndexingPipelineOptions options) {

@@ -6,6 +6,7 @@ import java.util.stream.StreamSupport;
 
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.model.DeleteByQueryTask;
 
 import org.apache.http.HttpEntity;
 
@@ -69,5 +70,29 @@ class HttpResponseParser {
     return StreamSupport.stream(node.get("aggregations").get(AGG_BY_INDEX).get("buckets").spliterator(), false)
         .map(n -> n.get("key").asText())
         .collect(Collectors.toSet());
+  }
+
+  /**
+   * Parses the response of delete by query and returns the task ID.
+   *
+   * @param entity {@link HttpEntity} from the response.
+   * @return task ID.
+   */
+  static String parseDeleteByQueryResponse(HttpEntity entity) {
+    return JsonHandler.readTree(entity).get("task").asText();
+  }
+
+  /**
+   * Parses the response of getting the delete by query task.
+   *
+   * @param entity {@link HttpEntity} from the response.
+   * @return {@link DeleteByQueryTask}
+   */
+  static DeleteByQueryTask parseDeleteByQueryTask(HttpEntity entity) {
+    JsonNode node = JsonHandler.readTree(entity);
+    DeleteByQueryTask task = new DeleteByQueryTask();
+    task.setCompleted(node.get("completed").asBoolean());
+    task.setRecordsDeleted(node.get("task").get("status").get("deleted").asLong());
+    return task;
   }
 }
