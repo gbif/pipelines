@@ -307,7 +307,7 @@ public class EsIndex {
 
       DeleteByQueryTask task = EsService.getDeletedByQueryTask(esClient, taskId);
       while (!task.isCompleted()) {
-        TimeUnit.SECONDS.sleep(20);
+        TimeUnit.SECONDS.sleep(2);
         task = EsService.getDeletedByQueryTask(esClient, taskId);
       }
 
