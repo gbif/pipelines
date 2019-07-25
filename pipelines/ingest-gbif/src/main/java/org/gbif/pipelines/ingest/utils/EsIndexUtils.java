@@ -126,7 +126,11 @@ public class EsIndexUtils {
     // prepare parameters
     EsConfig config = EsConfig.from(options.getEsHosts());
     String query = String.format(DELETE_BY_DATASET_QUERY, options.getDatasetId());
-    String indexes = String.join(",", existingDatasetIndexes);
+
+    // we only delete by query for indexes that contain multiple datasets
+    String indexes = existingDatasetIndexes.stream()
+        .filter(i -> !i.startsWith(options.getDatasetId()))
+        .collect(Collectors.joining(","));
 
     log.info("ES indexes {} delete records by query {}", indexes, query);
     EsIndex.deleteRecordsByQueryAndWaitTillCompletion(config, indexes, query);
