@@ -132,6 +132,10 @@ public class EsIndexUtils {
         .filter(i -> !i.startsWith(options.getDatasetId()))
         .collect(Collectors.joining(","));
 
+    if (Strings.isNullOrEmpty(indexes)) {
+      return;
+    }
+
     log.info("ES indexes {} delete records by query {}", indexes, query);
     EsIndex.deleteRecordsByQueryAndWaitTillCompletion(config, indexes, query);
   }
