@@ -14,7 +14,6 @@ import org.apache.http.nio.entity.NStringEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.POJONode;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -23,7 +22,6 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 
 import static org.gbif.pipelines.estools.service.EsConstants.Action;
-import static org.gbif.pipelines.estools.service.EsConstants.Constant;
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
 import static org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import static org.gbif.pipelines.estools.service.EsConstants.Searching;
@@ -34,24 +32,9 @@ import static org.gbif.pipelines.estools.service.JsonHandler.createObjectNode;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class HttpRequestBuilder {
 
-  // pre-defined settings
-  private static final ObjectNode INDEXING_SETTINGS = createObjectNode();
-  private static final ObjectNode SEARCH_SETTINGS = createObjectNode();
-
   private JsonNode settings;
   private JsonNode mappings;
   private IndexAliasAction indexAliasAction;
-
-  static {
-    INDEXING_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Indexing.REFRESH_INTERVAL);
-    INDEXING_SETTINGS.put(Field.INDEX_NUMBER_SHARDS, Constant.NUMBER_SHARDS);
-    INDEXING_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Indexing.NUMBER_REPLICAS);
-    INDEXING_SETTINGS.put(Field.INDEX_TRANSLOG_DURABILITY, Constant.TRANSLOG_DURABILITY);
-    INDEXING_SETTINGS.putPOJO(Field.INDEX_ANALYSIS, new POJONode(Indexing.NORMALIZER));
-
-    SEARCH_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Searching.REFRESH_INTERVAL);
-    SEARCH_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
-  }
 
   /** Creates a new {@link HttpRequestBuilder}. */
   static HttpRequestBuilder newInstance() {
@@ -65,7 +48,9 @@ class HttpRequestBuilder {
 
   /** Adds a {@link SettingsType} to the body. */
   HttpRequestBuilder withSettingsType(@NonNull SettingsType settingsType) {
-    this.settings = (settingsType == SettingsType.INDEXING) ? INDEXING_SETTINGS : SEARCH_SETTINGS;
+    this.settings =
+        (settingsType == SettingsType.INDEXING) ? JsonHandler.convertToJsonNode(Indexing.DEFAULT_INDEXING_SETTINGS) :
+            JsonHandler.convertToJsonNode(Searching.DEFAULT_SEARCH_SETTINGS);
     return this;
   }
 

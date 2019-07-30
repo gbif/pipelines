@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +16,7 @@ import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.model.DeleteByQueryTask;
+import org.gbif.pipelines.estools.service.EsConstants.Searching;
 import org.gbif.pipelines.estools.service.EsService;
 
 import com.google.common.base.Preconditions;
@@ -52,22 +54,6 @@ public class EsIndex {
   /**
    * Creates an Index in the ES instance specified in the {@link EsConfig} received.
    *
-   * <p>Both datasetId and attempt parameters are required. The index created will follow the
-   * pattern "{datasetId}_{attempt}".
-   *
-   * @param config configuration of the ES instance.
-   * @param datasetId dataset id.
-   * @param attempt attempt of the dataset crawling.
-   * @return name of the index created.
-   */
-  public static String create(EsConfig config, String datasetId, int attempt) {
-    final String idxName = createIndexName(datasetId, attempt);
-    return create(config, idxName);
-  }
-
-  /**
-   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
-   *
    * <p>Both datasetId and attempt parameters are required.
    *
    * @param config configuration of the ES instance.
@@ -80,23 +66,6 @@ public class EsIndex {
     try (EsClient esClient = EsClient.from(config)) {
       return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings);
     }
-  }
-
-  /**
-   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
-   *
-   * <p>Both datasetId and attempt parameters are required. The index created will follow the
-   * pattern "{datasetId}_{attempt}".
-   *
-   * @param config configuration of the ES instance.
-   * @param datasetId dataset id.
-   * @param attempt attempt of the dataset crawling.
-   * @param mappings path of the file with the mappings.
-   * @return name of the index created.
-   */
-  public static String create(EsConfig config, String datasetId, int attempt, Path mappings) {
-    final String idxName = createIndexName(datasetId, attempt);
-    return create(config, idxName, mappings);
   }
 
   /**
@@ -119,23 +88,6 @@ public class EsIndex {
   /**
    * Creates an Index in the ES instance specified in the {@link EsConfig} received.
    *
-   * <p>Both datasetId and attempt parameters are required. The index created will follow the
-   * pattern "{datasetId}_{attempt}".
-   *
-   * @param config configuration of the ES instance.
-   * @param datasetId dataset id.
-   * @param attempt attempt of the dataset crawling.
-   * @param mappings mappings as json string.
-   * @return name of the index created.
-   */
-  public static String create(EsConfig config, String datasetId, int attempt, String mappings) {
-    final String idxName = createIndexName(datasetId, attempt);
-    return create(config, idxName, mappings);
-  }
-
-  /**
-   * Creates an Index in the ES instance specified in the {@link EsConfig} received.
-   *
    * <p>Both datasetId and attempt parameters are required.
    *
    * @param config configuration of the ES instance.
@@ -147,7 +99,7 @@ public class EsIndex {
   public static String create(EsConfig config, String idxName, Path mappings, Map<String, String> settingMap) {
     log.info("Creating index {}", idxName);
     try (EsClient esClient = EsClient.from(config)) {
-      return EsService.createIndex(esClient, idxName, SettingsType.INDEXING, mappings, settingMap);
+      return EsService.createIndex(esClient, idxName, settingMap, mappings);
     }
   }
 
@@ -175,23 +127,6 @@ public class EsIndex {
   }
 
   /**
-   * Swaps an index in a alias.
-   *
-   * <p>The index received will be the only index associated to the alias after performing this
-   * call. All the indexes that were associated to this alias before will be removed from the ES
-   * instance.
-   *
-   * @param config configuration of the ES instance.
-   * @param alias alias that will be modified.
-   * @param index index to add to the alias that will become the only index of the alias.
-   */
-  public static void swapIndexInAlias(EsConfig config, String alias, String index) {
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(alias), "alias is required");
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-    swapIndexInAliases(config, Collections.singleton(alias), index, Collections.emptySet());
-  }
-
-  /**
    * Swaps an index in a aliases.
    *
    * <p>The index received will be the only index associated to the alias for the dataset after performing this
@@ -205,7 +140,7 @@ public class EsIndex {
   public static void swapIndexInAliases(EsConfig config, Set<String> aliases, String index) {
     Preconditions.checkArgument(aliases != null && !aliases.isEmpty(), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-    swapIndexInAliases(config, aliases, index, Collections.emptySet());
+    swapIndexInAliases(config, aliases, index, Collections.emptySet(), Searching.DEFAULT_SEARCH_SETTINGS);
   }
 
   /**
@@ -218,8 +153,12 @@ public class EsIndex {
    * @param extraIdxToRemove extra indexes to be removed from the aliases
    */
   public static void swapIndexInAliases(EsConfig config, Set<String> aliases, String index,
-      Set<String> extraIdxToRemove) {
-    Preconditions.checkArgument(aliases != null && !aliases.isEmpty(), "alias is required");
+      Set<String> extraIdxToRemove, Map<String, String> settings) {
+    Objects.requireNonNull(aliases, "aliases are required");
+
+    Set<String> validAliases =
+        aliases.stream().filter(alias -> !Strings.isNullOrEmpty(alias)).collect(Collectors.toSet());
+    Preconditions.checkArgument(!validAliases.isEmpty(), "aliases are required");
 
     try (EsClient esClient = EsClient.from(config)) {
 
@@ -233,20 +172,20 @@ public class EsIndex {
         // look for old indexes for this datasetId to remove them from the alias
         String datasetId = getDatasetIdFromIndex(idx);
         Optional.ofNullable(
-            getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), aliases))
+            getIndexesByAliasAndIndexPattern(esClient, getDatasetIndexesPattern(datasetId), validAliases))
             .ifPresent(idxToRemove::addAll);
       });
 
       // add extra indexes to remove
       Optional.ofNullable(extraIdxToRemove).ifPresent(idxToRemove::addAll);
 
-      log.info("Removing indexes {} and adding index {} in alias {}", idxToRemove, index, aliases);
+      log.info("Removing indexes {} and adding index {} in alias {}", idxToRemove, index, validAliases);
 
       // swap the indexes
-      swapIndexes(esClient, aliases, idxToAdd, idxToRemove);
+      swapIndexes(esClient, validAliases, idxToAdd, idxToRemove);
 
       // change index settings to search settings
-      updateIndexSettings(esClient, index, SettingsType.SEARCH);
+      Optional.ofNullable(index).ifPresent(idx -> updateIndexSettings(esClient, index, settings));
     }
   }
 

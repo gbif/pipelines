@@ -30,6 +30,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   private static final String DATASET_TEST = "abc";
   private static final String ALIAS_TEST = "alias";
   private static final int DEFAULT_ATTEMPT = 1;
+  private static final String DEFAULT_IDX_NAME = DATASET_TEST + INDEX_SEPARATOR + DEFAULT_ATTEMPT;
   private static final String SEARCH = DATASET_TEST + INDEX_SEPARATOR + "*";
 
   /** {@link Rule} requires this field to be public. */
@@ -44,7 +45,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void createIndexTest() {
     // create index
-    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT);
+    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DEFAULT_IDX_NAME);
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -53,7 +54,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void createIndexWithMappingsTest() {
     // create index
-    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
+    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DEFAULT_IDX_NAME, TEST_MAPPINGS_PATH);
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -66,10 +67,10 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void swapIndexInEmptyAliasTest() {
     // create index
-    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 1);
+    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 1);
 
     // swap index
-    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idxCreated);
+    EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), idxCreated);
 
     // assert result
     assertSwapResults(idxCreated, SEARCH, ALIAS_TEST, Collections.emptySet());
@@ -82,16 +83,16 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void swapIndexInAliasTest() {
     // create index
-    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 1);
-    String idx2 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 2);
+    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 1);
+    String idx2 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 2);
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2));
 
     // add the indexes to the alias
     addIndexesToAlias(ALIAS_TEST, initialIndexes);
 
     // create another index and swap it in the alias
-    String idx3 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 3);
-    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx3);
+    String idx3 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 3);
+    EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), idx3);
 
     // alias should have only the last index created
     assertSwapResults(idx3, SEARCH, ALIAS_TEST, initialIndexes);
@@ -101,8 +102,8 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     assertSearchSettings(idx3);
 
     // create another index and swap it again
-    String idx4 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, 4);
-    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx4);
+    String idx4 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 4);
+    EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), idx4);
 
     // alias should have only the last index created
     assertSwapResults(idx4, SEARCH, ALIAS_TEST, Collections.singleton(idx3));
@@ -117,14 +118,14 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     thrown.expect(ResponseException.class);
     thrown.expectMessage(CoreMatchers.containsString("URI [/_aliases], status line [HTTP/1.1 404 Not Found"));
 
-    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, "dummy_1");
+    EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), "dummy_1");
   }
 
   @Test
   public void countIndexDocumentsAfterSwappingTest() throws InterruptedException {
     // create index
     String idx =
-        EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST, DEFAULT_ATTEMPT, TEST_MAPPINGS_PATH);
+        EsIndex.create(ES_SERVER.getEsConfig(), DEFAULT_IDX_NAME, TEST_MAPPINGS_PATH);
 
     // index some documents
     long n = 3;
@@ -135,7 +136,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     }
 
     // swap index in alias
-    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), ALIAS_TEST, idx);
+    EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), idx);
 
     // wait the refresh interval for the documents to become searchable.
     Thread.sleep(
@@ -162,7 +163,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   public void findDatasetIndexesInAliasTest() {
     // create index
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
-    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey, 1);
+    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey + INDEX_SEPARATOR + 1);
 
     // index some documents
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
@@ -171,7 +172,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
 
     // add index to alias
     final String alias = "alias1";
-    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), alias, idx1);
+    EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(alias), idx1);
 
     // When
     Set<String> indexesFound =
@@ -186,7 +187,7 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   public void findDatasetIndexesInAliasesTest() {
     // create index
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
-    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey, 1);
+    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey + INDEX_SEPARATOR + 1);
 
     // index some documents
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
@@ -195,10 +196,10 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
 
     // add index to aliases
     final String alias1 = "alias1";
-    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), alias1, idx1);
+    EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(alias1), idx1);
 
     final String alias2 = "alias2";
-    EsIndex.swapIndexInAlias(ES_SERVER.getEsConfig(), alias2, idx1);
+    EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(alias2), idx1);
 
     // When
     Set<String> indexesFound =

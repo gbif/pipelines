@@ -10,6 +10,8 @@ import java.util.stream.IntStream;
 
 import org.gbif.pipelines.estools.model.DeleteByQueryTask;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
+import org.gbif.pipelines.estools.service.EsConstants.Indexing;
+import org.gbif.pipelines.estools.service.EsConstants.Searching;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
@@ -88,7 +90,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     assertIndexingSettings(idx);
 
     // When
-    EsService.updateIndexSettings(ES_SERVER.getEsClient(), idx, SEARCH);
+    EsService.updateIndexSettings(ES_SERVER.getEsClient(), idx, Searching.DEFAULT_SEARCH_SETTINGS);
 
     // Should
     assertSearchSettings(idx);
@@ -98,7 +100,7 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void updateMissingIndexTest() {
 
     // When
-    EsService.updateIndexSettings(ES_SERVER.getEsClient(), "fake-index", INDEXING);
+    EsService.updateIndexSettings(ES_SERVER.getEsClient(), "fake-index", Indexing.DEFAULT_INDEXING_SETTINGS);
 
     // Should
     thrown.expectMessage(CoreMatchers.containsString("Error updating index"));

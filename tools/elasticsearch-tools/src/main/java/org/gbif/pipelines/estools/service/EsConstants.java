@@ -1,5 +1,8 @@
 package org.gbif.pipelines.estools.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -50,7 +53,17 @@ public final class EsConstants {
 
     public static final String REFRESH_INTERVAL = "-1";
     public static final String NUMBER_REPLICAS = "0";
-    public static final String NORMALIZER = "{\"normalizer\":{\"lowercase_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\"]}}}";
+    public static final String NORMALIZER =
+        "{\"normalizer\":{\"lowercase_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\"]}}}";
+    public static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>();
+
+    static {
+      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Indexing.REFRESH_INTERVAL);
+      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_NUMBER_SHARDS, Constant.NUMBER_SHARDS);
+      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Indexing.NUMBER_REPLICAS);
+      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_TRANSLOG_DURABILITY, Constant.TRANSLOG_DURABILITY);
+      DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
+    }
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -58,6 +71,12 @@ public final class EsConstants {
 
     public static final String REFRESH_INTERVAL = "1s";
     public static final String NUMBER_REPLICAS = "1";
+    public static final Map<String, String> DEFAULT_SEARCH_SETTINGS = new HashMap<>();
+
+    static {
+      DEFAULT_SEARCH_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Searching.REFRESH_INTERVAL);
+      DEFAULT_SEARCH_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
+    }
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)

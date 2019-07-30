@@ -32,19 +32,23 @@ public class EsIndexUtils {
   /** Connects to Elasticsearch instance and creates an index */
   public static void createIndex(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    Path path = Paths.get(options.getEsSchemaPath());
+    Path mappingsPath = Paths.get(options.getEsSchemaPath());
 
-    Map<String, String> map = new HashMap<>();
-    map.put(EsConstants.Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
-    map.put(EsConstants.Field.INDEX_NUMBER_SHARDS, options.getIndexNumberShards().toString());
-    map.put(EsConstants.Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
-    map.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
+    boolean independentIndex = options.getEsIndexName().startsWith(options.getDatasetId());
+
+    Map<String, String> settings = new HashMap<>();
+    settings.put(EsConstants.Field.INDEX_REFRESH_INTERVAL,
+        independentIndex ? Indexing.REFRESH_INTERVAL : options.getIndexRefreshInterval());
+    settings.put(EsConstants.Field.INDEX_NUMBER_SHARDS, options.getIndexNumberShards().toString());
+    settings.put(EsConstants.Field.INDEX_NUMBER_REPLICAS,
+        independentIndex ? Indexing.NUMBER_REPLICAS : options.getIndexNumberReplicas().toString());
+    settings.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
 
     String idx;
     if (Strings.isNullOrEmpty(options.getEsIndexName())) {
-      idx = EsIndex.create(config, options.getDatasetId(), options.getAttempt(), path, map);
+      idx = EsIndex.create(config, options.getDatasetId(), options.getAttempt(), mappingsPath, settings);
     } else {
-      idx = EsIndex.create(config, options.getEsIndexName(), path, map);
+      idx = EsIndex.create(config, options.getEsIndexName(), mappingsPath, settings);
     }
     log.info("ES index {} created", idx);
 
@@ -103,8 +107,13 @@ public class EsIndexUtils {
 
     // we first check if there are indexes to swap to avoid unnecessary locks
     if (idxToAdd != null || !idxToRemove.isEmpty()) {
+      Map<String, String> searchSettings = new HashMap<>();
+      searchSettings.put(Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
+      searchSettings.put(Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
+
       SharedLockUtils.doInWriteLock(lockConfig, () -> {
-        EsIndex.swapIndexInAliases(config, Sets.newHashSet(options.getEsAlias()), idxToAdd, idxToRemove);
+        EsIndex.swapIndexInAliases(config, Sets.newHashSet(options.getEsAlias()), idxToAdd, idxToRemove,
+            searchSettings);
 
         Optional.ofNullable(idxToAdd).ifPresent(idx -> EsIndex.refresh(config, idx));
       });
