@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
+import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.common.SettingsType;
 
 import org.apache.http.HttpEntity;
@@ -39,6 +40,28 @@ class HttpRequestBuilder {
   /** Creates a new {@link HttpRequestBuilder}. */
   static HttpRequestBuilder newInstance() {
     return new HttpRequestBuilder();
+  }
+
+  static HttpEntity createBodyFromIndexParams(IndexParams indexParams) {
+    HttpRequestBuilder builder = new HttpRequestBuilder();
+
+    if (indexParams.getMappings() != null) {
+      builder.withMappings(indexParams.getMappings());
+    }
+
+    if (indexParams.getPathMappings() != null) {
+      builder.withMappings(indexParams.getPathMappings());
+    }
+
+    if (indexParams.getSettingsType() != null) {
+      builder.withSettingsType(indexParams.getSettingsType());
+    }
+
+    if (indexParams.getSettings() != null && !indexParams.getSettings().isEmpty()) {
+      builder.withSettingsMap(indexParams.getSettings());
+    }
+
+    return builder.build();
   }
 
   /** Creates a {@link HttpEntity} from a {@link String} that will become the body of the entity. */

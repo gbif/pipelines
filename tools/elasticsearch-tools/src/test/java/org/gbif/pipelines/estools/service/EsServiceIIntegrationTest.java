@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.gbif.pipelines.estools.model.DeleteByQueryTask;
+import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.estools.service.EsConstants.Searching;
@@ -55,7 +56,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void createIndexTest() throws IOException {
 
     // When
-    String idx = EsService.createIndex(ES_SERVER.getEsClient(), "idx", INDEXING);
+    String idx = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx").settingsType(INDEXING).build());
 
     Response response = ES_SERVER.getRestClient().performRequest(new Request(HttpGet.METHOD_NAME, "/" + idx));
 
@@ -67,7 +69,11 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void createIndexWithSettingsAndMappingsTest() {
 
     // When
-    String idx = EsService.createIndex(ES_SERVER.getEsClient(), "idx-settings", INDEXING, TEST_MAPPINGS_PATH);
+    String idx = EsService.createIndex(ES_SERVER.getEsClient(), IndexParams.builder()
+        .indexName("idx-settings")
+        .settingsType(INDEXING)
+        .pathMappings(TEST_MAPPINGS_PATH)
+        .build());
 
     JsonNode mappings = getMappingsFromIndex(idx).path(idx).path(Field.MAPPINGS);
 
@@ -83,7 +89,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void createAndUpdateIndexWithSettingsTest() {
 
     // When
-    String idx = EsService.createIndex(ES_SERVER.getEsClient(), "idx-settings", INDEXING);
+    String idx = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx-settings").settingsType(INDEXING).build());
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx));
@@ -110,7 +117,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void createWrongIndexTest() {
 
     // When
-    EsService.createIndex(ES_SERVER.getEsClient(), "UPPERCASE", INDEXING);
+    EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("UPPERCASE").settingsType(INDEXING).build());
 
     // Should
     thrown.expectMessage(CoreMatchers.containsString("must be lowercase"));
@@ -120,10 +128,12 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void duplicatedIndexTest() {
 
     // State
-    EsService.createIndex(ES_SERVER.getEsClient(), "idx", INDEXING);
+    EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx").settingsType(INDEXING).build());
 
     // When
-    EsService.createIndex(ES_SERVER.getEsClient(), "idx", INDEXING);
+    EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx").settingsType(INDEXING).build());
 
     // Should
     thrown.expectMessage(CoreMatchers.containsString("already exists"));
@@ -133,15 +143,20 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void getIndexesByAliasAndSwapIndexTest() {
 
     // State
-    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
-    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(), "idx2", INDEXING);
-    String idx3 = EsService.createIndex(ES_SERVER.getEsClient(), "idx3", INDEXING);
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
+    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx2").settingsType(INDEXING).build());
+    String idx3 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx3").settingsType(INDEXING).build());
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
 
     addIndexesToAlias(ALIAS_TEST, initialIndexes);
 
-    String idx4 = EsService.createIndex(ES_SERVER.getEsClient(), "idx4", INDEXING);
-    String idx5 = EsService.createIndex(ES_SERVER.getEsClient(), "idx5", INDEXING);
+    String idx4 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx4").settingsType(INDEXING).build());
+    String idx5 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx5").settingsType(INDEXING).build());
 
     // When
     Set<String> indexes =
@@ -170,16 +185,21 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void swapInMultipleAliasesTest() {
 
     // State
-    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
-    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(), "idx2", INDEXING);
-    String idx3 = EsService.createIndex(ES_SERVER.getEsClient(), "idx3", INDEXING);
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
+    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx2").settingsType(INDEXING).build());
+    String idx3 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx3").settingsType(INDEXING).build());
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2, idx3));
 
     Set<String> aliases = Sets.newHashSet(ALIAS_TEST, ANOTHER_ALIAS_TEST);
     addIndexesToAliases(aliases, initialIndexes);
 
-    String idx4 = EsService.createIndex(ES_SERVER.getEsClient(), "idx4", INDEXING);
-    String idx5 = EsService.createIndex(ES_SERVER.getEsClient(), "idx5", INDEXING);
+    String idx4 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx4").settingsType(INDEXING).build());
+    String idx5 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx5").settingsType(INDEXING).build());
 
     // When
     Set<String> indexes =
@@ -218,7 +238,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void swapEmptyAliasTest() {
 
     // State
-    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
 
     // When
     EsService.swapIndexes(ES_SERVER.getEsClient(), Collections.singleton(ALIAS_TEST), Collections.singleton(idx1),
@@ -243,7 +264,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void countEmptyIndexTest() {
 
     // When
-    String idx = EsService.createIndex(ES_SERVER.getEsClient(), "idx_1", SEARCH);
+    String idx = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx_1").settingsType(SEARCH).build());
 
     // Should
     assertEquals(0L, EsService.countIndexDocuments(ES_SERVER.getEsClient(), idx));
@@ -258,7 +280,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
 
     // State
     String idx =
-        EsService.createIndex(ES_SERVER.getEsClient(), "idx_1", Collections.emptyMap(), TEST_MAPPINGS_PATH);
+        EsService.createIndex(ES_SERVER.getEsClient(),
+            IndexParams.builder().indexName("idx_1").pathMappings(TEST_MAPPINGS_PATH).build());
 
     // When
     // index some documents
@@ -303,7 +326,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void existsIndexTest() {
 
     // State
-    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
 
     // When
     boolean exists = EsService.existsIndex(ES_SERVER.getEsClient(), idx1);
@@ -326,8 +350,10 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void deleteAllIndicesTest() {
 
     // When
-    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
-    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(), "idx2", INDEXING);
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
+    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx2").settingsType(INDEXING).build());
 
     // Should
     assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idx1));
@@ -345,14 +371,17 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void findDatasetIndexesInAliasTest() {
 
     // State
-    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", INDEXING);
-    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(), "idx2", INDEXING);
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx1").settingsType(INDEXING).build());
+    String idx2 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx2").settingsType(INDEXING).build());
     Set<String> indexes = new HashSet<>();
     indexes.add(idx1);
     indexes.add(idx2);
 
     // we create another empty index to check that it's discarded
-    String idx3 = EsService.createIndex(ES_SERVER.getEsClient(), "idx3", INDEXING);
+    String idx3 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx3").settingsType(INDEXING).build());
 
     // index some documents
     final String type = "doc";
@@ -386,7 +415,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void deleteByQueryTest() {
 
     // State
-    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", SEARCH);
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx").settingsType(SEARCH).build());
 
     // index some documents
     final String type = "doc";
@@ -406,7 +436,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
   public void getDeleteByQueryTaskTest() throws InterruptedException {
 
     // State
-    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(), "idx1", SEARCH);
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx1").settingsType(SEARCH).build());
 
     // index some documents
     final String type = "doc";

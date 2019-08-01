@@ -81,11 +81,7 @@ public abstract class EsApiIntegration {
     JsonNode indexSettings =
         getSettingsFromIndex(idx).path(idx).path(Field.SETTINGS).path(Field.INDEX);
     assertEquals(Searching.REFRESH_INTERVAL, indexSettings.path(Field.REFRESH_INTERVAL).asText());
-    assertEquals(Constant.NUMBER_SHARDS, indexSettings.path(Field.NUMBER_SHARDS).asText());
     assertEquals(Searching.NUMBER_REPLICAS, indexSettings.path(Field.NUMBER_REPLICAS).asText());
-    assertEquals(
-        Constant.TRANSLOG_DURABILITY,
-        indexSettings.path(Field.TRANSLOG).path(Field.DURABILITY).asText());
   }
 
   /** Asserts that the swap operation was done as expected in the embedded ES instance. */

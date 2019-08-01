@@ -10,20 +10,17 @@ import java.util.stream.Collectors;
 
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsConfig;
-import org.gbif.pipelines.estools.service.EsConstants;
+import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.parsers.config.LockConfig;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_QUERY;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -32,24 +29,8 @@ public class EsIndexUtils {
   /** Connects to Elasticsearch instance and creates an index */
   public static void createIndex(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    Path mappingsPath = Paths.get(options.getEsSchemaPath());
 
-    boolean independentIndex = options.getEsIndexName().startsWith(options.getDatasetId());
-
-    Map<String, String> settings = new HashMap<>();
-    settings.put(EsConstants.Field.INDEX_REFRESH_INTERVAL,
-        independentIndex ? Indexing.REFRESH_INTERVAL : options.getIndexRefreshInterval());
-    settings.put(EsConstants.Field.INDEX_NUMBER_SHARDS, options.getIndexNumberShards().toString());
-    settings.put(EsConstants.Field.INDEX_NUMBER_REPLICAS,
-        independentIndex ? Indexing.NUMBER_REPLICAS : options.getIndexNumberReplicas().toString());
-    settings.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
-
-    String idx;
-    if (Strings.isNullOrEmpty(options.getEsIndexName())) {
-      idx = EsIndex.create(config, options.getDatasetId(), options.getAttempt(), mappingsPath, settings);
-    } else {
-      idx = EsIndex.create(config, options.getEsIndexName(), mappingsPath, settings);
-    }
+    String idx = EsIndex.createIndex(config, createIndexParams(options));
     log.info("ES index {} created", idx);
 
     Optional.ofNullable(idx).ifPresent(options::setEsIndexName);
@@ -58,9 +39,34 @@ public class EsIndexUtils {
   /** Connects to Elasticsearch instance and creates an index, if index doesn't exist */
   public static void createIndexIfNotExist(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    if (!EsIndex.indexExists(config, options.getEsIndexName())) {
-      createIndex(options);
+    Optional<String> idx = EsIndex.createIndexIfNotExists(config, createIndexParams(options));
+
+    if (idx.isPresent()) {
+      log.info("ES index {} created", idx.get());
+      options.setEsIndexName(idx.get());
     }
+  }
+
+  private static IndexParams createIndexParams(EsIndexingPipelineOptions options) {
+    Path mappingsPath = Paths.get(options.getEsSchemaPath());
+
+    boolean independentIndex = options.getEsIndexName().startsWith(options.getDatasetId());
+
+    Map<String, String> settings = new HashMap<>();
+    settings.put(Field.INDEX_REFRESH_INTERVAL,
+        independentIndex ? Indexing.REFRESH_INTERVAL : options.getIndexRefreshInterval());
+    settings.put(Field.INDEX_NUMBER_SHARDS, options.getIndexNumberShards().toString());
+    settings.put(Field.INDEX_NUMBER_REPLICAS,
+        independentIndex ? Indexing.NUMBER_REPLICAS : options.getIndexNumberReplicas().toString());
+    settings.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
+
+    return IndexParams.builder()
+        .indexName(options.getEsIndexName())
+        .datasetKey(options.getDatasetId())
+        .attempt(options.getAttempt())
+        .pathMappings(mappingsPath)
+        .settings(settings)
+        .build();
   }
 
   /** Connects to Elasticsearch instance and swaps an index and an alias */
@@ -75,11 +81,7 @@ public class EsIndexUtils {
 
       EsIndex.swapIndexInAliases(config, aliases, index);
       log.info("ES index {} added to alias {}", index, aliases);
-
-      EsIndex.refresh(config, index);
     });
-    long count = EsIndex.countDocuments(config, index);
-    log.info("Index name - {}, Alias - {}, Number of records -  {}", index, aliases, count);
   }
 
   /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists */
@@ -111,46 +113,21 @@ public class EsIndexUtils {
       searchSettings.put(Field.INDEX_REFRESH_INTERVAL, options.getIndexRefreshInterval());
       searchSettings.put(Field.INDEX_NUMBER_REPLICAS, options.getIndexNumberReplicas().toString());
 
-      SharedLockUtils.doInWriteLock(lockConfig, () -> {
-        EsIndex.swapIndexInAliases(config, Sets.newHashSet(options.getEsAlias()), idxToAdd, idxToRemove,
-            searchSettings);
-
-        Optional.ofNullable(idxToAdd).ifPresent(idx -> EsIndex.refresh(config, idx));
-      });
+      SharedLockUtils.doInWriteLock(lockConfig, () ->
+          EsIndex.swapIndexInAliases(config, Sets.newHashSet(options.getEsAlias()), idxToAdd, idxToRemove,
+              searchSettings)
+      );
     }
-
-    Optional.ofNullable(idxToAdd).ifPresent(idx -> {
-      long count = EsIndex.countDocuments(config, idx);
-      log.info("Index name - {}, Alias - {}, Number of records -  {}", idx, options.getEsAlias(), count);
-    });
-
   }
 
-  /** Connects to Elasticsearch instance and deletes records in an index by datasetId */
-  public static void deleteRecordsByDatasetId(EsIndexingPipelineOptions options, Set<String> existingDatasetIndexes) {
-    if (existingDatasetIndexes == null || existingDatasetIndexes.isEmpty()) {
-      return;
-    }
-
-    // prepare parameters
+  /**
+   * Connects to Elasticsearch instance and deletes records in an index by datasetId and returns the indexes where the
+   * dataset was present
+   */
+  public static Set<String> deleteRecordsByDatasetId(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    String query = String.format(DELETE_BY_DATASET_QUERY, options.getDatasetId());
-
-    // we only delete by query for indexes that contain multiple datasets
-    String indexes = existingDatasetIndexes.stream()
-        .filter(i -> !i.startsWith(options.getDatasetId()))
-        .collect(Collectors.joining(","));
-
-    if (Strings.isNullOrEmpty(indexes)) {
-      return;
-    }
-
-    log.info("ES indexes {} delete records by query {}", indexes, query);
-    EsIndex.deleteRecordsByQueryAndWaitTillCompletion(config, indexes, query);
+    return EsIndex.deleteRecordsByDatasetId(config, options.getEsAlias(), options.getDatasetId(),
+        idxName -> idxName.startsWith(options.getDatasetId()));
   }
 
-  public static Set<String> findDatasetIndexesInAlias(EsIndexingPipelineOptions options) {
-    EsConfig config = EsConfig.from(options.getEsHosts());
-    return EsIndex.findDatasetIndexesInAliases(config, options.getEsAlias(), options.getDatasetId());
-  }
 }

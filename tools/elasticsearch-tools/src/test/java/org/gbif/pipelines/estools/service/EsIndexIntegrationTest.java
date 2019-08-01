@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.gbif.pipelines.estools.EsIndex;
+import org.gbif.pipelines.estools.model.IndexParams;
 
 import org.elasticsearch.client.ResponseException;
 import org.hamcrest.CoreMatchers;
@@ -18,9 +19,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 
-import static org.gbif.pipelines.estools.EsIndex.INDEX_SEPARATOR;
+import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
 import static org.gbif.pipelines.estools.service.EsConstants.Searching;
+import static org.gbif.pipelines.estools.service.EsConstants.Util.INDEX_SEPARATOR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -45,7 +47,9 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void createIndexTest() {
     // create index
-    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DEFAULT_IDX_NAME);
+    String idxCreated =
+        EsIndex.createIndex(ES_SERVER.getEsConfig(), IndexParams.builder().indexName(DEFAULT_IDX_NAME).settingsType(
+            INDEXING).build());
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -54,7 +58,9 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void createIndexWithMappingsTest() {
     // create index
-    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DEFAULT_IDX_NAME, TEST_MAPPINGS_PATH);
+    String idxCreated = EsIndex.createIndex(ES_SERVER.getEsConfig(),
+        IndexParams.builder().indexName(DEFAULT_IDX_NAME).settingsType(
+            INDEXING).pathMappings(TEST_MAPPINGS_PATH).build());
 
     // assert index created
     assertIndexWithSettingsAndIndexName(idxCreated, DATASET_TEST, DEFAULT_ATTEMPT);
@@ -67,7 +73,10 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void swapIndexInEmptyAliasTest() {
     // create index
-    String idxCreated = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 1);
+    String idxCreated =
+        EsIndex.createIndex(ES_SERVER.getEsConfig(),
+            IndexParams.builder().datasetKey(DATASET_TEST).attempt(1).settingsType(
+                INDEXING).build());
 
     // swap index
     EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), idxCreated);
@@ -83,15 +92,24 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   @Test
   public void swapIndexInAliasTest() {
     // create index
-    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 1);
-    String idx2 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 2);
+    String idx1 =
+        EsIndex.createIndex(ES_SERVER.getEsConfig(),
+            IndexParams.builder().datasetKey(DATASET_TEST).attempt(1).settingsType(
+                INDEXING).build());
+    String idx2 =
+        EsIndex.createIndex(ES_SERVER.getEsConfig(),
+            IndexParams.builder().datasetKey(DATASET_TEST).attempt(2).settingsType(
+                INDEXING).build());
     Set<String> initialIndexes = new HashSet<>(Arrays.asList(idx1, idx2));
 
     // add the indexes to the alias
     addIndexesToAlias(ALIAS_TEST, initialIndexes);
 
     // create another index and swap it in the alias
-    String idx3 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 3);
+    String idx3 =
+        EsIndex.createIndex(ES_SERVER.getEsConfig(),
+            IndexParams.builder().datasetKey(DATASET_TEST).attempt(3).settingsType(
+                INDEXING).build());
     EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), idx3);
 
     // alias should have only the last index created
@@ -102,7 +120,10 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
     assertSearchSettings(idx3);
 
     // create another index and swap it again
-    String idx4 = EsIndex.create(ES_SERVER.getEsConfig(), DATASET_TEST + INDEX_SEPARATOR + 4);
+    String idx4 =
+        EsIndex.createIndex(ES_SERVER.getEsConfig(),
+            IndexParams.builder().datasetKey(DATASET_TEST).attempt(4).settingsType(
+                INDEXING).build());
     EsIndex.swapIndexInAliases(ES_SERVER.getEsConfig(), Collections.singleton(ALIAS_TEST), idx4);
 
     // alias should have only the last index created
@@ -125,7 +146,8 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   public void countIndexDocumentsAfterSwappingTest() throws InterruptedException {
     // create index
     String idx =
-        EsIndex.create(ES_SERVER.getEsConfig(), DEFAULT_IDX_NAME, TEST_MAPPINGS_PATH);
+        EsIndex.createIndex(ES_SERVER.getEsConfig(),
+            IndexParams.builder().indexName(DEFAULT_IDX_NAME).pathMappings(TEST_MAPPINGS_PATH).build());
 
     // index some documents
     long n = 3;
@@ -163,7 +185,8 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   public void findDatasetIndexesInAliasTest() {
     // create index
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
-    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey + INDEX_SEPARATOR + 1);
+    String idx1 =
+        EsIndex.createIndex(ES_SERVER.getEsConfig(), IndexParams.builder().datasetKey(DATASET_TEST).attempt(1).build());
 
     // index some documents
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
@@ -187,7 +210,8 @@ public class EsIndexIntegrationTest extends EsApiIntegration {
   public void findDatasetIndexesInAliasesTest() {
     // create index
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
-    String idx1 = EsIndex.create(ES_SERVER.getEsConfig(), datasetKey + INDEX_SEPARATOR + 1);
+    String idx1 =
+        EsIndex.createIndex(ES_SERVER.getEsConfig(), IndexParams.builder().datasetKey(DATASET_TEST).attempt(1).build());
 
     // index some documents
     String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";

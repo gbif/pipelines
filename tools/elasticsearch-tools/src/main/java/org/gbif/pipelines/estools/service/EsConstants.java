@@ -42,8 +42,9 @@ public final class EsConstants {
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  private static final class Util {
+  public static final class Util {
 
+    public static final String INDEX_SEPARATOR = "_";
     private static final String JSON_CONCATENATOR = ".";
     private static final String INDEX_PREFIX = Field.INDEX + JSON_CONCATENATOR;
   }

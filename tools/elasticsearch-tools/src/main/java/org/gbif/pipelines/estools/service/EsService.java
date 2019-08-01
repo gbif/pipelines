@@ -1,6 +1,5 @@
 package org.gbif.pipelines.estools.service;
 
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -8,8 +7,8 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 import org.gbif.pipelines.estools.client.EsClient;
-import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.model.DeleteByQueryTask;
+import org.gbif.pipelines.estools.model.IndexParams;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -42,86 +41,21 @@ import static org.gbif.pipelines.estools.service.HttpRequestBuilder.createBodyFr
 public class EsService {
 
   /**
-   * Creates a ES index.
+   * Creates an ES index.
    *
    * @param esClient client to call ES. It is required.
-   * @param idxName name of the index to create.
-   * @param settingsType settings to use in the call.
-   * @return name of the index created.
+   * @param indexParams parameters of the index
+   * @return name of the index
    */
-  public static String createIndex(@NonNull EsClient esClient, String idxName, SettingsType settingsType) {
-    // create entity body
-    HttpEntity body = HttpRequestBuilder.newInstance().withSettingsType(settingsType).build();
-
-    return createIndexInternal(esClient, idxName, body);
-  }
-
-  /**
-   * Creates a ES index.
-   *
-   * @param esClient client to call ES. It is required.
-   * @param idxName name of the index to create.
-   * @param settingsType settings to use in the call.
-   * @param mappings path of the file with the mappings.
-   * @return name of the index created.
-   */
-  public static String createIndex(
-      @NonNull EsClient esClient, String idxName, SettingsType settingsType, Path mappings) {
-
-    // create entity body
-    HttpEntity body =
-        HttpRequestBuilder.newInstance()
-            .withSettingsType(settingsType)
-            .withMappings(mappings)
-            .build();
-
-    return createIndexInternal(esClient, idxName, body);
-  }
-
-  /**
-   * Creates a ES index.
-   *
-   * @param esClient client to call ES. It is required.
-   * @param idxName name of the index to create.
-   * @param settingsType settings to use in the call.
-   * @param mappings mappings as json.
-   * @return name of the index created.
-   */
-  public static String createIndex(
-      @NonNull EsClient esClient, String idxName, SettingsType settingsType, String mappings) {
-
-    // create entity body
-    HttpEntity body =
-        HttpRequestBuilder.newInstance()
-            .withSettingsType(settingsType)
-            .withMappings(mappings)
-            .build();
-
-    return createIndexInternal(esClient, idxName, body);
-  }
-
-  /**
-   * Creates a ES index.
-   *
-   * @param esClient client to call ES. It is required.
-   * @param idxName name of the index to create.
-   * @param settings {@link Map} with thesettings to use in the call.
-   * @param mappings path of the file with the mappings.
-   * @return name of the index created.
-   */
-  public static String createIndex(
-      @NonNull EsClient esClient, String idxName, Map<String, String> settings, Path mappings) {
-
-    // create entity body
-    HttpEntity body = HttpRequestBuilder.newInstance().withSettingsMap(settings).withMappings(mappings).build();
-
-    return createIndexInternal(esClient, idxName, body);
-  }
-
   @SneakyThrows
-  private static String createIndexInternal(@NonNull EsClient esClient, String idxName, HttpEntity body) {
-    String endpoint = buildEndpoint(idxName);
+  public static String createIndex(@NonNull EsClient esClient, IndexParams indexParams) {
+    // create entity body
+    HttpEntity body = HttpRequestBuilder.createBodyFromIndexParams(indexParams);
+
+    String endpoint = buildEndpoint(indexParams.getIndexName());
+
     Response response = esClient.performPutRequest(endpoint, Collections.emptyMap(), body);
+
     // parse response and return
     return HttpResponseParser.parseCreatedIndexResponse(response.getEntity());
   }
