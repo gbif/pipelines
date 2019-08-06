@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.Set;
 
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
@@ -14,6 +13,8 @@ import org.slf4j.MDC;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.pipelines.common.PipelinesVariables.Lock;
 
 /**
  * Pipeline sequence:
@@ -69,12 +70,12 @@ public class InterpretedToEsIndexExtendedPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     Set<String> existingDatasetIndexes = EsIndexUtils.deleteRecordsByDatasetId(options);
-    EsIndexUtils.createIndexIfNotExist(options);
+    EsIndexUtils.createIndexAndAliasForDefault(options);
 
     InterpretedToEsIndexPipeline.run(options);
 
     EsIndexUtils.updateAlias(options, existingDatasetIndexes,
-        LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.ES_LOCK_PREFIX));
+        LockConfigFactory.create(options.getProperties(), Lock.ES_LOCK_PREFIX));
 
     FsUtils.removeTmpDirectory(options);
     log.info("Finished main indexing pipeline");
