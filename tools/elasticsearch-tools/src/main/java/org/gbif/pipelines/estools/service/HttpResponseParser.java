@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.gbif.pipelines.estools.client.EsClient;
-import org.gbif.pipelines.estools.common.SettingsType;
 import org.gbif.pipelines.estools.model.DeleteByQueryTask;
 
 import org.apache.http.HttpEntity;
@@ -25,7 +24,7 @@ class HttpResponseParser {
    * Parses the response from an index creation request.
    *
    * <p>Specifically designed to use with a request similar to the one used in {@link
-   * org.gbif.pipelines.estools.service.EsService#createIndex(EsClient, String, SettingsType)}.
+   * org.gbif.pipelines.estools.service.EsService#createIndex(EsClient, org.gbif.pipelines.estools.model.IndexParams)}.
    *
    * @param entity {@link HttpEntity} from the response.
    * @return the name of the index created.

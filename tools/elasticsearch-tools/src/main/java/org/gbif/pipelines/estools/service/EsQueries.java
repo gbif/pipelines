@@ -25,4 +25,22 @@ public class EsQueries {
 
   public static final String DELETE_BY_DATASET_QUERY = "{\"query\":{\"match\":{\"datasetKey\":\"%s\"}}}";
 
+  public static final String DELETE_BY_DATASET_AND_NOT_CRAWLID_QUERY = "{\n"
+      + "  \"query\": {"
+      + "    \"bool\": {"
+      + "      \"filter\": {"
+      + "        \"term\": {"
+      + "          \"datasetKey\": \"%s\""
+      + "        }"
+      + "      },"
+      + "      \"must_not\": {"
+      + "        \"term\": {"
+      + "          \"crawlId\": %s"
+      + "        }"
+      + "      }"
+      + "    }"
+      + "  }"
+      + "}";
+
+
 }

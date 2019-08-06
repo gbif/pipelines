@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsIndexUtils {
 
-  /** Connects to Elasticsearch instance and creates an index */
+  /** Connects to Elasticsearch instance and creates an index. */
   public static void createIndex(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
@@ -36,7 +36,7 @@ public class EsIndexUtils {
     Optional.ofNullable(idx).ifPresent(options::setEsIndexName);
   }
 
-  /** Connects to Elasticsearch instance and creates an index, if index doesn't exist */
+  /** Connects to Elasticsearch instance and creates an index, if index doesn't exist. */
   public static void createIndexIfNotExist(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
     Optional<String> idx = EsIndex.createIndexIfNotExists(config, createIndexParams(options));
@@ -69,7 +69,7 @@ public class EsIndexUtils {
         .build();
   }
 
-  /** Connects to Elasticsearch instance and swaps an index and an alias */
+  /** Connects to Elasticsearch instance and swaps an index and an alias. */
   public static void swapIndex(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
@@ -84,7 +84,7 @@ public class EsIndexUtils {
     });
   }
 
-  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists */
+  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists. */
   public static void swapIndexIfAliasExists(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     String[] aliases = options.getEsAlias();
     if (aliases != null && aliases.length > 0) {
@@ -92,7 +92,7 @@ public class EsIndexUtils {
     }
   }
 
-  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists */
+  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists. */
   public static void updateAlias(EsIndexingPipelineOptions options, Set<String> existingDatasetIndexes,
       LockConfig lockConfig) {
     Preconditions.checkArgument(options.getEsAlias() != null && options.getEsAlias().length > 0,
@@ -121,12 +121,13 @@ public class EsIndexUtils {
   }
 
   /**
-   * Connects to Elasticsearch instance and deletes records in an index by datasetId and returns the indexes where the
-   * dataset was present
+   * Connects to Elasticsearch instance and deletes stale records from a dataset and returns the indexes where the
+   * dataset was present.
    */
-  public static Set<String> deleteRecordsByDatasetId(EsIndexingPipelineOptions options) {
+  public static Set<String> deleteStaleRecordsFromDataset(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    return EsIndex.deleteRecordsByDatasetId(config, options.getEsAlias(), options.getDatasetId(),
+    return EsIndex.deleteStaleRecordsFromDataset(config, options.getEsAlias(), options.getDatasetId(),
+        options.getAttempt(), options.getEsIndexName(),
         idxName -> idxName.startsWith(options.getDatasetId()));
   }
 

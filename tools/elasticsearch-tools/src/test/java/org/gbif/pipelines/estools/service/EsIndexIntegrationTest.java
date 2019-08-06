@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.model.IndexParams;
@@ -17,13 +18,17 @@ import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.gbif.pipelines.estools.service.EsConstants.Field;
 import static org.gbif.pipelines.estools.service.EsConstants.Searching;
 import static org.gbif.pipelines.estools.service.EsConstants.Util.INDEX_SEPARATOR;
+import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_AND_NOT_CRAWLID_QUERY;
+import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_QUERY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link EsIndex}. */

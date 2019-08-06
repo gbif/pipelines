@@ -15,6 +15,7 @@ import org.apache.http.HttpStatus;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -278,7 +279,8 @@ public class EsService {
    * @return {@link Response}
    */
   @SneakyThrows
-  private static Response executeQuery(@NonNull EsClient esClient, String idxName, String query) {
+  @VisibleForTesting
+  public static Response executeQuery(@NonNull EsClient esClient, String idxName, String query) {
     String endpoint = buildEndpoint(idxName, "_search");
     HttpEntity body = createBodyFromString(query);
     return esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
