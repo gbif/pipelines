@@ -64,22 +64,30 @@ public class InterpretedToEsIndexExtendedPipeline {
   }
 
   public static void run(EsIndexingPipelineOptions options) {
-
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
 
-    Set<String> existingDatasetIndexes = EsIndexUtils.deleteRecordsByDatasetId(options);
-    EsIndexUtils.createIndexIfNotExist(options);
-
-    InterpretedToEsIndexPipeline.run(options);
-
-    EsIndexUtils.updateAlias(options, existingDatasetIndexes,
-        LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.ES_LOCK_PREFIX));
+    run(options, () -> InterpretedToEsIndexPipeline.run(options));
 
     FsUtils.removeTmpDirectory(options);
     log.info("Finished main indexing pipeline");
 
     log.info("Call - System.exit(0)"); // Workaround for a bug with stuck job
     System.exit(0);
+  }
+
+  public static void run(EsIndexingPipelineOptions options, Runnable pipeline) {
+    // create index
+    EsIndexUtils.createIndexAndAliasForDefault(options);
+
+    // delete records
+    Set<String> existingDatasetIndexes = EsIndexUtils.deleteRecordsByDatasetId(options);
+
+    // run the pipeline
+    pipeline.run();
+
+    // update alias
+    EsIndexUtils.updateAlias(options, existingDatasetIndexes,
+        LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.ES_LOCK_PREFIX));
   }
 }

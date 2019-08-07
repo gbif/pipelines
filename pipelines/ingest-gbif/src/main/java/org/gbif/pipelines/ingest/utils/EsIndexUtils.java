@@ -2,31 +2,38 @@ package org.gbif.pipelines.ingest.utils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.gbif.pipelines.estools.EsIndex;
+import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.client.EsConfig;
 import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
+import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.parsers.config.LockConfig;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
+
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class EsIndexUtils {
 
-  /** Connects to Elasticsearch instance and creates an index */
+  /** Connects to Elasticsearch instance and creates an index. */
   public static void createIndex(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
@@ -37,13 +44,32 @@ public class EsIndexUtils {
   }
 
   /** Connects to Elasticsearch instance and creates an index, if index doesn't exist */
-  public static void createIndexIfNotExist(EsIndexingPipelineOptions options) {
+  public static void createIndexAndAliasForDefault(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    Optional<String> idx = EsIndex.createIndexIfNotExists(config, createIndexParams(options));
+    IndexParams params = createIndexParams(options);
 
-    if (idx.isPresent()) {
-      log.info("ES index {} created", idx.get());
-      options.setEsIndexName(idx.get());
+    log.info("Creating index from params: {}", params);
+    try (EsClient esClient = EsClient.from(config)) {
+      if (!EsService.existsIndex(esClient, params.getIndexName())) {
+        EsService.createIndex(esClient, params);
+        addIndexAliasForDefault(esClient, options);
+      }
+    }
+  }
+
+  /** Add alias to index if the index is default/regular (it will contain many datasets) */
+  private static void addIndexAliasForDefault(EsClient esClient, EsIndexingPipelineOptions options) {
+    String index = options.getEsIndexName();
+    Objects.requireNonNull(index, "index are required");
+    if (!index.startsWith(options.getDatasetId())) {
+      Set<String> aliases = Sets.newHashSet(options.getEsAlias());
+
+      Objects.requireNonNull(aliases, "aliases are required");
+
+      Set<String> validAliases = aliases.stream().filter(alias -> !Strings.isNullOrEmpty(alias)).collect(Collectors.toSet());
+      Preconditions.checkArgument(!validAliases.isEmpty(), "aliases are required");
+
+      swapIndexes(esClient, validAliases, Collections.singleton(index), Collections.emptySet());
     }
   }
 
@@ -69,7 +95,7 @@ public class EsIndexUtils {
         .build();
   }
 
-  /** Connects to Elasticsearch instance and swaps an index and an alias */
+  /** Connects to Elasticsearch instance and swaps an index and an alias. */
   public static void swapIndex(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     EsConfig config = EsConfig.from(options.getEsHosts());
 
@@ -84,7 +110,7 @@ public class EsIndexUtils {
     });
   }
 
-  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists */
+  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists. */
   public static void swapIndexIfAliasExists(EsIndexingPipelineOptions options, LockConfig lockConfig) {
     String[] aliases = options.getEsAlias();
     if (aliases != null && aliases.length > 0) {
@@ -92,7 +118,7 @@ public class EsIndexUtils {
     }
   }
 
-  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists */
+  /** Connects to Elasticsearch instance and swaps an index and an alias, if alias exists. */
   public static void updateAlias(EsIndexingPipelineOptions options, Set<String> existingDatasetIndexes,
       LockConfig lockConfig) {
     Preconditions.checkArgument(options.getEsAlias() != null && options.getEsAlias().length > 0,
@@ -127,7 +153,7 @@ public class EsIndexUtils {
   public static Set<String> deleteRecordsByDatasetId(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
     return EsIndex.deleteRecordsByDatasetId(config, options.getEsAlias(), options.getDatasetId(),
-        idxName -> idxName.startsWith(options.getDatasetId()));
+        idxName -> !idxName.startsWith(options.getDatasetId()));
   }
 
 }

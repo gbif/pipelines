@@ -15,6 +15,7 @@ import org.apache.http.HttpStatus;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -165,7 +166,7 @@ public class EsService {
    * @param esClient client to call ES. It is required.
    * @param idxName index where the document has to be indexed to.
    * @param type type of the document.
-   * @param id id of the doucment.
+   * @param id id of the document.
    * @param document document to index.
    */
   @SneakyThrows
@@ -278,7 +279,8 @@ public class EsService {
    * @return {@link Response}
    */
   @SneakyThrows
-  private static Response executeQuery(@NonNull EsClient esClient, String idxName, String query) {
+  @VisibleForTesting
+  public static Response executeQuery(@NonNull EsClient esClient, String idxName, String query) {
     String endpoint = buildEndpoint(idxName, "_search");
     HttpEntity body = createBodyFromString(query);
     return esClient.performPostRequest(endpoint, Collections.emptyMap(), body);

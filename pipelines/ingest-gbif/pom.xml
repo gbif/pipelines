@@ -124,6 +124,12 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-wrangler</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Curator Framework used for Zookeeper Locks -->
@@ -192,6 +198,23 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <!-- test -->
+    <dependency>
+      <groupId>pl.allegro.tech</groupId>
+      <artifactId>embedded-elasticsearch</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.zookeeper</groupId>
+      <artifactId>zookeeper</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>

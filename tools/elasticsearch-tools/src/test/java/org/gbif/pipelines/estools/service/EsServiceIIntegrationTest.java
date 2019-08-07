@@ -461,4 +461,5 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     assertTrue(task.isCompleted());
     assertEquals(5, task.getRecordsDeleted());
   }
+
 }

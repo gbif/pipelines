@@ -160,11 +160,12 @@ public class EsIndex {
    * @param config configuration of the ES instance.
    * @param aliases aliases where we look for records of the dataset
    * @param datasetKey dataset whose records we are looking for
-   * @param indexesToSkipFromDeletion filters the indexes whose records we don't want to delete.
+   * @param indexesToDelete filters the indexes whose records we want to delete, so we can ignore some. E.g.: delete
+   * only from non-independent indexes.
    * @return datasets where we found records of this datasetø
    */
   public static Set<String> deleteRecordsByDatasetId(EsConfig config, String[] aliases, String datasetKey,
-      Predicate<String> indexesToSkipFromDeletion) {
+      Predicate<String> indexesToDelete) {
 
     try (EsClient esClient = EsClient.from(config)) {
       // find indexes where the dataset is present
@@ -177,9 +178,9 @@ public class EsIndex {
       // prepare parameters
       String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
 
-      // we only delete by query for indexes that contain multiple datasets
+      // we only delete by query for the indexes specifiedø
       String indexes = existingDatasetIndexes.stream()
-          .filter(i -> indexesToSkipFromDeletion.negate().test(i))
+          .filter(indexesToDelete)
           .collect(Collectors.joining(","));
 
       if (!Strings.isNullOrEmpty(indexes)) {
