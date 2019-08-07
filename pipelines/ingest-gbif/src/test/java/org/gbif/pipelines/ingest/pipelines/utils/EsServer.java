@@ -37,7 +37,7 @@ public class EsServer extends ExternalResource {
   protected void before() throws Throwable {
     embeddedElastic =
         EmbeddedElastic.builder()
-            .withElasticVersion("6.5.4")
+            .withElasticVersion(getEsVersion())
             .withEsJavaOpts("-Xms128m -Xmx512m")
             .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
             .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
