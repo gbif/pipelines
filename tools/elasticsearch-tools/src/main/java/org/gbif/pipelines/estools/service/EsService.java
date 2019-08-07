@@ -166,7 +166,7 @@ public class EsService {
    * @param esClient client to call ES. It is required.
    * @param idxName index where the document has to be indexed to.
    * @param type type of the document.
-   * @param id id of the doucment.
+   * @param id id of the document.
    * @param document document to index.
    */
   @SneakyThrows
