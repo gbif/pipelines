@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.gbif.pipelines.estools.EsIndex;
@@ -157,90 +156,11 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
   /**
    * Tests the following cases:
-   * <p>
-   * 1. Index dataset in default static index.
-   * 2. Reindex dataset in default dynamic index.
-   * 3. Reindex dataset back to the default static index.
-   * 4. Reindex dataset to an independent index.
-   * 5. Reindex dataset back to the default static index.
-   */
-  @Test
-  public void indexSwitchingIndexTest() {
-    // State
-    EsIndexingPipelineOptions options =
-        createPipelineOptions(ES_SERVER, DATASET_TEST, STATIC_IDX, ALIAS, 1);
-    // 1. Index the dataset for the first time
-    InterpretedToEsIndexExtendedPipeline.run(options,
-        indexingPipeline(ES_SERVER, options, DEFAULT_REC_DATASET, "first"));
-    // we add the index to alias -- currently we only add independent indexes to the alias
-    EsService.swapIndexes(ES_SERVER.getEsClient(), Collections.singleton(ALIAS),
-        Collections.singleton(options.getEsIndexName()),
-        Collections.emptySet());
-
-    // When
-    // 2. Reindex dataset to a different index
-    options.setEsIndexName(DYNAMIC_IDX);
-    options.setAttempt(2);
-    InterpretedToEsIndexExtendedPipeline.run(options,
-        indexingPipeline(ES_SERVER, options, DEFAULT_REC_DATASET, "first"));
-    // we add the index to alias -- currently we only add independent indexes to the alias
-    EsService.swapIndexes(ES_SERVER.getEsClient(), Collections.singleton(ALIAS),
-        Collections.singleton(options.getEsIndexName()),
-        Collections.emptySet());
-
-    // Should
-    assertEquals(DEFAULT_REC_DATASET, EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS));
-    assertEquals(0, EsIndex.countDocuments(ES_SERVER.getEsConfig(), STATIC_IDX));
-    assertEquals(DEFAULT_REC_DATASET,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), DYNAMIC_IDX));
-
-    // When
-    // 3. Reindex dataset to default static
-    options.setEsIndexName(STATIC_IDX);
-    options.setAttempt(3);
-    InterpretedToEsIndexExtendedPipeline.run(options,
-        indexingPipeline(ES_SERVER, options, DEFAULT_REC_DATASET, "first"));
-
-    // Should
-    assertEquals(DEFAULT_REC_DATASET, EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS));
-    assertEquals(DEFAULT_REC_DATASET,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), STATIC_IDX));
-    assertEquals(0, EsIndex.countDocuments(ES_SERVER.getEsConfig(), DYNAMIC_IDX));
-
-    // When
-    // 4. Switch dataset to independent index
-    final String independentIndex = DATASET_TEST + "_" + 4;
-    options.setEsIndexName(independentIndex);
-    options.setAttempt(4);
-    InterpretedToEsIndexExtendedPipeline.run(options,
-        indexingPipeline(ES_SERVER, options, DEFAULT_REC_DATASET, "first"));
-
-    // Should
-    assertEquals(DEFAULT_REC_DATASET, EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS));
-    assertEquals(0, EsIndex.countDocuments(ES_SERVER.getEsConfig(), STATIC_IDX));
-    assertEquals(DEFAULT_REC_DATASET, EsIndex.countDocuments(ES_SERVER.getEsConfig(), independentIndex));
-
-    // When
-    // 5. Switch dataset back to default static index
-    options.setEsIndexName(STATIC_IDX);
-    options.setAttempt(5);
-    InterpretedToEsIndexExtendedPipeline.run(options,
-        indexingPipeline(ES_SERVER, options, DEFAULT_REC_DATASET, "first"));
-
-    // Should
-    assertEquals(DEFAULT_REC_DATASET, EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS));
-    assertEquals(DEFAULT_REC_DATASET,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), STATIC_IDX));
-    assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), independentIndex));
-  }
-
-  /**
-   * Tests the following cases:
    * 1. Index multiple datasets in default indexes and independent ones.
    * 2. Switch datasets to different indexes and also add and remove records.
    */
   @Test
-  public void reindexingMultipleDatasetsTest() {
+  public void switchingIndexTest() {
     // When
     // 1. Index multiple datasets
 
@@ -265,7 +185,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     assertEquals(DEFAULT_REC_DATASET * 3,
         EsIndex.countDocuments(ES_SERVER.getEsConfig(), DYNAMIC_IDX));
 
-    List<String> allDatasets = new ArrayList(staticDatasets);
+    List<String> allDatasets = new ArrayList<>(staticDatasets);
     allDatasets.addAll(dynamicDatasets);
     allDatasets.addAll(independentDatasets);
 

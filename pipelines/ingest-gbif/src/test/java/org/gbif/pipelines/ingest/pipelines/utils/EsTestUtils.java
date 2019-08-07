@@ -39,8 +39,8 @@ public class EsTestUtils {
   public static final String MATCH_QUERY = "{\"query\":{\"match\":{\"%s\":\"%s\"}}}";
   public static final int DEFAULT_REC_DATASET = 10;
 
-  public static final ObjectMapper MAPPER = new ObjectMapper();
-  public static final ObjectReader READER = MAPPER.readerFor(Map.class);
+  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectReader READER = MAPPER.readerFor(Map.class);
 
   public static EsIndexingPipelineOptions createPipelineOptions(EsServer server, String datasetKey, String idxName,
       String alias, int attempt) {
