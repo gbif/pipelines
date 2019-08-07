@@ -172,9 +172,6 @@ public class EsIndex {
       // find indexes where the dataset is present
       Set<String> existingDatasetIndexes = findDatasetIndexesInAliases(esClient, aliases, datasetKey);
 
-      // remove the current index
-      existingDatasetIndexes.remove(currentIndex);
-
       if (existingDatasetIndexes.isEmpty()) {
         return Collections.emptySet();
       }
@@ -191,6 +188,9 @@ public class EsIndex {
         log.info("Deleting records from ES indexes {} with query {}", indexes, query);
         deleteRecordsByQueryAndWaitTillCompletion(esClient, indexes, query);
       }
+
+      // remove the current index
+      existingDatasetIndexes.remove(currentIndex);
 
       return existingDatasetIndexes;
     }

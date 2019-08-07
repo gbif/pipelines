@@ -2,10 +2,8 @@ package org.gbif.pipelines.ingest.pipelines.utils;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.LongUnaryOperator;
 import java.util.stream.LongStream;
 
 import org.gbif.pipelines.estools.service.EsService;
@@ -45,12 +43,6 @@ public class EsTestUtils {
   public static final ObjectMapper MAPPER = new ObjectMapper();
   public static final ObjectReader READER = MAPPER.readerFor(Map.class);
 
-  public static final Map<String, List<String>> TEST_DATASETS = new HashMap<>();
-
-  static {
-
-  }
-
   public static EsIndexingPipelineOptions createPipelineOptions(EsServer server, String datasetKey, String idxName,
       String alias, int attempt) {
     String[] args = new String[8];
@@ -67,7 +59,7 @@ public class EsTestUtils {
 
 
   public static Runnable indexingPipeline(EsServer server, EsIndexingPipelineOptions options, long numRecords,
-      String msg, LongUnaryOperator idFn) {
+      String msg) {
     return () -> {
       String type = "doc";
       String document =
@@ -76,15 +68,11 @@ public class EsTestUtils {
 
       LongStream.range(0, numRecords)
           .forEach(
-              i -> EsService.indexDocument(server.getEsClient(), options.getEsIndexName(), type, idFn.applyAsLong(i),
+              i -> EsService.indexDocument(server.getEsClient(), options.getEsIndexName(), type,
+                  i + options.getDatasetId().hashCode(),
                   String.format(document, msg + " " + i)));
       EsService.refreshIndex(server.getEsClient(), options.getEsIndexName());
     };
-  }
-
-  public static Runnable indexingPipeline(EsServer server, EsIndexingPipelineOptions options, int numRecords,
-      String msg) {
-    return indexingPipeline(server, options, numRecords, msg, LongUnaryOperator.identity());
   }
 
   public static long countDocumentsFromQuery(EsServer server, String idxName, String query) {
@@ -106,8 +94,7 @@ public class EsTestUtils {
           createPipelineOptions(server, d, Strings.isNullOrEmpty(indexName) ? d + "_" + attempt : indexName, alias,
               attempt);
       InterpretedToEsIndexExtendedPipeline.run(options,
-          indexingPipeline(server, options, recordsPerDataset, options.getEsIndexName(),
-              i -> i + d.hashCode()));
+          indexingPipeline(server, options, recordsPerDataset, options.getEsIndexName()));
 
       if (addToAlias) {
         EsService.swapIndexes(server.getEsClient(), Collections.singleton(alias),

@@ -11,6 +11,7 @@ import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.pipelines.utils.EsServer;
 import org.gbif.pipelines.ingest.pipelines.utils.ZkServer;
 
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -48,6 +49,11 @@ public class InterpretedToEsIndexExtendedPipelineIT {
   @ClassRule
   public static final ZkServer ZK_SERVER = new ZkServer();
 
+  @Before
+  public void cleanIndexes() {
+    EsService.deleteAllIndexes(ES_SERVER.getEsClient());
+  }
+
   /**
    * Tests the following cases:
    * <p>
@@ -57,7 +63,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
    * 4. Reindex in the same index with new attempt and deleting some records.
    */
   @Test
-  public void reindexingDatasetInSameIndexTest() throws IOException {
+  public void reindexingDatasetInSameDefaultIndexTest() throws IOException {
 
     // State
     EsIndexingPipelineOptions options =
@@ -228,6 +234,11 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), independentIndex));
   }
 
+  /**
+   * Tests the following cases:
+   * 1. Index multiple datasets in default indexes and independent ones.
+   * 2. Switch datasets to different indexes and also add and remove records.
+   */
   @Test
   public void reindexingMultipleDatasetsTest() {
     // When
@@ -288,33 +299,44 @@ public class InterpretedToEsIndexExtendedPipelineIT {
         assertEquals(DEFAULT_REC_DATASET,
             countDocumentsFromQuery(ES_SERVER, ALIAS, String.format(MATCH_QUERY, "datasetKey", d))));
 
-    // When
     // 3. Switch some datasets again but adding and deleting records.
     attempt = 3;
-    switchDatasetAndRecords(DATASET_TEST, DYNAMIC_IDX, STATIC_IDX, attempt, 5);
-
-    // TODO: add more
+    switchDatasetAndRecords(DATASET_TEST, STATIC_IDX, attempt, 5);
+    switchDatasetAndRecords(DATASET_TEST_3, DATASET_TEST_3 + "_" + attempt, attempt, 2);
+    switchDatasetAndRecords(DATASET_TEST_4, DYNAMIC_IDX, attempt, -7);
+    switchDatasetAndRecords(DATASET_TEST_8, DYNAMIC_IDX, attempt, -1);
   }
 
-  private void switchDatasetAndRecords(String datasetKey, String sourceIdx, String targetIdx, int attempt,
-      int diffRecords) {
-    long previousCountAlias = EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS);
-    long previousSourceCount = EsIndex.countDocuments(ES_SERVER.getEsConfig(), sourceIdx);
-    long previousTargetCount = EsIndex.countDocuments(ES_SERVER.getEsConfig(), targetIdx);
-    long previousRecordsDataset =
-        countDocumentsFromQuery(ES_SERVER, ALIAS, String.format(MATCH_QUERY, "datasetKey", datasetKey));
+  private void switchDatasetAndRecords(String datasetKey, String targetIdx, int attempt, int diffRecords) {
+    // there should be only one source index
+    String sourceIdx =
+        EsIndex.findDatasetIndexesInAliases(ES_SERVER.getEsConfig(), new String[]{ALIAS}, datasetKey).iterator().next();
 
+    final long previousCountAlias = EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS);
+    final long previousSourceCount =
+        !sourceIdx.startsWith(datasetKey) ? EsIndex.countDocuments(ES_SERVER.getEsConfig(), sourceIdx) : 0;
+    final long previousTargetCount =
+        !targetIdx.startsWith(datasetKey) ? EsIndex.countDocuments(ES_SERVER.getEsConfig(), targetIdx) : 0;
+    final long previousRecordsDataset =
+        countDocumentsFromQuery(ES_SERVER, ALIAS, String.format(MATCH_QUERY, "datasetKey", datasetKey));
     final long recordsDataset = previousRecordsDataset + diffRecords;
 
+    // When
     indexDatasets(ES_SERVER, ImmutableList.of(datasetKey), attempt, targetIdx,
         ALIAS, false, recordsDataset);
 
+    // Should
     assertEquals(previousCountAlias + diffRecords,
         EsIndex.countDocuments(ES_SERVER.getEsConfig(), ALIAS));
     assertEquals(previousTargetCount + recordsDataset,
         EsIndex.countDocuments(ES_SERVER.getEsConfig(), targetIdx));
-    assertEquals(previousSourceCount - previousRecordsDataset,
-        EsIndex.countDocuments(ES_SERVER.getEsConfig(), sourceIdx));
+
+    if (sourceIdx.startsWith(datasetKey)) {
+      assertFalse(EsService.existsIndex(ES_SERVER.getEsClient(), sourceIdx));
+    } else {
+      assertEquals(previousSourceCount - previousRecordsDataset,
+          EsIndex.countDocuments(ES_SERVER.getEsConfig(), sourceIdx));
+    }
     assertEquals(recordsDataset,
         countDocumentsFromQuery(ES_SERVER, ALIAS, String.format(MATCH_QUERY, "datasetKey", datasetKey)));
   }
