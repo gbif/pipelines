@@ -15,8 +15,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Lock;
-
 /**
  * Pipeline sequence:
  *
@@ -82,11 +80,12 @@ public class InterpretedToEsIndexExtendedPipeline {
     // create index
     EsIndexUtils.createIndexAndAliasForDefault(options);
 
+    // delete records
+    Set<String> existingDatasetIndexes = EsIndexUtils.deleteRecordsByDatasetId(options);
+
     // run the pipeline
     pipeline.run();
 
-    // delete stale records
-    Set<String> existingDatasetIndexes = EsIndexUtils.deleteStaleRecordsFromDataset(options);
     // update alias
     EsIndexUtils.updateAlias(options, existingDatasetIndexes,
         LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.ES_LOCK_PREFIX));

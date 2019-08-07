@@ -1,7 +1,6 @@
 package org.gbif.pipelines.estools.service;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,11 +26,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 import static org.gbif.pipelines.estools.common.SettingsType.INDEXING;
 import static org.gbif.pipelines.estools.common.SettingsType.SEARCH;
-import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_AND_NOT_CRAWLID_QUERY;
+import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_QUERY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -411,28 +411,43 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     assertTrue(indexesFound.isEmpty());
   }
 
-
   @Test
-  public void getDeleteByDatasetAndNotCrawlIdTest() throws InterruptedException {
+  public void deleteByQueryTest() {
 
     // State
     String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
-        IndexParams.builder()
-            .indexName("idx1")
-            .pathMappings(Paths.get("mappings/dataset-mapping.json"))
-            .settingsType(SEARCH)
-            .build());
+        IndexParams.builder().indexName("idx").settingsType(SEARCH).build());
 
     // index some documents
     final String type = "doc";
     final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
-    final int attempt = 1;
-    String document = "{\"datasetKey\" : \"" + datasetKey + "\", \"crawlId\" : " + attempt + "}";
+    String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
+    IntStream.range(1, 4).forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, type, i, document));
+
+    // When
+    String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
+    String taskId = EsService.deleteRecordsByQuery(ES_SERVER.getEsClient(), idx1, query);
+
+    // Should
+    assertFalse(Strings.isNullOrEmpty(taskId));
+  }
+
+  @Test
+  public void getDeleteByQueryTaskTest() throws InterruptedException {
+
+    // State
+    String idx1 = EsService.createIndex(ES_SERVER.getEsClient(),
+        IndexParams.builder().indexName("idx1").settingsType(SEARCH).build());
+
+    // index some documents
+    final String type = "doc";
+    final String datasetKey = "82ceb6ba-f762-11e1-a439-00145eb45e9a";
+    String document = "{\"datasetKey\" : \"" + datasetKey + "\"}";
     IntStream.range(1, 6).forEach(i -> EsService.indexDocument(ES_SERVER.getEsClient(), idx1, type, i, document));
     EsService.refreshIndex(ES_SERVER.getEsClient(), idx1);
 
     // When
-    String query = String.format(DELETE_BY_DATASET_AND_NOT_CRAWLID_QUERY, datasetKey, attempt);
+    String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
     String taskId = EsService.deleteRecordsByQuery(ES_SERVER.getEsClient(), idx1, query);
     DeleteByQueryTask task = EsService.getDeletedByQueryTask(ES_SERVER.getEsClient(), taskId);
 
@@ -443,19 +458,8 @@ public class EsServiceIIntegrationTest extends EsApiIntegration {
     // When
     TimeUnit.SECONDS.sleep(1);
     task = EsService.getDeletedByQueryTask(ES_SERVER.getEsClient(), taskId);
-
-    // Should
-    assertTrue(task.isCompleted());
-    assertEquals(0, task.getRecordsDeleted());
-
-    // When
-    query = String.format(DELETE_BY_DATASET_AND_NOT_CRAWLID_QUERY, datasetKey, attempt + 1);
-    taskId = EsService.deleteRecordsByQuery(ES_SERVER.getEsClient(), idx1, query);
-    TimeUnit.SECONDS.sleep(1);
-    task = EsService.getDeletedByQueryTask(ES_SERVER.getEsClient(), taskId);
-
-    // Should
     assertTrue(task.isCompleted());
     assertEquals(5, task.getRecordsDeleted());
   }
+
 }

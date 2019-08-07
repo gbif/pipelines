@@ -147,14 +147,13 @@ public class EsIndexUtils {
   }
 
   /**
-   * Connects to Elasticsearch instance and deletes stale records from a dataset and returns the indexes where the
-   * dataset was present.
+   * Connects to Elasticsearch instance and deletes records in an index by datasetId and returns the indexes where the
+   * dataset was present
    */
-  public static Set<String> deleteStaleRecordsFromDataset(EsIndexingPipelineOptions options) {
+  public static Set<String> deleteRecordsByDatasetId(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    return EsIndex.deleteStaleRecordsFromDataset(config, options.getEsAlias(), options.getDatasetId(),
-        options.getAttempt(), options.getEsIndexName(),
-        idxName -> idxName.startsWith(options.getDatasetId()));
+    return EsIndex.deleteRecordsByDatasetId(config, options.getEsAlias(), options.getDatasetId(),
+        idxName -> !idxName.startsWith(options.getDatasetId()));
   }
 
 }

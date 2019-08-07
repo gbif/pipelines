@@ -1,7 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines.utils;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.LongStream;
@@ -88,25 +87,19 @@ public class EsTestUtils {
   }
 
   public static void indexDatasets(EsServer server, List<String> datasets, int attempt, String indexName, String alias,
-      boolean addToAlias, long recordsPerDataset) {
+      long recordsPerDataset) {
     datasets.forEach(d -> {
       EsIndexingPipelineOptions options =
           createPipelineOptions(server, d, Strings.isNullOrEmpty(indexName) ? d + "_" + attempt : indexName, alias,
               attempt);
       InterpretedToEsIndexExtendedPipeline.run(options,
           indexingPipeline(server, options, recordsPerDataset, options.getEsIndexName()));
-
-      if (addToAlias) {
-        EsService.swapIndexes(server.getEsClient(), Collections.singleton(alias),
-            Collections.singleton(options.getEsIndexName()),
-            Collections.emptySet());
-      }
     });
   }
 
-  public static void indexDatasets(EsServer server, List<String> datasets, int attempt, String indexName, String alias,
-      boolean addToAlias) {
-    indexDatasets(server, datasets, attempt, indexName, alias, addToAlias, DEFAULT_REC_DATASET);
+  public static void indexDatasets(EsServer server, List<String> datasets, int attempt, String indexName,
+      String alias) {
+    indexDatasets(server, datasets, attempt, indexName, alias, DEFAULT_REC_DATASET);
   }
 
 }

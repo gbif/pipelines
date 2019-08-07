@@ -248,17 +248,14 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // index in default static
     List<String> staticDatasets = ImmutableList.of(DATASET_TEST, DATASET_TEST_2, DATASET_TEST_3);
     indexDatasets(ES_SERVER, staticDatasets, attempt,
-        STATIC_IDX,
-        ALIAS, true);
+        STATIC_IDX, ALIAS);
     // index in default dynamic
     List<String> dynamicDatasets = ImmutableList.of(DATASET_TEST_4, DATASET_TEST_5, DATASET_TEST_6);
     indexDatasets(ES_SERVER, dynamicDatasets, attempt,
-        DYNAMIC_IDX,
-        ALIAS, true);
+        DYNAMIC_IDX, ALIAS);
     // index some independent datasets
     List<String> independentDatasets = ImmutableList.of(DATASET_TEST_7, DATASET_TEST_8, DATASET_TEST_9);
-    indexDatasets(ES_SERVER, independentDatasets, attempt, null,
-        ALIAS, false);
+    indexDatasets(ES_SERVER, independentDatasets, attempt, null, ALIAS);
 
     // Should
     assertEquals(DEFAULT_REC_DATASET * 9,
@@ -279,12 +276,9 @@ public class InterpretedToEsIndexExtendedPipelineIT {
     // When
     // 2. Switch some datasets to other indexes
     attempt = 2;
-    indexDatasets(ES_SERVER, ImmutableList.of(DATASET_TEST, DATASET_TEST_9), attempt, DYNAMIC_IDX,
-        ALIAS, false);
-    indexDatasets(ES_SERVER, ImmutableList.of(DATASET_TEST_4, DATASET_TEST_7), attempt, STATIC_IDX,
-        ALIAS, false);
-    indexDatasets(ES_SERVER, ImmutableList.of(DATASET_TEST_2, DATASET_TEST_5), attempt, null,
-        ALIAS, false);
+    indexDatasets(ES_SERVER, ImmutableList.of(DATASET_TEST, DATASET_TEST_9), attempt, DYNAMIC_IDX, ALIAS);
+    indexDatasets(ES_SERVER, ImmutableList.of(DATASET_TEST_4, DATASET_TEST_7), attempt, STATIC_IDX, ALIAS);
+    indexDatasets(ES_SERVER, ImmutableList.of(DATASET_TEST_2, DATASET_TEST_5), attempt, null, ALIAS);
 
     // Should
     assertEquals(DEFAULT_REC_DATASET * 9,
@@ -323,7 +317,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
 
     // When
     indexDatasets(ES_SERVER, ImmutableList.of(datasetKey), attempt, targetIdx,
-        ALIAS, false, recordsDataset);
+        ALIAS, recordsDataset);
 
     // Should
     assertEquals(previousCountAlias + diffRecords,

@@ -27,7 +27,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.estools.service.EsConstants.Util.INDEX_SEPARATOR;
-import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_AND_NOT_CRAWLID_QUERY;
+import static org.gbif.pipelines.estools.service.EsQueries.DELETE_BY_DATASET_QUERY;
 import static org.gbif.pipelines.estools.service.EsService.getIndexesByAliasAndIndexPattern;
 import static org.gbif.pipelines.estools.service.EsService.swapIndexes;
 import static org.gbif.pipelines.estools.service.EsService.updateIndexSettings;
@@ -154,43 +154,39 @@ public class EsIndex {
   }
 
   /**
-   * Connects to Elasticsearch instance and deletes records of a dataset and that doesn't belong to the
-   * current attempt. It returns the indexes where the ødataset was present.
+   * Connects to Elasticsearch instance and deletes records in an index by datasetId and returns the indexes where the
+   * dataset was present.
    *
    * @param config configuration of the ES instance.
    * @param aliases aliases where we look for records of the dataset
    * @param datasetKey dataset whose records we are looking for
-   * @param currentAttempt current attempt whose records will be kept
-   * @param currentIndex current index. It will be ignored
-   * @param indexesToSkipFromDeletion filters the indexes whose records we don't want to delete.
+   * @param indexesToDelete filters the indexes whose records we want to delete, so we can ignore some. E.g.: delete
+   * only from non-independent indexes.
    * @return datasets where we found records of this datasetø
    */
-  public static Set<String> deleteStaleRecordsFromDataset(EsConfig config, String[] aliases, String datasetKey,
-      Integer currentAttempt, String currentIndex, Predicate<String> indexesToSkipFromDeletion) {
+  public static Set<String> deleteRecordsByDatasetId(EsConfig config, String[] aliases, String datasetKey,
+      Predicate<String> indexesToDelete) {
 
     try (EsClient esClient = EsClient.from(config)) {
       // find indexes where the dataset is present
       Set<String> existingDatasetIndexes = findDatasetIndexesInAliases(esClient, aliases, datasetKey);
 
-      if (existingDatasetIndexes.isEmpty()) {
+      if (existingDatasetIndexes == null || existingDatasetIndexes.isEmpty()) {
         return Collections.emptySet();
       }
 
       // prepare parameters
-      String query = String.format(DELETE_BY_DATASET_AND_NOT_CRAWLID_QUERY, datasetKey, currentAttempt);
+      String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
 
-      // we only delete by query for indexes that contain multiple datasets
+      // we only delete by query for the indexes specifiedø
       String indexes = existingDatasetIndexes.stream()
-          .filter(i -> indexesToSkipFromDeletion.negate().test(i))
+          .filter(indexesToDelete)
           .collect(Collectors.joining(","));
 
       if (!Strings.isNullOrEmpty(indexes)) {
         log.info("Deleting records from ES indexes {} with query {}", indexes, query);
         deleteRecordsByQueryAndWaitTillCompletion(esClient, indexes, query);
       }
-
-      // remove the current index
-      existingDatasetIndexes.remove(currentIndex);
 
       return existingDatasetIndexes;
     }
