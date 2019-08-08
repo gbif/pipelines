@@ -255,5 +255,4 @@ public class InterpretedToEsIndexExtendedPipelineIT {
         countDocumentsFromQuery(ES_SERVER, ALIAS, String.format(MATCH_QUERY, "datasetKey", datasetKey)));
   }
 
-
 }

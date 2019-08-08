@@ -17,6 +17,12 @@
 
   <!-- Copy pom.xml value to test resources maven.properties -->
   <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
     <resources>
       <resource>
         <directory>src/test/resources</directory>

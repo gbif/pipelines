@@ -21,6 +21,15 @@
     <sonar.skip>true</sonar.skip>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
 
     <!-- Tools -->

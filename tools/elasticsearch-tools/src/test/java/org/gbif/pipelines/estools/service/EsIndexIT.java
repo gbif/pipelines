@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link EsIndex}. */
-public class EsIndexIntegrationTest extends EsApiIntegration {
+public class EsIndexIT extends EsApiIntegration {
 
   private static final String DATASET_TEST = "abc";
   private static final String ALIAS_TEST = "alias";

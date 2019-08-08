@@ -38,7 +38,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /** Tests the {@link EsService}. */
-public class EsServiceIIntegrationTest extends EsApiIntegration {
+public class EsServiceIT extends EsApiIntegration {
 
   private static final String ALIAS_TEST = "alias";
   private static final String ANOTHER_ALIAS_TEST = "alias2";
