@@ -162,10 +162,10 @@ public class EsIndex {
    * @param datasetKey dataset whose records we are looking for
    * @param indexesToDelete filters the indexes whose records we want to delete, so we can ignore some. E.g.: delete
    * only from non-independent indexes.
-   * @return datasets where we found records of this datasetø
+   * @return datasets where we found records of this dataset
    */
   public static Set<String> deleteRecordsByDatasetId(EsConfig config, String[] aliases, String datasetKey,
-      Predicate<String> indexesToDelete) {
+      Predicate<String> indexesToDelete, int timeoutSec, int attempts) {
 
     try (EsClient esClient = EsClient.from(config)) {
       // find indexes where the dataset is present
@@ -178,14 +178,14 @@ public class EsIndex {
       // prepare parameters
       String query = String.format(DELETE_BY_DATASET_QUERY, datasetKey);
 
-      // we only delete by query for the indexes specifiedø
+      // we only delete by query for the indexes specified
       String indexes = existingDatasetIndexes.stream()
           .filter(indexesToDelete)
           .collect(Collectors.joining(","));
 
       if (!Strings.isNullOrEmpty(indexes)) {
         log.info("Deleting records from ES indexes {} with query {}", indexes, query);
-        deleteRecordsByQueryAndWaitTillCompletion(esClient, indexes, query);
+        deleteRecordsByQueryAndWaitTillCompletion(esClient, indexes, query, timeoutSec, attempts);
       }
 
       return existingDatasetIndexes;
@@ -193,13 +193,13 @@ public class EsIndex {
   }
 
   @SneakyThrows
-  private static void deleteRecordsByQueryAndWaitTillCompletion(EsClient esClient, String index, String query) {
+  private static void deleteRecordsByQueryAndWaitTillCompletion(EsClient esClient, String index, String query, int timeoutSec, int attempts) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
     String taskId = EsService.deleteRecordsByQuery(esClient, index, query);
 
     DeleteByQueryTask task = EsService.getDeletedByQueryTask(esClient, taskId);
-    while (!task.isCompleted()) {
-      TimeUnit.SECONDS.sleep(2);
+    while (!task.isCompleted() && attempts-- > 0) {
+      TimeUnit.SECONDS.sleep(timeoutSec);
       task = EsService.getDeletedByQueryTask(esClient, taskId);
     }
 

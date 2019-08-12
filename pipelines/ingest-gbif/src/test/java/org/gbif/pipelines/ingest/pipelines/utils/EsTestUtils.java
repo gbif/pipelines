@@ -44,15 +44,16 @@ public class EsTestUtils {
 
   public static EsIndexingPipelineOptions createPipelineOptions(EsServer server, String datasetKey, String idxName,
       String alias, int attempt) {
-    String[] args = new String[8];
-    args[0] = "--esIndexName=" + idxName;
-    args[1] = "--datasetId=" + datasetKey;
-    args[2] = "--attempt=" + attempt;
-    args[3] = "--esAlias=" + alias;
-    args[4] = "--indexRefreshInterval=1ms";
-    args[5] = "--esHosts=" + server.getServerAddress();
-    args[6] = "--esSchemaPath=dataset-mapping.json";
-    args[7] = "--properties=lock.properties";
+    String[] args = {
+        "--esIndexName=" + idxName,
+        "--datasetId=" + datasetKey,
+        "--attempt=" + attempt,
+        "--esAlias=" + alias,
+        "--indexRefreshInterval=1ms",
+        "--esHosts=" + server.getServerAddress(),
+        "--esSchemaPath=dataset-mapping.json",
+        "--properties=lock.properties"
+    };
     return PipelineOptionsFactory.fromArgs(args).as(EsIndexingPipelineOptions.class);
   }
 

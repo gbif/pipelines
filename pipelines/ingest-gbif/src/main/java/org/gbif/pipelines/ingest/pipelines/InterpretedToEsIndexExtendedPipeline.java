@@ -2,7 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.Set;
 
-import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Lock;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
@@ -77,17 +77,13 @@ public class InterpretedToEsIndexExtendedPipeline {
   }
 
   public static void run(EsIndexingPipelineOptions options, Runnable pipeline) {
-    // create index
     EsIndexUtils.createIndexAndAliasForDefault(options);
 
-    // delete records
-    Set<String> existingDatasetIndexes = EsIndexUtils.deleteRecordsByDatasetId(options);
+    // Returns indices names in case of swapping
+    Set<String> indices = EsIndexUtils.deleteRecordsByDatasetId(options);
 
-    // run the pipeline
     pipeline.run();
 
-    // update alias
-    EsIndexUtils.updateAlias(options, existingDatasetIndexes,
-        LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.ES_LOCK_PREFIX));
+    EsIndexUtils.updateAlias(options, indices, LockConfigFactory.create(options.getProperties(), Lock.ES_LOCK_PREFIX));
   }
 }

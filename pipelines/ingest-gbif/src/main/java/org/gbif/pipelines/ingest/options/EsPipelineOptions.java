@@ -58,4 +58,17 @@ public interface EsPipelineOptions extends PipelineOptions {
   Integer getIndexNumberReplicas();
 
   void setIndexNumberReplicas(Integer indexNumberReplicas);
+
+  @Description("ES empty delete index query timeout in seconds")
+  @Default.Integer(3)
+  Integer getSearchQueryTimeoutSec();
+
+  void setSearchQueryTimeoutSec(Integer searchQueryTimeoutSec);
+
+  @Description("ES empty index query attempts")
+  @Default.Integer(60)
+  Integer getSearchQueryAttempts();
+
+  void setSearchQueryAttempts(Integer searchQueryAttempts);
+
 }

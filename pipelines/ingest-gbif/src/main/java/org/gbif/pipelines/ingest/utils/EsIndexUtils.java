@@ -66,7 +66,8 @@ public class EsIndexUtils {
 
       Objects.requireNonNull(aliases, "aliases are required");
 
-      Set<String> validAliases = aliases.stream().filter(alias -> !Strings.isNullOrEmpty(alias)).collect(Collectors.toSet());
+      Set<String> validAliases =
+          aliases.stream().filter(alias -> !Strings.isNullOrEmpty(alias)).collect(Collectors.toSet());
       Preconditions.checkArgument(!validAliases.isEmpty(), "aliases are required");
 
       swapIndexes(esClient, validAliases, Collections.singleton(index), Collections.emptySet());
@@ -152,8 +153,14 @@ public class EsIndexUtils {
    */
   public static Set<String> deleteRecordsByDatasetId(EsIndexingPipelineOptions options) {
     EsConfig config = EsConfig.from(options.getEsHosts());
-    return EsIndex.deleteRecordsByDatasetId(config, options.getEsAlias(), options.getDatasetId(),
-        idxName -> !idxName.startsWith(options.getDatasetId()));
+    return EsIndex.deleteRecordsByDatasetId(
+        config,
+        options.getEsAlias(),
+        options.getDatasetId(),
+        idxName -> !idxName.startsWith(options.getDatasetId()),
+        options.getSearchQueryTimeoutSec(),
+        options.getSearchQueryAttempts()
+    );
   }
 
 }
