@@ -64,11 +64,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToHdfsTablePipeline some.properties
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToHiveViewPipeline some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToHdfsTablePipeline
+ * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToHiveViewPipeline
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
@@ -82,7 +82,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class InterpretedToHdfsTablePipeline {
+public class InterpretedToHiveViewPipeline {
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
