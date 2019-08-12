@@ -71,9 +71,6 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     FsUtils.removeTmpDirectory(options);
     log.info("Finished main indexing pipeline");
-
-    log.info("Call - System.exit(0)"); // Workaround for a bug with stuck job
-    System.exit(0);
   }
 
   public static void run(EsIndexingPipelineOptions options, Runnable pipeline) {
