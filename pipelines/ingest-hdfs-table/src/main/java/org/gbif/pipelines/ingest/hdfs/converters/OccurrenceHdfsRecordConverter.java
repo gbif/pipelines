@@ -373,8 +373,6 @@ public class OccurrenceHdfsRecordConverter {
             interpretedFieldname = "date";
           } else if (DcTerm.format == term) {
             interpretedFieldname = "format";
-          } else if (DcTerm.format == term) {
-            interpretedFieldname = interpretedFieldname.substring(0, interpretedFieldname.length() - 1);
           }
           setHdfsRecordField(hr, field, interpretedFieldname, v);
         });
