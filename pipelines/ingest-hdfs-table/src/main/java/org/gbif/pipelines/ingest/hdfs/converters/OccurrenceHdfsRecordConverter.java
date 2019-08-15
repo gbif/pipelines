@@ -6,10 +6,12 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.occurrence.download.hive.Terms;
+import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
+import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -390,10 +392,25 @@ public class OccurrenceHdfsRecordConverter {
     OccurrenceHdfsRecord occurrenceHdfsRecord = new OccurrenceHdfsRecord();
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
     for (SpecificRecordBase record : records) {
-      Optional.ofNullable(converters.get(record.getClass()))
-              .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
+      if (Objects.nonNull(record) && hasInvalidId(record)) {
+        Optional.ofNullable(converters.get(record.getClass()))
+          .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
+      } else {
+        LOG.warn("Null record received");
+      }
     }
     return occurrenceHdfsRecord;
+  }
+
+  /**
+   * Validates the record has valid GBIF id.
+   */
+  private static boolean hasInvalidId(SpecificRecordBase record) {
+    if (record instanceof Issues) {
+      Issues recordIssues = (Issues)record;
+      return Objects.nonNull(recordIssues.getIssues()) && recordIssues.getIssues().getIssueList().contains(BasicInterpreter.GBIF_ID_INVALID);
+    }
+    return false;
   }
 
   /**
