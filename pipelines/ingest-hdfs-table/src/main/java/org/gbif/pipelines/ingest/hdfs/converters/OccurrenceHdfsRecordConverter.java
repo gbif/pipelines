@@ -392,7 +392,7 @@ public class OccurrenceHdfsRecordConverter {
     OccurrenceHdfsRecord occurrenceHdfsRecord = new OccurrenceHdfsRecord();
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
     for (SpecificRecordBase record : records) {
-      if (Objects.nonNull(record) && hasInvalidId(record)) {
+      if (Objects.nonNull(record) && !hasInvalidId(record)) {
         Optional.ofNullable(converters.get(record.getClass()))
           .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
       } else {
