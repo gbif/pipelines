@@ -396,7 +396,7 @@ public class OccurrenceHdfsRecordConverter {
         Optional.ofNullable(converters.get(record.getClass()))
           .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
       } else {
-        LOG.warn("Null record received");
+        LOG.warn("Record is null or has a invalid Id");
       }
     }
     return occurrenceHdfsRecord;
