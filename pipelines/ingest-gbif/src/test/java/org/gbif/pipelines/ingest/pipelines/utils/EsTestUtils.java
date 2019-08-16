@@ -12,7 +12,6 @@ import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.elasticsearch.client.Response;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.base.Strings;
@@ -37,6 +36,7 @@ public class EsTestUtils {
   public static final String STATIC_IDX = "def-static";
   public static final String DYNAMIC_IDX = "def-dynamic";
   public static final String MATCH_QUERY = "{\"query\":{\"match\":{\"%s\":\"%s\"}}}";
+  // default number of records per dataset
   public static final int DEFAULT_REC_DATASET = 10;
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -57,8 +57,7 @@ public class EsTestUtils {
     return PipelineOptionsFactory.fromArgs(args).as(EsIndexingPipelineOptions.class);
   }
 
-
-  public static Runnable indexingPipeline(EsServer server, EsIndexingPipelineOptions options, long numRecords,
+  public static Runnable indexingPipeline(EsServer server, EsIndexingPipelineOptions options, long numRecordsToIndex,
       String msg) {
     return () -> {
       String type = "doc";
@@ -66,7 +65,7 @@ public class EsTestUtils {
           "{\"datasetKey\" : \"" + options.getDatasetId() + "\", \"crawlId\" : " + options.getAttempt()
               + ", \"msg\": \"%s\"}";
 
-      LongStream.range(0, numRecords)
+      LongStream.range(0, numRecordsToIndex)
           .forEach(
               i -> EsService.indexDocument(server.getEsClient(), options.getEsIndexName(), type,
                   i + options.getDatasetId().hashCode(),
@@ -77,21 +76,19 @@ public class EsTestUtils {
 
   public static long countDocumentsFromQuery(EsServer server, String idxName, String query) {
     Response response = EsService.executeQuery(server.getEsClient(), idxName, query);
-    JsonNode rootNode = null;
     try {
-      rootNode = READER.readTree(response.getEntity().getContent());
+      return READER.readTree(response.getEntity().getContent()).get("hits").get("total").asLong();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-
-    return rootNode.get("hits").get("total").asLong();
   }
 
   public static void indexDatasets(EsServer server, List<String> datasets, int attempt, String indexName, String alias,
       long recordsPerDataset) {
-    datasets.forEach(d -> {
+    datasets.forEach(dataset -> {
       EsIndexingPipelineOptions options =
-          createPipelineOptions(server, d, Strings.isNullOrEmpty(indexName) ? d + "_" + attempt : indexName, alias,
+          createPipelineOptions(server, dataset, Strings.isNullOrEmpty(indexName) ? dataset + "_" + attempt : indexName,
+              alias,
               attempt);
       InterpretedToEsIndexExtendedPipeline.run(options,
           indexingPipeline(server, options, recordsPerDataset, options.getEsIndexName()));

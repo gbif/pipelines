@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines.utils;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,10 +44,6 @@ public class ZkServer extends ExternalResource {
   }
 
   private void updateLockProperties() throws IOException, URISyntaxException {
-    // get url lock file
-    URL url = Thread.currentThread().getContextClassLoader()
-        .getResource(LOCK_PROPERTIES_PATH);
-
     // create props
     Properties props = new Properties();
     try (InputStream in = Thread.currentThread().getContextClassLoader()
@@ -59,9 +54,10 @@ public class ZkServer extends ExternalResource {
       props.setProperty("es.lock.zkConnectionString", zkServer.getConnectString());
     }
 
-    // write properties to the fiel
-    File file = Paths.get(url.toURI()).toFile();
-    try (FileOutputStream out = new FileOutputStream(file)) {
+    // write properties to the file
+    URL urlFile = Thread.currentThread().getContextClassLoader()
+        .getResource(LOCK_PROPERTIES_PATH);
+    try (FileOutputStream out = new FileOutputStream(Paths.get(urlFile.toURI()).toFile())) {
       props.store(out, null);
     }
   }

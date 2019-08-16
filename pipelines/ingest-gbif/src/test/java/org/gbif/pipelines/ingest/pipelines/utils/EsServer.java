@@ -12,6 +12,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.rules.ExternalResource;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
@@ -22,15 +23,14 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
  * <p>This class is intended to be used as a {@link org.junit.ClassRule}.
  */
 @Slf4j
+@Getter
 public class EsServer extends ExternalResource {
 
   private static final String CLUSTER_NAME = "test_EScluster";
 
   private EmbeddedElastic embeddedElastic;
   private EsConfig esConfig;
-  // needed to assert results against ES server directly
   private RestClient restClient;
-  // I create both clients not to expose the restClient in EsClient
   private EsClient esClient;
 
   @Override
@@ -84,17 +84,5 @@ public class EsServer extends ExternalResource {
     Properties properties = new Properties();
     properties.load(this.getClass().getClassLoader().getResourceAsStream("maven.properties"));
     return properties.getProperty("elasticsearch.version");
-  }
-
-  public EsConfig getEsConfig() {
-    return esConfig;
-  }
-
-  public RestClient getRestClient() {
-    return restClient;
-  }
-
-  public EsClient getEsClient() {
-    return esClient;
   }
 }
