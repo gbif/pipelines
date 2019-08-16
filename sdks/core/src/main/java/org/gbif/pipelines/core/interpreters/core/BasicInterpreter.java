@@ -180,6 +180,7 @@ public class BasicInterpreter {
           if (parseResult.isSuccessful()) {
             br.setBasisOfRecord(parseResult.getPayload().name());
           } else {
+            br.setBasisOfRecord(BasisOfRecord.UNKNOWN.name());
             addIssue(br, BASIS_OF_RECORD_INVALID);
           }
           return br;
