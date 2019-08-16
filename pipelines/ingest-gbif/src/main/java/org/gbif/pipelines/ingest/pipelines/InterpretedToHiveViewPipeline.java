@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.ingest.hdfs.converters.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.ingest.hdfs.converters.OccurrenceHdfsRecordTransform;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -219,7 +220,9 @@ public class InterpretedToHiveViewPipeline {
             .and(erTag, verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to HdfsRecord", toHdfsRecordDoFn);
+            .apply("Merging to HdfsRecord", toHdfsRecordDoFn)
+            .apply("Removing records with invalid gbif ids", FilterMissedGbifIdTransform.create());
+
 
     hdfsRecordPCollection.apply(OccurrenceHdfsRecordTransform.write(targetPath));
 

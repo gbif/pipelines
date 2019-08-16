@@ -289,7 +289,9 @@ public class OccurrenceHdfsRecordConverter {
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> basicRecordMapper() {
     return (hr, sr) -> {
       BasicRecord br = (BasicRecord)sr;
-      hr.setGbifid(br.getGbifId());
+      if (Objects.nonNull(br.getGbifId())) {
+        hr.setGbifid(br.getGbifId());
+      }
       hr.setBasisofrecord(br.getBasisOfRecord());
       hr.setEstablishmentmeans(br.getEstablishmentMeans());
       hr.setIndividualcount(br.getIndividualCount());
@@ -392,12 +394,8 @@ public class OccurrenceHdfsRecordConverter {
     OccurrenceHdfsRecord occurrenceHdfsRecord = new OccurrenceHdfsRecord();
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
     for (SpecificRecordBase record : records) {
-      if (Objects.nonNull(record) && !hasInvalidId(record)) {
-        Optional.ofNullable(converters.get(record.getClass()))
-          .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
-      } else {
-        LOG.warn("Record is null or has a invalid Id");
-      }
+      Optional.ofNullable(converters.get(record.getClass()))
+        .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
     }
     return occurrenceHdfsRecord;
   }
