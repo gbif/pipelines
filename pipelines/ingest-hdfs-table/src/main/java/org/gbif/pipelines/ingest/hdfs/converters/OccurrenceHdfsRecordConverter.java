@@ -6,10 +6,12 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.occurrence.download.hive.Terms;
+import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
+import org.gbif.pipelines.io.avro.Issues;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -287,7 +289,9 @@ public class OccurrenceHdfsRecordConverter {
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> basicRecordMapper() {
     return (hr, sr) -> {
       BasicRecord br = (BasicRecord)sr;
-      hr.setGbifid(br.getGbifId());
+      if (Objects.nonNull(br.getGbifId())) {
+        hr.setGbifid(br.getGbifId());
+      }
       hr.setBasisofrecord(br.getBasisOfRecord());
       hr.setEstablishmentmeans(br.getEstablishmentMeans());
       hr.setIndividualcount(br.getIndividualCount());
@@ -373,8 +377,6 @@ public class OccurrenceHdfsRecordConverter {
             interpretedFieldname = "date";
           } else if (DcTerm.format == term) {
             interpretedFieldname = "format";
-          } else if (DcTerm.format == term) {
-            interpretedFieldname = interpretedFieldname.substring(0, interpretedFieldname.length() - 1);
           }
           setHdfsRecordField(hr, field, interpretedFieldname, v);
         });
@@ -393,9 +395,20 @@ public class OccurrenceHdfsRecordConverter {
     occurrenceHdfsRecord.setIssue(new ArrayList<>());
     for (SpecificRecordBase record : records) {
       Optional.ofNullable(converters.get(record.getClass()))
-              .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
+        .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
     }
     return occurrenceHdfsRecord;
+  }
+
+  /**
+   * Validates the record has valid GBIF id.
+   */
+  private static boolean hasInvalidId(SpecificRecordBase record) {
+    if (record instanceof Issues) {
+      Issues recordIssues = (Issues)record;
+      return Objects.nonNull(recordIssues.getIssues()) && recordIssues.getIssues().getIssueList().contains(BasicInterpreter.GBIF_ID_INVALID);
+    }
+    return false;
   }
 
   /**
