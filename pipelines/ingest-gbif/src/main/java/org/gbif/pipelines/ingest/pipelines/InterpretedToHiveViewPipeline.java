@@ -244,6 +244,7 @@ public class InterpretedToHiveViewPipeline {
    * Deletes pre-existing data of the dataset being processed.
    */
   private static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
+    log.info("Copying avro files to hdfsview/occurrence");
     //Moving files to the directory of latest records
     String occurrenceHdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview/occurrence").toString();
 
@@ -252,5 +253,6 @@ public class InterpretedToHiveViewPipeline {
 
     log.info("Moving files with pattern {} to {}", filter, occurrenceHdfsViewPath);
     FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, occurrenceHdfsViewPath);
+    log.info("Files moved to hdfsview/occurrnce directory");
   }
 }
