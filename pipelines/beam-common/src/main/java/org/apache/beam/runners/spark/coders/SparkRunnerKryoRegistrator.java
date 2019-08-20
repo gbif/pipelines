@@ -2,6 +2,7 @@ package org.apache.beam.runners.spark.coders;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.function.Function;
 
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -18,6 +19,8 @@ import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaNormalization;
 import org.apache.beam.runners.spark.io.MicrobatchSource;
 import org.apache.beam.runners.spark.stateful.SparkGroupAlsoByWindowViaWindowSet.StateAndTimers;
 import org.apache.beam.runners.spark.translation.GroupNonMergingWindowsFunctions.WindowedKey;
@@ -41,25 +44,34 @@ import scala.collection.mutable.WrappedArray.ofRef;
  */
 public class SparkRunnerKryoRegistrator implements KryoRegistrator {
 
+  // same function as in {@link org.apache.spark.SparkConf#registerAvroSchemas}
+  private static final Function<Schema, String> SCHEMA_ID =
+      schema -> "avro.schema." + SchemaNormalization.parsingFingerprint64(schema);
+
   private static final scala.collection.immutable.Map<Object, String> AVRO_SCHEMAS =
       scala.collection.immutable.Map$.MODULE$.empty();
 
   static {
-    AVRO_SCHEMAS.$plus(Tuple2.apply(LocationRecord.SCHEMA$.getName(), LocationRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(TemporalRecord.SCHEMA$.getName(), TemporalRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(TaxonRecord.SCHEMA$.getName(), TaxonRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(BasicRecord.SCHEMA$.getName(), BasicRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(MetadataRecord.SCHEMA$.getName(), MetadataRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(AmplificationRecord.SCHEMA$.getName(), AmplificationRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(AudubonRecord.SCHEMA$.getName(), AudubonRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(ImageRecord.SCHEMA$.getName(), ImageRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(MeasurementOrFact.SCHEMA$.getName(), MeasurementOrFact.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(MultimediaRecord.SCHEMA$.getName(), MultimediaRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(ExtendedRecord.SCHEMA$.getName(), ExtendedRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(IssueRecord.SCHEMA$.getName(), IssueRecord.SCHEMA$.toString()));
-    AVRO_SCHEMAS.$plus(Tuple2.apply(OccurrenceHdfsRecord.SCHEMA$.getName(), OccurrenceHdfsRecord.SCHEMA$.toString()));
+    // core
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(BasicRecord.SCHEMA$), BasicRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(LocationRecord.SCHEMA$), LocationRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(MetadataRecord.SCHEMA$), MetadataRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(TaxonRecord.SCHEMA$), TaxonRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(TemporalRecord.SCHEMA$), TemporalRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(ExtendedRecord.SCHEMA$), ExtendedRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(IssueRecord.SCHEMA$), IssueRecord.SCHEMA$.toString()));
     AVRO_SCHEMAS.$plus(
-        Tuple2.apply(AustraliaSpatialRecord.SCHEMA$.getName(), AustraliaSpatialRecord.SCHEMA$.toString()));
+        Tuple2.apply(SCHEMA_ID.apply(OccurrenceHdfsRecord.SCHEMA$), OccurrenceHdfsRecord.SCHEMA$.toString()));
+
+    // extensions
+    AVRO_SCHEMAS.$plus(
+        Tuple2.apply(SCHEMA_ID.apply(AmplificationRecord.SCHEMA$), AmplificationRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(AudubonRecord.SCHEMA$), AudubonRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(ImageRecord.SCHEMA$), ImageRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(MeasurementOrFact.SCHEMA$), MeasurementOrFact.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(Tuple2.apply(SCHEMA_ID.apply(MultimediaRecord.SCHEMA$), MultimediaRecord.SCHEMA$.toString()));
+    AVRO_SCHEMAS.$plus(
+        Tuple2.apply(SCHEMA_ID.apply(AustraliaSpatialRecord.SCHEMA$), AustraliaSpatialRecord.SCHEMA$.toString()));
   }
 
   @Override
