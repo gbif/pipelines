@@ -23,20 +23,19 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 import org.apache.beam.runners.spark.io.MicrobatchSource;
 import org.apache.beam.runners.spark.stateful.SparkGroupAlsoByWindowViaWindowSet.StateAndTimers;
-import org.apache.beam.runners.spark.translation.GroupNonMergingWindowsFunctions.WindowedKey;
 import org.apache.beam.runners.spark.translation.ValueAndCoderKryoSerializer;
 import org.apache.beam.runners.spark.translation.ValueAndCoderLazySerializable;
 import org.apache.beam.runners.spark.util.ByteArray;
 import org.apache.beam.sdk.transforms.windowing.PaneInfo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
-import org.apache.beam.vendor.guava.v20_0.com.google.common.collect.HashBasedTable;
+import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.HashBasedTable;
 import org.apache.spark.serializer.GenericAvroSerializer;
 import org.apache.spark.serializer.KryoRegistrator;
 
 import com.esotericsoftware.kryo.Kryo;
 import scala.Tuple2;
-import scala.collection.mutable.WrappedArray.ofRef;
+import scala.collection.mutable.WrappedArray;
 
 /**
  * Overrides the Beam SparkRunnerKryoRegistrator to register generic Avro classes with the {@link GenericAvroSerializer}
@@ -71,11 +70,13 @@ public class SparkRunnerKryoRegistrator implements KryoRegistrator {
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(AustraliaSpatialRecord.SCHEMA$));
   }
 
+  /** Copied from BEAM, except last line */
   @Override
   public void registerClasses(Kryo kryo) {
-    // copied from Beam
+    // MicrobatchSource is serialized as data and may not be Kryo-serializable.
     kryo.register(MicrobatchSource.class, new StatelessJavaSerializer());
     kryo.register(ValueAndCoderLazySerializable.class, new ValueAndCoderKryoSerializer());
+
     kryo.register(ArrayList.class);
     kryo.register(ByteArray.class);
     kryo.register(HashBasedTable.class);
@@ -85,23 +86,31 @@ public class SparkRunnerKryoRegistrator implements KryoRegistrator {
     kryo.register(PaneInfo.class);
     kryo.register(StateAndTimers.class);
     kryo.register(TupleTag.class);
-    kryo.register(WindowedKey.class);
-    kryo.register(ofRef.class);
+    kryo.register(WrappedArray.ofRef.class);
 
     try {
-      // copied from Beam
-      kryo.register(Class.forName("org.apache.beam.sdk.util.WindowedValue$TimestampedValueInGlobalWindow"));
       kryo.register(
-          Class.forName("org.apache.beam.vendor.guava.v20_0.com.google.common.collect.HashBasedTable$Factory"));
+          Class.forName("org.apache.beam.sdk.util.WindowedValue$TimestampedValueInGlobalWindow"));
+      kryo.register(
+          Class.forName("org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.HashBasedTable$Factory"));
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException("Unable to register classes with kryo.", e);
+    }
 
+    customRegister(kryo);
+  }
+
+  /** GBIF custom classes for registration */
+  private void customRegister(Kryo kryo) {
+    try {
       // custom types added
       kryo.register(Class.forName("org.apache.avro.generic.GenericData"), new GenericAvroSerializer(AVRO_SCHEMAS));
       kryo.register(Class.forName("org.apache.avro.generic.GenericData$Array"),
           new GenericAvroSerializer(AVRO_SCHEMAS));
       kryo.register(Class.forName("org.apache.avro.generic.GenericData$Record"),
           new GenericAvroSerializer(AVRO_SCHEMAS));
-    } catch (ClassNotFoundException ex) {
-      throw new IllegalStateException("Unable to register classes with kryo.", ex);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException("Unable to register classes with kryo.", e);
     }
   }
 }
