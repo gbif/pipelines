@@ -316,9 +316,11 @@ public final class FsUtils {
     FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
+      log.info("Reading properties path - {}", filePath);
       try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath)))) {
         Properties props = new Properties();
         props.load(br);
+        log.info("Loaded properties - {}", props);
         return props;
       }
     }
