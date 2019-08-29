@@ -1,21 +1,20 @@
 package org.gbif.pipelines.ingest.utils;
 
-import lombok.Cleanup;
-import lombok.SneakyThrows;
-import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
+import java.util.function.Function;
+
 import org.gbif.pipelines.parsers.config.LockConfig;
 import org.gbif.wrangler.lock.Mutex;
 import org.gbif.wrangler.lock.zookeeper.ZookeeperSharedReadWriteMutex;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.function.Function;
 
 /**
  * Utility class to create instances of ReadWrite locks using Curator Framework, Zookeeper Servers and GBIF Wrangler.
@@ -37,17 +36,18 @@ public class SharedLockUtils {
 
   @SneakyThrows
   public static void doInBarrier(LockConfig config, Mutex.Action action) {
-    @Cleanup CuratorFramework curator = curator(config);
-    curator.start();
-    String lockPath  =  config.getLockingPath() + config.getLockName();
-    DistributedBarrier barrier = new DistributedBarrier(curator, lockPath);
-    log.info("Acquiring barrier {}", lockPath);
-    barrier.waitOnBarrier();
-    log.info("Setting barrier {}", lockPath);
-    barrier.setBarrier();
-    action.execute();
-    log.info("Removing barrier {}", lockPath);
-    barrier.removeBarrier();
+    try (CuratorFramework curator = curator(config)) {
+      curator.start();
+      String lockPath = config.getLockingPath() + config.getLockName();
+      DistributedBarrier barrier = new DistributedBarrier(curator, lockPath);
+      log.info("Acquiring barrier {}", lockPath);
+      barrier.waitOnBarrier();
+      log.info("Setting barrier {}", lockPath);
+      barrier.setBarrier();
+      action.execute();
+      log.info("Removing barrier {}", lockPath);
+      barrier.removeBarrier();
+    }
   }
 
   /**
