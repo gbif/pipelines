@@ -44,6 +44,7 @@ public class EsTestUtils {
 
   public static EsIndexingPipelineOptions createPipelineOptions(EsServer server, String datasetKey, String idxName,
       String alias, int attempt) {
+    String propertiesPath = Thread.currentThread().getContextClassLoader().getResource("lock.properties").getPath();
     String[] args = {
         "--esIndexName=" + idxName,
         "--datasetId=" + datasetKey,
@@ -52,7 +53,7 @@ public class EsTestUtils {
         "--indexRefreshInterval=1ms",
         "--esHosts=" + server.getServerAddress(),
         "--esSchemaPath=dataset-mapping.json",
-        "--properties=lock.properties"
+        "--properties=" + propertiesPath
     };
     return PipelineOptionsFactory.fromArgs(args).as(EsIndexingPipelineOptions.class);
   }

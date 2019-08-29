@@ -46,8 +46,7 @@ public class ZkServer extends ExternalResource {
   private void updateLockProperties() throws IOException, URISyntaxException {
     // create props
     Properties props = new Properties();
-    try (InputStream in = Thread.currentThread().getContextClassLoader()
-        .getResourceAsStream(LOCK_PROPERTIES_PATH)) {
+    try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(LOCK_PROPERTIES_PATH)) {
       props.load(in);
 
       // update properties file with connection string
@@ -55,8 +54,7 @@ public class ZkServer extends ExternalResource {
     }
 
     // write properties to the file
-    URL urlFile = Thread.currentThread().getContextClassLoader()
-        .getResource(LOCK_PROPERTIES_PATH);
+    URL urlFile = Thread.currentThread().getContextClassLoader().getResource(LOCK_PROPERTIES_PATH);
     try (FileOutputStream out = new FileOutputStream(Paths.get(urlFile.toURI()).toFile())) {
       props.store(out, null);
     }

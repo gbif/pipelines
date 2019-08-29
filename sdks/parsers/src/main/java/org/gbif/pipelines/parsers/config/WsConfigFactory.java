@@ -30,24 +30,11 @@ public class WsConfigFactory {
   private static final String DEFAULT_TIMEOUT = "60";
   private static final String DEFAULT_CACHE_SIZE_MB = "64";
 
-  public static WsConfig create(@NonNull String wsName, @NonNull Path propertiesPath) {
+  public static WsConfig create(@NonNull Path propertiesPath, @NonNull String prefix) {
     // load properties or throw exception if cannot be loaded
     Properties props = ConfigFactory.loadProperties(propertiesPath);
 
-    // get the base path or throw exception if not present
-
-    String url = props.getProperty(wsName + URL_PROP);
-    if (Strings.isNullOrEmpty(url)) {
-      url = props.getProperty(WS_BASE_PATH_PROP);
-      if (Strings.isNullOrEmpty(url)) {
-        throw new IllegalArgumentException("WS base path is required");
-      }
-    }
-
-    String cacheSize = props.getProperty(wsName + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB);
-    String timeout = props.getProperty(wsName + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT);
-
-    return new WsConfig(url, timeout, cacheSize);
+    return create(props, prefix);
   }
 
   /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
@@ -64,6 +51,22 @@ public class WsConfigFactory {
   /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
   public static WsConfig create(String url, long timeout, long cacheSize) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
+    return new WsConfig(url, timeout, cacheSize);
+  }
+
+  public static WsConfig create(@NonNull Properties props, @NonNull String prefix) {
+    // get the base path or throw exception if not present
+    String url = props.getProperty(prefix + URL_PROP);
+    if (Strings.isNullOrEmpty(url)) {
+      url = props.getProperty(WS_BASE_PATH_PROP);
+      if (Strings.isNullOrEmpty(url)) {
+        throw new IllegalArgumentException("WS base path is required");
+      }
+    }
+
+    String cacheSize = props.getProperty(prefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB);
+    String timeout = props.getProperty(prefix + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT);
+
     return new WsConfig(url, timeout, cacheSize);
   }
 }

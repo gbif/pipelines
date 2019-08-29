@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -67,8 +68,12 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     return new TaxonomyTransform(kvStore, null);
   }
 
-  public static TaxonomyTransform create(String properties) {
-    return new TaxonomyTransform(null, KvConfigFactory.create(KvConfigFactory.TAXONOMY_PREFIX, Paths.get(properties)));
+  public static TaxonomyTransform create(String propertiesPath) {
+    return new TaxonomyTransform(null, KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.TAXONOMY_PREFIX));
+  }
+
+  public static TaxonomyTransform create(Properties propertiesPath) {
+    return new TaxonomyTransform(null, KvConfigFactory.create(propertiesPath, KvConfigFactory.TAXONOMY_PREFIX));
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */

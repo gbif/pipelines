@@ -28,6 +28,14 @@ public class LockConfigFactory {
     // load properties or throw exception if cannot be loaded
     Properties props = ConfigFactory.loadProperties(propertiesPath);
 
+    return create(props, prefix);
+  }
+
+  public static LockConfig create(@NonNull String propertiesPath, String prefix) {
+    return create(Paths.get(propertiesPath), prefix);
+  }
+
+  public static LockConfig create(@NonNull Properties props, @NonNull String prefix) {
     String zKConnectionsString = props.getProperty(prefix + ZK_CONNECTION_STRING);
     String namespace = props.getProperty(prefix + NAMESPACE);
     String lockPath = props.getProperty(prefix + LOCK_PATH);
@@ -36,10 +44,6 @@ public class LockConfigFactory {
     int maxRetries = Integer.parseInt(props.getProperty(prefix + CONNECTION_MAX_RETRIES, DEFAULT_LOCK_CONNECTION_MAX_RETRIES));
 
     return LockConfig.create(zKConnectionsString, namespace, lockPath, lockName, sleepTimeMs, maxRetries);
-  }
-
-  public static LockConfig create(@NonNull String propertiesPath, String prefix) {
-    return create(Paths.get(propertiesPath), prefix);
   }
 
 }

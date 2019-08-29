@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.util.Properties;
 import java.util.Set;
 
 import org.gbif.pipelines.common.PipelinesVariables.Lock;
@@ -81,6 +82,7 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     pipeline.run();
 
-    EsIndexUtils.updateAlias(options, indices, LockConfigFactory.create(options.getProperties(), Lock.ES_LOCK_PREFIX));
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    EsIndexUtils.updateAlias(options, indices, LockConfigFactory.create(properties, Lock.ES_LOCK_PREFIX));
   }
 }

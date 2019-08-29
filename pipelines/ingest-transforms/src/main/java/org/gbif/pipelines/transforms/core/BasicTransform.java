@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Properties;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
@@ -61,6 +62,12 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   public static BasicTransform create(String propertiesPath, String datasetId, boolean isTripletValid,
       boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
     KeygenConfig config = KeygenConfigFactory.create(Paths.get(propertiesPath));
+    return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId);
+  }
+
+  public static BasicTransform create(Properties properties, String datasetId, boolean isTripletValid,
+      boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
+    KeygenConfig config = KeygenConfigFactory.create(properties);
     return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId);
   }
 

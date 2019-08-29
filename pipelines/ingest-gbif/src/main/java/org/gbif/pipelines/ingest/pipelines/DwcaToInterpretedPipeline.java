@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Properties;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.beam.DwcaIO;
@@ -93,7 +94,7 @@ public class DwcaToInterpretedPipeline {
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
 
-    String propertiesPath = options.getProperties();
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
@@ -110,12 +111,12 @@ public class DwcaToInterpretedPipeline {
 
     log.info("Creating transformations");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
-    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
-    LocationTransform locationTransform = LocationTransform.create(propertiesPath);
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties);
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();

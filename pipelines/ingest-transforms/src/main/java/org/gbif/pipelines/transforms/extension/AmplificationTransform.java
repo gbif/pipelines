@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms.extension;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Properties;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AmplificationInterpreter;
@@ -51,8 +52,13 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
     return new AmplificationTransform(wsConfig);
   }
 
-  public static AmplificationTransform create(String properties) {
-    WsConfig config = WsConfigFactory.create(WsConfigFactory.BLAST_PREFIX, Paths.get(properties));
+  public static AmplificationTransform create(String propertiesPath) {
+    WsConfig config = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.BLAST_PREFIX);
+    return new AmplificationTransform(config);
+  }
+
+  public static AmplificationTransform create(Properties properties) {
+    WsConfig config = WsConfigFactory.create(properties, WsConfigFactory.BLAST_PREFIX);
     return new AmplificationTransform(config);
   }
 

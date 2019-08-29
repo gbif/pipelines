@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Properties;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -64,7 +65,7 @@ public class VerbatimToInterpretedAmpPipeline {
     Integer attempt = options.getAttempt();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String wsPropertiesPath = options.getProperties();
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
 
@@ -81,7 +82,7 @@ public class VerbatimToInterpretedAmpPipeline {
 
     log.info("Creating transformations");
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    AmplificationTransform amplificationTransform = AmplificationTransform.create(wsPropertiesPath);
+    AmplificationTransform amplificationTransform = AmplificationTransform.create(properties);
 
     log.info("Adding pipeline transforms");
     p.apply("Read Verbatim", verbatimTransform.read(pathVerbatimFn))

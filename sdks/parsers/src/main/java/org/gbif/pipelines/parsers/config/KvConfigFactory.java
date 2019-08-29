@@ -29,21 +29,11 @@ public class KvConfigFactory {
   private static final String DEFAULT_NUM_OF_KEY_BUCKETS = "10";
   private static final Boolean DEFAULT_REST_ONLY = Boolean.FALSE;
 
-  public static KvConfig create(@NonNull String keyPrefix, @NonNull Path propertiesPath) {
+  public static KvConfig create(@NonNull Path propertiesPath, @NonNull String prefix) {
     // load properties or throw exception if cannot be loaded
     Properties props = ConfigFactory.loadProperties(propertiesPath);
 
-    // get the base path or throw exception if not present
-    String basePath = ConfigFactory.getKey(props, WS_BASE_PATH_PROP) + "/v1/";
-    String zookeeperUrl = ConfigFactory.getKey(props, ZOOKEEPER_PROP);
-    String tableName = ConfigFactory.getKey(props, keyPrefix + TABLE_NAME);
-
-    boolean restOnly = Boolean.parseBoolean(props.getProperty(keyPrefix + REST_ONLY_NAME, DEFAULT_REST_ONLY.toString()));
-    long cacheSize = Long.parseLong(props.getProperty(keyPrefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB));
-    long timeout = Long.parseLong(props.getProperty(keyPrefix + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT_SEC));
-    int numOfKeyBuckets = Integer.parseInt(props.getProperty(keyPrefix + NUM_OF_KEY_BUCKETS, DEFAULT_NUM_OF_KEY_BUCKETS));
-
-    return KvConfig.create(basePath, timeout, cacheSize, tableName, zookeeperUrl, numOfKeyBuckets, restOnly);
+    return create(props, prefix);
   }
 
   public static KvConfig create(String baseApiPath, String zookeeperUrl, int numOfKeyBuckets, String tableName) {
@@ -61,6 +51,20 @@ public class KvConfigFactory {
   public static KvConfig create(String baseApiPath, long timeoutInSec, long cacheInMb, String zookeeperUrl,
       int numOfKeyBuckets, String tableName, boolean restOnly) {
     return KvConfig.create(baseApiPath, timeoutInSec, cacheInMb, tableName, zookeeperUrl, numOfKeyBuckets, restOnly);
+  }
+
+  public static KvConfig create(@NonNull Properties props, @NonNull String prefix) {
+    // get the base path or throw exception if not present
+    String basePath = ConfigFactory.getKey(props, WS_BASE_PATH_PROP) + "/v1/";
+    String zookeeperUrl = ConfigFactory.getKey(props, ZOOKEEPER_PROP);
+    String tableName = ConfigFactory.getKey(props, prefix + TABLE_NAME);
+
+    boolean restOnly = Boolean.parseBoolean(props.getProperty(prefix + REST_ONLY_NAME, DEFAULT_REST_ONLY.toString()));
+    long cacheSize = Long.parseLong(props.getProperty(prefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB));
+    long timeout = Long.parseLong(props.getProperty(prefix + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT_SEC));
+    int numOfKeyBuckets = Integer.parseInt(props.getProperty(prefix + NUM_OF_KEY_BUCKETS, DEFAULT_NUM_OF_KEY_BUCKETS));
+
+    return KvConfig.create(basePath, timeout, cacheSize, tableName, zookeeperUrl, numOfKeyBuckets, restOnly);
   }
 
 }

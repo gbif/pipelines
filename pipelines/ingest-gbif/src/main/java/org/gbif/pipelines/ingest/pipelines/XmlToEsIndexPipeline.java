@@ -1,5 +1,7 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.util.Properties;
+
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.XmlIO;
@@ -118,7 +120,7 @@ public class XmlToEsIndexPipeline {
     EsIndexUtils.createIndex(options);
 
     log.info("Adding step 1: Options");
-    String propertiesPath = options.getProperties();
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
@@ -136,12 +138,12 @@ public class XmlToEsIndexPipeline {
 
     log.info("Adding step 2: Creating transformations");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
-    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
-    LocationTransform locationTransform = LocationTransform.create(propertiesPath);
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties);
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -245,7 +247,7 @@ public class XmlToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(propertiesPath, PipelinesVariables.Lock.ES_LOCK_PREFIX));
+    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(properties, PipelinesVariables.Lock.ES_LOCK_PREFIX));
 
     MetricsHandler.saveCountersToFile(options, result);
 

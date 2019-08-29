@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
@@ -90,9 +91,9 @@ public class VerbatimToInterpretedPipeline {
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
-    String propertiesPath = options.getProperties();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -107,12 +108,12 @@ public class VerbatimToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
-    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
-    LocationTransform locationTransform = LocationTransform.create(propertiesPath);
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties);
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();

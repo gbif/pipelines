@@ -1,22 +1,30 @@
 package org.gbif.pipelines.ingest.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -177,7 +185,7 @@ public final class FsUtils {
   /**
    * Deletes all directories and subdirectories(recursively) by file prefix name.
    * <p>
-   * Example: all directories with '.temp-' prefix in direcory '89aad0bb-654f-483c-8711-2c00551033ae/3'
+   * Example: all directories with '.temp-' prefix in directory '89aad0bb-654f-483c-8711-2c00551033ae/3'
    *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param directoryPath to a directory
@@ -295,6 +303,26 @@ public final class FsUtils {
     FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig);
     deleteIfExist(hdfsSiteConfig, path);
     fs.mkdirs(new Path(path));
+  }
+
+  /**
+   * Read a properties file from HDFS/Local FS
+   *
+   * @param hdfsSiteConfig HDFS config file
+   * @param filePath directory to be created
+   */
+  @SneakyThrows
+  public static Properties readPropertiesFile(String hdfsSiteConfig, String filePath) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig);
+    Path fPath = new Path(filePath);
+    if (fs.exists(fPath)) {
+      try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath)))) {
+        Properties props = new Properties();
+        props.load(br);
+        return props;
+      }
+    }
+    throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
   }
 
   /**

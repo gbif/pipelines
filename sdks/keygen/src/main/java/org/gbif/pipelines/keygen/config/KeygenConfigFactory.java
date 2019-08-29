@@ -26,6 +26,10 @@ public class KeygenConfigFactory {
     // load properties or throw exception if cannot be loaded
     Properties props = loadProperties(propertiesPath);
 
+    return create(props);
+  }
+
+  public static KeygenConfig create(@NonNull Properties props) {
     // get the base path or throw exception if not present
     UnaryOperator<String> fn = key ->
         Optional.ofNullable(props.getProperty(key))

@@ -1,8 +1,9 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import java.nio.file.Paths;
+import java.util.Properties;
 
-import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Lock;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -112,7 +113,7 @@ public class DwcaToEsIndexPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     String endPointType = options.getEndPointType();
-    String propertiesPath = options.getProperties();
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -144,12 +145,12 @@ public class DwcaToEsIndexPipeline {
 
     log.info("Adding step 2: Creating transformations");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(propertiesPath, endPointType, attempt);
-    BasicTransform basicTransform = BasicTransform.create(propertiesPath, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(propertiesPath);
-    LocationTransform locationTransform = LocationTransform.create(propertiesPath);
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties);
     // Extension
     AudubonTransform audubonTransform = AudubonTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -252,7 +253,7 @@ public class DwcaToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(propertiesPath, PipelinesVariables.Lock.ES_LOCK_PREFIX));
+    EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(properties, Lock.ES_LOCK_PREFIX));
 
     MetricsHandler.saveCountersToFile(options, result);
     FsUtils.removeTmpDirectory(options);

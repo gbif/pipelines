@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Properties;
 import java.util.Set;
 
 import org.gbif.pipelines.core.Interpretation;
@@ -55,8 +56,13 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     return new MetadataTransform(wsConfig, endpointType, attempt);
   }
 
-  public static MetadataTransform create(String properties, String endpointType, Integer attempt) {
-    WsConfig wsConfig = WsConfigFactory.create(WsConfigFactory.METADATA_PREFIX, Paths.get(properties));
+  public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt) {
+    WsConfig wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
+    return new MetadataTransform(wsConfig, endpointType, attempt);
+  }
+
+  public static MetadataTransform create(Properties properties, String endpointType, Integer attempt) {
+    WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
     return new MetadataTransform(wsConfig, endpointType, attempt);
   }
 

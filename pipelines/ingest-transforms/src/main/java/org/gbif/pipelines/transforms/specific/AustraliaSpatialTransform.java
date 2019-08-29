@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
@@ -65,8 +66,13 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
     return new AustraliaSpatialTransform(kvStore, null);
   }
 
-  public static AustraliaSpatialTransform create(String properties) {
-    KvConfig config = KvConfigFactory.create(KvConfigFactory.AUSTRALIA_PREFIX, Paths.get(properties));
+  public static AustraliaSpatialTransform create(String propertiesPath) {
+    KvConfig config = KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.AUSTRALIA_PREFIX);
+    return new AustraliaSpatialTransform(null, config);
+  }
+
+  public static AustraliaSpatialTransform create(Properties properties) {
+    KvConfig config = KvConfigFactory.create(properties, KvConfigFactory.AUSTRALIA_PREFIX);
     return new AustraliaSpatialTransform(null, config);
   }
 

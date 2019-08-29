@@ -1,6 +1,12 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Properties;
+import java.util.function.UnaryOperator;
+
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.common.PipelinesVariables.Lock;
 import org.gbif.pipelines.ingest.hdfs.converters.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.ingest.hdfs.converters.OccurrenceHdfsRecordTransform;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -8,7 +14,18 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.config.LockConfig;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -21,13 +38,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.function.UnaryOperator;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
@@ -40,6 +50,10 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.MDC;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
@@ -231,8 +245,9 @@ public class InterpretedToHiveViewPipeline {
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
       //A write lock is acquired to avoid concurrent modifications while this operation is running
-      SharedLockUtils.doInBarrier(LockConfigFactory.create(options.getProperties(), PipelinesVariables.Lock.HDFS_LOCK_PREFIX),
-                                  () -> copyOccurrenceRecords(options));
+      Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+      LockConfig lockConfig = LockConfigFactory.create(properties, Lock.HDFS_LOCK_PREFIX);
+      SharedLockUtils.doInBarrier(lockConfig, () -> copyOccurrenceRecords(options));
     }
 
     //Metrics

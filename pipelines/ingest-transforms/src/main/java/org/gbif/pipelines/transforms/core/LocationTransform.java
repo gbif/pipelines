@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Properties;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -71,8 +72,13 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     return new LocationTransform(kvStore, null);
   }
 
-  public static LocationTransform create(String properties) {
-    KvConfig config = KvConfigFactory.create(KvConfigFactory.GEOCODE_PREFIX, Paths.get(properties));
+  public static LocationTransform create(String propertiesPath) {
+    KvConfig config = KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.GEOCODE_PREFIX);
+    return new LocationTransform(null, config);
+  }
+
+  public static LocationTransform create(Properties properties) {
+    KvConfig config = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
     return new LocationTransform(null, config);
   }
 
