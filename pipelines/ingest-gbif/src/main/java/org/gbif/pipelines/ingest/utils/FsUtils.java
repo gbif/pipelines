@@ -33,6 +33,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
@@ -74,16 +75,23 @@ public final class FsUtils {
    * @return string path to interpretation
    */
   public static String buildPathInterpret(BasePipelineOptions options, String name, String uniqueId) {
-    return FsUtils.buildPath(buildPathUsingTargetPath(options, name), Interpretation.FILE_NAME + uniqueId).toString();
+    return FsUtils.buildPath(
+        buildPathUsingTargetPath(options, DIRECTORY_NAME),
+        name,
+        Interpretation.FILE_NAME + uniqueId).toString();
   }
 
   /**
    * Builds the target base path of the Occurrence hdfs view.
+   *
    * @param options options pipeline options
    * @return path to the directory where the occurrence hdfs view is stored
    */
   public static String buildPathHdfsView(BasePipelineOptions options, String uniqueId) {
-    return FsUtils.buildPath(buildPathUsingTargetPath(options, OCCURRENCE_HDFS_RECORD.name()), HdfsView.VIEW_OCCURRENCE + uniqueId).toString();
+    return FsUtils.buildPath(
+        buildPathUsingTargetPath(options, DIRECTORY_NAME),
+        OCCURRENCE_HDFS_RECORD.name(),
+        HdfsView.VIEW_OCCURRENCE + uniqueId).toString();
   }
 
   /**
@@ -140,11 +148,12 @@ public final class FsUtils {
 
   /**
    * Creates an instances of a {@link Configuration} using a xml HDFS configuration file.
+   *
    * @param hdfsSiteConfig path to the hdfs-site.xml or HDFS config file
    * @return a {@link Configuration} based on the provided config file
    */
   @SneakyThrows
-  private static Configuration  getHdfsConfiguration(String hdfsSiteConfig) {
+  private static Configuration getHdfsConfiguration(String hdfsSiteConfig) {
     Configuration config = new Configuration();
 
     // check if the hdfs-site.xml is provided
@@ -168,13 +177,13 @@ public final class FsUtils {
     return FileSystem.get(URI.create(path), getHdfsConfiguration(hdfsSiteConfig));
   }
 
-    /**
-     * Helper method to get file system based on provided configuration.
-     */
-    @SneakyThrows
-    public static FileSystem getFileSystem(String hdfsSiteConfig) {
-      return FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
-    }
+  /**
+   * Helper method to get file system based on provided configuration.
+   */
+  @SneakyThrows
+  public static FileSystem getFileSystem(String hdfsSiteConfig) {
+    return FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
+  }
 
   /**
    * Helper method to write/overwrite a file
@@ -205,6 +214,7 @@ public final class FsUtils {
 
   /**
    * Moves a list files that match against a glob filter into a target directory.
+   *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param globFilter filter used to filter files and paths
    * @param targetPath target directory
@@ -225,6 +235,7 @@ public final class FsUtils {
 
   /**
    * Copies a list files that match against a glob filter into a target directory.
+   *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param globFilter filter used to filter files and paths
    * @param targetPath target directory
@@ -236,7 +247,8 @@ public final class FsUtils {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
-        FileUtil.copy(fs,path, fs, new Path(targetPath, prefix + path.getName()), false, getHdfsConfiguration(hdfsSiteConfig));
+        FileUtil.copy(fs, path, fs, new Path(targetPath, prefix + path.getName()), false,
+            getHdfsConfiguration(hdfsSiteConfig));
       }
     } catch (IOException e) {
       log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
@@ -245,6 +257,7 @@ public final class FsUtils {
 
   /**
    * Deletes a list files that match against a glob filter into a target directory.
+   *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param globFilter filter used to filter files and paths
    */
@@ -298,6 +311,7 @@ public final class FsUtils {
 
   /**
    * Creates a directory, it it exists it is removed first.
+   *
    * @param hdfsSiteConfig HDFS config file
    * @param path directory to be created
    */
@@ -337,7 +351,7 @@ public final class FsUtils {
       Set<String> steps) {
     if (steps != null && !steps.isEmpty()) {
 
-      String path = String.join("/", basePath, datasetId, attempt.toString(), Interpretation.DIRECTORY_NAME);
+      String path = String.join("/", basePath, datasetId, attempt.toString(), DIRECTORY_NAME);
 
       if (steps.contains(ALL.name())) {
         log.info("Delete interpretation directory - {}", path);
