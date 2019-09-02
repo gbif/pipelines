@@ -2,13 +2,12 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Collections;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
-import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.PipelinesVariables.Lock;
-import org.gbif.pipelines.ingest.hdfs.converters.FilterMissedGbifIdTransform;
-import org.gbif.pipelines.ingest.hdfs.converters.OccurrenceHdfsRecordTransform;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -37,6 +36,9 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.hdfs.FilterMissedGbifIdTransform;
+import org.gbif.pipelines.transforms.hdfs.OccurrenceHdfsRecordConverterTransform;
+import org.gbif.pipelines.transforms.hdfs.OccurrenceHdfsRecordTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -56,6 +58,8 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
+import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsView;
 
 /**
  * Pipeline sequence:
@@ -89,7 +93,6 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
  * --runner=SparkRunner
  * --targetPath=hdfs://ha-nn/output/
  * --esIndexName=pipeline
- * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200
  * --hdfsSiteConfig=/config/hdfs-site.xml
  * --coreSiteConfig=/config/core-site.xml
  *
@@ -97,52 +100,29 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class InterpretedToHiveViewPipeline {
+public class InterpretedToHdfsViewPipeline {
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
   }
 
-  /**
-   * Builds the target path based on a file name or else in file selector.
-   * @param options pipeline options
-   * @param fileSelector pattern of target name or file selector
-   * @return path to the target file or pattern
-   */
-  private static String targetPath(InterpretationPipelineOptions options, String fileSelector) {
-    return FsUtils.buildPath(occurrenceHdfsViewTargetPath(options),
-                            "view_occurrence" + fileSelector)
-                            .toString();
-  }
-
-  /**
-   * Builds the target base path of the Occurrence hdfs view.
-   * @param options options pipeline options
-   * @return path to the directory where the occurrence hdfs view is stored
-   */
-  private static String occurrenceHdfsViewTargetPath(InterpretationPipelineOptions options) {
-    return FsUtils.buildPath(options.getTargetPath(),
-                            options.getDatasetId(),
-                            options.getAttempt().toString(),
-                            PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME,
-                            OccurrenceHdfsRecord.class.getSimpleName().toLowerCase())
-                            .toString();
-  }
-
   public static void run(InterpretationPipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
-    MDC.put("attempt", options.getAttempt().toString());
-    String id = options.getDatasetId() + '_' + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+    String hdfsSiteConfig = options.getHdfsSiteConfig();
+    String datasetId = options.getDatasetId();
+    Integer attempt = options.getAttempt();
+    Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
+    String targetTempPath = buildPathHdfsView(options, datasetId + '_' + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    String targetPath = targetPath(options, id);
+    MDC.put("datasetId", datasetId);
+    MDC.put("attempt", attempt.toString());
 
     //Deletes the target path if it exists
-    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), occurrenceHdfsViewTargetPath(options));
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, options.getTargetPath(), datasetId, attempt, types);
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> interpretPathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
 
     // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
@@ -174,48 +154,48 @@ public class InterpretedToHiveViewPipeline {
 
     log.info("Adding step 3: Creating beam pipeline");
     PCollectionView<MetadataRecord> metadataView =
-      p.apply("Read Metadata", metadataTransform.read(pathFn))
-        .apply("Convert to view", View.asSingleton());
+        p.apply("Read Metadata", metadataTransform.read(interpretPathFn))
+            .apply("Convert to view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-      p.apply("Read Verbatim", verbatimTransform.read(pathFn))
-        .apply("Map Verbatim to KV", verbatimTransform.toKv());
+        p.apply("Read Verbatim", verbatimTransform.read(interpretPathFn))
+            .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
-      p.apply("Read Basic", basicTransform.read(pathFn))
-        .apply("Map Basic to KV", basicTransform.toKv());
+        p.apply("Read Basic", basicTransform.read(interpretPathFn))
+            .apply("Map Basic to KV", basicTransform.toKv());
 
     PCollection<KV<String, TemporalRecord>> temporalCollection =
-      p.apply("Read Temporal", temporalTransform.read(pathFn))
-        .apply("Map Temporal to KV", temporalTransform.toKv());
+        p.apply("Read Temporal", temporalTransform.read(interpretPathFn))
+            .apply("Map Temporal to KV", temporalTransform.toKv());
 
     PCollection<KV<String, LocationRecord>> locationCollection =
-      p.apply("Read Location", locationTransform.read(pathFn))
-        .apply("Map Location to KV", locationTransform.toKv());
+        p.apply("Read Location", locationTransform.read(interpretPathFn))
+            .apply("Map Location to KV", locationTransform.toKv());
 
     PCollection<KV<String, TaxonRecord>> taxonCollection =
-      p.apply("Read Taxon", taxonomyTransform.read(pathFn))
-        .apply("Map Taxon to KV", taxonomyTransform.toKv());
+        p.apply("Read Taxon", taxonomyTransform.read(interpretPathFn))
+            .apply("Map Taxon to KV", taxonomyTransform.toKv());
 
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
-      p.apply("Read Multimedia", multimediaTransform.read(pathFn))
-        .apply("Map Multimedia to KV", multimediaTransform.toKv());
+        p.apply("Read Multimedia", multimediaTransform.read(interpretPathFn))
+            .apply("Map Multimedia to KV", multimediaTransform.toKv());
 
     PCollection<KV<String, ImageRecord>> imageCollection =
-      p.apply("Read Image", imageTransform.read(pathFn))
-        .apply("Map Image to KV", imageTransform.toKv());
+        p.apply("Read Image", imageTransform.read(interpretPathFn))
+            .apply("Map Image to KV", imageTransform.toKv());
 
     PCollection<KV<String, AudubonRecord>> audubonCollection =
-      p.apply("Read Audubon", audubonTransform.read(pathFn))
-        .apply("Map Audubon to KV", audubonTransform.toKv());
+        p.apply("Read Audubon", audubonTransform.read(interpretPathFn))
+            .apply("Map Audubon to KV", audubonTransform.toKv());
 
     PCollection<KV<String, MeasurementOrFactRecord>> measurementCollection =
-      p.apply("Read Measurement", measurementOrFactTransform.read(pathFn))
-        .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
+        p.apply("Read Measurement", measurementOrFactTransform.read(interpretPathFn))
+            .apply("Map Measurement to KV", measurementOrFactTransform.toKv());
 
     log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
     SingleOutput<KV<String, CoGbkResult>, OccurrenceHdfsRecord> toHdfsRecordDoFn =
-        OccurrenceHdfsRecordTransform.Transform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
+        OccurrenceHdfsRecordConverterTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
             .converter();
 
     PCollection<OccurrenceHdfsRecord> hdfsRecordPCollection =
@@ -237,15 +217,14 @@ public class InterpretedToHiveViewPipeline {
             .apply("Merging to HdfsRecord", toHdfsRecordDoFn)
             .apply("Removing records with invalid gbif ids", FilterMissedGbifIdTransform.create());
 
-
-    hdfsRecordPCollection.apply(OccurrenceHdfsRecordTransform.write(targetPath));
+    hdfsRecordPCollection.apply(OccurrenceHdfsRecordTransform.create().write(targetTempPath));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
       //A write lock is acquired to avoid concurrent modifications while this operation is running
-      Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+      Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
       LockConfig lockConfig = LockConfigFactory.create(properties, Lock.HDFS_LOCK_PREFIX);
       SharedLockUtils.doInBarrier(lockConfig, () -> copyOccurrenceRecords(options));
     }
@@ -256,7 +235,6 @@ public class InterpretedToHiveViewPipeline {
     log.info("Pipeline has been finished");
   }
 
-
   /**
    * Copies all occurrence records into the "hdfsview/occurrence" directory.
    * Deletes pre-existing data of the dataset being processed.
@@ -264,13 +242,13 @@ public class InterpretedToHiveViewPipeline {
   private static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
     log.info("Copying avro files to hdfsview/occurrence");
     //Moving files to the directory of latest records
-    String occurrenceHdfsViewPath = FsUtils.buildPath(options.getTargetPath(), "hdfsview/occurrence").toString();
+    String targetPath = options.getTargetPath();
 
-    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), occurrenceHdfsViewPath + "/*" + options.getDatasetId() + '*');
-    String filter = targetPath(options, "*.avro");
+    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath + "/*" + options.getDatasetId() + '*');
+    String filter = buildPathHdfsView(options, "*.avro");
 
-    log.info("Moving files with pattern {} to {}", filter, occurrenceHdfsViewPath);
-    FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, occurrenceHdfsViewPath);
+    log.info("Moving files with pattern {} to {}", filter, targetPath);
+    FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, targetPath);
     log.info("Files moved to hdfsview/occurrnce directory");
   }
 }

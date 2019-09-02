@@ -1,24 +1,4 @@
-package org.gbif.pipelines.ingest.hdfs.converters;
-
-import org.gbif.dwc.terms.DcTerm;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.dwc.terms.TermFactory;
-import org.gbif.occurrence.download.hive.HiveColumns;
-import org.gbif.occurrence.download.hive.Terms;
-import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
-import org.gbif.pipelines.core.utils.TemporalUtils;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
-import org.gbif.pipelines.io.avro.Issues;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+package org.gbif.pipelines.transforms.hdfs.converters;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,13 +20,33 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.base.Strings;
+import org.gbif.dwc.terms.DcTerm;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
+import org.gbif.occurrence.download.hive.HiveColumns;
+import org.gbif.occurrence.download.hive.Terms;
+import org.gbif.pipelines.core.utils.TemporalUtils;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IssueRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
+
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Strings;
 
 /**
  * Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}.
@@ -70,7 +70,7 @@ public class OccurrenceHdfsRecordConverter {
   }
 
   //Converts a TemporalAccessor into Date
-  static final Function<TemporalAccessor, Date> TEMPORAL_TO_DATE =
+  private static final Function<TemporalAccessor, Date> TEMPORAL_TO_DATE =
     temporalAccessor -> {
       if (temporalAccessor instanceof ZonedDateTime) {
         return Date.from(((ZonedDateTime)temporalAccessor).toInstant());
@@ -384,7 +384,6 @@ public class OccurrenceHdfsRecordConverter {
     };
   }
 
-
   /**
    * Collects data from {@link SpecificRecordBase} instances into a {@link OccurrenceHdfsRecord}.
    * @param records list of input records
@@ -398,17 +397,6 @@ public class OccurrenceHdfsRecordConverter {
         .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
     }
     return occurrenceHdfsRecord;
-  }
-
-  /**
-   * Validates the record has valid GBIF id.
-   */
-  private static boolean hasInvalidId(SpecificRecordBase record) {
-    if (record instanceof Issues) {
-      Issues recordIssues = (Issues)record;
-      return Objects.nonNull(recordIssues.getIssues()) && recordIssues.getIssues().getIssueList().contains(BasicInterpreter.GBIF_ID_INVALID);
-    }
-    return false;
   }
 
   /**

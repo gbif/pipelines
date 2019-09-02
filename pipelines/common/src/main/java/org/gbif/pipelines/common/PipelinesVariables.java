@@ -49,7 +49,8 @@ public class PipelinesVariables {
         MEASUREMENT_OR_FACT,
         AMPLIFICATION,
         // Specific
-        AUSTRALIA_SPATIAL
+        AUSTRALIA_SPATIAL,
+        OCCURRENCE_HDFS_RECORD
       }
 
     }
@@ -59,6 +60,13 @@ public class PipelinesVariables {
 
       public static final String INDEX_TYPE = "record";
       public static final String GBIF_ID = "gbifId";
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class HdfsView {
+
+      public static final String VIEW_OCCURRENCE = "view_occurrence";
     }
 
   }

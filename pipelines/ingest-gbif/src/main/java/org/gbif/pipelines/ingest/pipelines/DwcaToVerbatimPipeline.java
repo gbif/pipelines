@@ -58,7 +58,7 @@ public class DwcaToVerbatimPipeline {
 
     log.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
-    String targetPath = FsUtils.buildPath(options, Conversion.FILE_NAME);
+    String targetPath = FsUtils.buildPathUsingTargetPath(options, Conversion.FILE_NAME);
     String tmpPath = FsUtils.getTempDir(options);
 
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();

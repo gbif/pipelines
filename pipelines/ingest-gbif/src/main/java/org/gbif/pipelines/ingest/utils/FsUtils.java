@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 
@@ -33,6 +34,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
 /** Utility class to work with file system. */
 @Slf4j
@@ -56,7 +58,7 @@ public final class FsUtils {
    *
    * @return string path
    */
-  public static String buildPath(BasePipelineOptions options, String name) {
+  public static String buildPathUsingTargetPath(BasePipelineOptions options, String name) {
     return FsUtils.buildPath(
         options.getTargetPath(),
         options.getDatasetId(),
@@ -72,15 +74,16 @@ public final class FsUtils {
    * @return string path to interpretation
    */
   public static String buildPathInterpret(BasePipelineOptions options, String name, String uniqueId) {
+    return FsUtils.buildPath(buildPathUsingTargetPath(options, name), Interpretation.FILE_NAME + uniqueId).toString();
+  }
 
-    return FsUtils.buildPath(
-        options.getTargetPath(),
-        options.getDatasetId(),
-        options.getAttempt().toString(),
-        Interpretation.DIRECTORY_NAME,
-        name.toLowerCase(),
-        Interpretation.FILE_NAME + uniqueId)
-        .toString();
+  /**
+   * Builds the target base path of the Occurrence hdfs view.
+   * @param options options pipeline options
+   * @return path to the directory where the occurrence hdfs view is stored
+   */
+  public static String buildPathHdfsView(BasePipelineOptions options, String uniqueId) {
+    return FsUtils.buildPath(buildPathUsingTargetPath(options, OCCURRENCE_HDFS_RECORD.name()), HdfsView.VIEW_OCCURRENCE + uniqueId).toString();
   }
 
   /**

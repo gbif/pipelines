@@ -1,12 +1,13 @@
-package org.gbif.pipelines.ingest.hdfs.converters;
+package org.gbif.pipelines.transforms.hdfs;
 
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor

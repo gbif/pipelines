@@ -74,7 +74,7 @@ public class MetricsHandler {
    */
   public static void saveCountersToFile(InterpretationPipelineOptions options, PipelineResult result){
     Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
+      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPathUsingTargetPath(options, metadataName);
       MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
     });
   }
@@ -85,7 +85,7 @@ public class MetricsHandler {
    */
   public static void saveCountersToFile(BasePipelineOptions options, PipelineResult result){
     Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
+      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPathUsingTargetPath(options, metadataName);
       MetricsHandler.saveCountersToFile("", metadataPath, result);
     });
   }
