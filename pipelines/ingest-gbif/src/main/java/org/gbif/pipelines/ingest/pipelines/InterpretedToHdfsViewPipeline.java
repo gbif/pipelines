@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Lock;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -59,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
-import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsView;
+import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsViewUsingInputPath;
 
 /**
  * Pipeline sequence:
@@ -113,16 +114,16 @@ public class InterpretedToHdfsViewPipeline {
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
-    String targetTempPath = buildPathHdfsView(options, datasetId + '_' + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+    String targetTempPath = buildPathHdfsViewUsingInputPath(options, datasetId + '_' + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
 
     //Deletes the target path if it exists
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, options.getTargetPath(), datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, options.getInputPath(), datasetId, attempt, types);
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> interpretPathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> interpretPathFn = t -> FsUtils.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
 
     // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
@@ -230,25 +231,26 @@ public class InterpretedToHdfsViewPipeline {
     }
 
     //Metrics
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToInputPathFile(options, result);
 
     log.info("Pipeline has been finished");
   }
 
   /**
-   * Copies all occurrence records into the "hdfsview/occurrence" directory.
+   * Copies all occurrence records into the directory from targetPath.
    * Deletes pre-existing data of the dataset being processed.
    */
   private static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
-    log.info("Copying avro files to hdfsview/occurrence");
     //Moving files to the directory of latest records
     String targetPath = options.getTargetPath();
 
-    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath + "/*" + options.getDatasetId() + '*');
-    String filter = buildPathHdfsView(options, "*.avro");
+    String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
+    log.info("Deleting avro files {}", deletePath);
+    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), deletePath);
+    String filter = buildPathHdfsViewUsingInputPath(options, "*.avro");
 
     log.info("Moving files with pattern {} to {}", filter, targetPath);
     FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, targetPath);
-    log.info("Files moved to hdfsview/occurrnce directory");
+    log.info("Files moved to {} directory", targetPath);
   }
 }

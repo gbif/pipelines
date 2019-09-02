@@ -73,7 +73,7 @@ public class InterpretedToEsIndexAmpPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     Pipeline p = Pipeline.create(options);
 

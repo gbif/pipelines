@@ -55,7 +55,7 @@ public class XmlToVerbatimPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     log.info("Adding step 1: Options");
-    String targetPath = FsUtils.buildPathUsingTargetPath(options, Conversion.FILE_NAME);
+    String targetPath = FsUtils.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
 
     log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);
@@ -67,7 +67,7 @@ public class XmlToVerbatimPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result);
 
     log.info("Pipeline has been finished");
   }

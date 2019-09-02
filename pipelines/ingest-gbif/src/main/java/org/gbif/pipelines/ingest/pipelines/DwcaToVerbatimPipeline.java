@@ -58,7 +58,7 @@ public class DwcaToVerbatimPipeline {
 
     log.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
-    String targetPath = FsUtils.buildPathUsingTargetPath(options, Conversion.FILE_NAME);
+    String targetPath = FsUtils.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
     String tmpPath = FsUtils.getTempDir(options);
 
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();
@@ -75,7 +75,7 @@ public class DwcaToVerbatimPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result);
 
     log.info("Pipeline has been finished");
   }

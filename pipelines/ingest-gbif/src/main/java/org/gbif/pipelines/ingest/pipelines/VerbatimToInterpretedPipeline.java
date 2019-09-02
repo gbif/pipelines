@@ -102,7 +102,7 @@ public class VerbatimToInterpretedPipeline {
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
@@ -188,7 +188,7 @@ public class VerbatimToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result);
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());

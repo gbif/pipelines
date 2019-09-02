@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
@@ -44,14 +43,7 @@ public final class FsUtils {
 
   /** Build a {@link Path} from an array of string values using path separator. */
   public static Path buildPath(String... values) {
-    StringJoiner joiner = new StringJoiner(Path.SEPARATOR);
-    Arrays.stream(values).forEach(joiner::add);
-    return new Path(joiner.toString());
-  }
-
-  /** Build a {@link String} path from an array of string values using path separator. */
-  public static String buildPathString(String... values) {
-    return buildPath(values).toString();
+    return new Path(String.join(Path.SEPARATOR, values));
   }
 
   /**
@@ -59,9 +51,9 @@ public final class FsUtils {
    *
    * @return string path
    */
-  public static String buildPathUsingTargetPath(BasePipelineOptions options, String name) {
+  public static String buildDatasetAttemptPath(BasePipelineOptions options, String name, boolean isInput) {
     return FsUtils.buildPath(
-        options.getTargetPath(),
+        isInput ? options.getInputPath() : options.getTargetPath(),
         options.getDatasetId(),
         options.getAttempt().toString(),
         name.toLowerCase())
@@ -74,9 +66,22 @@ public final class FsUtils {
    *
    * @return string path to interpretation
    */
-  public static String buildPathInterpret(BasePipelineOptions options, String name, String uniqueId) {
+  public static String buildPathInterpretUsingTargetPath(BasePipelineOptions options, String name, String uniqueId) {
     return FsUtils.buildPath(
-        buildPathUsingTargetPath(options, DIRECTORY_NAME),
+        buildDatasetAttemptPath(options, DIRECTORY_NAME, false),
+        name,
+        Interpretation.FILE_NAME + uniqueId).toString();
+  }
+
+  /**
+   * Uses pattern for path -
+   * "{targetPath}/{datasetId}/{attempt}/interpreted/{name}/interpret-{uniqueId}"
+   *
+   * @return string path to interpretation
+   */
+  public static String buildPathInterpretUsingInputPath(BasePipelineOptions options, String name, String uniqueId) {
+    return FsUtils.buildPath(
+        buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
         name,
         Interpretation.FILE_NAME + uniqueId).toString();
   }
@@ -87,11 +92,11 @@ public final class FsUtils {
    * @param options options pipeline options
    * @return path to the directory where the occurrence hdfs view is stored
    */
-  public static String buildPathHdfsView(BasePipelineOptions options, String uniqueId) {
+  public static String buildPathHdfsViewUsingInputPath(BasePipelineOptions options, String uniqueId) {
     return FsUtils.buildPath(
-        buildPathUsingTargetPath(options, DIRECTORY_NAME),
-        OCCURRENCE_HDFS_RECORD.name(),
-        HdfsView.VIEW_OCCURRENCE + uniqueId).toString();
+        buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
+        OCCURRENCE_HDFS_RECORD.name().toLowerCase(),
+        HdfsView.VIEW_OCCURRENCE + "_" + uniqueId).toString();
   }
 
   /**
@@ -101,7 +106,7 @@ public final class FsUtils {
    */
   public static String getTempDir(BasePipelineOptions options) {
     return Strings.isNullOrEmpty(options.getTempLocation())
-        ? FsUtils.buildPathString(options.getTargetPath(), "tmp")
+        ? FsUtils.buildPath(options.getTargetPath(), "tmp").toString()
         : options.getTempLocation();
   }
 
@@ -225,13 +230,13 @@ public final class FsUtils {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
       for (Path path : paths) {
-        fs.rename(path, new Path(targetPath, path.getName()));
+        boolean rename = fs.rename(path, new Path(targetPath, path.getName()));
+        log.info("File {} moved status - {}", path.toString(), rename);
       }
     } catch (IOException e) {
       log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
     }
   }
-
 
   /**
    * Copies a list files that match against a glob filter into a target directory.
@@ -359,7 +364,7 @@ public final class FsUtils {
         log.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
       } else {
         for (String step : steps) {
-          log.info("Delete interpretation/{} directory", step);
+          log.info("Delete {}/{} directory", path, step.toLowerCase());
           boolean isDeleted = deleteIfExist(hdfsSiteConfig, String.join("/", path, step.toLowerCase()));
           log.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
         }

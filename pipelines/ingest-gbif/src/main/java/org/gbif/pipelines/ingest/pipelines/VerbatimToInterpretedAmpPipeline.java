@@ -74,8 +74,8 @@ public class VerbatimToInterpretedAmpPipeline {
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
-    UnaryOperator<String> pathVerbatimFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
+    UnaryOperator<String> pathVerbatimFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);

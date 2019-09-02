@@ -1,5 +1,7 @@
 package org.gbif.pipelines.transforms.hdfs;
 
+import java.io.Serializable;
+
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -12,7 +14,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter;
 
 import org.apache.beam.sdk.metrics.Counter;
@@ -29,7 +30,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
 /**
  * Beam level transformation for Occurrence HDFS Downloads Table. The transformation consumes objects, which classes
@@ -68,7 +68,9 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * }</pre>
  */
 @AllArgsConstructor(staticName = "create")
-public class OccurrenceHdfsRecordConverterTransform {
+public class OccurrenceHdfsRecordConverterTransform implements Serializable {
+
+  private static final long serialVersionUID = 4605359346756029671L;
 
   // Core
   @NonNull
@@ -128,14 +130,6 @@ public class OccurrenceHdfsRecordConverterTransform {
     };
 
     return ParDo.of(fn).withSideInputs(metadataView);
-  }
-
-  public static class Avro extends Transform<OccurrenceHdfsRecord, OccurrenceHdfsRecord> {
-
-    public Avro() {
-      super(OccurrenceHdfsRecord.class, OCCURRENCE_HDFS_RECORD);
-    }
-
   }
 
 }

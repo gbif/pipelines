@@ -104,7 +104,7 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("attempt", options.getAttempt().toString());
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     // Core
     final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
@@ -215,7 +215,7 @@ public class InterpretedToEsIndexPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result);
 
     log.info("Pipeline has been finished");
   }

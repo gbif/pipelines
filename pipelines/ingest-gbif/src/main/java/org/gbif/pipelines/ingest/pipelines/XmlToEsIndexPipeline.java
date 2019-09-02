@@ -249,7 +249,7 @@ public class XmlToEsIndexPipeline {
 
     EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(properties, PipelinesVariables.Lock.ES_LOCK_PREFIX));
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result);
 
     log.info("Pipeline has been finished");
 

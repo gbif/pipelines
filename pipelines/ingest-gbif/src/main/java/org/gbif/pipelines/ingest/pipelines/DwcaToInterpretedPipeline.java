@@ -97,7 +97,7 @@ public class DwcaToInterpretedPipeline {
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
 
     String inputPath = options.getInputPath();
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();
@@ -179,7 +179,7 @@ public class DwcaToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result);
 
     log.info("Pipeline has been finished");
   }
