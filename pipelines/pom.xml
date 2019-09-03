@@ -23,6 +23,7 @@
     <module>ingest-gbif-standalone</module>
     <module>export-gbif-hbase</module>
     <module>ingest-hdfs-table</module>
+    <module>pre-backbone-release</module>
   </modules>
 
 </project>
