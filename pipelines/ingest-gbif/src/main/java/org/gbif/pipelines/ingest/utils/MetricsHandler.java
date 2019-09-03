@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.MetricQueryResults;
@@ -90,7 +91,8 @@ public class MetricsHandler {
   private static void saveCountersToFile(BasePipelineOptions options, PipelineResult result, boolean isInput) {
     Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
       String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildDatasetAttemptPath(options, metadataName, isInput);
-      MetricsHandler.saveCountersToFile("", metadataPath, result);
+      String hdfsSiteConfig = options instanceof InterpretationPipelineOptions ? ((InterpretationPipelineOptions) options).getHdfsSiteConfig() : "";
+      MetricsHandler.saveCountersToFile(hdfsSiteConfig, metadataPath, result);
     });
   }
 
