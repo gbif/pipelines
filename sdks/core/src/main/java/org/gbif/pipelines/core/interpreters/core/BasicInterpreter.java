@@ -82,10 +82,15 @@ public class BasicInterpreter {
         }
 
         if (!uniqueStrings.isEmpty()) {
-          KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
-              .orElse(keygenService.generateKey(uniqueStrings));
+          try {
+            KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
+                .orElse(keygenService.generateKey(uniqueStrings));
 
-          br.setGbifId(key.getKey());
+            br.setGbifId(key.getKey());
+          } catch (IllegalStateException ex) {
+            log.warn(ex.getMessage());
+            addIssue(br, GBIF_ID_INVALID);
+          }
         } else {
           addIssue(br, GBIF_ID_INVALID);
         }
