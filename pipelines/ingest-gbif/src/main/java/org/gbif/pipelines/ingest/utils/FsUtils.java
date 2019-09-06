@@ -8,9 +8,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -94,11 +92,21 @@ public final class FsUtils {
    * @param options options pipeline options
    * @return path to the directory where the occurrence hdfs view is stored
    */
-  public static String buildPathHdfsViewUsingInputPath(BasePipelineOptions options, String uniqueId) {
+  public static String buildFilePathHdfsViewUsingInputPath(BasePipelineOptions options, String uniqueId) {
+    return FsUtils.buildPath(buildPathHdfsViewUsingInputPath(options),
+        HdfsView.VIEW_OCCURRENCE + "_" + uniqueId).toString();
+  }
+
+  /**
+   * Builds the target base path of the Occurrence hdfs view.
+   *
+   * @param options options pipeline options
+   * @return path to the directory where the occurrence hdfs view is stored
+   */
+  public static String buildPathHdfsViewUsingInputPath(BasePipelineOptions options) {
     return FsUtils.buildPath(
         buildDatasetAttemptPath(options, DIRECTORY_NAME, true),
-        OCCURRENCE_HDFS_RECORD.name().toLowerCase(),
-        HdfsView.VIEW_OCCURRENCE + "_" + uniqueId).toString();
+        OCCURRENCE_HDFS_RECORD.name().toLowerCase()).toString();
   }
 
   /**

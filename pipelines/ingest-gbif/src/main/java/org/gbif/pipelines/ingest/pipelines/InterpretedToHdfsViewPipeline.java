@@ -61,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
+import static org.gbif.pipelines.ingest.utils.FsUtils.buildFilePathHdfsViewUsingInputPath;
 import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsViewUsingInputPath;
 
 /**
@@ -118,7 +119,7 @@ public class InterpretedToHdfsViewPipeline {
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
-    String targetTempPath = buildPathHdfsViewUsingInputPath(options, datasetId + '_' + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+    String targetTempPath = buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -252,12 +253,12 @@ public class InterpretedToHdfsViewPipeline {
     String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
     log.info("Deleting avro files {}", deletePath);
     FsUtils.deleteByPattern(options.getHdfsSiteConfig(), deletePath);
-    String filter = buildPathHdfsViewUsingInputPath(options, "*.avro");
+    String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
 
     log.info("Moving files with pattern {} to {}", filter, targetPath);
     HdfsFileMergeUtil.mergeFiles(options.getHdfsSiteConfig(),
         filter,
-        buildPathHdfsViewUsingInputPath(options, attemptStr),
+        buildPathHdfsViewUsingInputPath(options),
         HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_" + attemptStr,
         ".avro",
         SIZE_THRESHOLD,
