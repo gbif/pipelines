@@ -12,6 +12,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.HdfsFileMergeUtil;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -52,6 +53,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
+import org.apache.hadoop.fs.FileUtil;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -61,6 +63,7 @@ import lombok.extern.slf4j.Slf4j;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsViewUsingInputPath;
+import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathInterpretUsingTargetPath;
 
 /**
  * Pipeline sequence:
@@ -102,6 +105,9 @@ import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsViewUsingInpu
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedToHdfsViewPipeline {
+
+  private static long SIZE_THRESHOLD = 1024*1024*300;
+  private static long MIN_SIZE_THRESHOLD = 1024*1024*50;
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -243,6 +249,7 @@ public class InterpretedToHdfsViewPipeline {
   private static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
     //Moving files to the directory of latest records
     String targetPath = options.getTargetPath();
+    String attemptStr = options.getAttempt().toString();
 
     String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
     log.info("Deleting avro files {}", deletePath);
@@ -250,6 +257,13 @@ public class InterpretedToHdfsViewPipeline {
     String filter = buildPathHdfsViewUsingInputPath(options, "*.avro");
 
     log.info("Moving files with pattern {} to {}", filter, targetPath);
+    HdfsFileMergeUtil.mergeFiles(options.getHdfsSiteConfig(),
+                                 filter,
+                                 buildPathHdfsViewUsingInputPath(options, attemptStr),
+                                 HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_" + attemptStr,
+                                 ".avro",
+                                 SIZE_THRESHOLD,
+                                 MIN_SIZE_THRESHOLD);
     FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, targetPath);
     log.info("Files moved to {} directory", targetPath);
   }
