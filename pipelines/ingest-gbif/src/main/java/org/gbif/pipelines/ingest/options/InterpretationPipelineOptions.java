@@ -81,6 +81,12 @@ public interface InterpretationPipelineOptions
 
   void setUseExtendedRecordId(boolean useExtendedRecordId);
 
+  @Description("Number of file shards")
+  @Default.Integer(1)
+  Integer getNumberOfShards();
+
+  void setNumberOfShards(Integer numberOfShards);
+
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {
 

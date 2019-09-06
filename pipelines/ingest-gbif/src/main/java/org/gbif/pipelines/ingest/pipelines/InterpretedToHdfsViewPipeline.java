@@ -1,7 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
@@ -12,7 +10,6 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.HdfsFileMergeUtil;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -62,7 +59,6 @@ import lombok.extern.slf4j.Slf4j;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 import static org.gbif.pipelines.ingest.utils.FsUtils.buildFilePathHdfsViewUsingInputPath;
-import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsViewUsingInputPath;
 
 /**
  * Pipeline sequence:
@@ -105,9 +101,6 @@ import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsViewUsingInpu
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedToHdfsViewPipeline {
 
-  private static final long SIZE_THRESHOLD = 1024L * 1024L * 300L;
-  private static final long MIN_SIZE_THRESHOLD = 1024L * 1024L * 50L;
-
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
@@ -118,8 +111,9 @@ public class InterpretedToHdfsViewPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
+    int numberOfShards = options.getNumberOfShards();
     Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
-    String targetTempPath = buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+    String targetTempPath = buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + attempt);
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -223,7 +217,7 @@ public class InterpretedToHdfsViewPipeline {
             .apply("Merging to HdfsRecord", toHdfsRecordDoFn)
             .apply("Removing records with invalid gbif ids", FilterMissedGbifIdTransform.create());
 
-    hdfsRecordPCollection.apply(OccurrenceHdfsRecordTransform.create().write(targetTempPath));
+    hdfsRecordPCollection.apply(OccurrenceHdfsRecordTransform.create().write(targetTempPath, numberOfShards));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
@@ -248,7 +242,6 @@ public class InterpretedToHdfsViewPipeline {
   private static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
     //Moving files to the directory of latest records
     String targetPath = options.getTargetPath();
-    String attemptStr = options.getAttempt().toString();
 
     String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
     log.info("Deleting avro files {}", deletePath);
@@ -256,14 +249,6 @@ public class InterpretedToHdfsViewPipeline {
     String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
 
     log.info("Moving files with pattern {} to {}", filter, targetPath);
-    HdfsFileMergeUtil.mergeFiles(options.getHdfsSiteConfig(),
-        filter,
-        buildPathHdfsViewUsingInputPath(options),
-        HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_" + attemptStr,
-        ".avro",
-        SIZE_THRESHOLD,
-        MIN_SIZE_THRESHOLD);
-
     FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, targetPath);
     log.info("Files moved to {} directory", targetPath);
   }
