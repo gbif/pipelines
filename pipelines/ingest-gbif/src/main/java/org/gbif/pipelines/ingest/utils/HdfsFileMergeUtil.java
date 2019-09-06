@@ -6,17 +6,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Utility class to merge dataset avro files in HDFS into files of a expected size.
@@ -39,7 +40,6 @@ public class HdfsFileMergeUtil {
     private long size;
 
 
-
     FileMerge addFile(FileStatus fileStatus) {
       fileStatuses.add(fileStatus);
       size += fileStatus.getLen();
@@ -54,13 +54,14 @@ public class HdfsFileMergeUtil {
 
   /**
    * Tries to merge a file into a FileMerge with enough room (size < sizeThreshold)
+   *
    * @param merges existing file merges to check
    * @param fileMerge fileMerge to be merged
    * @param sizeThreshold expected file merge size
    */
   private static void tryMerge(Collection<FileMerge> merges, FileMerge fileMerge, long sizeThreshold) {
     boolean merged = false;
-    for (FileMerge merge: merges) {
+    for (FileMerge merge : merges) {
       if (!merge.getFileName().equals(fileMerge.getFileName()) && merge.getSize() + fileMerge.getSize() < sizeThreshold) {
         merge.merge(fileMerge);
         merged = true;
@@ -70,11 +71,11 @@ public class HdfsFileMergeUtil {
     if (merged) {
       merges.remove(fileMerge);
     }
-
   }
 
   /**
-   *  Merges a list of {@link FileStatus} into a new file.
+   * Merges a list of {@link FileStatus} into a new file.
+   *
    * @param fs target file system where all files belong
    * @param fileName output file name and path
    * @param fileStatuses files to be merged
@@ -106,32 +107,32 @@ public class HdfsFileMergeUtil {
    * @param minSizeThreshold if any file remain under this size it is merged into another file
    */
   public static void mergeFiles(FileSystem fs, String globFilter, String targetPath, String fileNamePrefix,
-                                String fileNamePostfix, long sizeThreshold, long minSizeThreshold) {
+      String fileNamePostfix, long sizeThreshold, long minSizeThreshold) {
     List<FileMerge> merges = new ArrayList<>();
     try {
       for (FileStatus status : fs.globStatus(new Path(globFilter))) {
         boolean added = false;
-        for (FileMerge fileMerge: merges) {
+        for (FileMerge fileMerge : merges) {
           if (fileMerge.getSize() + status.getLen() < sizeThreshold) {
             fileMerge.addFile(status);
             added = true;
           }
         }
         if (!added) {
-          merges.add(FileMerge.builder()
-                       .fileName(new Path( targetPath,fileNamePrefix + '_' + merges.size() + fileNamePostfix).toString())
-                       .build().addFile(status));
+          merges.add(
+              FileMerge.builder()
+                  .fileName(new Path(targetPath, fileNamePrefix + '_' + merges.size() + fileNamePostfix).toString())
+                  .build().addFile(status)
+          );
         }
       }
 
-
       //Merges small files into other files
       Collection<FileMerge> smallMerges = merges.stream()
-        .filter(fm -> fm.getSize() < minSizeThreshold)
-        .collect(Collectors.toList());
+          .filter(fm -> fm.getSize() < minSizeThreshold)
+          .collect(Collectors.toList());
 
       smallMerges.forEach(fm -> tryMerge(merges, fm, sizeThreshold + minSizeThreshold));
-
 
       //Merge all merges in the FilSystem
       for (FileMerge fileMerge : merges) {
@@ -155,9 +156,10 @@ public class HdfsFileMergeUtil {
    * @param sizeThreshold estimate file size to produce
    * @param minSizeThreshold if any file remain under this size it is merged into another file
    */
-  public static void mergeFiles(String hdfsSiteConfig, String globFilter, String targetPath, String fileNamePrefix, String fileNamePostfix,
-                                long sizeThreshold, long minSizeThreshold) {
-    mergeFiles(FsUtils.getFileSystem(hdfsSiteConfig), globFilter, targetPath, fileNamePrefix, fileNamePostfix, sizeThreshold, minSizeThreshold);
+  public static void mergeFiles(String hdfsSiteConfig, String globFilter, String targetPath, String fileNamePrefix,
+      String fileNamePostfix, long sizeThreshold, long minSizeThreshold) {
+    mergeFiles(FsUtils.getFileSystem(hdfsSiteConfig), globFilter, targetPath, fileNamePrefix, fileNamePostfix,
+        sizeThreshold, minSizeThreshold);
   }
 
 }

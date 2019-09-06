@@ -53,7 +53,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
-import org.apache.hadoop.fs.FileUtil;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -63,7 +62,6 @@ import lombok.extern.slf4j.Slf4j;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathHdfsViewUsingInputPath;
-import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathInterpretUsingTargetPath;
 
 /**
  * Pipeline sequence:
@@ -106,8 +104,8 @@ import static org.gbif.pipelines.ingest.utils.FsUtils.buildPathInterpretUsingTar
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedToHdfsViewPipeline {
 
-  private static long SIZE_THRESHOLD = 1024*1024*300;
-  private static long MIN_SIZE_THRESHOLD = 1024*1024*50;
+  private static final long SIZE_THRESHOLD = 1024L * 1024L * 300L;
+  private static final long MIN_SIZE_THRESHOLD = 1024L * 1024L * 50L;
 
   public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
@@ -258,12 +256,13 @@ public class InterpretedToHdfsViewPipeline {
 
     log.info("Moving files with pattern {} to {}", filter, targetPath);
     HdfsFileMergeUtil.mergeFiles(options.getHdfsSiteConfig(),
-                                 filter,
-                                 buildPathHdfsViewUsingInputPath(options, attemptStr),
-                                 HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_" + attemptStr,
-                                 ".avro",
-                                 SIZE_THRESHOLD,
-                                 MIN_SIZE_THRESHOLD);
+        filter,
+        buildPathHdfsViewUsingInputPath(options, attemptStr),
+        HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_" + attemptStr,
+        ".avro",
+        SIZE_THRESHOLD,
+        MIN_SIZE_THRESHOLD);
+
     FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, targetPath);
     log.info("Files moved to {} directory", targetPath);
   }
