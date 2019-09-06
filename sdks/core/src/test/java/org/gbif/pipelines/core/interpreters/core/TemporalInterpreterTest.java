@@ -48,15 +48,14 @@ public class TemporalInterpreterTest {
         .setDay(10)
         .setModified("2012-02-02")
         .setDateIdentified("2013-04-18")
-        .setStartDayOfYear(1)
-        .setEndDayOfYear(366)
+        .setStartDayOfYear(284)
+        .setEndDayOfYear(284)
         .build();
 
     // When
     TemporalInterpreter.interpretEventDate(er, tr);
     TemporalInterpreter.interpretDateIdentified(er, tr);
     TemporalInterpreter.interpretModifiedDate(er, tr);
-    TemporalInterpreter.interpretDayOfYear(tr);
 
     // Should
     assertEquals(expected, tr);
@@ -96,7 +95,6 @@ public class TemporalInterpreterTest {
     TemporalInterpreter.interpretEventDate(er, tr);
     TemporalInterpreter.interpretDateIdentified(er, tr);
     TemporalInterpreter.interpretModifiedDate(er, tr);
-    TemporalInterpreter.interpretDayOfYear(tr);
 
     // Should
     assertEquals(expected, tr);
@@ -133,7 +131,6 @@ public class TemporalInterpreterTest {
     TemporalInterpreter.interpretEventDate(er, tr);
     TemporalInterpreter.interpretDateIdentified(er, tr);
     TemporalInterpreter.interpretModifiedDate(er, tr);
-    TemporalInterpreter.interpretDayOfYear(tr);
 
     // Should
     assertEquals(expected, tr);
@@ -163,8 +160,8 @@ public class TemporalInterpreterTest {
         .setYear(2000)
         .setMonth(10)
         .setDay(10)
-        .setStartDayOfYear(1)
-        .setEndDayOfYear(366)
+        .setStartDayOfYear(314)
+        .setEndDayOfYear(314)
         .setIssues(
             IssueRecord.newBuilder()
                 .setIssueList(Arrays.asList(RECORDED_DATE_MISMATCH.name(), IDENTIFIED_DATE_UNLIKELY.name(),
@@ -177,7 +174,6 @@ public class TemporalInterpreterTest {
     TemporalInterpreter.interpretEventDate(er, tr);
     TemporalInterpreter.interpretDateIdentified(er, tr);
     TemporalInterpreter.interpretModifiedDate(er, tr);
-    TemporalInterpreter.interpretDayOfYear(tr);
 
     // Should
     assertEquals(expected, tr);

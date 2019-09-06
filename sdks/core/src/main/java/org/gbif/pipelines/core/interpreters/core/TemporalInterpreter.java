@@ -1,10 +1,8 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAdjusters;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
@@ -73,6 +71,8 @@ public class TemporalInterpreter {
     temporalDates.getDayOpt().ifPresent(tr::setDay);
     temporalDates.getFromOpt().map(Temporal::toString).ifPresent(eventDate::setGte);
     temporalDates.getToOpt().map(Temporal::toString).ifPresent(eventDate::setLte);
+    temporalDates.getStartDayOfYear().ifPresent(tr::setStartDayOfYear);
+    temporalDates.getEndDayOfYear().ifPresent(tr::setEndDayOfYear);
 
     tr.setEventDate(eventDate);
 
@@ -98,12 +98,5 @@ public class TemporalInterpreter {
     date.getIssues().forEach(x ->
         Optional.ofNullable(IDENTIFIED_DATE_ISSUE_MAP.get(x)).ifPresent(tr.getIssues().getIssueList()::add)
     );
-  }
-
-  /** {@link DwcTerm#startDayOfYear} and {@link DwcTerm#endDayOfYear} interpretation. */
-  public static void interpretDayOfYear(TemporalRecord tr) {
-    Optional<LocalDate> year = Optional.ofNullable(tr.getYear()).map(y -> LocalDate.of(y, 1, 1));
-    year.map(x -> x.with(TemporalAdjusters.lastDayOfYear())).ifPresent(x -> tr.setEndDayOfYear(x.getDayOfYear()));
-    year.map(x -> x.with(TemporalAdjusters.firstDayOfYear())).ifPresent(x -> tr.setStartDayOfYear(x.getDayOfYear()));
   }
 }
