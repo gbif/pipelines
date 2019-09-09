@@ -5,6 +5,7 @@ import java.time.ZoneOffset;
 import java.util.Properties;
 import java.util.function.UnaryOperator;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.beam.XmlIO;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -92,6 +93,7 @@ public class XmlToInterpretedPipeline {
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
+    MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));

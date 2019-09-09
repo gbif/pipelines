@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.XmlIO;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
@@ -53,6 +54,7 @@ public class XmlToVerbatimPipeline {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", StepType.XML_TO_VERBATIM.name());
 
     log.info("Adding step 1: Options");
     String targetPath = FsUtils.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
