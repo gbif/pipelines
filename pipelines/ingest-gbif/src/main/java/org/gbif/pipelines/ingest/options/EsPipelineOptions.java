@@ -71,4 +71,11 @@ public interface EsPipelineOptions extends PipelineOptions {
 
   void setSearchQueryAttempts(Integer searchQueryAttempts);
 
+  @Description("ES index max result window")
+  @Default.Integer(200000)
+  Integer getIndexMaxResultWindow();
+
+  void setIndexMaxResultWindow(Integer indexMaxResultWindow);
+
+
 }
