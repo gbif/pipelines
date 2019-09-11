@@ -220,8 +220,8 @@ public class OccurrenceHdfsRecordConverter {
    */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> taxonMapper() {
     return (hr, sr) -> {
-      TaxonRecord tr = (TaxonRecord)sr;
-      hr.setTaxonkey(tr.getUsage().getKey());
+      TaxonRecord tr = (TaxonRecord) sr;
+      Optional.ofNullable(tr.getUsage()).ifPresent(x -> hr.setTaxonkey(x.getKey()));
       if (Objects.nonNull(tr.getClassification())) {
         tr.getClassification().forEach(rankedName -> {
           switch (rankedName.getRank()) {

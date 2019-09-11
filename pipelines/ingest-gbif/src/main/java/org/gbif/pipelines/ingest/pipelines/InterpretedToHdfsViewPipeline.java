@@ -112,7 +112,7 @@ public class InterpretedToHdfsViewPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    int numberOfShards = options.getNumberOfShards();
+    Integer numberOfShards = options.getNumberOfShards();
     Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
     String targetTempPath = buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + attempt);
 

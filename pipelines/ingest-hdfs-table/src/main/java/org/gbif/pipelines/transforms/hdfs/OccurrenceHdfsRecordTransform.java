@@ -23,8 +23,8 @@ public class OccurrenceHdfsRecordTransform extends Transform<OccurrenceHdfsRecor
    *
    * @param toPath path with name to output files, like - directory/name
    */
-  public AvroIO.Write<OccurrenceHdfsRecord> write(String toPath, int numShards) {
-    return write(toPath).withNumShards(numShards);
+  public AvroIO.Write<OccurrenceHdfsRecord> write(String toPath, Integer numShards) {
+    return numShards == null ? write(toPath) : write(toPath).withNumShards(numShards);
   }
 
 }
