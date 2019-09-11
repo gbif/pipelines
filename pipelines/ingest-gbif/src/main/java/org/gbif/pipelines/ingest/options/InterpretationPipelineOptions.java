@@ -82,7 +82,6 @@ public interface InterpretationPipelineOptions
   void setUseExtendedRecordId(boolean useExtendedRecordId);
 
   @Description("Number of file shards")
-  @Default.Integer(1)
   Integer getNumberOfShards();
 
   void setNumberOfShards(Integer numberOfShards);
