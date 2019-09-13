@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.nio.file.Paths;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
@@ -55,6 +56,7 @@ public class DwcaToVerbatimPipeline {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", StepType.DWCA_TO_VERBATIM.name());
 
     log.info("Adding step 1: Options");
     String inputPath = options.getInputPath();

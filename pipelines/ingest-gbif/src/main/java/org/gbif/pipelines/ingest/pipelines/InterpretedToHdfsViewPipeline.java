@@ -5,6 +5,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Lock;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -117,6 +118,7 @@ public class InterpretedToHdfsViewPipeline {
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
+    MDC.put("step", StepType.HDFS_VIEW.name());
 
     //Deletes the target path if it exists
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, options.getInputPath(), datasetId, attempt, types);
