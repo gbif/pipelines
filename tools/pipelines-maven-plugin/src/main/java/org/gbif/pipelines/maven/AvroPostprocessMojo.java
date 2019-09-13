@@ -103,7 +103,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
       try {
         Files.write(path, lines);
       } catch (IOException ex) {
-        throw new IORuntimeException(ex.getMessage(), ex);
+        throw new RuntimeException(ex.getMessage(), ex);
       }
       getLog().info("Modified - " + path.toString());
     }
@@ -189,7 +189,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     try {
       return Files.readAllLines(path);
     } catch (IOException ex) {
-      throw new IORuntimeException(ex.getMessage(), ex);
+      throw new RuntimeException(ex.getMessage(), ex);
     }
   }
 
@@ -198,7 +198,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     try (Stream<Path> paths = Files.walk(Paths.get(directory))) {
       return paths.filter(path -> path.toFile().isFile()).collect(Collectors.toList());
     } catch (IOException ex) {
-      throw new IORuntimeException(ex.getMessage(), ex);
+      throw new RuntimeException(ex.getMessage(), ex);
     }
   }
 
@@ -217,7 +217,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
       }
       return exists;
     } catch (IOException ex) {
-      throw new IORuntimeException(ex.getMessage(), ex);
+      throw new RuntimeException(ex.getMessage(), ex);
     }
   }
 }
