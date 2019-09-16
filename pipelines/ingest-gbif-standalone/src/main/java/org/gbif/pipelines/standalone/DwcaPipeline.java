@@ -7,6 +7,7 @@ import org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexAmpPipeline;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
+import org.gbif.pipelines.ingest.pipelines.InterpretedToHdfsViewPipeline;
 import org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedAmpPipeline;
 import org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline;
 import org.gbif.pipelines.ingest.pipelines.XmlToEsIndexPipeline;
@@ -61,6 +62,10 @@ public class DwcaPipeline {
         options.setTargetPath(options.getInputPath());
         PipelinesOptionsFactory.registerHdfs(options);
         InterpretedToEsIndexExtendedPipeline.run(options);
+        break;
+      case INTERPRETED_TO_HDFS:
+        PipelinesOptionsFactory.registerHdfs(options);
+        InterpretedToHdfsViewPipeline.run(options);
         break;
       case VERBATIM_TO_INTERPRETED:
         PipelinesOptionsFactory.registerHdfs(options);
