@@ -247,11 +247,11 @@ public class InterpretedToHdfsViewPipeline {
 
     String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
     log.info("Deleting avro files {}", deletePath);
-    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), deletePath);
+    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath, deletePath);
     String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
 
     log.info("Moving files with pattern {} to {}", filter, targetPath);
-    FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, targetPath);
+    FsUtils.moveDirectory(options.getHdfsSiteConfig(), targetPath, filter);
     log.info("Files moved to {} directory", targetPath);
   }
 }
