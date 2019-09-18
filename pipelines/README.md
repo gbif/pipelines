@@ -8,5 +8,5 @@ Module uses [Apache Beam](https://beam.apache.org/get-started/beam-overview/) as
 - [**export-gbif-hbase**](./export-gbif-hbase) - The pipeline to export the verbatim data from the GBIF HBase tables and save as `ExtendedRecord` avro files
 - [**ingest-gbif**](./ingest-gbif) - Main GBIF pipelines for ingestion biodiversity data
 - [**ingest-gbif-standalone**](./ingest-gbif-standalone) - Independent GBIF pipelines for ingestion biodiversity data
-- [**ingest-hdfs-table**](./ingest-hdfs-table)
+- [**ingest-hdfs-table**](./ingest-hdfs-table) - Pipeline classes for conversion from interpreted formats into one common for HDFS view creation
 - [**ingest-transforms**](./ingest-transforms) - Transformations and pipelines for ingestion biodiversity data
