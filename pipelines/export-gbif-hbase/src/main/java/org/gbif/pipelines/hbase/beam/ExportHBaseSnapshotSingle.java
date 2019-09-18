@@ -1,18 +1,19 @@
 package org.gbif.pipelines.hbase.beam;
 
-import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
+import java.io.IOException;
+
+import org.gbif.api.model.occurrence.VerbatimOccurrence;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+
 import org.apache.avro.file.CodecFactory;
 import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.io.Compression;
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.io.hadoop.format.HadoopFormatIO;
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
-import org.apache.beam.sdk.transforms.Contextful;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
@@ -32,12 +33,6 @@ import org.apache.hadoop.hbase.util.Base64;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
-import org.gbif.api.model.occurrence.VerbatimOccurrence;
-import org.gbif.pipelines.common.PipelinesVariables;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Executes a pipeline that reads an HBase snapshot and exports verbatim data into a single Avro file
