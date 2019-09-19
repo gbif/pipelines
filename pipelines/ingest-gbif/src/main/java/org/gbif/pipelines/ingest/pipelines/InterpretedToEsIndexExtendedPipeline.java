@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.pipelines;
 import java.util.Properties;
 import java.util.Set;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Lock;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -67,6 +68,7 @@ public class InterpretedToEsIndexExtendedPipeline {
   public static void run(EsIndexingPipelineOptions options) {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     run(options, () -> InterpretedToEsIndexPipeline.run(options));
 

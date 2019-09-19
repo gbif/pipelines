@@ -5,6 +5,7 @@ import java.time.ZoneOffset;
 import java.util.Properties;
 import java.util.function.UnaryOperator;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -71,6 +72,7 @@ public class VerbatimToInterpretedAmpPipeline {
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
+    MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 

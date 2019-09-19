@@ -234,8 +234,8 @@ public final class FsUtils {
    * @param globFilter filter used to filter files and paths
    * @param targetPath target directory
    */
-  public static void moveDirectory(String hdfsSiteConfig, String globFilter, String targetPath) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig);
+  public static void moveDirectory(String hdfsSiteConfig, String targetPath, String globFilter) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, targetPath);
     try {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
@@ -249,35 +249,13 @@ public final class FsUtils {
   }
 
   /**
-   * Copies a list files that match against a glob filter into a target directory.
-   *
-   * @param hdfsSiteConfig path to hdfs-site.xml config file
-   * @param globFilter filter used to filter files and paths
-   * @param targetPath target directory
-   * @param prefix prefix identifier to be added to the copied files
-   */
-  public static void copyDirectory(String hdfsSiteConfig, String globFilter, String targetPath, String prefix) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig);
-    try {
-      FileStatus[] status = fs.globStatus(new Path(globFilter));
-      Path[] paths = FileUtil.stat2Paths(status);
-      for (Path path : paths) {
-        FileUtil.copy(fs, path, fs, new Path(targetPath, prefix + path.getName()), false,
-            getHdfsConfiguration(hdfsSiteConfig));
-      }
-    } catch (IOException e) {
-      log.warn("Can't move files using filter - {}, into path - {}", globFilter, targetPath);
-    }
-  }
-
-  /**
    * Deletes a list files that match against a glob filter into a target directory.
    *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param globFilter filter used to filter files and paths
    */
-  public static void deleteByPattern(String hdfsSiteConfig, String globFilter) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig);
+  public static void deleteByPattern(String hdfsSiteConfig, String directoryPath, String globFilter) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, directoryPath);
     try {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
@@ -322,19 +300,6 @@ public final class FsUtils {
       log.error("Can't delete {} directory, cause - {}", directoryPath, e.getCause());
       return false;
     }
-  }
-
-  /**
-   * Creates a directory, it it exists it is removed first.
-   *
-   * @param hdfsSiteConfig HDFS config file
-   * @param path directory to be created
-   */
-  @SneakyThrows
-  public static void mkdirs(String hdfsSiteConfig, String path) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig);
-    deleteIfExist(hdfsSiteConfig, path);
-    fs.mkdirs(new Path(path));
   }
 
   /**

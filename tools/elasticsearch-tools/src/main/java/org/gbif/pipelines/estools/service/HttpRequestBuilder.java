@@ -6,8 +6,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.model.IndexParams;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.nio.entity.NStringEntity;

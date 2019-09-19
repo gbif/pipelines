@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms.core;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
 
+import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
@@ -33,7 +34,7 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
   }
 
   /** Create an empty collection of {@link PCollection<ExtendedRecord>} */
-  public PCollection<ExtendedRecord> emptyCollection(org.apache.beam.sdk.Pipeline p) {
+  public PCollection<ExtendedRecord> emptyCollection(Pipeline p) {
     return Create.empty(TypeDescriptor.of(ExtendedRecord.class)).expand(PBegin.in(p));
   }
 

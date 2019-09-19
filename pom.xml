@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.pipelines</groupId>
   <artifactId>pipelines-parent</artifactId>
-  <version>2.2.10-SNAPSHOT</version>
+  <version>2.2.13-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -28,7 +28,7 @@
     <connection>scm:git:git@github.com:gbif/pipelines.git</connection>
     <url>https://github.com/gbif/pipelines</url>
     <developerConnection>scm:git:git@github.com:gbif/pipelines.git</developerConnection>
-    <tag>pipelines-parent-2.0.15</tag>
+    <tag>pipelines-parent-2.2.11</tag>
   </scm>
 
   <distributionManagement>
@@ -63,18 +63,18 @@
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
     <!-- Tools-->
-    <lombok.version>1.18.8</lombok.version>
+    <lombok.version>1.18.10</lombok.version>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.42</gbif-parsers.version>
+    <gbif-parsers.version>0.44</gbif-parsers.version>
     <dwca-io.version>2.6</dwca-io.version>
-    <gbif-api.version>0.81</gbif-api.version>
+    <gbif-api.version>0.89</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
-    <dwc-api.version>1.22</dwc-api.version>
+    <dwc-api.version>1.23</dwc-api.version>
     <kvs.version>1.4</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-occurrence.version>0.102</gbif-occurrence.version>
+    <gbif-occurrence.version>0.106</gbif-occurrence.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
@@ -569,6 +569,11 @@
         <artifactId>logstash-gelf</artifactId>
         <version>${logstash-gelf.version}</version>
         <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>${slf4j.version}</version>
       </dependency>
 
       <!-- ES -->

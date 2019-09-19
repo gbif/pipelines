@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-.buildSrc/mvnw clean package install
+.buildSrc/mvnw clean verify package install

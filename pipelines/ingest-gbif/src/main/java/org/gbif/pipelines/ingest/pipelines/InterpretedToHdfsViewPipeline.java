@@ -5,6 +5,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Lock;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -111,12 +112,13 @@ public class InterpretedToHdfsViewPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    int numberOfShards = options.getNumberOfShards();
+    Integer numberOfShards = options.getNumberOfShards();
     Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
     String targetTempPath = buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + attempt);
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
+    MDC.put("step", StepType.HDFS_VIEW.name());
 
     //Deletes the target path if it exists
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, options.getInputPath(), datasetId, attempt, types);
@@ -245,11 +247,11 @@ public class InterpretedToHdfsViewPipeline {
 
     String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
     log.info("Deleting avro files {}", deletePath);
-    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), deletePath);
+    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath, deletePath);
     String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
 
     log.info("Moving files with pattern {} to {}", filter, targetPath);
-    FsUtils.moveDirectory(options.getHdfsSiteConfig(), filter, targetPath);
+    FsUtils.moveDirectory(options.getHdfsSiteConfig(), targetPath, filter);
     log.info("Files moved to {} directory", targetPath);
   }
 }
