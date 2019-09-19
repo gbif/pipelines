@@ -1329,6 +1329,12 @@
       "items" : [ "string", "null" ]
     }, "null" ]
   }, {
+    "name" : "mediatype",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
     "name" : "hascoordinate",
     "type" : [ "boolean", "null" ]
   }, {
@@ -1388,12 +1394,6 @@
   }, {
     "name" : "repatriated",
     "type" : [ "boolean", "null" ]
-  }, {
-    "name" : "mediatype",
-    "type" : [ {
-      "type" : "array",
-      "items" : [ "string", "null" ]
-    }, "null" ]
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]
