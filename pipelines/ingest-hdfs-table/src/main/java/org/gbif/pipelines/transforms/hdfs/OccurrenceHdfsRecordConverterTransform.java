@@ -121,7 +121,7 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
         MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
         MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-        OccurrenceHdfsRecord record = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(mdr, br, tr, lr, txr, mmr, mfr, er);
+        OccurrenceHdfsRecord record = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(er, br, mdr, tr, lr, txr, mmr, mfr);
 
         c.output(record);
 

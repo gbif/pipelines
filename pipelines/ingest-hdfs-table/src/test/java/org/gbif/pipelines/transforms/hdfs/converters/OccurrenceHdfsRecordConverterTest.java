@@ -45,6 +45,7 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
 
+import org.apache.avro.specific.SpecificRecordBase;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -62,10 +63,15 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.order.simpleName(), "order");
     coreTerms.put(DwcTerm.group.simpleName(), "group");
     coreTerms.put(DcTerm.date.simpleName(), "26/06/2019");
+    coreTerms.put(DwcTerm.basisOfRecord.simpleName(), BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase());
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
         .setId("1")
         .setCoreTerms(coreTerms).build();
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(extendedRecord);
+    BasicRecord basicRecord = BasicRecord.newBuilder()
+                                          .setId("1")
+                                          .setCreated(1L)
+                                          .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
+    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(extendedRecord, basicRecord);
     Assert.assertEquals("1.0", hdfsRecord.getVerbatimdepth());
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
     Assert.assertEquals("I1", hdfsRecord.getInstitutioncode());
@@ -75,6 +81,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("order", hdfsRecord.getOrder());
     Assert.assertEquals("group", hdfsRecord.getGroup());
     Assert.assertEquals("26/06/2019", hdfsRecord.getDate());
+    Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
+    Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
   }
 
   @Test
