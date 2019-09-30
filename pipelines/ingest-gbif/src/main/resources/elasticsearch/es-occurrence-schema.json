@@ -120,9 +120,22 @@
       },
 
       "mediaTypes": {"type":  "keyword", "copy_to": "all"},
-      "multimediaItems": {"type": "nested", "enabled": false,
+      "multimediaItems": {"type": "nested",
         "properties": {
-          "license": { "type": "keyword" }
+          "license": { "type": "keyword" },
+          "type": { "type": "keyword" },
+          "format": { "type": "keyword" },
+          "identifier": { "type": "keyword" },
+          "audience": { "type": "keyword" },
+          "contributor": { "type": "keyword" },
+          "created": { "type": "date" },
+          "creator": { "type": "keyword" },
+          "description": { "type": "keyword" },
+          "publisher": { "type": "keyword" },
+          "references": { "type": "keyword" },
+          "rightsHolder": { "type": "keyword" },
+          "source": { "type": "keyword" },
+          "title": { "type": "keyword" }
         }
       },
 
