@@ -440,7 +440,7 @@ public class HBaseLockingKeyService implements Serializable {
         .forEach(entry -> lookupTableStore.delete(entry.getKey(), Columns.LOOKUP_LOCK_COLUMN));
   }
 
-  private enum KeyStatus {
+  enum KeyStatus {
     ALLOCATING,
     ALLOCATED
   }

@@ -236,7 +236,7 @@ public class HBaseStore<T> {
     }
   }
 
-  private byte[] convertKey(T key) {
+  public byte[] convertKey(T key) {
     if (salted) {
       return saltKey(String.valueOf(key), numberOfBuckets);
     } else {

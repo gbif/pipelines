@@ -203,6 +203,7 @@ class GBIFClassification {
    */
   @Getter
   @Setter
+  @Deprecated // Currently moved into the visualisation layer, and could be removed
   static class RankOfDiff {
     private static final NameParser PARSER = new NameParserGbifV1();
 

@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.beam.runners.spark.SparkRunner;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.io.hcatalog.HCatalogIO;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -150,16 +151,10 @@ public class BackbonePreRelease {
      * Formats the data for the output line in the CSV.
      */
     private static String toTabDelimited(long count, SpeciesMatchRequest verbatim, GBIFClassification current, GBIFClassification proposed) {
-      GBIFClassification.RankOfDiff diff = GBIFClassification.RankOfDiff.difference(current, proposed);
+
 
       return String.join("\t",
           String.valueOf(count),
-          diff.getScientificName(), // rank where the scientific name changes
-          diff.getCanonicalName(), // rank where the canonical name changes
-          diff.getIdentifier(), // rank where the identifier changes
-          String.valueOf(diff.isAcceptedScientificNameChanged()), // has accepted name changed?
-          String.valueOf(diff.isAcceptedCanonicalNameChanged()), // has accepted canonical changed?
-          String.valueOf(diff.isAcceptedIdentifierChanged()), // has the accepted identifier changed?
           verbatim.getKingdom(),
           verbatim.getPhylum(),
           verbatim.getClazz(),

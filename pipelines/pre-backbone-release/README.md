@@ -82,3 +82,23 @@ GROUP BY
   taxonKey,
   acceptedTaxonKey;
 ```
+
+Execute the pipeline using e.g.:
+```
+spark2-submit \
+  --class org.gbif.pipelines.backbone.impact.BackbonePreRelease \
+  --master yarn --executor-memory 4G --executor-cores 2 --num-executors 100 \
+  pre-backbone-release-2.2.4-SNAPSHOT-shaded.jar \
+  --minimumOccurrenceCount=1000
+  --scope=1
+```
+
+Get the result:
+```
+hdfs dfs -getmerge /tmp/backbone-pre-release-impact /tmp/report-1000.txt
+```
+
+Prepend a header
+```
+cat header.tsv /tmp/report-1000.txt > ./report-1000.tsv
+```
