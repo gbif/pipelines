@@ -125,12 +125,12 @@ public class ChronoAccumulatorConverter {
    * @return Year value if present
    */
   public static Optional<Year> getYear(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
-    Optional<Year> year = convert(accumulator, YEAR, issues).map(Year::of);
-    if (year.isPresent() && (year.get().isBefore(OLD_YEAR) || year.get().isAfter(Year.now()))) {
+    Optional<Integer> integer = convert(accumulator, YEAR, issues);
+    if (integer.isPresent() && (integer.get() < OLD_YEAR.getValue() || integer.get() > Year.now().getValue())) {
       issues.add(DATE_UNLIKELY);
       return Optional.empty();
     }
-    return year;
+    return integer.map(Year::of);
   }
 
   /**
@@ -140,7 +140,12 @@ public class ChronoAccumulatorConverter {
    * @return Month value if present
    */
   public static Optional<Month> getMonth(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
-    return convert(accumulator, MONTH_OF_YEAR, issues).map(Month::of);
+    Optional<Integer> integer = convert(accumulator, MONTH_OF_YEAR, issues);
+    if (integer.isPresent() && (integer.get() < 1 || integer.get() > 12)) {
+      issues.add(DATE_INVALID);
+      return Optional.empty();
+    }
+    return integer.map(Month::of);
   }
 
   /**
@@ -150,7 +155,12 @@ public class ChronoAccumulatorConverter {
    * @return Integer day value if present
    */
   public static Optional<Integer> getDay(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
-    return convert(accumulator, DAY_OF_MONTH, issues);
+    Optional<Integer> integer = convert(accumulator, DAY_OF_MONTH, issues);
+    if (integer.isPresent() && (integer.get() < 1 || integer.get() > 31)) {
+      issues.add(DATE_INVALID);
+      return Optional.empty();
+    }
+    return integer;
   }
 
   /**
