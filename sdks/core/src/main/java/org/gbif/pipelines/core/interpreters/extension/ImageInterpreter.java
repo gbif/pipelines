@@ -23,7 +23,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Image;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
+import org.gbif.pipelines.parsers.parsers.location.CoordinateParseUtils;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 

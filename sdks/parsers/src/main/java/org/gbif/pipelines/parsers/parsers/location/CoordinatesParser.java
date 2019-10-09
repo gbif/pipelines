@@ -10,7 +10,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
