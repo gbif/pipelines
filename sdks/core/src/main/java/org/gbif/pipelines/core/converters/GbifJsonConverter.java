@@ -45,7 +45,6 @@ import com.google.common.base.Strings;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.zookeeper.Op;
 
 import static org.gbif.pipelines.core.converters.JsonConverter.getEscapedTextNode;
 
