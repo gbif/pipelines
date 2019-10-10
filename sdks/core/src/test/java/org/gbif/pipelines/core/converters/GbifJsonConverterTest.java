@@ -468,7 +468,7 @@ public class GbifJsonConverterTest {
   public void multimediaRecordSkipIssuesWithIdEmptyTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"multimediaItems\":[{}],\"mediaTypes\":[]}";
+    String expected = "{\"id\":\"777\",\"multimediaItems\":[{}],\"mediaTypes\":[],\"mediaLicenses\":[]}";
 
     // State
     MultimediaRecord record = MultimediaRecord.newBuilder()
@@ -534,18 +534,20 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"multimediaItems\":[{\"type\":\"StillImage\",\"format\":\"image/jpeg\"},"
-            + "{\"type\":\"MovingImage\",\"format\":\"video/mp4\"}],"
-            + "\"mediaTypes\":[\"StillImage\",\"MovingImage\"]}";
+        "{\"id\":\"777\",\"multimediaItems\":[{\"type\":\"StillImage\",\"format\":\"image/jpeg\",\"license\":\"somelicense\"},"
+            + "{\"type\":\"MovingImage\",\"format\":\"video/mp4\",\"license\":\"somelicense\"}],"
+            + "\"mediaTypes\":[\"StillImage\",\"MovingImage\"],\"mediaLicenses\":[\"somelicense\"]}";
 
     // State
     Multimedia stillImage = new Multimedia();
     stillImage.setType(MediaType.StillImage.name());
     stillImage.setFormat("image/jpeg");
+    stillImage.setLicense("somelicense");
 
     Multimedia movingImage = new Multimedia();
     movingImage.setType(MediaType.MovingImage.name());
     movingImage.setFormat("video/mp4");
+    movingImage.setLicense("somelicense");
 
     MultimediaRecord multimediaRecord =
         MultimediaRecord.newBuilder()

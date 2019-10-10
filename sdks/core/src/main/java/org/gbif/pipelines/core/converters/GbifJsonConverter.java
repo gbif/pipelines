@@ -644,7 +644,7 @@ public class GbifJsonConverter {
 
         // media licenses
         Set<TextNode> mediaLicenses = mr.getMultimediaItems().stream()
-            .filter(i -> !Strings.isNullOrEmpty(i.getType()))
+            .filter(i -> !Strings.isNullOrEmpty(i.getLicense()))
             .map(Multimedia::getLicense)
             .map(TextNode::valueOf)
             .collect(Collectors.toSet());
