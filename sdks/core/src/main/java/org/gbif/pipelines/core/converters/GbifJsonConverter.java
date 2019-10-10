@@ -45,6 +45,7 @@ import com.google.common.base.Strings;
 import lombok.Builder;
 import lombok.Singular;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.zookeeper.Op;
 
 import static org.gbif.pipelines.core.converters.JsonConverter.getEscapedTextNode;
 
@@ -392,6 +393,8 @@ public class GbifJsonConverter {
       jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
       Collection<IntNode> taxonKey = new HashSet<>();
+      Optional.ofNullable(tr.getAcceptedUsage())
+        .ifPresent(acceptedUsage -> taxonKey.add(IntNode.valueOf(acceptedUsage.getKey())));
       if (classifications != null && !classifications.isEmpty()) {
         //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
         StringJoiner pathJoiner = new StringJoiner("_");
