@@ -641,6 +641,15 @@ public class GbifJsonConverter {
             .collect(Collectors.toSet());
 
         jc.addJsonArray("mediaTypes", mediaTypes);
+
+        // media licenses
+        Set<TextNode> mediaLicenses = mr.getMultimediaItems().stream()
+            .filter(i -> !Strings.isNullOrEmpty(i.getType()))
+            .map(Multimedia::getLicense)
+            .map(TextNode::valueOf)
+            .collect(Collectors.toSet());
+
+        jc.addJsonArray("mediaLicenses", mediaLicenses);
       }
     };
   }
