@@ -30,7 +30,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * ParDo runs sequence of interpretations for {@link AmplificationRecord} using {@link ExtendedRecord} as a source
  * and {@link AmplificationInterpreter} as interpretation steps
  *
- * @see <a href="http://rs.gbif.org/extension/ggbn/amplification.xml</a>
+ * @see <a href="http://rs.gbif.org/extension/ggbn/amplification.xml">http://rs.gbif.org/extension/ggbn/amplification.xml</a>
  */
 public class AmplificationTransform extends Transform<ExtendedRecord, AmplificationRecord> {
 
