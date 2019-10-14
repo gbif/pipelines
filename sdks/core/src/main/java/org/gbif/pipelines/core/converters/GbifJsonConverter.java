@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -391,9 +390,11 @@ public class GbifJsonConverter {
       ObjectNode classificationNode = JsonConverter.createObjectNode();
       jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
-      Collection<IntNode> taxonKey = new HashSet<>();
-      Optional.ofNullable(tr.getAcceptedUsage())
-        .ifPresent(acceptedUsage -> taxonKey.add(IntNode.valueOf(acceptedUsage.getKey())));
+      Set<IntNode> taxonKey = new HashSet<>();
+
+      Optional.ofNullable(tr.getUsage()).ifPresent(s -> taxonKey.add(IntNode.valueOf(s.getKey())));
+      Optional.ofNullable(tr.getAcceptedUsage()).ifPresent(au -> taxonKey.add(IntNode.valueOf(au.getKey())));
+
       if (classifications != null && !classifications.isEmpty()) {
         //Creates a set of fields" kingdomKey, phylumKey, classKey, etc for convenient aggregation/facets
         StringJoiner pathJoiner = new StringJoiner("_");
@@ -412,6 +413,7 @@ public class GbifJsonConverter {
         ArrayNode taxonKeyNode = classificationNode.putArray("taxonKey");
         taxonKeyNode.addAll(taxonKey);
       }
+
       Optional.ofNullable(tr.getUsageParsedName()).ifPresent(pn -> { //Required by API V1
         ObjectNode usageParsedNameNode = (ObjectNode) classificationNode.get("usageParsedName");
         usageParsedNameNode.put("genericName", pn.getGenus() != null ? pn.getGenus() : pn.getUninomial());
