@@ -333,8 +333,12 @@ public class GbifJsonConverter {
         jc.addJsonTextFieldNoCheck(ID, tr.getId());
       }
 
-      TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
-          .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventDateSingle", x.toString()));
+      if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
+        jc.addJsonTextFieldNoCheck("eventDateSingle", tr.getEventDate().getGte());
+      } else {
+        TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
+            .ifPresent(x -> jc.addJsonTextFieldNoCheck("eventDateSingle", x.toString()));
+      }
 
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);
