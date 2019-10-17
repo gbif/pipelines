@@ -115,14 +115,13 @@ public class LocationInterpreter {
         //Has geo-spatial issues
         lr.setHasGeospatialIssue(hasGeospatialIssues(lr));
 
+        interpretPublishingCountry(er, mdr).ifPresent(lr::setPublishingCountry);
+
         // Interpretation that required multiple sources
         // Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
-        if (Objects.nonNull(mdr) && Objects.nonNull(lr.getCountry())
-            && Objects.nonNull(mdr.getDatasetPublishingCountry())) {
-          lr.setRepatriated(!lr.getCountryCode().equals(mdr.getDatasetPublishingCountry()));
+        if (Objects.nonNull(lr.getCountryCode()) && Objects.nonNull(lr.getPublishingCountry())) {
+          lr.setRepatriated(!lr.getCountryCode().equals(lr.getPublishingCountry()));
         }
-
-        interpretPublishingCountry(er, mdr).ifPresent(lr::setPublishingCountry);
       }
     };
   }
