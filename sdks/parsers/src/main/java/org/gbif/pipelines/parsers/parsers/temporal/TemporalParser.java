@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
@@ -44,7 +47,7 @@ public class TemporalParser {
   private static final BiFunction<ChronoAccumulator, Set<ParsedTemporalIssue>, Temporal> TEMPORAL_FUNC =
       (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
-  private static final Predicate<Temporal> HAS_DAY_FN = t -> t instanceof LocalDate || t instanceof LocalDateTime;
+  private static final Predicate<Temporal> HAS_DAY_FN = t -> t instanceof LocalDate || t instanceof LocalDateTime || t instanceof OffsetDateTime;
   private static final Predicate<Temporal> HAS_MONTH_FN = t -> HAS_DAY_FN.test(t) || t instanceof YearMonth;
   private static final Predicate<Temporal> HAS_YEAR_FN = t -> HAS_MONTH_FN.test(t) || t instanceof Year;
 
@@ -173,14 +176,16 @@ public class TemporalParser {
     Integer dayNotNull = fromDay == null ? day : fromDay;
     Integer resultDay = isDayMatch ? dayNotNull : day;
 
-    boolean hasTime = fromTemporal instanceof LocalDateTime;
+    boolean hasTime = fromTemporal instanceof LocalDateTime || fromTemporal instanceof OffsetDateTime;
     LocalTime resultTime = hasTime ? LocalTime.from(fromTemporal) : null;
+
+    ZoneOffset resultOffset = fromTemporal instanceof OffsetDateTime ? OffsetTime.from(fromTemporal).getOffset() : null;
 
     if (!isYearMatch || !isMonthMatch || !isDayMatch) {
       yearMonthDayParsed.setFromDate(fromTemporal);
       yearMonthDayParsed.setIssues(Collections.singleton(DATE_MISMATCH));
     } else {
-      yearMonthDayParsed.setFromDate(resultYear, resultMonth, resultDay, resultTime);
+      yearMonthDayParsed.setFromDate(resultYear, resultMonth, resultDay, resultTime, resultOffset);
     }
 
     yearMonthDayParsed.setYear(resultYear);
@@ -240,7 +245,7 @@ public class TemporalParser {
       unit = ChronoUnit.MONTHS;
     } else if (from instanceof LocalDate) {
       unit = ChronoUnit.DAYS;
-    } else if (from instanceof LocalDateTime) {
+    } else if (from instanceof LocalDateTime || from instanceof OffsetDateTime) {
       unit = ChronoUnit.SECONDS;
     }
     return from.until(to, unit) >= 0;

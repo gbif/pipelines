@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.Optional;
 
@@ -17,9 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TemporalUtils {
 
-  public static Optional<Temporal> getTemporal(Year year, Month month, Integer day, LocalTime time) {
+  public static Optional<Temporal> getTemporal(Year year, Month month, Integer day, LocalTime time, ZoneOffset offset) {
     Temporal result = null;
-    if (year != null && month != null && day != null && time != null) {
+    if (year != null && month != null && day != null && time != null && offset != null) {
+      result = OffsetDateTime.of(LocalDate.of(year.getValue(), month, day), time, offset);
+    } else if (year != null && month != null && day != null && time != null) {
       result = LocalDateTime.of(LocalDate.of(year.getValue(), month, day), time);
     } else if (year != null && month != null && day != null) {
       result = LocalDate.of(year.getValue(), month, day);
@@ -41,7 +45,9 @@ public class TemporalUtils {
 
   private static Optional<Integer> getDayOfYear(Temporal temporal, boolean isEndDay) {
     Integer result = null;
-    if (temporal instanceof LocalDateTime) {
+    if (temporal instanceof OffsetDateTime) {
+      result = ((OffsetDateTime) temporal).getDayOfYear();
+    } else if (temporal instanceof LocalDateTime) {
       result = ((LocalDateTime) temporal).getDayOfYear();
     } else if (temporal instanceof LocalDate) {
       result = ((LocalDate) temporal).getDayOfYear();

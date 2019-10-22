@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.util.EnumMap;
@@ -23,6 +24,7 @@ import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.OFFSET_SECONDS;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 
@@ -115,7 +117,14 @@ public class ChronoAccumulatorConverter {
     if (!intSecond.isPresent()) {
       return Optional.of(localDateTime);
     }
-    return Optional.of(localDateTime.withSecond(intSecond.get()));
+    localDateTime = localDateTime.withSecond(intSecond.get());
+
+    // Check time zone
+    Optional<String> zone = accumulator.getChronoFileValue(OFFSET_SECONDS);
+    if (!zone.isPresent()) {
+      return Optional.of(localDateTime);
+    }
+    return Optional.of(localDateTime.atOffset(ZoneOffset.of(zone.get())));
   }
 
   /**

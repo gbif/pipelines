@@ -46,7 +46,7 @@
         "year": {"type": "integer"},
         "month": {"type": "integer"},
         "day": {"type": "integer"},
-        "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
+        "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ssZ||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
         "startDayOfYear": {"type": "integer"},
         "endDayOfYear": {"type": "integer"},
         "modified": {"type": "date"},

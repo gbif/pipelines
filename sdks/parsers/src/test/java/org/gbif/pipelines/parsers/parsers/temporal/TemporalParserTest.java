@@ -4,8 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.MonthDay;
+import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 
 import org.junit.Test;
@@ -64,6 +67,31 @@ public class TemporalParserTest {
     assertFalse(result.getToOpt().isPresent());
     assertFalse(result.getMonthOpt().isPresent());
     assertFalse(result.getDayOpt().isPresent());
+    assertEquals(startDayOfYear, result.getStartDayOfYear().get());
+    assertEquals(endDayOfYear, result.getEndDayOfYear().get());
+    assertTrue(result.getIssues().isEmpty());
+  }
+
+  @Test
+  public void dateTimeZoneTest() {
+    // State
+    Temporal expectedFirst = OffsetDateTime.of(LocalDateTime.of(2015, 4, 11, 12, 9, 33), ZoneOffset.of("+2"));
+    Integer startDayOfYear = 101;
+    Integer endDayOfYear = 101;
+
+    String eventDate = "2015-04-11T12:09:33+02:00";
+    String year = null;
+    String month = null;
+    String day = null;
+
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+    // Should
+    assertEquals(expectedFirst, result.getFromDate());
+    assertEquals(expectedFirst.get(ChronoField.YEAR), result.getYear().getValue());
+    assertFalse(result.getToOpt().isPresent());
+    assertTrue(result.getMonthOpt().isPresent());
+    assertTrue(result.getDayOpt().isPresent());
     assertEquals(startDayOfYear, result.getStartDayOfYear().get());
     assertEquals(endDayOfYear, result.getEndDayOfYear().get());
     assertTrue(result.getIssues().isEmpty());
@@ -901,9 +929,9 @@ public class TemporalParserTest {
   }
 
   @Test
-  public void localDateTimeSkipZoneTest() {
+  public void localDateTimeNegativeZoneTest() {
     // State
-    Temporal expectedFirst = LocalDateTime.of(1999, 4, 1, 9, 33, 59);
+    Temporal expectedFirst = OffsetDateTime.of(LocalDateTime.of(1999, 4, 1, 9, 33, 59), ZoneOffset.of("-3"));
     Integer startDayOfYear = 91;
     Integer endDayOfYear = 91;
 

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
+import static java.time.temporal.ChronoField.OFFSET_SECONDS;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -29,7 +30,8 @@ class ParserRawTime {
       return accumulator;
     }
     // Split by some zone char
-    String[] timeArray = DelimiterUtils.splitTime(rawTime);
+    String[] timeZoneArray = DelimiterUtils.splitTimeAndZone(rawTime);
+    String[] timeArray = DelimiterUtils.splitTime(timeZoneArray[0]);
 
     // Parse time only
     if (timeArray.length > 1) {
@@ -38,6 +40,10 @@ class ParserRawTime {
       if (timeArray.length > 2) {
         accumulator.setChronoField(SECOND_OF_MINUTE, timeArray[2]);
       }
+    }
+
+    if (timeZoneArray.length == 2 && timeZoneArray[1].length() > 1) {
+      accumulator.setChronoField(OFFSET_SECONDS, timeZoneArray[1]);
     }
 
     return accumulator;

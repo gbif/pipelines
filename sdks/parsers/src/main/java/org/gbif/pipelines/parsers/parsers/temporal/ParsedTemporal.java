@@ -2,7 +2,9 @@ package org.gbif.pipelines.parsers.parsers.temporal;
 
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.OffsetTime;
 import java.time.Year;
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.Collections;
 import java.util.HashSet;
@@ -79,9 +81,9 @@ public class ParsedTemporal {
     return Optional.ofNullable(day);
   }
 
-  public void setFromDate(Year year, Month month, Integer day, LocalTime time) {
+  public void setFromDate(Year year, Month month, Integer day, LocalTime time, ZoneOffset offset) {
     try {
-      TemporalUtils.getTemporal(year, month, day, time).ifPresent(x -> this.fromDate = x);
+      TemporalUtils.getTemporal(year, month, day, time, offset).ifPresent(x -> this.fromDate = x);
     } catch (RuntimeException ex) {
       issues.add(ParsedTemporalIssue.DATE_INVALID);
     }
