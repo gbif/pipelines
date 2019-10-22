@@ -1,13 +1,16 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.IssueRecord;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -21,6 +24,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
 
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
@@ -71,6 +76,31 @@ public class BasicRecordTransformTest {
 
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
+
+    PCollection<BasicRecord> recordCollection =
+        p.apply(Create.of(er)).apply(BasicTransform.create().interpret())
+            .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(recordCollection).containsInAnyOrder(expected);
+    p.run();
+  }
+
+  @Test
+  public void basisOfRecordTest() {
+    // Expected
+    BasicRecord expected = BasicRecord.newBuilder()
+        .setId("777")
+        .setBasisOfRecord(BasisOfRecord.UNKNOWN.name())
+        .setCreated(0L)
+        .setIssues(IssueRecord.newBuilder().setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name())).build())
+        .build();
+
+    // State
+    ExtendedRecord er = ExtendedRecord.newBuilder()
+        .setId("777")
+        .setCoreTerms(Collections.singletonMap(DwcTerm.sex.qualifiedName(), ""))
+        .build();
 
     PCollection<BasicRecord> recordCollection =
         p.apply(Create.of(er)).apply(BasicTransform.create().interpret())

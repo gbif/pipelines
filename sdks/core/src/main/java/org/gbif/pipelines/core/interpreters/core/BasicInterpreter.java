@@ -192,6 +192,12 @@ public class BasicInterpreter {
         };
 
     VocabularyParser.basisOfRecordParser().map(er, fn);
+
+    if (br.getBasisOfRecord() == null || br.getBasisOfRecord().isEmpty()) {
+      br.setBasisOfRecord(BasisOfRecord.UNKNOWN.name());
+      addIssue(br, BASIS_OF_RECORD_INVALID);
+    }
+
   }
 
   /** {@link DcTerm#references} interpretation. */
