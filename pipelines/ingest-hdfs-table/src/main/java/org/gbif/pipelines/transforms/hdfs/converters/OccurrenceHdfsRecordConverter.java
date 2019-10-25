@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -28,6 +27,7 @@ import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.occurrence.download.hive.Terms;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -266,9 +266,11 @@ public class OccurrenceHdfsRecordConverter {
         if (Objects.nonNull(tr.getAcceptedUsage().getKey())) {
           hr.setAcceptedtaxonkey(tr.getAcceptedUsage().getKey());
         }
+        Optional.ofNullable(tr.getAcceptedUsage().getRank()).ifPresent(r -> hr.setVTaxonrank(r.name()));
       } else if (Objects.nonNull(tr.getUsage())) {
         hr.setAcceptedtaxonkey(tr.getUsage().getKey());
         hr.setAcceptedscientificname(tr.getUsage().getName());
+        Optional.ofNullable(tr.getUsage().getRank()).ifPresent(r -> hr.setVTaxonrank(r.name()));
       }
 
       if (Objects.nonNull(tr.getUsageParsedName())) {
@@ -278,6 +280,11 @@ public class OccurrenceHdfsRecordConverter {
         hr.setSpecificepithet(tr.getUsageParsedName().getSpecificEpithet());
         hr.setInfraspecificepithet(tr.getUsageParsedName().getInfraspecificEpithet());
       }
+
+      Optional.ofNullable(tr.getDiagnostics())
+          .map(Diagnostic::getStatus)
+          .ifPresent(d -> hr.setTaxonomicstatus(d.name()));
+
       addIssues(tr.getIssues(), hr);
     };
   }
