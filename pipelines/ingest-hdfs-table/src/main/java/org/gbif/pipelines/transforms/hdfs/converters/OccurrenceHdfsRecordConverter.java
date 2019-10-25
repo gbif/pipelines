@@ -136,7 +136,6 @@ public class OccurrenceHdfsRecordConverter {
     return (hr, sr) -> {
       LocationRecord lr = (LocationRecord)sr;
       hr.setCountrycode(lr.getCountryCode());
-      hr.setCounty(lr.getCountry());
       hr.setContinent(lr.getContinent());
       hr.setDecimallatitude(lr.getDecimalLatitude());
       hr.setDecimallongitude(lr.getDecimalLongitude());
