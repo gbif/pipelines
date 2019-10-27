@@ -265,11 +265,11 @@ public class OccurrenceHdfsRecordConverter {
         if (Objects.nonNull(tr.getAcceptedUsage().getKey())) {
           hr.setAcceptedtaxonkey(tr.getAcceptedUsage().getKey());
         }
-        Optional.ofNullable(tr.getAcceptedUsage().getRank()).ifPresent(r -> hr.setVTaxonrank(r.name()));
+        Optional.ofNullable(tr.getAcceptedUsage().getRank()).ifPresent(r -> hr.setTaxonrank(r.name()));
       } else if (Objects.nonNull(tr.getUsage())) {
         hr.setAcceptedtaxonkey(tr.getUsage().getKey());
         hr.setAcceptedscientificname(tr.getUsage().getName());
-        Optional.ofNullable(tr.getUsage().getRank()).ifPresent(r -> hr.setVTaxonrank(r.name()));
+        Optional.ofNullable(tr.getUsage().getRank()).ifPresent(r -> hr.setTaxonrank(r.name()));
       }
 
       if (Objects.nonNull(tr.getUsageParsedName())) {
