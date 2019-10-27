@@ -45,7 +45,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
 
-import org.apache.avro.specific.SpecificRecordBase;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -281,7 +280,6 @@ public class OccurrenceHdfsRecordConverterTest {
         .setMinimumElevationInMeters(0.1)
         .build();
     OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(locationRecord);
-    Assert.assertEquals(Country.COSTA_RICA.name(), hdfsRecord.getCounty());
     Assert.assertEquals(Country.COSTA_RICA.getIso2LetterCode(), hdfsRecord.getCountrycode());
     Assert.assertEquals(new Double(9.934739), hdfsRecord.getDecimallatitude());
     Assert.assertEquals(new Double(-84.087502), hdfsRecord.getDecimallongitude());
