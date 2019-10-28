@@ -9,6 +9,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -312,15 +313,30 @@ public class OccurrenceHdfsRecordConverter {
       }
       hr.setCreated(new Date(br.getCreated()).toString());
       addIssues(br.getIssues(), hr);
+    };
+  }
 
-      //the id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have been
-      // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for a long time in
-      // our public API v1, so we continue to do this.the id (the <id> reference in the DWCA meta.xml) is an identifier
-      // local to the DWCA, and could only have been used for "un-starring" a DWCA star record. However, we've exposed
-      // it as DcTerm.identifier for a long time in our public API v1, so we continue to do this.
+  /**
+   * The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have been
+   * used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for a long time in
+   * our public API v1, so we continue to do this.the id (the <id> reference in the DWCA meta.xml) is an identifier
+   * local to the DWCA, and could only have been used for "un-starring" a DWCA star record. However, we've exposed
+   * it as DcTerm.identifier for a long time in our public API v1, so we continue to do this.
+   */
+  private static void setIdentifier(BasicRecord br, ExtendedRecord er, OccurrenceHdfsRecord hr) {
+
+    String institutionCode = er.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName());
+    String collectionCode = er.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName());
+    String catalogNumber = er.getCoreTerms().get(DwcTerm.catalogNumber.qualifiedName());
+
+    // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
+    String triplet = String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
+    String gbifId = Optional.ofNullable(br.getGbifId()).map(x -> Long.toString(x)).orElse("");
+
+    if (!br.getId().equals(gbifId) && !br.getId().equals(triplet)) {
       hr.setIdentifier(br.getId());
       hr.setVIdentifier(br.getId());
-    };
+    }
   }
 
   /**
@@ -409,6 +425,18 @@ public class OccurrenceHdfsRecordConverter {
       Optional.ofNullable(converters.get(record.getClass()))
         .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
     }
+
+    // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have been
+    // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for a long time in
+    // our public API v1, so we continue to do this.the id (the <id> reference in the DWCA meta.xml) is an identifier
+    // local to the DWCA, and could only have been used for "un-starring" a DWCA star record. However, we've exposed
+    // it as DcTerm.identifier for a long time in our public API v1, so we continue to do this.
+    Optional<SpecificRecordBase> erOpt = Arrays.stream(records).filter(x -> x instanceof ExtendedRecord).findFirst();
+    Optional<SpecificRecordBase> brOpt = Arrays.stream(records).filter(x -> x instanceof BasicRecord).findFirst();
+    if (erOpt.isPresent() && brOpt.isPresent()) {
+      setIdentifier((BasicRecord) brOpt.get(), (ExtendedRecord) erOpt.get(), occurrenceHdfsRecord);
+    }
+
     return occurrenceHdfsRecord;
   }
 
