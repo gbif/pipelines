@@ -312,6 +312,14 @@ public class OccurrenceHdfsRecordConverter {
       }
       hr.setCreated(new Date(br.getCreated()).toString());
       addIssues(br.getIssues(), hr);
+
+      //the id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have been
+      // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for a long time in
+      // our public API v1, so we continue to do this.the id (the <id> reference in the DWCA meta.xml) is an identifier
+      // local to the DWCA, and could only have been used for "un-starring" a DWCA star record. However, we've exposed
+      // it as DcTerm.identifier for a long time in our public API v1, so we continue to do this.
+      hr.setIdentifier(br.getId());
+      hr.setVIdentifier(br.getId());
     };
   }
 
