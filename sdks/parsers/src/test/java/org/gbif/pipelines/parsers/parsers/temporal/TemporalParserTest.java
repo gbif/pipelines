@@ -1620,6 +1620,117 @@ public class TemporalParserTest {
   }
 
   @Test
+  public void usFormatTest() {
+    // State
+    Temporal expectedFirst = LocalDate.of(1968, 6, 10);
+    Integer startDayOfYear = 162;
+    Integer endDayOfYear = 162;
+
+    // State
+    String eventDate = "06-10-1968";
+    String year = "1968";
+    String month = "6";
+    String day = "10";
+
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+
+    // Should
+    assertEquals(expectedFirst, result.getFromDate());
+    assertFalse(result.getToOpt().isPresent());
+    assertEquals(Year.from(expectedFirst), result.getYear());
+    assertEquals(Month.from(expectedFirst), result.getMonth());
+    assertEquals(MonthDay.from(expectedFirst).getDayOfMonth(), result.getDay().intValue());
+    assertTrue(result.getIssues().isEmpty());
+    assertEquals(startDayOfYear, result.getStartDayOfYear().get());
+    assertEquals(endDayOfYear, result.getEndDayOfYear().get());
+  }
+
+  @Test
+  public void usFormatPeriodTest() {
+    // State
+    Temporal expectedFirst = LocalDate.of(1968, 6, 10);
+    Temporal secondFirst = LocalDate.of(1968, 7, 10);
+    Integer startDayOfYear = 162;
+    Integer endDayOfYear = 192;
+
+    // State
+    String eventDate = "06-10-1968/07-10-1968";
+    String year = "1968";
+    String month = "6";
+    String day = "10";
+
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+
+    // Should
+    assertEquals(expectedFirst, result.getFromDate());
+    assertEquals(secondFirst, result.getToDate());
+    assertEquals(Year.from(expectedFirst), result.getYear());
+    assertEquals(Month.from(expectedFirst), result.getMonth());
+    assertEquals(MonthDay.from(expectedFirst).getDayOfMonth(), result.getDay().intValue());
+    assertTrue(result.getIssues().isEmpty());
+    assertEquals(startDayOfYear, result.getStartDayOfYear().get());
+    assertEquals(endDayOfYear, result.getEndDayOfYear().get());
+  }
+
+  @Test
+  public void usFormatPeriodWithTimeTest() {
+    // State
+    Temporal expectedFirst = LocalDateTime.of(1968, 6, 10, 22, 0);
+    Temporal secondFirst = LocalDateTime.of(1968, 7, 10, 20, 0);
+    Integer startDayOfYear = 162;
+    Integer endDayOfYear = 192;
+
+    // State
+    String eventDate = "06-10-1968T22:00/07-10-1968T20:00";
+    String year = "1968";
+    String month = "6";
+    String day = "10";
+
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+
+    // Should
+    assertEquals(expectedFirst, result.getFromDate());
+    assertEquals(secondFirst, result.getToDate());
+    assertEquals(Year.from(expectedFirst), result.getYear());
+    assertEquals(Month.from(expectedFirst), result.getMonth());
+    assertEquals(MonthDay.from(expectedFirst).getDayOfMonth(), result.getDay().intValue());
+    assertTrue(result.getIssues().isEmpty());
+    assertEquals(startDayOfYear, result.getStartDayOfYear().get());
+    assertEquals(endDayOfYear, result.getEndDayOfYear().get());
+  }
+
+  @Test
+  public void usFormatPeriodWithTime2Test() {
+    // State
+    Temporal expectedFirst = LocalDateTime.of(1968, 6, 10, 22, 0);
+    Temporal secondFirst = LocalDateTime.of(1968, 7, 10, 22, 0);
+    Integer startDayOfYear = 162;
+    Integer endDayOfYear = 192;
+
+    // State
+    String eventDate = "06-10-1968T22:00/07-10-1968";
+    String year = "1968";
+    String month = "6";
+    String day = "10";
+
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+
+    // Should
+    assertEquals(expectedFirst, result.getFromDate());
+    assertEquals(secondFirst, result.getToDate());
+    assertEquals(Year.from(expectedFirst), result.getYear());
+    assertEquals(Month.from(expectedFirst), result.getMonth());
+    assertEquals(MonthDay.from(expectedFirst).getDayOfMonth(), result.getDay().intValue());
+    assertTrue(result.getIssues().isEmpty());
+    assertEquals(startDayOfYear, result.getStartDayOfYear().get());
+    assertEquals(endDayOfYear, result.getEndDayOfYear().get());
+  }
+
+  @Test
   public void wrongLeapDay2Test() {
     // State
     String year = "2013";
