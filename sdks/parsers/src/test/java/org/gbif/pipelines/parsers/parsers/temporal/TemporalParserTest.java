@@ -75,7 +75,7 @@ public class TemporalParserTest {
   @Test
   public void dateTimeZoneTest() {
     // State
-    Temporal expectedFirst = OffsetDateTime.of(LocalDateTime.of(2015, 4, 11, 12, 9, 33), ZoneOffset.of("+2"));
+    Temporal expectedFirst = LocalDateTime.of(2015, 4, 11, 12, 9, 33);
     Integer startDayOfYear = 101;
     Integer endDayOfYear = 101;
 
@@ -90,6 +90,57 @@ public class TemporalParserTest {
     assertEquals(expectedFirst, result.getFromDate());
     assertEquals(expectedFirst.get(ChronoField.YEAR), result.getYear().getValue());
     assertFalse(result.getToOpt().isPresent());
+    assertTrue(result.getMonthOpt().isPresent());
+    assertTrue(result.getDayOpt().isPresent());
+    assertEquals(startDayOfYear, result.getStartDayOfYear().get());
+    assertEquals(endDayOfYear, result.getEndDayOfYear().get());
+    assertTrue(result.getIssues().isEmpty());
+  }
+
+  @Test
+  public void dateTimeWithSpacesTest() {
+    // State
+    Temporal expectedFirst = LocalDateTime.of(2019, 1, 1, 9, 15, 54);
+    Integer startDayOfYear = 1;
+    Integer endDayOfYear = 1;
+
+    String eventDate = "2019-01-01 9:15:54 am GMT";
+    String year = null;
+    String month = null;
+    String day = null;
+
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+    // Should
+    assertEquals(expectedFirst, result.getFromDate());
+    assertEquals(expectedFirst.get(ChronoField.YEAR), result.getYear().getValue());
+    assertFalse(result.getToOpt().isPresent());
+    assertTrue(result.getMonthOpt().isPresent());
+    assertTrue(result.getDayOpt().isPresent());
+    assertEquals(startDayOfYear, result.getStartDayOfYear().get());
+    assertEquals(endDayOfYear, result.getEndDayOfYear().get());
+    assertTrue(result.getIssues().isEmpty());
+  }
+
+  @Test
+  public void dateTimeZonePeriodTest() {
+    // State
+    Temporal expectedFirst = LocalDateTime.of(2015, 4, 11, 12, 9, 33);
+    Temporal expectedSecond = LocalDateTime.of(2015, 5, 11, 12, 9, 33);
+    Integer startDayOfYear = 101;
+    Integer endDayOfYear = 131;
+
+    String eventDate = "2015-04-11T12:09:33+14:00/2015-05-11T12:09:33+14:00";
+    String year = null;
+    String month = null;
+    String day = null;
+
+    // When
+    ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+    // Should
+    assertEquals(expectedFirst, result.getFromDate());
+    assertEquals(expectedFirst.get(ChronoField.YEAR), result.getYear().getValue());
+    assertEquals(expectedSecond, result.getToDate());
     assertTrue(result.getMonthOpt().isPresent());
     assertTrue(result.getDayOpt().isPresent());
     assertEquals(startDayOfYear, result.getStartDayOfYear().get());
@@ -931,7 +982,7 @@ public class TemporalParserTest {
   @Test
   public void localDateTimeNegativeZoneTest() {
     // State
-    Temporal expectedFirst = OffsetDateTime.of(LocalDateTime.of(1999, 4, 1, 9, 33, 59), ZoneOffset.of("-3"));
+    Temporal expectedFirst = LocalDateTime.of(1999, 4, 1, 9, 33, 59);
     Integer startDayOfYear = 91;
     Integer endDayOfYear = 91;
 
