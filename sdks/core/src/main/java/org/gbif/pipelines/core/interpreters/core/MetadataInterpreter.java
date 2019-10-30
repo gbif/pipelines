@@ -86,7 +86,9 @@ public class MetadataInterpreter {
         return null;
       }
     }).orElse(null);
-    return LicenseParser.getInstance().parseUriThenTitle(uri, null);
+    License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
+    //UNSPECIFIED must be mapped to null
+    return License.UNSPECIFIED == license ? null : license;
   }
 
   /** Gets the latest crawl attempt time, if exists. */

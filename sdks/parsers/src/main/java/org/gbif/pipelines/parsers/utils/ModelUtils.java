@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelUtils {
 
-  private static Function<String,String> NULL_TO_NULL = value -> Optional.ofNullable(value).map(v -> "null".equalsIgnoreCase(v) ? null : v).orElseGet(null);
+  private static Function<String,String> NULL_TO_NULL = value -> Optional.ofNullable(value).map(v -> "null".equalsIgnoreCase(v.trim()) ? null : v).orElseGet(null);
 
   public static String extractValue(ExtendedRecord er, Term term) {
     return er.getCoreTerms().get(term.qualifiedName());
