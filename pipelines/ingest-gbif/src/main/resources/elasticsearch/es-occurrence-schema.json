@@ -48,6 +48,7 @@
       "publishingCountry": {"type": "keyword", "copy_to": "all"},
       "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
       "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},
