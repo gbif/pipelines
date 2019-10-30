@@ -53,39 +53,20 @@ public class TemporalRecordTransformTest {
   @Test
   public void transformationTest() {
     // State
-    final List<ExtendedRecord> input =
-        createExtendedRecordList("1999-04-17T12:26Z/12:52:17Z", "1999-04/2010-05", "2010/2011");
+    final List<ExtendedRecord> input = createExtendedRecordList("1999-01-01T12:26Z");
 
     // Expected
     // First
-    final LocalDateTime fromOne = LocalDateTime.of(1999, 4, 17, 12, 26);
-    final LocalDateTime toOne = LocalDateTime.of(1999, 4, 17, 12, 52, 17);
+    final LocalDateTime fromOne = LocalDateTime.of(1999, 1, 1, 12, 26);
     final ParsedTemporal periodOne = ParsedTemporal.create();
     periodOne.setFromDate(fromOne);
-    periodOne.setToDate(toOne);
     periodOne.setYear(Year.of(1999));
-    periodOne.setMonth(Month.of(10));
+    periodOne.setMonth(Month.of(1));
     periodOne.setDay(1);
-    // Second
-    final YearMonth fromTwo = YearMonth.of(1999, 4);
-    final YearMonth toTwo = YearMonth.of(2010, 5);
-    final ParsedTemporal periodTwo = ParsedTemporal.create();
-    periodTwo.setFromDate(fromTwo);
-    periodTwo.setToDate(toTwo);
-    periodTwo.setYear(Year.of(1999));
-    periodTwo.setMonth(Month.of(10));
-    periodTwo.setDay(1);
-    // Third
-    final Year fromThree = Year.of(2010);
-    final Year toThree = Year.of(2011);
-    final ParsedTemporal periodThree = ParsedTemporal.create();
-    periodThree.setFromDate(fromThree);
-    periodThree.setToDate(toThree);
-    periodThree.setYear(Year.of(1999));
-    periodThree.setMonth(Month.of(10));
-    periodThree.setDay(1);
+    periodOne.setDay(1);
+    periodOne.setDay(1);
 
-    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne, periodTwo, periodThree);
+    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne);
 
     // When
     PCollection<TemporalRecord> dataStream = p
@@ -123,10 +104,8 @@ public class TemporalRecordTransformTest {
             x -> {
               ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
               record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
-              record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "10");
+              record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "1");
               record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "1");
-              record.getCoreTerms().put(DwcTerm.endDayOfYear.qualifiedName(), "365");
-              record.getCoreTerms().put(DwcTerm.startDayOfYear.qualifiedName(), "1");
               record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), x);
               record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), x);
               record.getCoreTerms().put(DcTerm.modified.qualifiedName(), x);
@@ -149,12 +128,7 @@ public class TemporalRecordTransformTest {
                   .setEventDate(EventDate.newBuilder().setGte(from).setLte(to).build())
                   .setDateIdentified(x.getFromOpt().map(Temporal::toString).orElse(null))
                   .setModified(x.getFromOpt().map(Temporal::toString).orElse(null))
-                  .setStartDayOfYear(x.getStartDayOfYear().orElse(null))
-                  .setEndDayOfYear(x.getEndDayOfYear().orElse(null))
                   .setCreated(0L)
-                  .setIssues(IssueRecord.newBuilder()
-                      .setIssueList(Collections.singletonList(RECORDED_DATE_MISMATCH.name()))
-                      .build())
                   .build();
             })
         .collect(Collectors.toList());

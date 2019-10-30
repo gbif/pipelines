@@ -55,9 +55,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
     Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(TemporalInterpreter::interpretEventDate)
-        .via(TemporalInterpreter::interpretDateIdentified)
-        .via(TemporalInterpreter::interpretModifiedDate);
+        .via(TemporalInterpreter::interpretTemporal);
 
     out.output(tr);
 

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.Term;
@@ -18,21 +17,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelUtils {
 
-  private static Function<String,String> NULL_TO_NULL = value -> Optional.ofNullable(value).map(v -> "null".equalsIgnoreCase(v.trim()) ? null : v).orElseGet(null);
-
   public static String extractValue(ExtendedRecord er, Term term) {
     return er.getCoreTerms().get(term.qualifiedName());
   }
 
-  /**
-   * Extracts a Term value, if such value has a variation of the word "null" it is transformed to null.
-   */
+  /** Extracts a Term value, if such value has a variation of the word "null" it is transformed to null. */
   public static String extractNullAwareValue(ExtendedRecord er, Term term) {
-    return NULL_TO_NULL.apply(er.getCoreTerms().get(term.qualifiedName()));
+    String value = extractValue(er, term);
+    return value != null && "null".equalsIgnoreCase(value.trim()) ? null : value;
   }
 
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
-    return Optional.ofNullable(er.getCoreTerms().get(term.qualifiedName()));
+    return Optional.ofNullable(extractValue(er, term));
+  }
+
+  public static boolean hasValue(ExtendedRecord er, Term term) {
+    return extractOptValue(er, term).isPresent();
   }
 
   /** Checks if a {@link ExtendedRecord} is null or empty. */
@@ -49,18 +49,25 @@ public class ModelUtils {
   }
 
   public static void addIssue(Issues model, String issue) {
-    model.getIssues().getIssueList().add(issue);
+    if (!model.getIssues().getIssueList().contains(issue)) {
+      model.getIssues().getIssueList().add(issue);
+    }
   }
 
   public static void addIssue(Issues model, OccurrenceIssue issue) {
-    model.getIssues().getIssueList().add(issue.name());
+    addIssue(model, issue.name());
   }
 
   public static void addIssue(Issues model, List<String> issues) {
-    model.getIssues().getIssueList().addAll(issues);
+    issues.forEach(x -> addIssue(model, x));
   }
 
   public static void addIssue(Issues model, Set<String> issues) {
-    model.getIssues().getIssueList().addAll(issues);
+    issues.forEach(x -> addIssue(model, x));
   }
+
+  public static void addIssueSet(Issues model, Set<OccurrenceIssue> issues) {
+    issues.forEach(x -> addIssue(model, x));
+  }
+
 }
