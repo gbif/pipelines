@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.Term;
@@ -17,8 +18,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelUtils {
 
+  private static Function<String,String> NULL_TO_NULL = value -> Optional.ofNullable(value).map(v -> "null".equalsIgnoreCase(v) ? null : v).orElseGet(null);
+
   public static String extractValue(ExtendedRecord er, Term term) {
     return er.getCoreTerms().get(term.qualifiedName());
+  }
+
+  /**
+   * Extracts a Term value, if such value has a variation of the word "null" it is transformed to null.
+   */
+  public static String extractNullAwareValue(ExtendedRecord er, Term term) {
+    return NULL_TO_NULL.apply(er.getCoreTerms().get(term.qualifiedName()));
   }
 
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {
