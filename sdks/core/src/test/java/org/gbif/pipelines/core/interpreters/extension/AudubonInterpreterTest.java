@@ -21,8 +21,9 @@ public class AudubonInterpreterTest {
     // Expected
     String expected = "{\"id\": \"id\", \"created\": null, \"audubonItems\": [{\"creator\": \"Jose Padial\", "
         + "\"creatorUri\": null, \"providerLiteral\": \"CM\", \"provider\": null, \"metadataCreatorLiteral\": null, "
-        + "\"metadataCreator\": null, \"metadataProviderLiteral\": null, \"metadataProvider\": null, \"rights\": \"CC0_1_0\", "
-        + "\"rightsUri\": \"http://creativecommons.org/publicdomain/zero/1.0/legalcode\", \"owner\": "
+        + "\"metadataCreator\": null, \"metadataProviderLiteral\": null, \"metadataProvider\": null, \"rights\": "
+        + "\"http://creativecommons.org/publicdomain/zero/1.0/\", "
+        + "\"rightsUri\": \"http://creativecommons.org/publicdomain/zero/1.0/\", \"owner\": "
         + "\"Carnegie Museum of Natural History Herps Collection (CM:Herps)\", \"usageTerms\": "
         + "\"CC0 1.0 (Public-domain)\", \"webStatement\": null, \"licenseLogoUrl\": null, \"credit\": null, "
         + "\"attributionLogoUrl\": null, \"attributionLinkUrl\": null, \"fundingAttribution\": null, \"source\": null, "
@@ -145,7 +146,7 @@ public class AudubonInterpreterTest {
     String expected =
         "{\"id\": \"id\", \"created\": null, \"audubonItems\": [{\"creator\": null, \"creatorUri\": null, \"providerLiteral\": "
             + "null, \"provider\": null, \"metadataCreatorLiteral\": null, \"metadataCreator\": null, \"metadataProviderLiteral\": null, "
-            + "\"metadataProvider\": null, \"rights\": \"UNSPECIFIED\", \"rightsUri\": null, \"owner\": null, \"usageTerms\": null, "
+            + "\"metadataProvider\": null, \"rights\": null, \"rightsUri\": null, \"owner\": null, \"usageTerms\": null, "
             + "\"webStatement\": null, \"licenseLogoUrl\": null, \"credit\": null, \"attributionLogoUrl\": null, "
             + "\"attributionLinkUrl\": null, \"fundingAttribution\": null, \"source\": null, \"sourceUri\": null, \"description\": null, "
             + "\"caption\": null, \"language\": null, \"languageUri\": null, \"physicalSetting\": null, \"cvTerm\": null, "

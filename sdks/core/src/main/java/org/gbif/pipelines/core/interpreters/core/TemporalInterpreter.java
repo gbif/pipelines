@@ -94,13 +94,6 @@ public class TemporalInterpreter {
     }
   }
 
-  public static OccurrenceParseResult<AtomizedLocalDate> interpretEventDate(String year, String month, String day,
-      String dateString) {
-    OccurrenceParseResult<TemporalAccessor> ta = interpretRecordedDate(year, month, day, dateString);
-    return new OccurrenceParseResult<>(ta.getStatus(), ta.getConfidence(),
-        AtomizedLocalDate.fromTemporalAccessor(ta.getPayload()), null, ta.getError());
-  }
-
   /**
    * A convenience method that calls interpretRecordedDate with the verbatim recordedDate values from the
    * VerbatimOccurrence.
