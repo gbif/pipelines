@@ -18,8 +18,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelUtils {
 
-  private static Function<String,String> NULL_TO_NULL = value -> Optional.ofNullable(value).map(v -> "null".equalsIgnoreCase(v.trim()) ? null : v).orElseGet(null);
-
   public static String extractValue(ExtendedRecord er, Term term) {
     return er.getCoreTerms().get(term.qualifiedName());
   }
@@ -28,7 +26,8 @@ public class ModelUtils {
    * Extracts a Term value, if such value has a variation of the word "null" it is transformed to null.
    */
   public static String extractNullAwareValue(ExtendedRecord er, Term term) {
-    return NULL_TO_NULL.apply(er.getCoreTerms().get(term.qualifiedName()));
+    String value = er.getCoreTerms().get(term.qualifiedName());
+    return Objects.nonNull(value) && "null".equalsIgnoreCase(value.trim()) ? null : value;
   }
 
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {

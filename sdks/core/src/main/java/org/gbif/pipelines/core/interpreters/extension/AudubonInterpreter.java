@@ -5,12 +5,9 @@ import java.time.temporal.Temporal;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
@@ -47,7 +44,6 @@ public class AudubonInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
   private static final LicenseUriParser LICENSE_URI_PARSER = LicenseUriParser.getInstance();
-  private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final String IPTC = "http://iptc.org/std/Iptc4xmpExt/2008-02-29/";
 
@@ -259,31 +255,13 @@ public class AudubonInterpreter {
 
   /** Returns ENUM instead of url string */
   private static void parseAndSetRightsAndRightsUri(Audubon a) {
-    Function<String, URI> uriFn = v -> Optional.ofNullable(v).map(x -> {
-      try {
-        return URI.create(x);
-      } catch (IllegalArgumentException ex) {
-        return null;
-      }
-    }).orElse(null);
-
-    URI uri = uriFn.apply(a.getRightsUri());
-    License license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRights());
-
-    if (uri == null && license == License.UNSPECIFIED) {
-      uri = uriFn.apply(a.getRights());
-      license = LICENSE_PARSER.parseUriThenTitle(uri, a.getRightsUri());
-    }
-
-    String resultUrl = license.getLicenseUrl();
-    String resultName = license.name();
-    if (license == License.UNSUPPORTED) {
-      String rightsUri = Strings.isNullOrEmpty(a.getRightsUri()) ? a.getRights() : a.getRightsUri();
-      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(rightsUri);
-      resultUrl = resultName = parsed.isSuccessful() ? parsed.getPayload().toString() : rightsUri;
-    }
-    a.setRights(resultName);
-    a.setRightsUri(resultUrl);
+     String rightsUri = Strings.isNullOrEmpty(a.getRightsUri()) ? a.getRights() : a.getRightsUri();
+     if (Objects.nonNull(rightsUri)) {
+       ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(rightsUri);
+       String licenseUri = parsed.isSuccessful() ? parsed.getPayload().toString() : rightsUri;
+       a.setRights(licenseUri);
+       a.setRightsUri(licenseUri);
+     }
   }
 
   /** Parses type in case if type is null, but maybe accessUri contains type, like - *.jpg */

@@ -31,6 +31,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LONGITUDE
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
 import static org.gbif.pipelines.core.interpreters.core.LocationInterpreter.hasGeospatialIssues;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -276,19 +277,24 @@ public class LocationInterpreterTest {
   @Test
   public void nullAwareValues() {
     // State
-    ExtendedRecord extendedRecord = new ExtendedRecord();
-    extendedRecord.setId("1");
+    ExtendedRecord er = new ExtendedRecord();
+    er.setId(ID);
     Map<String,String> coreTerms = new HashMap<>();
-    coreTerms.put(DwcTerm.maximumDepthInMeters.simpleName(), "NuLL");
-    coreTerms.put(DwcTerm.minimumDepthInMeters.simpleName(), "null");
-    extendedRecord.setCoreTerms(coreTerms);
+    coreTerms.put(DwcTerm.maximumDepthInMeters.qualifiedName(), "NuLL");
+    coreTerms.put(DwcTerm.minimumDepthInMeters.qualifiedName(), "null");
+    coreTerms.put(DwcTerm.minimumElevationInMeters.qualifiedName(), "10");
+    er.setCoreTerms(coreTerms);
+
+    LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
 
     // When
-    LocationRecord locationRecord = interpret(extendedRecord);
+    LocationInterpreter.interpretDepth(er, lr);
+    LocationInterpreter.interpretElevation(er, lr);
 
     //Should
-    assertNull(locationRecord.getDepth());
-    assertTrue(locationRecord.getIssues().getIssueList().isEmpty());
+    assertNull(lr.getDepth());
+    assertNotNull(lr.getElevation());
+    assertTrue(lr.getIssues().getIssueList().isEmpty());
   }
 
 }
