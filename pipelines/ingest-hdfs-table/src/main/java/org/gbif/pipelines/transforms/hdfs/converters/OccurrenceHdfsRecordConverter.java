@@ -97,20 +97,24 @@ public class OccurrenceHdfsRecordConverter {
 
   //Converts a String into Date
   private static final Function<String, Date> STRING_TO_DATE =
-    dateAsString -> {
-      if (Strings.isNullOrEmpty(dateAsString)) {
-        return null;
-      }
+      dateAsString -> {
+        if (Strings.isNullOrEmpty(dateAsString)) {
+          return null;
+        }
 
-      // parse string
-      TemporalAccessor temporalAccessor = FORMATTER.parseBest(dateAsString,
-                                                              ZonedDateTime::from,
-                                                              LocalDateTime::from,
-                                                              LocalDate::from,
-                                                              YearMonth::from,
-                                                              Year::from);
-      return TEMPORAL_TO_DATE.apply(temporalAccessor);
-    };
+        try {
+          // parse string
+          TemporalAccessor temporalAccessor = FORMATTER.parseBest(dateAsString,
+              ZonedDateTime::from,
+              LocalDateTime::from,
+              LocalDate::from,
+              YearMonth::from,
+              Year::from);
+          return TEMPORAL_TO_DATE.apply(temporalAccessor);
+        } catch (Exception ex) {
+          return null;
+        }
+      };
 
   private static final TermFactory TERM_FACTORY =  TermFactory.instance();
 
