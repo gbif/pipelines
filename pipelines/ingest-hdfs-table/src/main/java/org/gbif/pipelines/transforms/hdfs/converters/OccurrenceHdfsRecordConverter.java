@@ -211,9 +211,16 @@ public class OccurrenceHdfsRecordConverter {
         hr.setEnddayofyear(tr.getEndDayOfYear().toString());
       }
 
-      TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
-        .map(TEMPORAL_TO_DATE)
-        .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
+      if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
+        Optional.ofNullable(tr.getEventDate().getGte())
+            .map(STRING_TO_DATE)
+            .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
+      } else {
+        TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
+            .map(TEMPORAL_TO_DATE)
+            .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
+      }
+
       addIssues(tr.getIssues(), hr);
     };
   }
