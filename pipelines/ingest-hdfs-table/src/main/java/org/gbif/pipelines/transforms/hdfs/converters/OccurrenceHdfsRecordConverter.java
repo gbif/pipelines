@@ -333,7 +333,9 @@ public class OccurrenceHdfsRecordConverter {
     String triplet = String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
     String gbifId = Optional.ofNullable(br.getGbifId()).map(x -> Long.toString(x)).orElse("");
 
-    if (!br.getId().equals(gbifId) && !br.getId().equals(triplet)) {
+    String occId = er.getCoreTerms().get(DwcTerm.occurrenceID.qualifiedName());
+
+    if (!br.getId().equals(gbifId) && (!Strings.isNullOrEmpty(occId) || !br.getId().equals(triplet))) {
       hr.setIdentifier(br.getId());
       hr.setVIdentifier(br.getId());
     }
