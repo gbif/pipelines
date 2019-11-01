@@ -42,7 +42,7 @@ public class MetadataInterpreter {
         mdr.setDatasetTitle(dataset.getTitle());
         mdr.setInstallationKey(dataset.getInstallationKey());
         mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-        mdr.setLicense(getLicense(dataset.getLicense()).name());
+        Optional.ofNullable(getLicense(dataset.getLicense())).ifPresent(license -> mdr.setLicense(license.name()));
 
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (networkList != null && !networkList.isEmpty()) {
