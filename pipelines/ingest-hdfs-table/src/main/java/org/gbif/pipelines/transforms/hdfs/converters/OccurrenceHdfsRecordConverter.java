@@ -405,23 +405,27 @@ public class OccurrenceHdfsRecordConverter {
             setHdfsRecordField(hr, field, verbatimField, v);
           });
         }
+
         Optional.ofNullable(interpretedSchemaField(term)).ifPresent(field -> {
-          String interpretedFieldname = field.name();
-          if (DcTerm.abstract_ == term) {
-            interpretedFieldname = "abstract$";
-          } else if (DwcTerm.class_ == term) {
-            interpretedFieldname = "class$";
-          } else if (DwcTerm.group == term) {
-            interpretedFieldname = "group";
-          } else if (DwcTerm.order == term) {
-            interpretedFieldname = "order";
-          } else if (DcTerm.date == term) {
-            interpretedFieldname = "date";
-          } else if (DcTerm.format == term) {
-            interpretedFieldname = "format";
+          //Fields that were set by other mappers are ignored
+          if (Objects.isNull(hr.get(field.name()))) {
+            String interpretedFieldname = field.name();
+            if (DcTerm.abstract_ == term) {
+              interpretedFieldname = "abstract$";
+            } else if (DwcTerm.class_ == term) {
+              interpretedFieldname = "class$";
+            } else if (DwcTerm.group == term) {
+              interpretedFieldname = "group";
+            } else if (DwcTerm.order == term) {
+              interpretedFieldname = "order";
+            } else if (DcTerm.date == term) {
+              interpretedFieldname = "date";
+            } else if (DcTerm.format == term) {
+              interpretedFieldname = "format";
+            }
+            setHdfsRecordField(hr, field, interpretedFieldname, v);
           }
-          setHdfsRecordField(hr, field, interpretedFieldname, v);
-        });
+      });
       }));
     };
   }
