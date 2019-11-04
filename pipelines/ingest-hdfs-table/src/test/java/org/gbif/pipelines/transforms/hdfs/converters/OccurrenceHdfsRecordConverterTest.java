@@ -80,6 +80,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("order", hdfsRecord.getOrder());
     Assert.assertEquals("group", hdfsRecord.getGroup());
     Assert.assertEquals("26/06/2019", hdfsRecord.getDate());
+    Assert.assertEquals("1", hdfsRecord.getIdentifier());
+    Assert.assertEquals("1", hdfsRecord.getVIdentifier());
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
   }

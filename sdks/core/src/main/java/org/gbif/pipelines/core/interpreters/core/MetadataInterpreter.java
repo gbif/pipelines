@@ -42,7 +42,7 @@ public class MetadataInterpreter {
         mdr.setDatasetTitle(dataset.getTitle());
         mdr.setInstallationKey(dataset.getInstallationKey());
         mdr.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
-        mdr.setLicense(getLicense(dataset.getLicense()).name());
+        Optional.ofNullable(getLicense(dataset.getLicense())).ifPresent(license -> mdr.setLicense(license.name()));
 
         List<Network> networkList = client.getNetworkFromDataset(datasetId);
         if (networkList != null && !networkList.isEmpty()) {
@@ -86,7 +86,9 @@ public class MetadataInterpreter {
         return null;
       }
     }).orElse(null);
-    return LicenseParser.getInstance().parseUriThenTitle(uri, null);
+    License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
+    //UNSPECIFIED must be mapped to null
+    return License.UNSPECIFIED == license ? null : license;
   }
 
   /** Gets the latest crawl attempt time, if exists. */

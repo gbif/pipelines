@@ -9,6 +9,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -96,20 +97,24 @@ public class OccurrenceHdfsRecordConverter {
 
   //Converts a String into Date
   private static final Function<String, Date> STRING_TO_DATE =
-    dateAsString -> {
-      if (Strings.isNullOrEmpty(dateAsString)) {
-        return null;
-      }
+      dateAsString -> {
+        if (Strings.isNullOrEmpty(dateAsString)) {
+          return null;
+        }
 
-      // parse string
-      TemporalAccessor temporalAccessor = FORMATTER.parseBest(dateAsString,
-                                                              ZonedDateTime::from,
-                                                              LocalDateTime::from,
-                                                              LocalDate::from,
-                                                              YearMonth::from,
-                                                              Year::from);
-      return TEMPORAL_TO_DATE.apply(temporalAccessor);
-    };
+        try {
+          // parse string
+          TemporalAccessor temporalAccessor = FORMATTER.parseBest(dateAsString,
+              ZonedDateTime::from,
+              LocalDateTime::from,
+              LocalDate::from,
+              YearMonth::from,
+              Year::from);
+          return TEMPORAL_TO_DATE.apply(temporalAccessor);
+        } catch (Exception ex) {
+          return null;
+        }
+      };
 
   private static final TermFactory TERM_FACTORY =  TermFactory.instance();
 
@@ -206,9 +211,16 @@ public class OccurrenceHdfsRecordConverter {
         hr.setEnddayofyear(tr.getEndDayOfYear().toString());
       }
 
-      TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
-        .map(TEMPORAL_TO_DATE)
-        .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
+      if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
+        Optional.ofNullable(tr.getEventDate().getGte())
+            .map(STRING_TO_DATE)
+            .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
+      } else {
+        TemporalUtils.getTemporal(tr.getYear(), tr.getMonth(), tr.getDay())
+            .map(TEMPORAL_TO_DATE)
+            .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
+      }
+
       addIssues(tr.getIssues(), hr);
     };
   }
@@ -316,6 +328,31 @@ public class OccurrenceHdfsRecordConverter {
   }
 
   /**
+   * The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have been
+   * used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for a long time in
+   * our public API v1, so we continue to do this.the id (the <id> reference in the DWCA meta.xml) is an identifier
+   * local to the DWCA, and could only have been used for "un-starring" a DWCA star record. However, we've exposed
+   * it as DcTerm.identifier for a long time in our public API v1, so we continue to do this.
+   */
+  private static void setIdentifier(BasicRecord br, ExtendedRecord er, OccurrenceHdfsRecord hr) {
+
+    String institutionCode = er.getCoreTerms().get(DwcTerm.institutionCode.qualifiedName());
+    String collectionCode = er.getCoreTerms().get(DwcTerm.collectionCode.qualifiedName());
+    String catalogNumber = er.getCoreTerms().get(DwcTerm.catalogNumber.qualifiedName());
+
+    // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
+    String triplet = String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
+    String gbifId = Optional.ofNullable(br.getGbifId()).map(x -> Long.toString(x)).orElse("");
+
+    String occId = er.getCoreTerms().get(DwcTerm.occurrenceID.qualifiedName());
+
+    if (!br.getId().equals(gbifId) && (!Strings.isNullOrEmpty(occId) || !br.getId().equals(triplet))) {
+      hr.setIdentifier(br.getId());
+      hr.setVIdentifier(br.getId());
+    }
+  }
+
+  /**
    * From a {@link Schema.Field} copies it value into a the {@link OccurrenceHdfsRecord} field using the recognized data type.
    * @param occurrenceHdfsRecord target record
    * @param avroField field to be copied
@@ -368,23 +405,27 @@ public class OccurrenceHdfsRecordConverter {
             setHdfsRecordField(hr, field, verbatimField, v);
           });
         }
+
         Optional.ofNullable(interpretedSchemaField(term)).ifPresent(field -> {
-          String interpretedFieldname = field.name();
-          if (DcTerm.abstract_ == term) {
-            interpretedFieldname = "abstract$";
-          } else if (DwcTerm.class_ == term) {
-            interpretedFieldname = "class$";
-          } else if (DwcTerm.group == term) {
-            interpretedFieldname = "group";
-          } else if (DwcTerm.order == term) {
-            interpretedFieldname = "order";
-          } else if (DcTerm.date == term) {
-            interpretedFieldname = "date";
-          } else if (DcTerm.format == term) {
-            interpretedFieldname = "format";
+          //Fields that were set by other mappers are ignored
+          if (Objects.isNull(hr.get(field.name()))) {
+            String interpretedFieldname = field.name();
+            if (DcTerm.abstract_ == term) {
+              interpretedFieldname = "abstract$";
+            } else if (DwcTerm.class_ == term) {
+              interpretedFieldname = "class$";
+            } else if (DwcTerm.group == term) {
+              interpretedFieldname = "group";
+            } else if (DwcTerm.order == term) {
+              interpretedFieldname = "order";
+            } else if (DcTerm.date == term) {
+              interpretedFieldname = "date";
+            } else if (DcTerm.format == term) {
+              interpretedFieldname = "format";
+            }
+            setHdfsRecordField(hr, field, interpretedFieldname, v);
           }
-          setHdfsRecordField(hr, field, interpretedFieldname, v);
-        });
+      });
       }));
     };
   }
@@ -401,6 +442,18 @@ public class OccurrenceHdfsRecordConverter {
       Optional.ofNullable(converters.get(record.getClass()))
         .ifPresent(consumer -> consumer.accept(occurrenceHdfsRecord, record));
     }
+
+    // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have been
+    // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for a long time in
+    // our public API v1, so we continue to do this.the id (the <id> reference in the DWCA meta.xml) is an identifier
+    // local to the DWCA, and could only have been used for "un-starring" a DWCA star record. However, we've exposed
+    // it as DcTerm.identifier for a long time in our public API v1, so we continue to do this.
+    Optional<SpecificRecordBase> erOpt = Arrays.stream(records).filter(x -> x instanceof ExtendedRecord).findFirst();
+    Optional<SpecificRecordBase> brOpt = Arrays.stream(records).filter(x -> x instanceof BasicRecord).findFirst();
+    if (erOpt.isPresent() && brOpt.isPresent()) {
+      setIdentifier((BasicRecord) brOpt.get(), (ExtendedRecord) erOpt.get(), occurrenceHdfsRecord);
+    }
+
     return occurrenceHdfsRecord;
   }
 

@@ -78,7 +78,7 @@ public class MultimediaInterpreterTest {
             + "\"StillImage\", \"format\": \"image/jpeg\", \"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
             + "\"http://www.gbif.org/tmp.jpg\", \"title\": \"Title2\", \"description\": \"Desc2\", \"source\": \"Sr2\", "
             + "\"audience\": \"Aud2\", \"created\": \"2010\", \"creator\": \"Cr2\", \"contributor\": \"Cont2\", \"publisher\": "
-            + "\"Pub2\", \"license\": \"CC0_1_0\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"2\"}, {\"type\": \"StillImage\", "
+            + "\"Pub2\", \"license\": \"http://creativecommons.org/publicdomain/zero/1.0/legalcode\", \"rightsHolder\": \"Rh2\", \"datasetId\": \"2\"}, {\"type\": \"StillImage\", "
             + "\"format\": \"image/jpeg\", \"identifier\": \"https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg\", "
             + "\"references\": null, \"title\": null, \"description\": null, \"source\": null, \"audience\": null, \"created\": null, "
             + "\"creator\": null, \"contributor\": null, \"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}, "

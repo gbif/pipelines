@@ -31,6 +31,9 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_NEGATED_LONGITUDE
 import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE;
 import static org.gbif.pipelines.core.interpreters.core.LocationInterpreter.hasGeospatialIssues;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class LocationInterpreterTest {
 
@@ -268,6 +271,30 @@ public class LocationInterpreterTest {
     // Should
     assertEquals(expected, result);
 
+  }
+
+
+  @Test
+  public void nullAwareValues() {
+    // State
+    ExtendedRecord er = new ExtendedRecord();
+    er.setId(ID);
+    Map<String,String> coreTerms = new HashMap<>();
+    coreTerms.put(DwcTerm.maximumDepthInMeters.qualifiedName(), "NuLL");
+    coreTerms.put(DwcTerm.minimumDepthInMeters.qualifiedName(), "null");
+    coreTerms.put(DwcTerm.minimumElevationInMeters.qualifiedName(), "10");
+    er.setCoreTerms(coreTerms);
+
+    LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
+
+    // When
+    LocationInterpreter.interpretDepth(er, lr);
+    LocationInterpreter.interpretElevation(er, lr);
+
+    //Should
+    assertNull(lr.getDepth());
+    assertNotNull(lr.getElevation());
+    assertTrue(lr.getIssues().getIssueList().isEmpty());
   }
 
 }

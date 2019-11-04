@@ -176,6 +176,12 @@ public class TemporalParser {
     Integer dayNotNull = fromDay == null ? day : fromDay;
     Integer resultDay = isDayMatch ? dayNotNull : day;
 
+    // To support US format
+    if (isYearMatch && !isMonthMatch && !isDayMatch && month.getValue() == fromDay && fromMonth.getValue() == day) {
+      isMonthMatch = true;
+      isDayMatch =  true;
+    }
+
     boolean hasTime = fromTemporal instanceof LocalDateTime || fromTemporal instanceof OffsetDateTime;
     LocalTime resultTime = hasTime ? LocalTime.from(fromTemporal) : null;
 
@@ -197,6 +203,9 @@ public class TemporalParser {
 
   /** Merge from date from/to event and date from year-month-day */
   private static ParsedTemporal mergeYmd(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+    // To support US format
+    swapForUsFormat(yearMonthDayParsed, eventDateParsed);
+
     Temporal fromTemporal = eventDateParsed.getFromDate();
     Temporal toTemporal = eventDateParsed.getToDate();
 
@@ -231,6 +240,60 @@ public class TemporalParser {
     }
 
     return yearMonthDayParsed;
+  }
+
+  /** Swap date and month if format is US */
+  private static void swapForUsFormat(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+    Temporal fromDate = eventDateParsed.getFromDate();
+    Temporal toDate = eventDateParsed.getToDate();
+
+    boolean containsDateMonthFrom = fromDate instanceof LocalDateTime
+        || fromDate instanceof LocalDate
+        || fromDate instanceof OffsetDateTime;
+
+    boolean containsDateMonthTo = toDate instanceof LocalDateTime
+        || toDate instanceof LocalDate
+        || toDate instanceof OffsetDateTime;
+
+    boolean containsDateMonthSimple = yearMonthDayParsed.getYearOpt().isPresent()
+        && yearMonthDayParsed.getMonthOpt().isPresent()
+        && yearMonthDayParsed.getDayOpt().isPresent();
+
+    if (containsDateMonthFrom && containsDateMonthTo && containsDateMonthSimple) {
+      if (!Month.from(fromDate).equals(yearMonthDayParsed.getMonth())
+          && MonthDay.from(fromDate).getDayOfMonth() != yearMonthDayParsed.getDay()
+          && Month.from(fromDate).getValue() == yearMonthDayParsed.getDay()
+          && MonthDay.from(fromDate).getDayOfMonth() == yearMonthDayParsed.getMonth().getValue()) {
+
+        Temporal fromTemporal = fromDate;
+        Temporal toTemporal = toDate;
+        if (fromDate instanceof OffsetDateTime && toDate instanceof OffsetDateTime) {
+          OffsetDateTime ldtf = (OffsetDateTime) fromDate;
+          OffsetDateTime ldtt = (OffsetDateTime) toDate;
+          fromTemporal = OffsetDateTime.of(
+              LocalDateTime.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue(), ldtf.getHour(), ldtf.getMinute(), ldtf.getSecond()),
+              ldtf.getOffset()
+          );
+          toTemporal = OffsetDateTime.of(
+              LocalDateTime.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue(), ldtt.getHour(), ldtt.getMinute(), ldtt.getSecond()),
+              ldtt.getOffset()
+          );
+        } else if (fromDate instanceof LocalDateTime && toDate instanceof LocalDateTime) {
+          LocalDateTime ldtf = (LocalDateTime) fromDate;
+          LocalDateTime ldtt = (LocalDateTime) toDate;
+          fromTemporal = LocalDateTime.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue(), ldtf.getHour(), ldtf.getMinute(), ldtf.getSecond());
+          toTemporal = LocalDateTime.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue(), ldtt.getHour(), ldtt.getMinute(), ldtt.getSecond());
+        } else if (fromDate instanceof LocalDate && toDate instanceof LocalDate) {
+          LocalDate ldtf = (LocalDate) fromDate;
+          LocalDate ldtt = (LocalDate) toDate;
+          fromTemporal = LocalDate.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue());
+          toTemporal = LocalDate.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue());
+        }
+        eventDateParsed.setFromDate(fromTemporal);
+        eventDateParsed.setToDate(toTemporal);
+      }
+    }
+
   }
 
   /** Compare dates, FROM cannot be greater than TO */

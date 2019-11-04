@@ -45,7 +45,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_MET
 import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
 import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
 
 /** Interprets the location terms of a {@link ExtendedRecord}. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -133,7 +133,7 @@ public class LocationInterpreter {
     // Special case for eBird, use the supplied publishing country.
     if (EBIRD_DATASET_KEY.toString().equals(mr.getDatasetKey())) {
 
-      String verbatimPublishingCountryCode = extractValue(er, GbifTerm.publishingCountry);
+      String verbatimPublishingCountryCode = extractNullAwareValue(er, GbifTerm.publishingCountry);
       OccurrenceParseResult<Country> result =
           new OccurrenceParseResult<>(COUNTRY_PARSER.parse(verbatimPublishingCountryCode));
 
@@ -161,7 +161,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#waterBody} interpretation. */
   public static void interpretWaterBody(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.waterBody);
+    String value = extractNullAwareValue(er, DwcTerm.waterBody);
     if (!Strings.isNullOrEmpty(value)) {
       lr.setWaterBody(cleanName(value));
     }
@@ -169,7 +169,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#stateProvince} interpretation. */
   public static void interpretStateProvince(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.stateProvince);
+    String value = extractNullAwareValue(er, DwcTerm.stateProvince);
     if (!Strings.isNullOrEmpty(value)) {
       lr.setStateProvince(cleanName(value));
     }
@@ -177,7 +177,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#minimumElevationInMeters} interpretation. */
   public static void interpretMinimumElevationInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.minimumElevationInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.minimumElevationInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -188,7 +188,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#maximumElevationInMeters} interpretation. */
   public static void interpretMaximumElevationInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.maximumElevationInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.maximumElevationInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -201,20 +201,20 @@ public class LocationInterpreter {
    * {@link GbifTerm#elevation} and {@link GbifTerm#elevationAccuracy} interpretation.
    */
   public static void interpretElevation(ExtendedRecord er, LocationRecord lr) {
-    String minElevation = extractValue(er, DwcTerm.minimumElevationInMeters);
-    String maxElevation = extractValue(er, DwcTerm.maximumElevationInMeters);
+    String minElevation = extractNullAwareValue(er, DwcTerm.minimumElevationInMeters);
+    String maxElevation = extractNullAwareValue(er, DwcTerm.maximumElevationInMeters);
     OccurrenceParseResult<DoubleAccuracy> occurrenceParseResult =
         MeterRangeParser.parseElevation(minElevation, maxElevation, null);
     if (occurrenceParseResult.isSuccessful()) {
       lr.setElevation(occurrenceParseResult.getPayload().getValue());
       lr.setElevationAccuracy(occurrenceParseResult.getPayload().getAccuracy());
+      occurrenceParseResult.getIssues().forEach(i -> addIssue(lr, i));
     }
-    occurrenceParseResult.getIssues().forEach(i -> addIssue(lr, i));
   }
 
   /** {@link DwcTerm#minimumDepthInMeters} interpretation. */
   public static void interpretMinimumDepthInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.minimumDepthInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.minimumDepthInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -225,7 +225,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#maximumDepthInMeters} interpretation. */
   public static void interpretMaximumDepthInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.maximumDepthInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.maximumDepthInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -239,19 +239,19 @@ public class LocationInterpreter {
    * interpretation.
    */
   public static void interpretDepth(ExtendedRecord er, LocationRecord lr) {
-    String minDepth = extractValue(er, DwcTerm.minimumDepthInMeters);
-    String maxDepth = extractValue(er, DwcTerm.maximumDepthInMeters);
+    String minDepth = extractNullAwareValue(er, DwcTerm.minimumDepthInMeters);
+    String maxDepth = extractNullAwareValue(er, DwcTerm.maximumDepthInMeters);
     OccurrenceParseResult<DoubleAccuracy> occurrenceParseResult = MeterRangeParser.parseDepth(minDepth, maxDepth, null);
     if (occurrenceParseResult.isSuccessful()) {
       lr.setDepth(occurrenceParseResult.getPayload().getValue());
       lr.setDepthAccuracy(occurrenceParseResult.getPayload().getAccuracy());
+      occurrenceParseResult.getIssues().forEach(i -> addIssue(lr, i));
     }
-    occurrenceParseResult.getIssues().forEach(i -> addIssue(lr, i));
   }
 
   /** {@link DwcTerm#minimumDistanceAboveSurfaceInMeters} interpretation. */
   public static void interpretMinimumDistanceAboveSurfaceInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.minimumDistanceAboveSurfaceInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.minimumDistanceAboveSurfaceInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -262,7 +262,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#maximumDistanceAboveSurfaceInMeters} interpretation. */
   public static void interpretMaximumDistanceAboveSurfaceInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.maximumDistanceAboveSurfaceInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.maximumDistanceAboveSurfaceInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       if (parseResult.isSuccessful()) {
@@ -273,7 +273,7 @@ public class LocationInterpreter {
 
   /** {@link DwcTerm#coordinateUncertaintyInMeters} interpretation. */
   public static void interpretCoordinateUncertaintyInMeters(ExtendedRecord er, LocationRecord lr) {
-    String value = extractValue(er, DwcTerm.coordinateUncertaintyInMeters);
+    String value = extractNullAwareValue(er, DwcTerm.coordinateUncertaintyInMeters);
     if (!Strings.isNullOrEmpty(value)) {
       ParseResult<Double> parseResult = MeterRangeParser.parseMeters(value);
       Double result = parseResult.isSuccessful() ? Math.abs(parseResult.getPayload()) : null;
