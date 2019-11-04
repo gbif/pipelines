@@ -101,6 +101,12 @@
       <artifactId>okio</artifactId>
     </dependency>
 
+    <!-- Fault tolerance - Used for API service calls-->
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-retry</artifactId>
+    </dependency>
+
     <!-- Json -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

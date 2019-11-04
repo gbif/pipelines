@@ -45,13 +45,13 @@ public class WsConfigFactory {
   /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
   public static WsConfig create(String url, String timeout, String cacheSize) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
-    return new WsConfig(url, timeout, cacheSize);
+    return new WsConfig(url, timeout, cacheSize, RetryConfigFactory.create());
   }
 
   /** Creates a {@link WsConfig} from a url and uses default timeout and cache size. */
   public static WsConfig create(String url, long timeout, long cacheSize) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(url), "url is required");
-    return new WsConfig(url, timeout, cacheSize);
+    return new WsConfig(url, timeout, cacheSize, RetryConfigFactory.create());
   }
 
   public static WsConfig create(@NonNull Properties props, @NonNull String prefix) {
@@ -66,7 +66,8 @@ public class WsConfigFactory {
 
     String cacheSize = props.getProperty(prefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB);
     String timeout = props.getProperty(prefix + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT);
+    RetryConfig retryConfig = RetryConfigFactory.create(props, prefix);
 
-    return new WsConfig(url, timeout, cacheSize);
+    return new WsConfig(url, timeout, cacheSize, retryConfig);
   }
 }

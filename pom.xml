@@ -71,7 +71,7 @@
     <gbif-api.version>0.89</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
     <dwc-api.version>1.23</dwc-api.version>
-    <kvs.version>1.4</kvs.version>
+    <kvs.version>1.5</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.106</gbif-occurrence.version>
@@ -87,6 +87,9 @@
     <geotools.version>12.1</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
     <guava.version>20.0</guava.version>
+
+    <!-- Fault tolerance -->
+    <resilience4j.version>1.1.0</resilience4j.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.5</slf4j.version>
@@ -729,6 +732,13 @@
         <artifactId>curator-test</artifactId>
         <version>${curator.version}</version>
         <scope>test</scope>
+      </dependency>
+
+      <!-- Fault tolerance - Used for API service calls-->
+      <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-retry</artifactId>
+        <version>${resilience4j.version}</version>
       </dependency>
 
       <!-- Maven plugin -->

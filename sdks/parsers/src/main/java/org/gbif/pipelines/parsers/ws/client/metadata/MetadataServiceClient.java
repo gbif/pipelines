@@ -3,13 +3,17 @@ package org.gbif.pipelines.parsers.ws.client.metadata;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
+import org.gbif.pipelines.parsers.config.RetryFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 
 import javax.xml.ws.WebServiceException;
+
+import io.github.resilience4j.retry.Retry;
 import retrofit2.Call;
 import retrofit2.HttpException;
 import retrofit2.Response;
@@ -18,9 +22,11 @@ import retrofit2.Response;
 public class MetadataServiceClient {
 
   private final MetadataServiceRest rest;
+  private final Retry retry;
 
   private MetadataServiceClient(WsConfig wsConfig) {
     rest = MetadataServiceRest.getInstance(wsConfig);
+    retry = RetryFactory.create(wsConfig.getRetryConfig(), "RegistryApiCall");
   }
 
   public static MetadataServiceClient create(WsConfig wsConfig) {
@@ -63,15 +69,20 @@ public class MetadataServiceClient {
 
   /** executes request and handles response and errors. */
   private <T> T performCall(Call<T> serviceCall) {
-    try {
-      Response<T> execute = serviceCall.execute();
-      if (execute.isSuccessful()) {
-        return execute.body();
-      } else {
-        throw new HttpException(execute);
-      }
-    } catch (IOException e) {
-      throw new WebServiceException("Error making request " + serviceCall.request(), e);
-    }
+    return
+      Retry.decorateFunction(retry, (Call<T> call) -> {
+                                                     try {
+                                                       Response<T> execute = call.execute();
+                                                       if (execute.isSuccessful()) {
+                                                         return execute.body();
+                                                       } else {
+                                                         throw new HttpException(execute);
+                                                       }
+                                                     } catch (IOException e) {
+                                                       throw new WebServiceException("Error making request " + call.request(), e);
+                                                     }
+                                                   }
+      ).apply(serviceCall);
   }
+
 }
