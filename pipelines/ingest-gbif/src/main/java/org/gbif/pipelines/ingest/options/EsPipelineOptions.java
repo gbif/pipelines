@@ -66,7 +66,7 @@ public interface EsPipelineOptions extends PipelineOptions {
   void setSearchQueryTimeoutSec(Integer searchQueryTimeoutSec);
 
   @Description("ES empty index query attempts")
-  @Default.Integer(60)
+  @Default.Integer(100)
   Integer getSearchQueryAttempts();
 
   void setSearchQueryAttempts(Integer searchQueryAttempts);
