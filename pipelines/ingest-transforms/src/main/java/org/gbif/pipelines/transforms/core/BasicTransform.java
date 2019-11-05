@@ -89,7 +89,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   @SneakyThrows
   @Teardown
-  public void teardown() {
+  public void tearDown() {
     if (connection != null) {
       connection.close();
     }

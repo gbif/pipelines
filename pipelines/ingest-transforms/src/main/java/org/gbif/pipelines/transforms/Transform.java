@@ -94,6 +94,10 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
     return ParDo.of(this);
   }
 
+  public String getBaseName() {
+    return baseName;
+  }
+
   @ProcessElement
   public void processElement(ProcessContext c) {
     processElement(c.element()).ifPresent(r -> {
