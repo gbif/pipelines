@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.gbif.kvs.KeyValueStore;
@@ -135,18 +136,35 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<LocationRecord> out, ProcessContext c) {
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
 
+  @Override
+  public Optional<LocationRecord> processElement(ExtendedRecord source) {
+    throw new IllegalArgumentException("Method is not implemented!");
+  }
+
+  @Override
+  @ProcessElement
+  public void processElement(ProcessContext c) {
+    processElement(c.element(), c.sideInput(metadataView)).ifPresent(r -> {
+      c.output(r);
+      incCounter();
+    });
+  }
+
+  public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
     LocationRecord lr = LocationRecord.newBuilder()
         .setId(source.getId())
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    Interpretation.from(source)
+    return Interpretation.from(source)
         .to(lr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, c.sideInput(metadataView)))
+        .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, mdr))
         .via(LocationInterpreter::interpretContinent)
         .via(LocationInterpreter::interpretWaterBody)
         .via(LocationInterpreter::interpretStateProvince)
@@ -159,10 +177,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
         .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
         .via(LocationInterpreter::interpretCoordinatePrecision)
-        .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters);
-
-    out.output(lr);
-
-    counter.inc();
+        .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+        .get();
   }
+
 }

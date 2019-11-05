@@ -48,18 +48,21 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
         .via((MultimediaRecord mr) -> KV.of(mr.getId(), mr));
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<MultimediaRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
+
+  @Override
+  public Optional<MultimediaRecord> processElement(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.MULTIMEDIA.getRowType()))
             .filter(l -> !l.isEmpty())
             .isPresent() || ModelUtils.extractOptValue(er, DwcTerm.associatedMedia).isPresent())
         .via(MultimediaInterpreter::interpret)
         .via(MultimediaInterpreter::interpretAssociatedMedia)
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
 
 }

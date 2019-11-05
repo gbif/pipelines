@@ -124,20 +124,23 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<TaxonRecord> out) {
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
 
+  @Override
+  public Optional<TaxonRecord> processElement(ExtendedRecord source) {
     TaxonRecord tr = TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build();
 
     Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore));
+
     // the id is null when there is an error in the interpretation. In these
     // cases we do not write the taxonRecord because it is totally empty.
-    Optional.ofNullable(tr.getId()).ifPresent(id -> out.output(tr));
-
-    counter.inc();
+    return tr.getId() == null ? Optional.empty() : Optional.of(tr);
   }
 
 }

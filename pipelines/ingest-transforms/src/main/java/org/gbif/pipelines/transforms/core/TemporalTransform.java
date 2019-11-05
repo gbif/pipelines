@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
@@ -44,22 +45,24 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .via((TemporalRecord tr) -> KV.of(tr.getId(), tr));
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<TemporalRecord> out) {
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
 
+  @Override
+  public Optional<TemporalRecord> processElement(ExtendedRecord source) {
     TemporalRecord tr = TemporalRecord.newBuilder()
         .setId(source.getId())
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    Interpretation.from(source)
+    return Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(TemporalInterpreter::interpretTemporal);
-
-    out.output(tr);
-
-    counter.inc();
+        .via(TemporalInterpreter::interpretTemporal)
+        .get();
   }
+
 
 }

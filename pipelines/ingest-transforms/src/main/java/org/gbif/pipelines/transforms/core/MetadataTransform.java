@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -73,16 +74,19 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element String source, OutputReceiver<MetadataRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
+
+  @Override
+  public Optional<MetadataRecord> processElement(String source) {
+    return Interpretation.from(source)
         .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(Instant.now().toEpochMilli()).build())
         .via(MetadataInterpreter.interpret(client))
         .via(MetadataInterpreter.interpretCrawlId(attempt))
         .via(MetadataInterpreter.interpretEndpointType(endpointType))
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
 
   /**

@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.gbif.pipelines.core.Interpretation;
@@ -94,8 +95,13 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<BasicRecord> out) {
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
+
+  @Override
+  public Optional<BasicRecord> processElement(ExtendedRecord source) {
 
     BasicRecord br = BasicRecord.newBuilder()
         .setId(source.getId())
@@ -103,7 +109,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    Interpretation.from(source)
+    return Interpretation.from(source)
         .to(br)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, useExtendedRecordId))
@@ -114,11 +120,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretLifeStage)
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
-        .via(BasicInterpreter::interpretReferences);
-
-    out.output(br);
-
-    counter.inc();
+        .via(BasicInterpreter::interpretReferences)
+        .get();
   }
 
 }

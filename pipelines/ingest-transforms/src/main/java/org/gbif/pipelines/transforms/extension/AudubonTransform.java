@@ -46,16 +46,20 @@ public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
         .via((AudubonRecord ar) -> KV.of(ar.getId(), ar));
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<AudubonRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
+
+  @Override
+  public Optional<AudubonRecord> processElement(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> AudubonRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.AUDUBON.getRowType()))
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(AudubonInterpreter::interpret)
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
+
 }

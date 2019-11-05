@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
@@ -92,5 +93,17 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   public SingleOutput<R, T> interpret() {
     return ParDo.of(this);
   }
+
+  @ProcessElement
+  public void processElement(ProcessContext c) {
+    processElement(c.element()).ifPresent(r -> {
+      c.output(r);
+      incCounter();
+    });
+  }
+
+  public abstract Optional<T> processElement(R source);
+
+  public abstract void incCounter();
 
 }

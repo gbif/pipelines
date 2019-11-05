@@ -91,12 +91,15 @@ public class PipelinesVariables {
     public static final String TEMPORAL_RECORDS_COUNT = "temporalRecordsCount";
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
+    public static final String VERBATIM_RECORDS_COUNT = "verbatimRecordsCount";
     // Extension types
     public static final String MULTIMEDIA_RECORDS_COUNT = "multimediaRecordsCount";
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
     public static final String AUDUBON_RECORDS_COUNT = "audubonRecordsCount";
     public static final String MEASUREMENT_OR_FACT_RECORDS_COUNT = "measurementOrFactRecordsCount";
     public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
+
+    public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
     // Specific
     public static final String AUSTRALIA_SPATIAL_RECORDS_COUNT = "australiaSpatialRecordsCount";
   }

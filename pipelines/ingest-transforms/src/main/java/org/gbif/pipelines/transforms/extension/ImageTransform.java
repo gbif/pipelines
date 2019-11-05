@@ -46,17 +46,20 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
         .via((ImageRecord ir) -> KV.of(ir.getId(), ir));
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<ImageRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
+
+  @Override
+  public Optional<ImageRecord> processElement(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> ImageRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.IMAGE.getRowType()))
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(ImageInterpreter::interpret)
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
 
 }

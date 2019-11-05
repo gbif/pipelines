@@ -116,9 +116,14 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
     }
   }
 
-  @ProcessElement
-  public void processElement(ProcessContext context) {
-    Interpretation.from(context::element)
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
+
+  @Override
+  public Optional<AustraliaSpatialRecord> processElement(LocationRecord source) {
+    return Interpretation.from(source)
         .to(lr -> AustraliaSpatialRecord.newBuilder()
             .setId(lr.getId())
             .setCreated(Instant.now().toEpochMilli())
@@ -128,10 +133,7 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
             .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
             .isPresent())
         .via(AustraliaSpatialInterpreter.interpret(kvStore))
-        .consume(context::output);
-
-    counter.inc();
-
+        .get();
   }
 
 }

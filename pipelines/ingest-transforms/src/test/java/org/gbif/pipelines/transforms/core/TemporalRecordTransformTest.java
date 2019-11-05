@@ -81,8 +81,6 @@ public class TemporalRecordTransformTest {
 
   @Test
   public void emptyErTest() {
-    // Expected
-    TemporalRecord expected = TemporalRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
@@ -94,7 +92,7 @@ public class TemporalRecordTransformTest {
         .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
-    PAssert.that(dataStream).containsInAnyOrder(expected);
+    PAssert.that(dataStream).empty();
     p.run();
   }
 

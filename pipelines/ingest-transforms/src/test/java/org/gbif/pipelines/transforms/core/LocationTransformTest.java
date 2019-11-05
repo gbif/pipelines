@@ -56,9 +56,7 @@ public class LocationTransformTest {
     }
 
   @Test
-  public void emptyErTest() {
-    // Expected
-    LocationRecord expected = LocationRecord.newBuilder().setId("777").setCreated(0L).build();
+  public void emptyLrTest() {
 
     // State
     KeyValueTestStore<LatLng, GeocodeResponse> kvStore = new KeyValueTestStore<>();
@@ -77,7 +75,7 @@ public class LocationTransformTest {
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should
-    PAssert.that(recordCollection).containsInAnyOrder(expected);
+    PAssert.that(recordCollection).empty();
     p.run();
   }
 

@@ -71,8 +71,6 @@ public class BasicRecordTransformTest {
 
   @Test
   public void emptyErTest() {
-    // Expected
-    BasicRecord expected = BasicRecord.newBuilder().setId("777").setCreated(0L).build();
 
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
@@ -82,7 +80,7 @@ public class BasicRecordTransformTest {
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
-    PAssert.that(recordCollection).containsInAnyOrder(expected);
+    PAssert.that(recordCollection).empty();
     p.run();
   }
 

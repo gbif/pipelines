@@ -75,16 +75,20 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<AmplificationRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
+
+  @Override
+  public Optional<AmplificationRecord> processElement(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> AmplificationRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(AmplificationInterpreter.EXTENSION_ROW_TYPE))
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(AmplificationInterpreter.interpret(client))
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
+
 }

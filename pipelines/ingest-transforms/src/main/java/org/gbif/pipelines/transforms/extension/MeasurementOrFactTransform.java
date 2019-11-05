@@ -46,9 +46,14 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
         .via((MeasurementOrFactRecord mr) -> KV.of(mr.getId(), mr));
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<MeasurementOrFactRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public void incCounter() {
+    counter.inc();
+  }
+
+  @Override
+  public Optional<MeasurementOrFactRecord> processElement(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> MeasurementOrFactRecord.newBuilder()
             .setId(er.getId())
             .setCreated(Instant.now().toEpochMilli())
@@ -57,9 +62,7 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(MeasurementOrFactInterpreter::interpret)
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
 
 }
