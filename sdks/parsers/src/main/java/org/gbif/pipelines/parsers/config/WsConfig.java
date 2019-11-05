@@ -20,13 +20,13 @@ public final class WsConfig implements Serializable {
   // cache size in bytes
   private final long cacheSize;
   //Retry configuration
-  private final RetryConfig retryConfig;
+  private final PipelinesRetryConfig pipelinesRetryConfig;
 
-  public WsConfig(String basePath, String timeout, String cacheSizeMb, RetryConfig retryConfig) {
+  public WsConfig(String basePath, String timeout, String cacheSizeMb, PipelinesRetryConfig pipelinesRetryConfig) {
     this.basePath = basePath;
     this.timeout = Long.parseLong(timeout);
     this.cacheSize = Long.parseLong(cacheSizeMb) * 1024L * 1024L;
-    this.retryConfig = retryConfig;
+    this.pipelinesRetryConfig = pipelinesRetryConfig;
   }
 }
 

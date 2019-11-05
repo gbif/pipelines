@@ -28,23 +28,23 @@ public class RetryConfigFactory {
   private static final String RANDOMIZATION_FACTOR_PROP = "retry.randomization_factor";
 
   /**@return a RetryConfig with default values*/
-  public static RetryConfig create() {
-    return new RetryConfig(DEFAULT_MAX_ATTEMPTS, DEFAULT_INITIAL_INTERVAL, DEFAULT_MULTIPLIER, DEFAULT_RANDOMIZATION_FACTOR);
+  public static PipelinesRetryConfig create() {
+    return new PipelinesRetryConfig(DEFAULT_MAX_ATTEMPTS, DEFAULT_INITIAL_INTERVAL, DEFAULT_MULTIPLIER, DEFAULT_RANDOMIZATION_FACTOR);
   }
 
   /**@return a RetryConfig from the properties settings*/
-  public static RetryConfig create(@NonNull Path propertiesPath, @NonNull String prefix) {
+  public static PipelinesRetryConfig create(@NonNull Path propertiesPath, @NonNull String prefix) {
     // load properties or throw exception if cannot be loaded
     Properties props = ConfigFactory.loadProperties(propertiesPath);
 
     return create(props, prefix);
   }
 
-  public static RetryConfig create(@NonNull Properties props, @NonNull String prefix) {
+  public static PipelinesRetryConfig create(@NonNull Properties props, @NonNull String prefix) {
     int maxAttempts = Optional.ofNullable(props.getProperty(prefix + MAX_ATTEMPTS_PROP)).map(Integer::parseInt).orElse(DEFAULT_MAX_ATTEMPTS);
     long initialInterval = Optional.ofNullable(props.getProperty(prefix + INITIAL_INTERVALS_PROP)).map(Long::parseLong).orElse(DEFAULT_INITIAL_INTERVAL);
     double multiplier = Optional.ofNullable(props.getProperty(prefix + MULTIPLIER_PROP)).map(Double::parseDouble).orElse( DEFAULT_MULTIPLIER);
     double randomizationFactor = Optional.ofNullable(props.getProperty(prefix + RANDOMIZATION_FACTOR_PROP)).map(Double::parseDouble).orElse(DEFAULT_RANDOMIZATION_FACTOR);
-    return new RetryConfig(maxAttempts, initialInterval, multiplier, randomizationFactor);
+    return new PipelinesRetryConfig(maxAttempts, initialInterval, multiplier, randomizationFactor);
   }
 }

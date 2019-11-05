@@ -3,7 +3,6 @@ package org.gbif.pipelines.parsers.ws.client.metadata;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 
 import org.gbif.pipelines.parsers.config.RetryFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
@@ -26,7 +25,7 @@ public class MetadataServiceClient {
 
   private MetadataServiceClient(WsConfig wsConfig) {
     rest = MetadataServiceRest.getInstance(wsConfig);
-    retry = RetryFactory.create(wsConfig.getRetryConfig(), "RegistryApiCall");
+    retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "RegistryApiCall");
   }
 
   public static MetadataServiceClient create(WsConfig wsConfig) {

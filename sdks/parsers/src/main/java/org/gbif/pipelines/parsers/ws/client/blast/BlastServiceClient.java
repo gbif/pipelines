@@ -23,7 +23,7 @@ public class BlastServiceClient {
 
   private BlastServiceClient(WsConfig wsConfig) {
     rest = BlastServiceRest.getInstance(wsConfig);
-    retry = RetryFactory.create(wsConfig.getRetryConfig(), "BlastServiceCall");
+    retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "BlastServiceCall");
   }
 
   public static BlastServiceClient create(WsConfig wsConfig) {
