@@ -52,6 +52,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,12 +75,12 @@ public class VerbatimToInterpretedPipeline {
     String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    String hdfsSiteConfig = options.getHdfsSiteConfig();
+    String hdfsConfig = options.getHdfsSiteConfig();
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     ExecutorService executor = Executors.newFixedThreadPool(6);
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsConfig, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -111,40 +112,29 @@ public class VerbatimToInterpretedPipeline {
     taxonomyTransform.setup();
     locationTransform.setup();
 
-    DataFileWriter<MetadataRecord> metadataRecordAvroWriter =
-        createAvroWriter(MetadataRecord.getClassSchema(), pathFn.apply(metadataTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<ExtendedRecord> extendedRecordAvroWriter =
-        createAvroWriter(ExtendedRecord.getClassSchema(), pathFn.apply(verbatimTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<BasicRecord> basicRecordAvroWriter =
-        createAvroWriter(BasicRecord.getClassSchema(), pathFn.apply(basicTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<TemporalRecord> temporalRecordAvroWriter =
-        createAvroWriter(TemporalRecord.getClassSchema(), pathFn.apply(temporalTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<MultimediaRecord> multimediaRecordAvroWriter =
-        createAvroWriter(MultimediaRecord.getClassSchema(), pathFn.apply(multimediaTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<ImageRecord> imageRecordAvroWriter =
-        createAvroWriter(ImageRecord.getClassSchema(), pathFn.apply(imageTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<AudubonRecord> audubonRecordAvroWriter =
-        createAvroWriter(AudubonRecord.getClassSchema(), pathFn.apply(audubonTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<MeasurementOrFactRecord> measurementOrFactRecordAvroWriter =
-        createAvroWriter(MeasurementOrFactRecord.getClassSchema(), pathFn.apply(measurementOrFactTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<LocationRecord> locationRecordAvroWriter =
-        createAvroWriter(LocationRecord.getClassSchema(), pathFn.apply(locationTransform.getBaseName()),
-            hdfsSiteConfig);
-    DataFileWriter<TaxonRecord> taxonRecordAvroWriter =
-        createAvroWriter(TaxonRecord.getClassSchema(), pathFn.apply(taxonomyTransform.getBaseName()),
-            hdfsSiteConfig);
-
+    CustomDataFileWriter<MetadataRecord> metadataWriter =
+        createAvroWriter(MetadataRecord.getClassSchema(), pathFn.apply(metadataTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<ExtendedRecord> verbatimWriter =
+        createAvroWriter(ExtendedRecord.getClassSchema(), pathFn.apply(verbatimTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<BasicRecord> basicWriter =
+        createAvroWriter(BasicRecord.getClassSchema(), pathFn.apply(basicTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<TemporalRecord> temporalWriter =
+        createAvroWriter(TemporalRecord.getClassSchema(), pathFn.apply(temporalTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<MultimediaRecord> multimediaWriter =
+        createAvroWriter(MultimediaRecord.getClassSchema(), pathFn.apply(multimediaTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<ImageRecord> imageWriter =
+        createAvroWriter(ImageRecord.getClassSchema(), pathFn.apply(imageTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<AudubonRecord> audubonWriter =
+        createAvroWriter(AudubonRecord.getClassSchema(), pathFn.apply(audubonTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<MeasurementOrFactRecord> measurementWriter =
+        createAvroWriter(MeasurementOrFactRecord.getClassSchema(), pathFn.apply(measurementOrFactTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<LocationRecord> locationWriter =
+        createAvroWriter(LocationRecord.getClassSchema(), pathFn.apply(locationTransform.getBaseName()), hdfsConfig);
+    CustomDataFileWriter<TaxonRecord> taxonWriter =
+        createAvroWriter(TaxonRecord.getClassSchema(), pathFn.apply(taxonomyTransform.getBaseName()), hdfsConfig);
 
     Optional<MetadataRecord> mdr = metadataTransform.processElement(options.getDatasetId());
-    metadataRecordAvroWriter.append(mdr.get());
+    metadataWriter.append(mdr.get());
 
     Map<String, ExtendedRecord> erMap = ExtendedRecordReader.readUniqueRecords(options.getInputPath());
 
@@ -152,101 +142,40 @@ public class VerbatimToInterpretedPipeline {
     erMap.forEach((k, v) -> {
       CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
         // Verbatim
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            extendedRecordAvroWriter.append(v);
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
-
+        futures.add(CompletableFuture.runAsync(() -> verbatimWriter.append(v), executor));
         // Basic
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            basicRecordAvroWriter.append(basicTransform.processElement(v).get());
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
-
+        futures.add(CompletableFuture.runAsync(() -> basicWriter.append(basicTransform.processElement(v).get()), executor));
         // Temporal
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            temporalRecordAvroWriter.append(temporalTransform.processElement(v).get());
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
-
+        futures.add(CompletableFuture.runAsync(() -> temporalWriter.append(temporalTransform.processElement(v).get()), executor));
         // Multimedia
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            multimediaRecordAvroWriter.append(multimediaTransform.processElement(v).get());
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
-
+        futures.add(CompletableFuture.runAsync(() -> multimediaWriter.append(multimediaTransform.processElement(v).get()), executor));
         // Image
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            imageRecordAvroWriter.append(imageTransform.processElement(v).get());
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
-
+        futures.add(CompletableFuture.runAsync(() -> imageWriter.append(imageTransform.processElement(v).get()), executor));
         // Audubon
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            audubonRecordAvroWriter.append(audubonTransform.processElement(v).get());
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
-
+        futures.add(CompletableFuture.runAsync(() -> audubonWriter.append(audubonTransform.processElement(v).get()), executor));
         // Measurement
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            measurementOrFactRecordAvroWriter.append(measurementOrFactTransform.processElement(v).get());
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
-
+        futures.add(CompletableFuture.runAsync(() ->  measurementWriter.append(measurementOrFactTransform.processElement(v).get()), executor));
         // Taxonomy
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            taxonRecordAvroWriter.append(taxonomyTransform.processElement(v).get());
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
-
+        futures.add(CompletableFuture.runAsync(() -> taxonWriter.append(taxonomyTransform.processElement(v).get()), executor));
         // Location
-        futures.add(CompletableFuture.runAsync(() -> {
-          try {
-            locationRecordAvroWriter.append(locationTransform.processElement(v).get());
-          } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
-          }
-        }, executor));
+        futures.add(CompletableFuture.runAsync(() -> locationWriter.append(locationTransform.processElement(v, mdr.get()).get()), executor));
+
       }, executor);
       futures.add(future);
     });
 
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
 
-    metadataRecordAvroWriter.close();
-    extendedRecordAvroWriter.close();
-    basicRecordAvroWriter.close();
-    temporalRecordAvroWriter.close();
-    multimediaRecordAvroWriter.close();
-    imageRecordAvroWriter.close();
-    audubonRecordAvroWriter.close();
-    measurementOrFactRecordAvroWriter.close();
-    locationRecordAvroWriter.close();
-    taxonRecordAvroWriter.close();
+    metadataWriter.close();
+    verbatimWriter.close();
+    basicWriter.close();
+    temporalWriter.close();
+    multimediaWriter.close();
+    imageWriter.close();
+    audubonWriter.close();
+    measurementWriter.close();
+    locationWriter.close();
+    taxonWriter.close();
 
     basicTransform.tearDown();
     taxonomyTransform.tearDown();
@@ -257,23 +186,46 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsConfig, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
 
   }
 
-  private static <T> DataFileWriter<T> createAvroWriter(Schema schema, String outputPath, String hdfsSiteConfig) throws Exception {
+  private static <T> CustomDataFileWriter<T> createAvroWriter(Schema schema, String outputPath, String hdfsSiteConfig)
+      throws Exception {
     Path path = new Path(outputPath);
     FileSystem fs = org.gbif.converters.converter.FsUtils.createParentDirectories(path, hdfsSiteConfig);
     BufferedOutputStream outputStream = new BufferedOutputStream(fs.create(path));
-    return DataFileWriteBuilder.builder()
-        .schema(schema)
-        .codec(CodecFactory.snappyCodec())
-        .outputStream(outputStream)
-        .syncInterval(2 * 1024 * 1024)
-        .build()
-        .createDataFileWriter();
+    return CustomDataFileWriter.create(
+        DataFileWriteBuilder.builder()
+            .schema(schema)
+            .codec(CodecFactory.snappyCodec())
+            .outputStream(outputStream)
+            .syncInterval(2 * 1024 * 1024)
+            .build()
+            .createDataFileWriter()
+    );
+  }
+
+  @AllArgsConstructor(staticName = "create")
+  static class CustomDataFileWriter<T> {
+
+    private final DataFileWriter<T> dataFileWriter;
+
+    /** Synchronized append method, helps avoid the ArrayIndexOutOfBoundsException */
+    public synchronized void append(T record) {
+      try {
+        dataFileWriter.append(record);
+      } catch (IOException ex) {
+        log.error(ex.getLocalizedMessage());
+        throw new RuntimeException(ex.getMessage(), ex);
+      }
+    }
+
+    public void close() throws IOException {
+      dataFileWriter.close();
+    }
   }
 
 }
