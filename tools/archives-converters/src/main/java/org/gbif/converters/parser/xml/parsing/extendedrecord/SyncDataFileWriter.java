@@ -2,20 +2,22 @@ package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
 import java.io.IOException;
 
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import org.apache.avro.file.DataFileWriter;
 
 import lombok.AllArgsConstructor;
 
 /** Sync class for avro DataFileWriter, created to avoid an issue during file writing */
 @AllArgsConstructor
-public class SyncDataFileWriter {
+public class SyncDataFileWriter<T> {
 
-  private final DataFileWriter<ExtendedRecord> dataFileWriter;
+  private final DataFileWriter<T> dataFileWriter;
 
   /** Synchronized append method, helps avoid the ArrayIndexOutOfBoundsException */
-  public synchronized void append(ExtendedRecord extendedRecord) throws IOException {
-    dataFileWriter.append(extendedRecord);
+  public synchronized void append(T record) {
+    try {
+      dataFileWriter.append(record);
+    } catch (IOException ex) {
+      throw new RuntimeException(ex.getMessage(), ex);
+    }
   }
 }

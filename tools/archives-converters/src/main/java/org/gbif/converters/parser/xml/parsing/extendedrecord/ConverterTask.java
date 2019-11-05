@@ -1,12 +1,10 @@
 package org.gbif.converters.parser.xml.parsing.extendedrecord;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.gbif.converters.parser.xml.OccurrenceParser;
-import org.gbif.converters.parser.xml.ParsingException;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
@@ -58,14 +56,9 @@ public class ConverterTask implements Runnable {
    * Converts {@link ExtendedRecord#getId} into id hash, appends AVRO file and counts the number of records
    */
   private void appendExtendedRecord(ExtendedRecord record) {
-    try {
-      if (!record.getId().equals(RECORD_ID_ERROR)) {
-        dataFileWriter.append(record);
-        counter.incrementAndGet();
-      }
-    } catch (IOException ex) {
-      log.error(ex.getMessage(), ex);
-      throw new ParsingException("Parsing failed", ex);
+    if (!record.getId().equals(RECORD_ID_ERROR)) {
+      dataFileWriter.append(record);
+      counter.incrementAndGet();
     }
   }
 }
