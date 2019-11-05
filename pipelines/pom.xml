@@ -23,6 +23,7 @@
     <module>ingest-gbif-standalone</module>
     <module>ingest-hdfs-table</module>
     <module>ingest-transforms</module>
+    <module>ingest-gbif-java</module>
   </modules>
 
 </project>
