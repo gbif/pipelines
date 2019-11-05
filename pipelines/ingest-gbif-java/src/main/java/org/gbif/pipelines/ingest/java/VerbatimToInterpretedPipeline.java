@@ -144,21 +144,21 @@ public class VerbatimToInterpretedPipeline {
         // Verbatim
         futures.add(CompletableFuture.runAsync(() -> verbatimWriter.append(v), executor));
         // Basic
-        futures.add(CompletableFuture.runAsync(() -> basicWriter.append(basicTransform.processElement(v).get()), executor));
+        futures.add(CompletableFuture.runAsync(() -> basicTransform.processElement(v).ifPresent(basicWriter::append), executor));
         // Temporal
-        futures.add(CompletableFuture.runAsync(() -> temporalWriter.append(temporalTransform.processElement(v).get()), executor));
+        futures.add(CompletableFuture.runAsync(() -> temporalTransform.processElement(v).ifPresent(temporalWriter::append), executor));
         // Multimedia
-        futures.add(CompletableFuture.runAsync(() -> multimediaWriter.append(multimediaTransform.processElement(v).get()), executor));
+        futures.add(CompletableFuture.runAsync(() -> multimediaTransform.processElement(v).ifPresent(multimediaWriter::append), executor));
         // Image
-        futures.add(CompletableFuture.runAsync(() -> imageWriter.append(imageTransform.processElement(v).get()), executor));
+        futures.add(CompletableFuture.runAsync(() -> imageTransform.processElement(v).ifPresent(imageWriter::append), executor));
         // Audubon
-        futures.add(CompletableFuture.runAsync(() -> audubonWriter.append(audubonTransform.processElement(v).get()), executor));
+        futures.add(CompletableFuture.runAsync(() -> audubonTransform.processElement(v).ifPresent(audubonWriter::append), executor));
         // Measurement
-        futures.add(CompletableFuture.runAsync(() ->  measurementWriter.append(measurementOrFactTransform.processElement(v).get()), executor));
+        futures.add(CompletableFuture.runAsync(() ->  measurementOrFactTransform.processElement(v).ifPresent(measurementWriter::append), executor));
         // Taxonomy
-        futures.add(CompletableFuture.runAsync(() -> taxonWriter.append(taxonomyTransform.processElement(v).get()), executor));
+        futures.add(CompletableFuture.runAsync(() -> taxonomyTransform.processElement(v).ifPresent(taxonWriter::append), executor));
         // Location
-        futures.add(CompletableFuture.runAsync(() -> locationWriter.append(locationTransform.processElement(v, mdr.get()).get()), executor));
+        futures.add(CompletableFuture.runAsync(() -> locationTransform.processElement(v, mdr.get()).ifPresent(locationWriter::append), executor));
 
       }, executor);
       futures.add(future);
@@ -181,15 +181,10 @@ public class VerbatimToInterpretedPipeline {
     taxonomyTransform.tearDown();
     locationTransform.tearDown();
 
-    PipelineResult result = null;
-    MetricsHandler.saveCountersToTargetPathFile(options, result);
-
-    log.info("Deleting beam temporal folders");
-    String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsConfig, tempPath, ".temp-beam");
-
     log.info("Pipeline has been finished");
 
+    // TODO: FIX
+    System.exit(0);
   }
 
   private static <T> CustomDataFileWriter<T> createAvroWriter(Schema schema, String outputPath, String hdfsSiteConfig)
