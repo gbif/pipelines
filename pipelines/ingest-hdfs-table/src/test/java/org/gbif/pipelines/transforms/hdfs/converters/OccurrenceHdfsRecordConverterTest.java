@@ -71,17 +71,29 @@ public class OccurrenceHdfsRecordConverterTest {
                                           .setCreated(1L)
                                           .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
     OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(extendedRecord, basicRecord);
+    //Test common fields
     Assert.assertEquals("1.0", hdfsRecord.getVerbatimdepth());
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
+    Assert.assertEquals("C1", hdfsRecord.getVCollectioncode());
     Assert.assertEquals("I1", hdfsRecord.getInstitutioncode());
+    Assert.assertEquals("I1", hdfsRecord.getVInstitutioncode());
     Assert.assertEquals("CN1", hdfsRecord.getCatalognumber());
-    Assert.assertEquals("classs", hdfsRecord.getClass$());
-    Assert.assertEquals("format", hdfsRecord.getFormat());
-    Assert.assertEquals("order", hdfsRecord.getOrder());
-    Assert.assertEquals("group", hdfsRecord.getGroup());
-    Assert.assertEquals("26/06/2019", hdfsRecord.getDate());
+    Assert.assertEquals("CN1", hdfsRecord.getVCatalognumber());
     Assert.assertEquals("1", hdfsRecord.getIdentifier());
     Assert.assertEquals("1", hdfsRecord.getVIdentifier());
+
+    //Test fields names with reserved words
+    Assert.assertEquals("classs", hdfsRecord.getClass$());
+    Assert.assertEquals("classs", hdfsRecord.getVClass());
+    Assert.assertEquals("format", hdfsRecord.getFormat());
+    Assert.assertEquals("format", hdfsRecord.getVFormat());
+    Assert.assertEquals("order", hdfsRecord.getOrder());
+    Assert.assertEquals("order", hdfsRecord.getVOrder());
+    Assert.assertEquals("group", hdfsRecord.getGroup());
+    Assert.assertEquals("group", hdfsRecord.getVGroup());
+    Assert.assertEquals("26/06/2019", hdfsRecord.getDate());
+    Assert.assertEquals("26/06/2019", hdfsRecord.getVDate());
+
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
   }
