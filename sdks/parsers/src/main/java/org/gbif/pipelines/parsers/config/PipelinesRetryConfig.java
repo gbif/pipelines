@@ -1,5 +1,7 @@
 package org.gbif.pipelines.parsers.config;
 
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -10,7 +12,7 @@ import lombok.Getter;
 @Getter
 @Data
 @AllArgsConstructor
-public class PipelinesRetryConfig {
+public class PipelinesRetryConfig implements Serializable {
 
   //Maximum number of attempts
   private final Integer maxAttempts;
