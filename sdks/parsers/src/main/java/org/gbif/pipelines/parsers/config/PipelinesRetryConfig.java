@@ -14,6 +14,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PipelinesRetryConfig implements Serializable {
 
+  private static final long serialVersionUID = -8983292173694266924L;
+
   //Maximum number of attempts
   private final Integer maxAttempts;
 
