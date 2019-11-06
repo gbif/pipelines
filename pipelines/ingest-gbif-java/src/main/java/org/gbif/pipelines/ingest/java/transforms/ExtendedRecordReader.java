@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.something;
+package org.gbif.pipelines.ingest.java.transforms;
 
 import java.io.File;
 import java.util.HashMap;
@@ -9,6 +9,9 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ExtendedRecordReader {
 
   public static HashMap<String, ExtendedRecord> readUniqueRecords(String verbatimPath) throws Exception {
@@ -24,7 +27,15 @@ public class ExtendedRecordReader {
     try (DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(verbatimPath, datumReader)) {
       while (dataFileReader.hasNext()) {
         ExtendedRecord next = dataFileReader.next();
-        map.put(next.getId(), next);
+
+        ExtendedRecord saved = map.get(next.getId());
+        if (saved == null) {
+          map.put(next.getId(), next);
+        } else if (!saved.equals(next)) {
+          map.remove(next.getId());
+          log.warn("occurrenceId = {}, duplicates were found", saved.getId());
+        }
+
       }
     }
 

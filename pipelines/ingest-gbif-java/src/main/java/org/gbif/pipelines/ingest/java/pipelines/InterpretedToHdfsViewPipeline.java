@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java;
+package org.gbif.pipelines.ingest.java.pipelines;
 
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 

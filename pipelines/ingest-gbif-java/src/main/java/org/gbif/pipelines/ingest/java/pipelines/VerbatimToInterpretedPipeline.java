@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java;
+package org.gbif.pipelines.ingest.java.pipelines;
 
 import java.io.BufferedOutputStream;
 import java.time.LocalDateTime;
@@ -16,7 +16,7 @@ import org.gbif.converters.converter.DataFileWriteBuilder;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.SyncDataFileWriter;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.something.ExtendedRecordReader;
+import org.gbif.pipelines.ingest.java.transforms.ExtendedRecordReader;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -288,6 +288,8 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Pipeline has been finished");
     System.out.println(LocalDateTime.now());
+
+    // TODO: FIX
     System.exit(0);
   }
 
