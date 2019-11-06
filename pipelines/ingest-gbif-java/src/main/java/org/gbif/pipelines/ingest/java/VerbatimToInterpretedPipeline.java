@@ -3,9 +3,6 @@ package org.gbif.pipelines.ingest.java;
 import java.io.BufferedOutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -64,6 +61,8 @@ public class VerbatimToInterpretedPipeline {
   }
 
   public static void run(InterpretationPipelineOptions options) throws Exception {
+
+    System.out.println(LocalDateTime.now());
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
@@ -138,7 +137,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<ExtendedRecord> verbatimDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(ExtendedRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(verbatimOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -148,7 +147,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<MetadataRecord> metadataDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(MetadataRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(metadataOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -158,7 +157,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<BasicRecord> basicDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(BasicRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(basicOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -168,7 +167,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<TemporalRecord> temporalDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(TemporalRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(temporalOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -178,7 +177,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<MultimediaRecord> multimediaDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(MultimediaRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(multimediaOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -188,7 +187,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<ImageRecord> imageDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(ImageRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(imageOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -198,7 +197,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<AudubonRecord> audubonDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(AudubonRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(audubonOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -208,7 +207,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<MeasurementOrFactRecord> measurementDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(MeasurementOrFactRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(measurementOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -218,7 +217,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<TaxonRecord> taxonomyDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(TaxonRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(taxonomyOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -228,7 +227,7 @@ public class VerbatimToInterpretedPipeline {
         DataFileWriter<LocationRecord> locationDataFileWriter =
             DataFileWriteBuilder.builder()
                 .schema(LocationRecord.getClassSchema())
-                .codec(CodecFactory.fromString(options.getAvroCompressionType()))
+                .codec(CodecFactory.snappyCodec())
                 .outputStream(locationOutputStream)
                 .syncInterval(options.getAvroSyncInterval())
                 .build()
@@ -249,35 +248,34 @@ public class VerbatimToInterpretedPipeline {
       Optional<MetadataRecord> mdr = metadataTransform.processElement(options.getDatasetId());
       metadataWriter.append(mdr.get());
 
-      Map<String, ExtendedRecord> erMap = ExtendedRecordReader.readUniqueRecords(options.getInputPath());
+      CompletableFuture[] futures = ExtendedRecordReader.readUniqueRecords(options.getInputPath())
+          .values()
+          .stream()
+          .map(v ->
+              CompletableFuture.runAsync(() -> {
+                // Verbatim
+                verbatimWriter.append(v);
+                // Basic
+                basicTransform.processElement(v).ifPresent(basicWriter::append);
+                // Temporal
+                temporalTransform.processElement(v).ifPresent(temporalWriter::append);
+                // Multimedia
+                multimediaTransform.processElement(v).ifPresent(multimediaWriter::append);
+                // Image
+                imageTransform.processElement(v).ifPresent(imageWriter::append);
+                // Audubon
+                audubonTransform.processElement(v).ifPresent(audubonWriter::append);
+                // Measurement
+                measurementOrFactTransform.processElement(v).ifPresent(measurementWriter::append);
+                // Taxonomy
+                taxonomyTransform.processElement(v).ifPresent(taxonWriter::append);
+                // Location
+                locationTransform.processElement(v, mdr.get()).ifPresent(locationWriter::append);
 
-      List<CompletableFuture<Void>> futures = new ArrayList<>(erMap.size() * 10);
-      erMap.forEach((k, v) -> {
-        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-          // Verbatim
-          futures.add(CompletableFuture.runAsync(() -> verbatimWriter.append(v), executor));
-          // Basic
-          futures.add(CompletableFuture.runAsync(() -> basicTransform.processElement(v).ifPresent(basicWriter::append), executor));
-          // Temporal
-          futures.add(CompletableFuture.runAsync(() -> temporalTransform.processElement(v).ifPresent(temporalWriter::append), executor));
-          // Multimedia
-          futures.add(CompletableFuture.runAsync(() -> multimediaTransform.processElement(v).ifPresent(multimediaWriter::append), executor));
-          // Image
-          futures.add(CompletableFuture.runAsync(() -> imageTransform.processElement(v).ifPresent(imageWriter::append), executor));
-          // Audubon
-          futures.add(CompletableFuture.runAsync(() -> audubonTransform.processElement(v).ifPresent(audubonWriter::append), executor));
-          // Measurement
-          futures.add(CompletableFuture.runAsync(() -> measurementOrFactTransform.processElement(v).ifPresent(measurementWriter::append), executor));
-          // Taxonomy
-          futures.add(CompletableFuture.runAsync(() -> taxonomyTransform.processElement(v).ifPresent(taxonWriter::append), executor));
-          // Location
-          futures.add(CompletableFuture.runAsync(() -> locationTransform.processElement(v, mdr.get()).ifPresent(locationWriter::append), executor));
+              }, executor))
+          .toArray(CompletableFuture[]::new);
 
-        }, executor);
-        futures.add(future);
-      });
-
-      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
+      CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {
       log.error("Failed performing conversion on {}", e.getMessage());
@@ -289,8 +287,7 @@ public class VerbatimToInterpretedPipeline {
     locationTransform.tearDown();
 
     log.info("Pipeline has been finished");
-
-    // TODO: FIX
+    System.out.println(LocalDateTime.now());
     System.exit(0);
   }
 
