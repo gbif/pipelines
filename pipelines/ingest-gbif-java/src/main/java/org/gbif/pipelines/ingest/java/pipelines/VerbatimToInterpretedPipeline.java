@@ -87,7 +87,7 @@ public class VerbatimToInterpretedPipeline {
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
 
-    log.info("Creating a pipeline transforms");
+    log.info("Creating pipeline transforms");
 
     // Core
     MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
@@ -280,11 +280,11 @@ public class VerbatimToInterpretedPipeline {
     } catch (Exception e) {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
+    } finally {
+      basicTransform.tearDown();
+      taxonomyTransform.tearDown();
+      locationTransform.tearDown();
     }
-
-    basicTransform.tearDown();
-    taxonomyTransform.tearDown();
-    locationTransform.tearDown();
 
     log.info("Pipeline has been finished");
     System.out.println(LocalDateTime.now());
