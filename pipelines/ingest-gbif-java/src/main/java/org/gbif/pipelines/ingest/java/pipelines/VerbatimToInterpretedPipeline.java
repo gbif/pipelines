@@ -3,7 +3,6 @@ package org.gbif.pipelines.ingest.java.pipelines;
 import java.io.BufferedOutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -14,9 +13,9 @@ import java.util.function.UnaryOperator;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.DataFileWriteBuilder;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.SyncDataFileWriter;
+import org.gbif.pipelines.ingest.java.transforms.ExtendedRecordReader;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.java.transforms.ExtendedRecordReader;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -62,7 +61,7 @@ public class VerbatimToInterpretedPipeline {
 
   public static void run(InterpretationPipelineOptions options) throws Exception {
     ExecutorService executor = Executors.newWorkStealingPool();
-    try{
+    try {
       run(options, executor);
     } finally {
       executor.shutdown();
@@ -98,7 +97,8 @@ public class VerbatimToInterpretedPipeline {
 
     // Core
     MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
-    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    BasicTransform basicTransform =
+        BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
@@ -248,13 +248,18 @@ public class VerbatimToInterpretedPipeline {
       SyncDataFileWriter<MultimediaRecord> multimediaWriter = new SyncDataFileWriter<>(multimediaDataFileWriter);
       SyncDataFileWriter<ImageRecord> imageWriter = new SyncDataFileWriter<>(imageDataFileWriter);
       SyncDataFileWriter<AudubonRecord> audubonWriter = new SyncDataFileWriter<>(audubonDataFileWriter);
-      SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter = new SyncDataFileWriter<>(measurementDataFileWriter);
+      SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
+          new SyncDataFileWriter<>(measurementDataFileWriter);
       SyncDataFileWriter<TaxonRecord> taxonWriter = new SyncDataFileWriter<>(taxonomyDataFileWriter);
       SyncDataFileWriter<LocationRecord> locationWriter = new SyncDataFileWriter<>(locationDataFileWriter);
 
-      Optional<MetadataRecord> mdr = metadataTransform.processElement(options.getDatasetId());
-      metadataWriter.append(mdr.get());
+      // Create MetadataRecord
+      MetadataRecord mdr = metadataTransform.processElement(options.getDatasetId())
+          .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
 
+      metadataWriter.append(mdr);
+
+      // Create all records
       CompletableFuture[] futures = ExtendedRecordReader.readUniqueRecords(options.getInputPath())
           .values()
           .stream()
@@ -277,7 +282,7 @@ public class VerbatimToInterpretedPipeline {
                 // Taxonomy
                 taxonomyTransform.processElement(v).ifPresent(taxonWriter::append);
                 // Location
-                locationTransform.processElement(v, mdr.get()).ifPresent(locationWriter::append);
+                locationTransform.processElement(v, mdr).ifPresent(locationWriter::append);
 
               }, executor))
           .toArray(CompletableFuture[]::new);
