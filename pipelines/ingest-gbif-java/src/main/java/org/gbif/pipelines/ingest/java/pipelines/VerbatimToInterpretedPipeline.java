@@ -97,8 +97,7 @@ public class VerbatimToInterpretedPipeline {
 
     // Core
     MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
-    BasicTransform basicTransform =
-        BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
@@ -248,8 +247,7 @@ public class VerbatimToInterpretedPipeline {
       SyncDataFileWriter<MultimediaRecord> multimediaWriter = new SyncDataFileWriter<>(multimediaDataFileWriter);
       SyncDataFileWriter<ImageRecord> imageWriter = new SyncDataFileWriter<>(imageDataFileWriter);
       SyncDataFileWriter<AudubonRecord> audubonWriter = new SyncDataFileWriter<>(audubonDataFileWriter);
-      SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-          new SyncDataFileWriter<>(measurementDataFileWriter);
+      SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter = new SyncDataFileWriter<>(measurementDataFileWriter);
       SyncDataFileWriter<TaxonRecord> taxonWriter = new SyncDataFileWriter<>(taxonomyDataFileWriter);
       SyncDataFileWriter<LocationRecord> locationWriter = new SyncDataFileWriter<>(locationDataFileWriter);
 
