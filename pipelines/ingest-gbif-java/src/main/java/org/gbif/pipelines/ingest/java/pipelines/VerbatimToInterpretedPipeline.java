@@ -61,8 +61,17 @@ public class VerbatimToInterpretedPipeline {
   }
 
   public static void run(InterpretationPipelineOptions options) throws Exception {
+    ExecutorService executor = Executors.newWorkStealingPool();
+    try{
+      run(options, executor);
+    } finally {
+      executor.shutdown();
+    }
+  }
 
-    System.out.println(LocalDateTime.now());
+  public static void run(InterpretationPipelineOptions options, ExecutorService executor) throws Exception {
+
+    log.info("Pipeline has been started - {}", LocalDateTime.now());
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
@@ -74,8 +83,6 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String hdfsConfig = options.getHdfsSiteConfig();
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
-
-    ExecutorService executor = Executors.newFixedThreadPool(6);
 
     FsUtils.deleteInterpretIfExist(hdfsConfig, targetPath, datasetId, attempt, types);
 
@@ -102,7 +109,7 @@ public class VerbatimToInterpretedPipeline {
     AudubonTransform audubonTransform = AudubonTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
 
-    log.info("Init a pipeline transforms");
+    log.info("Init pipeline transforms");
     // Core
     metadataTransform.setup();
     basicTransform.setup();
@@ -286,11 +293,8 @@ public class VerbatimToInterpretedPipeline {
       locationTransform.tearDown();
     }
 
-    log.info("Pipeline has been finished");
-    System.out.println(LocalDateTime.now());
+    log.info("Pipeline has been finished - {}", LocalDateTime.now());
 
-    // TODO: FIX
-    System.exit(0);
   }
 
 }
