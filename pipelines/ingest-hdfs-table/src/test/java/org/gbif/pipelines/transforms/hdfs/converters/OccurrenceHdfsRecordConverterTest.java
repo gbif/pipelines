@@ -63,6 +63,7 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.group.simpleName(), "group");
     coreTerms.put(DcTerm.date.simpleName(), "26/06/2019");
     coreTerms.put(DwcTerm.basisOfRecord.simpleName(), BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase());
+    coreTerms.put(DwcTerm.lifeStage.simpleName(), "adultss");
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
         .setId("1")
         .setCoreTerms(coreTerms).build();
@@ -70,7 +71,13 @@ public class OccurrenceHdfsRecordConverterTest {
                                           .setId("1")
                                           .setCreated(1L)
                                           .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(extendedRecord, basicRecord);
+    List<RankedName> classification = new ArrayList<>();
+    classification.add( RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
+    classification.add( RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER).build());
+    TaxonRecord taxonRecord = TaxonRecord.newBuilder()
+                                .setClassification(classification)
+                                .build();
+    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord, taxonRecord, extendedRecord);
     //Test common fields
     Assert.assertEquals("1.0", hdfsRecord.getVerbatimdepth());
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
@@ -83,11 +90,11 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("1", hdfsRecord.getVIdentifier());
 
     //Test fields names with reserved words
-    Assert.assertEquals("classs", hdfsRecord.getClass$());
+    Assert.assertEquals("CLASS", hdfsRecord.getClass$());
     Assert.assertEquals("classs", hdfsRecord.getVClass());
     Assert.assertEquals("format", hdfsRecord.getFormat());
     Assert.assertEquals("format", hdfsRecord.getVFormat());
-    Assert.assertEquals("order", hdfsRecord.getOrder());
+    Assert.assertEquals("ORDER", hdfsRecord.getOrder());
     Assert.assertEquals("order", hdfsRecord.getVOrder());
     Assert.assertEquals("group", hdfsRecord.getGroup());
     Assert.assertEquals("group", hdfsRecord.getVGroup());
@@ -96,6 +103,8 @@ public class OccurrenceHdfsRecordConverterTest {
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
+    Assert.assertNull(hdfsRecord.getLifestage());
+    Assert.assertEquals( "adultss", hdfsRecord.getVLifestage());
   }
 
   @Test

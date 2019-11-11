@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms.hdfs.converters;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
@@ -38,6 +39,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.keygen.common.TermUtils;
 import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
 
 import org.apache.avro.Schema;
@@ -53,6 +55,8 @@ import com.google.common.base.Strings;
  * Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}.
  */
 public class OccurrenceHdfsRecordConverter {
+
+  public static final DateTimeFormatter ISO_8601_FORMAT = DateTimeFormatter.ISO_INSTANT;
 
   //Registered converters
   private static Map<Class<? extends SpecificRecordBase>, BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase>>
@@ -204,11 +208,15 @@ public class OccurrenceHdfsRecordConverter {
 
       if (Objects.nonNull(tr.getStartDayOfYear())) {
         hr.setStartdayofyear(tr.getStartDayOfYear().toString());
+      } else {
+        hr.setStartdayofyear(null);
       }
 
 
       if (Objects.nonNull(tr.getEndDayOfYear())) {
         hr.setEnddayofyear(tr.getEndDayOfYear().toString());
+      } else {
+        hr.setEnddayofyear(null);
       }
 
       if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
@@ -320,9 +328,9 @@ public class OccurrenceHdfsRecordConverter {
       if (Objects.nonNull(br.getCreated())) {
         hr.setLastcrawled(br.getCreated());
         hr.setLastinterpreted(br.getCreated());
-        hr.setLastinterpreted(br.getCreated());
+        hr.setLastparsed(br.getCreated());
+        hr.setCreated(ISO_8601_FORMAT.format(Instant.ofEpochMilli(br.getCreated()).atZone(ZoneOffset.UTC)));
       }
-      hr.setCreated(new Date(br.getCreated()).toString());
       addIssues(br.getIssues(), hr);
     };
   }
@@ -406,26 +414,28 @@ public class OccurrenceHdfsRecordConverter {
           });
         }
 
-        Optional.ofNullable(interpretedSchemaField(term)).ifPresent(field -> {
-          //Fields that were set by other mappers are ignored
-          if (Objects.isNull(hr.get(field.name()))) {
-            String interpretedFieldname = field.name();
-            if (DcTerm.abstract_ == term) {
-              interpretedFieldname = "abstract$";
-            } else if (DwcTerm.class_ == term) {
-              interpretedFieldname = "class$";
-            } else if (DwcTerm.group == term) {
-              interpretedFieldname = "group";
-            } else if (DwcTerm.order == term) {
-              interpretedFieldname = "order";
-            } else if (DcTerm.date == term) {
-              interpretedFieldname = "date";
-            } else if (DcTerm.format == term) {
-              interpretedFieldname = "format";
+        if (!TermUtils.isInterpretedSourceTerm(term)) {
+          Optional.ofNullable(interpretedSchemaField(term)).ifPresent(field -> {
+            //Fields that were set by other mappers are ignored
+            if (Objects.isNull(hr.get(field.name()))) {
+              String interpretedFieldname = field.name();
+              if (DcTerm.abstract_ == term) {
+                interpretedFieldname = "abstract$";
+              } else if (DwcTerm.class_ == term) {
+                interpretedFieldname = "class$";
+              } else if (DwcTerm.group == term) {
+                interpretedFieldname = "group";
+              } else if (DwcTerm.order == term) {
+                interpretedFieldname = "order";
+              } else if (DcTerm.date == term) {
+                interpretedFieldname = "date";
+              } else if (DcTerm.format == term) {
+                interpretedFieldname = "format";
+              }
+              setHdfsRecordField(hr, field, interpretedFieldname, v);
             }
-            setHdfsRecordField(hr, field, interpretedFieldname, v);
-          }
-      });
+          });
+        }
       }));
     };
   }
