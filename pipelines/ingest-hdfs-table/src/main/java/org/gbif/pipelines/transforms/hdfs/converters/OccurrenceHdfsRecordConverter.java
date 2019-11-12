@@ -286,8 +286,8 @@ public class OccurrenceHdfsRecordConverter {
           hr.setAcceptedtaxonkey(tr.getAcceptedUsage().getKey());
         }
         Optional.ofNullable(tr.getAcceptedUsage().getRank()).ifPresent(r -> hr.setTaxonrank(r.name()));
-      } else if (Objects.nonNull(tr.getUsage())) {
-        // if the acceptedUsage is null we use the usage as the accepted
+      } else if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getKey() != 0) {
+        // if the acceptedUsage is null we use the usage as the accepted as longs as it's not incertidae sedis
         hr.setAcceptedtaxonkey(tr.getUsage().getKey());
         hr.setAcceptedscientificname(tr.getUsage().getName());
         hr.setAcceptednameusageid(tr.getUsage().getKey().toString());
