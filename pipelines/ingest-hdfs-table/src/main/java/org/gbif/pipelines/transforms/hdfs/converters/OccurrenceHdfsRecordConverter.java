@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transforms.hdfs.converters;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
@@ -55,8 +54,6 @@ import com.google.common.base.Strings;
  * Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}.
  */
 public class OccurrenceHdfsRecordConverter {
-
-  public static final DateTimeFormatter ISO_8601_FORMAT = DateTimeFormatter.ISO_INSTANT;
 
   //Registered converters
   private static Map<Class<? extends SpecificRecordBase>, BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase>>
@@ -126,6 +123,17 @@ public class OccurrenceHdfsRecordConverter {
   private static final Logger LOG = LoggerFactory.getLogger(OccurrenceHdfsRecordConverter.class);
 
   /**
+   * Sets the lastInterpreted and lastParsed dates if the new value is greater that the existing one or if it is not set.
+   */
+  private static void setCreatedIfGreater(OccurrenceHdfsRecord hr, Long created) {
+    if (Objects.nonNull(created)) {
+      Long maxCreated = Math.max(created, Optional.ofNullable(hr.getLastinterpreted()).orElse(Long.MIN_VALUE));
+      hr.setLastinterpreted(maxCreated);
+      hr.setLastparsed(maxCreated);
+    }
+  }
+
+  /**
    * Adds the list of issues to the list of issues in the {@link OccurrenceHdfsRecord}.
    * @param issueRecord
    * @param hr target object
@@ -167,6 +175,8 @@ public class OccurrenceHdfsRecordConverter {
       hr.setHascoordinate(lr.getHasCoordinate());
       hr.setHasgeospatialissues(lr.getHasGeospatialIssue());
       hr.setRepatriated(lr.getRepatriated());
+
+      setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);
     };
   }
@@ -189,6 +199,8 @@ public class OccurrenceHdfsRecordConverter {
       hr.setPublishingorgkey(mr.getPublishingOrganizationKey());
       hr.setPublishingcountry(mr.getDatasetPublishingCountry());
       hr.setLastcrawled(mr.getLastCrawled());
+
+      setCreatedIfGreater(hr, mr.getCreated());
       addIssues(mr.getIssues(), hr);
     };
   }
@@ -229,6 +241,7 @@ public class OccurrenceHdfsRecordConverter {
             .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
       }
 
+      setCreatedIfGreater(hr, tr.getCreated());
       addIssues(tr.getIssues(), hr);
     };
   }
@@ -304,6 +317,7 @@ public class OccurrenceHdfsRecordConverter {
           .map(Diagnostic::getStatus)
           .ifPresent(d -> hr.setTaxonomicstatus(d.name()));
 
+      setCreatedIfGreater(hr, tr.getCreated());
       addIssues(tr.getIssues(), hr);
     };
   }
@@ -325,12 +339,8 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSex(br.getSex());
       hr.setTypestatus(br.getTypeStatus());
       hr.setTypifiedname(br.getTypifiedName());
-      if (Objects.nonNull(br.getCreated())) {
-        hr.setLastcrawled(br.getCreated());
-        hr.setLastinterpreted(br.getCreated());
-        hr.setLastparsed(br.getCreated());
-        hr.setCreated(ISO_8601_FORMAT.format(Instant.ofEpochMilli(br.getCreated()).atZone(ZoneOffset.UTC)));
-      }
+
+      setCreatedIfGreater(hr, br.getCreated());
       addIssues(br.getIssues(), hr);
     };
   }
@@ -482,6 +492,7 @@ public class OccurrenceHdfsRecordConverter {
         .collect(Collectors.toList());
       hr.setExtMultimedia(MediaSerDeserUtils.toJson(mr.getMultimediaItems()));
 
+      setCreatedIfGreater(hr, mr.getCreated());
       hr.setMediatype(mediaTypes);
     };
   }
