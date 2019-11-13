@@ -197,7 +197,6 @@ public class OccurrenceHdfsRecordConverter {
       hr.setNetworkkey(mr.getNetworkKeys());
       hr.setPublisher(mr.getPublisherTitle());
       hr.setPublishingorgkey(mr.getPublishingOrganizationKey());
-      hr.setPublishingcountry(mr.getDatasetPublishingCountry());
       hr.setLastcrawled(mr.getLastCrawled());
 
       setCreatedIfGreater(hr, mr.getCreated());
@@ -472,9 +471,7 @@ public class OccurrenceHdfsRecordConverter {
 
     // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have been
     // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for a long time in
-    // our public API v1, so we continue to do this.the id (the <id> reference in the DWCA meta.xml) is an identifier
-    // local to the DWCA, and could only have been used for "un-starring" a DWCA star record. However, we've exposed
-    // it as DcTerm.identifier for a long time in our public API v1, so we continue to do this.
+    // our public API v1, so we continue to do this.
     Optional<SpecificRecordBase> erOpt = Arrays.stream(records).filter(x -> x instanceof ExtendedRecord).findFirst();
     Optional<SpecificRecordBase> brOpt = Arrays.stream(records).filter(x -> x instanceof BasicRecord).findFirst();
     if (erOpt.isPresent() && brOpt.isPresent()) {
