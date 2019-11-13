@@ -75,6 +75,7 @@ public class OccurrenceHdfsRecordConverterTest {
     classification.add( RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
     classification.add( RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER).build());
     TaxonRecord taxonRecord = TaxonRecord.newBuilder()
+                                .setCreated(2L) //This value for lastParsed and lastInterpreted since is greater that the Basic record created date
                                 .setClassification(classification)
                                 .build();
     OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord, taxonRecord, extendedRecord);
@@ -105,6 +106,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
     Assert.assertNull(hdfsRecord.getLifestage());
     Assert.assertEquals( "adultss", hdfsRecord.getVLifestage());
+    Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
+    Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
   }
 
   @Test
