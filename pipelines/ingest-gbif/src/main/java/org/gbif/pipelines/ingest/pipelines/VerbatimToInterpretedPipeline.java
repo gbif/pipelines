@@ -141,11 +141,11 @@ public class VerbatimToInterpretedPipeline {
         verbatimTransform.emptyCollection(p) :
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create());
+            .apply("Filter duplicates", UniqueIdTransform.create())
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
 
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
-        .apply("Set default values", DefaultValuesTransform.create(properties, datasetId))
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
 
     uniqueRecords

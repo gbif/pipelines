@@ -122,7 +122,8 @@ public class XmlToInterpretedPipeline {
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create());
+            .apply("Filter duplicates", UniqueIdTransform.create())
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
 
     log.info("Adding interpretations");
 
@@ -139,9 +140,6 @@ public class XmlToInterpretedPipeline {
 
     uniqueRecords
         .apply("Write unique verbatim to avro", verbatimTransform.write(pathFn));
-
-    uniqueRecords
-        .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
 
     uniqueRecords
         .apply("Interpret basic", basicTransform.interpret())

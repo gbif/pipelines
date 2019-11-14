@@ -162,7 +162,8 @@ public class DwcaToEsIndexPipeline {
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", reader)
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create());
+            .apply("Filter duplicates", UniqueIdTransform.create())
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
 
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(datasetId))
@@ -171,7 +172,6 @@ public class DwcaToEsIndexPipeline {
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         uniqueRecords
-          .apply("Set default values", DefaultValuesTransform.create(properties, datasetId))
           .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     // Core

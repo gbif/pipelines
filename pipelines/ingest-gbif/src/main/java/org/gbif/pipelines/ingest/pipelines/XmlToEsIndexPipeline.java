@@ -155,7 +155,8 @@ public class XmlToEsIndexPipeline {
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create());
+            .apply("Filter duplicates", UniqueIdTransform.create())
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
 
     log.info("Adding step 3: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
@@ -165,7 +166,6 @@ public class XmlToEsIndexPipeline {
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         uniqueRecords
-          .apply("Set default values", DefaultValuesTransform.create(properties, datasetId))
           .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     // Core
