@@ -16,6 +16,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -121,7 +122,8 @@ public class XmlToInterpretedPipeline {
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create());
+            .apply("Filter duplicates", UniqueIdTransform.create())
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
 
     log.info("Adding interpretations");
 

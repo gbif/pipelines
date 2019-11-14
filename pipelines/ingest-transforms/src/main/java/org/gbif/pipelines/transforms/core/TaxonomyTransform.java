@@ -119,7 +119,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
       try {
         kvStore.close();
       } catch (IOException ex) {
-        log.error("Error closing KVStore", ex);
+        log.error("Error closing KV Store", ex);
       }
     }
   }

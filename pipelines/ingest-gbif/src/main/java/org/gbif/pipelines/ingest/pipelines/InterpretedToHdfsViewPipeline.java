@@ -140,7 +140,7 @@ public class InterpretedToHdfsViewPipeline {
 
     Pipeline p = Pipeline.create(options);
 
-    log.info("Adding step 2: Reading avros");
+    log.info("Adding step 2: Reading AVROs");
     // Core
     BasicTransform basicTransform = BasicTransform.create();
     MetadataTransform metadataTransform = MetadataTransform.create();

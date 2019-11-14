@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -69,10 +68,7 @@ public class MetadataInterpreter {
   public static Consumer<MetadataRecord> interpretEndpointType(String endpointType) {
     return mdr -> {
       if (!Strings.isNullOrEmpty(endpointType)) {
-        com.google.common.base.Optional<EndpointType> lookup = VocabularyUtils.lookup(endpointType, EndpointType.class);
-        if (lookup.isPresent()) {
-          mdr.setProtocol(lookup.get().name());
-        }
+        VocabularyUtils.lookup(endpointType, EndpointType.class).ifPresent(x -> mdr.setProtocol(x.name()));
       }
     };
   }
@@ -93,14 +89,13 @@ public class MetadataInterpreter {
 
   /** Gets the latest crawl attempt time, if exists. */
   private static Optional<Date> getLastCrawledDate(List<MachineTag> machineTags) {
-    if (Objects.nonNull(machineTags)) {
-      return machineTags.stream()
-          .filter(tag -> TagName.CRAWL_ATTEMPT.getName().equals(tag.getName())
-              && TagName.CRAWL_ATTEMPT.getNamespace().getNamespace().equals(tag.getNamespace()))
-          .sorted(Comparator.comparing(MachineTag::getCreated).reversed())
-          .map(MachineTag::getCreated)
-          .findFirst();
-    }
-    return Optional.empty();
+    return Optional.ofNullable(machineTags)
+        .map(x -> x.stream()
+            .filter(tag -> TagName.CRAWL_ATTEMPT.getName().equals(tag.getName())
+                && TagName.CRAWL_ATTEMPT.getNamespace().getNamespace().equals(tag.getNamespace()))
+            .sorted(Comparator.comparing(MachineTag::getCreated).reversed())
+            .map(MachineTag::getCreated)
+            .findFirst())
+        .get();
   }
 }

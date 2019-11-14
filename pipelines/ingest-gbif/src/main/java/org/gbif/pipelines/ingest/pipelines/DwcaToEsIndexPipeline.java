@@ -27,6 +27,7 @@ import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -161,7 +162,8 @@ public class DwcaToEsIndexPipeline {
     PCollection<ExtendedRecord> uniqueRecords =
         p.apply("Read ExtendedRecords", reader)
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create());
+            .apply("Filter duplicates", UniqueIdTransform.create())
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
 
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(datasetId))
@@ -169,7 +171,8 @@ public class DwcaToEsIndexPipeline {
             .apply("Convert into view", View.asSingleton());
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
-        uniqueRecords.apply("Map Verbatim to KV", verbatimTransform.toKv());
+        uniqueRecords
+          .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
