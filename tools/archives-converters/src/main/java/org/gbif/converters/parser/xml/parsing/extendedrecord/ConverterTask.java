@@ -24,7 +24,7 @@ import static org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedReco
 public class ConverterTask implements Runnable {
 
   private final File inputFile;
-  private final SyncDataFileWriter dataFileWriter;
+  private final SyncDataFileWriter<ExtendedRecord> dataFileWriter;
   private final UniquenessValidator validator;
   private final AtomicLong counter;
 

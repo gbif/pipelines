@@ -51,7 +51,7 @@ public class ExtendedRecordConverter {
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
       // Class with sync method to avoid problem with writing
-      SyncDataFileWriter writer = new SyncDataFileWriter(dataFileWriter);
+      SyncDataFileWriter<ExtendedRecord> writer = new SyncDataFileWriter<>(dataFileWriter);
 
       AtomicLong counter = new AtomicLong(0);
 
