@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Can be a org.gbif.api.model.registry.Organization model, some problem with enum unmarshalling */
+/** Can´t be an org.gbif.api.model.registry.Organization due to enum unmarshalling */
 @Getter
 @Setter
 @NoArgsConstructor

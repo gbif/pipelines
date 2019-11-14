@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.converters;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -26,14 +27,14 @@ public class OccurrenceExtensionConverterTest {
     extMap.put(somethingExt, somethingExt);
 
     // When
-    ExtendedRecord result = OccurrenceExtensionConverter.convert(coreMap, extMap);
+    Optional<ExtendedRecord> result = OccurrenceExtensionConverter.convert(coreMap, extMap);
 
     // Should
-    Assert.assertNotNull(result);
-    Assert.assertEquals(id, result.getId());
-    Assert.assertEquals(somethingCore, result.getCoreTerms().get(somethingCore));
-    Assert.assertEquals(somethingExt, result.getCoreTerms().get(somethingExt));
-
+    Assert.assertTrue(result.isPresent());
+    ExtendedRecord erResult = result.get();
+    Assert.assertEquals(id, erResult.getId());
+    Assert.assertEquals(somethingCore, erResult.getCoreTerms().get(somethingCore));
+    Assert.assertEquals(somethingExt, erResult.getCoreTerms().get(somethingExt));
   }
 
 }

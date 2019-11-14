@@ -38,6 +38,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.keygen.common.TermUtils;
 import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
 
 import org.apache.avro.Schema;
@@ -122,6 +123,17 @@ public class OccurrenceHdfsRecordConverter {
   private static final Logger LOG = LoggerFactory.getLogger(OccurrenceHdfsRecordConverter.class);
 
   /**
+   * Sets the lastInterpreted and lastParsed dates if the new value is greater that the existing one or if it is not set.
+   */
+  private static void setCreatedIfGreater(OccurrenceHdfsRecord hr, Long created) {
+    if (Objects.nonNull(created)) {
+      Long maxCreated = Math.max(created, Optional.ofNullable(hr.getLastinterpreted()).orElse(Long.MIN_VALUE));
+      hr.setLastinterpreted(maxCreated);
+      hr.setLastparsed(maxCreated);
+    }
+  }
+
+  /**
    * Adds the list of issues to the list of issues in the {@link OccurrenceHdfsRecord}.
    * @param issueRecord
    * @param hr target object
@@ -163,6 +175,8 @@ public class OccurrenceHdfsRecordConverter {
       hr.setHascoordinate(lr.getHasCoordinate());
       hr.setHasgeospatialissues(lr.getHasGeospatialIssue());
       hr.setRepatriated(lr.getRepatriated());
+
+      setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);
     };
   }
@@ -183,8 +197,9 @@ public class OccurrenceHdfsRecordConverter {
       hr.setNetworkkey(mr.getNetworkKeys());
       hr.setPublisher(mr.getPublisherTitle());
       hr.setPublishingorgkey(mr.getPublishingOrganizationKey());
-      hr.setPublishingcountry(mr.getDatasetPublishingCountry());
       hr.setLastcrawled(mr.getLastCrawled());
+
+      setCreatedIfGreater(hr, mr.getCreated());
       addIssues(mr.getIssues(), hr);
     };
   }
@@ -204,11 +219,15 @@ public class OccurrenceHdfsRecordConverter {
 
       if (Objects.nonNull(tr.getStartDayOfYear())) {
         hr.setStartdayofyear(tr.getStartDayOfYear().toString());
+      } else {
+        hr.setStartdayofyear(null);
       }
 
 
       if (Objects.nonNull(tr.getEndDayOfYear())) {
         hr.setEnddayofyear(tr.getEndDayOfYear().toString());
+      } else {
+        hr.setEnddayofyear(null);
       }
 
       if (tr.getEventDate() != null && tr.getEventDate().getGte() != null) {
@@ -221,6 +240,7 @@ public class OccurrenceHdfsRecordConverter {
             .ifPresent(eventDate -> hr.setEventdate(eventDate.getTime()));
       }
 
+      setCreatedIfGreater(hr, tr.getCreated());
       addIssues(tr.getIssues(), hr);
     };
   }
@@ -278,9 +298,16 @@ public class OccurrenceHdfsRecordConverter {
           hr.setAcceptedtaxonkey(tr.getAcceptedUsage().getKey());
         }
         Optional.ofNullable(tr.getAcceptedUsage().getRank()).ifPresent(r -> hr.setTaxonrank(r.name()));
-      } else if (Objects.nonNull(tr.getUsage())) {
+      } else if (Objects.nonNull(tr.getUsage()) && tr.getUsage().getKey() != 0) {
+        // if the acceptedUsage is null we use the usage as the accepted as longs as it's not incertidae sedis
         hr.setAcceptedtaxonkey(tr.getUsage().getKey());
         hr.setAcceptedscientificname(tr.getUsage().getName());
+        hr.setAcceptednameusageid(tr.getUsage().getKey().toString());
+      }
+
+      if (Objects.nonNull(tr.getUsage())) {
+        hr.setTaxonkey(tr.getUsage().getKey());
+        hr.setScientificname(tr.getUsage().getName());
         Optional.ofNullable(tr.getUsage().getRank()).ifPresent(r -> hr.setTaxonrank(r.name()));
       }
 
@@ -296,6 +323,7 @@ public class OccurrenceHdfsRecordConverter {
           .map(Diagnostic::getStatus)
           .ifPresent(d -> hr.setTaxonomicstatus(d.name()));
 
+      setCreatedIfGreater(hr, tr.getCreated());
       addIssues(tr.getIssues(), hr);
     };
   }
@@ -317,12 +345,8 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSex(br.getSex());
       hr.setTypestatus(br.getTypeStatus());
       hr.setTypifiedname(br.getTypifiedName());
-      if (Objects.nonNull(br.getCreated())) {
-        hr.setLastcrawled(br.getCreated());
-        hr.setLastinterpreted(br.getCreated());
-        hr.setLastinterpreted(br.getCreated());
-      }
-      hr.setCreated(new Date(br.getCreated()).toString());
+
+      setCreatedIfGreater(hr, br.getCreated());
       addIssues(br.getIssues(), hr);
     };
   }
@@ -406,26 +430,28 @@ public class OccurrenceHdfsRecordConverter {
           });
         }
 
-        Optional.ofNullable(interpretedSchemaField(term)).ifPresent(field -> {
-          //Fields that were set by other mappers are ignored
-          if (Objects.isNull(hr.get(field.name()))) {
-            String interpretedFieldname = field.name();
-            if (DcTerm.abstract_ == term) {
-              interpretedFieldname = "abstract$";
-            } else if (DwcTerm.class_ == term) {
-              interpretedFieldname = "class$";
-            } else if (DwcTerm.group == term) {
-              interpretedFieldname = "group";
-            } else if (DwcTerm.order == term) {
-              interpretedFieldname = "order";
-            } else if (DcTerm.date == term) {
-              interpretedFieldname = "date";
-            } else if (DcTerm.format == term) {
-              interpretedFieldname = "format";
+        if (!TermUtils.isInterpretedSourceTerm(term)) {
+          Optional.ofNullable(interpretedSchemaField(term)).ifPresent(field -> {
+            //Fields that were set by other mappers are ignored
+            if (Objects.isNull(hr.get(field.name()))) {
+              String interpretedFieldname = field.name();
+              if (DcTerm.abstract_ == term) {
+                interpretedFieldname = "abstract$";
+              } else if (DwcTerm.class_ == term) {
+                interpretedFieldname = "class$";
+              } else if (DwcTerm.group == term) {
+                interpretedFieldname = "group";
+              } else if (DwcTerm.order == term) {
+                interpretedFieldname = "order";
+              } else if (DcTerm.date == term) {
+                interpretedFieldname = "date";
+              } else if (DcTerm.format == term) {
+                interpretedFieldname = "format";
+              }
+              setHdfsRecordField(hr, field, interpretedFieldname, v);
             }
-            setHdfsRecordField(hr, field, interpretedFieldname, v);
-          }
-      });
+          });
+        }
       }));
     };
   }
@@ -445,9 +471,7 @@ public class OccurrenceHdfsRecordConverter {
 
     // The id (the <id> reference in the DWCA meta.xml) is an identifier local to the DWCA, and could only have been
     // used for "un-starring" a DWCA star record. However, we've exposed it as DcTerm.identifier for a long time in
-    // our public API v1, so we continue to do this.the id (the <id> reference in the DWCA meta.xml) is an identifier
-    // local to the DWCA, and could only have been used for "un-starring" a DWCA star record. However, we've exposed
-    // it as DcTerm.identifier for a long time in our public API v1, so we continue to do this.
+    // our public API v1, so we continue to do this.
     Optional<SpecificRecordBase> erOpt = Arrays.stream(records).filter(x -> x instanceof ExtendedRecord).findFirst();
     Optional<SpecificRecordBase> brOpt = Arrays.stream(records).filter(x -> x instanceof BasicRecord).findFirst();
     if (erOpt.isPresent() && brOpt.isPresent()) {
@@ -472,6 +496,7 @@ public class OccurrenceHdfsRecordConverter {
         .collect(Collectors.toList());
       hr.setExtMultimedia(MediaSerDeserUtils.toJson(mr.getMultimediaItems()));
 
+      setCreatedIfGreater(hr, mr.getCreated());
       hr.setMediatype(mediaTypes);
     };
   }
@@ -480,7 +505,7 @@ public class OccurrenceHdfsRecordConverter {
    * Gets the {@link Schema.Field} associated to a verbatim term.
    */
   private static Schema.Field verbatimSchemaField(Term term) {
-    return OccurrenceHdfsRecord.SCHEMA$.getField("v_" + HiveColumns.columnFor(term));
+    return OccurrenceHdfsRecord.SCHEMA$.getField("v_" + term.simpleName().toLowerCase());
   }
 
   /**
@@ -489,4 +514,5 @@ public class OccurrenceHdfsRecordConverter {
   private static Schema.Field interpretedSchemaField(Term term) {
     return OccurrenceHdfsRecord.SCHEMA$.getField(HiveColumns.columnFor(term));
   }
+
 }

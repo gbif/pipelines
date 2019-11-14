@@ -37,10 +37,12 @@ public class OccurrenceExtensionTransform extends DoFn<ExtendedRecord, ExtendedR
     List<Map<String, String>> occurrenceExts = er.getExtensions().get(DwcTerm.Occurrence.qualifiedName());
     if (occurrenceExts != null && !occurrenceExts.isEmpty()) {
       Map<String, String> coreTerms = er.getCoreTerms();
-      occurrenceExts.forEach(occurrence -> {
-        counter.inc();
-        out.output(OccurrenceExtensionConverter.convert(coreTerms, occurrence));
-      });
+      occurrenceExts.forEach(occurrence ->
+                               OccurrenceExtensionConverter.convert(coreTerms, occurrence)
+                                 .ifPresent(extEr -> {
+                                   counter.inc();
+                                   out.output(extEr);
+                                 }));
     } else {
       out.output(er);
     }

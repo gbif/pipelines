@@ -42,7 +42,7 @@ public class TaxonRecordConverter {
     taxonRecord.setClassification(classifications);
     taxonRecord.setSynonym(source.isSynonym());
     taxonRecord.setUsage(convertRankedName(source.getUsage()));
-    //Usage is set as the accepted usage if the accepted usage is null
+    // Usage is set as the accepted usage if the accepted usage is null
     taxonRecord.setAcceptedUsage(Optional.ofNullable(convertRankedName(source.getAcceptedUsage()))
                                   .orElse(taxonRecord.getUsage()));
     taxonRecord.setNomenclature(convertNomenclature(source.getNomenclature()));

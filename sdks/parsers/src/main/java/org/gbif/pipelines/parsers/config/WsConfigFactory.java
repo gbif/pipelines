@@ -66,8 +66,8 @@ public class WsConfigFactory {
 
     String cacheSize = props.getProperty(prefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB);
     String timeout = props.getProperty(prefix + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT);
-    RetryConfig retryConfig = RetryConfigFactory.create(props, prefix);
+    PipelinesRetryConfig pipelinesRetryConfig = RetryConfigFactory.create(props, prefix);
 
-    return new WsConfig(url, timeout, cacheSize, retryConfig);
+    return new WsConfig(url, timeout, cacheSize, pipelinesRetryConfig);
   }
 }
