@@ -16,7 +16,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.DefaultValuesTransform;
+import org.gbif.pipelines.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -112,7 +112,6 @@ public class VerbatimToInterpretedPipeline {
 
     // Core
     MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
-    DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create();
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
@@ -146,10 +145,8 @@ public class VerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
+        .apply("Set default values", DefaultValuesTransform.create(properties, datasetId))
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
-
-    uniqueRecords
-      .apply("Set default values", defaultValuesTransform.interpret(metadataView));
 
     uniqueRecords
         .apply("Check basic transform condition", basicTransform.check(types))

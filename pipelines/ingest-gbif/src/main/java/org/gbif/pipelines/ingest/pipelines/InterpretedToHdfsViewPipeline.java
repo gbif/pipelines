@@ -27,7 +27,6 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.config.LockConfig;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -141,11 +140,10 @@ public class InterpretedToHdfsViewPipeline {
 
     Pipeline p = Pipeline.create(options);
 
-    log.info("Adding step 2: Reading avros");
+    log.info("Adding step 2: Reading AVROs");
     // Core
     BasicTransform basicTransform = BasicTransform.create();
     MetadataTransform metadataTransform = MetadataTransform.create();
-    DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
@@ -163,7 +161,6 @@ public class InterpretedToHdfsViewPipeline {
 
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(interpretPathFn))
-          .apply("Set default values", defaultValuesTransform.interpret(metadataView))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =

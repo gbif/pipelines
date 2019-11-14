@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -17,7 +16,6 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.common.parsers.LicenseParser;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
@@ -31,8 +29,6 @@ import lombok.NoArgsConstructor;
 /** Interprets GBIF metadata by datasetId */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetadataInterpreter {
-
-  public static final String DEFAULT_TERM_NAMESPACE = "default-term.gbif.org";
 
   /** Gets information from GBIF API by datasetId */
   public static BiConsumer<String, MetadataRecord> interpret(MetadataServiceClient client) {
@@ -59,7 +55,6 @@ public class MetadataInterpreter {
         mdr.setPublisherTitle(organization.getTitle());
         mdr.setDatasetPublishingCountry(organization.getCountry());
         getLastCrawledDate(dataset.getMachineTags()).ifPresent(d -> mdr.setLastCrawled(d.getTime()));
-        copyMachineTags(dataset, mdr);
       }
     };
   }
@@ -81,18 +76,6 @@ public class MetadataInterpreter {
     };
   }
 
-  /** Replace all the default verbatim values with the values defined as MachineTags with the namespace 'default-term.gbif.org'.*/
-  public static Consumer<ExtendedRecord> interpretDefaultValues(MetadataRecord mr) {
-    return er -> {
-      if (Objects.nonNull(mr.getMachineTags())) {
-        mr.getMachineTags()
-          .stream()
-          .filter(tag -> DEFAULT_TERM_NAMESPACE.equalsIgnoreCase(tag.getNamespace()))
-          .forEach(defaultValTag -> er.getCoreTerms().replace(defaultValTag.getName(), defaultValTag.getValue()));
-      }
-    };
-  }
-
   /** Returns ENUM instead of url string */
   private static License getLicense(String url) {
     URI uri = Optional.ofNullable(url).map(x -> {
@@ -109,31 +92,13 @@ public class MetadataInterpreter {
 
   /** Gets the latest crawl attempt time, if exists. */
   private static Optional<Date> getLastCrawledDate(List<MachineTag> machineTags) {
-    if (Objects.nonNull(machineTags)) {
-      return machineTags.stream()
-          .filter(tag -> TagName.CRAWL_ATTEMPT.getName().equals(tag.getName())
-              && TagName.CRAWL_ATTEMPT.getNamespace().getNamespace().equals(tag.getNamespace()))
-          .sorted(Comparator.comparing(MachineTag::getCreated).reversed())
-          .map(MachineTag::getCreated)
-          .findFirst();
-    }
-    return Optional.empty();
-  }
-
-  /** Copies dataset.machineTags to mr.machineTags. */
-  private static void copyMachineTags(Dataset dataset, MetadataRecord mdr) {
-    if (Objects.nonNull(dataset.getMachineTags())) {
-      mdr.setMachineTags(dataset.getMachineTags()
-                          .stream()
-                          .map(machineTag -> org.gbif.pipelines.io.avro.MachineTag.newBuilder()
-                            .setKey(machineTag.getKey())
-                            .setNamespace(machineTag.getNamespace())
-                            .setName(machineTag.getName())
-                            .setValue(machineTag.getValue())
-                            .setCreatedBy(machineTag.getCreatedBy())
-                            .setCreated(machineTag.getCreated().getTime())
-                            .build())
-                          .collect(Collectors.toList()));
-    }
+    return Optional.ofNullable(machineTags)
+        .map(x -> x.stream()
+            .filter(tag -> TagName.CRAWL_ATTEMPT.getName().equals(tag.getName())
+                && TagName.CRAWL_ATTEMPT.getNamespace().getNamespace().equals(tag.getNamespace()))
+            .sorted(Comparator.comparing(MachineTag::getCreated).reversed())
+            .map(MachineTag::getCreated)
+            .findFirst())
+        .get();
   }
 }
