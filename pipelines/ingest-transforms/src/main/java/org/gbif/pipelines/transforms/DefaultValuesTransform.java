@@ -17,7 +17,6 @@ import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 
 import org.apache.beam.sdk.transforms.DoFn;
-import org.apache.beam.sdk.transforms.DoFn.Setup;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
@@ -34,11 +33,10 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   private final String datasetId;
-
-  private MetadataServiceClient client;
+  private final WsConfig wsConfig;
 
   private DefaultValuesTransform(WsConfig wsConfig, String datasetId) {
-    this.client = MetadataServiceClient.create(wsConfig);
+    this.wsConfig = wsConfig;
     this.datasetId = datasetId;
   }
 
@@ -58,7 +56,7 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
    */
   @Override
   public PCollection<ExtendedRecord> expand(PCollection<ExtendedRecord> input) {
-    Dataset dataset = client.getDataset(datasetId);
+    Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
     List<MachineTag> tags = Collections.emptyList();
     if (dataset != null && dataset.getMachineTags() != null && !dataset.getMachineTags().isEmpty()) {
       tags = dataset.getMachineTags()
@@ -80,7 +78,7 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
           Term term = TERM_FACTORY.findPropertyTerm(tag.getName());
           String defaultValue = tag.getValue();
           if (term != null && !Strings.isNullOrEmpty(defaultValue)) {
-            er.getCoreTerms().replace(term.qualifiedName(), tag.getValue());
+            er.getCoreTerms().putIfAbsent(term.qualifiedName(), tag.getValue());
           }
         });
 

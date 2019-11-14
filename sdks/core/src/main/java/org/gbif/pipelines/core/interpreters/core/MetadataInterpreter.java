@@ -68,10 +68,7 @@ public class MetadataInterpreter {
   public static Consumer<MetadataRecord> interpretEndpointType(String endpointType) {
     return mdr -> {
       if (!Strings.isNullOrEmpty(endpointType)) {
-        com.google.common.base.Optional<EndpointType> lookup = VocabularyUtils.lookup(endpointType, EndpointType.class);
-        if (lookup.isPresent()) {
-          mdr.setProtocol(lookup.get().name());
-        }
+        VocabularyUtils.lookup(endpointType, EndpointType.class).ifPresent(x -> mdr.setProtocol(x.name()));
       }
     };
   }
