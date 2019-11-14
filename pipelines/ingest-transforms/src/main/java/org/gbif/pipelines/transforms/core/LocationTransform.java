@@ -159,9 +159,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretMinimumDistanceAboveSurfaceInMeters)
         .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
         .via(LocationInterpreter::interpretCoordinatePrecision)
-        .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters);
-
-    out.output(lr);
+        .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
+        .consume(out::output);
 
     counter.inc();
   }

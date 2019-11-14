@@ -88,7 +88,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   @SneakyThrows
   @Teardown
-  public void teardown() {
+  public void tearDown() {
     if (connection != null) {
       connection.close();
     }
@@ -114,9 +114,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretLifeStage)
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
-        .via(BasicInterpreter::interpretReferences);
-
-    out.output(br);
+        .via(BasicInterpreter::interpretReferences)
+        .consume(out::output);
 
     counter.inc();
   }
