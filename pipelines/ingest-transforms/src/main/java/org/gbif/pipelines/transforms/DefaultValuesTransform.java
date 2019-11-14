@@ -34,12 +34,11 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   private final String datasetId;
-  private final WsConfig wsConfig;
 
   private MetadataServiceClient client;
 
   private DefaultValuesTransform(WsConfig wsConfig, String datasetId) {
-    this.wsConfig = wsConfig;
+    this.client = MetadataServiceClient.create(wsConfig);
     this.datasetId = datasetId;
   }
 
@@ -51,13 +50,6 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
   public static DefaultValuesTransform create(Properties properties, String datasetId) {
     WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
     return new DefaultValuesTransform(wsConfig, datasetId);
-  }
-
-  @Setup
-  public void setup() {
-    if (wsConfig != null) {
-      client = MetadataServiceClient.create(wsConfig);
-    }
   }
 
   /**
