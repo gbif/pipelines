@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.java.pipelines;
 import java.io.BufferedOutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -13,6 +14,7 @@ import java.util.function.UnaryOperator;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.DataFileWriteBuilder;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.SyncDataFileWriter;
+import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.ExtendedRecordReader;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -107,6 +109,8 @@ public class VerbatimToInterpretedPipeline {
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
     AudubonTransform audubonTransform = AudubonTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
+    // Other
+    DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId);
 
     log.info("Init pipeline transforms");
     // Core
@@ -257,10 +261,11 @@ public class VerbatimToInterpretedPipeline {
 
       metadataWriter.append(mdr);
 
+      HashMap<String, ExtendedRecord> erMap = ExtendedRecordReader.readUniqueRecords(options.getInputPath());
+      HashMap<String, ExtendedRecord> erDefaultValueMap = defaultValuesTransform.replaceDefaultValues(erMap);
+
       // Create all records
-      CompletableFuture[] futures = ExtendedRecordReader.readUniqueRecords(options.getInputPath())
-          .values()
-          .stream()
+      CompletableFuture[] futures = erDefaultValueMap.values().stream()
           .map(v ->
               CompletableFuture.runAsync(() -> {
                 // Verbatim

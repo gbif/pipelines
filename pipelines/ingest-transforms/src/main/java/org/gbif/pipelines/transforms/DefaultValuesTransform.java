@@ -56,6 +56,20 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
    */
   @Override
   public PCollection<ExtendedRecord> expand(PCollection<ExtendedRecord> input) {
+    List<MachineTag> tags = getMachineTags();
+    return tags.isEmpty() ? input : ParDo.of(createDoFn(tags)).expand(input);
+  }
+
+  private DoFn<ExtendedRecord, ExtendedRecord> createDoFn(List<MachineTag> tags) {
+    return new DoFn<ExtendedRecord, ExtendedRecord>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) {
+        c.output(replaceDefaultValues(c.element(), tags));
+      }
+    };
+  }
+
+  public List<MachineTag> getMachineTags() {
     Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
     List<MachineTag> tags = Collections.emptyList();
     if (dataset != null && dataset.getMachineTags() != null && !dataset.getMachineTags().isEmpty()) {
@@ -64,26 +78,20 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
           .filter(tag -> DEFAULT_TERM_NAMESPACE.equalsIgnoreCase(tag.getNamespace()))
           .collect(Collectors.toList());
     }
-    return tags.isEmpty() ? input : ParDo.of(createDoFn(tags)).expand(input);
+    return tags;
   }
 
-  private DoFn<ExtendedRecord, ExtendedRecord> createDoFn(List<MachineTag> tags) {
-    return new DoFn<ExtendedRecord, ExtendedRecord>() {
-      @ProcessElement
-      public void processElement(ProcessContext c) {
+  public ExtendedRecord replaceDefaultValues(ExtendedRecord er, List<MachineTag> tags) {
+    ExtendedRecord erWithDefault = ExtendedRecord.newBuilder(er).build();
 
-        ExtendedRecord er = ExtendedRecord.newBuilder(c.element()).build();
-
-        tags.forEach(tag -> {
-          Term term = TERM_FACTORY.findPropertyTerm(tag.getName());
-          String defaultValue = tag.getValue();
-          if (term != null && !Strings.isNullOrEmpty(defaultValue)) {
-            er.getCoreTerms().putIfAbsent(term.qualifiedName(), tag.getValue());
-          }
-        });
-
-        c.output(er);
+    tags.forEach(tag -> {
+      Term term = TERM_FACTORY.findPropertyTerm(tag.getName());
+      String defaultValue = tag.getValue();
+      if (term != null && !Strings.isNullOrEmpty(defaultValue)) {
+        erWithDefault.getCoreTerms().putIfAbsent(term.qualifiedName(), tag.getValue());
       }
-    };
+    });
+
+    return erWithDefault;
   }
 }
