@@ -49,7 +49,7 @@ public interface BasePipelineOptions extends PipelineOptions {
   void setWriteOutput(boolean writeOutput);
 
   @Description("Avro compression type")
-  @Default.String("SNAPPY")
+  @Default.String("snappy")
   String getAvroCompressionType();
 
   void setAvroCompressionType(String compressionType);
