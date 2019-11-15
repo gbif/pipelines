@@ -1,5 +1,6 @@
 package org.gbif.converters.converter;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Optional;
@@ -13,25 +14,25 @@ import lombok.Builder;
 import lombok.NonNull;
 
 @Builder
-public class DataFileWriteBuilder {
+public class SyncDataFileWriterBuilder {
 
   @NonNull
   private Schema schema;
   @NonNull
-  private CodecFactory codec;
+  private String codec;
   @NonNull
   private OutputStream outputStream;
   private Integer syncInterval;
   private Boolean flushOnEveryBlock;
 
-  public <T> DataFileWriter<T> createDataFileWriter() throws IOException {
+  public <T> SyncDataFileWriter<T> createSyncDataFileWriter() throws IOException {
     DataFileWriter<T> dataFileWriter = new DataFileWriter<>(new SpecificDatumWriter<>(schema));
 
-    dataFileWriter.setCodec(codec);
+    dataFileWriter.setCodec(CodecFactory.fromString(codec));
     Optional.ofNullable(flushOnEveryBlock).ifPresent(dataFileWriter::setFlushOnEveryBlock);
     Optional.ofNullable(syncInterval).ifPresent(dataFileWriter::setSyncInterval);
-    dataFileWriter.create(schema, outputStream);
+    dataFileWriter.create(schema, new BufferedOutputStream(outputStream));
 
-    return dataFileWriter;
+    return new SyncDataFileWriter<>(dataFileWriter);
   }
 }

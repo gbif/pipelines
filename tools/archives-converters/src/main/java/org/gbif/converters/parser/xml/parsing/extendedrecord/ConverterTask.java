@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;

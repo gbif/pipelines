@@ -1,6 +1,7 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -9,11 +10,12 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.converters.converter.DataFileWriteBuilder;
-import org.gbif.converters.parser.xml.parsing.extendedrecord.SyncDataFileWriter;
+import org.gbif.converters.converter.SyncDataFileWriter;
+import org.gbif.converters.converter.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.ExtendedRecordReader;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -40,8 +42,7 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
-import org.apache.avro.file.CodecFactory;
-import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.MDC;
@@ -109,8 +110,6 @@ public class VerbatimToInterpretedPipeline {
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
     AudubonTransform audubonTransform = AudubonTransform.create();
     ImageTransform imageTransform = ImageTransform.create();
-    // Other
-    DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId);
 
     log.info("Init pipeline transforms");
     // Core
@@ -142,154 +141,55 @@ public class VerbatimToInterpretedPipeline {
     FileSystem locationFs = createParentDirectories(locationPath, hdfsConfig);
 
     try (
-        // Verbatim
-        BufferedOutputStream verbatimOutputStream = new BufferedOutputStream(verbatimFs.create(verbatimPath));
-        DataFileWriter<ExtendedRecord> verbatimDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(ExtendedRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(verbatimOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Metadata
-        BufferedOutputStream metadataOutputStream = new BufferedOutputStream(metadataFs.create(metadataPath));
-        DataFileWriter<MetadataRecord> metadataDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(MetadataRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(metadataOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Basic
-        BufferedOutputStream basicOutputStream = new BufferedOutputStream(basicFs.create(basicPath));
-        DataFileWriter<BasicRecord> basicDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(BasicRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(basicOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Temporal
-        BufferedOutputStream temporalOutputStream = new BufferedOutputStream(temporalFs.create(temporalPath));
-        DataFileWriter<TemporalRecord> temporalDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(TemporalRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(temporalOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Multimedia
-        BufferedOutputStream multimediaOutputStream = new BufferedOutputStream(multimediaFs.create(multimediaPath));
-        DataFileWriter<MultimediaRecord> multimediaDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(MultimediaRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(multimediaOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Image
-        BufferedOutputStream imageOutputStream = new BufferedOutputStream(imageFs.create(imagePath));
-        DataFileWriter<ImageRecord> imageDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(ImageRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(imageOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Audubon
-        BufferedOutputStream audubonOutputStream = new BufferedOutputStream(audubonFs.create(audubonPath));
-        DataFileWriter<AudubonRecord> audubonDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(AudubonRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(audubonOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Measurement
-        BufferedOutputStream measurementOutputStream = new BufferedOutputStream(measurementFs.create(measurementPath));
-        DataFileWriter<MeasurementOrFactRecord> measurementDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(MeasurementOrFactRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(measurementOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Taxonomy
-        BufferedOutputStream taxonomyOutputStream = new BufferedOutputStream(taxonFs.create(taxonomyPath));
-        DataFileWriter<TaxonRecord> taxonomyDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(TaxonRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(taxonomyOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
-        // Location
-        BufferedOutputStream locationOutputStream = new BufferedOutputStream(locationFs.create(locationPath));
-        DataFileWriter<LocationRecord> locationDataFileWriter =
-            DataFileWriteBuilder.builder()
-                .schema(LocationRecord.getClassSchema())
-                .codec(CodecFactory.snappyCodec())
-                .outputStream(locationOutputStream)
-                .syncInterval(options.getAvroSyncInterval())
-                .build()
-                .createDataFileWriter();
+        SyncDataFileWriter<ExtendedRecord> verbatimWriter =
+            createSyncDataFileWriter(options, ExtendedRecord.getClassSchema(), verbatimFs.create(verbatimPath));
+        SyncDataFileWriter<MetadataRecord> metadataWriter =
+            createSyncDataFileWriter(options, MetadataRecord.getClassSchema(), metadataFs.create(metadataPath));
+        SyncDataFileWriter<BasicRecord> basicWriter =
+            createSyncDataFileWriter(options, BasicRecord.getClassSchema(), basicFs.create(basicPath));
+        SyncDataFileWriter<TemporalRecord> temporalWriter =
+            createSyncDataFileWriter(options, TemporalRecord.getClassSchema(), temporalFs.create(temporalPath));
+        SyncDataFileWriter<MultimediaRecord> multimediaWriter =
+            createSyncDataFileWriter(options, MultimediaRecord.getClassSchema(), multimediaFs.create(multimediaPath));
+        SyncDataFileWriter<ImageRecord> imageWriter =
+            createSyncDataFileWriter(options, ImageRecord.getClassSchema(), imageFs.create(imagePath));
+        SyncDataFileWriter<AudubonRecord> audubonWriter =
+            createSyncDataFileWriter(options, AudubonRecord.getClassSchema(), audubonFs.create(audubonPath));
+        SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
+            createSyncDataFileWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementFs.create(measurementPath));
+        SyncDataFileWriter<TaxonRecord> taxonWriter =
+            createSyncDataFileWriter(options, TaxonRecord.getClassSchema(), taxonFs.create(taxonomyPath));
+        SyncDataFileWriter<LocationRecord> locationWriter =
+            createSyncDataFileWriter(options, LocationRecord.getClassSchema(), locationFs.create(locationPath))
     ) {
-
-      SyncDataFileWriter<MetadataRecord> metadataWriter = new SyncDataFileWriter<>(metadataDataFileWriter);
-      SyncDataFileWriter<ExtendedRecord> verbatimWriter = new SyncDataFileWriter<>(verbatimDataFileWriter);
-      SyncDataFileWriter<BasicRecord> basicWriter = new SyncDataFileWriter<>(basicDataFileWriter);
-      SyncDataFileWriter<TemporalRecord> temporalWriter = new SyncDataFileWriter<>(temporalDataFileWriter);
-      SyncDataFileWriter<MultimediaRecord> multimediaWriter = new SyncDataFileWriter<>(multimediaDataFileWriter);
-      SyncDataFileWriter<ImageRecord> imageWriter = new SyncDataFileWriter<>(imageDataFileWriter);
-      SyncDataFileWriter<AudubonRecord> audubonWriter = new SyncDataFileWriter<>(audubonDataFileWriter);
-      SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter = new SyncDataFileWriter<>(measurementDataFileWriter);
-      SyncDataFileWriter<TaxonRecord> taxonWriter = new SyncDataFileWriter<>(taxonomyDataFileWriter);
-      SyncDataFileWriter<LocationRecord> locationWriter = new SyncDataFileWriter<>(locationDataFileWriter);
 
       // Create MetadataRecord
       MetadataRecord mdr = metadataTransform.processElement(options.getDatasetId())
           .orElseThrow(() -> new IllegalArgumentException("MetadataRecord can't be null"));
-
       metadataWriter.append(mdr);
 
+      // Read DWCA and replace default values
       HashMap<String, ExtendedRecord> erMap = ExtendedRecordReader.readUniqueRecords(options.getInputPath());
-      HashMap<String, ExtendedRecord> erDefaultValueMap = defaultValuesTransform.replaceDefaultValues(erMap);
+      DefaultValuesTransform.create(properties, datasetId).replaceDefaultValues(erMap);
 
-      // Create all records
-      CompletableFuture[] futures = erDefaultValueMap.values().stream()
-          .map(v ->
-              CompletableFuture.runAsync(() -> {
-                // Verbatim
-                verbatimWriter.append(v);
-                // Basic
-                basicTransform.processElement(v).ifPresent(basicWriter::append);
-                // Temporal
-                temporalTransform.processElement(v).ifPresent(temporalWriter::append);
-                // Multimedia
-                multimediaTransform.processElement(v).ifPresent(multimediaWriter::append);
-                // Image
-                imageTransform.processElement(v).ifPresent(imageWriter::append);
-                // Audubon
-                audubonTransform.processElement(v).ifPresent(audubonWriter::append);
-                // Measurement
-                measurementOrFactTransform.processElement(v).ifPresent(measurementWriter::append);
-                // Taxonomy
-                taxonomyTransform.processElement(v).ifPresent(taxonWriter::append);
-                // Location
-                locationTransform.processElement(v, mdr).ifPresent(locationWriter::append);
+      // Create interpretation
+      Consumer<ExtendedRecord> interpretRecords = er -> {
+        verbatimWriter.append(er);
+        basicTransform.processElement(er).ifPresent(basicWriter::append);
+        temporalTransform.processElement(er).ifPresent(temporalWriter::append);
+        multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
+        imageTransform.processElement(er).ifPresent(imageWriter::append);
+        audubonTransform.processElement(er).ifPresent(audubonWriter::append);
+        measurementOrFactTransform.processElement(er).ifPresent(measurementWriter::append);
+        taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
+        locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+      };
 
-              }, executor))
+      // Run interpretation
+      CompletableFuture[] futures = erMap.values()
+          .stream()
+          .map(v -> CompletableFuture.runAsync(() -> interpretRecords.accept(v), executor))
           .toArray(CompletableFuture[]::new);
-
       CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {
@@ -302,7 +202,17 @@ public class VerbatimToInterpretedPipeline {
     }
 
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
+  }
 
+  private static <T> SyncDataFileWriter<T> createSyncDataFileWriter(InterpretationPipelineOptions options,
+      Schema schema, OutputStream stream) throws IOException {
+    return SyncDataFileWriterBuilder.builder()
+        .schema(schema)
+        .codec(options.getAvroCompressionType())
+        .outputStream(stream)
+        .syncInterval(options.getAvroSyncInterval())
+        .build()
+        .createSyncDataFileWriter();
   }
 
 }

@@ -2,18 +2,17 @@ package org.gbif.converters.parser.xml;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.concurrent.ForkJoinPool;
 import java.util.zip.Deflater;
 
-import org.gbif.converters.converter.DataFileWriteBuilder;
+import org.gbif.converters.converter.SyncDataFileWriter;
+import org.gbif.converters.converter.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.junit.Assert;
@@ -29,67 +28,67 @@ public class ExtendedRecordConverterTest {
   private final String inpPath =
       getClass().getResource("/responses/pages/7ef15372-1387-11e2-bb2e-00145eb45e9a/").getFile();
   private final String outPath = inpPath + "verbatim.avro";
-  private final CodecFactory codec = CodecFactory.deflateCodec(Deflater.BEST_SPEED);
+  private final CodecFactory codec = CodecFactory.snappyCodec();
 
   @Test(expected = ParsingException.class)
-  public void inputPathIsAbsentTest() throws IOException {
+  public void inputPathIsAbsentTest() throws Exception {
     try (OutputStream output = new FileOutputStream(outPath);
-        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvro("", dataFileWrite);
     }
   }
 
   @Test(expected = ParsingException.class)
-  public void outputPathIsAbsentTest() throws IOException {
+  public void outputPathIsAbsentTest() throws Exception {
     try (OutputStream output = new FileOutputStream(outPath);
-        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
     }
   }
 
   @Test(expected = ParsingException.class)
-  public void inputPathIsNullTest() throws IOException {
+  public void inputPathIsNullTest() throws Exception {
     try (OutputStream output = new FileOutputStream(outPath);
-        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvro(null, dataFileWrite);
     }
   }
 
   @Test(expected = NullPointerException.class)
-  public void outputPathIsNullTest() throws IOException {
-    try (DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(null)) {
+  public void outputPathIsNullTest() throws Exception {
+    try (SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(null)) {
       ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
     }
   }
 
   @Test(expected = ParsingException.class)
-  public void inputPathNotValidTest() throws IOException {
+  public void inputPathNotValidTest() throws Exception {
     try (OutputStream output = new FileOutputStream(outPath);
-        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
     }
   }
 
   @Test(expected = ParsingException.class)
-  public void inputFileWrongExtensionTest() throws IOException {
+  public void inputFileWrongExtensionTest() throws Exception {
     // State
     String inputPath = inpPath + "61.zip";
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
     }
   }
 
   @Test
-  public void parsingDirectoryTest() throws IOException {
+  public void parsingDirectoryTest() throws Exception {
     // State
     String inputPath = inpPath + "61";
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
     }
 
@@ -100,13 +99,13 @@ public class ExtendedRecordConverterTest {
   }
 
   @Test
-  public void parsingArchiveTest() throws IOException {
+  public void parsingArchiveTest() throws Exception {
     // State
     String inputPath = inpPath + "61.tar.xz";
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
     }
 
@@ -117,13 +116,13 @@ public class ExtendedRecordConverterTest {
   }
 
   @Test
-  public void avroDeserializingTest() throws IOException {
+  public void avroDeserializingTest() throws Exception {
     // State
     String inputPath = inpPath + "61";
 
     // When
     try (OutputStream output = new FileOutputStream(outPath);
-        DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
+        SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
       ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
     }
 
@@ -144,12 +143,12 @@ public class ExtendedRecordConverterTest {
     Files.deleteIfExists(verbatim.toPath());
   }
 
-  private DataFileWriter<ExtendedRecord> createWriter(OutputStream output) throws IOException {
-    return DataFileWriteBuilder.builder()
+  private SyncDataFileWriter<ExtendedRecord> createWriter(OutputStream output) throws Exception {
+    return SyncDataFileWriterBuilder.builder()
         .schema(ExtendedRecord.getClassSchema())
-        .codec(codec)
+        .codec(codec.toString())
         .outputStream(output)
         .build()
-        .createDataFileWriter();
+        .createSyncDataFileWriter();
   }
 }

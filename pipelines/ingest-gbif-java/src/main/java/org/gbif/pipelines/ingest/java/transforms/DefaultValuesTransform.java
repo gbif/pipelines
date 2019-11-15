@@ -27,12 +27,11 @@ public class DefaultValuesTransform {
     return new DefaultValuesTransform(properties, datasetId);
   }
 
-  public HashMap<String, ExtendedRecord> replaceDefaultValues(HashMap<String, ExtendedRecord> source) {
+  public void replaceDefaultValues(HashMap<String, ExtendedRecord> source) {
     List<MachineTag> tags = transform.getMachineTags();
     if (!tags.isEmpty()) {
       source.forEach((key, value) -> source.put(key, transform.replaceDefaultValues(value, tags)));
     }
-    return source;
   }
 
 }

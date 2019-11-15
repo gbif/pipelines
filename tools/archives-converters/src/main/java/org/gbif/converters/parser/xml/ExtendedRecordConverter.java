@@ -10,14 +10,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ExecutorPool;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
-import org.gbif.converters.parser.xml.parsing.extendedrecord.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import org.apache.avro.file.DataFileWriter;
 
 import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +38,7 @@ public class ExtendedRecordConverter {
   }
 
   /** @param inputPath path to directory with response files or a tar.xz archive */
-  public long toAvro(String inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
+  public long toAvro(String inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter) {
     if (Strings.isNullOrEmpty(inputPath)) {
       throw new ParsingException("Input or output stream must not be empty or null!");
     }
@@ -50,13 +48,10 @@ public class ExtendedRecordConverter {
     try (Stream<Path> walk = Files.walk(inputFile.toPath());
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
-      // Class with sync method to avoid problem with writing
-      SyncDataFileWriter<ExtendedRecord> writer = new SyncDataFileWriter<>(dataFileWriter);
-
       AtomicLong counter = new AtomicLong(0);
 
       Predicate<Path> prefixPr = x -> x.toString().endsWith(FILE_PREFIX_RESPONSE) || x.toString().endsWith(FILE_PREFIX_XML);
-      Function<File, ConverterTask> taskFn = f -> new ConverterTask(f, writer, validator, counter);
+      Function<File, ConverterTask> taskFn = f -> new ConverterTask(f, dataFileWriter, validator, counter);
 
       // Run async process - read a file, convert to ExtendedRecord and write to avro
       CompletableFuture[] futures =
@@ -67,7 +62,6 @@ public class ExtendedRecordConverter {
 
       // Wait all threads
       CompletableFuture.allOf(futures).get();
-      dataFileWriter.flush();
 
       return counter.get();
 

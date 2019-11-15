@@ -1,4 +1,4 @@
-package org.gbif.converters.parser.xml.parsing.extendedrecord;
+package org.gbif.converters.converter;
 
 import java.io.IOException;
 
@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 
 /** Sync class for avro DataFileWriter, created to avoid an issue during file writing */
 @AllArgsConstructor
-public class SyncDataFileWriter<T> {
+public class SyncDataFileWriter<T> implements AutoCloseable {
 
   private final DataFileWriter<T> dataFileWriter;
 
@@ -19,5 +19,10 @@ public class SyncDataFileWriter<T> {
     } catch (IOException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }
+  }
+
+  @Override
+  public void close() throws Exception {
+    dataFileWriter.close();
   }
 }
