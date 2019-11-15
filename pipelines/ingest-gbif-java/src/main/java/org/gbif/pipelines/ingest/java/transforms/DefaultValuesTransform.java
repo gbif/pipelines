@@ -1,7 +1,7 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.gbif.api.model.registry.MachineTag;
@@ -27,7 +27,7 @@ public class DefaultValuesTransform {
     return new DefaultValuesTransform(properties, datasetId);
   }
 
-  public void replaceDefaultValues(HashMap<String, ExtendedRecord> source) {
+  public void replaceDefaultValues(Map<String, ExtendedRecord> source) {
     List<MachineTag> tags = transform.getMachineTags();
     if (!tags.isEmpty()) {
       source.forEach((key, value) -> source.put(key, transform.replaceDefaultValues(value, tags)));
