@@ -41,7 +41,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
   private final String endpointType;
   private MetadataServiceClient client;
 
-  public MetadataTransform(WsConfig wsConfig, String endpointType, Integer attempt) {
+  private MetadataTransform(WsConfig wsConfig, String endpointType, Integer attempt) {
     super(MetadataRecord.class, METADATA);
     this.wsConfig = wsConfig;
     this.endpointType = endpointType;
