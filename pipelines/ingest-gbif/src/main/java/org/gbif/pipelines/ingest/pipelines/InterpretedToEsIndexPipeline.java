@@ -18,7 +18,6 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -42,7 +41,6 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -108,18 +106,6 @@ public class InterpretedToEsIndexPipeline {
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
-    // Core
-    final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
-    final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
-    final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
-    final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
-    final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
-    // Extension
-    final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
-    final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
-    final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
-    final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
-
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding step 2: Creating transformations");
@@ -179,27 +165,29 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
-            .converter();
+        GbifJsonTransform.create(
+            verbatimTransform.getTag(), basicTransform.getTag(), temporalTransform.getTag(), locationTransform.getTag(),
+            taxonomyTransform.getTag(),  multimediaTransform.getTag(), imageTransform.getTag(), audubonTransform.getTag(),
+            measurementOrFactTransform.getTag(), metadataView
+        ).converter();
 
     PCollection<String> jsonCollection =
         KeyedPCollectionTuple
             // Core
-            .of(brTag, basicCollection)
-            .and(trTag, temporalCollection)
-            .and(lrTag, locationCollection)
-            .and(txrTag, taxonCollection)
+            .of(basicTransform.getTag(), basicCollection)
+            .and(temporalTransform.getTag(), temporalCollection)
+            .and(locationTransform.getTag(), locationCollection)
+            .and(taxonomyTransform.getTag(), taxonCollection)
             // Extension
-            .and(mrTag, multimediaCollection)
-            .and(irTag, imageCollection)
-            .and(arTag, audubonCollection)
-            .and(mfrTag, measurementCollection)
+            .and(multimediaTransform.getTag(), multimediaCollection)
+            .and(imageTransform.getTag(), imageCollection)
+            .and(audubonTransform.getTag(), audubonCollection)
+            .and(measurementOrFactTransform.getTag(), measurementCollection)
             // Raw
-            .and(erTag, verbatimCollection)
+            .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", gbifJsonDoFn)
-            .apply("Filter records without gbifId", FilterMissedGbifIdTransform.create());
+            .apply("Merging to json", gbifJsonDoFn);
 
     log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =

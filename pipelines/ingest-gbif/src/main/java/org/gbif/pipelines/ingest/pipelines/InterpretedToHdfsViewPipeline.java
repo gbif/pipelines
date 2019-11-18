@@ -36,7 +36,6 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.hdfs.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.transforms.hdfs.OccurrenceHdfsRecordConverterTransform;
 import org.gbif.pipelines.transforms.hdfs.OccurrenceHdfsRecordTransform;
 
@@ -50,7 +49,6 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -126,18 +124,6 @@ public class InterpretedToHdfsViewPipeline {
     log.info("Adding step 1: Options");
     UnaryOperator<String> interpretPathFn = t -> FsUtils.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
 
-    // Core
-    final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
-    final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
-    final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
-    final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
-    final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
-    // Extension
-    final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
-    final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
-    final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
-    final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
-
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding step 2: Reading AVROs");
@@ -197,29 +183,29 @@ public class InterpretedToHdfsViewPipeline {
 
     log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
     SingleOutput<KV<String, CoGbkResult>, OccurrenceHdfsRecord> toHdfsRecordDoFn =
-        OccurrenceHdfsRecordConverterTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
-            .converter();
+        OccurrenceHdfsRecordConverterTransform.create(
+            verbatimTransform.getTag(), basicTransform.getTag(), temporalTransform.getTag(), locationTransform.getTag(),
+            taxonomyTransform.getTag(),  multimediaTransform.getTag(), imageTransform.getTag(), audubonTransform.getTag(),
+            measurementOrFactTransform.getTag(), metadataView
+        ).converter();
 
-    PCollection<OccurrenceHdfsRecord> hdfsRecordPCollection =
-        KeyedPCollectionTuple
-            // Core
-            .of(brTag, basicCollection)
-            .and(trTag, temporalCollection)
-            .and(lrTag, locationCollection)
-            .and(txrTag, taxonCollection)
-            // Extension
-            .and(mrTag, multimediaCollection)
-            .and(irTag, imageCollection)
-            .and(arTag, audubonCollection)
-            .and(mfrTag, measurementCollection)
-            // Raw
-            .and(erTag, verbatimCollection)
-            // Apply
-            .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to HdfsRecord", toHdfsRecordDoFn)
-            .apply("Removing records with invalid gbif ids", FilterMissedGbifIdTransform.create());
-
-    hdfsRecordPCollection.apply(OccurrenceHdfsRecordTransform.create().write(targetTempPath, numberOfShards));
+    KeyedPCollectionTuple
+        // Core
+        .of(basicTransform.getTag(), basicCollection)
+        .and(temporalTransform.getTag(), temporalCollection)
+        .and(locationTransform.getTag(), locationCollection)
+        .and(taxonomyTransform.getTag(), taxonCollection)
+        // Extension
+        .and(multimediaTransform.getTag(), multimediaCollection)
+        .and(imageTransform.getTag(), imageCollection)
+        .and(audubonTransform.getTag(), audubonCollection)
+        .and(measurementOrFactTransform.getTag(), measurementCollection)
+        // Raw
+        .and(verbatimTransform.getTag(), verbatimCollection)
+        // Apply
+        .apply("Grouping objects", CoGroupByKey.create())
+        .apply("Merging to HdfsRecord", toHdfsRecordDoFn)
+        .apply(OccurrenceHdfsRecordTransform.create().write(targetTempPath, numberOfShards));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

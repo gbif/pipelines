@@ -5,9 +5,8 @@ import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -16,6 +15,7 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.TupleTag;
 
 
 /**
@@ -27,6 +27,7 @@ import org.apache.beam.sdk.values.PCollection;
 public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R, T> {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+  private final TupleTag<T> tag = new TupleTag<T>() {};
   private final RecordType recordType;
   private final String baseName;
   private final Class<T> clazz;
@@ -87,10 +88,17 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   }
 
   /**
-   * Creates an {@link BasicTransform} for {@link BasicRecord}
+   * Creates an {@link R} for {@link T}
    */
   public SingleOutput<R, T> interpret() {
     return ParDo.of(this);
+  }
+
+  /**
+   * @return TupleTag required for grouping
+   */
+  public TupleTag<T> getTag() {
+    return tag;
   }
 
 }

@@ -12,7 +12,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
-import org.gbif.pipelines.transforms.CheckTransforms;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.metrics.Counter;
@@ -21,7 +21,7 @@ import org.apache.beam.sdk.values.PCollection;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
-import static org.gbif.pipelines.transforms.CheckTransforms.checkRecordType;
+import static org.gbif.pipelines.transforms.common.CheckTransforms.checkRecordType;
 
 /**
  * Beam level transformations for the GBIF metadata, reads an avro, writes an avro, maps from value to keyValue and
