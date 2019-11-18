@@ -80,12 +80,10 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<BasicRecord>, 
                   // Found duplicates, compare all duplicate records, maybe they are identical
                   Map<String, BasicRecord> map = new TreeMap<>();
                   map.put(HashUtils.getSha1(next.getId()), next);
-                  identicalCounter.inc();
 
                   while (iterator.hasNext()) {
                     BasicRecord br = iterator.next();
                     map.put(HashUtils.getSha1(br.getId()), br);
-                    identicalCounter.inc();
                   }
 
                   List<BasicRecord> records = new LinkedList<>(map.values());
@@ -96,25 +94,28 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<BasicRecord>, 
                     c.output(invalidTag, next);
                   } else if (records.size() > 1) {
 
-                    int skip = 0;
+                    int skip = -1;
                     for (int x = 0; x < records.size(); x++) {
-                      skip = x;
                       if (records.get(x).getGbifId() != null) {
+                        skip = x;
                         break;
                       }
                     }
 
-                    c.output(tag, records.remove(skip));
+                    if (skip > -1) {
+                      c.output(tag, records.remove(skip));
+                    }
                     records.forEach(x -> c.output(invalidTag, x));
 
                   } else {
                     c.output(tag, next);
                     uniqueCounter.inc();
+                    identicalCounter.inc();
                   }
 
                   // Log duplicate and metric
                   log.warn("gbifId = {}, duplicates were found", element.getKey());
-                  duplicateCounter.inc();
+                  duplicateCounter.inc(map.size());
                 }
               }
             }).withOutputTags(tag, TupleTagList.of(invalidTag)));

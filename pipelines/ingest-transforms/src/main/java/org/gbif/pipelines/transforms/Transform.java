@@ -30,12 +30,14 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   private final TupleTag<T> tag = new TupleTag<T>() {};
   private final RecordType recordType;
   private final String baseName;
+  private final String baseInvalidName;
   private final Class<T> clazz;
 
   public Transform(Class<T> clazz, RecordType recordType) {
     this.clazz = clazz;
     this.recordType = recordType;
     this.baseName = recordType.name().toLowerCase();
+    this.baseInvalidName = baseName + "_invalid";
   }
 
   protected RecordType getRecordType() {
@@ -85,6 +87,16 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
    */
   public AvroIO.Write<T> write(UnaryOperator<String> pathFn) {
     return write(pathFn.apply(baseName));
+  }
+
+  /**
+   * Writes {@link T} *.avro files to path, data will be split into several files, uses
+   * Snappy compression codec by default
+   *
+   * @param pathFn function can return an output path, where in param is fixed - {@link Transform#baseInvalidName}
+   */
+  public AvroIO.Write<T> writeInvalid(UnaryOperator<String> pathFn) {
+    return write(pathFn.apply(baseInvalidName));
   }
 
   /**

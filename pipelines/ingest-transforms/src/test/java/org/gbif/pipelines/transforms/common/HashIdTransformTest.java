@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transforms.common;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;
@@ -21,33 +20,22 @@ import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
-public class UniqueIdTransformTest {
+public class HashIdTransformTest {
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
   @Test
-  public void filterDuplicateDifferentTest() {
+  public void hashIdTest() {
+
     // State
-    final List<ExtendedRecord> input = createCollection("0001_1", "0001_1", "0001_2", "0002_1", "0003_1", "0004_1");
-    final List<ExtendedRecord> expected = createCollection("0002_1", "0003_1", "0004_1");
+    final String datasetId = "f349d447-1c92-4637-ab32-8ae559497032";
+    final List<ExtendedRecord> input = createCollection("0001_1", "0002_2", "0003_3");
+    final List<ExtendedRecord> expected = createCollection("20d8ab138ab4c919cbf32f5d9e667812077a0ee4_1",
+        "1122dc31ba32e386e3a36719699fdb5fb1d2912f_2", "f2b1c436ad680263d74bf1498bf7433d9bb4b31a_3");
 
     // When
-    PCollection<ExtendedRecord> result = p.apply(Create.of(input)).apply(UniqueIdTransform.create());
-
-    // Should
-    PAssert.that(result).containsInAnyOrder(expected);
-    p.run();
-  }
-
-  @Test
-  public void filterDuplicateIdenticalTest() {
-    // State
-    final List<ExtendedRecord> input = createCollection("0001_1", "0001_1", "0001_1", "0002_1", "0003_1", "0004_1");
-    final List<ExtendedRecord> expected = createCollection("0001_1", "0002_1", "0003_1", "0004_1");
-
-    // When
-    PCollection<ExtendedRecord> result = p.apply(Create.of(input)).apply(UniqueIdTransform.create());
+    PCollection<ExtendedRecord> result = p.apply(Create.of(input)).apply(HashIdTransform.create(datasetId));
 
     // Should
     PAssert.that(result).containsInAnyOrder(expected);
@@ -65,4 +53,5 @@ public class UniqueIdTransformTest {
         })
         .collect(Collectors.toList());
   }
+
 }

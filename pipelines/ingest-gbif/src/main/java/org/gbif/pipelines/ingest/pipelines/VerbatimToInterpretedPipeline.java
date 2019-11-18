@@ -42,7 +42,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.PDone;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -136,14 +135,14 @@ public class VerbatimToInterpretedPipeline {
     UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create();
 
     log.info("Creating beam pipeline");
-    //Create and write metadata
+    // Create and write metadata
     PCollection<MetadataRecord> metadataRecord =
         p.apply("Create metadata collection", Create.of(options.getDatasetId()))
             .apply("Interpret metadata", metadataTransform.interpret());
 
     metadataRecord.apply("Write metadata to avro", metadataTransform.write(pathFn));
 
-    //Create View for further use
+    // Create View for the further usage
     PCollectionView<MetadataRecord> metadataView =
         metadataRecord
             .apply("Check verbatim transform condition", metadataTransform.checkMetadata(types))
@@ -161,12 +160,13 @@ public class VerbatimToInterpretedPipeline {
             .apply("Interpret basic", basicTransform.interpret())
             .apply("Get invalid GBIF IDs", gbifIdTransform);
 
+    // Filter record with identical GBIF ID
     PCollection<KV<String, ExtendedRecord>> uniqueRecordsKv =
-        uniqueRecords.apply("Map Verbatim to KV", verbatimTransform.toKv());
+        uniqueRecords.apply("Map verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> uniqueBasicRecordsKv =
         basicCollection.get(gbifIdTransform.getInvalidTag())
-            .apply("Map BasicRecord to KV", basicTransform.toKv());
+            .apply("Map basic to KV", basicTransform.toKv());
 
     SingleOutput<KV<String, CoGbkResult>, ExtendedRecord> filterByGbifIdFn =
         FilterExtendedRecordTransform.create(verbatimTransform.getTag(), basicTransform.getTag()).filter();
@@ -180,8 +180,12 @@ public class VerbatimToInterpretedPipeline {
             .apply("Grouping objects", CoGroupByKey.create())
             .apply("Filter verbatim", filterByGbifIdFn);
 
+    // Interpret and write all record types
     basicCollection.get(gbifIdTransform.getTag())
         .apply("Write basic to avro", basicTransform.write(pathFn));
+
+    basicCollection.get(gbifIdTransform.getInvalidTag())
+        .apply("Write invalid basic to avro", basicTransform.writeInvalid(pathFn));
 
     filteredUniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
