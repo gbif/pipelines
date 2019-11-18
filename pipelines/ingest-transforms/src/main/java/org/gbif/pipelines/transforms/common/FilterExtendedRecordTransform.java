@@ -17,13 +17,13 @@ import org.apache.beam.sdk.values.TupleTag;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
 
+/** Filter uses invalid BasicRecord collection as a source to find and skip ExtendedRecord record */
 @AllArgsConstructor(staticName = "create")
 public class FilterExtendedRecordTransform implements Serializable {
 
-  private static final long serialVersionUID = 2953351237274578362L;
+  private static final long serialVersionUID = 2953351237274578363L;
 
   // Core
   @NonNull
@@ -42,13 +42,12 @@ public class FilterExtendedRecordTransform implements Serializable {
         CoGbkResult v = c.element().getValue();
         String k = c.element().getKey();
 
-        // Core
         ExtendedRecord er = v.getOnly(erTag, ExtendedRecord.newBuilder().setId(k).build());
-        if (v.getOnly(brTag) == null) {
+        BasicRecord br = v.getOnly(brTag, BasicRecord.newBuilder().setId(k).build());
+        if (br.getCreated() == null) {
           c.output(er);
+          counter.inc();
         }
-
-        counter.inc();
       }
     };
 

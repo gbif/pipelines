@@ -31,6 +31,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_GBI
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.INVALID_GBIF_ID_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
 
+/**
+ * Splits collection into two:
+ * 1 - normal collection with regular GBIF ids
+ * 2 - contains invalid records withGBIF ids, as duplicates or missed GBIF ids
+ */
 @Slf4j
 @Getter
 @NoArgsConstructor(staticName = "create")
