@@ -35,7 +35,7 @@ public class ExtendedRecordConverterTest {
   public void inputPathIsAbsentTest() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro("", dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro("", dataFileWrite);
     }
   }
 
@@ -43,7 +43,7 @@ public class ExtendedRecordConverterTest {
   public void outputPathIsAbsentTest() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro("test", dataFileWrite);
     }
   }
 
@@ -51,14 +51,14 @@ public class ExtendedRecordConverterTest {
   public void inputPathIsNullTest() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(null, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(null, dataFileWrite);
     }
   }
 
   @Test(expected = NullPointerException.class)
   public void outputPathIsNullTest() throws IOException {
     try (DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(null)) {
-      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro("test", dataFileWrite);
     }
   }
 
@@ -66,7 +66,7 @@ public class ExtendedRecordConverterTest {
   public void inputPathNotValidTest() throws IOException {
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro("test", dataFileWrite);
     }
   }
 
@@ -78,7 +78,7 @@ public class ExtendedRecordConverterTest {
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
   }
 
@@ -90,7 +90,7 @@ public class ExtendedRecordConverterTest {
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
@@ -107,7 +107,7 @@ public class ExtendedRecordConverterTest {
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
@@ -124,7 +124,7 @@ public class ExtendedRecordConverterTest {
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         DataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
