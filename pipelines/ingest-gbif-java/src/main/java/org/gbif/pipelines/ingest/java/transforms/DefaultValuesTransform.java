@@ -9,14 +9,14 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 public class DefaultValuesTransform {
 
-  private final org.gbif.pipelines.transforms.DefaultValuesTransform transform;
+  private final org.gbif.pipelines.transforms.common.DefaultValuesTransform transform;
 
   private DefaultValuesTransform(String propertiesPath, String datasetId) {
-    this.transform = org.gbif.pipelines.transforms.DefaultValuesTransform.create(propertiesPath, datasetId);
+    this.transform = org.gbif.pipelines.transforms.common.DefaultValuesTransform.create(propertiesPath, datasetId);
   }
 
   private DefaultValuesTransform(Properties properties, String datasetId) {
-    this.transform = org.gbif.pipelines.transforms.DefaultValuesTransform.create(properties, datasetId);
+    this.transform = org.gbif.pipelines.transforms.common.DefaultValuesTransform.create(properties, datasetId);
   }
 
   public static DefaultValuesTransform create(String propertiesPath, String datasetId) {

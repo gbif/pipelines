@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.concurrent.ForkJoinPool;
-import java.util.zip.Deflater;
 
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
@@ -34,7 +33,7 @@ public class ExtendedRecordConverterTest {
   public void inputPathIsAbsentTest() throws Exception {
     try (OutputStream output = new FileOutputStream(outPath);
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro("", dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro("", dataFileWrite);
     }
   }
 
@@ -42,7 +41,7 @@ public class ExtendedRecordConverterTest {
   public void outputPathIsAbsentTest() throws Exception {
     try (OutputStream output = new FileOutputStream(outPath);
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro("test", dataFileWrite);
     }
   }
 
@@ -50,14 +49,14 @@ public class ExtendedRecordConverterTest {
   public void inputPathIsNullTest() throws Exception {
     try (OutputStream output = new FileOutputStream(outPath);
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(null, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(null, dataFileWrite);
     }
   }
 
   @Test(expected = NullPointerException.class)
   public void outputPathIsNullTest() throws Exception {
     try (SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(null)) {
-      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro("test", dataFileWrite);
     }
   }
 
@@ -65,7 +64,7 @@ public class ExtendedRecordConverterTest {
   public void inputPathNotValidTest() throws Exception {
     try (OutputStream output = new FileOutputStream(outPath);
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro("test", dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro("test", dataFileWrite);
     }
   }
 
@@ -77,7 +76,7 @@ public class ExtendedRecordConverterTest {
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
   }
 
@@ -89,7 +88,7 @@ public class ExtendedRecordConverterTest {
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
@@ -106,7 +105,7 @@ public class ExtendedRecordConverterTest {
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should
@@ -123,7 +122,7 @@ public class ExtendedRecordConverterTest {
     // When
     try (OutputStream output = new FileOutputStream(outPath);
         SyncDataFileWriter<ExtendedRecord> dataFileWrite = createWriter(output)) {
-      ExtendedRecordConverter.crete(number).toAvro(inputPath, dataFileWrite);
+      ExtendedRecordConverter.create(number).toAvro(inputPath, dataFileWrite);
     }
 
     // Should

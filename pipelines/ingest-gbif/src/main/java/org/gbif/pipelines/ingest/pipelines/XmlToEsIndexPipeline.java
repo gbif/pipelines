@@ -21,12 +21,11 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
-import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
-import org.gbif.pipelines.transforms.UniqueIdTransform;
+import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
+import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -212,27 +211,29 @@ public class XmlToEsIndexPipeline {
 
     log.info("Adding step 4: Group and convert object into a json");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
-            .converter();
+        GbifJsonTransform.create(
+            verbatimTransform.getTag(), basicTransform.getTag(), temporalTransform.getTag(), locationTransform.getTag(),
+            taxonomyTransform.getTag(),  multimediaTransform.getTag(), imageTransform.getTag(), audubonTransform.getTag(),
+            measurementOrFactTransform.getTag(), metadataView
+        ).converter();
 
     PCollection<String> jsonCollection =
         KeyedPCollectionTuple
             // Core
-            .of(brTag, basicCollection)
-            .and(trTag, temporalCollection)
-            .and(lrTag, locationCollection)
-            .and(txrTag, taxonCollection)
+            .of(basicTransform.getTag(), basicCollection)
+            .and(temporalTransform.getTag(), temporalCollection)
+            .and(locationTransform.getTag(), locationCollection)
+            .and(taxonomyTransform.getTag(), taxonCollection)
             // Extension
-            .and(mrTag, multimediaCollection)
-            .and(irTag, imageCollection)
-            .and(arTag, audubonCollection)
-            .and(mfrTag, measurementCollection)
+            .and(multimediaTransform.getTag(), multimediaCollection)
+            .and(imageTransform.getTag(), imageCollection)
+            .and(audubonTransform.getTag(), audubonCollection)
+            .and(measurementOrFactTransform.getTag(), measurementCollection)
             // Raw
-            .and(erTag, verbatimCollection)
+            .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", gbifJsonDoFn)
-            .apply("Filter records without gbifId", FilterMissedGbifIdTransform.create());
+            .apply("Merging to json", gbifJsonDoFn);
 
     log.info("Adding step 5: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =

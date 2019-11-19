@@ -82,9 +82,15 @@ public class PipelinesVariables {
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
     public static final String IDENTICAL_OBJECTS_COUNT = "identicalObjectsCount";
 
+    public static final String UNIQUE_GBIF_IDS_COUNT = "uniqueGbifIdsCount";
+    public static final String DUPLICATE_GBIF_IDS_COUNT = "duplicatedGbifIdsCount";
+    public static final String IDENTICAL_GBIF_OBJECTS_COUNT = "identicalGbifObjectsCount";
+
+    public static final String FILTER_ER_BASED_ON_GBIF_ID = "filterErBasedOnGbifIdCount";
+
     public static final String OCCURRENCE_EXT_COUNT = "occurrenceExtCount";
     public static final String HASH_ID_COUNT = "hashIdCount";
-    public static final String MISSED_GBIF_ID_COUNT = "missedGbifIdCount";
+    public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
     // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";

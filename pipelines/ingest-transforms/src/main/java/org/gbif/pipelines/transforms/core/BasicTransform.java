@@ -26,6 +26,7 @@ import lombok.SneakyThrows;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value to keyValue and
@@ -76,6 +77,15 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   public MapElements<BasicRecord, KV<String, BasicRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, BasicRecord>>() {})
         .via((BasicRecord br) -> KV.of(br.getId(), br));
+  }
+
+  /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getGbifId()} */
+  public MapElements<BasicRecord, KV<String, BasicRecord>> toGbifIdKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, BasicRecord>>() {})
+        .via((BasicRecord br) -> {
+          String key = Optional.ofNullable(br.getGbifId()).map(Object::toString).orElse(GBIF_ID_INVALID);
+          return KV.of(key, br);
+        });
   }
 
   @SneakyThrows

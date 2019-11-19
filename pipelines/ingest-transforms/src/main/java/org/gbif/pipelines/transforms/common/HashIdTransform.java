@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transforms.common;
 
 import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;

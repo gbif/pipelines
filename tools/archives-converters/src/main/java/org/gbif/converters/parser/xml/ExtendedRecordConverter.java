@@ -1,13 +1,16 @@
 package org.gbif.converters.parser.xml;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.gbif.converters.converter.SyncDataFileWriter;
@@ -33,30 +36,28 @@ public class ExtendedRecordConverter {
     this.executor = ExecutorPool.getInstance(parallelism);
   }
 
-  public static ExtendedRecordConverter crete(int parallelism) {
+  public static ExtendedRecordConverter create(int parallelism) {
     return new ExtendedRecordConverter(parallelism);
   }
 
   /** @param inputPath path to directory with response files or a tar.xz archive */
-  public long toAvro(String inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter) {
+  public long toAvro(String inputPath, SyncDataFileWriter<ExtendedRecord> writer) {
     if (Strings.isNullOrEmpty(inputPath)) {
       throw new ParsingException("Input or output stream must not be empty or null!");
     }
 
     File inputFile = ParserFileUtils.uncompressAndGetInputFile(inputPath);
 
-    try (Stream<Path> walk = Files.walk(inputFile.toPath());
-        UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
+    try (UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
+      List<File> files = getInputFiles(inputFile);
 
       AtomicLong counter = new AtomicLong(0);
 
-      Predicate<Path> prefixPr = x -> x.toString().endsWith(FILE_PREFIX_RESPONSE) || x.toString().endsWith(FILE_PREFIX_XML);
-      Function<File, ConverterTask> taskFn = f -> new ConverterTask(f, dataFileWriter, validator, counter);
 
-      // Run async process - read a file, convert to ExtendedRecord and write to avro
-      CompletableFuture[] futures =
-          walk.filter(x -> x.toFile().isFile() && prefixPr.test(x))
-              .map(Path::toFile)
+      Function<File, ConverterTask> taskFn = f -> new ConverterTask(f, writer, validator, counter);
+
+      // Run async process - read a file, convert to ExtendedRecord and write to Avro
+      CompletableFuture[] futures = files.stream()
               .map(file -> CompletableFuture.runAsync(taskFn.apply(file), executor))
               .toArray(CompletableFuture[]::new);
 
@@ -68,6 +69,14 @@ public class ExtendedRecordConverter {
     } catch (Exception ex) {
       log.error(ex.getMessage(), ex);
       throw new ParsingException(ex);
+    }
+  }
+
+  /** Traverse the input directory and gets all the files.*/
+  private List<File> getInputFiles(File inputhFile) throws IOException {
+    Predicate<Path> prefixPr = x -> x.toString().endsWith(FILE_PREFIX_RESPONSE) || x.toString().endsWith(FILE_PREFIX_XML);
+    try(Stream<Path> walk = Files.walk(inputhFile.toPath()).filter(file -> file.toFile().isFile() && prefixPr.test(file))) {
+      return walk.map(Path::toFile).collect(Collectors.toList());
     }
   }
 }

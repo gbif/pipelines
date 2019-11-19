@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms;
+package org.gbif.pipelines.transforms.common;
 
 import java.util.Arrays;
 import java.util.Collections;
