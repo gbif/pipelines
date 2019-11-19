@@ -8,9 +8,8 @@ import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.blast.request.Sequence;
 import org.gbif.pipelines.parsers.ws.client.blast.response.Blast;
 
-import javax.xml.ws.WebServiceException;
-
 import io.github.resilience4j.retry.Retry;
+import javax.xml.ws.WebServiceException;
 import retrofit2.Call;
 import retrofit2.HttpException;
 import retrofit2.Response;

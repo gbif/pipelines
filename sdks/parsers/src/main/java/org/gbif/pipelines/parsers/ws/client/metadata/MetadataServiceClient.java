@@ -10,9 +10,8 @@ import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 
-import javax.xml.ws.WebServiceException;
-
 import io.github.resilience4j.retry.Retry;
+import javax.xml.ws.WebServiceException;
 import retrofit2.Call;
 import retrofit2.HttpException;
 import retrofit2.Response;

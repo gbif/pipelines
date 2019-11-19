@@ -1,13 +1,13 @@
 package org.gbif.pipelines.parsers.config;
 
+import java.util.Objects;
+
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
+import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import javax.annotation.Nullable;
-import java.util.Objects;
 
 /**
  * Creates the configuration to use a retry service.

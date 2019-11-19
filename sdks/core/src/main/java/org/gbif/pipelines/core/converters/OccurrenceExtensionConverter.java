@@ -1,7 +1,6 @@
 package org.gbif.pipelines.core.converters;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.gbif.dwc.terms.DwcTerm;
