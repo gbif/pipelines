@@ -19,9 +19,10 @@ import java.util.stream.Stream;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
-import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.ExtendedRecordReader;
+import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
+import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -53,6 +54,7 @@ import org.slf4j.MDC;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
@@ -181,36 +183,17 @@ public class VerbatimToInterpretedPipeline {
       DefaultValuesTransform.create(properties, datasetId).replaceDefaultValues(erMap);
 
       // Filter GBIF id duplicates
-      Map<Long, BasicRecord> brMap = new ConcurrentHashMap<>();
-      Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
-      Consumer<ExtendedRecord> interpretBrFn = er ->
-          basicTransform.processElement(er)
-              .ifPresent(br -> {
-                if (br.getGbifId() != null) {
-                  BasicRecord record = brMap.get(br.getGbifId());
-                  if (record != null) {
-                    int compare = HashUtils.getSha1(br.getId()).compareTo(HashUtils.getSha1(record.getId()));
-                    if (compare > 0) {
-                      brMap.put(br.getGbifId(), br);
-                      brInvalidMap.put(record.getId(), record);
-                    }
-                  } else {
-                    brMap.put(br.getGbifId(), br);
-                  }
-                } else {
-                  brInvalidMap.put(br.getId(), br);
-                }
-              });
-
-      CompletableFuture[] brFutures = erMap.values()
-          .stream()
-          .map(v -> CompletableFuture.runAsync(() -> interpretBrFn.accept(v), executor))
-          .toArray(CompletableFuture[]::new);
-      CompletableFuture.allOf(brFutures).get();
+      UniqueGbifIdTransform gbifIdTransform =
+          UniqueGbifIdTransform.builder()
+              .executor(executor)
+              .erMap(erMap)
+              .basicTransform(basicTransform)
+              .build()
+              .run();
 
       // Create interpretation
       Consumer<ExtendedRecord> interpretAllFn = er -> {
-        BasicRecord br = brInvalidMap.get(er.getId());
+        BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
         if (br == null) {
           verbatimWriter.append(er);
           temporalTransform.processElement(er).ifPresent(temporalWriter::append);
@@ -226,7 +209,7 @@ public class VerbatimToInterpretedPipeline {
       };
 
       // Run async writing for BasicRecords
-      Stream<CompletableFuture<Void>> streamBr = brMap.values()
+      Stream<CompletableFuture<Void>> streamBr = gbifIdTransform.getBrMap().values()
           .stream()
           .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
 
@@ -236,7 +219,6 @@ public class VerbatimToInterpretedPipeline {
           .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
 
       CompletableFuture[] futures = Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
-
       CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {
@@ -251,8 +233,8 @@ public class VerbatimToInterpretedPipeline {
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 
-  private static <T> SyncDataFileWriter<T> createSyncDataFileWriter(InterpretationPipelineOptions options,
-      Schema schema, OutputStream stream) throws IOException {
+  @SneakyThrows
+  private static <T> SyncDataFileWriter<T> createSyncDataFileWriter(BasePipelineOptions options, Schema schema, OutputStream stream) {
     return SyncDataFileWriterBuilder.builder()
         .schema(schema)
         .codec(options.getAvroCompressionType())

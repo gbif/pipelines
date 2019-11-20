@@ -9,16 +9,18 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ExtendedRecordReader {
 
-  public static HashMap<String, ExtendedRecord> readUniqueRecords(String verbatimPath) throws Exception {
+  public static HashMap<String, ExtendedRecord> readUniqueRecords(String verbatimPath) {
     return readUniqueRecords(new File(verbatimPath));
   }
 
-  public static HashMap<String, ExtendedRecord> readUniqueRecords(File verbatimPath) throws Exception {
+  @SneakyThrows
+  public static HashMap<String, ExtendedRecord> readUniqueRecords(File verbatimPath) {
 
     HashMap<String, ExtendedRecord> map = new HashMap<>();
 
