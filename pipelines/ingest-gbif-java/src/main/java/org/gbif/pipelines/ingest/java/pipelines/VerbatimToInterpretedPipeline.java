@@ -5,17 +5,21 @@ import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.ExtendedRecordReader;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -121,6 +125,7 @@ public class VerbatimToInterpretedPipeline {
     Path verbatimPath = new Path(pathFn.apply(verbatimTransform.getBaseName()));
     Path metadataPath = new Path(pathFn.apply(metadataTransform.getBaseName()));
     Path basicPath = new Path(pathFn.apply(basicTransform.getBaseName()));
+    Path basicInvalidPath = new Path(pathFn.apply(basicTransform.getBaseInvalidName()));
     Path temporalPath = new Path(pathFn.apply(temporalTransform.getBaseName()));
     Path multimediaPath = new Path(pathFn.apply(multimediaTransform.getBaseName()));
     Path imagePath = new Path(pathFn.apply(imageTransform.getBaseName()));
@@ -132,6 +137,7 @@ public class VerbatimToInterpretedPipeline {
     FileSystem metadataFs = createParentDirectories(metadataPath, hdfsConfig);
     FileSystem verbatimFs = createParentDirectories(verbatimPath, hdfsConfig);
     FileSystem basicFs = createParentDirectories(basicPath, hdfsConfig);
+    FileSystem basicInvalidFs = createParentDirectories(basicInvalidPath, hdfsConfig);
     FileSystem temporalFs = createParentDirectories(temporalPath, hdfsConfig);
     FileSystem multimediaFs = createParentDirectories(multimediaPath, hdfsConfig);
     FileSystem imageFs = createParentDirectories(imagePath, hdfsConfig);
@@ -147,6 +153,8 @@ public class VerbatimToInterpretedPipeline {
             createSyncDataFileWriter(options, MetadataRecord.getClassSchema(), metadataFs.create(metadataPath));
         SyncDataFileWriter<BasicRecord> basicWriter =
             createSyncDataFileWriter(options, BasicRecord.getClassSchema(), basicFs.create(basicPath));
+        SyncDataFileWriter<BasicRecord> basicInvalidWriter =
+            createSyncDataFileWriter(options, BasicRecord.getClassSchema(), basicInvalidFs.create(basicInvalidPath));
         SyncDataFileWriter<TemporalRecord> temporalWriter =
             createSyncDataFileWriter(options, TemporalRecord.getClassSchema(), temporalFs.create(temporalPath));
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
@@ -172,24 +180,63 @@ public class VerbatimToInterpretedPipeline {
       HashMap<String, ExtendedRecord> erMap = ExtendedRecordReader.readUniqueRecords(options.getInputPath());
       DefaultValuesTransform.create(properties, datasetId).replaceDefaultValues(erMap);
 
+      // Filter GBIF id duplicates
+      Map<Long, BasicRecord> brMap = new ConcurrentHashMap<>();
+      Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
+      Consumer<ExtendedRecord> interpretBrFn = er ->
+          basicTransform.processElement(er)
+              .ifPresent(br -> {
+                if (br.getGbifId() != null) {
+                  BasicRecord record = brMap.get(br.getGbifId());
+                  if (record != null) {
+                    int compare = HashUtils.getSha1(br.getId()).compareTo(HashUtils.getSha1(record.getId()));
+                    if (compare > 0) {
+                      brMap.put(br.getGbifId(), br);
+                      brInvalidMap.put(record.getId(), record);
+                    }
+                  } else {
+                    brMap.put(br.getGbifId(), br);
+                  }
+                } else {
+                  brInvalidMap.put(br.getId(), br);
+                }
+              });
+
+      CompletableFuture[] brFutures = erMap.values()
+          .stream()
+          .map(v -> CompletableFuture.runAsync(() -> interpretBrFn.accept(v), executor))
+          .toArray(CompletableFuture[]::new);
+      CompletableFuture.allOf(brFutures).get();
+
       // Create interpretation
-      Consumer<ExtendedRecord> interpretRecords = er -> {
-        verbatimWriter.append(er);
-        basicTransform.processElement(er).ifPresent(basicWriter::append);
-        temporalTransform.processElement(er).ifPresent(temporalWriter::append);
-        multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
-        imageTransform.processElement(er).ifPresent(imageWriter::append);
-        audubonTransform.processElement(er).ifPresent(audubonWriter::append);
-        measurementOrFactTransform.processElement(er).ifPresent(measurementWriter::append);
-        taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
-        locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+      Consumer<ExtendedRecord> interpretAllFn = er -> {
+        BasicRecord br = brInvalidMap.get(er.getId());
+        if (br == null) {
+          verbatimWriter.append(er);
+          temporalTransform.processElement(er).ifPresent(temporalWriter::append);
+          multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
+          imageTransform.processElement(er).ifPresent(imageWriter::append);
+          audubonTransform.processElement(er).ifPresent(audubonWriter::append);
+          measurementOrFactTransform.processElement(er).ifPresent(measurementWriter::append);
+          taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
+          locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
+        } else {
+          basicInvalidWriter.append(br);
+        }
       };
 
-      // Run interpretation
-      CompletableFuture[] futures = erMap.values()
+      // Run async writing for BasicRecords
+      Stream<CompletableFuture<Void>> streamBr = brMap.values()
           .stream()
-          .map(v -> CompletableFuture.runAsync(() -> interpretRecords.accept(v), executor))
-          .toArray(CompletableFuture[]::new);
+          .map(v -> CompletableFuture.runAsync(() -> basicWriter.append(v), executor));
+
+      // Run async interpretation and writing for all records
+      Stream<CompletableFuture<Void>> streamAll = erMap.values()
+          .stream()
+          .map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
+
+      CompletableFuture[] futures = Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
+
       CompletableFuture.allOf(futures).get();
 
     } catch (Exception e) {
