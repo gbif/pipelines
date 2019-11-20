@@ -22,6 +22,8 @@ import lombok.SneakyThrows;
 @Builder
 public class UniqueGbifIdTransform {
 
+  private static final int SYNC_THRESHOLD = 100;
+
   private final Map<Long, BasicRecord> brMap = new ConcurrentHashMap<>();
   private final Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
 
@@ -34,8 +36,12 @@ public class UniqueGbifIdTransform {
   @Builder.Default
   private ExecutorService executor = Executors.newWorkStealingPool();
 
-  @SneakyThrows
   public UniqueGbifIdTransform run() {
+    return erMap.size() >= SYNC_THRESHOLD ? runAsync() : runSync();
+  }
+
+  @SneakyThrows
+  private UniqueGbifIdTransform runAsync() {
     // Filter GBIF id duplicates
     Consumer<ExtendedRecord> interpretBrFn = filterByGbifId(brMap, brInvalidMap);
 
@@ -46,6 +52,12 @@ public class UniqueGbifIdTransform {
         .toArray(CompletableFuture[]::new);
     CompletableFuture.allOf(brFutures).get();
 
+    return this;
+  }
+
+  @SneakyThrows
+  private UniqueGbifIdTransform runSync() {
+    erMap.values().forEach(filterByGbifId(brMap, brInvalidMap));
     return this;
   }
 

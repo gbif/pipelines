@@ -1,15 +1,12 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -234,7 +231,8 @@ public class VerbatimToInterpretedPipeline {
   }
 
   @SneakyThrows
-  private static <T> SyncDataFileWriter<T> createSyncDataFileWriter(BasePipelineOptions options, Schema schema, OutputStream stream) {
+  private static <T> SyncDataFileWriter<T> createSyncDataFileWriter(BasePipelineOptions options, Schema schema,
+      OutputStream stream) {
     return SyncDataFileWriterBuilder.builder()
         .schema(schema)
         .codec(options.getAvroCompressionType())
