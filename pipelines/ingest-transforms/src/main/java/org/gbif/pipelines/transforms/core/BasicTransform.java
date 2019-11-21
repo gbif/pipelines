@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
@@ -43,34 +44,40 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private final boolean isTripletValid;
   private final boolean isOccurrenceIdValid;
   private final boolean useExtendedRecordId;
+  private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn;
 
   private Connection connection;
   private HBaseLockingKeyService keygenService;
 
   private BasicTransform(KeygenConfig keygenConfig, String datasetId, boolean isTripletValid,
-      boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
+      boolean isOccurrenceIdValid, boolean useExtendedRecordId, BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn) {
     super(BasicRecord.class, BASIC);
     this.keygenConfig = keygenConfig;
     this.datasetId = datasetId;
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
     this.useExtendedRecordId = useExtendedRecordId;
+    this.gbifIdFn = gbifIdFn;
   }
 
   public static BasicTransform create() {
-    return new BasicTransform(null, null, false, false, false);
+    return new BasicTransform(null, null, false, false, false, null);
   }
 
   public static BasicTransform create(String propertiesPath, String datasetId, boolean isTripletValid,
       boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
     KeygenConfig config = KeygenConfigFactory.create(Paths.get(propertiesPath));
-    return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId);
+    return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId, null);
   }
 
   public static BasicTransform create(Properties properties, String datasetId, boolean isTripletValid,
       boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
     KeygenConfig config = KeygenConfigFactory.create(properties);
-    return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId);
+    return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId, null);
+  }
+
+  public static BasicTransform create(BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn) {
+    return new BasicTransform(null, null, false, false, true, gbifIdFn);
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
@@ -122,7 +129,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     return Interpretation.from(source)
         .to(br)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, useExtendedRecordId))
+        .via(BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, useExtendedRecordId, gbifIdFn))
         .via(BasicInterpreter::interpretBasisOfRecord)
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)

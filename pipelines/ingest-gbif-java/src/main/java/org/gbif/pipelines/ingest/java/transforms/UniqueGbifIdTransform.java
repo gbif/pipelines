@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +30,7 @@ public class UniqueGbifIdTransform {
   private BasicTransform basicTransform;
 
   @NonNull
-  private HashMap<String, ExtendedRecord> erMap;
+  private Map<String, ExtendedRecord> erMap;
 
   @Builder.Default
   private ExecutorService executor = Executors.newWorkStealingPool();
@@ -58,6 +57,7 @@ public class UniqueGbifIdTransform {
   @SneakyThrows
   private UniqueGbifIdTransform runSync() {
     erMap.values().forEach(filterByGbifId(brMap, brInvalidMap));
+
     return this;
   }
 
@@ -73,6 +73,8 @@ public class UniqueGbifIdTransform {
                   if (compare > 0) {
                     map.put(br.getGbifId(), br);
                     invalidMap.put(record.getId(), record);
+                  } else {
+                    invalidMap.put(br.getId(), record);
                   }
                 } else {
                   map.put(br.getGbifId(), br);

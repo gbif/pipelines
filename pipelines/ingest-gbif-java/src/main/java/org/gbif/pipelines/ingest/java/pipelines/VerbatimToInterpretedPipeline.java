@@ -3,7 +3,7 @@ package org.gbif.pipelines.ingest.java.pipelines;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -176,7 +176,7 @@ public class VerbatimToInterpretedPipeline {
       metadataWriter.append(mdr);
 
       // Read DWCA and replace default values
-      HashMap<String, ExtendedRecord> erMap = ExtendedRecordReader.readUniqueRecords(options.getInputPath());
+      Map<String, ExtendedRecord> erMap = ExtendedRecordReader.readUniqueRecords(options.getInputPath());
       DefaultValuesTransform.create(properties, datasetId).replaceDefaultValues(erMap);
 
       // Filter GBIF id duplicates

@@ -52,9 +52,15 @@ public class BasicInterpreter {
   private static final Parsable<String> TYPE_NAME_PARSER = org.gbif.common.parsers.TypifiedNameParser.getInstance();
 
   /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
-      boolean isTripletValid, boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
-    return useExtendedRecordId ? interpretCopyGbifId() : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
+      HBaseLockingKeyService keygenService,
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
+      boolean useExtendedRecordId,
+      BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn
+  ) {
+    gbifIdFn = gbifIdFn == null ? interpretCopyGbifId() : gbifIdFn;
+    return useExtendedRecordId ? gbifIdFn : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
   }
 
   /** Generates or gets existing GBIF id */
