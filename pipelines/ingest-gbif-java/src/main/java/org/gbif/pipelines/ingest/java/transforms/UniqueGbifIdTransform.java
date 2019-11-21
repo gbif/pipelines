@@ -21,7 +21,7 @@ import lombok.SneakyThrows;
 @Builder
 public class UniqueGbifIdTransform {
 
-  private static final int SYNC_THRESHOLD = 100;
+  private static final int SYNC_THRESHOLD = 1_000;
 
   private final Map<Long, BasicRecord> brMap = new ConcurrentHashMap<>();
   private final Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
