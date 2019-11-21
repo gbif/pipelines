@@ -70,11 +70,11 @@ public class UniqueGbifIdTransform {
                 BasicRecord record = map.get(br.getGbifId());
                 if (record != null) {
                   int compare = HashUtils.getSha1(br.getId()).compareTo(HashUtils.getSha1(record.getId()));
-                  if (compare > 0) {
+                  if (compare < 0) {
                     map.put(br.getGbifId(), br);
                     invalidMap.put(record.getId(), record);
                   } else {
-                    invalidMap.put(br.getId(), record);
+                    invalidMap.put(br.getId(), br);
                   }
                 } else {
                   map.put(br.getGbifId(), br);

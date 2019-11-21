@@ -17,9 +17,9 @@ import org.junit.Test;
 
 public class UniqueGbifIdTransformTest {
 
-  private final String key = "key";
+  private static final String KEY = "KEY";
   private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn =
-      (er, br) -> Optional.ofNullable(er.getCoreTerms().get(key)).ifPresent(x -> br.setGbifId(Long.valueOf(x)));
+      (er, br) -> Optional.ofNullable(er.getCoreTerms().get(KEY)).ifPresent(x -> br.setGbifId(Long.valueOf(x)));
   private final BasicTransform basicTransform = BasicTransform.create(gbifIdFn);
 
   @Test
@@ -181,7 +181,7 @@ public class UniqueGbifIdTransformTest {
           String[] array = x.split("_");
           return ExtendedRecord.newBuilder()
               .setId(array[0])
-              .setCoreTerms(Collections.singletonMap("key", array.length > 1 ? array[1] : null))
+              .setCoreTerms(Collections.singletonMap("KEY", array.length > 1 ? array[1] : null))
               .build();
         })
         .collect(Collectors.toMap(ExtendedRecord::getId, Function.identity()));
