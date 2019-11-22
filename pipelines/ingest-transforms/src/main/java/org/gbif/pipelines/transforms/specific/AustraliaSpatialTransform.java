@@ -21,8 +21,6 @@ import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -43,13 +41,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class AustraliaSpatialTransform extends Transform<LocationRecord, AustraliaSpatialRecord> {
 
-  private final Counter counter = Metrics.counter(AustraliaSpatialTransform.class, AUSTRALIA_SPATIAL_RECORDS_COUNT);
-
   private final KvConfig kvConfig;
   private KeyValueStore<LatLng, String> kvStore;
 
   private AustraliaSpatialTransform(KeyValueStore<LatLng, String> kvStore, KvConfig kvConfig) {
-    super(AustraliaSpatialRecord.class, AUSTRALIA_SPATIAL);
+    super(AustraliaSpatialRecord.class, AUSTRALIA_SPATIAL, AustraliaSpatialTransform.class.getName(), AUSTRALIA_SPATIAL_RECORDS_COUNT);
     this.kvStore = kvStore;
     this.kvConfig = kvConfig;
   }
@@ -117,12 +113,7 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<AustraliaSpatialRecord> processElement(LocationRecord source) {
+  public Optional<AustraliaSpatialRecord> convert(LocationRecord source) {
     return Interpretation.from(source)
         .to(lr -> AustraliaSpatialRecord.newBuilder()
             .setId(lr.getId())

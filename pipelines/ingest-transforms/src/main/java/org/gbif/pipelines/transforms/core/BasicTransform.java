@@ -16,8 +16,6 @@ import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -37,8 +35,6 @@ import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID
  */
 public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
-  private final Counter counter = Metrics.counter(BasicTransform.class, BASIC_RECORDS_COUNT);
-
   private final KeygenConfig keygenConfig;
   private final String datasetId;
   private final boolean isTripletValid;
@@ -51,7 +47,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   private BasicTransform(KeygenConfig keygenConfig, String datasetId, boolean isTripletValid,
       boolean isOccurrenceIdValid, boolean useExtendedRecordId, BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn) {
-    super(BasicRecord.class, BASIC);
+    super(BasicRecord.class, BASIC, BasicTransform.class.getName(), BASIC_RECORDS_COUNT);
     this.keygenConfig = keygenConfig;
     this.datasetId = datasetId;
     this.isTripletValid = isTripletValid;
@@ -113,12 +109,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<BasicRecord> processElement(ExtendedRecord source) {
+  public Optional<BasicRecord> convert(ExtendedRecord source) {
 
     BasicRecord br = BasicRecord.newBuilder()
         .setId(source.getId())

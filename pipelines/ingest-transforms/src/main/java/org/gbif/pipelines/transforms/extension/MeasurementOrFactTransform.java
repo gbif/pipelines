@@ -10,8 +10,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -30,10 +28,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class MeasurementOrFactTransform extends Transform<ExtendedRecord, MeasurementOrFactRecord> {
 
-  private final Counter counter = Metrics.counter(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT);
-
   public MeasurementOrFactTransform() {
-    super(MeasurementOrFactRecord.class, MEASUREMENT_OR_FACT);
+    super(MeasurementOrFactRecord.class, MEASUREMENT_OR_FACT, MeasurementOrFactTransform.class.getName(), MEASUREMENT_OR_FACT_RECORDS_COUNT);
   }
 
   public static MeasurementOrFactTransform create() {
@@ -47,12 +43,7 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<MeasurementOrFactRecord> processElement(ExtendedRecord source) {
+  public Optional<MeasurementOrFactRecord> convert(ExtendedRecord source) {
     return Interpretation.from(source)
         .to(er -> MeasurementOrFactRecord.newBuilder()
             .setId(er.getId())

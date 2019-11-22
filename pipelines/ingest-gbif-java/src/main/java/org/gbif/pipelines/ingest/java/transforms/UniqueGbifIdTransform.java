@@ -21,8 +21,6 @@ import lombok.SneakyThrows;
 @Builder
 public class UniqueGbifIdTransform {
 
-  private static final int SYNC_THRESHOLD = 1_000;
-
   private final Map<Long, BasicRecord> brMap = new ConcurrentHashMap<>();
   private final Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
 
@@ -35,8 +33,11 @@ public class UniqueGbifIdTransform {
   @Builder.Default
   private ExecutorService executor = Executors.newWorkStealingPool();
 
+  @Builder.Default
+  private boolean useSyncMode = true;
+
   public UniqueGbifIdTransform run() {
-    return erMap.size() >= SYNC_THRESHOLD ? runAsync() : runSync();
+    return useSyncMode ?  runSync() : runAsync();
   }
 
   @SneakyThrows

@@ -6,8 +6,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
@@ -24,10 +22,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord> {
 
-  private final Counter counter = Metrics.counter(VerbatimTransform.class, VERBATIM_RECORDS_COUNT);
-
   private VerbatimTransform() {
-    super(ExtendedRecord.class, VERBATIM);
+    super(ExtendedRecord.class, VERBATIM, VerbatimTransform.class.getName(), VERBATIM_RECORDS_COUNT);
   }
 
   public static VerbatimTransform create() {
@@ -46,12 +42,7 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<ExtendedRecord> processElement(ExtendedRecord source) {
+  public Optional<ExtendedRecord> convert(ExtendedRecord source) {
     return Optional.ofNullable(source);
   }
 }

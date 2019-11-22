@@ -230,7 +230,7 @@ public class VerbatimToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToTargetPathFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());

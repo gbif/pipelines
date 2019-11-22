@@ -218,7 +218,7 @@ public class InterpretedToHdfsViewPipeline {
     }
 
     //Metrics
-    MetricsHandler.saveCountersToInputPathFile(options, result);
+    MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

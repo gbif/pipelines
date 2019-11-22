@@ -246,7 +246,7 @@ public class DwcaToEsIndexPipeline {
 
     EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(properties, Lock.ES_LOCK_PREFIX));
 
-    MetricsHandler.saveCountersToTargetPathFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
     FsUtils.removeTmpDirectory(options);
 
     log.info("Pipeline has been finished");

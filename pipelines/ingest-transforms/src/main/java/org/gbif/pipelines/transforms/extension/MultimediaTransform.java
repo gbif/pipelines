@@ -12,8 +12,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -32,10 +30,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRecord> {
 
-  private final Counter counter = Metrics.counter(MultimediaTransform.class, MULTIMEDIA_RECORDS_COUNT);
-
   public MultimediaTransform() {
-    super(MultimediaRecord.class, MULTIMEDIA);
+    super(MultimediaRecord.class, MULTIMEDIA, MultimediaTransform.class.getName(), MULTIMEDIA_RECORDS_COUNT);
   }
 
   public static MultimediaTransform create() {
@@ -49,12 +45,7 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<MultimediaRecord> processElement(ExtendedRecord source) {
+  public Optional<MultimediaRecord> convert(ExtendedRecord source) {
     return Interpretation.from(source)
         .to(er -> MultimediaRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.MULTIMEDIA.getRowType()))

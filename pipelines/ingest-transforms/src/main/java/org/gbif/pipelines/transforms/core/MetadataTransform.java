@@ -16,8 +16,6 @@ import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.values.PCollection;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
@@ -35,15 +33,13 @@ import static org.gbif.pipelines.transforms.common.CheckTransforms.checkRecordTy
  */
 public class MetadataTransform extends Transform<String, MetadataRecord> {
 
-  private final Counter counter = Metrics.counter(MetadataTransform.class, METADATA_RECORDS_COUNT);
-
   private final Integer attempt;
   private final WsConfig wsConfig;
   private final String endpointType;
   private MetadataServiceClient client;
 
   private MetadataTransform(WsConfig wsConfig, String endpointType, Integer attempt) {
-    super(MetadataRecord.class, METADATA);
+    super(MetadataRecord.class, METADATA, MetadataTransform.class.getName(), METADATA_RECORDS_COUNT);
     this.wsConfig = wsConfig;
     this.endpointType = endpointType;
     this.attempt = attempt;
@@ -75,12 +71,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<MetadataRecord> processElement(String source) {
+  public Optional<MetadataRecord> convert(String source) {
     return Interpretation.from(source)
         .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(Instant.now().toEpochMilli()).build())
         .via(MetadataInterpreter.interpret(client))

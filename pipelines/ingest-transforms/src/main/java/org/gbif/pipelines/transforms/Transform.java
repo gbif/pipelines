@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -12,6 +13,8 @@ import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
@@ -28,17 +31,28 @@ import org.apache.beam.sdk.values.TupleTag;
 public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R, T> {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
   private final TupleTag<T> tag = new TupleTag<T>() {};
   private final RecordType recordType;
   private final String baseName;
   private final String baseInvalidName;
   private final Class<T> clazz;
+  private final String counterName;
 
-  public Transform(Class<T> clazz, RecordType recordType) {
+  private Counter counter;
+  private Consumer<String> counterFn = v -> counter.inc();
+
+  public Transform(Class<T> clazz, RecordType recordType, String counterNamespace, String counterName) {
     this.clazz = clazz;
     this.recordType = recordType;
     this.baseName = recordType.name().toLowerCase();
     this.baseInvalidName = baseName + "_invalid";
+    this.counterName = counterName;
+    this.counter = Metrics.counter(counterNamespace, counterName);
+  }
+
+  public void setCounterFn(Consumer<String> counterFn) {
+    this.counterFn = counterFn;
   }
 
   protected RecordType getRecordType() {
@@ -117,10 +131,21 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
 
   @ProcessElement
   public void processElement(ProcessContext c) {
-    processElement(c.element()).ifPresent(r -> {
-      c.output(r);
-      incCounter();
-    });
+    processElement(c.element()).ifPresent(c::output);
+  }
+
+  /** TODO: DOC! */
+  public Optional<T> processElement(R source) {
+    incCounter();
+    return convert(source);
+  }
+
+  /** TODO: DOC! */
+  public abstract Optional<T> convert(R source);
+
+  /** TODO: DOC! */
+  public void incCounter(){
+    counterFn.accept(counterName);
   }
 
   /**
@@ -129,9 +154,4 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   public TupleTag<T> getTag() {
     return tag;
   }
-
-  public abstract Optional<T> processElement(R source);
-
-  public abstract void incCounter();
-
 }

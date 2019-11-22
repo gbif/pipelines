@@ -22,8 +22,6 @@ import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -45,13 +43,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
-  private final Counter counter = Metrics.counter(TaxonomyTransform.class, TAXON_RECORDS_COUNT);
-
   private final KvConfig kvConfig;
   private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
 
   private TaxonomyTransform(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore, KvConfig kvConfig) {
-    super(TaxonRecord.class, TAXONOMY);
+    super(TaxonRecord.class, TAXONOMY, TaxonomyTransform.class.getName(), TAXON_RECORDS_COUNT);
     this.kvStore = kvStore;
     this.kvConfig = kvConfig;
   }
@@ -125,12 +121,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<TaxonRecord> processElement(ExtendedRecord source) {
+  public Optional<TaxonRecord> convert(ExtendedRecord source) {
     TaxonRecord tr = TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build();
 
     Interpretation.from(source)

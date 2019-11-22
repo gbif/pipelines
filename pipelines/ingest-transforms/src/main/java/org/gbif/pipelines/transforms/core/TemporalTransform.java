@@ -9,8 +9,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -29,10 +27,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
-  private final Counter counter = Metrics.counter(TemporalTransform.class, TEMPORAL_RECORDS_COUNT);
-
   private TemporalTransform() {
-    super(TemporalRecord.class, TEMPORAL);
+    super(TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
   }
 
   public static TemporalTransform create() {
@@ -46,12 +42,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<TemporalRecord> processElement(ExtendedRecord source) {
+  public Optional<TemporalRecord> convert(ExtendedRecord source) {
     TemporalRecord tr = TemporalRecord.newBuilder()
         .setId(source.getId())
         .setCreated(Instant.now().toEpochMilli())

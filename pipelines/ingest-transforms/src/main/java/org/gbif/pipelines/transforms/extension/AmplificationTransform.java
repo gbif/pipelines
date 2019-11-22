@@ -14,8 +14,6 @@ import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.blast.BlastServiceClient;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -34,13 +32,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class AmplificationTransform extends Transform<ExtendedRecord, AmplificationRecord> {
 
-  private final Counter counter = Metrics.counter(AmplificationTransform.class, AMPLIFICATION_RECORDS_COUNT);
-
   private final WsConfig wsConfig;
   private BlastServiceClient client;
 
-  public AmplificationTransform(WsConfig wsConfig) {
-    super(AmplificationRecord.class, AMPLIFICATION);
+  private AmplificationTransform(WsConfig wsConfig) {
+    super(AmplificationRecord.class, AMPLIFICATION, AmplificationTransform.class.getName(), AMPLIFICATION_RECORDS_COUNT);
     this.wsConfig = wsConfig;
   }
 
@@ -76,12 +72,7 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<AmplificationRecord> processElement(ExtendedRecord source) {
+  public Optional<AmplificationRecord> convert(ExtendedRecord source) {
     return Interpretation.from(source)
         .to(er -> AmplificationRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(AmplificationInterpreter.EXTENSION_ROW_TYPE))
