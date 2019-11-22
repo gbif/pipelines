@@ -89,13 +89,11 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
-    String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
-    String hdfsConfig = options.getHdfsSiteConfig();
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
-    FsUtils.deleteInterpretIfExist(hdfsConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), targetPath, datasetId, attempt, types);
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -108,7 +106,7 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Creating pipeline transforms");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, options.getEndPointType(), attempt);
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
@@ -143,27 +141,27 @@ public class VerbatimToInterpretedPipeline {
 
     try (
         SyncDataFileWriter<ExtendedRecord> verbatimWriter =
-            createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
+            createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
         SyncDataFileWriter<MetadataRecord> metadataWriter =
-            createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id);
+            createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id, false);
         SyncDataFileWriter<BasicRecord> basicWriter =
-            createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
+            createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
         SyncDataFileWriter<BasicRecord> basicInvalidWriter =
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, true);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
-            createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id);
+            createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id, false);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
-            createWriter(options, MultimediaRecord.getClassSchema(), temporalTransform, id);
+            createWriter(options, MultimediaRecord.getClassSchema(), temporalTransform, id, false);
         SyncDataFileWriter<ImageRecord> imageWriter =
-            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id);
+            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
         SyncDataFileWriter<AudubonRecord> audubonWriter =
-            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
+            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
         SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-            createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
+            createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id, false);
         SyncDataFileWriter<TaxonRecord> taxonWriter =
-            createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id);
+            createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id, false);
         SyncDataFileWriter<LocationRecord> locationWriter =
-            createWriter(options, LocationRecord.getClassSchema(), locationTransform, id)
+            createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false)
     ) {
 
       // Create MetadataRecord
@@ -187,7 +185,7 @@ public class VerbatimToInterpretedPipeline {
               .build()
               .run();
 
-      // Create interpretation
+      // Create interpretation function
       Consumer<ExtendedRecord> interpretAllFn = er -> {
         BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
         if (br == null) {
@@ -236,15 +234,6 @@ public class VerbatimToInterpretedPipeline {
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
-  }
-
-  /**
-   * TODO: DOC!
-   */
-  @SneakyThrows
-  private static <T> SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options, Schema schema,
-      Transform transform, String id) {
-    return createWriter(options, schema, transform, id, false);
   }
 
   /**
