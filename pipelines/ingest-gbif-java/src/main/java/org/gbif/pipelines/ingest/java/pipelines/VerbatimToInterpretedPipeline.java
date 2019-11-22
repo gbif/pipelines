@@ -220,6 +220,7 @@ public class VerbatimToInterpretedPipeline {
         streamAll = erCollection.stream().map(v -> CompletableFuture.runAsync(() -> interpretAllFn.accept(v), executor));
       }
 
+      // Wait for all features
       CompletableFuture[] futures = Stream.concat(streamBr, streamAll).toArray(CompletableFuture[]::new);
       CompletableFuture.allOf(futures).get();
 
