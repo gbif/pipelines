@@ -3,6 +3,7 @@ package org.gbif.pipelines.ingest.java.pipelines;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -58,6 +59,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
  * TODO: DOC!
@@ -89,7 +91,7 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occIdValid = options.isOccurrenceIdValid();
     boolean useErdId = options.isUseExtendedRecordId();
-    Set<String> types = options.getInterpretationTypes();
+    Set<String> types = Collections.singleton(ALL.name());
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
@@ -106,7 +108,7 @@ public class VerbatimToInterpretedPipeline {
     IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
     Consumer<String> incMetricFn = metrics::incMetric;
 
-    log.info("Creating pipeline transforms");
+    log.info("Creating pipelines transforms");
     // Core
     MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt)
         .counterFn(incMetricFn).init();
