@@ -2,13 +2,13 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.ImageInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -43,7 +43,7 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
         .via((ImageRecord ir) -> KV.of(ir.getId(), ir));
   }
 
-  public ImageTransform counterFn(Consumer<String> counterFn) {
+  public ImageTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

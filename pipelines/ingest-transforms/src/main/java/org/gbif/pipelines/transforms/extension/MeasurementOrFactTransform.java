@@ -2,13 +2,13 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MeasurementOrFactInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -43,7 +43,7 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
         .via((MeasurementOrFactRecord mr) -> KV.of(mr.getId(), mr));
   }
 
-  public MeasurementOrFactTransform counterFn(Consumer<String> counterFn) {
+  public MeasurementOrFactTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

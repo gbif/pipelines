@@ -2,7 +2,6 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
@@ -11,6 +10,7 @@ import org.gbif.pipelines.core.interpreters.extension.MultimediaInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -45,7 +45,7 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
         .via((MultimediaRecord mr) -> KV.of(mr.getId(), mr));
   }
 
-  public MultimediaTransform counterFn(Consumer<String> counterFn) {
+  public MultimediaTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Consumer;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -20,6 +19,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
@@ -92,7 +92,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
   }
 
-  public LocationTransform counterFn(Consumer<String> counterFn) {
+  public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
@@ -20,6 +19,7 @@ import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -80,7 +80,7 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
         .via((AustraliaSpatialRecord ar) -> KV.of(ar.getId(), ar));
   }
 
-  public AustraliaSpatialTransform counterFn(Consumer<String> counterFn) {
+  public AustraliaSpatialTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

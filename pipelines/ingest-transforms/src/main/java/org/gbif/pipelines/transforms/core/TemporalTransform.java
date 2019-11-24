@@ -2,12 +2,12 @@ package org.gbif.pipelines.transforms.core;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -42,7 +42,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .via((TemporalRecord tr) -> KV.of(tr.getId(), tr));
   }
 
-  public TemporalTransform counterFn(Consumer<String> counterFn) {
+  public TemporalTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

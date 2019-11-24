@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Consumer;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -19,6 +18,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -80,7 +80,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
         .via((TaxonRecord tr) -> KV.of(tr.getId(), tr));
   }
 
-  public TaxonomyTransform counterFn(Consumer<String> counterFn) {
+  public TaxonomyTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

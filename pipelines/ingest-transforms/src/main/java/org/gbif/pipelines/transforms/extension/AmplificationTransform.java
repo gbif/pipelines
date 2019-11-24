@@ -4,7 +4,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AmplificationInterpreter;
@@ -13,6 +12,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.blast.BlastServiceClient;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -65,7 +65,7 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
         .via((AmplificationRecord ar) -> KV.of(ar.getId(), ar));
   }
 
-  public AmplificationTransform counterFn(Consumer<String> counterFn) {
+  public AmplificationTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

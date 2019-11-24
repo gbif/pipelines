@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
@@ -15,6 +14,7 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -92,7 +92,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         });
   }
 
-  public BasicTransform counterFn(Consumer<String> counterFn) {
+  public BasicTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

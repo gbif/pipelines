@@ -1,9 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.Pipeline;
@@ -42,7 +42,7 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
     return Create.empty(TypeDescriptor.of(ExtendedRecord.class)).expand(PBegin.in(p));
   }
 
-  public VerbatimTransform counterFn(Consumer<String> counterFn) {
+  public VerbatimTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

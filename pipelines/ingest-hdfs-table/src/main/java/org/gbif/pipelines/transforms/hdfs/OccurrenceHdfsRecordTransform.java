@@ -6,18 +6,14 @@ import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.io.AvroIO;
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.HDFS_VIEW_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
 public class OccurrenceHdfsRecordTransform extends Transform<OccurrenceHdfsRecord, OccurrenceHdfsRecord> {
 
-  private final Counter counter = Metrics.counter(OccurrenceHdfsRecordTransform.class, HDFS_VIEW_RECORDS_COUNT);
-
   private OccurrenceHdfsRecordTransform() {
-    super(OccurrenceHdfsRecord.class, OCCURRENCE_HDFS_RECORD);
+    super(OccurrenceHdfsRecord.class, OCCURRENCE_HDFS_RECORD, OccurrenceHdfsRecordTransform.class.getName(), HDFS_VIEW_RECORDS_COUNT);
   }
 
   public static OccurrenceHdfsRecordTransform create() {
@@ -35,12 +31,7 @@ public class OccurrenceHdfsRecordTransform extends Transform<OccurrenceHdfsRecor
   }
 
   @Override
-  public void incCounter() {
-    counter.inc();
-  }
-
-  @Override
-  public Optional<OccurrenceHdfsRecord> processElement(OccurrenceHdfsRecord source) {
+  public Optional<OccurrenceHdfsRecord> convert(OccurrenceHdfsRecord source) {
     return Optional.ofNullable(source);
   }
 

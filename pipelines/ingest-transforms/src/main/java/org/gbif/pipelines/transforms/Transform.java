@@ -2,7 +2,6 @@ package org.gbif.pipelines.transforms;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
@@ -40,7 +39,7 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   private final String counterName;
 
   private Counter counter;
-  private Consumer<String> counterFn = v -> counter.inc();
+  private SerializableConsumer<String> counterFn = v -> counter.inc();
 
   public Transform(Class<T> clazz, RecordType recordType, String counterNamespace, String counterName) {
     this.clazz = clazz;
@@ -51,7 +50,7 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
     this.counter = Metrics.counter(counterNamespace, counterName);
   }
 
-  public void setCounterFn(Consumer<String> counterFn) {
+  public void setCounterFn(SerializableConsumer<String> counterFn) {
     this.counterFn = counterFn;
   }
 

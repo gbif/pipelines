@@ -36,6 +36,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
@@ -106,7 +107,7 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
-    Consumer<String> incMetricFn = metrics::incMetric;
+    SerializableConsumer<String> incMetricFn = metrics::incMetric;
 
     log.info("Creating pipelines transforms");
     // Core

@@ -2,13 +2,13 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AudubonInterpreter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -43,7 +43,7 @@ public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
         .via((AudubonRecord ar) -> KV.of(ar.getId(), ar));
   }
 
-  public AudubonTransform counterFn(Consumer<String> counterFn) {
+  public AudubonTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }

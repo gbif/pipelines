@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.MetadataInterpreter;
@@ -14,6 +13,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
@@ -64,7 +64,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     return new MetadataTransform(wsConfig, endpointType, attempt);
   }
 
-  public MetadataTransform counterFn(Consumer<String> counterFn) {
+  public MetadataTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }
