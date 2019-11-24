@@ -1,6 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.Transform;
@@ -39,6 +40,11 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
   /** Create an empty collection of {@link PCollection<ExtendedRecord>} */
   public PCollection<ExtendedRecord> emptyCollection(Pipeline p) {
     return Create.empty(TypeDescriptor.of(ExtendedRecord.class)).expand(PBegin.in(p));
+  }
+
+  public VerbatimTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
   }
 
   @Override

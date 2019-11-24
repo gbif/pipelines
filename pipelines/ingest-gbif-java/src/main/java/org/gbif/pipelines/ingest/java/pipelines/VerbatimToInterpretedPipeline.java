@@ -66,12 +66,12 @@ import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToInterpretedPipeline {
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
   }
 
-  public static void run(InterpretationPipelineOptions options) throws Exception {
+  public static void run(InterpretationPipelineOptions options) {
     ExecutorService executor = Executors.newWorkStealingPool();
     try {
       run(options, executor);
@@ -80,17 +80,18 @@ public class VerbatimToInterpretedPipeline {
     }
   }
 
-  public static void run(InterpretationPipelineOptions options, ExecutorService executor) throws Exception {
+  public static void run(InterpretationPipelineOptions options, ExecutorService executor) {
 
     log.info("Pipeline has been started - {}", LocalDateTime.now());
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     boolean tripletValid = options.isTripletValid();
-    boolean occurrenceIdValid = options.isOccurrenceIdValid();
-    boolean useExtendedRecordId = options.isUseExtendedRecordId();
+    boolean occIdValid = options.isOccurrenceIdValid();
+    boolean useErdId = options.isUseExtendedRecordId();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
+    String endPointType = options.getEndPointType();
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
     FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), targetPath, datasetId, attempt, types);
@@ -103,41 +104,31 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Init metrics");
     IngestMetrics metrics = IngestMetricsBuilder.createVerbatimToInterpretedMetrics();
+    Consumer<String> incMetricFn = metrics::incMetric;
 
     log.info("Creating pipeline transforms");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, options.getEndPointType(), attempt);
-    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
-    VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt)
+        .counterFn(incMetricFn).init();
+    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId)
+        .counterFn(incMetricFn).init();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties)
+        .counterFn(incMetricFn).init();
+    LocationTransform locationTransform = LocationTransform.create(properties)
+        .counterFn(incMetricFn).init();
+    VerbatimTransform verbatimTransform = VerbatimTransform.create()
+        .counterFn(incMetricFn);
+    TemporalTransform temporalTransform = TemporalTransform.create()
+        .counterFn(incMetricFn);
     // Extension
-    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create();
-    MultimediaTransform multimediaTransform = MultimediaTransform.create();
-    AudubonTransform audubonTransform = AudubonTransform.create();
-    ImageTransform imageTransform = ImageTransform.create();
-
-    log.info("Set new metrics functions");
-    // Core
-    metadataTransform.setCounterFn(metrics::incMetric);
-    basicTransform.setCounterFn(metrics::incMetric);
-    verbatimTransform.setCounterFn(metrics::incMetric);
-    temporalTransform.setCounterFn(metrics::incMetric);
-    taxonomyTransform.setCounterFn(metrics::incMetric);
-    locationTransform.setCounterFn(metrics::incMetric);
-    // Extension
-    measurementTransform.setCounterFn(metrics::incMetric);
-    multimediaTransform.setCounterFn(metrics::incMetric);
-    audubonTransform.setCounterFn(metrics::incMetric);
-    imageTransform.setCounterFn(metrics::incMetric);
-
-    log.info("Init pipeline transforms");
-    // Core
-    metadataTransform.setup();
-    basicTransform.setup();
-    taxonomyTransform.setup();
-    locationTransform.setup();
+    MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create()
+        .counterFn(incMetricFn);
+    MultimediaTransform multimediaTransform = MultimediaTransform.create()
+        .counterFn(incMetricFn);
+    AudubonTransform audubonTransform = AudubonTransform.create()
+        .counterFn(incMetricFn);
+    ImageTransform imageTransform = ImageTransform.create()
+        .counterFn(incMetricFn);
 
     try (
         SyncDataFileWriter<ExtendedRecord> verbatimWriter =

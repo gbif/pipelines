@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -26,6 +27,7 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
@@ -78,8 +80,19 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
         .via((TaxonRecord tr) -> KV.of(tr.getId(), tr));
   }
 
+  public TaxonomyTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public TaxonomyTransform init() {
+    setup();
+    return this;
+  }
+
+  @SneakyThrows
   @Setup
-  public void setup() throws IOException {
+  public void setup() {
     if (kvConfig != null) {
 
       ClientConfiguration clientConfiguration = ClientConfiguration.builder()

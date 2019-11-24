@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.core;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
@@ -39,6 +40,11 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
   public MapElements<TemporalRecord, KV<String, TemporalRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, TemporalRecord>>() {})
         .via((TemporalRecord tr) -> KV.of(tr.getId(), tr));
+  }
+
+  public TemporalTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
   }
 
   @Override

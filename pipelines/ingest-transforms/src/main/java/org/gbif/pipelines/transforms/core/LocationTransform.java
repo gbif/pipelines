@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -30,6 +31,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
@@ -90,9 +92,19 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
   }
 
+  public LocationTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
 
+  public LocationTransform init() {
+    setup();
+    return this;
+  }
+
+  @SneakyThrows
   @Setup
-  public void setup() throws IOException {
+  public void setup() {
     if (kvConfig != null) {
 
       ClientConfiguration clientConfig = ClientConfiguration.builder()

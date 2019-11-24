@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
@@ -89,6 +90,16 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
           String key = Optional.ofNullable(br.getGbifId()).map(Object::toString).orElse(GBIF_ID_INVALID);
           return KV.of(key, br);
         });
+  }
+
+  public BasicTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public BasicTransform init() {
+    setup();
+    return this;
   }
 
   @SneakyThrows

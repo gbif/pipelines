@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
@@ -26,6 +27,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUSTRALIA_SPATIAL_RECORDS_COUNT;
@@ -78,8 +80,19 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
         .via((AustraliaSpatialRecord ar) -> KV.of(ar.getId(), ar));
   }
 
+  public AustraliaSpatialTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public AustraliaSpatialTransform init() {
+    setup();
+    return this;
+  }
+
+  @SneakyThrows
   @Setup
-  public void setup() throws IOException {
+  public void setup() {
     if (kvConfig != null) {
 
       CachedHBaseKVStoreConfiguration hBaseKVStoreConfiguration = CachedHBaseKVStoreConfiguration.builder()

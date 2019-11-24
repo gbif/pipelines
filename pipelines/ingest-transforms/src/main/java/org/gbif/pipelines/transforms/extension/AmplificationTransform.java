@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AmplificationInterpreter;
@@ -62,6 +63,16 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
   public MapElements<AmplificationRecord, KV<String, AmplificationRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, AmplificationRecord>>() {})
         .via((AmplificationRecord ar) -> KV.of(ar.getId(), ar));
+  }
+
+  public AmplificationTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public AmplificationTransform init() {
+    setup();
+    return this;
   }
 
   @Setup

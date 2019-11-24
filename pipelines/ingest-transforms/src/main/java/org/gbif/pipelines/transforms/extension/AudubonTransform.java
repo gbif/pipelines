@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.Interpretation;
@@ -40,6 +41,11 @@ public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
   public MapElements<AudubonRecord, KV<String, AudubonRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, AudubonRecord>>() {})
         .via((AudubonRecord ar) -> KV.of(ar.getId(), ar));
+  }
+
+  public AudubonTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
   }
 
   @Override

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.MetadataInterpreter;
@@ -61,6 +62,16 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
   public static MetadataTransform create(Properties properties, String endpointType, Integer attempt) {
     WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
     return new MetadataTransform(wsConfig, endpointType, attempt);
+  }
+
+  public MetadataTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public MetadataTransform init() {
+    setup();
+    return this;
   }
 
   @Setup

@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.pipelines.core.Interpretation;
@@ -40,6 +41,11 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
   public MapElements<ImageRecord, KV<String, ImageRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, ImageRecord>>() {})
         .via((ImageRecord ir) -> KV.of(ir.getId(), ir));
+  }
+
+  public ImageTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
   }
 
   @Override

@@ -2,6 +2,7 @@ package org.gbif.pipelines.transforms.extension;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DwcTerm;
@@ -42,6 +43,11 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
   public MapElements<MultimediaRecord, KV<String, MultimediaRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, MultimediaRecord>>() {})
         .via((MultimediaRecord mr) -> KV.of(mr.getId(), mr));
+  }
+
+  public MultimediaTransform counterFn(Consumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
   }
 
   @Override
