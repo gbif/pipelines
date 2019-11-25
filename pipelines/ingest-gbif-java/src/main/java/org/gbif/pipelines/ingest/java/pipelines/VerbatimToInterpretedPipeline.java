@@ -20,7 +20,7 @@ import org.gbif.converters.converter.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
-import org.gbif.pipelines.ingest.java.transforms.ExtendedRecordReader;
+import org.gbif.pipelines.ingest.java.readers.AvroRecordReader;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -164,7 +164,7 @@ public class VerbatimToInterpretedPipeline {
       metadataWriter.append(mdr);
 
       // Read DWCA and replace default values
-      Map<String, ExtendedRecord> erMap = ExtendedRecordReader.readUniqueRecords(options.getInputPath());
+      Map<String, ExtendedRecord> erMap = AvroRecordReader.readUniqueRecords(ExtendedRecord.class, options.getInputPath());
       DefaultValuesTransform.create(properties, datasetId).replaceDefaultValues(erMap);
 
       boolean useSyncMode = options.getSyncThreshold() > erMap.size();

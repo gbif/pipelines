@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java.transforms;
+package org.gbif.pipelines.ingest.java.readers;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,13 +20,13 @@ import lombok.SneakyThrows;
 
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 
-public class ExtendedRecordReaderTest {
+public class AvroRecordReaderTest {
 
   private final Path verbatimPath = new Path("verbatim.avro");
   private final FileSystem verbatimFs = createParentDirectories(verbatimPath, null);
 
   @Test
-  public void normalExtendedRecordsTest() throws IOException {
+  public void regularExtendedRecordsTest() throws IOException {
 
     // State
     ExtendedRecord expectedOne = ExtendedRecord.newBuilder().setId("1").build();
@@ -35,7 +35,8 @@ public class ExtendedRecordReaderTest {
     writeExtendedRecords(expectedOne, expectedTwo, expectedThree);
 
     // When
-    Map<String, ExtendedRecord> result = ExtendedRecordReader.readUniqueRecords(verbatimPath.toString());
+    Map<String, ExtendedRecord> result =
+        AvroRecordReader.readRecords(ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -45,7 +46,27 @@ public class ExtendedRecordReaderTest {
   }
 
   @Test
-  public void oneEqualDuplicateTest() throws IOException {
+  public void uniqueExtendedRecordsTest() throws IOException {
+
+    // State
+    ExtendedRecord expectedOne = ExtendedRecord.newBuilder().setId("1").build();
+    ExtendedRecord expectedTwo = ExtendedRecord.newBuilder().setId("2").build();
+    ExtendedRecord expectedThree = ExtendedRecord.newBuilder().setId("3").build();
+    writeExtendedRecords(expectedOne, expectedTwo, expectedThree);
+
+    // When
+    Map<String, ExtendedRecord> result =
+        AvroRecordReader.readUniqueRecords(ExtendedRecord.class, verbatimPath.toString());
+
+    // Should
+    assertMap(result, expectedOne, expectedTwo, expectedThree);
+
+    // Post
+    Files.deleteIfExists(Paths.get(verbatimPath.toString()));
+  }
+
+  @Test
+  public void uniqueOneEqualDuplicateTest() throws IOException {
 
     // State
     ExtendedRecord expectedOne = ExtendedRecord.newBuilder().setId("1").build();
@@ -54,7 +75,8 @@ public class ExtendedRecordReaderTest {
     writeExtendedRecords(expectedOne, expectedTwo, expectedThree);
 
     // When
-    Map<String, ExtendedRecord> result = ExtendedRecordReader.readUniqueRecords(verbatimPath.toString());
+    Map<String, ExtendedRecord> result =
+        AvroRecordReader.readUniqueRecords(ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedOne, expectedThree);
@@ -64,7 +86,7 @@ public class ExtendedRecordReaderTest {
   }
 
   @Test
-  public void oneNotEqualDuplicateTest() throws IOException {
+  public void uniqueOneNotEqualDuplicateTest() throws IOException {
 
     // State
     ExtendedRecord expectedOne = ExtendedRecord.newBuilder().setId("1")
@@ -74,7 +96,8 @@ public class ExtendedRecordReaderTest {
     writeExtendedRecords(expectedOne, expectedTwo, expectedThree);
 
     // When
-    Map<String, ExtendedRecord> result = ExtendedRecordReader.readUniqueRecords(verbatimPath.toString());
+    Map<String, ExtendedRecord> result =
+        AvroRecordReader.readUniqueRecords(ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedThree);
@@ -84,7 +107,7 @@ public class ExtendedRecordReaderTest {
   }
 
   @Test
-  public void allNotEqualDuplicateTest() throws IOException {
+  public void uniqueAllNotEqualDuplicateTest() throws IOException {
 
     // State
     ExtendedRecord expectedOne = ExtendedRecord.newBuilder().setId("1")
@@ -96,7 +119,8 @@ public class ExtendedRecordReaderTest {
     writeExtendedRecords(expectedOne, expectedTwo, expectedThree);
 
     // When
-    Map<String, ExtendedRecord> result = ExtendedRecordReader.readUniqueRecords(verbatimPath.toString());
+    Map<String, ExtendedRecord> result =
+        AvroRecordReader.readUniqueRecords(ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result);
