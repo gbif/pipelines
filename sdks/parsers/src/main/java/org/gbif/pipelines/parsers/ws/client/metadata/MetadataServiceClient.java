@@ -3,12 +3,16 @@ package org.gbif.pipelines.parsers.ws.client.metadata;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+import org.gbif.pipelines.parsers.config.ContentfulConfig;
 import org.gbif.pipelines.parsers.config.RetryFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
+import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentfulService;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
+import org.gbif.pipelines.parsers.ws.client.metadata.response.Project;
 
 import javax.xml.ws.WebServiceException;
 
@@ -21,16 +25,23 @@ import retrofit2.Response;
 public class MetadataServiceClient {
 
   private final MetadataServiceRest rest;
+  private final ContentfulService contentfulService;
   private final Retry retry;
 
-  private MetadataServiceClient(WsConfig wsConfig) {
+  private MetadataServiceClient(WsConfig wsConfig, ContentfulConfig contentfulConfig) {
     rest = MetadataServiceRest.getInstance(wsConfig);
     retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "RegistryApiCall");
+    contentfulService = Objects.nonNull(contentfulConfig)? new ContentfulService(contentfulConfig.getAuthToken(), contentfulConfig.getSpaceId()) : null;
   }
 
   public static MetadataServiceClient create(WsConfig wsConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
-    return new MetadataServiceClient(wsConfig);
+    return new MetadataServiceClient(wsConfig, null);
+  }
+
+  public static MetadataServiceClient create(WsConfig wsConfig, ContentfulConfig contentfulConfig) {
+    Objects.requireNonNull(wsConfig, "WS config is required");
+    return new MetadataServiceClient(wsConfig, contentfulConfig);
   }
 
   /**
@@ -63,25 +74,41 @@ public class MetadataServiceClient {
   public Dataset getDataset(String datasetId) {
     Objects.requireNonNull(datasetId);
     Call<Dataset> call = rest.getService().getDataset(datasetId);
-    return performCall(call);
+    Dataset dataset = performCall(call);
+    //Has Contenful being configured?
+    if (Objects.nonNull(contentfulService)) {
+      getContentfulProjectData(dataset).ifPresent(dataset::setProject);
+    }
+    return dataset;
+  }
+
+  /**
+   * Gets Contentful data.
+   */
+  private Optional<Project> getContentfulProjectData(Dataset dataset) {
+    return Optional.ofNullable(dataset.getProject()).map(project -> Retry.decorateFunction(retry, (Dataset d) -> {
+      try {
+        return contentfulService.getProject(d.getProject().getIdentifier());
+      } catch (Exception e) {
+        throw new WebServiceException("Error getting Contentful data for dataset " + d, e);
+      }
+    }).apply(dataset));
   }
 
   /** executes request and handles response and errors. */
   private <T> T performCall(Call<T> serviceCall) {
-    return
-      Retry.decorateFunction(retry, (Call<T> call) -> {
-                                                     try {
-                                                       Response<T> execute = call.execute();
-                                                       if (execute.isSuccessful()) {
-                                                         return execute.body();
-                                                       } else {
-                                                         throw new HttpException(execute);
-                                                       }
-                                                     } catch (IOException e) {
-                                                       throw new WebServiceException("Error making request " + call.request(), e);
-                                                     }
-                                                   }
-      ).apply(serviceCall);
+    return Retry.decorateFunction(retry, (Call<T> call) -> {
+      try {
+        Response<T> execute = call.execute();
+        if (execute.isSuccessful()) {
+          return execute.body();
+        } else {
+          throw new HttpException(execute);
+        }
+      } catch (IOException e) {
+        throw new WebServiceException("Error making request " + call.request(), e);
+      }
+    }).apply(serviceCall);
   }
 
 }

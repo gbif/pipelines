@@ -9,6 +9,8 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.MetadataInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.parsers.config.ContentfulConfig;
+import org.gbif.pipelines.parsers.config.ContentfulConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
@@ -38,38 +40,42 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
 
   private final Integer attempt;
   private final WsConfig wsConfig;
+  private final ContentfulConfig contentfulConfig;
   private final String endpointType;
   private MetadataServiceClient client;
 
-  private MetadataTransform(WsConfig wsConfig, String endpointType, Integer attempt) {
+  private MetadataTransform(WsConfig wsConfig, ContentfulConfig contentfulConfig, String endpointType, Integer attempt) {
     super(MetadataRecord.class, METADATA);
     this.wsConfig = wsConfig;
+    this.contentfulConfig = contentfulConfig;
     this.endpointType = endpointType;
     this.attempt = attempt;
   }
 
   public static MetadataTransform create() {
-    return new MetadataTransform(null, null, null);
+    return new MetadataTransform(null, null, null, null);
   }
 
-  public static MetadataTransform create(WsConfig wsConfig, String endpointType, Integer attempt) {
-    return new MetadataTransform(wsConfig, endpointType, attempt);
+  public static MetadataTransform create(WsConfig wsConfig, ContentfulConfig contentfulConfig, String endpointType, Integer attempt) {
+    return new MetadataTransform(wsConfig, contentfulConfig, endpointType, attempt);
   }
 
   public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt) {
     WsConfig wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
-    return new MetadataTransform(wsConfig, endpointType, attempt);
+    ContentfulConfig contentfulConfig = ContentfulConfigFactory.create(Paths.get(propertiesPath));
+    return new MetadataTransform(wsConfig, contentfulConfig, endpointType, attempt);
   }
 
   public static MetadataTransform create(Properties properties, String endpointType, Integer attempt) {
     WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
-    return new MetadataTransform(wsConfig, endpointType, attempt);
+    ContentfulConfig contentfulConfig = ContentfulConfigFactory.create(properties);
+    return new MetadataTransform(wsConfig, contentfulConfig, endpointType, attempt);
   }
 
   @Setup
   public void setup() {
-    if (wsConfig != null) {
-      client = MetadataServiceClient.create(wsConfig);
+    if (wsConfig != null && contentfulConfig != null) {
+      client = MetadataServiceClient.create(wsConfig, contentfulConfig);
     }
   }
 

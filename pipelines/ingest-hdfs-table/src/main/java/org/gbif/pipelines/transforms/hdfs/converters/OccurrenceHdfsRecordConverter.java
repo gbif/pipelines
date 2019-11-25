@@ -198,6 +198,8 @@ public class OccurrenceHdfsRecordConverter {
       hr.setPublisher(mr.getPublisherTitle());
       hr.setPublishingorgkey(mr.getPublishingOrganizationKey());
       hr.setLastcrawled(mr.getLastCrawled());
+      hr.setProjectid(mr.getProjectId());
+      hr.setProgrammeacronym(mr.getProgrammeAcronym());
 
       setCreatedIfGreater(hr, mr.getCreated());
       addIssues(mr.getIssues(), hr);

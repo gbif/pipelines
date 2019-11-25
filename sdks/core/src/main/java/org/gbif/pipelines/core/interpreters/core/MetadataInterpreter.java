@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -55,6 +56,12 @@ public class MetadataInterpreter {
         mdr.setPublisherTitle(organization.getTitle());
         mdr.setDatasetPublishingCountry(organization.getCountry());
         getLastCrawledDate(dataset.getMachineTags()).ifPresent(d -> mdr.setLastCrawled(d.getTime()));
+        if (Objects.nonNull(dataset.getProject())) {
+          mdr.setProjectId(dataset.getProject().getIdentifier());
+          if (Objects.nonNull(dataset.getProject().getProgram())) {
+            mdr.setProgrammeAcronym(dataset.getProject().getProgram().getAcronym());
+          }
+        }
       }
     };
   }

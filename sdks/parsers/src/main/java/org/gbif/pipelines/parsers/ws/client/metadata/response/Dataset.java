@@ -25,5 +25,7 @@ public class Dataset implements Serializable {
   private String publishingOrganizationKey;
   private String license;
   private String title;
+  private Project project;
   private List<MachineTag> machineTags;
+
 }
