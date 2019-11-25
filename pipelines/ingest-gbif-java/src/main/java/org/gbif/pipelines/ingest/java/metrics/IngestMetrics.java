@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.java.metrics;
 
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,8 +23,12 @@ public class IngestMetrics {
   private final Map<String, AtomicLong> valueMap = new HashMap<>();
 
   public IngestMetrics addMetric(Class<?> namespace, String name) {
+    return addMetric(namespace.getName(), name);
+  }
+
+  public IngestMetrics addMetric(String namespace, String name) {
     valueMap.putIfAbsent(name, new AtomicLong(0L));
-    nameSpaceMap.putIfAbsent(name, namespace.getName());
+    nameSpaceMap.putIfAbsent(name, namespace);
     return this;
   }
 
