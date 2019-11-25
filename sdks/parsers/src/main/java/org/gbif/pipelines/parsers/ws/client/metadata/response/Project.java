@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/** GBIF project.*/
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,6 +18,6 @@ public class Project implements Serializable {
 
   private String title;
   private String identifier;
-  private Program program;
+  private Programme programme;
 
 }

@@ -1,6 +1,6 @@
 package org.gbif.pipelines.parsers.ws.client.metadata.contentful;
 
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Program;
+import org.gbif.pipelines.parsers.ws.client.metadata.response.Programme;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Project;
 
 import java.util.Objects;
@@ -55,14 +55,14 @@ public class ContentfulService {
   }
 
   /** Converts a project entry/resource into a Programme object.
-   * Returns null if the project doesn't have an associated program.*/
-  private Program getProgramme(CDAEntry projectEntry) {
+   * Returns null if the project doesn't have an associated programme.*/
+  private Programme getProgramme(CDAEntry projectEntry) {
     Object programmeO = projectEntry.getField("programme");
     if (Objects.nonNull(programmeO)) {
       CDAEntry programmeEntry = (CDAEntry)programmeO;
-      return new Program(programmeEntry.getAttribute("id"), //id system attribute
-                         programmeEntry.getField(DEFAULT_LOCALE, "title"),
-                         programmeEntry.getField("acronym"));
+      return new Programme(programmeEntry.getAttribute("id"), //id system attribute
+                           programmeEntry.getField(DEFAULT_LOCALE, "title"),
+                           programmeEntry.getField("acronym"));
     }
     return null;
   }

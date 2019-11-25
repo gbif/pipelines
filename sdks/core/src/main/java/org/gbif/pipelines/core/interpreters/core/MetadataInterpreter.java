@@ -58,8 +58,8 @@ public class MetadataInterpreter {
         getLastCrawledDate(dataset.getMachineTags()).ifPresent(d -> mdr.setLastCrawled(d.getTime()));
         if (Objects.nonNull(dataset.getProject())) {
           mdr.setProjectId(dataset.getProject().getIdentifier());
-          if (Objects.nonNull(dataset.getProject().getProgram())) {
-            mdr.setProgrammeAcronym(dataset.getProject().getProgram().getAcronym());
+          if (Objects.nonNull(dataset.getProject().getProgramme())) {
+            mdr.setProgrammeAcronym(dataset.getProject().getProgramme().getAcronym());
           }
         }
       }
