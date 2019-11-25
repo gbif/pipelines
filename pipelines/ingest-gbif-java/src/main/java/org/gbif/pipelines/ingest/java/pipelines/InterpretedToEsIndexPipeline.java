@@ -1,10 +1,18 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
@@ -39,6 +47,13 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
+import org.apache.http.HttpHost;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -46,8 +61,10 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.elasticsearch.common.xcontent.XContentType.JSON;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -95,6 +112,8 @@ public class InterpretedToEsIndexPipeline {
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
 
     log.info("Creating pipeline");
+
+    // Reading all avro files in parallel
     CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature = CompletableFuture.supplyAsync(
         () -> AvroRecordReader.readRecords(MetadataRecord.class, pathFn.apply(metadataTransform.getBaseName())),
         executor);
@@ -148,7 +167,8 @@ public class InterpretedToEsIndexPipeline {
     Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
     Map<String, MeasurementOrFactRecord> measurementMap = measurementMapFeature.get();
 
-    Function<BasicRecord, String> jsonConverterFn = br -> {
+    // Join all avro, convert into string json and IndexRequest for ES
+    Function<BasicRecord, IndexRequest> indexRequestFn = br -> {
 
       String k = br.getId();
       // Core
@@ -167,12 +187,59 @@ public class InterpretedToEsIndexPipeline {
 
       metrics.incMetric(AVRO_TO_JSON_COUNT);
 
-      return json;
+      return new IndexRequest(options.getEsIndexName(), INDEX_TYPE, br.getGbifId().toString()).source(json, JSON);
     };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
 
-    //TODO: READ ALL RECORDS AND PUSH TO ES
+    // Create ES client and extra function
+    HttpHost[] hosts = Arrays.stream(options.getEsHosts()).map(HttpHost::new).toArray(HttpHost[]::new);
+    RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(hosts));
+
+    List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+    long counter = 0;
+    Queue<BulkRequest> requests = new LinkedList<>();
+    requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
+
+    Consumer<BasicRecord> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())
+        .ifPresent(req -> req.add(indexRequestFn.apply(br)));
+
+    Consumer<BulkRequest> clientBulkFn = br -> {
+      try {
+        client.bulk(br, RequestOptions.DEFAULT);
+      } catch (IOException ex) {
+        log.error(ex.getMessage(), ex);
+      }
+    };
+
+    Runnable pushIntoEsFn = () -> Optional.ofNullable(requests.poll())
+        .ifPresent(req -> {
+          if (useSyncMode) {
+            clientBulkFn.accept(req);
+          } else {
+            futures.add(CompletableFuture.runAsync(() -> clientBulkFn.accept(req), executor));
+          }
+        });
+
+    // Push requests into ES
+    for (BasicRecord br : basicMap.values()) {
+      if (counter < options.getEsMaxBatchSize()) {
+        addIndexRequestFn.accept(br);
+        counter++;
+      } else {
+        addIndexRequestFn.accept(br);
+        pushIntoEsFn.run();
+        requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
+        counter = 0;
+      }
+    }
+    pushIntoEsFn.run();
+
+    // Wait for all futures and save metrics
+    if (!useSyncMode) {
+      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
+    }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
