@@ -198,7 +198,6 @@ public class InterpretedToEsIndexPipeline {
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-    long counter = 0;
     Queue<BulkRequest> requests = new LinkedList<>();
     requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
 
@@ -223,6 +222,7 @@ public class InterpretedToEsIndexPipeline {
         });
 
     // Push requests into ES
+    long counter = 0;
     for (BasicRecord br : basicMap.values()) {
       if (counter < options.getEsMaxBatchSize()) {
         addIndexRequestFn.accept(br);
