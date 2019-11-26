@@ -27,6 +27,7 @@ import lombok.SneakyThrows;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
 import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value to keyValue and
@@ -63,13 +64,19 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   public static BasicTransform create(String propertiesPath, String datasetId, boolean isTripletValid,
       boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
-    KeygenConfig config = KeygenConfigFactory.create(Paths.get(propertiesPath));
+    KeygenConfig config = null;
+    if (!useExtendedRecordId) {
+      config = KeygenConfigFactory.create(Paths.get(propertiesPath));
+    }
     return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId);
   }
 
   public static BasicTransform create(Properties properties, String datasetId, boolean isTripletValid,
       boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
-    KeygenConfig config = KeygenConfigFactory.create(properties);
+    KeygenConfig config = null;
+    if (!useExtendedRecordId) {
+      config = KeygenConfigFactory.create(properties);
+    }
     return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId);
   }
 
@@ -110,9 +117,12 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
     BasicRecord br = BasicRecord.newBuilder()
         .setId(source.getId())
-        .setGbifId(useExtendedRecordId && source.getCoreTerms().isEmpty() ? Long.parseLong(source.getId()) : null)
         .setCreated(Instant.now().toEpochMilli())
         .build();
+
+    if (useExtendedRecordId && source.getCoreTerms().isEmpty()) {
+      interpretCopyGbifId().accept(source, br);
+    }
 
     Interpretation.from(source)
         .to(br)

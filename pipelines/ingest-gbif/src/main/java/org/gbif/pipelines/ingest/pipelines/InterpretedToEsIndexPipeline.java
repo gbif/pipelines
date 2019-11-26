@@ -48,7 +48,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 /**
  * Pipeline sequence:
@@ -199,7 +198,7 @@ public class InterpretedToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get(GBIF_ID).asText()));
+            .withIdFn(input -> input.get(options.getEsDocumentId()).asText()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

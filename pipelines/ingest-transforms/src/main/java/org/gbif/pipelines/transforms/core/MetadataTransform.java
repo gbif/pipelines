@@ -12,8 +12,8 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
-import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -52,17 +52,23 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     return new MetadataTransform(null, null, null);
   }
 
-  public static MetadataTransform create(WsConfig wsConfig, String endpointType, Integer attempt) {
+  public static MetadataTransform create(WsConfig wsConfig, String endpointType, Integer attempt, boolean skipRegistryCalls) {
     return new MetadataTransform(wsConfig, endpointType, attempt);
   }
 
-  public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt) {
-    WsConfig wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
+  public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt, boolean skipRegistryCalls) {
+    WsConfig wsConfig = null;
+    if (skipRegistryCalls) {
+      wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
+    }
     return new MetadataTransform(wsConfig, endpointType, attempt);
   }
 
-  public static MetadataTransform create(Properties properties, String endpointType, Integer attempt) {
-    WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+  public static MetadataTransform create(Properties properties, String endpointType, Integer attempt, boolean skipRegistryCalls) {
+    WsConfig wsConfig = null;
+    if (skipRegistryCalls) {
+      wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+    }
     return new MetadataTransform(wsConfig, endpointType, attempt);
   }
 

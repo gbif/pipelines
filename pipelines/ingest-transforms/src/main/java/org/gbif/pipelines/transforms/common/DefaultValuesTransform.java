@@ -40,13 +40,19 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
     this.datasetId = datasetId;
   }
 
-  public static DefaultValuesTransform create(String propertiesPath, String datasetId) {
-    WsConfig wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
+  public static DefaultValuesTransform create(String propertiesPath, String datasetId, boolean skipRegisrtyCalls) {
+    WsConfig wsConfig = null;
+    if (skipRegisrtyCalls) {
+      wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
+    }
     return new DefaultValuesTransform(wsConfig, datasetId);
   }
 
-  public static DefaultValuesTransform create(Properties properties, String datasetId) {
-    WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+  public static DefaultValuesTransform create(Properties properties, String datasetId, boolean skipRegisrtyCalls) {
+    WsConfig wsConfig = null;
+    if (skipRegisrtyCalls) {
+      wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+    }
     return new DefaultValuesTransform(wsConfig, datasetId);
   }
 
@@ -56,13 +62,15 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
    */
   @Override
   public PCollection<ExtendedRecord> expand(PCollection<ExtendedRecord> input) {
-    Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
     List<MachineTag> tags = Collections.emptyList();
-    if (dataset != null && dataset.getMachineTags() != null && !dataset.getMachineTags().isEmpty()) {
-      tags = dataset.getMachineTags()
-          .stream()
-          .filter(tag -> DEFAULT_TERM_NAMESPACE.equalsIgnoreCase(tag.getNamespace()))
-          .collect(Collectors.toList());
+    if (wsConfig != null) {
+      Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
+      if (dataset != null && dataset.getMachineTags() != null && !dataset.getMachineTags().isEmpty()) {
+        tags = dataset.getMachineTags()
+            .stream()
+            .filter(tag -> DEFAULT_TERM_NAMESPACE.equalsIgnoreCase(tag.getNamespace()))
+            .collect(Collectors.toList());
+      }
     }
     return tags.isEmpty() ? input : ParDo.of(createDoFn(tags)).expand(input);
   }
