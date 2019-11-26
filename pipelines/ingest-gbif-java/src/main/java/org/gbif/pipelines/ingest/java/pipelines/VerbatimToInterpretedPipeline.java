@@ -19,8 +19,8 @@ import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.readers.AvroRecordReader;
+import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -60,6 +60,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
@@ -237,7 +238,7 @@ public class VerbatimToInterpretedPipeline {
   @SneakyThrows
   private static <T> SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options, Schema schema,
       Transform transform, String id, boolean useInvalidName) {
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
     Path path = new Path(pathFn.apply(baseName));
     FileSystem verbatimFs = createParentDirectories(path, options.getHdfsSiteConfig());
