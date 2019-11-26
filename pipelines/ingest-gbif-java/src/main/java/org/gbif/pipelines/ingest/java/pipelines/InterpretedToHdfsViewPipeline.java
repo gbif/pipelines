@@ -185,7 +185,7 @@ public class InterpretedToHdfsViewPipeline {
         basicMap.values().stream().map(occurrenceHdfsRecordFn).forEach(writer::append);
       } else {
         CompletableFuture[] futures = basicMap.values().stream()
-            .map(br -> CompletableFuture.runAsync(() -> writer.append(occurrenceHdfsRecordFn.apply(br))))
+            .map(br -> CompletableFuture.runAsync(() -> writer.append(occurrenceHdfsRecordFn.apply(br)), executor))
             .toArray(CompletableFuture[]::new);
         // Wait for all futures
         CompletableFuture.allOf(futures).get();
