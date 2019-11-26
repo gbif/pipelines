@@ -167,7 +167,7 @@ public class InterpretedToEsIndexPipeline {
     Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
     Map<String, MeasurementOrFactRecord> measurementMap = measurementMapFeature.get();
 
-    // Join all avro, convert into string json and IndexRequest for ES
+    // Join all records, convert into string json and IndexRequest for ES
     Function<BasicRecord, IndexRequest> indexRequestFn = br -> {
 
       String k = br.getId();
