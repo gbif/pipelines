@@ -102,6 +102,8 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
+    String esDocumentId = options.getEsDocumentId();
+
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
@@ -198,7 +200,7 @@ public class InterpretedToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get(options.getEsDocumentId()).asText()));
+            .withIdFn(input -> input.get(esDocumentId).asText()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
