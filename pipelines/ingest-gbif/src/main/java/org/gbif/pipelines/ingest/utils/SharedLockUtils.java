@@ -1,8 +1,12 @@
 package org.gbif.pipelines.ingest.utils;
 
+import java.util.Properties;
 import java.util.function.Function;
 
+import org.gbif.pipelines.common.PipelinesVariables.Lock;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.parsers.config.LockConfig;
+import org.gbif.pipelines.parsers.config.LockConfigFactory;
 import org.gbif.wrangler.lock.Mutex;
 import org.gbif.wrangler.lock.zookeeper.ZookeeperSharedReadWriteMutex;
 
@@ -85,5 +89,12 @@ public class SharedLockUtils {
    */
   public static void doInReadLock(LockConfig config, Mutex.Action action) {
     doInCurator(config, action, sharedReadWriteMutex -> sharedReadWriteMutex.createReadMutex(config.getLockName()));
+  }
+
+  /** A write lock is acquired to avoid concurrent modifications while this operation is running */
+  public static void doHdfsPrefixLock(InterpretationPipelineOptions options, Mutex.Action action) {
+    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    LockConfig lockConfig = LockConfigFactory.create(properties, Lock.HDFS_LOCK_PREFIX);
+    SharedLockUtils.doInBarrier(lockConfig, action);
   }
 }

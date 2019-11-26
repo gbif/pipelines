@@ -211,10 +211,7 @@ public class InterpretedToHdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      //A write lock is acquired to avoid concurrent modifications while this operation is running
-      Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
-      LockConfig lockConfig = LockConfigFactory.create(properties, Lock.HDFS_LOCK_PREFIX);
-      SharedLockUtils.doInBarrier(lockConfig, () -> copyOccurrenceRecords(options));
+      SharedLockUtils.doHdfsPrefixLock(options, () -> FsUtils.copyOccurrenceRecords(options));
     }
 
     //Metrics
@@ -223,21 +220,4 @@ public class InterpretedToHdfsViewPipeline {
     log.info("Pipeline has been finished");
   }
 
-  /**
-   * Copies all occurrence records into the directory from targetPath.
-   * Deletes pre-existing data of the dataset being processed.
-   */
-  private static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
-    //Moving files to the directory of latest records
-    String targetPath = options.getTargetPath();
-
-    String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
-    log.info("Deleting avro files {}", deletePath);
-    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath, deletePath);
-    String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
-
-    log.info("Moving files with pattern {} to {}", filter, targetPath);
-    FsUtils.moveDirectory(options.getHdfsSiteConfig(), targetPath, filter);
-    log.info("Files moved to {} directory", targetPath);
-  }
 }

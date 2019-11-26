@@ -9,6 +9,8 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.converters.converter.SyncDataFileWriter;
+import org.gbif.converters.converter.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
@@ -17,6 +19,7 @@ import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -40,6 +43,8 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter;
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -47,6 +52,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
@@ -164,8 +170,7 @@ public class InterpretedToHdfsViewPipeline {
       MultimediaRecord mr = multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
       ImageRecord ir = imageMap.getOrDefault(k, ImageRecord.newBuilder().setId(k).build());
       AudubonRecord ar = audubonMap.getOrDefault(k, AudubonRecord.newBuilder().setId(k).build());
-      MeasurementOrFactRecord mfr =
-          measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
+      MeasurementOrFactRecord mfr = measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
       metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
@@ -175,10 +180,40 @@ public class InterpretedToHdfsViewPipeline {
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
 
-    // TODO: WRITE
+    try (SyncDataFileWriter<OccurrenceHdfsRecord> writer = createWriter(options)) {
+      if (useSyncMode) {
+        basicMap.values().stream().map(occurrenceHdfsRecordFn).forEach(writer::append);
+      } else {
+        CompletableFuture[] futures = basicMap.values().stream()
+            .map(br -> CompletableFuture.runAsync(() -> writer.append(occurrenceHdfsRecordFn.apply(br))))
+            .toArray(CompletableFuture[]::new);
+        // Wait for all futures
+        CompletableFuture.allOf(futures).get();
+      }
+    }
+
+    SharedLockUtils.doHdfsPrefixLock(options, () -> FsUtils.copyOccurrenceRecords(options));
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
+  }
+
+  /**
+   * TODO: DOC!
+   */
+  @SneakyThrows
+  private static SyncDataFileWriter<OccurrenceHdfsRecord> createWriter(InterpretationPipelineOptions options) {
+    String id = options.getDatasetId() + '_' + options.getAttempt();
+    String targetTempPath = FsUtils.buildFilePathHdfsViewUsingInputPath(options, id);
+    Path path = new Path(targetTempPath);
+    FileSystem verbatimFs = createParentDirectories(path, options.getHdfsSiteConfig());
+    return SyncDataFileWriterBuilder.builder()
+        .schema(OccurrenceHdfsRecord.getClassSchema())
+        .codec(options.getAvroCompressionType())
+        .outputStream(verbatimFs.create(path))
+        .syncInterval(options.getAvroSyncInterval())
+        .build()
+        .createSyncDataFileWriter();
   }
 
 }

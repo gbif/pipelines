@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -345,6 +346,24 @@ public final class FsUtils {
         }
       }
     }
+  }
+
+  /**
+   * Copies all occurrence records into the directory from targetPath.
+   * Deletes pre-existing data of the dataset being processed.
+   */
+  public static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
+    //Moving files to the directory of latest records
+    String targetPath = options.getTargetPath();
+
+    String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
+    log.info("Deleting avro files {}", deletePath);
+    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath, deletePath);
+    String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
+
+    log.info("Moving files with pattern {} to {}", filter, targetPath);
+    FsUtils.moveDirectory(options.getHdfsSiteConfig(), targetPath, filter);
+    log.info("Files moved to {} directory", targetPath);
   }
 
 }
