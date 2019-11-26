@@ -154,7 +154,8 @@ public class InterpretedToEsIndexPipeline {
         () -> AvroRecordReader.readRecords(MeasurementOrFactRecord.class, pathFn.apply(measurementTransform.getBaseName())),
         executor);
 
-    CompletableFuture.allOf(metadataMapFeature, verbatimMapFeature);
+    CompletableFuture.allOf(metadataMapFeature, verbatimMapFeature, basicMapFeature, temporalMapFeature,
+        locationMapFeature, taxonMapFeature, multimediaMapFeature, imageMapFeature, audubonMapFeature, measurementMapFeature);
 
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
