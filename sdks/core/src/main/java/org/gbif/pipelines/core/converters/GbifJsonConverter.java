@@ -99,16 +99,36 @@ public class GbifJsonConverter {
   @Singular
   private List<SpecificRecordBase> records;
 
+  /**
+   * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into json object, suited to the new ES
+   * record
+   */
+  public static ObjectNode toJson(SpecificRecordBase... records) {
+    return GbifJsonConverter.builder()
+        .records(Arrays.asList(records))
+        .build()
+        .toJson();
+  }
+
+  /**
+   * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into json object, suited to a partial ES
+   * record update
+   */
+  public static ObjectNode toPartialJson(SpecificRecordBase... records) {
+    return GbifJsonConverter.builder()
+        .records(Arrays.asList(records))
+        .skipId(false)
+        .skipIssues(true)
+        .build()
+        .toJson();
+  }
 
   /**
    * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into string json object, suited to the new ES
    * record
    */
   public static String toStringJson(SpecificRecordBase... records) {
-    return GbifJsonConverter.builder()
-        .records(Arrays.asList(records))
-        .build()
-        .toString();
+    return toJson(records).toString();
   }
 
   /**
@@ -116,12 +136,7 @@ public class GbifJsonConverter {
    * record update
    */
   public static String toStringPartialJson(SpecificRecordBase... records) {
-    return GbifJsonConverter.builder()
-        .records(Arrays.asList(records))
-        .skipId(false)
-        .skipIssues(true)
-        .build()
-        .toString();
+    return toPartialJson(records).toString();
   }
 
   /** Change the json result, merging all issues from records to one array */

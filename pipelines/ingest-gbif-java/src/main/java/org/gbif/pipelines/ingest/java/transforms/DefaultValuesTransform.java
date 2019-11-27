@@ -11,20 +11,20 @@ public class DefaultValuesTransform {
 
   private final org.gbif.pipelines.transforms.common.DefaultValuesTransform transform;
 
-  private DefaultValuesTransform(String propertiesPath, String datasetId) {
-    this.transform = org.gbif.pipelines.transforms.common.DefaultValuesTransform.create(propertiesPath, datasetId);
+  private DefaultValuesTransform(String propertiesPath, String datasetId, boolean skipRegistryCalls) {
+    this.transform = org.gbif.pipelines.transforms.common.DefaultValuesTransform.create(propertiesPath, datasetId, skipRegistryCalls);
   }
 
-  private DefaultValuesTransform(Properties properties, String datasetId) {
-    this.transform = org.gbif.pipelines.transforms.common.DefaultValuesTransform.create(properties, datasetId);
+  private DefaultValuesTransform(Properties properties, String datasetId, boolean skipRegistryCalls) {
+    this.transform = org.gbif.pipelines.transforms.common.DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
   }
 
-  public static DefaultValuesTransform create(String propertiesPath, String datasetId) {
-    return new DefaultValuesTransform(propertiesPath, datasetId);
+  public static DefaultValuesTransform create(String propertiesPath, String datasetId, boolean skipRegistryCalls) {
+    return new DefaultValuesTransform(propertiesPath, datasetId, skipRegistryCalls);
   }
 
-  public static DefaultValuesTransform create(Properties properties, String datasetId) {
-    return new DefaultValuesTransform(properties, datasetId);
+  public static DefaultValuesTransform create(Properties properties, String datasetId, boolean skipRegistryCalls) {
+    return new DefaultValuesTransform(properties, datasetId, skipRegistryCalls);
   }
 
   public void replaceDefaultValues(Map<String, ExtendedRecord> source) {

@@ -21,7 +21,7 @@ import lombok.SneakyThrows;
 @Builder
 public class UniqueGbifIdTransform {
 
-  private final Map<Long, BasicRecord> brMap = new ConcurrentHashMap<>();
+  private final Map<String, BasicRecord> brMap = new ConcurrentHashMap<>();
   private final Map<String, BasicRecord> brInvalidMap = new ConcurrentHashMap<>();
 
   @NonNull
@@ -63,22 +63,24 @@ public class UniqueGbifIdTransform {
   }
 
   // Filter GBIF id duplicates
-  private Consumer<ExtendedRecord> filterByGbifId(Map<Long, BasicRecord> map, Map<String, BasicRecord> invalidMap) {
+  private Consumer<ExtendedRecord> filterByGbifId(Map<String, BasicRecord> map, Map<String, BasicRecord> invalidMap) {
     return er ->
         basicTransform.processElement(er)
             .ifPresent(br -> {
-              if (br.getGbifId() != null) {
-                BasicRecord record = map.get(br.getGbifId());
+              if (basicTransform.isUseExtendedRecordId()) {
+                map.put(br.getId(), br);
+              } else if (br.getGbifId() != null) {
+                BasicRecord record = map.get(br.getGbifId().toString());
                 if (record != null) {
                   int compare = HashUtils.getSha1(br.getId()).compareTo(HashUtils.getSha1(record.getId()));
                   if (compare < 0) {
-                    map.put(br.getGbifId(), br);
+                    map.put(br.getGbifId().toString(), br);
                     invalidMap.put(record.getId(), record);
                   } else {
                     invalidMap.put(br.getId(), br);
                   }
                 } else {
-                  map.put(br.getGbifId(), br);
+                  map.put(br.getGbifId().toString(), br);
                 }
               } else {
                 invalidMap.put(br.getId(), br);

@@ -56,6 +56,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.slf4j.MDC;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -64,6 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 import static org.elasticsearch.common.xcontent.XContentType.JSON;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
 
 @Slf4j
@@ -93,6 +95,8 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Options");
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+
+    String esDocumentId = options.getEsDocumentId();
 
     log.info("Creating transformations");
     // Core
@@ -184,11 +188,13 @@ public class InterpretedToEsIndexPipeline {
       MeasurementOrFactRecord mfr = measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-      String json = GbifJsonConverter.toStringJson(metadata, br, tr, lr, txr, mmr, mfr, er);
+      ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, mmr, mfr, er);
 
       metrics.incMetric(AVRO_TO_JSON_COUNT);
 
-      return new IndexRequest(options.getEsIndexName(), INDEX_TYPE, br.getGbifId().toString()).source(json, JSON);
+      String docId = esDocumentId.equals(GBIF_ID) ? br.getGbifId().toString() : json.get(esDocumentId).asText();
+
+      return new IndexRequest(options.getEsIndexName(), INDEX_TYPE, docId).source(json.toString(), JSON);
     };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

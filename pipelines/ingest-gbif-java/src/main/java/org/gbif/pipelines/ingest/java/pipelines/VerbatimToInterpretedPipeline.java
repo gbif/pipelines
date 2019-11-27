@@ -93,6 +93,7 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occIdValid = options.isOccurrenceIdValid();
     boolean useErdId = options.isUseExtendedRecordId();
+    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     Set<String> types = Collections.singleton(ALL.name());
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
@@ -112,7 +113,7 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Creating pipelines transforms");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt)
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls)
         .counterFn(incMetricFn).init();
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId)
         .counterFn(incMetricFn).init();
@@ -166,7 +167,7 @@ public class VerbatimToInterpretedPipeline {
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap = AvroRecordReader.readUniqueRecords(ExtendedRecord.class, options.getInputPath());
-      DefaultValuesTransform.create(properties, datasetId).replaceDefaultValues(erMap);
+      DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls).replaceDefaultValues(erMap);
 
       boolean useSyncMode = options.getSyncThreshold() > erMap.size();
 

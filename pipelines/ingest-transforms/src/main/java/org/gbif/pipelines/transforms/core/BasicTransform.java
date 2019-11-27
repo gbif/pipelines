@@ -154,4 +154,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .get();
   }
 
+  public boolean isUseExtendedRecordId() {
+    return useExtendedRecordId;
+  }
 }
