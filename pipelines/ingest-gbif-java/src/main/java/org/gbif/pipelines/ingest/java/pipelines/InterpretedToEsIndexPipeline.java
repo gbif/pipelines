@@ -2,10 +2,8 @@ package org.gbif.pipelines.ingest.java.pipelines;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -197,57 +195,40 @@ public class InterpretedToEsIndexPipeline {
       return new IndexRequest(options.getEsIndexName(), INDEX_TYPE, docId).source(json.toString(), JSON);
     };
 
-    boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
-
     // Create ES client and extra function
     HttpHost[] hosts = Arrays.stream(options.getEsHosts()).map(HttpHost::create).toArray(HttpHost[]::new);
-    RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(hosts));
+    try (RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(hosts))) {
 
-    List<CompletableFuture<Void>> futures = new ArrayList<>();
+      Queue<BulkRequest> requests = new LinkedList<>();
+      requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
 
-    Queue<BulkRequest> requests = new LinkedList<>();
-    requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
+      Consumer<BasicRecord> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())
+          .ifPresent(req -> req.add(indexRequestFn.apply(br)));
 
-    Consumer<BasicRecord> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())
-        .ifPresent(req -> req.add(indexRequestFn.apply(br)));
+      Runnable pushIntoEsFn = () -> Optional.ofNullable(requests.poll())
+          .ifPresent(br -> {
+            try {
+              client.bulk(br, RequestOptions.DEFAULT);
+            } catch (IOException ex) {
+              log.error(ex.getMessage(), ex);
+            }
+          });
 
-    Consumer<BulkRequest> clientBulkFn = br -> {
-      try {
-        client.bulk(br, RequestOptions.DEFAULT);
-      } catch (IOException ex) {
-        log.error(ex.getMessage(), ex);
+      // Push requests into ES
+      long counter = 0;
+      for (BasicRecord br : basicMap.values()) {
+        if (counter < options.getEsMaxBatchSize()) {
+          addIndexRequestFn.accept(br);
+          counter++;
+        } else {
+          addIndexRequestFn.accept(br);
+          pushIntoEsFn.run();
+          requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
+          counter = 0;
+        }
       }
-    };
-
-    Runnable pushIntoEsFn = () -> Optional.ofNullable(requests.poll())
-        .ifPresent(req -> {
-          if (useSyncMode) {
-            clientBulkFn.accept(req);
-          } else {
-            futures.add(CompletableFuture.runAsync(() -> clientBulkFn.accept(req), executor));
-          }
-        });
-
-    // Push requests into ES
-    long counter = 0;
-    for (BasicRecord br : basicMap.values()) {
-      if (counter < options.getEsMaxBatchSize()) {
-        addIndexRequestFn.accept(br);
-        counter++;
-      } else {
-        addIndexRequestFn.accept(br);
-        pushIntoEsFn.run();
-        requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
-        counter = 0;
-      }
+      pushIntoEsFn.run();
     }
-    pushIntoEsFn.run();
-
-    // Wait for all futures and save metrics
-    if (!useSyncMode) {
-      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
-    }
-    client.close();
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
