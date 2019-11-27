@@ -194,7 +194,7 @@ public class InterpretedToEsIndexPipeline {
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
 
     // Create ES client and extra function
-    HttpHost[] hosts = Arrays.stream(options.getEsHosts()).map(HttpHost::new).toArray(HttpHost[]::new);
+    HttpHost[] hosts = Arrays.stream(options.getEsHosts()).map(HttpHost::create).toArray(HttpHost[]::new);
     RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(hosts));
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
@@ -241,6 +241,7 @@ public class InterpretedToEsIndexPipeline {
     if (!useSyncMode) {
       CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
     }
+    client.close();
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
