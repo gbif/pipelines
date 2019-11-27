@@ -146,7 +146,7 @@ public class VerbatimToInterpretedPipeline {
         SyncDataFileWriter<TemporalRecord> temporalWriter =
             createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id, false);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
-            createWriter(options, MultimediaRecord.getClassSchema(), temporalTransform, id, false);
+            createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
         SyncDataFileWriter<ImageRecord> imageWriter =
             createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
         SyncDataFileWriter<AudubonRecord> audubonWriter =
