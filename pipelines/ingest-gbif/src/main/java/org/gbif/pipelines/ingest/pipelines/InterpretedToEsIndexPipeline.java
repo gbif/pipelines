@@ -48,7 +48,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 /**
  * Pipeline sequence:
@@ -102,6 +101,8 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
+
+    String esDocumentId = options.getEsDocumentId();
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
@@ -199,7 +200,7 @@ public class InterpretedToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get(GBIF_ID).asText()));
+            .withIdFn(input -> input.get(esDocumentId).asText()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();

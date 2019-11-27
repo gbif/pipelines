@@ -90,6 +90,7 @@ public class XmlToInterpretedPipeline {
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean tripletValid = options.isTripletValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
+    boolean skipRegisrtyCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
 
     MDC.put("datasetId", datasetId);
@@ -106,7 +107,7 @@ public class XmlToInterpretedPipeline {
 
     log.info("Creating transformations");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegisrtyCalls);
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
@@ -123,7 +124,7 @@ public class XmlToInterpretedPipeline {
         p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId, skipRegisrtyCalls));
 
     log.info("Adding interpretations");
 

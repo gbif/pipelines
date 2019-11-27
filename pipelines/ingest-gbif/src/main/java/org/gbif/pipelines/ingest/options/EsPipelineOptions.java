@@ -4,6 +4,8 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
+
 /** Main pipeline options necessary for Elasticsearch index properties */
 public interface EsPipelineOptions extends PipelineOptions {
 
@@ -76,6 +78,12 @@ public interface EsPipelineOptions extends PipelineOptions {
   Integer getIndexMaxResultWindow();
 
   void setIndexMaxResultWindow(Integer indexMaxResultWindow);
+
+  @Description("ES document id")
+  @Default.String(GBIF_ID)
+  String getEsDocumentId();
+
+  void setEsDocumentId(String esDocumentId);
 
 
 }

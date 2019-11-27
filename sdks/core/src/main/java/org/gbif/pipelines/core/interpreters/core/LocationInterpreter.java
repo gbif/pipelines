@@ -304,6 +304,14 @@ public class LocationInterpreter {
     SimpleTypeParser.parseDouble(er, DwcTerm.coordinatePrecision, fn);
   }
 
+  /** {@link DwcTerm#locality} interpretation. */
+  public static void interpretLocality(ExtendedRecord er, LocationRecord lr) {
+    String value = extractNullAwareValue(er, DwcTerm.locality);
+    if (!Strings.isNullOrEmpty(value)) {
+      lr.setLocality(cleanName(value));
+    }
+  }
+
   private static String cleanName(String x) {
     x = StringUtils.normalizeSpace(x).trim();
     // if we get all upper names, Capitalize them

@@ -109,7 +109,8 @@ public class LocationTransformTest {
         "44.5",
         "105.0",
         "5.0",
-        "false"
+        "false",
+        "Universitietsparken"
     };
     final String[] japan = {
         "1",
@@ -133,7 +134,8 @@ public class LocationTransformTest {
         "44.5",
         "105.0",
         "5.0",
-         "true"
+        "true",
+        "center"
     };
 
     final MetadataRecord mdr = MetadataRecord.newBuilder()
@@ -182,6 +184,7 @@ public class LocationTransformTest {
               terms.put(DwcTerm.decimalLongitude.qualifiedName(), x[14]);
               terms.put(DwcTerm.stateProvince.qualifiedName(), x[15]);
               terms.put(GbifTerm.publishingCountry.qualifiedName(), metadataRecord.getDatasetPublishingCountry());
+              terms.put(DwcTerm.locality.qualifiedName(), x[22]);
               return record;
             })
         .collect(Collectors.toList());
@@ -218,6 +221,7 @@ public class LocationTransformTest {
                       .setHasGeospatialIssue(false)
                       .setPublishingCountry(mdr.getDatasetPublishingCountry())
                       .setCreated(0L)
+                      .setLocality(x[22])
                       .build();
               record.getIssues().getIssueList().add(x[16]);
               return record;

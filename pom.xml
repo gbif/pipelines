@@ -71,7 +71,7 @@
     <gbif-api.version>0.98</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
     <dwc-api.version>1.23</dwc-api.version>
-    <kvs.version>1.5</kvs.version>
+    <kvs.version>1.6-SNAPSHOT</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.106</gbif-occurrence.version>
@@ -79,14 +79,16 @@
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
     <apache.beam.version>2.15.0</apache.beam.version>
-    <hadoop.version>2.6.0-cdh5.12.0</hadoop.version>
-    <hadoop-core.version>2.6.0-mr1-cdh5.12.0</hadoop-core.version>
-    <hbase.version>1.2.0-cdh5.12.0</hbase.version>
+    <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
+    <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
+    <hbase.version>1.2.0-cdh5.16.2</hbase.version>
     <curator.version>2.9.0</curator.version>
 
     <geotools.version>20.5</geotools.version>
     <commons-lang3.version>3.4</commons-lang3.version>
     <guava.version>20.0</guava.version>
+    <!-- Guava version required by HBase libraries -->
+    <guava.hbase.version>12.0.1</guava.hbase.version>
 
     <!-- Fault tolerance -->
     <resilience4j.version>1.1.0</resilience4j.version>
