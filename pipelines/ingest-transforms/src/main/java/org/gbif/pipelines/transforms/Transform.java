@@ -135,8 +135,9 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
 
   /** TODO: DOC! */
   public Optional<T> processElement(R source) {
-    incCounter();
-    return convert(source);
+    Optional<T> convert = convert(source);
+    convert.ifPresent(t -> incCounter());
+    return convert;
   }
 
   /** TODO: DOC! */
