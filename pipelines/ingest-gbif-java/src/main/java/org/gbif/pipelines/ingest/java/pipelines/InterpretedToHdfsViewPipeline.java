@@ -82,7 +82,7 @@ public class InterpretedToHdfsViewPipeline {
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     log.info("Options");
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
 
     log.info("Creating transformations");
     // Core
@@ -195,7 +195,7 @@ public class InterpretedToHdfsViewPipeline {
 
     SharedLockUtils.doHdfsPrefixLock(options, () -> FsUtils.copyOccurrenceRecords(options));
 
-    MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
+    MetricsHandler.saveCountersToInputPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 
@@ -205,7 +205,7 @@ public class InterpretedToHdfsViewPipeline {
   @SneakyThrows
   private static SyncDataFileWriter<OccurrenceHdfsRecord> createWriter(InterpretationPipelineOptions options) {
     String id = options.getDatasetId() + '_' + options.getAttempt();
-    String targetTempPath = FsUtils.buildFilePathHdfsViewUsingInputPath(options, id);
+    String targetTempPath = FsUtils.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
     Path path = new Path(targetTempPath);
     FileSystem verbatimFs = createParentDirectories(path, options.getHdfsSiteConfig());
     return SyncDataFileWriterBuilder.builder()
