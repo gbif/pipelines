@@ -157,14 +157,13 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   }
 
   public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
-    this.incCounter();
 
     LocationRecord lr = LocationRecord.newBuilder()
         .setId(source.getId())
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    return Interpretation.from(source)
+    Optional<LocationRecord> result = Interpretation.from(source)
         .to(lr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, mdr))
@@ -182,6 +181,10 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretCoordinatePrecision)
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
         .get();
+
+    result.ifPresent(r -> this.incCounter());
+
+    return result;
   }
 
 }

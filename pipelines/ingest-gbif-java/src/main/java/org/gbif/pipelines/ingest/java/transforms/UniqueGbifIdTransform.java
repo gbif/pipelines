@@ -36,6 +36,9 @@ public class UniqueGbifIdTransform {
   @Builder.Default
   private boolean useSyncMode = true;
 
+  @Builder.Default
+  private boolean skipTransform = false;
+
   public UniqueGbifIdTransform run() {
     return useSyncMode ?  runSync() : runAsync();
   }
@@ -67,7 +70,7 @@ public class UniqueGbifIdTransform {
     return er ->
         basicTransform.processElement(er)
             .ifPresent(br -> {
-              if (basicTransform.isUseExtendedRecordId()) {
+              if (skipTransform) {
                 map.put(br.getId(), br);
               } else if (br.getGbifId() != null) {
                 BasicRecord record = map.get(br.getGbifId().toString());

@@ -153,8 +153,4 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretReferences)
         .get();
   }
-
-  public boolean isUseExtendedRecordId() {
-    return useExtendedRecordId;
-  }
 }

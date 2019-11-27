@@ -178,6 +178,7 @@ public class VerbatimToInterpretedPipeline {
               .erMap(erMap)
               .basicTransform(basicTransform)
               .useSyncMode(useSyncMode)
+              .skipTransform(useErdId)
               .build()
               .run();
 
