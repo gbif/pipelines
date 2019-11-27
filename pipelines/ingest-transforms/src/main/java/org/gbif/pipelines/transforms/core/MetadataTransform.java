@@ -50,13 +50,13 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     return new MetadataTransform(null, null, null);
   }
 
-  public static MetadataTransform create(WsConfig wsConfig, String endpointType, Integer attempt, boolean skipRegistryCalls) {
+  public static MetadataTransform create(WsConfig wsConfig, String endpointType, Integer attempt) {
     return new MetadataTransform(wsConfig, endpointType, attempt);
   }
 
   public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt, boolean skipRegistryCalls) {
     WsConfig wsConfig = null;
-    if (skipRegistryCalls) {
+    if (!skipRegistryCalls) {
       wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
     }
     return new MetadataTransform(wsConfig, endpointType, attempt);
@@ -64,7 +64,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
 
   public static MetadataTransform create(Properties properties, String endpointType, Integer attempt, boolean skipRegistryCalls) {
     WsConfig wsConfig = null;
-    if (skipRegistryCalls) {
+    if (!skipRegistryCalls) {
       wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
     }
     return new MetadataTransform(wsConfig, endpointType, attempt);
