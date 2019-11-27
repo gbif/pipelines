@@ -175,6 +175,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setHascoordinate(lr.getHasCoordinate());
       hr.setHasgeospatialissues(lr.getHasGeospatialIssue());
       hr.setRepatriated(lr.getRepatriated());
+      hr.setLocality(lr.getLocality());
 
       setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);
