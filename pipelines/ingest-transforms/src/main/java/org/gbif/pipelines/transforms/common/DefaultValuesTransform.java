@@ -40,17 +40,17 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
     this.datasetId = datasetId;
   }
 
-  public static DefaultValuesTransform create(String propertiesPath, String datasetId, boolean skipRegisrtyCalls) {
+  public static DefaultValuesTransform create(String propertiesPath, String datasetId, boolean skipRegistryCalls) {
     WsConfig wsConfig = null;
-    if (skipRegisrtyCalls) {
+    if (!skipRegistryCalls) {
       wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
     }
     return new DefaultValuesTransform(wsConfig, datasetId);
   }
 
-  public static DefaultValuesTransform create(Properties properties, String datasetId, boolean skipRegisrtyCalls) {
+  public static DefaultValuesTransform create(Properties properties, String datasetId, boolean skipRegistryCalls) {
     WsConfig wsConfig = null;
-    if (skipRegisrtyCalls) {
+    if (!skipRegistryCalls) {
       wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
     }
     return new DefaultValuesTransform(wsConfig, datasetId);
