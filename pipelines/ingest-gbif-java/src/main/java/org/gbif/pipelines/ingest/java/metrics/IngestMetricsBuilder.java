@@ -43,6 +43,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECO
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class IngestMetricsBuilder {
 
+  /** {@link IngestMetrics} for {@link org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline} */
   public static IngestMetrics createVerbatimToInterpretedMetrics() {
     return IngestMetrics.create()
         .addMetric(BasicTransform.class, BASIC_RECORDS_COUNT)
@@ -65,11 +66,13 @@ public class IngestMetricsBuilder {
         .addMetric(UniqueIdTransform.class, IDENTICAL_OBJECTS_COUNT);
   }
 
+  /** {@link IngestMetrics} for {@link org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline} */
   public static IngestMetrics createInterpretedToEsIndexMetrics() {
     return IngestMetrics.create()
         .addMetric(GbifJsonTransform.class, AVRO_TO_JSON_COUNT);
   }
 
+  /** {@link IngestMetrics} for {@link org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline} */
   public static IngestMetrics createInterpretedToHdfsViewMetrics() {
     return IngestMetrics.create()
         .addMetric(OccurrenceHdfsRecordConverterTransform.class, AVRO_TO_HDFS_COUNT);

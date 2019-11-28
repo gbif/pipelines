@@ -68,6 +68,47 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.INDEX_TYPE;
 
+
+/**
+ * Pipeline sequence:
+ *
+ * <pre>
+ *    1) Reads avro files:
+ *      {@link org.gbif.pipelines.io.avro.MetadataRecord},
+ *      {@link org.gbif.pipelines.io.avro.BasicRecord},
+ *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
+ *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    2) Joins avro files
+ *    3) Converts to json model (resources/elasticsearch/es-occurrence-schema.json)
+ *    4) Pushes data to Elasticsearch instance
+ * </pre>
+ *
+ * <p>How to run:
+ *
+ * <pre>{@code
+ * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline some.properties
+ *
+ * or pass all parameters:
+ *
+ * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline \
+ * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82 \
+ * --attempt=1 \
+ * --inputPath=/path \
+ * --targetPath=/path \
+ * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
+ * --properties=/path/pipelines.properties \
+ * --esIndexName=index_name \
+ * --esAlias=index_alias \
+ * --indexNumberShards=1 \
+ * --esDocumentId=id
+ *
+ * }</pre>
+ */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedToEsIndexPipeline {

@@ -7,6 +7,10 @@ import java.util.Properties;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+/**
+ * Java transformations to use verbatim default term values defined as MachineTags in an MetadataRecord.
+ * transforms form {@link ExtendedRecord} to {@link ExtendedRecord}.
+ */
 public class DefaultValuesTransform {
 
   private final org.gbif.pipelines.transforms.common.DefaultValuesTransform transform;

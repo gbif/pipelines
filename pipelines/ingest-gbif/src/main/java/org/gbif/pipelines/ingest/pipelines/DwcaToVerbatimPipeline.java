@@ -30,11 +30,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline some.properties
+ * java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline
+ * java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ *  --pipelineStep=DWCA_TO_VERBATIM \
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner

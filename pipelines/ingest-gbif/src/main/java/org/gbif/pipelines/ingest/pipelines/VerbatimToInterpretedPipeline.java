@@ -69,11 +69,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ * --pipelineStep=VERBATIM_TO_INTERPRETED \
  * --properties=/some/path/to/output/ws.properties
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
@@ -100,7 +101,7 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
-    boolean skipRegisrtyCalls = options.isSkipRegisrtyCalls();
+    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
@@ -121,7 +122,7 @@ public class VerbatimToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegisrtyCalls);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
     BasicTransform basicTransform =  BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
@@ -154,7 +155,7 @@ public class VerbatimToInterpretedPipeline {
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId, skipRegisrtyCalls));
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls));
 
     PCollectionTuple basicCollection =
         uniqueRecords.apply("Check basic transform condition", basicTransform.check(types))

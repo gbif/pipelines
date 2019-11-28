@@ -133,24 +133,19 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
     processElement(c.element()).ifPresent(c::output);
   }
 
-  /** TODO: DOC! */
   public Optional<T> processElement(R source) {
     Optional<T> convert = convert(source);
     convert.ifPresent(t -> incCounter());
     return convert;
   }
 
-  /** TODO: DOC! */
   public abstract Optional<T> convert(R source);
 
-  /** TODO: DOC! */
-  public void incCounter(){
+  public void incCounter() {
     counterFn.accept(counterName);
   }
 
-  /**
-   * @return TupleTag required for grouping
-   */
+  /** @return TupleTag required for grouping */
   public TupleTag<T> getTag() {
     return tag;
   }

@@ -16,6 +16,10 @@ import org.apache.beam.sdk.metrics.MetricResults;
 
 import lombok.AllArgsConstructor;
 
+/**
+ * Metrics to support {@link org.gbif.pipelines.transforms.Transform} counters, wrapper on top of
+ * {@link org.apache.beam.sdk.metrics.MetricResults}
+ */
 @AllArgsConstructor(staticName = "create")
 public class IngestMetrics {
 

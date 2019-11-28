@@ -27,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
  *      {@link org.gbif.pipelines.io.avro.BasicRecord},
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *      avro files
@@ -40,19 +43,23 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline some.properties
+ * java target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline
- * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
- * --attempt=1
- * --runner=SparkRunner
- * --targetPath=hdfs://ha-nn/output/
- * --esAlias=pipeline
- * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200
- * --hdfsSiteConfig=/config/hdfs-site.xml
- * --coreSiteConfig=/config/core-site.xml
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
+ *  --pipelineStep=INTERPRETED_TO_ES_INDEX \
+ *  --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ *  --attempt=1 \
+ *  --runner=SparkRunner \
+ *  --inputPath=/path \
+ *  --targetPath=/path \
+ *  --esIndexName=test2_java \
+ *  --esAlias=occurrence2_java \
+ *  --indexNumberShards=3 \
+ * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
+ * --properties=/home/nvolik/Projects/GBIF/gbif-configuration/cli/dev/config/pipelines.properties \
+ * --esDocumentId=id
  *
  * }</pre>
  */

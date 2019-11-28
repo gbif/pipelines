@@ -64,7 +64,41 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
- * TODO: DOC!
+ * Pipeline sequence:
+ *
+ * <pre>
+ *    1) Reads verbatim.avro file
+ *    2) Interprets and converts avro {@link org.gbif.pipelines.io.avro.ExtendedRecord} file to:
+ *      {@link org.gbif.pipelines.io.avro.MetadataRecord},
+ *      {@link org.gbif.pipelines.io.avro.BasicRecord},
+ *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
+ *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
+ *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.LocationRecord}
+ *    3) Writes data to independent files
+ * </pre>
+ *
+ * <p>How to run:
+ *
+ * <pre>{@code
+ * java -jar target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline some.properties
+ *
+ * or pass all parameters:
+ *
+ * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline \
+ * --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ * --attempt=1 \
+ * --interpretationTypes=ALL \
+ * --targetPath=/path \
+ * --inputPath=/path/verbatim.avro \
+ * --properties=/path/pipelines.properties \
+ * --useExtendedRecordId=true
+ * --skipRegisrtyCalls=true
+ *
+ * }</pre>
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -234,9 +268,7 @@ public class VerbatimToInterpretedPipeline {
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 
-  /**
-   * TODO: DOC!
-   */
+  /** Create an AVRO file writer */
   @SneakyThrows
   private static <T> SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options, Schema schema,
       Transform transform, String id, boolean useInvalidName) {

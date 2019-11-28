@@ -59,11 +59,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ *  --pipelineStep=DWCA_TO_INTERPRETED \
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
  * --targetPath=/some/path/to/output/

@@ -23,25 +23,36 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
-/** TODO: DOC! */
+/** Avro format reader, reads {@link Record} based objects using sting or {@link List<File>} path */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AvroRecordReader {
 
-  /** TODO: DOC! */
+  /**
+   * Read {@link Record#getId()} unique records
+   *
+   * @param clazz instance of {@link Record}
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
+   */
   public static <T extends Record> Map<String, T> readUniqueRecords(Class<T> clazz, String path) {
     List<File> paths = parseWildcardPath(path);
     return readUniqueRecords(clazz, paths);
   }
 
-  /** TODO: DOC! */
+  /**
+   * Read {@link Record#getId()} unique records
+   *
+   * @param clazz instance of {@link Record}
+   * @param paths list of paths to the files
+   */
   @SneakyThrows
   public static <T extends Record> Map<String, T> readUniqueRecords(Class<T> clazz, List<File> paths) {
 
     Map<String, T> map = new HashMap<>();
     Set<String> duplicateSet = new HashSet<>();
 
-    for (File path : paths) {// Deserialize avro record from disk
+    for (File path : paths) {
+      // Deserialize avro record from disk
       DatumReader<T> reader = new SpecificDatumReader<>(clazz);
       try (DataFileReader<T> dataFileReader = new DataFileReader<>(path, reader)) {
         while (dataFileReader.hasNext()) {
@@ -63,19 +74,30 @@ public class AvroRecordReader {
     return map;
   }
 
-  /** TODO: DOC! */
+  /**
+   * Read {@link Record#getId()} distinct records
+   *
+   * @param clazz instance of {@link Record}
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
+   */
   public static <T extends Record> Map<String, T> readRecords(Class<T> clazz, String path) {
     List<File> paths = parseWildcardPath(path);
     return readRecords(clazz, paths);
   }
 
-  /** TODO: DOC! */
+  /**
+   * Read {@link Record#getId()} distinct records
+   *
+   * @param clazz instance of {@link Record}
+   * @param paths list of paths to the files
+   */
   @SneakyThrows
   public static <T extends Record> Map<String, T> readRecords(Class<T> clazz, List<File> paths) {
 
     Map<String, T> map = new HashMap<>();
 
-    for (File path : paths) {// Deserialize ExtendedRecord from disk
+    for (File path : paths) {
+      // Deserialize ExtendedRecord from disk
       DatumReader<T> reader = new SpecificDatumReader<>(clazz);
       try (DataFileReader<T> dataFileReader = new DataFileReader<>(path, reader)) {
         while (dataFileReader.hasNext()) {
@@ -88,11 +110,11 @@ public class AvroRecordReader {
     return map;
   }
 
-  /** TODO: DOC! */
+  /** Read multiple files, with the wildcard in the path */
   private static List<File> parseWildcardPath(String path) {
     if (path.contains("*")) {
       File parentFile = new File(path).getParentFile();
-      if(parentFile.listFiles() != null) {
+      if (parentFile.listFiles() != null) {
         return Arrays.stream(parentFile.listFiles())
             .filter(f -> f.isFile() && f.toString().endsWith(AVRO_EXTENSION))
             .collect(Collectors.toList());

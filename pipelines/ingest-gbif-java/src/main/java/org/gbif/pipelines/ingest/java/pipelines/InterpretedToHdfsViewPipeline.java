@@ -56,6 +56,41 @@ import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+/**
+ * Pipeline sequence:
+ *
+ * <pre>
+ *    1) Reads avro files:
+ *      {@link MetadataRecord},
+ *      {@link BasicRecord},
+ *      {@link TemporalRecord},
+ *      {@link MultimediaRecord},
+ *      {@link ImageRecord},
+ *      {@link AudubonRecord},
+ *      {@link MeasurementOrFactRecord},
+ *      {@link TaxonRecord},
+ *      {@link LocationRecord}
+ *    2) Joins avro files
+ *    3) Converts to a {@link OccurrenceHdfsRecord} based on the input files
+ *    4) Moves the produced files to a directory where the latest version of HDFS records are kept
+ * </pre>
+ *
+ * <p>How to run:
+ *
+ * <pre>{@code
+ * java -jar target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline some.properties
+ *
+ * or pass all parameters:
+ *
+ * java -jar target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline \
+ * --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ * --attempt=1 \
+ * --inputPath=/path \
+ * --targetPath=/path \
+ * --properties=/path/pipelines.properties
+ *
+ * }</pre>
+ */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedToHdfsViewPipeline {
@@ -199,9 +234,7 @@ public class InterpretedToHdfsViewPipeline {
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
   }
 
-  /**
-   * TODO: DOC!
-   */
+  /** Create an AVRO file writer */
   @SneakyThrows
   private static SyncDataFileWriter<OccurrenceHdfsRecord> createWriter(InterpretationPipelineOptions options) {
     String id = options.getDatasetId() + '_' + options.getAttempt();

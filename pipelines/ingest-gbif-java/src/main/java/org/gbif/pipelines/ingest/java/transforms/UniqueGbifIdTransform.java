@@ -17,6 +17,11 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
+/**
+ * Splits collection into two:
+ * 1 - normal collection with regular GBIF ids
+ * 2 - contains invalid records with GBIF ids, as duplicates or missed GBIF ids
+ */
 @Getter
 @Builder
 public class UniqueGbifIdTransform {

@@ -43,11 +43,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexAmpPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexAmpPipeline
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ * --pipelineStep=INTERPRETED_TO_ES_INDEX_AMP \
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
