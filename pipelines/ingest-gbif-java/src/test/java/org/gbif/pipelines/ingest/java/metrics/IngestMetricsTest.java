@@ -1,6 +1,8 @@
 package org.gbif.pipelines.ingest.java.metrics;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -108,7 +110,7 @@ public class IngestMetricsTest {
   }
 
   @Test
-  public void concurrentMetricsTest() {
+  public void concurrentMetricsTest() throws Exception {
 
     // State
     Class<IngestMetricsTest> namespace = IngestMetricsTest.class;
@@ -124,10 +126,12 @@ public class IngestMetricsTest {
         .addMetric(namespace, name)
         .addMetric(namespace2, name2);
 
+    List<CompletableFuture<Void>> futures = new ArrayList<>();
     for (int x = 0; x < count; x++) {
-      CompletableFuture.runAsync(() -> metrics.incMetric(name), executor);
-      CompletableFuture.runAsync(() -> metrics.incMetric(name2), executor);
+      futures.add(CompletableFuture.runAsync(() -> metrics.incMetric(name), executor));
+      futures.add(CompletableFuture.runAsync(() -> metrics.incMetric(name2), executor));
     }
+    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
     MetricResults result = metrics.getMetricsResult();
 
     executor.shutdown();

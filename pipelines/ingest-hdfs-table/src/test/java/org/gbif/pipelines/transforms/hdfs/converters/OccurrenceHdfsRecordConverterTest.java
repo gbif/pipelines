@@ -143,7 +143,7 @@ public class OccurrenceHdfsRecordConverterTest {
     OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord);
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
-    Assert.assertEquals(new Integer(99), hdfsRecord.getIndividualcount());
+    Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
     Assert.assertEquals(LifeStage.GAMETE.name(), hdfsRecord.getLifestage());
     Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
@@ -194,29 +194,29 @@ public class OccurrenceHdfsRecordConverterTest {
 
     OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(taxonRecord);
     Assert.assertEquals("Archaea", hdfsRecord.getKingdom());
-    Assert.assertEquals(new Integer(2), hdfsRecord.getKingdomkey());
+    Assert.assertEquals(Integer.valueOf(2), hdfsRecord.getKingdomkey());
 
     Assert.assertEquals("Crenarchaeota", hdfsRecord.getPhylum());
-    Assert.assertEquals(new Integer(79), hdfsRecord.getPhylumkey());
+    Assert.assertEquals(Integer.valueOf(79), hdfsRecord.getPhylumkey());
 
     Assert.assertEquals("Acidilobales", hdfsRecord.getOrder());
-    Assert.assertEquals(new Integer(8016360), hdfsRecord.getOrderkey());
+    Assert.assertEquals(Integer.valueOf(8016360), hdfsRecord.getOrderkey());
 
     Assert.assertEquals("Thermoprotei", hdfsRecord.getClass$());
-    Assert.assertEquals(new Integer(292), hdfsRecord.getClasskey());
+    Assert.assertEquals(Integer.valueOf(292), hdfsRecord.getClasskey());
 
     Assert.assertEquals("Caldisphaeraceae", hdfsRecord.getFamily());
-    Assert.assertEquals(new Integer(7785), hdfsRecord.getFamilykey());
+    Assert.assertEquals(Integer.valueOf(7785), hdfsRecord.getFamilykey());
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenus());
-    Assert.assertEquals(new Integer(1000002), hdfsRecord.getGenuskey());
+    Assert.assertEquals(Integer.valueOf(1000002), hdfsRecord.getGenuskey());
 
     Assert.assertEquals("Caldisphaera lagunensis", hdfsRecord.getSpecies());
-    Assert.assertEquals(new Integer(1000003), hdfsRecord.getSpecieskey());
+    Assert.assertEquals(Integer.valueOf(1000003), hdfsRecord.getSpecieskey());
 
     Assert.assertEquals("2492483", hdfsRecord.getAcceptednameusageid());
     Assert.assertEquals("Caldisphaera lagunensis Itoh & al., 2003", hdfsRecord.getAcceptedscientificname());
-    Assert.assertEquals(new Integer(2492483), hdfsRecord.getAcceptedtaxonkey());
+    Assert.assertEquals(Integer.valueOf(2492483), hdfsRecord.getAcceptedtaxonkey());
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenericname());
     Assert.assertEquals("lagunensis", hdfsRecord.getSpecificepithet());
@@ -240,9 +240,9 @@ public class OccurrenceHdfsRecordConverterTest {
         .setModified(rawEventDate)
         .build();
     OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(temporalRecord);
-    Assert.assertEquals(new Integer(1), hdfsRecord.getDay());
-    Assert.assertEquals(new Integer(1), hdfsRecord.getMonth());
-    Assert.assertEquals(new Integer(2019), hdfsRecord.getYear());
+    Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getDay());
+    Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getMonth());
+    Assert.assertEquals(Integer.valueOf(2019), hdfsRecord.getYear());
     Assert.assertEquals("1", hdfsRecord.getStartdayofyear());
     Assert.assertEquals(eventDate, hdfsRecord.getEventdate());
     Assert.assertEquals(eventDate, hdfsRecord.getDateidentified());
