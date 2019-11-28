@@ -2,8 +2,10 @@ package org.gbif.pipelines.ingest.java.pipelines;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -114,7 +116,7 @@ public class InterpretedToEsIndexPipeline {
     IngestMetrics metrics = IngestMetricsBuilder.createInterpretedToEsIndexMetrics();
 
     log.info("Creating pipeline");
-
+    log.info("Reading avro files...");
     // Reading all avro files in parallel
     CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature = CompletableFuture.supplyAsync(
         () -> AvroRecordReader.readRecords(MetadataRecord.class, pathFn.apply(metadataTransform.getBaseName())),
@@ -170,6 +172,7 @@ public class InterpretedToEsIndexPipeline {
     Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
     Map<String, MeasurementOrFactRecord> measurementMap = measurementMapFeature.get();
 
+    log.info("Joining avro files...");
     // Join all records, convert into string json and IndexRequest for ES
     Function<BasicRecord, IndexRequest> indexRequestFn = br -> {
 
@@ -195,9 +198,13 @@ public class InterpretedToEsIndexPipeline {
       return new IndexRequest(options.getEsIndexName(), INDEX_TYPE, docId).source(json.toString(), JSON);
     };
 
+    boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
+
     // Create ES client and extra function
     HttpHost[] hosts = Arrays.stream(options.getEsHosts()).map(HttpHost::create).toArray(HttpHost[]::new);
     try (RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(hosts))) {
+
+      List<CompletableFuture<Void>> futures = new ArrayList<>();
 
       Queue<BulkRequest> requests = new LinkedList<>();
       requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
@@ -205,29 +212,42 @@ public class InterpretedToEsIndexPipeline {
       Consumer<BasicRecord> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())
           .ifPresent(req -> req.add(indexRequestFn.apply(br)));
 
+      Consumer<BulkRequest> clientBulkFn = br -> {
+        try {
+          client.bulk(br, RequestOptions.DEFAULT);
+        } catch (IOException ex) {
+          log.error(ex.getMessage(), ex);
+        }
+      };
+
       Runnable pushIntoEsFn = () -> Optional.ofNullable(requests.poll())
-          .ifPresent(br -> {
-            try {
-              client.bulk(br, RequestOptions.DEFAULT);
-            } catch (IOException ex) {
-              log.error(ex.getMessage(), ex);
+          .ifPresent(req -> {
+            log.info("Push ES request, number of actions - {}", req.numberOfActions());
+            if (useSyncMode) {
+              clientBulkFn.accept(req);
+            } else {
+              futures.add(CompletableFuture.runAsync(() -> clientBulkFn.accept(req), executor));
             }
           });
 
       // Push requests into ES
-      long counter = 0;
       for (BasicRecord br : basicMap.values()) {
-        if (counter < options.getEsMaxBatchSize()) {
+        BulkRequest peek = requests.peek();
+        if (peek.numberOfActions() < options.getEsMaxBatchSize()
+            && peek.estimatedSizeInBytes() < options.getEsMaxBatchSizeBytes()) {
           addIndexRequestFn.accept(br);
-          counter++;
         } else {
           addIndexRequestFn.accept(br);
           pushIntoEsFn.run();
           requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
-          counter = 0;
         }
       }
       pushIntoEsFn.run();
+
+      // Wait for all futures and save metrics
+      if (!useSyncMode) {
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
+      }
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
