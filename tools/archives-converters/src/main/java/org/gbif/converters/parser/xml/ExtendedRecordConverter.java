@@ -21,10 +21,12 @@ import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import com.google.common.base.Strings;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /** Parsing xml response files or tar.xz archive and convert to ExtendedRecord avro file */
 @Slf4j
+@AllArgsConstructor(staticName = "create")
 public class ExtendedRecordConverter {
 
   private static final String FILE_PREFIX_RESPONSE = ".response";
