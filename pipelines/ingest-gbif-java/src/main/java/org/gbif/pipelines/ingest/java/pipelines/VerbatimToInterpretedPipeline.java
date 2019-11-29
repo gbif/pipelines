@@ -105,6 +105,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 public class VerbatimToInterpretedPipeline {
 
   public static void main(String[] args) {
+    run(args);
+  }
+
+  public static void run(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
   }
@@ -116,6 +120,11 @@ public class VerbatimToInterpretedPipeline {
     } finally {
       executor.shutdown();
     }
+  }
+
+  public static void run(String[] args, ExecutorService executor) {
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    run(options, executor);
   }
 
   public static void run(InterpretationPipelineOptions options, ExecutorService executor) {

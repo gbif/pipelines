@@ -96,6 +96,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 public class InterpretedToHdfsViewPipeline {
 
   public static void main(String[] args) {
+    run(args);
+  }
+
+  public static void run(String[] args) {
     InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
   }
@@ -107,6 +111,11 @@ public class InterpretedToHdfsViewPipeline {
     } finally {
       executor.shutdown();
     }
+  }
+
+  public static void run(String[] args, ExecutorService executor) {
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
+    run(options, executor);
   }
 
   @SneakyThrows

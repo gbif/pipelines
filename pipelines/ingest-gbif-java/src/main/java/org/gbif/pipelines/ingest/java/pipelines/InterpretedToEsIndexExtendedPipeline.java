@@ -63,8 +63,12 @@ import lombok.extern.slf4j.Slf4j;
 public class InterpretedToEsIndexExtendedPipeline {
 
   public static void main(String[] args) {
+    run(args);
+  }
+
+  public static void run(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
-    InterpretedToEsIndexExtendedPipeline.run(options);
+    run(options);
   }
 
   public static void run(EsIndexingPipelineOptions options) {
@@ -74,6 +78,11 @@ public class InterpretedToEsIndexExtendedPipeline {
     } finally {
       executor.shutdown();
     }
+  }
+
+  public static void run(String[] args, ExecutorService executor) {
+    EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
+    InterpretedToEsIndexExtendedPipeline.run(options, executor);
   }
 
   public static void run(EsIndexingPipelineOptions options, ExecutorService executor) {

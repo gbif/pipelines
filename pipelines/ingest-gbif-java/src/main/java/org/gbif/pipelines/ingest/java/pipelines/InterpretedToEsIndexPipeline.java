@@ -114,6 +114,10 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.IND
 public class InterpretedToEsIndexPipeline {
 
   public static void main(String[] args) {
+    run(args);
+  }
+
+  public static void run(String[] args) {
     EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
     run(options);
   }
@@ -125,6 +129,11 @@ public class InterpretedToEsIndexPipeline {
     } finally {
       executor.shutdown();
     }
+  }
+
+  public static void run(String[] args, ExecutorService executor) {
+    EsIndexingPipelineOptions options = PipelinesOptionsFactory.createIndexing(args);
+    run(options, executor);
   }
 
   @SneakyThrows
