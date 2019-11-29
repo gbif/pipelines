@@ -75,10 +75,18 @@ public class OccurrenceHdfsRecordConverterTest {
     classification.add( RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
     classification.add( RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER).build());
     TaxonRecord taxonRecord = TaxonRecord.newBuilder()
-                                .setCreated(2L) //This value for lastParsed and lastInterpreted since is greater that the Basic record created date
-                                .setClassification(classification)
-                                .build();
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord, taxonRecord, extendedRecord);
+        .setCreated(
+            2L) //This value for lastParsed and lastInterpreted since is greater that the Basic record created date
+        .setClassification(classification)
+        .build();
+    TemporalRecord temporalRecord = TemporalRecord.newBuilder()
+        .setId("1")
+        .setDateIdentified("2019-11-12T13:24:56.963591")
+        .setModified("2019-04-15T17:17")
+        .build();
+
+    OccurrenceHdfsRecord hdfsRecord =
+        OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord, taxonRecord, temporalRecord, extendedRecord);
     //Test common fields
     Assert.assertEquals("1.0", hdfsRecord.getVerbatimdepth());
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
@@ -101,6 +109,10 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("group", hdfsRecord.getVGroup());
     Assert.assertEquals("26/06/2019", hdfsRecord.getDate());
     Assert.assertEquals("26/06/2019", hdfsRecord.getVDate());
+
+    // test temporal fields
+    Assert.assertNotNull(hdfsRecord.getDateidentified());
+    Assert.assertNotNull(hdfsRecord.getModified());
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
