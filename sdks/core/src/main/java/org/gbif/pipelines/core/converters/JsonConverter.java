@@ -121,7 +121,7 @@ public class JsonConverter {
         addCommonFields((SpecificRecordBase) value, element);
         arrayNode.add(element);
       } else if (value instanceof String || value.getClass().isPrimitive() || Primitives.isWrapperType(
-          (value.getClass())) || UUID.class.isAssignableFrom(value.getClass())) {
+          value.getClass()) || UUID.class.isAssignableFrom(value.getClass())) {
         arrayNode.add(value.toString());
       }
     });
