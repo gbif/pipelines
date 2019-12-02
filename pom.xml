@@ -66,7 +66,7 @@
     <lombok.version>1.18.10</lombok.version>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.45</gbif-parsers.version>
+    <gbif-parsers.version>0.46</gbif-parsers.version>
     <dwca-io.version>2.6</dwca-io.version>
     <gbif-api.version>0.98</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
@@ -596,11 +596,6 @@
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpcore-nio</artifactId>
         <version>${apache.httpcomponents.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.elasticsearch.client</groupId>
-        <artifactId>elasticsearch-rest-high-level-client</artifactId>
-        <version>${elasticsearch.version}</version>
       </dependency>
 
       <!-- Json -->
