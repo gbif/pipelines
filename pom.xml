@@ -103,11 +103,11 @@
     <apache.httpcomponents.version>4.4.5</apache.httpcomponents.version>
 
     <jackson.version>2.9.10</jackson.version>
-    <jackson-dataformat-avro.version>2.8.6</jackson-dataformat-avro.version>
 
-    <retrofit.version>2.5.0</retrofit.version>
-    <okhttp.version>3.11.0</okhttp.version>
-    <okio.version>2.0.0</okio.version>
+    <retrofit.version>2.6.2</retrofit.version>
+    <okhttp.version>4.2.2</okhttp.version>
+    <okio.version>2.4.1</okio.version>
+    <okio-kotlin.version>1.3.50</okio-kotlin.version>
 
     <findbugs-jsr305.version>3.0.2</findbugs-jsr305.version>
 
@@ -622,7 +622,7 @@
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-avro</artifactId>
-        <version>${jackson-dataformat-avro.version}</version>
+        <version>${jackson.version}</version>
       </dependency>
 
       <!-- Http clients -->
@@ -645,6 +645,11 @@
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio</artifactId>
         <version>${okio.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-stdlib</artifactId>
+        <version>${okio-kotlin.version}</version>
       </dependency>
 
       <!-- Geotools -->
