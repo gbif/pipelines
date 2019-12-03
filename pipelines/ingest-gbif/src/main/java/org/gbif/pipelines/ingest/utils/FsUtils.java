@@ -307,7 +307,7 @@ public final class FsUtils {
    * Read a properties file from HDFS/Local FS
    *
    * @param hdfsSiteConfig HDFS config file
-   * @param filePath directory to be created
+   * @param filePath properties file path
    */
   @SneakyThrows
   public static Properties readPropertiesFile(String hdfsSiteConfig, String filePath) {

@@ -140,9 +140,10 @@ public class VerbatimToInterpretedPipeline {
     Set<String> types = Collections.singleton(ALL.name());
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    String hdfsSiteConfig = options.getHdfsSiteConfig();
+    Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
 
-    FsUtils.deleteInterpretIfExist(options.getHdfsSiteConfig(), targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -209,7 +210,7 @@ public class VerbatimToInterpretedPipeline {
       metadataWriter.append(mdr);
 
       // Read DWCA and replace default values
-      Map<String, ExtendedRecord> erMap = AvroRecordReader.readUniqueRecords(ExtendedRecord.class, options.getInputPath());
+      Map<String, ExtendedRecord> erMap = AvroRecordReader.readUniqueRecords(hdfsSiteConfig, ExtendedRecord.class, options.getInputPath());
       DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls).replaceDefaultValues(erMap);
 
       boolean useSyncMode = options.getSyncThreshold() > erMap.size();

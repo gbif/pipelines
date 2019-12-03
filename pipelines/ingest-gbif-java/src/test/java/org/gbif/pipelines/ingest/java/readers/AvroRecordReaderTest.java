@@ -22,7 +22,7 @@ import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 
 public class AvroRecordReaderTest {
 
-  private final Path verbatimPath = new Path("verbatim.avro");
+  private final Path verbatimPath = new Path("target/verbatim.avro");
   private final FileSystem verbatimFs = createParentDirectories(verbatimPath, null);
 
   @Test
@@ -36,7 +36,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readRecords(ExtendedRecord.class, verbatimPath.toString());
+        AvroRecordReader.readRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -56,7 +56,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readUniqueRecords(ExtendedRecord.class, verbatimPath.toString());
+        AvroRecordReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -76,7 +76,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readUniqueRecords(ExtendedRecord.class, verbatimPath.toString());
+        AvroRecordReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedOne, expectedThree);
@@ -97,7 +97,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readUniqueRecords(ExtendedRecord.class, verbatimPath.toString());
+        AvroRecordReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedThree);
@@ -120,7 +120,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readUniqueRecords(ExtendedRecord.class, verbatimPath.toString());
+        AvroRecordReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result);

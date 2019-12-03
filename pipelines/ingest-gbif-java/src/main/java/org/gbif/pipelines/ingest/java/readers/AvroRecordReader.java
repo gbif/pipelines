@@ -1,31 +1,36 @@
 package org.gbif.pipelines.ingest.java.readers;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.Record;
 
 import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.SeekableInput;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.hadoop.fs.AvroFSInput;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
-/** Avro format reader, reads {@link Record} based objects using sting or {@link List<File>} path */
+/** Avro format reader, reads {@link Record} based objects using sting or {@link List<Path>} path */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(staticName = "create")
 public class AvroRecordReader {
 
   /**
@@ -34,9 +39,22 @@ public class AvroRecordReader {
    * @param clazz instance of {@link Record}
    * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
    */
-  public static <T extends Record> Map<String, T> readUniqueRecords(Class<T> clazz, String path) {
-    List<File> paths = parseWildcardPath(path);
-    return readUniqueRecords(clazz, paths);
+  public static <T extends Record> Map<String, T> readUniqueRecords(String hdfsSiteConfig, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+    List<Path> paths = parseWildcardPath(fs, path);
+    return readUniqueRecords(fs, clazz, paths);
+  }
+
+  /**
+   * Read {@link Record#getId()} distinct records
+   *
+   * @param clazz instance of {@link Record}
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
+   */
+  public static <T extends Record> Map<String, T> readRecords(String hdfsSiteConfig, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+    List<Path> paths = parseWildcardPath(fs, path);
+    return readRecords(fs, clazz, paths);
   }
 
   /**
@@ -46,15 +64,16 @@ public class AvroRecordReader {
    * @param paths list of paths to the files
    */
   @SneakyThrows
-  public static <T extends Record> Map<String, T> readUniqueRecords(Class<T> clazz, List<File> paths) {
+  private static <T extends Record> Map<String, T> readUniqueRecords(FileSystem fs, Class<T> clazz, List<Path> paths) {
 
     Map<String, T> map = new HashMap<>();
     Set<String> duplicateSet = new HashSet<>();
 
-    for (File path : paths) {
-      // Deserialize avro record from disk
+    for (Path path : paths) {
+      // Read avro record from disk/hdfs
       DatumReader<T> reader = new SpecificDatumReader<>(clazz);
-      try (DataFileReader<T> dataFileReader = new DataFileReader<>(path, reader)) {
+      try (SeekableInput input = new AvroFSInput(fs.open(path), fs.getContentSummary(path).getLength());
+          DataFileReader<T> dataFileReader = new DataFileReader<>(input, reader)) {
         while (dataFileReader.hasNext()) {
           T next = dataFileReader.next();
 
@@ -78,28 +97,18 @@ public class AvroRecordReader {
    * Read {@link Record#getId()} distinct records
    *
    * @param clazz instance of {@link Record}
-   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
-   */
-  public static <T extends Record> Map<String, T> readRecords(Class<T> clazz, String path) {
-    List<File> paths = parseWildcardPath(path);
-    return readRecords(clazz, paths);
-  }
-
-  /**
-   * Read {@link Record#getId()} distinct records
-   *
-   * @param clazz instance of {@link Record}
    * @param paths list of paths to the files
    */
   @SneakyThrows
-  public static <T extends Record> Map<String, T> readRecords(Class<T> clazz, List<File> paths) {
+  private static <T extends Record> Map<String, T> readRecords(FileSystem fs, Class<T> clazz, List<Path> paths) {
 
     Map<String, T> map = new HashMap<>();
 
-    for (File path : paths) {
+    for (Path path : paths) {
       // Deserialize ExtendedRecord from disk
       DatumReader<T> reader = new SpecificDatumReader<>(clazz);
-      try (DataFileReader<T> dataFileReader = new DataFileReader<>(path, reader)) {
+      try (SeekableInput input = new AvroFSInput(fs.open(path), fs.getContentSummary(path).getLength());
+          DataFileReader<T> dataFileReader = new DataFileReader<>(input, reader)) {
         while (dataFileReader.hasNext()) {
           T next = dataFileReader.next();
           map.put(next.getId(), next);
@@ -111,16 +120,23 @@ public class AvroRecordReader {
   }
 
   /** Read multiple files, with the wildcard in the path */
-  private static List<File> parseWildcardPath(String path) {
+  @SneakyThrows
+  private static List<Path> parseWildcardPath(FileSystem fs, String path) {
     if (path.contains("*")) {
       File parentFile = new File(path).getParentFile();
-      if (parentFile.listFiles() != null) {
-        return Arrays.stream(parentFile.listFiles())
-            .filter(f -> f.isFile() && f.toString().endsWith(AVRO_EXTENSION))
-            .collect(Collectors.toList());
+      Path pp = new Path(parentFile.getPath().replace("hdfs:/ha-nn", "hdfs://ha-nn"));
+      RemoteIterator<LocatedFileStatus> files = fs.listFiles(pp, false);
+      List<Path> paths = new ArrayList<>();
+      while (files.hasNext()) {
+        LocatedFileStatus next = files.next();
+        Path np = next.getPath();
+        if (next.isFile() && np.getName().endsWith(AVRO_EXTENSION)) {
+          paths.add(np);
+        }
       }
+      return paths;
     }
-    return Collections.singletonList(new File(path));
+    return Collections.singletonList(new Path(path));
   }
 
 }

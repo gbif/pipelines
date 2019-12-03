@@ -147,6 +147,7 @@ public class InterpretedToEsIndexPipeline {
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     String esDocumentId = options.getEsDocumentId();
+    String hdfsSiteConfig = options.getHdfsSiteConfig();
 
     log.info("Creating transformations");
     // Core
@@ -169,43 +170,43 @@ public class InterpretedToEsIndexPipeline {
     log.info("Reading avro files...");
     // Reading all avro files in parallel
     CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(MetadataRecord.class, pathFn.apply(metadataTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, MetadataRecord.class, pathFn.apply(metadataTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(ExtendedRecord.class, pathFn.apply(verbatimTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, ExtendedRecord.class, pathFn.apply(verbatimTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(BasicRecord.class, pathFn.apply(basicTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, BasicRecord.class, pathFn.apply(basicTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, TemporalRecord>> temporalMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(TemporalRecord.class, pathFn.apply(temporalTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, TemporalRecord.class, pathFn.apply(temporalTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, LocationRecord>> locationMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(LocationRecord.class, pathFn.apply(locationTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, LocationRecord.class, pathFn.apply(locationTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(TaxonRecord.class, pathFn.apply(taxonomyTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, TaxonRecord.class, pathFn.apply(taxonomyTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(MultimediaRecord.class, pathFn.apply(multimediaTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, MultimediaRecord.class, pathFn.apply(multimediaTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, ImageRecord>> imageMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(ImageRecord.class, pathFn.apply(imageTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, ImageRecord.class, pathFn.apply(imageTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(AudubonRecord.class, pathFn.apply(audubonTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, AudubonRecord.class, pathFn.apply(audubonTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, MeasurementOrFactRecord>> measurementMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(MeasurementOrFactRecord.class, pathFn.apply(measurementTransform.getBaseName())),
+        () -> AvroRecordReader.readRecords(hdfsSiteConfig, MeasurementOrFactRecord.class, pathFn.apply(measurementTransform.getBaseName())),
         executor);
 
     CompletableFuture.allOf(metadataMapFeature, verbatimMapFeature, basicMapFeature, temporalMapFeature,
