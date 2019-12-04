@@ -164,12 +164,10 @@ public class OccurrenceHdfsRecordConverter {
       hr.setElevation(lr.getElevation());
       hr.setElevationaccuracy(lr.getElevationAccuracy());
       if (Objects.nonNull(lr.getMaximumDistanceAboveSurfaceInMeters())) {
-        hr.setMaximumdistanceabovesurfaceinmeters(lr.getMaximumDistanceAboveSurfaceInMeters()
-                                                    .toString());
+        hr.setMaximumdistanceabovesurfaceinmeters(lr.getMaximumDistanceAboveSurfaceInMeters().toString());
       }
       if (Objects.nonNull(lr.getMinimumDistanceAboveSurfaceInMeters())) {
-        hr.setMinimumdistanceabovesurfaceinmeters(lr.getMinimumDistanceAboveSurfaceInMeters()
-                                                    .toString());
+        hr.setMinimumdistanceabovesurfaceinmeters(lr.getMinimumDistanceAboveSurfaceInMeters().toString());
       }
       hr.setStateprovince(lr.getStateProvince());
       hr.setWaterbody(lr.getWaterBody());
@@ -177,6 +175,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setHasgeospatialissues(lr.getHasGeospatialIssue());
       hr.setRepatriated(lr.getRepatriated());
       hr.setLocality(lr.getLocality());
+      hr.setPublishingcountry(lr.getPublishingCountry());
 
       setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);
@@ -191,7 +190,6 @@ public class OccurrenceHdfsRecordConverter {
       MetadataRecord mr = (MetadataRecord)sr;
       hr.setCrawlid(mr.getCrawlId());
       hr.setDatasetkey(mr.getDatasetKey());
-      hr.setPublishingcountry(mr.getDatasetPublishingCountry());
       hr.setDatasetname(mr.getDatasetTitle());
       hr.setInstallationkey(mr.getInstallationKey());
       hr.setLicense(mr.getLicense());
