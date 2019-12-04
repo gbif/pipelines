@@ -265,7 +265,9 @@ public class InterpretedToEsIndexPipeline {
 
       Consumer<BulkRequest> clientBulkFn = br -> {
         try {
-          client.bulk(br, RequestOptions.DEFAULT);
+          if (br.numberOfActions() > 0) {
+            client.bulk(br, RequestOptions.DEFAULT);
+          }
         } catch (IOException ex) {
           log.error(ex.getMessage(), ex);
         }
