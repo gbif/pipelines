@@ -290,11 +290,11 @@ public class VerbatimToInterpretedPipeline {
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
     Path path = new Path(pathFn.apply(baseName));
-    FileSystem verbatimFs = createParentDirectories(path, options.getHdfsSiteConfig());
+    FileSystem fs = createParentDirectories(path, options.getHdfsSiteConfig());
     return SyncDataFileWriterBuilder.builder()
         .schema(schema)
         .codec(options.getAvroCompressionType())
-        .outputStream(verbatimFs.create(path))
+        .outputStream(fs.create(path))
         .syncInterval(options.getAvroSyncInterval())
         .build()
         .createSyncDataFileWriter();

@@ -1,5 +1,6 @@
 package org.gbif.converters.converter;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 import org.apache.avro.file.DataFileWriter;
@@ -8,7 +9,7 @@ import lombok.AllArgsConstructor;
 
 /** Sync class for avro DataFileWriter, created to avoid an issue during file writing */
 @AllArgsConstructor
-public class SyncDataFileWriter<T> implements AutoCloseable {
+public class SyncDataFileWriter<T> implements Closeable {
 
   private final DataFileWriter<T> dataFileWriter;
 
@@ -22,7 +23,7 @@ public class SyncDataFileWriter<T> implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     dataFileWriter.close();
   }
 }
