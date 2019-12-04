@@ -10,6 +10,11 @@ import org.gbif.pipelines.transforms.SerializableConsumer;
 
 import lombok.NoArgsConstructor;
 
+/**
+ * Java level transformation for sampling event where occurrence records stored in extensions
+ *
+ * @see <a href="https://github.com/gbif/ipt/wiki/BestPracticesSamplingEventData>Sampling event</a>
+ */
 @NoArgsConstructor(staticName = "create")
 public class OccurrenceExtensionTransform {
 
