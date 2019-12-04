@@ -66,15 +66,6 @@
                   <pattern>org.apache.http</pattern>
                   <shadedPattern>hc45.org.apache.http</shadedPattern>
                 </relocation>
-                <!-- Transient from core: conflicts with Hadoop on Spark -->
-                <relocation>
-                  <pattern>org.hsqldb</pattern>
-                  <shadedPattern>h228.org.hsqldb</shadedPattern>
-                </relocation>
-                <relocation>
-                  <pattern>com.google.common</pattern>
-                  <shadedPattern>g20.com.google.common</shadedPattern>
-                </relocation>
               </relocations>
             </configuration>
           </execution>
