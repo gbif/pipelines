@@ -4,6 +4,7 @@ import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
+import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
@@ -34,6 +35,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECO
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MEASUREMENT_OR_FACT_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.MULTIMEDIA_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.OCCURRENCE_EXT_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_IDS_COUNT;
@@ -63,7 +65,8 @@ public class IngestMetricsBuilder {
         .addMetric(UniqueGbifIdTransform.class, INVALID_GBIF_ID_COUNT)
         .addMetric(UniqueIdTransform.class, UNIQUE_IDS_COUNT)
         .addMetric(UniqueIdTransform.class, DUPLICATE_IDS_COUNT)
-        .addMetric(UniqueIdTransform.class, IDENTICAL_OBJECTS_COUNT);
+        .addMetric(UniqueIdTransform.class, IDENTICAL_OBJECTS_COUNT)
+        .addMetric(OccurrenceExtensionTransform.class, OCCURRENCE_EXT_COUNT);
   }
 
   /** {@link IngestMetrics} for {@link org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline} */

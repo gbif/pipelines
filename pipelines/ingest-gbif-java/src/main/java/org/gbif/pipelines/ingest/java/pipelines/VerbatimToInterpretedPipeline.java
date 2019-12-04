@@ -21,6 +21,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.readers.AvroRecordReader;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
+import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -178,6 +179,9 @@ public class VerbatimToInterpretedPipeline {
         .counterFn(incMetricFn);
     ImageTransform imageTransform = ImageTransform.create()
         .counterFn(incMetricFn);
+    // Extra
+    OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
+    DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
 
     try (
         SyncDataFileWriter<ExtendedRecord> verbatimWriter =
@@ -211,15 +215,16 @@ public class VerbatimToInterpretedPipeline {
 
       // Read DWCA and replace default values
       Map<String, ExtendedRecord> erMap = AvroRecordReader.readUniqueRecords(hdfsSiteConfig, ExtendedRecord.class, options.getInputPath());
-      DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls).replaceDefaultValues(erMap);
+      Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);
+      defaultValuesTransform.replaceDefaultValues(erExtMap);
 
-      boolean useSyncMode = options.getSyncThreshold() > erMap.size();
+      boolean useSyncMode = options.getSyncThreshold() > erExtMap.size();
 
       // Filter GBIF id duplicates
       UniqueGbifIdTransform gbifIdTransform =
           UniqueGbifIdTransform.builder()
               .executor(executor)
-              .erMap(erMap)
+              .erMap(erExtMap)
               .basicTransform(basicTransform)
               .useSyncMode(useSyncMode)
               .skipTransform(useErdId)
@@ -254,7 +259,7 @@ public class VerbatimToInterpretedPipeline {
 
       // Run async interpretation and writing for all records
       Stream<CompletableFuture<Void>> streamAll;
-      Collection<ExtendedRecord> erCollection = erMap.values();
+      Collection<ExtendedRecord> erCollection = erExtMap.values();
       if (useSyncMode) {
         streamAll = Stream.of(CompletableFuture.runAsync(() -> erCollection.forEach(interpretAllFn), executor));
       } else {
