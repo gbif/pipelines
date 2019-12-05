@@ -14,6 +14,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.gbif.converters.converter.FileSystemFactory;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
@@ -163,42 +164,19 @@ public final class FsUtils {
   }
 
   /**
-   * Creates an instances of a {@link Configuration} using a xml HDFS configuration file.
-   *
-   * @param hdfsSiteConfig path to the hdfs-site.xml or HDFS config file
-   * @return a {@link Configuration} based on the provided config file
-   */
-  @SneakyThrows
-  private static Configuration getHdfsConfiguration(String hdfsSiteConfig) {
-    Configuration config = new Configuration();
-
-    // check if the hdfs-site.xml is provided
-    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-      File hdfsSite = new File(hdfsSiteConfig);
-      if (hdfsSite.exists() && hdfsSite.isFile()) {
-        log.info("using hdfs-site.xml");
-        config.addResource(hdfsSite.toURI().toURL());
-      } else {
-        log.warn("hdfs-site.xml does not exist");
-      }
-    }
-    return config;
-  }
-
-  /**
    * Helper method to get file system based on provided configuration.
    */
   @SneakyThrows
   public static FileSystem getFileSystem(String hdfsSiteConfig, String path) {
-    return FileSystem.get(URI.create(path), getHdfsConfiguration(hdfsSiteConfig));
+    return FileSystemFactory.getInstance(hdfsSiteConfig).getFs(path);
   }
 
   /**
    * Helper method to get file system based on provided configuration.
    */
   @SneakyThrows
-  public static FileSystem getFileSystem(String hdfsSiteConfig) {
-    return FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
+  public static FileSystem getLocalFileSystem(String hdfsSiteConfig) {
+    return FileSystemFactory.getInstance(hdfsSiteConfig).getLocalFs();
   }
 
   /**
@@ -311,7 +289,7 @@ public final class FsUtils {
    */
   @SneakyThrows
   public static Properties readPropertiesFile(String hdfsSiteConfig, String filePath) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig);
+    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);

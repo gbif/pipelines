@@ -58,7 +58,8 @@ public class MetricsHandler {
 
       String countersInfo = getCountersInfo(results);
 
-      try (FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path)) {
+      FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+      try {
         FsUtils.createFile(fs, path, countersInfo);
         log.info("Metadata was written to a file - {}", path);
       } catch (IOException ex) {
