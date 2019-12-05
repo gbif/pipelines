@@ -23,6 +23,7 @@ import org.gbif.pipelines.ingest.java.transforms.AvroReader;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
+import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -142,7 +143,7 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
+    Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
