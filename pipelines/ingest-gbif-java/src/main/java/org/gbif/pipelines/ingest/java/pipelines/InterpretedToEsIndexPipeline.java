@@ -1,18 +1,10 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
@@ -21,7 +13,8 @@ import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.java.readers.AvroRecordReader;
+import org.gbif.pipelines.ingest.java.transforms.AvroReader;
+import org.gbif.pipelines.ingest.java.transforms.ElasticsearchWriter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -47,13 +40,7 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 
-import org.apache.http.HttpHost;
-import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
 import org.slf4j.MDC;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -170,43 +157,43 @@ public class InterpretedToEsIndexPipeline {
     log.info("Reading avro files...");
     // Reading all avro files in parallel
     CompletableFuture<Map<String, MetadataRecord>> metadataMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, MetadataRecord.class, pathFn.apply(metadataTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, MetadataRecord.class, pathFn.apply(metadataTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, ExtendedRecord.class, pathFn.apply(verbatimTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, ExtendedRecord.class, pathFn.apply(verbatimTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, BasicRecord.class, pathFn.apply(basicTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, BasicRecord.class, pathFn.apply(basicTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, TemporalRecord>> temporalMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, TemporalRecord.class, pathFn.apply(temporalTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, TemporalRecord.class, pathFn.apply(temporalTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, LocationRecord>> locationMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, LocationRecord.class, pathFn.apply(locationTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, LocationRecord.class, pathFn.apply(locationTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, TaxonRecord>> taxonMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, TaxonRecord.class, pathFn.apply(taxonomyTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, TaxonRecord.class, pathFn.apply(taxonomyTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, MultimediaRecord.class, pathFn.apply(multimediaTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, MultimediaRecord.class, pathFn.apply(multimediaTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, ImageRecord>> imageMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, ImageRecord.class, pathFn.apply(imageTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, ImageRecord.class, pathFn.apply(imageTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, AudubonRecord>> audubonMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, AudubonRecord.class, pathFn.apply(audubonTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, AudubonRecord.class, pathFn.apply(audubonTransform.getBaseName())),
         executor);
 
     CompletableFuture<Map<String, MeasurementOrFactRecord>> measurementMapFeature = CompletableFuture.supplyAsync(
-        () -> AvroRecordReader.readRecords(hdfsSiteConfig, MeasurementOrFactRecord.class, pathFn.apply(measurementTransform.getBaseName())),
+        () -> AvroReader.readRecords(hdfsSiteConfig, MeasurementOrFactRecord.class, pathFn.apply(measurementTransform.getBaseName())),
         executor);
 
     CompletableFuture.allOf(metadataMapFeature, verbatimMapFeature, basicMapFeature, temporalMapFeature,
@@ -251,57 +238,17 @@ public class InterpretedToEsIndexPipeline {
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
 
-    // Create ES client and extra function
-    HttpHost[] hosts = Arrays.stream(options.getEsHosts()).map(HttpHost::create).toArray(HttpHost[]::new);
-    try (RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(hosts))) {
-
-      List<CompletableFuture<Void>> futures = new ArrayList<>();
-
-      Queue<BulkRequest> requests = new LinkedList<>();
-      requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
-
-      Consumer<BasicRecord> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())
-          .ifPresent(req -> req.add(indexRequestFn.apply(br)));
-
-      Consumer<BulkRequest> clientBulkFn = br -> {
-        try {
-          if (br.numberOfActions() > 0) {
-            client.bulk(br, RequestOptions.DEFAULT);
-          }
-        } catch (IOException ex) {
-          log.error(ex.getMessage(), ex);
-        }
-      };
-
-      Runnable pushIntoEsFn = () -> Optional.ofNullable(requests.poll())
-          .ifPresent(req -> {
-            log.info("Push ES request, number of actions - {}", req.numberOfActions());
-            if (useSyncMode) {
-              clientBulkFn.accept(req);
-            } else {
-              futures.add(CompletableFuture.runAsync(() -> clientBulkFn.accept(req), executor));
-            }
-          });
-
-      // Push requests into ES
-      for (BasicRecord br : basicMap.values()) {
-        BulkRequest peek = requests.peek();
-        if (peek.numberOfActions() < options.getEsMaxBatchSize()
-            && peek.estimatedSizeInBytes() < options.getEsMaxBatchSizeBytes()) {
-          addIndexRequestFn.accept(br);
-        } else {
-          addIndexRequestFn.accept(br);
-          pushIntoEsFn.run();
-          requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
-        }
-      }
-      pushIntoEsFn.run();
-
-      // Wait for all futures and save metrics
-      if (!useSyncMode) {
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
-      }
-    }
+    log.info("Pushing data into Elasticsearch");
+    ElasticsearchWriter.builder()
+        .esHosts(options.getEsHosts())
+        .esMaxBatchSize(options.getEsMaxBatchSize())
+        .esMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
+        .executor(executor)
+        .useSyncMode(useSyncMode)
+        .indexRequestFn(indexRequestFn)
+        .records(basicMap.values())
+        .build()
+        .write();
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java.readers;
+package org.gbif.pipelines.ingest.java.transforms;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +20,7 @@ import lombok.SneakyThrows;
 
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 
-public class AvroRecordReaderTest {
+public class AvroReaderTransformTest {
 
   private final Path verbatimPath = new Path("target/verbatim.avro");
   private final FileSystem verbatimFs = createParentDirectories(verbatimPath, null);
@@ -36,7 +36,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readRecords("", ExtendedRecord.class, verbatimPath.toString());
+        AvroReader.readRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -56,7 +56,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
+        AvroReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -76,7 +76,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
+        AvroReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedOne, expectedThree);
@@ -97,7 +97,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
+        AvroReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result, expectedThree);
@@ -120,7 +120,7 @@ public class AvroRecordReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroRecordReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
+        AvroReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath.toString());
 
     // Should
     assertMap(result);

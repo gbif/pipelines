@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java.readers;
+package org.gbif.pipelines.ingest.java.transforms;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 /** Avro format reader, reads {@link Record} based objects using sting or {@link List<Path>} path */
 @Slf4j
 @AllArgsConstructor(staticName = "create")
-public class AvroRecordReader {
+public class AvroReader {
 
   /**
    * Read {@link Record#getId()} unique records
