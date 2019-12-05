@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -14,14 +13,12 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.gbif.converters.converter.FileSystemFactory;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -334,7 +331,8 @@ public final class FsUtils {
     //Moving files to the directory of latest records
     String targetPath = options.getTargetPath();
 
-    String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
+    String deletePath =
+        FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
     log.info("Deleting avro files {}", deletePath);
     FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath, deletePath);
     String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
