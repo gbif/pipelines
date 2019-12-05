@@ -52,7 +52,7 @@ public class FileSystemFactory {
   }
 
   public FileSystem getHdfsFs() {
-    return localFs;
+    return hdfsFs;
   }
 
   /**
