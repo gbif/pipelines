@@ -51,7 +51,7 @@ public class GbifJsonConverterTest {
             + ":\"01-01-2011\",\"year\":2011,\"month\":1,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},"
             + "\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{"
             + "\"lon\":2.0,\"lat\":1.0},\"decimalLatitude\":1.0,\"decimalLongitude\":2.0,\"scoordinates\":\"POINT (2.0 1.0)\","
-            + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"gbifClassification\":"
+            + "\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":\"Code 1'2\\\"\",\"locality\":\"[68]\",\"gbifClassification\":"
             + "{\"usage\":{\"key\":10,\"name\":\"synonym\",\"rank\":\"SPECIES\"},\"classification\":[{\"key\":1,\"name\":\"Name\","
             + "\"rank\":\"CHEMOFORM\"},{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],\"acceptedUsage\":{\"key\":11,\"name\":"
             + "\"accepted usage\",\"rank\":\"SPECIES\"},\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":"
@@ -107,6 +107,7 @@ public class GbifJsonConverterTest {
             .setDecimalLatitude(1d)
             .setDecimalLongitude(2d)
             .setContinent("something{something}")
+            .setLocality("[68]")
             .build();
     lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
