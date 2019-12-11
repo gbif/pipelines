@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.gbif.kvs.KeyValueStore;
@@ -18,12 +19,11 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
@@ -31,6 +31,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
@@ -48,14 +49,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
-  private final Counter counter = Metrics.counter(LocationTransform.class, LOCATION_RECORDS_COUNT);
-
   private final KvConfig kvConfig;
   private KeyValueStore<LatLng, GeocodeResponse> kvStore;
   private PCollectionView<MetadataRecord> metadataView;
 
   public LocationTransform(KeyValueStore<LatLng, GeocodeResponse> kvStore, KvConfig kvConfig) {
-    super(LocationRecord.class, LOCATION);
+    super(LocationRecord.class, LOCATION, LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
     this.kvStore = kvStore;
     this.kvConfig = kvConfig;
   }
@@ -93,8 +92,19 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
   }
 
+  public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public LocationTransform init() {
+    setup();
+    return this;
+  }
+
+  @SneakyThrows
   @Setup
-  public void setup() throws IOException {
+  public void setup() {
     if (kvConfig != null) {
 
       ClientConfiguration clientConfig = ClientConfiguration.builder()
@@ -135,18 +145,28 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     }
   }
 
+  @Override
+  public Optional<LocationRecord> convert(ExtendedRecord source) {
+    throw new IllegalArgumentException("Method is not implemented!");
+  }
+
+  @Override
   @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<LocationRecord> out, ProcessContext c) {
+  public void processElement(ProcessContext c) {
+    processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
+  }
+
+  public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
 
     LocationRecord lr = LocationRecord.newBuilder()
         .setId(source.getId())
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    Interpretation.from(source)
+    Optional<LocationRecord> result = Interpretation.from(source)
         .to(lr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, c.sideInput(metadataView)))
+        .via(LocationInterpreter.interpretCountryAndCoordinates(kvStore, mdr))
         .via(LocationInterpreter::interpretContinent)
         .via(LocationInterpreter::interpretWaterBody)
         .via(LocationInterpreter::interpretStateProvince)
@@ -160,8 +180,11 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretMaximumDistanceAboveSurfaceInMeters)
         .via(LocationInterpreter::interpretCoordinatePrecision)
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
-        .consume(out::output);
+        .get();
 
-    counter.inc();
+    result.ifPresent(r -> this.incCounter());
+
+    return result;
   }
+
 }

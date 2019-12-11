@@ -1,16 +1,19 @@
 package org.gbif.pipelines.transforms.hdfs;
 
+import java.util.Optional;
+
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.io.AvroIO;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.HDFS_VIEW_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
 
 public class OccurrenceHdfsRecordTransform extends Transform<OccurrenceHdfsRecord, OccurrenceHdfsRecord> {
 
   private OccurrenceHdfsRecordTransform() {
-    super(OccurrenceHdfsRecord.class, OCCURRENCE_HDFS_RECORD);
+    super(OccurrenceHdfsRecord.class, OCCURRENCE_HDFS_RECORD, OccurrenceHdfsRecordTransform.class.getName(), HDFS_VIEW_RECORDS_COUNT);
   }
 
   public static OccurrenceHdfsRecordTransform create() {
@@ -25,6 +28,11 @@ public class OccurrenceHdfsRecordTransform extends Transform<OccurrenceHdfsRecor
    */
   public AvroIO.Write<OccurrenceHdfsRecord> write(String toPath, Integer numShards) {
     return numShards == null ? write(toPath) : write(toPath).withNumShards(numShards);
+  }
+
+  @Override
+  public Optional<OccurrenceHdfsRecord> convert(OccurrenceHdfsRecord source) {
+    return Optional.ofNullable(source);
   }
 
 }

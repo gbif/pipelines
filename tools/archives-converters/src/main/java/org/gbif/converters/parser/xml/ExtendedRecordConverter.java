@@ -13,20 +13,20 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ExecutorPool;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
-import org.gbif.converters.parser.xml.parsing.extendedrecord.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-import org.apache.avro.file.DataFileWriter;
-
 import com.google.common.base.Strings;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /** Parsing xml response files or tar.xz archive and convert to ExtendedRecord avro file */
 @Slf4j
+@AllArgsConstructor(staticName = "create")
 public class ExtendedRecordConverter {
 
   private static final String FILE_PREFIX_RESPONSE = ".response";
@@ -43,7 +43,7 @@ public class ExtendedRecordConverter {
   }
 
   /** @param inputPath path to directory with response files or a tar.xz archive */
-  public long toAvro(String inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
+  public long toAvro(String inputPath, SyncDataFileWriter<ExtendedRecord> writer) {
     if (Strings.isNullOrEmpty(inputPath)) {
       throw new ParsingException("Input or output stream must not be empty or null!");
     }
@@ -52,9 +52,6 @@ public class ExtendedRecordConverter {
 
     try (UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
       List<File> files = getInputFiles(inputFile);
-
-      // Class with sync method to avoid problem with writing
-      SyncDataFileWriter writer = new SyncDataFileWriter(dataFileWriter);
 
       AtomicLong counter = new AtomicLong(0);
 
@@ -68,7 +65,6 @@ public class ExtendedRecordConverter {
 
       // Wait all threads
       CompletableFuture.allOf(futures).get();
-      dataFileWriter.flush();
 
       return counter.get();
 
@@ -81,7 +77,7 @@ public class ExtendedRecordConverter {
   /** Traverse the input directory and gets all the files.*/
   private List<File> getInputFiles(File inputhFile) throws IOException {
     Predicate<Path> prefixPr = x -> x.toString().endsWith(FILE_PREFIX_RESPONSE) || x.toString().endsWith(FILE_PREFIX_XML);
-    try(Stream<Path> walk = Files.walk(inputhFile.toPath()).filter(file -> Files.isRegularFile(file) && prefixPr.test(file))) {
+    try(Stream<Path> walk = Files.walk(inputhFile.toPath()).filter(file -> file.toFile().isFile() && prefixPr.test(file))) {
       return walk.map(Path::toFile).collect(Collectors.toList());
     }
   }

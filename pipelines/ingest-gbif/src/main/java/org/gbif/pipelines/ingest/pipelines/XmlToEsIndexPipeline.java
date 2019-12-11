@@ -21,11 +21,11 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
+import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -48,7 +48,6 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -80,11 +79,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.XmlToEsIndexPipeline some.properties
+ * java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.XmlToEsIndexPipeline
+ * java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ * --pipelineStep=XML_TO_ES_INDEX \
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
  * --inputPath=/some/path/to/input/0057a720-17c9-4658-971e-9578f3577cf5/*.xml
@@ -112,6 +112,7 @@ public class XmlToEsIndexPipeline {
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean tripletValid = options.isTripletValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
+    boolean skipRegisrtyCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
 
     MDC.put("datasetId", datasetId);
@@ -122,23 +123,11 @@ public class XmlToEsIndexPipeline {
     log.info("Adding step 1: Options");
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
-    // Core
-    final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
-    final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
-    final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
-    final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
-    final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
-    // Extension
-    final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
-    final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
-    final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
-    final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
-
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding step 2: Creating transformations");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegisrtyCalls);
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
@@ -155,7 +144,7 @@ public class XmlToEsIndexPipeline {
         p.apply("Read ExtendedRecords", XmlIO.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId, skipRegisrtyCalls));
 
     log.info("Adding step 3: Reading avros");
     PCollectionView<MetadataRecord> metadataView =
@@ -253,7 +242,7 @@ public class XmlToEsIndexPipeline {
 
     EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(properties, PipelinesVariables.Lock.ES_LOCK_PREFIX));
 
-    MetricsHandler.saveCountersToTargetPathFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
 

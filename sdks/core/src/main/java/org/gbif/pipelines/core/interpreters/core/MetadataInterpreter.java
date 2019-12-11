@@ -105,4 +105,18 @@ public class MetadataInterpreter {
             .findFirst())
         .get();
   }
+
+  private static void processMachineTags(List<MachineTag> machineTags, String namespace, Consumer<MachineTag> consumer) {
+     if (Objects.nonNull(machineTags) && !machineTags.isEmpty()) {
+           machineTags.stream()
+             .filter(tag -> tag.getNamespace().equals(namespace))
+             .forEach(consumer);
+     }
+  }
+
+  private void processCollectionTags(List<MachineTag> machineTags) {
+    processMachineTags(machineTags, "processing.gbif.org", machineTag -> {
+
+    });
+  }
 }

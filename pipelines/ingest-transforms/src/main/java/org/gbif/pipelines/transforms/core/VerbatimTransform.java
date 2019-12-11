@@ -1,6 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.util.Optional;
+
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.Pipeline;
@@ -11,6 +14,7 @@ import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.VERBATIM;
 
 /**
@@ -20,7 +24,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord> {
 
   private VerbatimTransform() {
-    super(ExtendedRecord.class, VERBATIM);
+    super(ExtendedRecord.class, VERBATIM, VerbatimTransform.class.getName(), VERBATIM_RECORDS_COUNT);
   }
 
   public static VerbatimTransform create() {
@@ -38,4 +42,13 @@ public class VerbatimTransform extends Transform<ExtendedRecord, ExtendedRecord>
     return Create.empty(TypeDescriptor.of(ExtendedRecord.class)).expand(PBegin.in(p));
   }
 
+  public VerbatimTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  @Override
+  public Optional<ExtendedRecord> convert(ExtendedRecord source) {
+    return Optional.ofNullable(source);
+  }
 }

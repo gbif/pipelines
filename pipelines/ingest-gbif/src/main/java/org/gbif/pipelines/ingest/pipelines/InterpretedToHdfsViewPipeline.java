@@ -1,13 +1,10 @@
 package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.Collections;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.common.PipelinesVariables.Lock;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -24,8 +21,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.parsers.config.LockConfig;
-import org.gbif.pipelines.parsers.config.LockConfigFactory;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
@@ -81,18 +76,18 @@ import static org.gbif.pipelines.ingest.utils.FsUtils.buildFilePathHdfsViewUsing
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToHiveViewPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToHiveViewPipeline
- * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
- * --attempt=1
- * --runner=SparkRunner
- * --targetPath=hdfs://ha-nn/output/
- * --esIndexName=pipeline
- * --hdfsSiteConfig=/config/hdfs-site.xml
- * --coreSiteConfig=/config/core-site.xml
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ * --pipelineStep=INTERPRETED_TO_HDFS \
+ * --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ * --attempt=1 \
+ * --runner=SparkRunner \
+ * --inputPath=/path \
+ * --targetPath=/path \
+ * --properties=/path/pipelines.properties
  *
  * }</pre>
  */
@@ -211,33 +206,13 @@ public class InterpretedToHdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      //A write lock is acquired to avoid concurrent modifications while this operation is running
-      Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
-      LockConfig lockConfig = LockConfigFactory.create(properties, Lock.HDFS_LOCK_PREFIX);
-      SharedLockUtils.doInBarrier(lockConfig, () -> copyOccurrenceRecords(options));
+      SharedLockUtils.doHdfsPrefixLock(options, () -> FsUtils.copyOccurrenceRecords(options));
     }
 
     //Metrics
-    MetricsHandler.saveCountersToInputPathFile(options, result);
+    MetricsHandler.saveCountersToInputPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }
 
-  /**
-   * Copies all occurrence records into the directory from targetPath.
-   * Deletes pre-existing data of the dataset being processed.
-   */
-  private static void copyOccurrenceRecords(InterpretationPipelineOptions options) {
-    //Moving files to the directory of latest records
-    String targetPath = options.getTargetPath();
-
-    String deletePath = FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
-    log.info("Deleting avro files {}", deletePath);
-    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath, deletePath);
-    String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
-
-    log.info("Moving files with pattern {} to {}", filter, targetPath);
-    FsUtils.moveDirectory(options.getHdfsSiteConfig(), targetPath, filter);
-    log.info("Files moved to {} directory", targetPath);
-  }
 }

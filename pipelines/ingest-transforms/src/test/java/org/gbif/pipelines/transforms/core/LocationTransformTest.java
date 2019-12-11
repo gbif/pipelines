@@ -56,7 +56,7 @@ public class LocationTransformTest {
     }
 
   @Test
-  public void emptyErTest() {
+  public void emptyLrTest() {
 
     // State
     KeyValueTestStore<LatLng, GeocodeResponse> kvStore = new KeyValueTestStore<>();

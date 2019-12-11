@@ -12,10 +12,9 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.blast.BlastServiceClient;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -34,13 +33,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class AmplificationTransform extends Transform<ExtendedRecord, AmplificationRecord> {
 
-  private final Counter counter = Metrics.counter(AmplificationTransform.class, AMPLIFICATION_RECORDS_COUNT);
-
   private final WsConfig wsConfig;
   private BlastServiceClient client;
 
-  public AmplificationTransform(WsConfig wsConfig) {
-    super(AmplificationRecord.class, AMPLIFICATION);
+  private AmplificationTransform(WsConfig wsConfig) {
+    super(AmplificationRecord.class, AMPLIFICATION, AmplificationTransform.class.getName(), AMPLIFICATION_RECORDS_COUNT);
     this.wsConfig = wsConfig;
   }
 
@@ -68,6 +65,16 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
         .via((AmplificationRecord ar) -> KV.of(ar.getId(), ar));
   }
 
+  public AmplificationTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public AmplificationTransform init() {
+    setup();
+    return this;
+  }
+
   @Setup
   public void setup() {
     if (wsConfig != null) {
@@ -75,16 +82,15 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<AmplificationRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public Optional<AmplificationRecord> convert(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> AmplificationRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(AmplificationInterpreter.EXTENSION_ROW_TYPE))
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(AmplificationInterpreter.interpret(client))
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
+
 }

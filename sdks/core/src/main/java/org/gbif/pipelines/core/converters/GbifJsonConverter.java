@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
@@ -33,6 +34,8 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.avro.data.Json;
 import org.apache.avro.specific.SpecificRecordBase;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -99,16 +102,36 @@ public class GbifJsonConverter {
   @Singular
   private List<SpecificRecordBase> records;
 
+  /**
+   * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into json object, suited to the new ES
+   * record
+   */
+  public static ObjectNode toJson(SpecificRecordBase... records) {
+    return GbifJsonConverter.builder()
+        .records(Arrays.asList(records))
+        .build()
+        .toJson();
+  }
+
+  /**
+   * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into json object, suited to a partial ES
+   * record update
+   */
+  public static ObjectNode toPartialJson(SpecificRecordBase... records) {
+    return GbifJsonConverter.builder()
+        .records(Arrays.asList(records))
+        .skipId(false)
+        .skipIssues(true)
+        .build()
+        .toJson();
+  }
 
   /**
    * Converts all {@link SpecificRecordBase} (created from AVRO schemas) into string json object, suited to the new ES
    * record
    */
   public static String toStringJson(SpecificRecordBase... records) {
-    return GbifJsonConverter.builder()
-        .records(Arrays.asList(records))
-        .build()
-        .toString();
+    return toJson(records).toString();
   }
 
   /**
@@ -116,12 +139,7 @@ public class GbifJsonConverter {
    * record update
    */
   public static String toStringPartialJson(SpecificRecordBase... records) {
-    return GbifJsonConverter.builder()
-        .records(Arrays.asList(records))
-        .skipId(false)
-        .skipIssues(true)
-        .build()
-        .toString();
+    return toPartialJson(records).toString();
   }
 
   /** Change the json result, merging all issues from records to one array */
@@ -422,6 +440,16 @@ public class GbifJsonConverter {
         ObjectNode usageParsedNameNode = (ObjectNode) classificationNode.get("usageParsedName");
         usageParsedNameNode.put("genericName", pn.getGenus() != null ? pn.getGenus() : pn.getUninomial());
       });
+
+
+      if (jc.getMainNode().has("verbatim")) {
+        JsonNode verbatimNode = jc.getMainNode().get("verbatim");
+        JsonNode coreNode = verbatimNode.get("core");
+        Optional.ofNullable(coreNode.get(DwcTerm.taxonID.qualifiedName()))
+          .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
+        Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))
+          .ifPresent(verbatimScientificName -> classificationNode.set(GbifTerm.verbatimScientificName.simpleName(), verbatimScientificName));
+      }
       jc.addJsonObject("gbifClassification", classificationNode);
     };
   }

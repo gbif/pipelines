@@ -5,18 +5,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.gbif.pipelines.parsers.config.ContentfulConfig;
+import org.gbif.pipelines.parsers.config.ElasticsearchContentConfig;
 import org.gbif.pipelines.parsers.config.RetryFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
-import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentfulService;
+import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentService;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Project;
 
-import javax.xml.ws.WebServiceException;
-
 import io.github.resilience4j.retry.Retry;
+import javax.xml.ws.WebServiceException;
 import retrofit2.Call;
 import retrofit2.HttpException;
 import retrofit2.Response;
@@ -25,13 +24,13 @@ import retrofit2.Response;
 public class MetadataServiceClient {
 
   private final MetadataServiceRest rest;
-  private final ContentfulService contentfulService;
+  private final ContentService contentService;
   private final Retry retry;
 
-  private MetadataServiceClient(WsConfig wsConfig, ContentfulConfig contentfulConfig) {
+  private MetadataServiceClient(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
     rest = MetadataServiceRest.getInstance(wsConfig);
     retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "RegistryApiCall");
-    contentfulService = Objects.nonNull(contentfulConfig)? new ContentfulService(contentfulConfig.getAuthToken(), contentfulConfig.getSpaceId()) : null;
+    contentService = Objects.nonNull(elasticsearchContentConfig)? new ContentService(elasticsearchContentConfig.getHosts()) : null;
   }
 
   public static MetadataServiceClient create(WsConfig wsConfig) {
@@ -39,9 +38,9 @@ public class MetadataServiceClient {
     return new MetadataServiceClient(wsConfig, null);
   }
 
-  public static MetadataServiceClient create(WsConfig wsConfig, ContentfulConfig contentfulConfig) {
+  public static MetadataServiceClient create(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
-    return new MetadataServiceClient(wsConfig, contentfulConfig);
+    return new MetadataServiceClient(wsConfig, elasticsearchContentConfig);
   }
 
   /**
@@ -75,9 +74,9 @@ public class MetadataServiceClient {
     Objects.requireNonNull(datasetId);
     Call<Dataset> call = rest.getService().getDataset(datasetId);
     Dataset dataset = performCall(call);
-    //Has Contenful being configured?
-    if (Objects.nonNull(contentfulService)) {
-      getContentfulProjectData(dataset).ifPresent(dataset::setProject);
+    //Has Contenful Elastic being configured?
+    if (Objects.nonNull(contentService)) {
+      getContentProjectData(dataset).ifPresent(dataset::setProject);
     }
     return dataset;
   }
@@ -85,12 +84,12 @@ public class MetadataServiceClient {
   /**
    * Gets Contentful data.
    */
-  private Optional<Project> getContentfulProjectData(Dataset dataset) {
+  private Optional<Project> getContentProjectData(Dataset dataset) {
     return Optional.ofNullable(dataset.getProject()).map(project -> Retry.decorateFunction(retry, (Dataset d) -> {
       try {
-        return contentfulService.getProject(d.getProject().getIdentifier());
+        return contentService.getProject(d.getProject().getIdentifier());
       } catch (Exception e) {
-        throw new WebServiceException("Error getting Contentful data for dataset " + d, e);
+        throw new WebServiceException("Error getting content data for dataset " + d, e);
       }
     }).apply(dataset));
   }

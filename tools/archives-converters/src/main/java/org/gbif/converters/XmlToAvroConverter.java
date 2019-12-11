@@ -1,12 +1,13 @@
 package org.gbif.converters;
 
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.gbif.converters.converter.ConverterToVerbatim;
+import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.ExtendedRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import org.apache.avro.file.DataFileWriter;
 
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,13 +19,21 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(staticName = "create")
 public class XmlToAvroConverter extends ConverterToVerbatim {
 
-  private int xmlReaderParallelism = Runtime.getRuntime().availableProcessors();
+  private ExecutorService executor = Executors.newWorkStealingPool();
+
+  /**
+   * @param executor to use provided ExecutorService
+   */
+  public XmlToAvroConverter executor(ExecutorService executor) {
+    this.executor = executor;
+    return this;
+  }
 
   /**
    * @param xmlReaderParallelism number of threads for reader
    */
   public XmlToAvroConverter xmlReaderParallelism(int xmlReaderParallelism) {
-    this.xmlReaderParallelism = xmlReaderParallelism;
+    this.executor = Executors.newFixedThreadPool(xmlReaderParallelism);
     return this;
   }
 
@@ -45,7 +54,7 @@ public class XmlToAvroConverter extends ConverterToVerbatim {
    * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
    */
   @Override
-  public long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter) {
-    return ExtendedRecordConverter.create(xmlReaderParallelism).toAvro(inputPath.toString(), dataFileWriter);
+  public long convert(Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter) {
+    return ExtendedRecordConverter.create(executor).toAvro(inputPath.toString(), dataFileWriter);
   }
 }

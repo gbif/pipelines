@@ -18,16 +18,16 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
@@ -45,13 +45,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
-  private final Counter counter = Metrics.counter(TaxonomyTransform.class, TAXON_RECORDS_COUNT);
-
   private final KvConfig kvConfig;
   private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
 
   private TaxonomyTransform(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore, KvConfig kvConfig) {
-    super(TaxonRecord.class, TAXONOMY);
+    super(TaxonRecord.class, TAXONOMY, TaxonomyTransform.class.getName(), TAXON_RECORDS_COUNT);
     this.kvStore = kvStore;
     this.kvConfig = kvConfig;
   }
@@ -82,8 +80,19 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
         .via((TaxonRecord tr) -> KV.of(tr.getId(), tr));
   }
 
+  public TaxonomyTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public TaxonomyTransform init() {
+    setup();
+    return this;
+  }
+
+  @SneakyThrows
   @Setup
-  public void setup() throws IOException {
+  public void setup() {
     if (kvConfig != null) {
 
       ClientConfiguration clientConfiguration = ClientConfiguration.builder()
@@ -124,20 +133,18 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<TaxonRecord> out) {
-
+  @Override
+  public Optional<TaxonRecord> convert(ExtendedRecord source) {
     TaxonRecord tr = TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build();
 
     Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore));
+
     // the id is null when there is an error in the interpretation. In these
     // cases we do not write the taxonRecord because it is totally empty.
-    Optional.ofNullable(tr.getId()).ifPresent(id -> out.output(tr));
-
-    counter.inc();
+    return tr.getId() == null ? Optional.empty() : Optional.of(tr);
   }
 
 }

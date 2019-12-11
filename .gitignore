@@ -2,6 +2,7 @@
 *.iml
 *.log
 *.log.*
+*.crc
 target
 output
 java-generated

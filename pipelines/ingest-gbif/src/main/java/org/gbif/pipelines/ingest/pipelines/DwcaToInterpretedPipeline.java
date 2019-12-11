@@ -59,11 +59,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ *  --pipelineStep=DWCA_TO_INTERPRETED \
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
  * --targetPath=/some/path/to/output/
@@ -90,6 +91,7 @@ public class DwcaToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
+    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -111,7 +113,7 @@ public class DwcaToInterpretedPipeline {
 
     log.info("Creating transformations");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
@@ -179,7 +181,7 @@ public class DwcaToInterpretedPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToTargetPathFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

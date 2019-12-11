@@ -27,6 +27,8 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -52,9 +54,15 @@ public class BasicInterpreter {
   private static final Parsable<String> TYPE_NAME_PARSER = org.gbif.common.parsers.TypifiedNameParser.getInstance();
 
   /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
-      boolean isTripletValid, boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
-    return useExtendedRecordId ? interpretCopyGbifId() : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
+      HBaseLockingKeyService keygenService,
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
+      boolean useExtendedRecordId,
+      BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn
+  ) {
+    gbifIdFn = gbifIdFn == null ? interpretCopyGbifId() : gbifIdFn;
+    return useExtendedRecordId ? gbifIdFn : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
   }
 
   /** Generates or gets existing GBIF id */
@@ -100,9 +108,12 @@ public class BasicInterpreter {
 
   /** Copies GBIF id from ExtendedRecord id */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretCopyGbifId() {
-    return (er, br) -> br.setGbifId(Long.parseLong(er.getId()));
+    return (er, br) -> {
+      if (StringUtils.isNumeric(er.getId())) {
+        br.setGbifId(Long.parseLong(er.getId()));
+      }
+    };
   }
-
 
   /** {@link DwcTerm#individualCount} interpretation. */
   public static void interpretIndividualCount(ExtendedRecord er, BasicRecord br) {

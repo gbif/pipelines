@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;

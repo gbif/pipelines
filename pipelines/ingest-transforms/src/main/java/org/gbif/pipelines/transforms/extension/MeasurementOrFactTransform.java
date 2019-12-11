@@ -8,10 +8,9 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.MeasurementOrFactInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -30,10 +29,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class MeasurementOrFactTransform extends Transform<ExtendedRecord, MeasurementOrFactRecord> {
 
-  private final Counter counter = Metrics.counter(MeasurementOrFactTransform.class, MEASUREMENT_OR_FACT_RECORDS_COUNT);
-
   public MeasurementOrFactTransform() {
-    super(MeasurementOrFactRecord.class, MEASUREMENT_OR_FACT);
+    super(MeasurementOrFactRecord.class, MEASUREMENT_OR_FACT, MeasurementOrFactTransform.class.getName(), MEASUREMENT_OR_FACT_RECORDS_COUNT);
   }
 
   public static MeasurementOrFactTransform create() {
@@ -46,9 +43,14 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
         .via((MeasurementOrFactRecord mr) -> KV.of(mr.getId(), mr));
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<MeasurementOrFactRecord> out) {
-    Interpretation.from(source)
+  public MeasurementOrFactTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  @Override
+  public Optional<MeasurementOrFactRecord> convert(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> MeasurementOrFactRecord.newBuilder()
             .setId(er.getId())
             .setCreated(Instant.now().toEpochMilli())
@@ -57,9 +59,7 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(MeasurementOrFactInterpreter::interpret)
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
 
 }

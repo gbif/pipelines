@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import org.gbif.converters.converter.ConverterToVerbatim;
+import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
-import org.apache.avro.file.DataFileWriter;
 
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -40,7 +39,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
    * @param dataFileWriter AVRO data writer for {@link ExtendedRecord}
    */
   @Override
-  protected long convert(Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter)
+  protected long convert(Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException {
     DwcaReader reader = DwcaReader.fromLocation(inputPath.toString());
     log.info("Exporting the DwC Archive to Avro started {}", inputPath);

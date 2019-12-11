@@ -9,7 +9,6 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.CodecFactory;
-import org.apache.avro.file.DataFileWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -85,20 +84,20 @@ public abstract class ConverterToVerbatim {
     // by another consumer.
     FileSystem fs = FsUtils.createParentDirectories(outputPath, hdfsSiteConfig);
     try (BufferedOutputStream outputStream = new BufferedOutputStream(fs.create(outputPath));
-        DataFileWriter<ExtendedRecord> dataFileWriter =
-            DataFileWriteBuilder.builder()
+        SyncDataFileWriter<ExtendedRecord> dataFileWriter =
+            SyncDataFileWriterBuilder.builder()
                 .schema(ExtendedRecord.getClassSchema())
-                .codec(codecFactory)
+                .codec(codecFactory.toString())
                 .outputStream(outputStream)
                 .syncInterval(syncInterval)
                 .build()
-                .createDataFileWriter()) {
+                .createSyncDataFileWriter()) {
 
       long numberOfRecords = convert(inputPath, dataFileWriter);
 
       createMetafile(fs, metaPath, numberOfRecords);
 
-    } catch (IOException e) {
+    } catch (Exception e) {
       log.error("Failed performing conversion on {}", inputPath, e);
       throw new IllegalStateException("Failed performing conversion on " + inputPath, e);
     } finally {
@@ -115,6 +114,6 @@ public abstract class ConverterToVerbatim {
     }
   }
 
-  protected abstract long convert(java.nio.file.Path inputPath, DataFileWriter<ExtendedRecord> dataFileWriter)
+  protected abstract long convert(java.nio.file.Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException;
 }

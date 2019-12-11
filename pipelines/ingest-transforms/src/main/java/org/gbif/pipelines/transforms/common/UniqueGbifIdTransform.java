@@ -12,18 +12,21 @@ import org.gbif.pipelines.transforms.core.BasicTransform;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PBegin;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
@@ -38,14 +41,26 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.UNIQUE_GBIF_I
  */
 @Slf4j
 @Getter
-@NoArgsConstructor(staticName = "create")
+@AllArgsConstructor(staticName = "create")
 public class UniqueGbifIdTransform extends PTransform<PCollection<BasicRecord>, PCollectionTuple> {
 
   private final TupleTag<BasicRecord> tag = new TupleTag<BasicRecord>() {};
   private final TupleTag<BasicRecord> invalidTag = new TupleTag<BasicRecord>() {};
 
+  // Skip transform dynamically
+  private final boolean skipTransform;
+
+  public static UniqueGbifIdTransform create() {
+    return new UniqueGbifIdTransform(false);
+  }
+
   @Override
   public PCollectionTuple expand(PCollection<BasicRecord> input) {
+
+    if (skipTransform) {
+      return PCollectionTuple.of(tag, input)
+          .and(invalidTag, Create.empty(TypeDescriptor.of(BasicRecord.class)).expand(PBegin.in(input.getPipeline())));
+    }
 
     // Convert from list to map where, key - occurrenceId, value - object instance and group by key
     PCollection<KV<String, Iterable<BasicRecord>>> groupedCollection =

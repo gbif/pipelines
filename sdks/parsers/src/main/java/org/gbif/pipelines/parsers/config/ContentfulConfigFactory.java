@@ -15,13 +15,10 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ContentfulConfigFactory {
 
-  public static final String CONTENTFUL_PREFIX = "contentful";
+  private static final String CONTENTFUL_ELASTICSEARCH = "content.es";
 
-  public static final String SPACE_ID_PROP = ".spaceId";
 
-  public static final String AUTH_TOKEN_PROP = ".auth_token";
-
-  public static ContentfulConfig create(@NonNull Path propertiesPath) {
+  public static ElasticsearchContentConfig create(@NonNull Path propertiesPath) {
     // load properties or throw exception if cannot be loaded
     Properties props = ConfigFactory.loadProperties(propertiesPath);
 
@@ -29,11 +26,9 @@ public class ContentfulConfigFactory {
   }
 
 
-  public static ContentfulConfig create(@NonNull Properties props) {
+  public static ElasticsearchContentConfig create(@NonNull Properties props) {
     // get the base path or throw exception if not present
-    String spaceId = props.getProperty(CONTENTFUL_PREFIX + SPACE_ID_PROP);
-    String authToken = props.getProperty(CONTENTFUL_PREFIX + AUTH_TOKEN_PROP);
-
-    return ContentfulConfig.create(spaceId, authToken);
+    String[] hosts = props.getProperty(CONTENTFUL_ELASTICSEARCH).split(",");
+    return ElasticsearchContentConfig.create(hosts);
   }
 }

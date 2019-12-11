@@ -1,15 +1,15 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -28,10 +28,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
-  private final Counter counter = Metrics.counter(TemporalTransform.class, TEMPORAL_RECORDS_COUNT);
-
   private TemporalTransform() {
-    super(TemporalRecord.class, TEMPORAL);
+    super(TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
   }
 
   public static TemporalTransform create() {
@@ -44,21 +42,24 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .via((TemporalRecord tr) -> KV.of(tr.getId(), tr));
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<TemporalRecord> out) {
+  public TemporalTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
 
+  @Override
+  public Optional<TemporalRecord> convert(ExtendedRecord source) {
     TemporalRecord tr = TemporalRecord.newBuilder()
         .setId(source.getId())
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    Interpretation.from(source)
+    return Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(TemporalInterpreter::interpretTemporal)
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
+
 
 }

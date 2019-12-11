@@ -1,7 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -9,16 +11,15 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.MetadataInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.config.ContentfulConfig;
+import org.gbif.pipelines.parsers.config.ElasticsearchContentConfig;
 import org.gbif.pipelines.parsers.config.ContentfulConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
-import org.gbif.pipelines.transforms.common.CheckTransforms;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.pipelines.transforms.common.CheckTransforms;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.values.PCollection;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
@@ -36,18 +37,16 @@ import static org.gbif.pipelines.transforms.common.CheckTransforms.checkRecordTy
  */
 public class MetadataTransform extends Transform<String, MetadataRecord> {
 
-  private final Counter counter = Metrics.counter(MetadataTransform.class, METADATA_RECORDS_COUNT);
-
   private final Integer attempt;
   private final WsConfig wsConfig;
-  private final ContentfulConfig contentfulConfig;
+  private final ElasticsearchContentConfig elasticsearchContentConfig;
   private final String endpointType;
   private MetadataServiceClient client;
 
-  private MetadataTransform(WsConfig wsConfig, ContentfulConfig contentfulConfig, String endpointType, Integer attempt) {
-    super(MetadataRecord.class, METADATA);
+  private MetadataTransform(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig, String endpointType, Integer attempt) {
+    super(MetadataRecord.class, METADATA, MetadataTransform.class.getName(), METADATA_RECORDS_COUNT);
     this.wsConfig = wsConfig;
-    this.contentfulConfig = contentfulConfig;
+    this.elasticsearchContentConfig = elasticsearchContentConfig;
     this.endpointType = endpointType;
     this.attempt = attempt;
   }
@@ -56,39 +55,56 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     return new MetadataTransform(null, null, null, null);
   }
 
-  public static MetadataTransform create(WsConfig wsConfig, ContentfulConfig contentfulConfig, String endpointType, Integer attempt) {
-    return new MetadataTransform(wsConfig, contentfulConfig, endpointType, attempt);
+  public static MetadataTransform create(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig, String endpointType, Integer attempt) {
+    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
   }
 
-  public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt) {
-    WsConfig wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
-    ContentfulConfig contentfulConfig = ContentfulConfigFactory.create(Paths.get(propertiesPath));
-    return new MetadataTransform(wsConfig, contentfulConfig, endpointType, attempt);
+  public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt, boolean skipRegistryCalls) {
+    WsConfig wsConfig = null;
+    ElasticsearchContentConfig elasticsearchContentConfig = null;
+    if (!skipRegistryCalls) {
+      Path properties = Paths.get(propertiesPath);
+      wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+      elasticsearchContentConfig = ContentfulConfigFactory.create(properties);
+    }
+    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
   }
 
-  public static MetadataTransform create(Properties properties, String endpointType, Integer attempt) {
-    WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
-    ContentfulConfig contentfulConfig = ContentfulConfigFactory.create(properties);
-    return new MetadataTransform(wsConfig, contentfulConfig, endpointType, attempt);
+  public static MetadataTransform create(Properties properties, String endpointType, Integer attempt, boolean skipRegistryCalls) {
+    WsConfig wsConfig = null;
+    ElasticsearchContentConfig elasticsearchContentConfig = null;
+    if (!skipRegistryCalls) {
+      wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+      elasticsearchContentConfig = ContentfulConfigFactory.create(properties);
+    }
+    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
+  }
+
+  public MetadataTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public MetadataTransform init() {
+    setup();
+    return this;
   }
 
   @Setup
   public void setup() {
-    if (wsConfig != null && contentfulConfig != null) {
-      client = MetadataServiceClient.create(wsConfig, contentfulConfig);
+    if (wsConfig != null && elasticsearchContentConfig != null) {
+      client = MetadataServiceClient.create(wsConfig, elasticsearchContentConfig);
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element String source, OutputReceiver<MetadataRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public Optional<MetadataRecord> convert(String source) {
+    return Interpretation.from(source)
         .to(id -> MetadataRecord.newBuilder().setId(id).setCreated(Instant.now().toEpochMilli()).build())
         .via(MetadataInterpreter.interpret(client))
         .via(MetadataInterpreter.interpretCrawlId(attempt))
         .via(MetadataInterpreter.interpretEndpointType(endpointType))
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
 
   /**

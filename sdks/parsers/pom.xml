@@ -3,7 +3,7 @@
   <parent>
     <artifactId>sdks</artifactId>
     <groupId>org.gbif.pipelines</groupId>
-    <version>2.2.32-SNAPSHOT</version>
+    <version>2.3.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -100,10 +100,6 @@
       <groupId>com.squareup.okio</groupId>
       <artifactId>okio</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.contentful.java</groupId>
-      <artifactId>java-sdk</artifactId>
-    </dependency>
 
     <!-- Fault tolerance - Used for API service calls-->
     <dependency>
@@ -129,6 +125,16 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- ES -->
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-high-level-client</artifactId>
     </dependency>
 
     <!-- Test -->

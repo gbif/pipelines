@@ -10,13 +10,10 @@ import lombok.Getter;
 @Getter
 @Data
 @AllArgsConstructor(staticName = "create")
-public final class ContentfulConfig implements Serializable {
+public final class ElasticsearchContentConfig implements Serializable {
 
-  // authentication token
-  private final String authToken;
-
-  // Contentful space id
-  private final String spaceId;
+  // Elasticsearch hosts
+  private final String[] hosts;
 
 }
 

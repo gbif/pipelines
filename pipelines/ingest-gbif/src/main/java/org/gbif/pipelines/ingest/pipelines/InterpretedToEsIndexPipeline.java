@@ -48,7 +48,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 /**
  * Pipeline sequence:
@@ -72,19 +71,23 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline
- * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
- * --attempt=1
- * --runner=SparkRunner
- * --targetPath=hdfs://ha-nn/output/
- * --esIndexName=pipeline
- * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200
- * --hdfsSiteConfig=/config/hdfs-site.xml
- * --coreSiteConfig=/config/core-site.xml
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ *  --pipelineStep=INTERPRETED_TO_ES_INDEX \
+ *  --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ *  --attempt=1 \
+ *  --runner=SparkRunner \
+ *  --inputPath=/path \
+ *  --targetPath=/path \
+ *  --esIndexName=test2_java \
+ *  --esAlias=occurrence2_java \
+ *  --indexNumberShards=3 \
+ * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
+ * --properties=/home/nvolik/Projects/GBIF/gbif-configuration/cli/dev/config/pipelines.properties \
+ * --esDocumentId=id
  *
  * }</pre>
  */
@@ -102,6 +105,8 @@ public class InterpretedToEsIndexPipeline {
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
+
+    String esDocumentId = options.getEsDocumentId();
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
@@ -199,13 +204,13 @@ public class InterpretedToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get(GBIF_ID).asText()));
+            .withIdFn(input -> input.get(esDocumentId).asText()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToTargetPathFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

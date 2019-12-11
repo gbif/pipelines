@@ -27,7 +27,7 @@ public class UniqueGbifIdTransformTest {
 
   @Test
   public void withoutDuplicatesTest() {
-    // Statet
+    // State
     final List<BasicRecord> input = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
     final List<BasicRecord> expected = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
 
@@ -47,7 +47,7 @@ public class UniqueGbifIdTransformTest {
   public void allDuplicatesTest() {
     // State
     final List<BasicRecord> input = createCollection("1_1", "2_1", "3_1", "4_1", "5_1", "6_1");
-    final List<BasicRecord> expectedNoraml = createCollection("4_1"); // Has lowest SHA1 hash
+    final List<BasicRecord> expectedNormal = createCollection("4_1"); // Has lowest SHA1 hash
     final List<BasicRecord> expectedInvalid = createCollection("1_1", "2_1", "3_1", "5_1", "6_1");
 
     // When
@@ -57,7 +57,7 @@ public class UniqueGbifIdTransformTest {
     PCollection<BasicRecord> invalid = tuple.get(transform.getInvalidTag());
 
     // Should
-    PAssert.that(normal).containsInAnyOrder(expectedNoraml);
+    PAssert.that(normal).containsInAnyOrder(expectedNormal);
     PAssert.that(invalid).containsInAnyOrder(expectedInvalid);
     p.run();
   }
@@ -118,7 +118,7 @@ public class UniqueGbifIdTransformTest {
 
   @Test
   public void oneWithoutGbifIdValueTest() {
-    // Statet
+    // State
     final List<BasicRecord> input = createCollection("1");
     final List<BasicRecord> expected = createCollection("1");
 
@@ -137,7 +137,7 @@ public class UniqueGbifIdTransformTest {
 
   @Test
   public void mixedValuesTest() {
-    // Statet
+    // State
     final List<BasicRecord> input = createCollection("1", "1_1", "2_2", "3_3", "4_1", "5", "6_6");
     final List<BasicRecord> expected = createCollection("2_2", "3_3", "4_1", "6_6");
     final List<BasicRecord> expectedInvalid = createCollection("1", "1_1", "5");

@@ -19,15 +19,15 @@ import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUSTRALIA_SPATIAL_RECORDS_COUNT;
@@ -43,13 +43,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class AustraliaSpatialTransform extends Transform<LocationRecord, AustraliaSpatialRecord> {
 
-  private final Counter counter = Metrics.counter(AustraliaSpatialTransform.class, AUSTRALIA_SPATIAL_RECORDS_COUNT);
-
   private final KvConfig kvConfig;
   private KeyValueStore<LatLng, String> kvStore;
 
   private AustraliaSpatialTransform(KeyValueStore<LatLng, String> kvStore, KvConfig kvConfig) {
-    super(AustraliaSpatialRecord.class, AUSTRALIA_SPATIAL);
+    super(AustraliaSpatialRecord.class, AUSTRALIA_SPATIAL, AustraliaSpatialTransform.class.getName(), AUSTRALIA_SPATIAL_RECORDS_COUNT);
     this.kvStore = kvStore;
     this.kvConfig = kvConfig;
   }
@@ -82,8 +80,19 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
         .via((AustraliaSpatialRecord ar) -> KV.of(ar.getId(), ar));
   }
 
+  public AustraliaSpatialTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public AustraliaSpatialTransform init() {
+    setup();
+    return this;
+  }
+
+  @SneakyThrows
   @Setup
-  public void setup() throws IOException {
+  public void setup() {
     if (kvConfig != null) {
 
       CachedHBaseKVStoreConfiguration hBaseKVStoreConfiguration = CachedHBaseKVStoreConfiguration.builder()
@@ -116,9 +125,9 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
     }
   }
 
-  @ProcessElement
-  public void processElement(ProcessContext context) {
-    Interpretation.from(context::element)
+  @Override
+  public Optional<AustraliaSpatialRecord> convert(LocationRecord source) {
+    return Interpretation.from(source)
         .to(lr -> AustraliaSpatialRecord.newBuilder()
             .setId(lr.getId())
             .setCreated(Instant.now().toEpochMilli())
@@ -128,10 +137,7 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
             .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
             .isPresent())
         .via(AustraliaSpatialInterpreter.interpret(kvStore))
-        .consume(context::output);
-
-    counter.inc();
-
+        .get();
   }
 
 }

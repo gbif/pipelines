@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
-import static java.time.temporal.ChronoField.OFFSET_SECONDS;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 
 import static com.google.common.base.Strings.isNullOrEmpty;

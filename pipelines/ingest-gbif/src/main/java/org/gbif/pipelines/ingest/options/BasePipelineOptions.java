@@ -49,7 +49,7 @@ public interface BasePipelineOptions extends PipelineOptions {
   void setWriteOutput(boolean writeOutput);
 
   @Description("Avro compression type")
-  @Default.String("SNAPPY")
+  @Default.String("snappy")
   String getAvroCompressionType();
 
   void setAvroCompressionType(String compressionType);
@@ -59,6 +59,12 @@ public interface BasePipelineOptions extends PipelineOptions {
   int getAvroSyncInterval();
 
   void setAvroSyncInterval(int syncInterval);
+
+  @Description("The threshold for java based pipelines, switches between sync and async execution")
+  @Default.Integer(1_000)
+  int getSyncThreshold();
+
+  void setSyncThreshold(int syncThreshold);
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class DefaultDirectoryFactory implements DefaultValueFactory<String> {

@@ -3,10 +3,8 @@ package org.gbif.pipelines.transforms.core;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
-import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,7 +12,6 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 
@@ -30,8 +27,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.RECORDED_DATE_MISMATCH;
 
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)

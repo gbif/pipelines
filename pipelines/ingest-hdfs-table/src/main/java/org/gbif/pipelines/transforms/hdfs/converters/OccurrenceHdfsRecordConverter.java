@@ -91,10 +91,11 @@ public class OccurrenceHdfsRecordConverter {
 
   //Supported Date formats
   private static final DateTimeFormatter FORMATTER =
-    DateTimeFormatter.ofPattern(
-      "[yyyy-MM-dd'T'HH:mm:ssXXX][yyyy-MM-dd'T'HH:mmXXX][yyyy-MM-dd'T'HH:mm:ss.SSS XXX][yyyy-MM-dd'T'HH:mm:ss.SSSXXX][yyyy-MM-dd'T'HH:mm:ss.SSS]"
-      + "[yyyy-MM-dd'T'HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss XXX][yyyy-MM-dd'T'HH:mm:ssXXX][yyyy-MM-dd'T'HH:mm:ss]"
-      + "[yyyy-MM-dd'T'HH:mm][yyyy-MM-dd][yyyy-MM][yyyy]");
+      DateTimeFormatter.ofPattern(
+          "[yyyy-MM-dd'T'HH:mm:ssXXX][yyyy-MM-dd'T'HH:mmXXX][yyyy-MM-dd'T'HH:mm:ss.SSS XXX][yyyy-MM-dd'T'HH:mm:ss.SSSXXX]"
+              + "[yyyy-MM-dd'T'HH:mm:ss.SSSSSS][yyyy-MM-dd'T'HH:mm:ss.SSSSS][yyyy-MM-dd'T'HH:mm:ss.SSSS][yyyy-MM-dd'T'HH:mm:ss.SSS]"
+              + "[yyyy-MM-dd'T'HH:mm:ss][yyyy-MM-dd'T'HH:mm:ss XXX][yyyy-MM-dd'T'HH:mm:ssXXX][yyyy-MM-dd'T'HH:mm:ss]"
+              + "[yyyy-MM-dd'T'HH:mm][yyyy-MM-dd][yyyy-MM][yyyy]");
 
   //Converts a String into Date
   private static final Function<String, Date> STRING_TO_DATE =
@@ -163,18 +164,18 @@ public class OccurrenceHdfsRecordConverter {
       hr.setElevation(lr.getElevation());
       hr.setElevationaccuracy(lr.getElevationAccuracy());
       if (Objects.nonNull(lr.getMaximumDistanceAboveSurfaceInMeters())) {
-        hr.setMaximumdistanceabovesurfaceinmeters(lr.getMaximumDistanceAboveSurfaceInMeters()
-                                                    .toString());
+        hr.setMaximumdistanceabovesurfaceinmeters(lr.getMaximumDistanceAboveSurfaceInMeters().toString());
       }
       if (Objects.nonNull(lr.getMinimumDistanceAboveSurfaceInMeters())) {
-        hr.setMinimumdistanceabovesurfaceinmeters(lr.getMinimumDistanceAboveSurfaceInMeters()
-                                                    .toString());
+        hr.setMinimumdistanceabovesurfaceinmeters(lr.getMinimumDistanceAboveSurfaceInMeters().toString());
       }
       hr.setStateprovince(lr.getStateProvince());
       hr.setWaterbody(lr.getWaterBody());
       hr.setHascoordinate(lr.getHasCoordinate());
       hr.setHasgeospatialissues(lr.getHasGeospatialIssue());
       hr.setRepatriated(lr.getRepatriated());
+      hr.setLocality(lr.getLocality());
+      hr.setPublishingcountry(lr.getPublishingCountry());
 
       setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);
@@ -189,7 +190,6 @@ public class OccurrenceHdfsRecordConverter {
       MetadataRecord mr = (MetadataRecord)sr;
       hr.setCrawlid(mr.getCrawlId());
       hr.setDatasetkey(mr.getDatasetKey());
-      hr.setPublishingcountry(mr.getDatasetPublishingCountry());
       hr.setDatasetname(mr.getDatasetTitle());
       hr.setInstallationkey(mr.getInstallationKey());
       hr.setLicense(mr.getLicense());

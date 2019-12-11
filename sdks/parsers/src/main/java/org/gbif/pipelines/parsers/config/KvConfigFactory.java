@@ -56,8 +56,8 @@ public class KvConfigFactory {
   public static KvConfig create(@NonNull Properties props, @NonNull String prefix) {
     // get the base path or throw exception if not present
     String basePath = ConfigFactory.getKey(props, WS_BASE_PATH_PROP) + "/v1/";
-    String zookeeperUrl = ConfigFactory.getKey(props, ZOOKEEPER_PROP);
-    String tableName = ConfigFactory.getKey(props, prefix + TABLE_NAME);
+    String zookeeperUrl = props.getProperty(ZOOKEEPER_PROP);
+    String tableName = props.getProperty(prefix + TABLE_NAME);
 
     boolean restOnly = Boolean.parseBoolean(props.getProperty(prefix + REST_ONLY_NAME, DEFAULT_REST_ONLY.toString()));
     long cacheSize = Long.parseLong(props.getProperty(prefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB));

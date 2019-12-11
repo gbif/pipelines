@@ -59,6 +59,7 @@ public interface InterpretationPipelineOptions
   void setCoreSiteConfig(String path);
 
   @Description("Type of the endpoint being crawled")
+  @Default.String("DWC_ARCHIVE")
   String getEndPointType();
 
   void setEndPointType(String id);
@@ -80,6 +81,12 @@ public interface InterpretationPipelineOptions
   boolean isUseExtendedRecordId();
 
   void setUseExtendedRecordId(boolean useExtendedRecordId);
+
+  @Description("Skips GBIF registry calls")
+  @Default.Boolean(false)
+  boolean isSkipRegisrtyCalls();
+
+  void setSkipRegisrtyCalls(boolean skipRegisrtyCalls);
 
   @Description("Number of file shards")
   Integer getNumberOfShards();

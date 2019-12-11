@@ -23,6 +23,8 @@ public class Dataset implements Serializable {
 
   private String installationKey;
   private String publishingOrganizationKey;
+  private String collectionKey;
+  private String institutionKey;
   private String license;
   private String title;
   private Project project;

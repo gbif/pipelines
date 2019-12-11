@@ -53,6 +53,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
 
   private static final String DEFAULT = "-gbif";
   private static final String ISSUE = "getIssues() {";
+  private static final String ID = "getId() {";
   private static final String BEFORE = "@SuppressWarnings(\"all\")";
   private static final String INTER_BASE = "org.apache.avro.specific.SpecificRecord";
   private static final String INTER = INTER_BASE + " {";
@@ -67,9 +68,10 @@ public class AvroPostprocessMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException {
 
     if (!DEFAULT.equals(directory) && !DEFAULT.equals(defaultPackage)) {
-      boolean interfaceExist = createIssuesInterface();
+      boolean interfaceIssueExist = createIssuesInterface();
+      boolean interfaceRecordExist = createRecordInterface();
 
-      if (!interfaceExist) {
+      if (!interfaceIssueExist && !interfaceRecordExist) {
         searchClasses().forEach(this::modifyFile);
       }
     }
@@ -85,7 +87,8 @@ public class AvroPostprocessMojo extends AbstractMojo {
     List<Integer> idxs = getIdx(lines);
 
     addOverrideMethod(lines, idxs);
-    changeInterface(lines, idxs);
+    addIssueRecordInterface(lines, idxs);
+    addRecordInterface(lines, idxs);
     addAvroCodecAnnotation(lines, idxs);
 
     writeFile(path, lines, idxs);
@@ -139,16 +142,36 @@ public class AvroPostprocessMojo extends AbstractMojo {
   }
 
   /**
-   * Adds Issues interface extension to a class
+   * Adds Issues and Record interface extension to a class
    *
    * @param lines java class source lines
    * @param idxs excepted line indexes
    */
-  private void changeInterface(List<String> lines, List<Integer> idxs) {
+  private void addIssueRecordInterface(List<String> lines, List<Integer> idxs) {
     int interIdx = idxs.get(1);
     int ovrdIdx = idxs.get(2);
-    if (interIdx != -1 && ovrdIdx != -1) {
-      String replace = INTER_BASE + ", " + defaultPackage + ".Issues {";
+    int idIdx = idxs.get(3);
+    if (interIdx != -1 && ovrdIdx != -1 && idIdx != -1) {
+      String replace =
+          INTER_BASE + ", " + defaultPackage + ".Issues, "
+              + defaultPackage + ".Record {";
+      replace = lines.get(interIdx).replace(INTER, replace);
+      lines.set(interIdx, replace);
+    }
+  }
+
+  /**
+   * Adds Record interface extension to a class
+   *
+   * @param lines java class source lines
+   * @param idxs excepted line indexes
+   */
+  private void addRecordInterface(List<String> lines, List<Integer> idxs) {
+    int interIdx = idxs.get(1);
+    int ovrdIdx = idxs.get(2);
+    int idIdx = idxs.get(3);
+    if (interIdx != -1 && ovrdIdx == -1 && idIdx != -1) {
+      String replace =  INTER_BASE + ", " + defaultPackage + ".Record {";
       replace = lines.get(interIdx).replace(INTER, replace);
       lines.set(interIdx, replace);
     }
@@ -163,9 +186,10 @@ public class AvroPostprocessMojo extends AbstractMojo {
     int beforeIdx = -1;
     int interIdx = -1;
     int ovrdIdx = -1;
+    int idIdx = -1;
     for (int x = 0; x < lines.size(); x++) {
       String line = lines.get(x);
-      if (beforeIdx != -1 && interIdx != -1 && ovrdIdx != -1) {
+      if (beforeIdx != -1 && interIdx != -1 && ovrdIdx != -1&& idIdx != -1) {
         break;
       }
       if (line.equals(BEFORE)) {
@@ -174,10 +198,12 @@ public class AvroPostprocessMojo extends AbstractMojo {
         interIdx = x;
       } else if (line.endsWith(ISSUE)) {
         ovrdIdx = x;
+      } else if (line.endsWith(ID)) {
+        idIdx = x;
       }
     }
 
-    return Arrays.asList(beforeIdx, interIdx, ovrdIdx);
+    return Arrays.asList(beforeIdx, interIdx, ovrdIdx, idIdx);
   }
 
   /**
@@ -197,6 +223,25 @@ public class AvroPostprocessMojo extends AbstractMojo {
   private List<Path> searchClasses() {
     try (Stream<Path> paths = Files.walk(Paths.get(directory))) {
       return paths.filter(path -> path.toFile().isFile()).collect(Collectors.toList());
+    } catch (IOException ex) {
+      throw new RuntimeException(ex.getMessage(), ex);
+    }
+  }
+
+  /** Creates Record.java interface in a defaultPackage directory */
+  private boolean createRecordInterface() {
+    String path = directory + defaultPackage.replaceAll("\\.", "/") + "/Record.java";
+    String clazz =
+        "package "
+            + defaultPackage
+            + ";\npublic interface Record {\n  java.lang.String getId();\n}";
+    try {
+      Path path1 = Paths.get(path);
+      boolean exists = path1.toFile().exists();
+      if (!exists) {
+        Files.write(path1, clazz.getBytes(UTF_8));
+      }
+      return exists;
     } catch (IOException ex) {
       throw new RuntimeException(ex.getMessage(), ex);
     }

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
@@ -11,6 +12,8 @@ import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.beam.sdk.io.AvroIO;
+import org.apache.beam.sdk.metrics.Counter;
+import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
@@ -27,17 +30,28 @@ import org.apache.beam.sdk.values.TupleTag;
 public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R, T> {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
+
   private final TupleTag<T> tag = new TupleTag<T>() {};
   private final RecordType recordType;
   private final String baseName;
   private final String baseInvalidName;
   private final Class<T> clazz;
+  private final String counterName;
 
-  public Transform(Class<T> clazz, RecordType recordType) {
+  private Counter counter;
+  private SerializableConsumer<String> counterFn = v -> counter.inc();
+
+  public Transform(Class<T> clazz, RecordType recordType, String counterNamespace, String counterName) {
     this.clazz = clazz;
     this.recordType = recordType;
     this.baseName = recordType.name().toLowerCase();
     this.baseInvalidName = baseName + "_invalid";
+    this.counterName = counterName;
+    this.counter = Metrics.counter(counterNamespace, counterName);
+  }
+
+  public void setCounterFn(SerializableConsumer<String> counterFn) {
+    this.counterFn = counterFn;
   }
 
   protected RecordType getRecordType() {
@@ -106,11 +120,33 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
     return ParDo.of(this);
   }
 
-  /**
-   * @return TupleTag required for grouping
-   */
+  public String getBaseName() {
+    return baseName;
+  }
+
+  public String getBaseInvalidName() {
+    return baseInvalidName;
+  }
+
+  @ProcessElement
+  public void processElement(ProcessContext c) {
+    processElement(c.element()).ifPresent(c::output);
+  }
+
+  public Optional<T> processElement(R source) {
+    Optional<T> convert = convert(source);
+    convert.ifPresent(t -> incCounter());
+    return convert;
+  }
+
+  public abstract Optional<T> convert(R source);
+
+  public void incCounter() {
+    counterFn.accept(counterName);
+  }
+
+  /** @return TupleTag required for grouping */
   public TupleTag<T> getTag() {
     return tag;
   }
-
 }

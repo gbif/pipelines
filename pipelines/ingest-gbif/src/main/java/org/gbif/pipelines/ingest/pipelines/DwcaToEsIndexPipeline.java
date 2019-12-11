@@ -22,11 +22,11 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
+import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
@@ -49,7 +49,6 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -81,11 +80,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ *  --pipelineStep=DWCA_TO_ES_INDEX \
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
  * --inputPath=/some/path/to/input/dwca.zip
@@ -112,6 +112,7 @@ public class DwcaToEsIndexPipeline {
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean tripletValid = options.isTripletValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
+    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
     Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
 
@@ -133,7 +134,7 @@ public class DwcaToEsIndexPipeline {
 
     log.info("Adding step 2: Creating transformations");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt);
+    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
@@ -150,7 +151,7 @@ public class DwcaToEsIndexPipeline {
         p.apply("Read ExtendedRecords", reader)
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId));
+            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls));
 
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create metadata collection", Create.of(datasetId))
@@ -247,7 +248,7 @@ public class DwcaToEsIndexPipeline {
 
     EsIndexUtils.swapIndexIfAliasExists(options, LockConfigFactory.create(properties, Lock.ES_LOCK_PREFIX));
 
-    MetricsHandler.saveCountersToTargetPathFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
     FsUtils.removeTmpDirectory(options);
 
     log.info("Pipeline has been finished");

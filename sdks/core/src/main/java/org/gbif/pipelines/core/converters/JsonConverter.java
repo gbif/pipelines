@@ -62,26 +62,6 @@ public class JsonConverter {
 
   private static final Map<Character, Character> CHAR_MAP = Collections.singletonMap('\u001E', ',');
 
-  // Utility predicates to check if a node is a complex element
-  private static final Predicate<String> IS_OBJECT = value -> value.startsWith("{\"") && value.endsWith("}");
-  private static final Predicate<String> IS_ARRAY_ONE = value -> value.startsWith("[") && value.endsWith("]");
-  private static final Predicate<String> IS_ARRAY_TWO = value -> value.startsWith("[{") && value.endsWith("}]");
-  private static final Predicate<String> IS_VALID_JSON =
-      value -> {
-        try (JsonParser parser = MAPPER.getFactory().createParser(value)) {
-          while (parser.nextToken() != null) {
-            // NOP
-          }
-        } catch (Exception ex) {
-          log.warn("JSON is invalid - {}", value);
-          return false;
-        }
-        return true;
-      };
-
-  private static final Predicate<String> IS_COMPLEX_OBJECT =
-      IS_OBJECT.or(IS_ARRAY_ONE).or(IS_ARRAY_TWO).and(IS_VALID_JSON);
-
   private final ObjectNode mainNode = MAPPER.createObjectNode();
 
   @Singular
@@ -121,7 +101,7 @@ public class JsonConverter {
         addCommonFields((SpecificRecordBase) value, element);
         arrayNode.add(element);
       } else if (value instanceof String || value.getClass().isPrimitive() || Primitives.isWrapperType(
-          (value.getClass())) || UUID.class.isAssignableFrom(value.getClass())) {
+          value.getClass()) || UUID.class.isAssignableFrom(value.getClass())) {
         arrayNode.add(value.toString());
       }
     });
@@ -171,7 +151,7 @@ public class JsonConverter {
                     }
                     break;
                   default:
-                    addJsonFieldNoCheck(node, f.name(), r.toString());
+                    addJsonRawFieldNoCheck(node, f.name(), r.toString());
                     break;
                 }
               });
@@ -205,12 +185,6 @@ public class JsonConverter {
   /** Adds text field without any skip checks */
   void addJsonTextFieldNoCheck(String key, String value) {
     mainNode.set(sanitizeValue(key), getEscapedTextNode(value));
-  }
-
-  /** Converts - "key":"value" and check some incorrect symbols for json */
-  void addJsonFieldNoCheck(ObjectNode node, String key, String value) {
-    // Can be a json  or a string
-    node.set(sanitizeValue(key), IS_COMPLEX_OBJECT.test(value) ? new POJONode(value) : getEscapedTextNode(value));
   }
 
   /** Converts - "key":"value" and check some incorrect symbols for json */
