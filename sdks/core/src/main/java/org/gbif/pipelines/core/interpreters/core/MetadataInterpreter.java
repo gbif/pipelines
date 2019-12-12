@@ -62,6 +62,7 @@ public class MetadataInterpreter {
             mdr.setProgrammeAcronym(dataset.getProject().getProgramme().getAcronym());
           }
         }
+        copyMachineTags(dataset.getMachineTags(), mdr);
       }
     };
   }
@@ -106,17 +107,18 @@ public class MetadataInterpreter {
         .get();
   }
 
-  private static void processMachineTags(List<MachineTag> machineTags, String namespace, Consumer<MachineTag> consumer) {
+  /** Copy MachineTags into the Avro Metadata record. */
+  private static void copyMachineTags(List<MachineTag> machineTags, MetadataRecord mdr) {
      if (Objects.nonNull(machineTags) && !machineTags.isEmpty()) {
+        mdr.setMachineTags(
            machineTags.stream()
-             .filter(tag -> tag.getNamespace().equals(namespace))
-             .forEach(consumer);
+             .map(machineTag -> org.gbif.pipelines.io.avro.MachineTag.newBuilder()
+                                  .setNamespace(machineTag.getNamespace())
+                                  .setName(machineTag.getName())
+                                  .setValue(machineTag.getValue())
+                                  .build())
+             .collect(Collectors.toList()));
      }
   }
 
-  private void processCollectionTags(List<MachineTag> machineTags) {
-    processMachineTags(machineTags, "processing.gbif.org", machineTag -> {
-
-    });
-  }
 }
