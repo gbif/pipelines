@@ -9,7 +9,6 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -34,7 +33,6 @@ public class TaggedValueInterpreterTest {
       .build();
     TaggedValueRecord tvr = TaggedValueRecord.newBuilder()
       .setId("1")
-      .setTaggedValues(new HashMap<>())
       .build();
     ExtendedRecord er = ExtendedRecord.newBuilder()
       .setId("1")

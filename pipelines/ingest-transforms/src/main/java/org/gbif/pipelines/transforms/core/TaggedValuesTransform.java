@@ -5,9 +5,16 @@ import org.gbif.pipelines.core.interpreters.core.TaggedValuesInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
 import java.util.Optional;
+
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptor;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAGGED_VALUES_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAGGED_VALUES;
@@ -21,24 +28,53 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValueRecord> {
 
-  private final MetadataRecord mr;
+  private PCollectionView<MetadataRecord> metadataView;
 
-  private TaggedValuesTransform(MetadataRecord metadataRecord) {
+
+  private TaggedValuesTransform() {
     super(TaggedValueRecord.class, TAGGED_VALUES, TaggedValueRecord.class.getName(), TAGGED_VALUES_RECORDS_COUNT);
-    this.mr = metadataRecord;
   }
 
-  public static TaggedValuesTransform create(MetadataRecord metadataRecord) {
-    return new TaggedValuesTransform(metadataRecord);
+  public static TaggedValuesTransform create() {
+    return new TaggedValuesTransform();
   }
 
   @Override
   public Optional<TaggedValueRecord> convert(ExtendedRecord source) {
-    return Interpretation.from(source)
-            .to(id -> TaggedValueRecord.newBuilder().setId(source.getId()).build())
-            .via(TaggedValuesInterpreter.interpret(mr))
-            .get();
+    throw new IllegalArgumentException("Method is not implemented!");
+  }
 
+  public TaggedValuesTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  public ParDo.SingleOutput<ExtendedRecord, TaggedValueRecord> interpret(PCollectionView<MetadataRecord> metadataView) {
+    this.metadataView = metadataView;
+    return ParDo.of(this).withSideInputs(metadataView);
+  }
+
+  /** Maps {@link TaggedValueRecord} to key value, where key is {@link TaggedValueRecord#getId} */
+  public MapElements<TaggedValueRecord, KV<String, TaggedValueRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, TaggedValueRecord>>() {})
+      .via((TaggedValueRecord lr) -> KV.of(lr.getId(), lr));
+  }
+
+  @Override
+  @ProcessElement
+  public void processElement(ProcessContext c) {
+    processElement(c.element(), c.sideInput(metadataView)).ifPresent(c::output);
+  }
+
+  public Optional<TaggedValueRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
+    Optional<TaggedValueRecord> result = Interpretation.from(source)
+      .to(id -> TaggedValueRecord.newBuilder().setId(source.getId()).build())
+      .via(TaggedValuesInterpreter.interpret(mdr))
+      .get();
+
+    result.ifPresent(r -> this.incCounter());
+
+    return result;
   }
 
 }

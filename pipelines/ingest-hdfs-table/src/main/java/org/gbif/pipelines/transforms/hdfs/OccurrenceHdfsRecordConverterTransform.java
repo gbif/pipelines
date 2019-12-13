@@ -12,9 +12,12 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter;
+
+import javax.validation.constraints.NotNull;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
@@ -92,6 +95,8 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
   private final TupleTag<AudubonRecord> arTag;
   @NonNull
   private final TupleTag<MeasurementOrFactRecord> mfrTag;
+  @NotNull
+  private final TupleTag<TaggedValueRecord> tvrTag;
 
   @NonNull
   private final PCollectionView<MetadataRecord> metadataView;
@@ -114,6 +119,7 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
         TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
         LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
         TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
+        TaggedValueRecord tvr = v.getOnly(tvrTag, TaggedValueRecord.newBuilder().setId(k).build());
         // Extension
         MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
         ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
@@ -121,7 +127,7 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
         MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
         MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-        OccurrenceHdfsRecord record = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(br, mdr, tr, lr, txr, mmr, mfr, er);
+        OccurrenceHdfsRecord record = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(br, mdr, tr, lr, txr, mmr, mfr, tvr, er);
 
         c.output(record);
 

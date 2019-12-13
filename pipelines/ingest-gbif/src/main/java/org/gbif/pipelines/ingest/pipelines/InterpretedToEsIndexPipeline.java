@@ -16,12 +16,14 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -121,6 +123,8 @@ public class InterpretedToEsIndexPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
     LocationTransform locationTransform = LocationTransform.create();
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -135,6 +139,10 @@ public class InterpretedToEsIndexPipeline {
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(pathFn))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
+
+    PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
+      p.apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.read(pathFn))
+        .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         p.apply("Read Basic", basicTransform.read(pathFn))
@@ -173,7 +181,7 @@ public class InterpretedToEsIndexPipeline {
         GbifJsonTransform.create(
             verbatimTransform.getTag(), basicTransform.getTag(), temporalTransform.getTag(), locationTransform.getTag(),
             taxonomyTransform.getTag(),  multimediaTransform.getTag(), imageTransform.getTag(), audubonTransform.getTag(),
-            measurementOrFactTransform.getTag(), metadataView
+            measurementOrFactTransform.getTag(), taggedValuesTransform.getTag(), metadataView
         ).converter();
 
     PCollection<String> jsonCollection =
@@ -183,6 +191,7 @@ public class InterpretedToEsIndexPipeline {
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
             .and(taxonomyTransform.getTag(), taxonCollection)
+            .and(taggedValuesTransform.getTag(), taggedValuesCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)

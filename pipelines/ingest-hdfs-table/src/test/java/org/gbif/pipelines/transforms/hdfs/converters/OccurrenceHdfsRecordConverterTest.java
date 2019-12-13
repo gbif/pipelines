@@ -23,6 +23,7 @@ import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -41,6 +42,7 @@ import org.gbif.pipelines.io.avro.ParsedName;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
@@ -85,8 +87,13 @@ public class OccurrenceHdfsRecordConverterTest {
         .setModified("2019-04-15T17:17")
         .build();
 
+    TaggedValueRecord taggedValueRecord = TaggedValueRecord.newBuilder()
+      .setId("1")
+      .setTaggedValues(Collections.singletonMap(GbifInternalTerm.collectionKey.qualifiedName(), "7ddf754f-d193-4cc9-b351-99906754a03b"))
+      .build();
+
     OccurrenceHdfsRecord hdfsRecord =
-        OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord, taxonRecord, temporalRecord, extendedRecord);
+        OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord, taxonRecord, temporalRecord, extendedRecord, taggedValueRecord);
     //Test common fields
     Assert.assertEquals("1.0", hdfsRecord.getVerbatimdepth());
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
@@ -120,6 +127,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals( "adultss", hdfsRecord.getVLifestage());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
+    Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionKey());
+
   }
 
   @Test

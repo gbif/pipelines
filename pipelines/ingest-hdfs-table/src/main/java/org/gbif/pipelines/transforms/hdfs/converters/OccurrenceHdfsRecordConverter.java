@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.download.hive.HiveColumns;
@@ -36,6 +37,7 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.keygen.common.TermUtils;
@@ -69,6 +71,7 @@ public class OccurrenceHdfsRecordConverter {
     converters.put(TemporalRecord.class, temporalMapper());
     converters.put(MetadataRecord.class, metadataMapper());
     converters.put(MultimediaRecord.class, multimediaMapper());
+    converters.put(TaggedValueRecord.class, taggedValueMapper());
   }
 
   //Converts a TemporalAccessor into Date
@@ -500,6 +503,20 @@ public class OccurrenceHdfsRecordConverter {
 
       setCreatedIfGreater(hr, mr.getCreated());
       hr.setMediatype(mediaTypes);
+    };
+  }
+
+
+  /**
+   * Collects the {@link TaggedValueRecord}  tagged values data into the {@link OccurrenceHdfsRecord}.
+   */
+  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> taggedValueMapper() {
+    return (hr, sr) -> {
+      TaggedValueRecord tvr = (TaggedValueRecord)sr;
+      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.projectId.qualifiedName())).ifPresent(hr::setProjectid);
+      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.programmeAcronym.qualifiedName())).ifPresent(hr::setProgrammeacronym);
+      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.collectionKey.qualifiedName())).ifPresent(hr::setCollectionKey);
+      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.institutionKey.qualifiedName())).ifPresent(hr::setInstitutionKey);
     };
   }
 

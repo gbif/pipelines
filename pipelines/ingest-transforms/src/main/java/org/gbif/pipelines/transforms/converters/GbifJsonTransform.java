@@ -12,6 +12,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
@@ -109,6 +110,8 @@ public class GbifJsonTransform implements Serializable {
   private final TupleTag<AudubonRecord> arTag;
   @NonNull
   private final TupleTag<MeasurementOrFactRecord> mfrTag;
+  @NonNull
+  private final TupleTag<TaggedValueRecord> tvrTag;
 
   @NonNull
   private final PCollectionView<MetadataRecord> metadataView;
@@ -131,6 +134,8 @@ public class GbifJsonTransform implements Serializable {
         TemporalRecord tr = v.getOnly(trTag, TemporalRecord.newBuilder().setId(k).build());
         LocationRecord lr = v.getOnly(lrTag, LocationRecord.newBuilder().setId(k).build());
         TaxonRecord txr = v.getOnly(txrTag, TaxonRecord.newBuilder().setId(k).build());
+        TaggedValueRecord tvr = v.getOnly(tvrTag, TaggedValueRecord.newBuilder().setId(k).build());
+
         // Extension
         MultimediaRecord mr = v.getOnly(mrTag, MultimediaRecord.newBuilder().setId(k).build());
         ImageRecord ir = v.getOnly(irTag, ImageRecord.newBuilder().setId(k).build());
@@ -138,7 +143,7 @@ public class GbifJsonTransform implements Serializable {
         MeasurementOrFactRecord mfr = v.getOnly(mfrTag, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
         MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-        String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er);
+        String json = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, tvr, er);
 
         c.output(json);
 

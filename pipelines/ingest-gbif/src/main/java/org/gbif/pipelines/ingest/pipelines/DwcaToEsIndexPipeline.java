@@ -19,6 +19,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.parsers.config.LockConfigFactory;
@@ -29,6 +30,7 @@ import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -140,6 +142,8 @@ public class DwcaToEsIndexPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
     LocationTransform locationTransform = LocationTransform.create(properties);
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+
     // Extension
     AudubonTransform audubonTransform = AudubonTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -161,6 +165,11 @@ public class DwcaToEsIndexPipeline {
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         uniqueRecords
           .apply("Map Verbatim to KV", verbatimTransform.toKv());
+
+    PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
+      uniqueRecords
+        .apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.interpret(metadataView))
+        .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
 
     // Core
     PCollection<KV<String, BasicRecord>> basicCollection =
@@ -209,7 +218,7 @@ public class DwcaToEsIndexPipeline {
         GbifJsonTransform.create(
             verbatimTransform.getTag(), basicTransform.getTag(), temporalTransform.getTag(), locationTransform.getTag(),
             taxonomyTransform.getTag(),  multimediaTransform.getTag(), imageTransform.getTag(), audubonTransform.getTag(),
-            measurementOrFactTransform.getTag(), metadataView
+            measurementOrFactTransform.getTag(), taggedValuesTransform.getTag(), metadataView
         ).converter();
 
     PCollection<String> jsonCollection =
@@ -219,6 +228,7 @@ public class DwcaToEsIndexPipeline {
             .and(temporalTransform.getTag(), temporalCollection)
             .and(locationTransform.getTag(), locationCollection)
             .and(taxonomyTransform.getTag(), taxonCollection)
+            .and(taggedValuesTransform.getTag(), taggedValuesCollection)
             // Extension
             .and(multimediaTransform.getTag(), multimediaCollection)
             .and(imageTransform.getTag(), imageCollection)

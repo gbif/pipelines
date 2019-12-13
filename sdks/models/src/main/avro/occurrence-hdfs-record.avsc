@@ -687,6 +687,13 @@
     "name" : "programmeacronym",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "institutionKey",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "collectionKey",
+    "type" : [ "string", "null" ]
+  },
+  {
     "name" : "abstract",
     "type" : [ "string", "null" ]
   }, {
