@@ -61,6 +61,7 @@ public class ElasticsearchWriter {
           }
         } catch (IOException ex) {
           log.error(ex.getMessage(), ex);
+          throw new RuntimeException(ex.getMessage(), ex);
         }
       };
 
