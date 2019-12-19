@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -98,10 +99,16 @@ public class OccurrenceHdfsRecordConverter {
               + "[yyyy-MM-dd'T'HH:mm][yyyy-MM-dd][yyyy-MM][yyyy]");
 
   //Converts a String into Date
-  private static final Function<String, Date> STRING_TO_DATE =
+  static final Function<String, Date> STRING_TO_DATE =
       dateAsString -> {
         if (Strings.isNullOrEmpty(dateAsString)) {
           return null;
+        }
+
+        boolean firstYear = false;
+        if (dateAsString.startsWith("0000")) {
+          firstYear = true;
+          dateAsString = dateAsString.replaceFirst("0000", "1970");
         }
 
         try {
@@ -112,7 +119,17 @@ public class OccurrenceHdfsRecordConverter {
               LocalDate::from,
               YearMonth::from,
               Year::from);
-          return TEMPORAL_TO_DATE.apply(temporalAccessor);
+
+          Date date = TEMPORAL_TO_DATE.apply(temporalAccessor);
+
+          if (date != null && firstYear) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
+            cal.set(Calendar.YEAR, 1);
+            return cal.getTime();
+          }
+
+          return date;
         } catch (Exception ex) {
           return null;
         }

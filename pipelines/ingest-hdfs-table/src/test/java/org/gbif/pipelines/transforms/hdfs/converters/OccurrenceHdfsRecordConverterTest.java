@@ -1,9 +1,11 @@
 package org.gbif.pipelines.transforms.hdfs.converters;
 
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -48,6 +50,9 @@ import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter.*;
+import static org.junit.Assert.assertEquals;
+
 public class OccurrenceHdfsRecordConverterTest {
 
   @Test
@@ -86,7 +91,7 @@ public class OccurrenceHdfsRecordConverterTest {
         .build();
 
     OccurrenceHdfsRecord hdfsRecord =
-        OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord, taxonRecord, temporalRecord, extendedRecord);
+        toOccurrenceHdfsRecord(basicRecord, taxonRecord, temporalRecord, extendedRecord);
     //Test common fields
     Assert.assertEquals("1.0", hdfsRecord.getVerbatimdepth());
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
@@ -131,7 +136,7 @@ public class OccurrenceHdfsRecordConverterTest {
     multimedia.setLicense(License.CC_BY_4_0.name());
     multimedia.setSource("image.jpg");
     multimediaRecord.setMultimediaItems(Collections.singletonList(multimedia));
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(multimediaRecord);
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(multimediaRecord);
 
     //Testing de-serialization
     List<Multimedia> media = MediaSerDeserUtils.fromJson(hdfsRecord.getExtMultimedia());
@@ -152,7 +157,7 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setEstablishmentMeans(EstablishmentMeans.INVASIVE.name());
     basicRecord.setCreated(now);
     basicRecord.setGbifId(1L);
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(basicRecord);
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord);
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
@@ -204,7 +209,7 @@ public class OccurrenceHdfsRecordConverterTest {
     taxonRecord.setUsageParsedName(parsedName);
     taxonRecord.setNomenclature(Nomenclature.newBuilder().setSource("nothing").build());
 
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(taxonRecord);
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(taxonRecord);
     Assert.assertEquals("Archaea", hdfsRecord.getKingdom());
     Assert.assertEquals(Integer.valueOf(2), hdfsRecord.getKingdomkey());
 
@@ -251,7 +256,7 @@ public class OccurrenceHdfsRecordConverterTest {
         .setDateIdentified(rawEventDate)
         .setModified(rawEventDate)
         .build();
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(temporalRecord);
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(temporalRecord);
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getDay());
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getMonth());
     Assert.assertEquals(Integer.valueOf(2019), hdfsRecord.getYear());
@@ -284,7 +289,7 @@ public class OccurrenceHdfsRecordConverterTest {
         .setPublisherTitle("Pub")
         .setPublishingOrganizationKey(organizationKey)
         .build();
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(metadataRecord);
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(metadataRecord);
     Assert.assertEquals(datasetKey, hdfsRecord.getDatasetkey());
     Assert.assertEquals(networkKey, hdfsRecord.getNetworkkey());
     Assert.assertEquals(installationKey, hdfsRecord.getInstallationkey());
@@ -317,7 +322,7 @@ public class OccurrenceHdfsRecordConverterTest {
         .setMaximumElevationInMeters(0.1)
         .setMinimumElevationInMeters(0.1)
         .build();
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(locationRecord);
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(locationRecord);
     Assert.assertEquals(Country.COSTA_RICA.getIso2LetterCode(), hdfsRecord.getCountrycode());
     Assert.assertEquals(Double.valueOf(9.934739d), hdfsRecord.getDecimallatitude());
     Assert.assertEquals(Double.valueOf(-84.087502d), hdfsRecord.getDecimallongitude());
@@ -355,7 +360,70 @@ public class OccurrenceHdfsRecordConverterTest {
             .build())
         .build();
 
-    OccurrenceHdfsRecord hdfsRecord = OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(temporalRecord);
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(temporalRecord);
     Assert.assertArrayEquals(issues, hdfsRecord.getIssue().toArray(new String[issues.length]));
+  }
+
+  @Test(expected = Test.None.class)
+  public void dateParserTest() throws ParseException {
+    STRING_TO_DATE.apply("2019");
+
+    STRING_TO_DATE.apply("2019-04");
+
+    STRING_TO_DATE.apply("2019-04-01");
+
+    STRING_TO_DATE.apply("2019-04-15T17:17:48.191 +02:00");
+
+    STRING_TO_DATE.apply("2019-04-15T17:17:48.191");
+
+    STRING_TO_DATE.apply("2019-04-15T17:17:48.023+02:00");
+
+    STRING_TO_DATE.apply("2019-11-12T13:24:56.963591");
+  }
+
+  @Test
+  public void dateWithYearZeroTest() {
+    Date date = STRING_TO_DATE.apply("0000");
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(date);
+    assertEquals(1, cal.get(Calendar.YEAR));
+    assertEquals(0, cal.get(Calendar.MONTH));
+    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+
+    date = STRING_TO_DATE.apply("0000-01");
+    cal.setTime(date);
+    assertEquals(1, cal.get(Calendar.YEAR));
+    assertEquals(0, cal.get(Calendar.MONTH));
+    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+
+    date = STRING_TO_DATE.apply("0000-01-01");
+    cal.setTime(date);
+    assertEquals(1, cal.get(Calendar.YEAR));
+    assertEquals(0, cal.get(Calendar.MONTH));
+    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+
+    date = STRING_TO_DATE.apply("0000-01-01T00:00:01.100");
+    cal.setTime(date);
+    assertEquals(1, cal.get(Calendar.YEAR));
+    assertEquals(0, cal.get(Calendar.MONTH));
+    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+
+    date = STRING_TO_DATE.apply("0000-01-01T17:17:48.191 +02:00");
+    cal.setTime(date);
+    assertEquals(1, cal.get(Calendar.YEAR));
+    assertEquals(0, cal.get(Calendar.MONTH));
+    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+
+    date = STRING_TO_DATE.apply("0000-01-01T13:24:56.963591");
+    cal.setTime(date);
+    assertEquals(1, cal.get(Calendar.YEAR));
+    assertEquals(0, cal.get(Calendar.MONTH));
+    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+
+    date = STRING_TO_DATE.apply("0000-01-01T17:17:48.023+02:00");
+    cal.setTime(date);
+    assertEquals(1, cal.get(Calendar.YEAR));
+    assertEquals(0, cal.get(Calendar.MONTH));
+    assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
   }
 }
