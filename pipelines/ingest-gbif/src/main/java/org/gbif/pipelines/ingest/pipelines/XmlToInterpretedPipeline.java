@@ -19,6 +19,7 @@ import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -114,6 +115,8 @@ public class XmlToInterpretedPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
     LocationTransform locationTransform = LocationTransform.create(properties);
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -142,6 +145,10 @@ public class XmlToInterpretedPipeline {
 
     uniqueRecords
         .apply("Write unique verbatim to avro", verbatimTransform.write(pathFn));
+
+    uniqueRecords
+      .apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.interpret(metadataView))
+      .apply("Map TaggedValueRecord to KV", taggedValuesTransform.write(pathFn));
 
     uniqueRecords
         .apply("Interpret basic", basicTransform.interpret())

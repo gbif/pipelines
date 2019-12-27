@@ -152,7 +152,7 @@ public class DwcaToInterpretedPipeline {
 
     uniqueRecords
        .apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.interpret(metadataView))
-       .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
+       .apply("Map TaggedValueRecord to KV", taggedValuesTransform.write(pathFn));
 
     uniqueRecords
         .apply("Interpret basic", basicTransform.interpret())

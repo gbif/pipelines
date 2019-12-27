@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java.pipelines;
+  package org.gbif.pipelines.ingest.java.pipelines;
 
 import java.time.LocalDateTime;
 import java.util.Map;
