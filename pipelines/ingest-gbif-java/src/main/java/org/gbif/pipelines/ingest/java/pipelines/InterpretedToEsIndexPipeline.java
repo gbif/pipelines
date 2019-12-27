@@ -27,11 +27,13 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -144,6 +146,8 @@ public class InterpretedToEsIndexPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
     LocationTransform locationTransform = LocationTransform.create();
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+
     // Extension
     MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -163,6 +167,10 @@ public class InterpretedToEsIndexPipeline {
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature = CompletableFuture.supplyAsync(
         () -> AvroReader.readRecords(hdfsSiteConfig, ExtendedRecord.class, pathFn.apply(verbatimTransform.getBaseName())),
         executor);
+
+    CompletableFuture<Map<String, TaggedValueRecord>> taggedValuesMapFeature = CompletableFuture.supplyAsync(
+      () -> AvroReader.readRecords(hdfsSiteConfig, TaggedValueRecord.class, pathFn.apply(taggedValuesTransform.getBaseName())),
+      executor);
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature = CompletableFuture.supplyAsync(
         () -> AvroReader.readRecords(hdfsSiteConfig, BasicRecord.class, pathFn.apply(basicTransform.getBaseName())),
@@ -202,6 +210,7 @@ public class InterpretedToEsIndexPipeline {
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
+    Map<String, TaggedValueRecord> taggedValueRecordMap  = taggedValuesMapFeature.get();
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
     Map<String, LocationRecord> locationMap = locationMapFeature.get();
     Map<String, TaxonRecord> taxonMap = taxonMapFeature.get();
@@ -217,6 +226,7 @@ public class InterpretedToEsIndexPipeline {
       String k = br.getId();
       // Core
       ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
+      TaggedValueRecord tvr = taggedValueRecordMap.getOrDefault(k, TaggedValueRecord.newBuilder().setId(k).build());
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
       LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
       TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
@@ -227,7 +237,7 @@ public class InterpretedToEsIndexPipeline {
       MeasurementOrFactRecord mfr = measurementMap.getOrDefault(k, MeasurementOrFactRecord.newBuilder().setId(k).build());
 
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-      ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, mmr, mfr, er);
+      ObjectNode json = GbifJsonConverter.toJson(metadata, br, tr, lr, txr, mmr, mfr, tvr, er);
 
       metrics.incMetric(AVRO_TO_JSON_COUNT);
 

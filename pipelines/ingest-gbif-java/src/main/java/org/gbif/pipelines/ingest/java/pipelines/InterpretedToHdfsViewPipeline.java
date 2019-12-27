@@ -29,11 +29,13 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -137,6 +139,8 @@ public class InterpretedToHdfsViewPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
     LocationTransform locationTransform = LocationTransform.create();
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+
     // Extension
     MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -156,6 +160,10 @@ public class InterpretedToHdfsViewPipeline {
     CompletableFuture<Map<String, ExtendedRecord>> verbatimMapFeature = CompletableFuture.supplyAsync(
         () -> AvroReader.readRecords(hdfsSiteConfig, ExtendedRecord.class, pathFn.apply(verbatimTransform.getBaseName())),
         executor);
+
+    CompletableFuture<Map<String, TaggedValueRecord>> taggedValuesMapFeature = CompletableFuture.supplyAsync(
+      () -> AvroReader.readRecords(hdfsSiteConfig, TaggedValueRecord.class, pathFn.apply(taggedValuesTransform.getBaseName())),
+      executor);
 
     CompletableFuture<Map<String, BasicRecord>> basicMapFeature = CompletableFuture.supplyAsync(
         () -> AvroReader.readRecords(hdfsSiteConfig, BasicRecord.class, pathFn.apply(basicTransform.getBaseName())),
@@ -195,6 +203,7 @@ public class InterpretedToHdfsViewPipeline {
     MetadataRecord metadata = metadataMapFeature.get().values().iterator().next();
     Map<String, BasicRecord> basicMap = basicMapFeature.get();
     Map<String, ExtendedRecord> verbatimMap = verbatimMapFeature.get();
+    Map<String, TaggedValueRecord> taggedValueRecordMap  = taggedValuesMapFeature.get();
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
     Map<String, LocationRecord> locationMap = locationMapFeature.get();
     Map<String, TaxonRecord> taxonMap = taxonMapFeature.get();
@@ -209,6 +218,7 @@ public class InterpretedToHdfsViewPipeline {
       String k = br.getId();
       // Core
       ExtendedRecord er = verbatimMap.getOrDefault(k, ExtendedRecord.newBuilder().setId(k).build());
+      TaggedValueRecord tvr = taggedValueRecordMap.getOrDefault(k, TaggedValueRecord.newBuilder().setId(k).build());
       TemporalRecord tr = temporalMap.getOrDefault(k, TemporalRecord.newBuilder().setId(k).build());
       LocationRecord lr = locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
       TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
@@ -221,7 +231,7 @@ public class InterpretedToHdfsViewPipeline {
       metrics.incMetric(AVRO_TO_HDFS_COUNT);
 
       MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
-      return OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(br, metadata, tr, lr, txr, mmr, mfr, er);
+      return OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(br, metadata, tr, lr, txr, mmr, mfr, tvr, er);
     };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

@@ -36,6 +36,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
@@ -43,6 +44,7 @@ import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -169,6 +171,8 @@ public class VerbatimToInterpretedPipeline {
         .counterFn(incMetricFn).init();
     VerbatimTransform verbatimTransform = VerbatimTransform.create()
         .counterFn(incMetricFn);
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create()
+      .counterFn(incMetricFn);
     TemporalTransform temporalTransform = TemporalTransform.create()
         .counterFn(incMetricFn);
     // Extension
@@ -189,6 +193,8 @@ public class VerbatimToInterpretedPipeline {
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
         SyncDataFileWriter<MetadataRecord> metadataWriter =
             createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id, false);
+        SyncDataFileWriter<TaggedValueRecord> taggedValueWriter =
+          createWriter(options, TaggedValueRecord.getClassSchema(), taggedValuesTransform, id, false);
         SyncDataFileWriter<BasicRecord> basicWriter =
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
         SyncDataFileWriter<BasicRecord> basicInvalidWriter =
@@ -237,6 +243,7 @@ public class VerbatimToInterpretedPipeline {
         BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
         if (br == null) {
           verbatimWriter.append(er);
+          taggedValuesTransform.processElement(er).ifPresent(taggedValueWriter::append);
           temporalTransform.processElement(er).ifPresent(temporalWriter::append);
           multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
           imageTransform.processElement(er).ifPresent(imageWriter::append);
