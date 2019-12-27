@@ -11,6 +11,7 @@ import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -30,9 +31,12 @@ import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -55,7 +59,8 @@ public class GbifJsonConverterTest {
             + "{\"usage\":{\"key\":10,\"name\":\"synonym\",\"rank\":\"SPECIES\"},\"classification\":[{\"key\":1,\"name\":\"Name\","
             + "\"rank\":\"CHEMOFORM\"},{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],\"acceptedUsage\":{\"key\":11,\"name\":"
             + "\"accepted usage\",\"rank\":\"SPECIES\"},\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":"
-            + "\"Name2\",\"classificationPath\":\"_1_2\",\"taxonKey\":[1,2,10,11]},\"gbifId\":111,\"datasetKey\":\"datatesKey\",\"crawlId\":1,"
+            + "\"Name2\",\"classificationPath\":\"_1_2\",\"taxonKey\":[1,2,10,11]},\"gbifId\":111,\"collectionKey\":\"75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d\","
+            + "\"institutionKey\":\"6ac3f774-d9fb-4796-b3e9-92bf6c81c084\",\"datasetKey\":\"datatesKey\",\"crawlId\":1,"
             + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\","
             + "\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
             + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"COORDINATE_REPROJECTION_SUSPICIOUS\",\"PRESUMED_NEGATED_LONGITUDE\","
@@ -126,8 +131,17 @@ public class GbifJsonConverterTest {
         .setUsage(synonym)
         .build();
 
+    TaggedValueRecord tvr = TaggedValueRecord
+      .newBuilder()
+      .setId("123")
+      .setTaggedValues(new ImmutableMap.Builder<String,String>()
+                         .put(GbifInternalTerm.collectionKey.qualifiedName(), "75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d")
+                         .put(GbifInternalTerm.institutionKey.qualifiedName(), "6ac3f774-d9fb-4796-b3e9-92bf6c81c084")
+                         .build())
+      .build();
+
     // When
-    String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, br, mr);
+    String result = GbifJsonConverter.toStringJson(er, tmr, lr, tr, br, tvr, mr);
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));
@@ -318,12 +332,15 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"gbifClassification\":{\"usage\":{\"key\":1,\"name\":\"n\",\"rank\":\"ABERRATION\"},"
+        "{\"id\":\"777\",\"all\":[\"T1\",\"Name\"],"
+            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/taxonID\":\"T1\",\"http://rs.tdwg.org/dwc/terms/scientificName\":\"Name\"},\"extensions\":{}},"
+            + "\"gbifClassification\":{\"usage\":{\"key\":1,\"name\":\"n\",\"rank\":\"ABERRATION\"},"
             + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
             + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}]"
             + ",\"acceptedUsage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
             + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\","
-            + "\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},\"created\":\"1970-01-01T00:00\"}";
+            + "\"classificationPath\":\"_1\",\"taxonKey\":[1,2],\"taxonID\":\"T1\",\"verbatimScientificName\":\"Name\"},"
+            + "\"created\":\"1970-01-01T00:00\"}";
 
     // State
     List<RankedName> rankedNameList = new ArrayList<>();
@@ -340,8 +357,16 @@ public class GbifJsonConverterTest {
         .setAcceptedUsage(name2)
         .build();
 
+    ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
+      .setId("777")
+      .setCoreTerms(new ImmutableMap.Builder<String,String>()
+                      .put(DwcTerm.taxonID.qualifiedName(), "T1")
+                      .put(DwcTerm.scientificName.qualifiedName(), "Name")
+                      .build())
+      .build();
+
     // When
-    String result = GbifJsonConverter.toStringPartialJson(taxonRecord);
+    String result = GbifJsonConverter.toStringPartialJson(extendedRecord, taxonRecord);
 
     // Should
     Assert.assertEquals(expected, result);

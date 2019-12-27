@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -55,6 +56,13 @@ public class MetadataInterpreter {
         mdr.setPublisherTitle(organization.getTitle());
         mdr.setDatasetPublishingCountry(organization.getCountry());
         getLastCrawledDate(dataset.getMachineTags()).ifPresent(d -> mdr.setLastCrawled(d.getTime()));
+        if (Objects.nonNull(dataset.getProject())) {
+          mdr.setProjectId(dataset.getProject().getIdentifier());
+          if (Objects.nonNull(dataset.getProject().getProgramme())) {
+            mdr.setProgrammeAcronym(dataset.getProject().getProgramme().getAcronym());
+          }
+        }
+        copyMachineTags(dataset.getMachineTags(), mdr);
       }
     };
   }
@@ -98,4 +106,19 @@ public class MetadataInterpreter {
             .findFirst())
         .get();
   }
+
+  /** Copy MachineTags into the Avro Metadata record. */
+  private static void copyMachineTags(List<MachineTag> machineTags, MetadataRecord mdr) {
+     if (Objects.nonNull(machineTags) && !machineTags.isEmpty()) {
+        mdr.setMachineTags(
+           machineTags.stream()
+             .map(machineTag -> org.gbif.pipelines.io.avro.MachineTag.newBuilder()
+                                  .setNamespace(machineTag.getNamespace())
+                                  .setName(machineTag.getName())
+                                  .setValue(machineTag.getValue())
+                                  .build())
+             .collect(Collectors.toList()));
+     }
+  }
+
 }

@@ -19,11 +19,13 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -129,6 +131,7 @@ public class InterpretedToHdfsViewPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
     LocationTransform locationTransform = LocationTransform.create();
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -143,6 +146,10 @@ public class InterpretedToHdfsViewPipeline {
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(interpretPathFn))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
+
+    PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
+      p.apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.read(interpretPathFn))
+        .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         p.apply("Read Basic", basicTransform.read(interpretPathFn))
@@ -181,7 +188,7 @@ public class InterpretedToHdfsViewPipeline {
         OccurrenceHdfsRecordConverterTransform.create(
             verbatimTransform.getTag(), basicTransform.getTag(), temporalTransform.getTag(), locationTransform.getTag(),
             taxonomyTransform.getTag(),  multimediaTransform.getTag(), imageTransform.getTag(), audubonTransform.getTag(),
-            measurementOrFactTransform.getTag(), metadataView
+            measurementOrFactTransform.getTag(), taggedValuesTransform.getTag(), metadataView
         ).converter();
 
     KeyedPCollectionTuple
@@ -190,6 +197,7 @@ public class InterpretedToHdfsViewPipeline {
         .and(temporalTransform.getTag(), temporalCollection)
         .and(locationTransform.getTag(), locationCollection)
         .and(taxonomyTransform.getTag(), taxonCollection)
+        .and(taggedValuesTransform.getTag(), taggedValuesCollection)
         // Extension
         .and(multimediaTransform.getTag(), multimediaCollection)
         .and(imageTransform.getTag(), imageCollection)

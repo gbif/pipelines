@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
@@ -10,6 +11,8 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.MetadataInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.parsers.config.ElasticsearchContentConfig;
+import org.gbif.pipelines.parsers.config.ContentfulConfigFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
@@ -36,38 +39,45 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
 
   private final Integer attempt;
   private final WsConfig wsConfig;
+  private final ElasticsearchContentConfig elasticsearchContentConfig;
   private final String endpointType;
   private MetadataServiceClient client;
 
-  private MetadataTransform(WsConfig wsConfig, String endpointType, Integer attempt) {
+  private MetadataTransform(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig, String endpointType, Integer attempt) {
     super(MetadataRecord.class, METADATA, MetadataTransform.class.getName(), METADATA_RECORDS_COUNT);
     this.wsConfig = wsConfig;
+    this.elasticsearchContentConfig = elasticsearchContentConfig;
     this.endpointType = endpointType;
     this.attempt = attempt;
   }
 
   public static MetadataTransform create() {
-    return new MetadataTransform(null, null, null);
+    return new MetadataTransform(null, null, null, null);
   }
 
-  public static MetadataTransform create(WsConfig wsConfig, String endpointType, Integer attempt) {
-    return new MetadataTransform(wsConfig, endpointType, attempt);
+  public static MetadataTransform create(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig, String endpointType, Integer attempt) {
+    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
   }
 
   public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt, boolean skipRegistryCalls) {
     WsConfig wsConfig = null;
+    ElasticsearchContentConfig elasticsearchContentConfig = null;
     if (!skipRegistryCalls) {
-      wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
+      Path properties = Paths.get(propertiesPath);
+      wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+      elasticsearchContentConfig = ContentfulConfigFactory.create(properties);
     }
-    return new MetadataTransform(wsConfig, endpointType, attempt);
+    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
   }
 
   public static MetadataTransform create(Properties properties, String endpointType, Integer attempt, boolean skipRegistryCalls) {
     WsConfig wsConfig = null;
+    ElasticsearchContentConfig elasticsearchContentConfig = null;
     if (!skipRegistryCalls) {
       wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+      elasticsearchContentConfig = ContentfulConfigFactory.create(properties);
     }
-    return new MetadataTransform(wsConfig, endpointType, attempt);
+    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
   }
 
   public MetadataTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -82,8 +92,8 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
 
   @Setup
   public void setup() {
-    if (wsConfig != null) {
-      client = MetadataServiceClient.create(wsConfig);
+    if (wsConfig != null && elasticsearchContentConfig != null) {
+      client = MetadataServiceClient.create(wsConfig, elasticsearchContentConfig);
     }
   }
 

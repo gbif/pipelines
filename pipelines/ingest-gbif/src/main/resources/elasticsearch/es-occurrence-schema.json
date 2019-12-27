@@ -49,6 +49,10 @@
       "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
       "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "projectId": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},
@@ -117,7 +121,9 @@
           "diagnostics.status": { "type": "keyword" },
           "usageParsedName.state": { "type": "keyword" },
           "usageParsedName.type": { "type": "keyword" },
-          "usageParsedName.notho": { "type": "keyword" }
+          "usageParsedName.notho": { "type": "keyword" },
+          "verbatimScientificName": { "type": "keyword", "normalizer": "lowercase_normalizer", "boost": 100, "copy_to": "all"  },
+          "taxonID": { "type": "keyword" }
         }
       },
 

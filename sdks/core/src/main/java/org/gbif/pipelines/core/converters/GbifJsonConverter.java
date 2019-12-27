@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
@@ -30,9 +32,12 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.avro.data.Json;
 import org.apache.avro.specific.SpecificRecordBase;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -73,6 +78,8 @@ public class GbifJsonConverter {
   private static final String ISSUES = "issues";
   private static final String CREATED_FIELD = "created";
 
+  private static final TermFactory TERM_FACTORY = TermFactory.instance();
+
   private static final LongFunction<LocalDateTime> DATE_FN =
       l -> LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneId.of("UTC"));
 
@@ -88,7 +95,8 @@ public class GbifJsonConverter {
           .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
           .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
-          .converter(MultimediaRecord.class, getMultimediaConverter());
+          .converter(MultimediaRecord.class, getMultimediaConverter())
+          .converter(TaggedValueRecord.class, geTaggedValueConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -437,6 +445,16 @@ public class GbifJsonConverter {
         ObjectNode usageParsedNameNode = (ObjectNode) classificationNode.get("usageParsedName");
         usageParsedNameNode.put("genericName", pn.getGenus() != null ? pn.getGenus() : pn.getUninomial());
       });
+
+
+      if (jc.getMainNode().has("verbatim")) {
+        JsonNode verbatimNode = jc.getMainNode().get("verbatim");
+        JsonNode coreNode = verbatimNode.get("core");
+        Optional.ofNullable(coreNode.get(DwcTerm.taxonID.qualifiedName()))
+          .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
+        Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))
+          .ifPresent(verbatimScientificName -> classificationNode.set(GbifTerm.verbatimScientificName.simpleName(), verbatimScientificName));
+      }
       jc.addJsonObject("gbifClassification", classificationNode);
     };
   }
@@ -672,6 +690,35 @@ public class GbifJsonConverter {
 
         jc.addJsonArray("mediaLicenses", mediaLicenses);
       }
+    };
+  }
+
+
+  /**
+   * String converter for {@link TaggedValueRecord}, convert an object to specific string view.
+   * Copies all the value at the root node level.
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   * "verbatim": {
+   *    ...
+   * },
+   * "institutionKey": "7ddf754f-d193-4cc9-b351-99906754a03b",
+   * "collectionKey": "7ddf754f-d193-4cc9-b351-99906754a07b",
+   *  //.....more fields
+   *
+   * }</pre>
+   */
+  private BiConsumer<JsonConverter, SpecificRecordBase> geTaggedValueConverter() {
+    return (jc, record) -> {
+      TaggedValueRecord tvr = (TaggedValueRecord) record;
+      if (Objects.nonNull(tvr.getTaggedValues())) {
+        tvr.getTaggedValues().forEach((k,v) ->
+          Optional.ofNullable(TERM_FACTORY.findTerm(k)).ifPresent( term -> jc.addJsonTextFieldNoCheck(term.simpleName(), v))
+        );
+      }
+
     };
   }
 }
