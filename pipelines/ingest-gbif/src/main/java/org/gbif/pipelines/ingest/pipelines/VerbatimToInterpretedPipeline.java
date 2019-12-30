@@ -22,6 +22,7 @@ import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.MetadataTransform;
+import org.gbif.pipelines.transforms.core.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -128,6 +129,7 @@ public class VerbatimToInterpretedPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
     LocationTransform locationTransform = LocationTransform.create(properties);
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -192,6 +194,11 @@ public class VerbatimToInterpretedPipeline {
     filteredUniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
+
+    filteredUniqueRecords
+      .apply("Check tagged values transform condition", taggedValuesTransform.check(types))
+      .apply("Interpret tagged values", taggedValuesTransform.interpret(metadataView))
+      .apply("Write tagged values to avro", taggedValuesTransform.write(pathFn));
 
     filteredUniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
