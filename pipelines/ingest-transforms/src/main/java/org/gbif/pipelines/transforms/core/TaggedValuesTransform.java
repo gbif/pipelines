@@ -10,6 +10,7 @@ import org.gbif.pipelines.transforms.Transform;
 
 import java.util.Optional;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
@@ -26,6 +27,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * ParDo runs sequence of interpretations for {@link TaggedValueRecord} using {@link ExtendedRecord}
  * as a source and {@link TaggedValuesInterpreter} as interpretation steps
  */
+@Slf4j
 public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValueRecord> {
 
   private PCollectionView<MetadataRecord> metadataView;
