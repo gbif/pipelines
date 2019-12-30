@@ -85,13 +85,17 @@ public class MetadataServiceClient {
    * Gets Contentful data.
    */
   private Optional<Project> getContentProjectData(Dataset dataset) {
-    return Optional.ofNullable(dataset.getProject()).map(project -> Retry.decorateFunction(retry, (Dataset d) -> {
-      try {
-        return contentService.getProject(d.getProject().getIdentifier());
-      } catch (Exception e) {
-        throw new WebServiceException("Error getting content data for dataset " + d, e);
-      }
-    }).apply(dataset));
+    if (Objects.nonNull(dataset.getProject()) && Objects.nonNull(dataset.getProject().getIdentifier())) {
+      return Optional.ofNullable(Retry.decorateFunction(retry, (Dataset d) -> {
+        try {
+          return contentService.getProject(d.getProject().getIdentifier());
+        } catch (Exception e) {
+          throw new WebServiceException("Error getting content data for dataset " + d, e);
+        }
+      }).apply(dataset));
+    }
+    return Optional.empty();
+
   }
 
   /** executes request and handles response and errors. */
