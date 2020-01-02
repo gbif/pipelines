@@ -171,7 +171,7 @@ public class AudubonInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     Map<String, String> audubon = new HashMap<>(2);
     audubon.put("http://purl.org/dc/elements/1.1/type", "image");
-    audubon.put("http://ns.adobe.com/xap/1.0/CreateDate", "2020/12/10");
+    audubon.put("http://ns.adobe.com/xap/1.0/CreateDate", "2021/12/10");
 
     ext.put("http://rs.tdwg.org/ac/terms/Multimedia", Collections.singletonList(audubon));
 

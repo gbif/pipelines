@@ -54,7 +54,7 @@ public class MultimediaInterpreterTest {
     ext2.put(DcTerm.source.qualifiedName(), "Sr2");
 
     Map<String, String> ext3 = new HashMap<>(1);
-    ext3.put(DcTerm.created.qualifiedName(), "2020-01-12T18:33:58.000+0000");
+    ext3.put(DcTerm.created.qualifiedName(), "2021-01-12T18:33:58.000+0000");
 
     Map<String, String> ext4 = new HashMap<>(4);
     ext3.put(DcTerm.identifier.qualifiedName(), "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
