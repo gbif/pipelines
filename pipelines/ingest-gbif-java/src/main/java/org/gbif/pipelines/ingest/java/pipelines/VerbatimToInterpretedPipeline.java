@@ -243,7 +243,7 @@ public class VerbatimToInterpretedPipeline {
         BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
         if (br == null) {
           verbatimWriter.append(er);
-          taggedValuesTransform.processElement(er).ifPresent(taggedValueWriter::append);
+          taggedValuesTransform.processElement(er, mdr).ifPresent(taggedValueWriter::append);
           temporalTransform.processElement(er).ifPresent(temporalWriter::append);
           multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
           imageTransform.processElement(er).ifPresent(imageWriter::append);
