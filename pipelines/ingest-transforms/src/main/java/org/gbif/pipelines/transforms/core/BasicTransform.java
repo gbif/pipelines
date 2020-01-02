@@ -151,6 +151,11 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
         .via(BasicInterpreter::interpretReferences)
+        .via(BasicInterpreter::interpretOrganismQuantity)
+        .via(BasicInterpreter::interpretOrganismQuantityType)
+        .via(BasicInterpreter::interpretSampleSizeUnit)
+        .via(BasicInterpreter::interpretSampleSizeValue)
+        .via(BasicInterpreter::interpretRelativeOrganismQuantity)
         .get();
   }
 }

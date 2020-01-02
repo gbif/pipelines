@@ -13,6 +13,7 @@ import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
+import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.Parsable;
 import org.gbif.common.parsers.core.ParseResult;
@@ -39,6 +40,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /**
@@ -226,7 +228,7 @@ public class BasicInterpreter {
 
   /** {@link GbifTerm#typifiedName} interpretation. */
   public static void interpretTypifiedName(ExtendedRecord er, BasicRecord br) {
-    Optional<String> typifiedName = Optional.ofNullable(er.getCoreTerms().get(GbifTerm.typifiedName.qualifiedName()));
+    Optional<String> typifiedName = extractOptValue(er, GbifTerm.typifiedName);
     if (typifiedName.isPresent()) {
       br.setTypifiedName(typifiedName.get());
     } else {
@@ -238,6 +240,44 @@ public class BasicInterpreter {
               br.setTypifiedName(result.getPayload());
             }
           });
+    }
+  }
+
+  /** {@link DwcTerm#sampleSizeValue} interpretation. */
+  public static void interpretSampleSizeValue(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, DwcTerm.sampleSizeValue).map(String::trim).ifPresent(br::setSampleSizeValue);
+  }
+
+  /** {@link DwcTerm#sampleSizeUnit} interpretation. */
+  public static void interpretSampleSizeUnit(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, DwcTerm.sampleSizeUnit).map(String::trim).ifPresent(br::setSampleSizeUnit);
+  }
+
+  /** {@link DwcTerm#organismQuantity} interpretation. */
+  public static void interpretOrganismQuantity(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, DwcTerm.organismQuantity).map(String::trim).ifPresent(br::setOrganismQuantity);
+  }
+
+  /** {@link DwcTerm#organismQuantityType} interpretation. */
+  public static void interpretOrganismQuantityType(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, DwcTerm.organismQuantityType).map(String::trim).ifPresent(br::setOrganismQuantityType);
+  }
+
+  /** If the organism and sample have the same measure type, we can calculate relative organism quantity */
+  public static void interpretRelativeOrganismQuantity(ExtendedRecord er, BasicRecord br) {
+    if (!Strings.isNullOrEmpty(br.getOrganismQuantityType()) && !Strings.isNullOrEmpty(br.getSampleSizeUnit())) {
+      if (br.getOrganismQuantityType().equalsIgnoreCase(br.getSampleSizeUnit())) {
+        Double organismQuantity = NumberParser.parseDouble(br.getOrganismQuantity());
+        Double sampleSizeValue = NumberParser.parseDouble(br.getSampleSizeValue());
+        if (organismQuantity != null && sampleSizeValue != null
+            && !organismQuantity.isNaN() && !organismQuantity.isInfinite()
+            && !sampleSizeValue.isNaN() && !sampleSizeValue.isInfinite()) {
+          double result = organismQuantity / sampleSizeValue;
+          if (!Double.isNaN(result) && !Double.isInfinite(result)) {
+            br.setRelativeOrganismQuantity(organismQuantity / sampleSizeValue);
+          }
+        }
+      }
     }
   }
 }
