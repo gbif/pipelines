@@ -302,7 +302,7 @@ public class GbifJsonConverter {
         .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
       Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))
         .ifPresent(verbatimScientificName -> classificationNode.set(GbifTerm.verbatimScientificName.simpleName(), verbatimScientificName));
-      if (!jc.getMainNode().has("gbifClassification")) {
+      if (!jc.getMainNode().has("gbifClassification") && classificationNode.size() > 0) {
         jc.addJsonObject("gbifClassification", classificationNode);
       }
 
