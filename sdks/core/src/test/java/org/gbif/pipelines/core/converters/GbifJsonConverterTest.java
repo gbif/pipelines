@@ -334,12 +334,13 @@ public class GbifJsonConverterTest {
     String expected =
         "{\"id\":\"777\",\"all\":[\"T1\",\"Name\"],"
             + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/taxonID\":\"T1\",\"http://rs.tdwg.org/dwc/terms/scientificName\":\"Name\"},\"extensions\":{}},"
-            + "\"gbifClassification\":{\"usage\":{\"key\":1,\"name\":\"n\",\"rank\":\"ABERRATION\"},"
+            + "\"gbifClassification\":{\"taxonID\":\"T1\",\"verbatimScientificName\":\"Name\","
+            + "\"usage\":{\"key\":1,\"name\":\"n\",\"rank\":\"ABERRATION\"},"
             + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
             + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}]"
             + ",\"acceptedUsage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
             + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\","
-            + "\"classificationPath\":\"_1\",\"taxonKey\":[1,2],\"taxonID\":\"T1\",\"verbatimScientificName\":\"Name\"},"
+            + "\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},"
             + "\"created\":\"1970-01-01T00:00\"}";
 
     // State

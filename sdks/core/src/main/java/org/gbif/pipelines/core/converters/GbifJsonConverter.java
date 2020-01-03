@@ -295,6 +295,17 @@ public class GbifJsonConverter {
 
       // Main node
       jc.getMainNode().set("verbatim", verbatimNode);
+
+      //Classification verbatim
+      ObjectNode classificationNode = jc.getMainNode().has("gbifClassification")? (ObjectNode)jc.getMainNode().get("gbifClassification") : JsonConverter.createObjectNode();
+      Optional.ofNullable(coreNode.get(DwcTerm.taxonID.qualifiedName()))
+        .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
+      Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))
+        .ifPresent(verbatimScientificName -> classificationNode.set(GbifTerm.verbatimScientificName.simpleName(), verbatimScientificName));
+      if (!jc.getMainNode().has("gbifClassification")) {
+        jc.addJsonObject("gbifClassification", classificationNode);
+      }
+
     };
   }
 
@@ -414,7 +425,7 @@ public class GbifJsonConverter {
       TaxonRecord tr = trBuilder.build();
 
       //Create a ObjectNode with the specific fields copied from the original record
-      ObjectNode classificationNode = JsonConverter.createObjectNode();
+      ObjectNode classificationNode = jc.getMainNode().has("gbifClassification")? (ObjectNode)jc.getMainNode().get("gbifClassification") : JsonConverter.createObjectNode();
       jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
       Set<IntNode> taxonKey = new HashSet<>();
@@ -446,16 +457,9 @@ public class GbifJsonConverter {
         usageParsedNameNode.put("genericName", pn.getGenus() != null ? pn.getGenus() : pn.getUninomial());
       });
 
-
-      if (jc.getMainNode().has("verbatim")) {
-        JsonNode verbatimNode = jc.getMainNode().get("verbatim");
-        JsonNode coreNode = verbatimNode.get("core");
-        Optional.ofNullable(coreNode.get(DwcTerm.taxonID.qualifiedName()))
-          .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
-        Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))
-          .ifPresent(verbatimScientificName -> classificationNode.set(GbifTerm.verbatimScientificName.simpleName(), verbatimScientificName));
+      if (!jc.getMainNode().has("gbifClassification")) {
+        jc.addJsonObject("gbifClassification", classificationNode);
       }
-      jc.addJsonObject("gbifClassification", classificationNode);
     };
   }
 
