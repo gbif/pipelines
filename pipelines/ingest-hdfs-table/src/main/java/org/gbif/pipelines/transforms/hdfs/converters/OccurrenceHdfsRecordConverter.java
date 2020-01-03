@@ -156,7 +156,7 @@ public class OccurrenceHdfsRecordConverter {
 
   /**
    * Adds the list of issues to the list of issues in the {@link OccurrenceHdfsRecord}.
-   * @param issueRecord
+   * @param issueRecord record issues
    * @param hr target object
    */
   private static void addIssues(IssueRecord issueRecord, OccurrenceHdfsRecord hr) {
@@ -367,6 +367,11 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSex(br.getSex());
       hr.setTypestatus(br.getTypeStatus());
       hr.setTypifiedname(br.getTypifiedName());
+      hr.setOrganismquantity(br.getOrganismQuantity());
+      hr.setOrganismquantitytype(br.getOrganismQuantityType());
+      hr.setSamplesizeunit(br.getSampleSizeUnit());
+      hr.setSamplesizevalue(br.getSampleSizeValue());
+      hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
 
       setCreatedIfGreater(hr, br.getCreated());
       addIssues(br.getIssues(), hr);

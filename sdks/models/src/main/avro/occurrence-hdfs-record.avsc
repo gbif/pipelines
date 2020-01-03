@@ -913,6 +913,9 @@
     "name" : "organismquantitytype",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "relativeorganismquantity",
+    "type" : [ "double", "null" ]
+  }, {
     "name" : "sex",
     "type" : [ "string", "null" ]
   }, {
