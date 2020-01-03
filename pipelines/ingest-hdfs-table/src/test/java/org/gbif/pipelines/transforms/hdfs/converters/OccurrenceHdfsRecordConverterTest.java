@@ -51,13 +51,15 @@ import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter.*;
+import static org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter.STRING_TO_DATE;
+import static org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord;
 import static org.junit.Assert.assertEquals;
 
 public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void extendedRecordMapperTest() {
+    // State
     Map<String, String> coreTerms = new HashMap<>();
     coreTerms.put(DwcTerm.verbatimDepth.simpleName(), "1.0");
     coreTerms.put(DwcTerm.collectionCode.simpleName(), "C1");
@@ -70,21 +72,28 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DcTerm.date.simpleName(), "26/06/2019");
     coreTerms.put(DwcTerm.basisOfRecord.simpleName(), BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase());
     coreTerms.put(DwcTerm.lifeStage.simpleName(), "adultss");
+    coreTerms.put(DwcTerm.sampleSizeUnit.simpleName(), "unit");
+    coreTerms.put(DwcTerm.sampleSizeValue.simpleName(), "value");
+    coreTerms.put(DwcTerm.organismQuantity.simpleName(), "quantity");
+    coreTerms.put(DwcTerm.organismQuantityType.simpleName(), "type");
+
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
         .setId("1")
         .setCoreTerms(coreTerms).build();
+
     BasicRecord basicRecord = BasicRecord.newBuilder()
-                                          .setId("1")
-                                          .setCreated(1L)
-                                          .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
+        .setId("1")
+        .setCreated(1L)
+        .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
+
     List<RankedName> classification = new ArrayList<>();
-    classification.add( RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
-    classification.add( RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER).build());
+    classification.add(RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
+    classification.add(RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER).build());
     TaxonRecord taxonRecord = TaxonRecord.newBuilder()
-        .setCreated(
-            2L) //This value for lastParsed and lastInterpreted since is greater that the Basic record created date
+        .setCreated(2L) //This value for lastParsed and lastInterpreted since is greater that the Basic record created date
         .setClassification(classification)
         .build();
+
     TemporalRecord temporalRecord = TemporalRecord.newBuilder()
         .setId("1")
         .setDateIdentified("2019-11-12T13:24:56.963591")
@@ -92,12 +101,15 @@ public class OccurrenceHdfsRecordConverterTest {
         .build();
 
     TaggedValueRecord taggedValueRecord = TaggedValueRecord.newBuilder()
-      .setId("1")
-      .setTaggedValues(Collections.singletonMap(GbifInternalTerm.collectionKey.qualifiedName(), "7ddf754f-d193-4cc9-b351-99906754a03b"))
-      .build();
+        .setId("1")
+        .setTaggedValues(Collections.singletonMap(GbifInternalTerm.collectionKey.qualifiedName(), "7ddf754f-d193-4cc9-b351-99906754a03b"))
+        .build();
 
+    // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord, taxonRecord, temporalRecord, extendedRecord, taggedValueRecord);
-    //Test common fields
+
+    // Should
+    // Test common fields
     Assert.assertEquals("1.0", hdfsRecord.getVerbatimdepth());
     Assert.assertEquals("C1", hdfsRecord.getCollectioncode());
     Assert.assertEquals("C1", hdfsRecord.getVCollectioncode());
@@ -107,8 +119,12 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("CN1", hdfsRecord.getVCatalognumber());
     Assert.assertEquals("1", hdfsRecord.getIdentifier());
     Assert.assertEquals("1", hdfsRecord.getVIdentifier());
+    Assert.assertEquals("quantity", hdfsRecord.getVOrganismquantity());
+    Assert.assertEquals("type", hdfsRecord.getVOrganismquantitytype());
+    Assert.assertEquals("unit", hdfsRecord.getVSamplesizeunit());
+    Assert.assertEquals("value", hdfsRecord.getVSamplesizevalue());
 
-    //Test fields names with reserved words
+    // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
     Assert.assertEquals("classs", hdfsRecord.getVClass());
     Assert.assertEquals("format", hdfsRecord.getFormat());
@@ -120,22 +136,22 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("26/06/2019", hdfsRecord.getDate());
     Assert.assertEquals("26/06/2019", hdfsRecord.getVDate());
 
-    // test temporal fields
+    // Test temporal fields
     Assert.assertNotNull(hdfsRecord.getDateidentified());
     Assert.assertNotNull(hdfsRecord.getModified());
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
     Assert.assertNull(hdfsRecord.getLifestage());
-    Assert.assertEquals( "adultss", hdfsRecord.getVLifestage());
+    Assert.assertEquals("adultss", hdfsRecord.getVLifestage());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
     Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionKey());
-
   }
 
   @Test
   public void multimediaMapperTest() {
+    //
     MultimediaRecord multimediaRecord = new MultimediaRecord();
     multimediaRecord.setId("1");
     Multimedia multimedia = new Multimedia();
@@ -153,6 +169,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void basicRecordMapperTest() {
+    // State
     long now = new Date().getTime();
     BasicRecord basicRecord = new BasicRecord();
     basicRecord.setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name());
@@ -164,7 +181,16 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setEstablishmentMeans(EstablishmentMeans.INVASIVE.name());
     basicRecord.setCreated(now);
     basicRecord.setGbifId(1L);
+    basicRecord.setOrganismQuantity("organism");
+    basicRecord.setOrganismQuantityType("type");
+    basicRecord.setSampleSizeUnit("unit");
+    basicRecord.setSampleSizeValue("value");
+    basicRecord.setRelativeOrganismQuantity(2d);
+
+    // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord);
+
+    // Should
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
     Assert.assertEquals(Sex.HERMAPHRODITE.name(), hdfsRecord.getSex());
     Assert.assertEquals(Integer.valueOf(99), hdfsRecord.getIndividualcount());
@@ -172,10 +198,16 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(EstablishmentMeans.INVASIVE.name(), hdfsRecord.getEstablishmentmeans());
+    Assert.assertEquals("organism", hdfsRecord.getOrganismquantity());
+    Assert.assertEquals("type", hdfsRecord.getOrganismquantitytype());
+    Assert.assertEquals("unit", hdfsRecord.getSamplesizeunit());
+    Assert.assertEquals("value", hdfsRecord.getSamplesizevalue());
+    Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
   }
 
   @Test
   public void taxonMapperTest() {
+    // State
     List<RankedName> classification = new ArrayList<>();
     classification.add(RankedName.newBuilder().setKey(2).setRank(Rank.KINGDOM).setName("Archaea").build());
     classification.add(RankedName.newBuilder().setKey(79).setRank(Rank.PHYLUM).setName("Crenarchaeota").build());
@@ -216,7 +248,10 @@ public class OccurrenceHdfsRecordConverterTest {
     taxonRecord.setUsageParsedName(parsedName);
     taxonRecord.setNomenclature(Nomenclature.newBuilder().setSource("nothing").build());
 
+    // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(taxonRecord);
+
+    // Should
     Assert.assertEquals("Archaea", hdfsRecord.getKingdom());
     Assert.assertEquals(Integer.valueOf(2), hdfsRecord.getKingdomkey());
 
@@ -275,6 +310,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void metadataMapperTest() {
+    // State
     String datasetKey = UUID.randomUUID().toString();
     String nodeKey = UUID.randomUUID().toString();
     String installationKey = UUID.randomUUID().toString();
@@ -296,7 +332,11 @@ public class OccurrenceHdfsRecordConverterTest {
         .setPublisherTitle("Pub")
         .setPublishingOrganizationKey(organizationKey)
         .build();
+
+    // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(metadataRecord);
+
+    // Should
     Assert.assertEquals(datasetKey, hdfsRecord.getDatasetkey());
     Assert.assertEquals(networkKey, hdfsRecord.getNetworkkey());
     Assert.assertEquals(installationKey, hdfsRecord.getInstallationkey());
@@ -305,6 +345,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void locationMapperTest() {
+    // State
     LocationRecord locationRecord = LocationRecord.newBuilder()
         .setId("1")
         .setCountry(Country.COSTA_RICA.name())
@@ -329,7 +370,11 @@ public class OccurrenceHdfsRecordConverterTest {
         .setMaximumElevationInMeters(0.1)
         .setMinimumElevationInMeters(0.1)
         .build();
+
+    // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(locationRecord);
+
+    // Should
     Assert.assertEquals(Country.COSTA_RICA.getIso2LetterCode(), hdfsRecord.getCountrycode());
     Assert.assertEquals(Double.valueOf(9.934739d), hdfsRecord.getDecimallatitude());
     Assert.assertEquals(Double.valueOf(-84.087502d), hdfsRecord.getDecimallongitude());
@@ -349,7 +394,7 @@ public class OccurrenceHdfsRecordConverterTest {
 
   @Test
   public void issueMappingTest() {
-
+    // State
     String[] issues = {
         OccurrenceIssue.IDENTIFIED_DATE_INVALID.name(),
         OccurrenceIssue.MODIFIED_DATE_INVALID.name(),
@@ -367,7 +412,10 @@ public class OccurrenceHdfsRecordConverterTest {
             .build())
         .build();
 
+    // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(temporalRecord);
+
+    // Should
     Assert.assertArrayEquals(issues, hdfsRecord.getIssue().toArray(new String[issues.length]));
   }
 

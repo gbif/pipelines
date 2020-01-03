@@ -17,6 +17,11 @@
     {"name": "individualCount", "type": ["null", "int"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/individualCount"},
     {"name": "typeStatus", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/typeStatus"},
     {"name": "typifiedName", "type": ["null", "string"], "default" : null, "doc": "https://gbif.github.io/dwc-api/apidocs/org/gbif/dwc/terms/GbifTerm.html#typifiedName"},
+    {"name": "sampleSizeValue", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeValue"},
+    {"name": "sampleSizeUnit", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/sampleSizeUnit"},
+    {"name": "organismQuantity", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/organismQuantity"},
+    {"name": "organismQuantityType", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/organismQuantityType"},
+    {"name": "relativeOrganismQuantity", "type": ["null", "double"], "default" : null},
     {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
     {"name": "issues", "type": "IssueRecord", "default":{}}
   ]
