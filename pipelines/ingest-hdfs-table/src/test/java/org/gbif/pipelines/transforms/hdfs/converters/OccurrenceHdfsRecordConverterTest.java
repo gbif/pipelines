@@ -146,7 +146,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("adultss", hdfsRecord.getVLifestage());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
-    Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionKey());
+    Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionkey());
   }
 
   @Test

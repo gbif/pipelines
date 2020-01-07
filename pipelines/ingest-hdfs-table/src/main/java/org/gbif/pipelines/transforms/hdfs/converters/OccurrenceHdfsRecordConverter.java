@@ -537,8 +537,8 @@ public class OccurrenceHdfsRecordConverter {
       TaggedValueRecord tvr = (TaggedValueRecord)sr;
       Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.projectId.qualifiedName())).ifPresent(hr::setProjectid);
       Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.programmeAcronym.qualifiedName())).ifPresent(hr::setProgrammeacronym);
-      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.collectionKey.qualifiedName())).ifPresent(hr::setCollectionKey);
-      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.institutionKey.qualifiedName())).ifPresent(hr::setInstitutionKey);
+      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.collectionKey.qualifiedName())).ifPresent(hr::setCollectionkey);
+      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.institutionKey.qualifiedName())).ifPresent(hr::setInstitutionkey);
     };
   }
 

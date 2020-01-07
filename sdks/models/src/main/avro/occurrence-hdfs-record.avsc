@@ -687,10 +687,10 @@
     "name" : "programmeacronym",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "institutionKey",
+    "name" : "institutionkey",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "collectionKey",
+    "name" : "collectionkey",
     "type" : [ "string", "null" ]
   },
   {
