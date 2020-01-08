@@ -74,10 +74,10 @@
       "locality":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "occurrenceId":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
 
-      "organismQuantity": {"type":  "keyword", "copy_to": "all"},
+      "organismQuantity": {"type":  "double"},
       "organismQuantityType": {"type":  "keyword", "copy_to": "all"},
       "sampleSizeUnit": {"type":  "keyword", "copy_to": "all"},
-      "sampleSizeValue": {"type":  "keyword", "copy_to": "all"},
+      "sampleSizeValue": {"type":  "double"},
       "relativeOrganismQuantity": {"type":  "double"},
 
       "continent": {"type":"keyword", "copy_to": "all"},
