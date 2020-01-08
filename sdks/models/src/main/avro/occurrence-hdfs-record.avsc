@@ -908,7 +908,7 @@
     "type" : [ "int", "null" ]
   }, {
     "name" : "organismquantity",
-    "type" : [ "string", "null" ]
+    "type" : [ "double", "null" ]
   }, {
     "name" : "organismquantitytype",
     "type" : [ "string", "null" ]
@@ -1022,7 +1022,7 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "samplesizevalue",
-    "type" : [ "string", "null" ]
+    "type" : [ "double", "null" ]
   }, {
     "name" : "samplesizeunit",
     "type" : [ "string", "null" ]

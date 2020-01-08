@@ -58,8 +58,8 @@ public class GbifJsonConverterTest {
             + "{\"usage\":{\"key\":10,\"name\":\"synonym\",\"rank\":\"SPECIES\"},\"classification\":[{\"key\":1,\"name\":\"Name\","
             + "\"rank\":\"CHEMOFORM\"},{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],\"acceptedUsage\":{\"key\":11,\"name\":"
             + "\"accepted usage\",\"rank\":\"SPECIES\"},\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":"
-            + "\"Name2\",\"classificationPath\":\"_1_2\",\"taxonKey\":[1,2,10,11]},\"gbifId\":111,\"sampleSizeValue\":\"SampleSizeValue\","
-            + "\"sampleSizeUnit\":\"SampleSizeUnit\",\"organismQuantity\":\"OrganismQuantity\",\"organismQuantityType\":\"OrganismQuantityType\","
+            + "\"Name2\",\"classificationPath\":\"_1_2\",\"taxonKey\":[1,2,10,11]},\"gbifId\":111,\"sampleSizeValue\":2.0,"
+            + "\"sampleSizeUnit\":\"SampleSizeUnit\",\"organismQuantity\":2.0,\"organismQuantityType\":\"OrganismQuantityType\","
             + "\"relativeOrganismQuantity\":0.001,\"collectionKey\":\"75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d\","
             + "\"institutionKey\":\"6ac3f774-d9fb-4796-b3e9-92bf6c81c084\",\"datasetKey\":\"datatesKey\",\"crawlId\":1,"
             + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\","
@@ -93,10 +93,10 @@ public class GbifJsonConverterTest {
     BasicRecord br = BasicRecord.newBuilder()
         .setId("777")
         .setGbifId(111L)
-        .setOrganismQuantity("OrganismQuantity")
+        .setOrganismQuantity(2d)
         .setOrganismQuantityType("OrganismQuantityType")
         .setSampleSizeUnit("SampleSizeUnit")
-        .setSampleSizeValue("SampleSizeValue")
+        .setSampleSizeValue(2d)
         .setRelativeOrganismQuantity(0.001d)
         .build();
 

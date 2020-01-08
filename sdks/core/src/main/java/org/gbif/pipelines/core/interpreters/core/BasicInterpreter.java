@@ -245,37 +245,47 @@ public class BasicInterpreter {
 
   /** {@link DwcTerm#sampleSizeValue} interpretation. */
   public static void interpretSampleSizeValue(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, DwcTerm.sampleSizeValue).map(String::trim).ifPresent(br::setSampleSizeValue);
+    extractOptValue(er, DwcTerm.sampleSizeValue)
+        .map(String::trim)
+        .map(NumberParser::parseDouble)
+        .filter(x-> !x.isInfinite() && !x.isNaN())
+        .ifPresent(br::setSampleSizeValue);
   }
 
   /** {@link DwcTerm#sampleSizeUnit} interpretation. */
   public static void interpretSampleSizeUnit(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, DwcTerm.sampleSizeUnit).map(String::trim).ifPresent(br::setSampleSizeUnit);
+    extractOptValue(er, DwcTerm.sampleSizeUnit)
+        .map(String::trim)
+        .ifPresent(br::setSampleSizeUnit);
   }
 
   /** {@link DwcTerm#organismQuantity} interpretation. */
   public static void interpretOrganismQuantity(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, DwcTerm.organismQuantity).map(String::trim).ifPresent(br::setOrganismQuantity);
+    extractOptValue(er, DwcTerm.organismQuantity)
+        .map(String::trim)
+        .map(NumberParser::parseDouble)
+        .filter(x-> !x.isInfinite() && !x.isNaN())
+        .ifPresent(br::setOrganismQuantity);
   }
 
   /** {@link DwcTerm#organismQuantityType} interpretation. */
   public static void interpretOrganismQuantityType(ExtendedRecord er, BasicRecord br) {
-    extractOptValue(er, DwcTerm.organismQuantityType).map(String::trim).ifPresent(br::setOrganismQuantityType);
+    extractOptValue(er, DwcTerm.organismQuantityType)
+        .map(String::trim)
+        .ifPresent(br::setOrganismQuantityType);
   }
 
   /** If the organism and sample have the same measure type, we can calculate relative organism quantity */
-  public static void interpretRelativeOrganismQuantity(ExtendedRecord er, BasicRecord br) {
-    if (!Strings.isNullOrEmpty(br.getOrganismQuantityType()) && !Strings.isNullOrEmpty(br.getSampleSizeUnit())) {
-      if (br.getOrganismQuantityType().equalsIgnoreCase(br.getSampleSizeUnit())) {
-        Double organismQuantity = NumberParser.parseDouble(br.getOrganismQuantity());
-        Double sampleSizeValue = NumberParser.parseDouble(br.getSampleSizeValue());
-        if (organismQuantity != null && sampleSizeValue != null
-            && !organismQuantity.isNaN() && !organismQuantity.isInfinite()
-            && !sampleSizeValue.isNaN() && !sampleSizeValue.isInfinite()) {
-          double result = organismQuantity / sampleSizeValue;
-          if (!Double.isNaN(result) && !Double.isInfinite(result)) {
-            br.setRelativeOrganismQuantity(organismQuantity / sampleSizeValue);
-          }
+  public static void interpretRelativeOrganismQuantity(BasicRecord br) {
+    if (!Strings.isNullOrEmpty(br.getOrganismQuantityType())
+        && !Strings.isNullOrEmpty(br.getSampleSizeUnit())
+        && br.getOrganismQuantityType().equalsIgnoreCase(br.getSampleSizeUnit())) {
+      Double organismQuantity = br.getOrganismQuantity();
+      Double sampleSizeValue = br.getSampleSizeValue();
+      if (organismQuantity != null && sampleSizeValue != null) {
+        double result = organismQuantity / sampleSizeValue;
+        if (!Double.isNaN(result) && !Double.isInfinite(result)) {
+          br.setRelativeOrganismQuantity(organismQuantity / sampleSizeValue);
         }
       }
     }

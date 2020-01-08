@@ -28,7 +28,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretSampleSizeValue(er, br);
 
     // Should
-    Assert.assertEquals("value", br.getSampleSizeValue());
+    Assert.assertNull(br.getSampleSizeValue());
   }
 
   @Test
@@ -62,7 +62,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretOrganismQuantity(er, br);
 
     // Should
-    Assert.assertEquals("value", br.getOrganismQuantity());
+    Assert.assertNull(br.getOrganismQuantity());
   }
 
   @Test
@@ -101,7 +101,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretSampleSizeUnit(er, br);
     BasicInterpreter.interpretSampleSizeValue(er, br);
 
-    BasicInterpreter.interpretRelativeOrganismQuantity(er, br);
+    BasicInterpreter.interpretRelativeOrganismQuantity(br);
 
     // Should
     Assert.assertEquals(Double.valueOf(5d), br.getRelativeOrganismQuantity());
@@ -124,7 +124,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretSampleSizeUnit(er, br);
     BasicInterpreter.interpretSampleSizeValue(er, br);
 
-    BasicInterpreter.interpretRelativeOrganismQuantity(er, br);
+    BasicInterpreter.interpretRelativeOrganismQuantity(br);
 
     // Should
     Assert.assertNull(br.getRelativeOrganismQuantity());
@@ -147,7 +147,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretSampleSizeUnit(er, br);
     BasicInterpreter.interpretSampleSizeValue(er, br);
 
-    BasicInterpreter.interpretRelativeOrganismQuantity(er, br);
+    BasicInterpreter.interpretRelativeOrganismQuantity(br);
 
     // Should
     Assert.assertNull(br.getRelativeOrganismQuantity());
@@ -173,7 +173,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretSampleSizeUnit(er, br);
     BasicInterpreter.interpretSampleSizeValue(er, br);
 
-    BasicInterpreter.interpretRelativeOrganismQuantity(er, br);
+    BasicInterpreter.interpretRelativeOrganismQuantity(br);
 
     // Should
     Assert.assertNull(br.getRelativeOrganismQuantity());
@@ -198,7 +198,7 @@ public class BasicInterpreterTest {
     BasicInterpreter.interpretSampleSizeUnit(er, br);
     BasicInterpreter.interpretSampleSizeValue(er, br);
 
-    BasicInterpreter.interpretRelativeOrganismQuantity(er, br);
+    BasicInterpreter.interpretRelativeOrganismQuantity(br);
 
     // Should
     Assert.assertNull(br.getRelativeOrganismQuantity());

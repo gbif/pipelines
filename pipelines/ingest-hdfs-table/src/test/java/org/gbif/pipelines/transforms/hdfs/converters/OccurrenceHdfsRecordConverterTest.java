@@ -181,10 +181,10 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setEstablishmentMeans(EstablishmentMeans.INVASIVE.name());
     basicRecord.setCreated(now);
     basicRecord.setGbifId(1L);
-    basicRecord.setOrganismQuantity("organism");
+    basicRecord.setOrganismQuantity(2d);
     basicRecord.setOrganismQuantityType("type");
     basicRecord.setSampleSizeUnit("unit");
-    basicRecord.setSampleSizeValue("value");
+    basicRecord.setSampleSizeValue(2d);
     basicRecord.setRelativeOrganismQuantity(2d);
 
     // When
@@ -198,10 +198,10 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(TypeStatus.ALLOTYPE.name(), hdfsRecord.getTypestatus());
     Assert.assertEquals("noName", hdfsRecord.getTypifiedname());
     Assert.assertEquals(EstablishmentMeans.INVASIVE.name(), hdfsRecord.getEstablishmentmeans());
-    Assert.assertEquals("organism", hdfsRecord.getOrganismquantity());
+    Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getOrganismquantity());
     Assert.assertEquals("type", hdfsRecord.getOrganismquantitytype());
     Assert.assertEquals("unit", hdfsRecord.getSamplesizeunit());
-    Assert.assertEquals("value", hdfsRecord.getSamplesizevalue());
+    Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getSamplesizevalue());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
   }
 
