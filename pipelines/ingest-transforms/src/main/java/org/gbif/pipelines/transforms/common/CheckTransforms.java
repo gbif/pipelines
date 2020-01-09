@@ -3,7 +3,7 @@ package org.gbif.pipelines.transforms.common;
 import java.util.Arrays;
 import java.util.Set;
 
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.PTransform;
@@ -12,8 +12,6 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
 import lombok.AllArgsConstructor;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
  * Set of different predicate functions. Each function checks predicate and returns {@link  PCollection},
@@ -34,8 +32,9 @@ public class CheckTransforms<T> extends PTransform<PCollection<T>, PCollection<T
     return condition ? input : Create.empty(TypeDescriptor.of(clazz)).expand(PBegin.in(input.getPipeline()));
   }
 
-  public static boolean checkRecordType(Set<String> types, RecordType... type) {
+  public static boolean checkRecordType(Set<String> types, InterpretationType... type) {
     boolean matchType = Arrays.stream(type).anyMatch(x -> types.contains(x.name()));
-    return types.contains(ALL.name()) || matchType;
+    boolean all = Arrays.stream(type).anyMatch(x -> types.contains(x.all()));
+    return all || matchType;
   }
 }

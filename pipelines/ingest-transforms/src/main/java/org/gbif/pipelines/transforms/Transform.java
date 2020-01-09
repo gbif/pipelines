@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.InterpretationType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
@@ -32,7 +32,7 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
   private final TupleTag<T> tag = new TupleTag<T>() {};
-  private final RecordType recordType;
+  private final InterpretationType recordType;
   private final String baseName;
   private final String baseInvalidName;
   private final Class<T> clazz;
@@ -41,7 +41,7 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
   private Counter counter;
   private SerializableConsumer<String> counterFn = v -> counter.inc();
 
-  public Transform(Class<T> clazz, RecordType recordType, String counterNamespace, String counterName) {
+  public Transform(Class<T> clazz, InterpretationType recordType, String counterNamespace, String counterName) {
     this.clazz = clazz;
     this.recordType = recordType;
     this.baseName = recordType.name().toLowerCase();
@@ -54,12 +54,12 @@ public abstract class Transform<R, T extends SpecificRecordBase> extends DoFn<R,
     this.counterFn = counterFn;
   }
 
-  protected RecordType getRecordType() {
+  protected InterpretationType getRecordType() {
     return recordType;
   }
 
   /**
-   * Checks if list contains {@link RecordType#BASIC}, else returns empty {@link PCollection<T>}
+   * Checks if list contains {@link InterpretationType}, else returns empty {@link PCollection<T>}
    */
   public CheckTransforms<ExtendedRecord> check(Set<String> types) {
     return CheckTransforms.create(ExtendedRecord.class, CheckTransforms.checkRecordType(types, recordType));

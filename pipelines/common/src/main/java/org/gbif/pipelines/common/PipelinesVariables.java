@@ -1,5 +1,7 @@
 package org.gbif.pipelines.common;
 
+import java.io.Serializable;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -32,7 +34,14 @@ public class PipelinesVariables {
       public static final String DIRECTORY_NAME = "interpreted";
       public static final String FILE_NAME = "interpret-";
 
-      public enum RecordType {
+      public interface InterpretationType extends Serializable {
+
+        String name();
+
+        String all();
+      }
+
+      public enum RecordType implements InterpretationType {
         ALL,
         // Raw
         VERBATIM,
@@ -51,7 +60,12 @@ public class PipelinesVariables {
         AMPLIFICATION,
         // Specific
         AUSTRALIA_SPATIAL,
-        OCCURRENCE_HDFS_RECORD
+        OCCURRENCE_HDFS_RECORD;
+
+        @Override
+        public String all() {
+          return ALL.name();
+        }
       }
 
     }
