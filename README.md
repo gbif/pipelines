@@ -1,4 +1,5 @@
 [![Build Status](https://builds.gbif.org/job/pipelines/badge/icon?style=flat-square)](https://builds.gbif.org/job/pipelines/)
+[![Coverage](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.pipelines%3Apipelines-parent&metric=coverage)](https://sonar.gbif.org/dashboard?id=org.gbif.pipelines%3Apipelines-parent)
 
 # Table of Contents
 
