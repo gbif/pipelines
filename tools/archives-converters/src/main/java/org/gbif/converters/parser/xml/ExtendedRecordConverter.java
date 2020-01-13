@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
-import org.gbif.converters.parser.xml.parsing.extendedrecord.ExecutorPool;
+import org.gbif.converters.parser.xml.parsing.extendedrecord.ExecutorPoolFactory;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -35,7 +35,7 @@ public class ExtendedRecordConverter {
   private final Executor executor;
 
   private ExtendedRecordConverter(int parallelism) {
-    this.executor = ExecutorPool.getInstance(parallelism);
+    this.executor = ExecutorPoolFactory.getInstance(parallelism);
   }
 
   public static ExtendedRecordConverter create(int parallelism) {

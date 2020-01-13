@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 /** Singleton class to create only one Executor instance */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ExecutorPool {
+public class ExecutorPoolFactory {
 
   private static volatile Executor instance;
   private static final Object MUTEX = new Object();
