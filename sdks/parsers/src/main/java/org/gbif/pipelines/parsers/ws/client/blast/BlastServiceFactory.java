@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.ws.client.metadata;
+package org.gbif.pipelines.parsers.ws.client.blast;
 
 import java.util.concurrent.TimeUnit;
 
@@ -8,13 +8,12 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-public class MetadataServiceRest {
-
-  private final MetadataService service;
-  private static volatile MetadataServiceRest instance;
+public class BlastServiceFactory {
+  private final BlastService service;
+  private static volatile BlastServiceFactory instance;
   private static final Object MUTEX = new Object();
 
-  private MetadataServiceRest(WsConfig wsConfig) {
+  private BlastServiceFactory(WsConfig wsConfig) {
 
     // create client
     OkHttpClient client =
@@ -32,21 +31,22 @@ public class MetadataServiceRest {
             .validateEagerly(true)
             .build();
 
-    service = retrofit.create(MetadataService.class);
+    service = retrofit.create(BlastService.class);
   }
 
-  public static MetadataServiceRest getInstance(WsConfig config) {
+  public static BlastServiceFactory getInstance(WsConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new MetadataServiceRest(config);
+          instance = new BlastServiceFactory(config);
         }
       }
     }
     return instance;
   }
 
-  public MetadataService getService() {
+  public BlastService getService() {
     return service;
   }
+
 }

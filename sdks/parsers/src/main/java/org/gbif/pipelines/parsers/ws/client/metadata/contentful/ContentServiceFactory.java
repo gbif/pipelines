@@ -1,22 +1,22 @@
 package org.gbif.pipelines.parsers.ws.client.metadata.contentful;
 
-public class ContentServiceRest {
+public class ContentServiceFactory {
 
   private final ContentService service;
-  private static volatile ContentServiceRest instance;
+  private static volatile ContentServiceFactory instance;
   private static final Object MUTEX = new Object();
 
-  private ContentServiceRest(String... hosts) {
+  private ContentServiceFactory(String... hosts) {
 
     // create service
     service = new ContentService(hosts);
   }
 
-  public static ContentServiceRest getInstance(String... hosts) {
+  public static ContentServiceFactory getInstance(String... hosts) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new ContentServiceRest(hosts);
+          instance = new ContentServiceFactory(hosts);
         }
       }
     }

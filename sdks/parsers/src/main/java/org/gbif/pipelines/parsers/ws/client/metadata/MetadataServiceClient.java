@@ -9,7 +9,7 @@ import org.gbif.pipelines.parsers.config.ElasticsearchContentConfig;
 import org.gbif.pipelines.parsers.config.RetryFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentService;
-import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentServiceRest;
+import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentServiceFactory;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
@@ -24,15 +24,15 @@ import retrofit2.Response;
 /** rest client for getting gbif internal api responses */
 public class MetadataServiceClient {
 
-  private final MetadataServiceRest rest;
+  private final MetadataServiceFactory rest;
   private final ContentService contentService;
   private final Retry retry;
 
   private MetadataServiceClient(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
-    rest = MetadataServiceRest.getInstance(wsConfig);
+    rest = MetadataServiceFactory.getInstance(wsConfig);
     retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "RegistryApiCall");
     contentService = Optional.ofNullable(elasticsearchContentConfig)
-        .map(x -> ContentServiceRest.getInstance(x.getHosts()).getService())
+        .map(x -> ContentServiceFactory.getInstance(x.getHosts()).getService())
         .orElse(null);
   }
 

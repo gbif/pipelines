@@ -113,7 +113,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   @Setup
   public void setup() {
     if (keygenConfig != null) {
-      connection = HbaseConnectionFactory.create(keygenConfig.getHbaseZk());
+      connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
       keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
     }
   }

@@ -16,12 +16,12 @@ import retrofit2.Response;
 
 public class BlastServiceClient {
 
-  private final BlastServiceRest rest;
+  private final BlastServiceFactory rest;
 
   private final Retry retry;
 
   private BlastServiceClient(WsConfig wsConfig) {
-    rest = BlastServiceRest.getInstance(wsConfig);
+    rest = BlastServiceFactory.getInstance(wsConfig);
     retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "BlastServiceCall");
   }
 

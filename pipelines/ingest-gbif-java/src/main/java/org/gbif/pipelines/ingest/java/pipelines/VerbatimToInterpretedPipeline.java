@@ -283,7 +283,7 @@ public class VerbatimToInterpretedPipeline {
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
       // Shoudn't call metadataTransform.tearDown() for Java pipelines cause it will close content ES connection
-      basicTransform.tearDown();
+      // Shoudn't call basicTransform.tearDown() for Java to reuse Zk connection
       taxonomyTransform.tearDown();
       locationTransform.tearDown();
     }

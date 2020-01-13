@@ -1,32 +1,47 @@
 package org.gbif.pipelines.keygen.common;
 
-import java.io.IOException;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.SneakyThrows;
 
-@Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class HbaseConnectionFactory {
 
-  public static Connection create(String hbaseZk) throws IOException {
+  private final Connection connection;
+  private static volatile HbaseConnectionFactory instance;
+  private static final Object MUTEX = new Object();
+
+  @SneakyThrows
+  private HbaseConnectionFactory(String hbaseZk) {
     if (Strings.isNullOrEmpty(hbaseZk)) {
-      return ConnectionFactory.createConnection(HBaseConfiguration.create());
+      connection = ConnectionFactory.createConnection(HBaseConfiguration.create());
+    } else {
+      Configuration hbaseConfig = HBaseConfiguration.create();
+      hbaseConfig.set("hbase.zookeeper.quorum", hbaseZk);
+      connection = ConnectionFactory.createConnection(hbaseConfig);
     }
-    Configuration hbaseConfig = HBaseConfiguration.create();
-    hbaseConfig.set("hbase.zookeeper.quorum", hbaseZk);
-    return ConnectionFactory.createConnection(hbaseConfig);
   }
 
-  public static Connection create() throws IOException {
-    return create(null);
+  public static HbaseConnectionFactory getInstance(String hbaseZk) {
+    if (instance == null) {
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new HbaseConnectionFactory(hbaseZk);
+        }
+      }
+    }
+    return instance;
+  }
+
+  public static HbaseConnectionFactory getInstance() {
+    return getInstance(null);
+  }
+
+  public Connection getConnection() {
+    return connection;
   }
 
 }
