@@ -9,6 +9,7 @@ import org.gbif.pipelines.parsers.config.ElasticsearchContentConfig;
 import org.gbif.pipelines.parsers.config.RetryFactory;
 import org.gbif.pipelines.parsers.config.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentService;
+import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentServiceRest;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Network;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Organization;
@@ -30,7 +31,9 @@ public class MetadataServiceClient {
   private MetadataServiceClient(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
     rest = MetadataServiceRest.getInstance(wsConfig);
     retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "RegistryApiCall");
-    contentService = Objects.nonNull(elasticsearchContentConfig)? new ContentService(elasticsearchContentConfig.getHosts()) : null;
+    contentService = Optional.ofNullable(elasticsearchContentConfig)
+        .map(x -> ContentServiceRest.getInstance(x.getHosts()).getService())
+        .orElse(null);
   }
 
   public static MetadataServiceClient create(WsConfig wsConfig) {
