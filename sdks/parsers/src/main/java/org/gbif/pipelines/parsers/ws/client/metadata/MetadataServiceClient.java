@@ -46,6 +46,13 @@ public class MetadataServiceClient {
     return new MetadataServiceClient(wsConfig, elasticsearchContentConfig);
   }
 
+  /** Release ES content client */
+  public void close() {
+    if (contentService != null) {
+      contentService.close();
+    }
+  }
+
   /**
    * requests https://api.gbif.org/v1/dataset/{datasetId}/networks
    *

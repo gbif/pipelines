@@ -97,6 +97,13 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     }
   }
 
+  @Teardown
+  public void tearDown() {
+    if (client != null) {
+      client.close();
+    }
+  }
+
   @Override
   public Optional<MetadataRecord> convert(String source) {
     return Interpretation.from(source)

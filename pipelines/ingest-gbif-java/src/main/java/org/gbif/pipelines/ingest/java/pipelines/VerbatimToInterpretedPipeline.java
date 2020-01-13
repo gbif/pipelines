@@ -282,6 +282,7 @@ public class VerbatimToInterpretedPipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
+      // Shoudn't call metadataTransform.tearDown() for Java pipelines cause it will close content ES connection
       basicTransform.tearDown();
       taxonomyTransform.tearDown();
       locationTransform.tearDown();

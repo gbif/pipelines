@@ -46,11 +46,16 @@ public class ContentService {
   }
 
   /**
-   *
    * @param hosts Elasticsearch hosts
    */
-  public ContentService(String...hosts) {
+  public ContentService(String... hosts) {
     restHighLevelClient = buildClient(hosts);
+  }
+
+  /** Release ES content client */
+  @SneakyThrows
+  public void close() {
+    restHighLevelClient.close();
   }
 
   /**
