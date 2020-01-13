@@ -17,8 +17,6 @@ import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter;
 
-import javax.validation.constraints.NotNull;
-
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -29,6 +27,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 

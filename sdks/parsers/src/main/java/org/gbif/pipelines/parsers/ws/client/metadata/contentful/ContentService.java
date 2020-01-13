@@ -1,13 +1,13 @@
 package org.gbif.pipelines.parsers.ws.client.metadata.contentful;
 
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Programme;
-import org.gbif.pipelines.parsers.ws.client.metadata.response.Project;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+
+import org.gbif.pipelines.parsers.ws.client.metadata.response.Programme;
+import org.gbif.pipelines.parsers.ws.client.metadata.response.Project;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.SearchRequest;

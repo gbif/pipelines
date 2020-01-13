@@ -1,5 +1,7 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.util.Optional;
+
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaggedValuesInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -8,14 +10,13 @@ import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
-import java.util.Optional;
-
-import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
+
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAGGED_VALUES_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAGGED_VALUES;

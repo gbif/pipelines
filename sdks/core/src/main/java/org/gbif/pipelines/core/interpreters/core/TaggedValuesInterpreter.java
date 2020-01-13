@@ -1,5 +1,11 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.Term;
@@ -7,12 +13,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
-
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import com.google.common.collect.Sets;
 import lombok.AccessLevel;

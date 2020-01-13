@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 
-
 import lombok.NoArgsConstructor;
 
 /**

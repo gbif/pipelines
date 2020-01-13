@@ -35,9 +35,10 @@ import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
-import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 public class GbifJsonConverterTest {
 

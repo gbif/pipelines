@@ -1,5 +1,8 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import java.util.Collections;
+import java.util.UUID;
+
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.Term;
@@ -7,9 +10,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MachineTag;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
-
-import java.util.Collections;
-import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Test;

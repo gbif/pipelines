@@ -36,8 +36,6 @@ import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.avro.data.Json;
 import org.apache.avro.specific.SpecificRecordBase;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
