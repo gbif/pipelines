@@ -71,7 +71,7 @@
     <gbif-api.version>0.98</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
     <dwc-api.version>1.24-SNAPSHOT</dwc-api.version>
-    <kvs.version>1.7-SNAPSHOT</kvs.version>
+    <kvs.version>1.6</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.106</gbif-occurrence.version>
