@@ -281,11 +281,6 @@ public class VerbatimToInterpretedPipeline {
     } catch (Exception e) {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
-    } finally {
-      // Shoudn't call metadataTransform.tearDown() for Java pipelines cause it will close content ES connection
-      // Shoudn't call basicTransform.tearDown() for Java to reuse Zk connection
-      taxonomyTransform.tearDown();
-      locationTransform.tearDown();
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
