@@ -2,12 +2,8 @@ package org.gbif.pipelines.keygen.common;
 
 import java.util.function.Predicate;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
 
-import com.google.common.base.Strings;
 import lombok.SneakyThrows;
 
 public class HbaseConnectionFactory {
@@ -18,13 +14,7 @@ public class HbaseConnectionFactory {
 
   @SneakyThrows
   private HbaseConnectionFactory(String hbaseZk) {
-    if (Strings.isNullOrEmpty(hbaseZk)) {
-      connection = ConnectionFactory.createConnection(HBaseConfiguration.create());
-    } else {
-      Configuration hbaseConfig = HBaseConfiguration.create();
-      hbaseConfig.set("hbase.zookeeper.quorum", hbaseZk);
-      connection = ConnectionFactory.createConnection(hbaseConfig);
-    }
+    connection = HbaseConnection.create(hbaseZk);
   }
 
   public static HbaseConnectionFactory getInstance(String hbaseZk) {

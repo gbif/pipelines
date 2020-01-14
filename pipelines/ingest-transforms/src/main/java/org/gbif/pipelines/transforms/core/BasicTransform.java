@@ -11,6 +11,7 @@ import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.common.HbaseConnection;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
@@ -105,7 +106,10 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   }
 
   public BasicTransform init() {
-    setup();
+    if (keygenConfig != null) {
+      connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
+      keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
+    }
     return this;
   }
 
@@ -113,7 +117,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   @Setup
   public void setup() {
     if (keygenConfig != null) {
-      connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
+      connection = HbaseConnection.create(keygenConfig.getHbaseZk());
       keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
     }
   }
