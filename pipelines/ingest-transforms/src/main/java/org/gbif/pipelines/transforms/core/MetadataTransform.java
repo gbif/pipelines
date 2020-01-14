@@ -85,11 +85,13 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     return this;
   }
 
+  /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public MetadataTransform init() {
     setup();
     return this;
   }
 
+  /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
     if (wsConfig != null && elasticsearchContentConfig != null) {
@@ -97,6 +99,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     }
   }
 
+  /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
     if (client != null) {

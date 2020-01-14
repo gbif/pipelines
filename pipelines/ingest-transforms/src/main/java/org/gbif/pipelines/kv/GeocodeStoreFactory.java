@@ -7,6 +7,9 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import lombok.SneakyThrows;
 
+/**
+ * Factory to get singleton instance of {@link GeocodeStore}
+ */
 public class GeocodeStoreFactory {
 
   private final KeyValueStore<LatLng, GeocodeResponse> store;
@@ -15,7 +18,7 @@ public class GeocodeStoreFactory {
 
   @SneakyThrows
   private GeocodeStoreFactory(KvConfig config) {
-    store = GeocodeStore.get(config);
+    store = GeocodeStore.create(config);
   }
 
   public static GeocodeStoreFactory getInstance(KvConfig config) {

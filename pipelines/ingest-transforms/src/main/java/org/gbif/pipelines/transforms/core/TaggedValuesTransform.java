@@ -33,7 +33,6 @@ public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValue
 
   private PCollectionView<MetadataRecord> metadataView;
 
-
   private TaggedValuesTransform() {
     super(TaggedValueRecord.class, TAGGED_VALUES, TaggedValueRecord.class.getName(), TAGGED_VALUES_RECORDS_COUNT);
   }

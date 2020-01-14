@@ -13,11 +13,14 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
+/**
+ * Create KV store for geocode lookup using KV store {@link KvConfig}
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class GeocodeStore {
 
   @SneakyThrows
-  public static KeyValueStore<LatLng, GeocodeResponse> get(KvConfig config) {
+  public static KeyValueStore<LatLng, GeocodeResponse> create(KvConfig config) {
     if (config != null) {
       ClientConfiguration clientConfig = ClientConfiguration.builder()
           .withBaseApiUrl(config.getBasePath()) //GBIF base API url

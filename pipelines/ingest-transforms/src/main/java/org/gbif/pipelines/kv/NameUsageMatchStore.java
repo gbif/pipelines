@@ -13,11 +13,14 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
+/**
+ * Create KV store for taxon species match using {@link KvConfig}
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class NameUsageMatchStore {
 
   @SneakyThrows
-  public static KeyValueStore<SpeciesMatchRequest, NameUsageMatch> get(KvConfig config) {
+  public static KeyValueStore<SpeciesMatchRequest, NameUsageMatch> create(KvConfig config) {
     if (config != null) {
       ClientConfiguration clientConfiguration = ClientConfiguration.builder()
           .withBaseApiUrl(config.getBasePath()) //GBIF base API url

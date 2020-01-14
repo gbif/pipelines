@@ -7,6 +7,9 @@ import org.gbif.rest.client.species.NameUsageMatch;
 
 import lombok.SneakyThrows;
 
+/**
+ * Factory to get singleton instance of KV store {@link NameUsageMatchStore}
+ */
 public class NameUsageMatchStoreFactory {
 
   private final KeyValueStore<SpeciesMatchRequest, NameUsageMatch> store;
@@ -15,7 +18,7 @@ public class NameUsageMatchStoreFactory {
 
   @SneakyThrows
   private NameUsageMatchStoreFactory(KvConfig config) {
-    store = NameUsageMatchStore.get(config);
+    store = NameUsageMatchStore.create(config);
   }
 
   public static NameUsageMatchStoreFactory getInstance(KvConfig config) {
