@@ -1,5 +1,7 @@
 package org.gbif.pipelines.keygen.common;
 
+import java.util.function.Predicate;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
@@ -26,9 +28,10 @@ public class HbaseConnectionFactory {
   }
 
   public static HbaseConnectionFactory getInstance(String hbaseZk) {
-    if (instance == null) {
+    Predicate<HbaseConnectionFactory> pr = i -> i == null || i.getConnection() == null || i.getConnection().isClosed();
+    if (pr.test(instance)) {
       synchronized (MUTEX) {
-        if (instance == null) {
+        if (pr.test(instance)) {
           instance = new HbaseConnectionFactory(hbaseZk);
         }
       }
