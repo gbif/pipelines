@@ -6,23 +6,19 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Function;
 
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
-import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
-import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.kv.NameUsageMatchStore;
+import org.gbif.pipelines.kv.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.pipelines.utils.SupplierFactory;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 import org.apache.beam.sdk.transforms.MapElements;
@@ -87,49 +83,16 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   }
 
   public TaxonomyTransform init() {
-    kvStore = SupplierFactory.getInstance(() -> SETUP_FN.apply(kvConfig)).getService();
+    kvStore = NameUsageMatchStoreFactory.getInstance(kvConfig).getStore();
     return this;
   }
 
   @Setup
   public void setup() {
     if (kvStore == null) {
-      kvStore = SETUP_FN.apply(kvConfig);
+      kvStore = NameUsageMatchStore.get(kvConfig);
     }
   }
-
-  private static final Function<KvConfig, KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> SETUP_FN = config -> {
-    if (config != null) {
-      try {
-        ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-            .withBaseApiUrl(config.getBasePath()) //GBIF base API url
-            .withFileCacheMaxSizeMb(config.getCacheSizeMb()) //Max file cache size
-            .withTimeOut(config.getTimeout()) //Geocode service connection time-out
-            .build();
-
-        if (config.getZookeeperUrl() != null && !config.isRestOnly()) {
-
-          CachedHBaseKVStoreConfiguration matchConfig = CachedHBaseKVStoreConfiguration.builder()
-              .withValueColumnQualifier("j") //stores JSON data
-              .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                  .withTableName(config.getTableName()) //Geocode KV HBase table
-                  .withColumnFamily("v") //Column in which qualifiers are stored
-                  .withNumOfKeyBuckets(config.getNumOfKeyBuckets()) //Buckets for salted key generations
-                  .withHBaseZk(config.getZookeeperUrl()) //HBase Zookeeper ensemble
-                  .build())
-              .withCacheCapacity(15_000L)
-              .build();
-
-          return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
-        } else {
-          return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
-        }
-      } catch (IOException ex) {
-        throw new RuntimeException(ex);
-      }
-    }
-    return null;
-  };
 
   @Teardown
   public void tearDown() {
