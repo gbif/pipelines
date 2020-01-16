@@ -146,7 +146,7 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+    Properties properties = PropertiesFactory.create(hdfsSiteConfig, options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -310,8 +310,7 @@ public class VerbatimToInterpretedPipeline {
   /** Closes resources only one time, before JVM shuts down  */
   private static class Shutdown {
 
-    private static volatile Shutdown instance;
-    private static final Object MUTEX = new Object();
+    private static Shutdown instance;
 
     @SneakyThrows
     private Shutdown(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
@@ -326,13 +325,10 @@ public class VerbatimToInterpretedPipeline {
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
-    public static void doOnExit(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
+    private static synchronized void doOnExit(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr,
+        TaxonomyTransform tTr) {
       if (instance == null) {
-        synchronized (MUTEX) {
-          if (instance == null) {
-            instance = new Shutdown(mdTr, bTr, lTr, tTr);
-          }
-        }
+        instance = new Shutdown(mdTr, bTr, lTr, tTr);
       }
     }
 

@@ -35,7 +35,7 @@ public class ExtendedRecordConverter {
   private final Executor executor;
 
   private ExtendedRecordConverter(int parallelism) {
-    this.executor = ExecutorPoolFactory.getInstance(parallelism);
+    this.executor = ExecutorPoolFactory.create(parallelism);
   }
 
   public static ExtendedRecordConverter create(int parallelism) {

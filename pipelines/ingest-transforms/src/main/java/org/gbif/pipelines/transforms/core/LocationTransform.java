@@ -14,7 +14,6 @@ import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.kv.GeocodeStore;
 import org.gbif.pipelines.kv.GeocodeStoreFactory;
 import org.gbif.pipelines.parsers.config.KvConfig;
 import org.gbif.pipelines.parsers.config.KvConfigFactory;
@@ -96,7 +95,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public LocationTransform init() {
-    kvStore = GeocodeStoreFactory.getInstance(kvConfig).getStore();
+    kvStore = GeocodeStoreFactory.createSingleton(kvConfig);
     return this;
   }
 
@@ -104,7 +103,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @Setup
   public void setup() {
     if (kvStore == null) {
-      kvStore = GeocodeStore.create(kvConfig);
+      kvStore = GeocodeStoreFactory.create(kvConfig);
     }
   }
 

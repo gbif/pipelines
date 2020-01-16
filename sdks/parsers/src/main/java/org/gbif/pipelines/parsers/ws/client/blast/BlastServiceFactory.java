@@ -4,49 +4,38 @@ import java.util.concurrent.TimeUnit;
 
 import org.gbif.pipelines.parsers.config.WsConfig;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BlastServiceFactory {
-  private final BlastService service;
-  private static volatile BlastServiceFactory instance;
-  private static final Object MUTEX = new Object();
 
-  private BlastServiceFactory(WsConfig wsConfig) {
+  private static BlastService instance;
 
-    // create client
-    OkHttpClient client =
-        new OkHttpClient.Builder()
-            .connectTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
-            .readTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
-            .build();
-
-    // create service
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .client(client)
-            .baseUrl(wsConfig.getBasePath())
-            .addConverterFactory(JacksonConverterFactory.create())
-            .validateEagerly(true)
-            .build();
-
-    service = retrofit.create(BlastService.class);
-  }
-
-  public static BlastServiceFactory getInstance(WsConfig config) {
+  public static synchronized BlastService create(WsConfig config) {
     if (instance == null) {
-      synchronized (MUTEX) {
-        if (instance == null) {
-          instance = new BlastServiceFactory(config);
-        }
-      }
+      // create client
+      OkHttpClient client =
+          new OkHttpClient.Builder()
+              .connectTimeout(config.getTimeout(), TimeUnit.SECONDS)
+              .readTimeout(config.getTimeout(), TimeUnit.SECONDS)
+              .build();
+
+      // create service
+      Retrofit retrofit =
+          new Retrofit.Builder()
+              .client(client)
+              .baseUrl(config.getBasePath())
+              .addConverterFactory(JacksonConverterFactory.create())
+              .validateEagerly(true)
+              .build();
+
+      instance = retrofit.create(BlastService.class);
     }
     return instance;
-  }
-
-  public BlastService getService() {
-    return service;
   }
 
 }

@@ -24,15 +24,15 @@ import retrofit2.Response;
 /** rest client for getting gbif internal api responses */
 public class MetadataServiceClient {
 
-  private final MetadataServiceFactory rest;
+  private final MetadataService metadataService;
   private final ContentService contentService;
   private final Retry retry;
 
   private MetadataServiceClient(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
-    rest = MetadataServiceFactory.getInstance(wsConfig);
     retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "RegistryApiCall");
+    metadataService = MetadataServiceFactory.create(wsConfig);
     contentService = Optional.ofNullable(elasticsearchContentConfig)
-        .map(x -> ContentServiceFactory.getInstance(x.getHosts()).getService())
+        .map(x -> ContentServiceFactory.create(x.getHosts()))
         .orElse(null);
   }
 
@@ -60,7 +60,7 @@ public class MetadataServiceClient {
    */
   public List<Network> getNetworkFromDataset(String datasetId) {
     Objects.requireNonNull(datasetId);
-    Call<List<Network>> call = rest.getService().getNetworks(datasetId);
+    Call<List<Network>> call = metadataService.getNetworks(datasetId);
     return performCall(call);
   }
 
@@ -71,7 +71,7 @@ public class MetadataServiceClient {
    */
   public Organization getOrganization(String organizationId) {
     Objects.requireNonNull(organizationId);
-    Call<Organization> call = rest.getService().getOrganization(organizationId);
+    Call<Organization> call = metadataService.getOrganization(organizationId);
     return performCall(call);
   }
 
@@ -82,7 +82,7 @@ public class MetadataServiceClient {
    */
   public Dataset getDataset(String datasetId) {
     Objects.requireNonNull(datasetId);
-    Call<Dataset> call = rest.getService().getDataset(datasetId);
+    Call<Dataset> call = metadataService.getDataset(datasetId);
     Dataset dataset = performCall(call);
     //Has Contenful Elastic being configured?
     if (Objects.nonNull(contentService)) {

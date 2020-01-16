@@ -165,7 +165,7 @@ public final class FsUtils {
    */
   @SneakyThrows
   public static FileSystem getFileSystem(String hdfsSiteConfig, String path) {
-    return FileSystemFactory.getInstance(hdfsSiteConfig).getFs(path);
+    return FileSystemFactory.create(hdfsSiteConfig).getFs(path);
   }
 
   /**
@@ -173,7 +173,7 @@ public final class FsUtils {
    */
   @SneakyThrows
   public static FileSystem getLocalFileSystem(String hdfsSiteConfig) {
-    return FileSystemFactory.getInstance(hdfsSiteConfig).getLocalFs();
+    return FileSystemFactory.create(hdfsSiteConfig).getLocalFs();
   }
 
   /**

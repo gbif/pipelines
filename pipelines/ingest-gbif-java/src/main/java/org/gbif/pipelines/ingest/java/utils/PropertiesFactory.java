@@ -4,36 +4,20 @@ import java.util.Properties;
 
 import org.gbif.pipelines.ingest.utils.FsUtils;
 
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PropertiesFactory {
 
-  private static volatile PropertiesFactory instance;
+  private static Properties instance;
 
-  private final Properties properties;
-
-  private static final Object MUTEX = new Object();
-
-  @SneakyThrows
-  private PropertiesFactory(String hdfsSiteConfig, String propertiesPath) {
-    properties = FsUtils.readPropertiesFile(hdfsSiteConfig, propertiesPath);
-  }
-
-  public static PropertiesFactory getInstance(String hdfsSiteConfig, String propertiesPath) {
+  public static synchronized Properties create(String hdfsSiteConfig, String propertiesPath) {
     if (instance == null) {
-      synchronized (MUTEX) {
-        if (instance == null) {
-          instance = new PropertiesFactory(hdfsSiteConfig, propertiesPath);
-        }
-      }
+      instance = FsUtils.readPropertiesFile(hdfsSiteConfig, propertiesPath);
+
     }
     return instance;
-  }
-
-  public Properties get() {
-    return properties;
   }
 
 }
