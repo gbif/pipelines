@@ -105,7 +105,7 @@ public class Wgs84Projection {
         return ParsedField.success(new LatLng(lat2, lon2), issues);
       }
     } catch (Exception ex) {
-      log.warn("Coordinate re-projection failed", ex);
+      log.warn("Coordinate re-projection failed for datum {}, lat {} and lon {}: {}", datum, lat, lon, ex.getMessage(), ex);
       issues.add(COORDINATE_REPROJECTION_FAILED.name());
     }
 
