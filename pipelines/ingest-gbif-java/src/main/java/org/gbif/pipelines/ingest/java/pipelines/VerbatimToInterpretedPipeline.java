@@ -104,6 +104,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  *
  * }</pre>
  */
+@SuppressWarnings("all")
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class VerbatimToInterpretedPipeline {
@@ -281,6 +282,8 @@ public class VerbatimToInterpretedPipeline {
     } catch (Exception e) {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
+    } finally {
+      Shutdown.doOnExit(metadataTransform, basicTransform, locationTransform, taxonomyTransform);
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
@@ -302,6 +305,37 @@ public class VerbatimToInterpretedPipeline {
         .syncInterval(options.getAvroSyncInterval())
         .build()
         .createSyncDataFileWriter();
+  }
+
+  /** Closes resources only one time, before JVM shuts down  */
+  private static class Shutdown {
+
+    private static volatile Shutdown instance;
+    private static final Object MUTEX = new Object();
+
+    @SneakyThrows
+    private Shutdown(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
+      Runnable shudownHook = () -> {
+        log.info("Closing all resources");
+        mdTr.tearDown();
+        bTr.tearDown();
+        lTr.tearDown();
+        tTr.tearDown();
+        log.info("The resources were closed");
+      };
+      Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
+    }
+
+    public static void doOnExit(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
+      if (instance == null) {
+        synchronized (MUTEX) {
+          if (instance == null) {
+            instance = new Shutdown(mdTr, bTr, lTr, tTr);
+          }
+        }
+      }
+    }
+
   }
 
 }
