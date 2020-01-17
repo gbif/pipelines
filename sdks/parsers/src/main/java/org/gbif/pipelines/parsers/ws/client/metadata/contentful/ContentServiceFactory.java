@@ -1,17 +1,29 @@
 package org.gbif.pipelines.parsers.ws.client.metadata.contentful;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ContentServiceFactory {
 
-  private static ContentService instance;
+  private final ContentService service;
+  private static volatile ContentServiceFactory instance;
+  private static final Object MUTEX = new Object();
 
-  public static synchronized ContentService create(String... hosts) {
+  private ContentServiceFactory(String... hosts) {
+
+    // create service
+    service = new ContentService(hosts);
+  }
+
+  public static ContentServiceFactory getInstance(String... hosts) {
     if (instance == null) {
-      instance = new ContentService(hosts);
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new ContentServiceFactory(hosts);
+        }
+      }
     }
     return instance;
+  }
+
+  public ContentService getService() {
+    return service;
   }
 }

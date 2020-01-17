@@ -15,10 +15,12 @@ public class FileSystemFactory {
 
   private static final String HDFS_PREFIX = "hdfs://ha-nn";
 
-  private static FileSystemFactory instance;
+  private static volatile FileSystemFactory instance;
 
   private final FileSystem localFs;
   private final FileSystem hdfsFs;
+
+  private static final Object MUTEX = new Object();
 
   @SneakyThrows
   private FileSystemFactory(String hdfsSiteConfig) {
@@ -30,9 +32,13 @@ public class FileSystemFactory {
     localFs = FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
   }
 
-  public static synchronized FileSystemFactory create(String hdfsSiteConfig) {
+  public static FileSystemFactory getInstance(String hdfsSiteConfig) {
     if (instance == null) {
-      instance = new FileSystemFactory(hdfsSiteConfig);
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = new FileSystemFactory(hdfsSiteConfig);
+        }
+      }
     }
     return instance;
   }

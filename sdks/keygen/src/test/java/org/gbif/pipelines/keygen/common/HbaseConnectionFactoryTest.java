@@ -11,13 +11,13 @@ import org.junit.Test;
 public class HbaseConnectionFactoryTest {
 
   private final Supplier<CompletableFuture<Connection>> connectionAsyncSupplier =
-      () -> CompletableFuture.supplyAsync(HbaseConnectionFactory::createSingleton);
+      () -> CompletableFuture.supplyAsync(HbaseConnectionFactory.getInstance()::getConnection);
 
   @Test
   public void instanceTest() throws IOException {
     // When
-    Connection conn1 = HbaseConnectionFactory.createSingleton();
-    Connection conn2 = HbaseConnectionFactory.createSingleton();
+    Connection conn1 = HbaseConnectionFactory.getInstance().getConnection();
+    Connection conn2 = HbaseConnectionFactory.getInstance().getConnection();
 
     // Should
     Assert.assertSame(conn1, conn2);
@@ -29,12 +29,12 @@ public class HbaseConnectionFactoryTest {
   @Test
   public void closeInstanceTest() throws IOException {
     // When
-    Connection conn1 = HbaseConnectionFactory.createSingleton();
-    Connection conn2 = HbaseConnectionFactory.createSingleton();
+    Connection conn1 = HbaseConnectionFactory.getInstance().getConnection();
+    Connection conn2 = HbaseConnectionFactory.getInstance().getConnection();
 
     conn1.close();
 
-    Connection conn3 = HbaseConnectionFactory.createSingleton();
+    Connection conn3 = HbaseConnectionFactory.getInstance().getConnection();
 
     // Should
     Assert.assertTrue(conn1.isClosed());

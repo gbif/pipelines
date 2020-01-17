@@ -30,7 +30,7 @@ public class FsUtils {
    */
   @SneakyThrows
   public static FileSystem createParentDirectories(Path path, String hdfsSite) {
-    FileSystem fs = FileSystemFactory.create(hdfsSite).getFs(path.toString());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSite).getFs(path.toString());
     fs.mkdirs(path.getParent());
     return fs;
   }
@@ -67,7 +67,7 @@ public class FsUtils {
   }
 
   public static long fileSize(URI file, String hdfsSiteConfig) throws IOException {
-    FileSystem fs = FileSystemFactory.create(hdfsSiteConfig).getFs(file.toString());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig).getFs(file.toString());
     return fs.getFileStatus(new Path(file)).getLen();
   }
 

@@ -10,11 +10,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExecutorPoolFactory {
 
-  private static Executor instance;
+  private static volatile Executor instance;
+  private static final Object MUTEX = new Object();
 
-  public static synchronized Executor create(int parallelism) {
+  public static Executor getInstance(int parallelism) {
     if (instance == null) {
-      instance = Executors.newFixedThreadPool(parallelism);
+      synchronized (MUTEX) {
+        if (instance == null) {
+          instance = Executors.newFixedThreadPool(parallelism);
+        }
+      }
     }
     return instance;
   }

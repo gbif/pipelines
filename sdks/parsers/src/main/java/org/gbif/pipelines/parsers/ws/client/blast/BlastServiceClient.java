@@ -16,11 +16,12 @@ import retrofit2.Response;
 
 public class BlastServiceClient {
 
-  private final BlastService blastService;
+  private final BlastServiceFactory rest;
+
   private final Retry retry;
 
   private BlastServiceClient(WsConfig wsConfig) {
-    blastService = BlastServiceFactory.create(wsConfig);
+    rest = BlastServiceFactory.getInstance(wsConfig);
     retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "BlastServiceCall");
   }
 
@@ -33,7 +34,7 @@ public class BlastServiceClient {
     Objects.requireNonNull(sequence);
     return
       Retry.decorateFunction(retry, (Sequence seq) -> {
-        Call<Blast> call = blastService.getBlast(seq);
+        Call<Blast> call = rest.getService().getBlast(seq);
         try {
           Response<Blast> execute = call.execute();
           if (execute.isSuccessful()) {

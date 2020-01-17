@@ -11,6 +11,7 @@ import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.common.HbaseConnection;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
@@ -107,7 +108,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public BasicTransform init() {
     if (keygenConfig != null) {
-      connection = HbaseConnectionFactory.createSingleton(keygenConfig.getHbaseZk());
+      connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
       keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
     }
     return this;
@@ -118,7 +119,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   @Setup
   public void setup() {
     if (keygenConfig != null) {
-      connection = HbaseConnectionFactory.create(keygenConfig.getHbaseZk());
+      connection = HbaseConnection.create(keygenConfig.getHbaseZk());
       keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
     }
   }
