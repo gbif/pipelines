@@ -2,7 +2,7 @@ package org.gbif.pipelines.parsers.parsers.temporal.utils;
 
 import java.text.DateFormatSymbols;
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.function.IntPredicate;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -65,9 +65,9 @@ public class ParsedUnitUtils {
    * @param validator predicate with validity conditions
    * @return parsed value or ISSUE(-1) value, if value is invalid
    */
-  private static Optional<Integer> parseInteger(String rawValue, Predicate<Integer> validator) {
+  private static Optional<Integer> parseInteger(String rawValue, IntPredicate validator) {
     if (!isNullOrEmpty(rawValue) && isNumeric(rawValue)) {
-      Integer value = Integer.valueOf(rawValue);
+      int value = Integer.parseInt(rawValue);
       return validator.test(value) ? Optional.empty() : Optional.of(value);
     }
     return Optional.empty();
