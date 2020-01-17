@@ -1,7 +1,10 @@
-package org.gbif.pipelines.parsers.config;
+package org.gbif.pipelines.parsers.config.factory;
 
 import java.nio.file.Path;
 import java.util.Properties;
+
+import org.gbif.pipelines.parsers.config.model.PipelinesRetryConfig;
+import org.gbif.pipelines.parsers.config.model.WsConfig;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

@@ -1,8 +1,10 @@
-package org.gbif.pipelines.parsers.config;
+package org.gbif.pipelines.parsers.config.factory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+
+import org.gbif.pipelines.parsers.config.model.LockConfig;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

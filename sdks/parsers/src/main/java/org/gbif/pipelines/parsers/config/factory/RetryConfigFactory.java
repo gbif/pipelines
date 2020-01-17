@@ -1,8 +1,10 @@
-package org.gbif.pipelines.parsers.config;
+package org.gbif.pipelines.parsers.config.factory;
 
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Properties;
+
+import org.gbif.pipelines.parsers.config.model.PipelinesRetryConfig;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -29,7 +31,7 @@ public class RetryConfigFactory {
 
   /**@return a RetryConfig with default values*/
   public static PipelinesRetryConfig create() {
-    return new PipelinesRetryConfig(DEFAULT_MAX_ATTEMPTS, DEFAULT_INITIAL_INTERVAL, DEFAULT_MULTIPLIER, DEFAULT_RANDOMIZATION_FACTOR);
+    return PipelinesRetryConfig.create(DEFAULT_MAX_ATTEMPTS, DEFAULT_INITIAL_INTERVAL, DEFAULT_MULTIPLIER, DEFAULT_RANDOMIZATION_FACTOR);
   }
 
   /**@return a RetryConfig from the properties settings*/
@@ -45,6 +47,6 @@ public class RetryConfigFactory {
     long initialInterval = Optional.ofNullable(props.getProperty(prefix + INITIAL_INTERVALS_PROP)).map(Long::parseLong).orElse(DEFAULT_INITIAL_INTERVAL);
     double multiplier = Optional.ofNullable(props.getProperty(prefix + MULTIPLIER_PROP)).map(Double::parseDouble).orElse( DEFAULT_MULTIPLIER);
     double randomizationFactor = Optional.ofNullable(props.getProperty(prefix + RANDOMIZATION_FACTOR_PROP)).map(Double::parseDouble).orElse(DEFAULT_RANDOMIZATION_FACTOR);
-    return new PipelinesRetryConfig(maxAttempts, initialInterval, multiplier, randomizationFactor);
+    return PipelinesRetryConfig.create(maxAttempts, initialInterval, multiplier, randomizationFactor);
   }
 }

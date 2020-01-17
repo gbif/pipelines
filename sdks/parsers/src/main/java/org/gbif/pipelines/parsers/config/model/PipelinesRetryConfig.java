@@ -1,17 +1,15 @@
-package org.gbif.pipelines.parsers.config;
+package org.gbif.pipelines.parsers.config.model;
 
 import java.io.Serializable;
 
-import lombok.AllArgsConstructor;
+import org.gbif.pipelines.parsers.config.factory.RetryConfigFactory;
+
 import lombok.Data;
-import lombok.Getter;
 
 /**
  * Models the exponential backoff configuration. If you want to create an instance, use {@link RetryConfigFactory}
  */
-@Getter
-@Data
-@AllArgsConstructor
+@Data(staticConstructor = "create")
 public class PipelinesRetryConfig implements Serializable {
 
   private static final long serialVersionUID = -8983292173694266924L;

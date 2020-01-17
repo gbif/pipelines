@@ -1,14 +1,10 @@
-package org.gbif.pipelines.parsers.config;
+package org.gbif.pipelines.parsers.config.model;
 
 import java.io.Serializable;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 
-@Data
-@AllArgsConstructor(staticName = "create")
-@Getter
+@Data(staticConstructor = "create")
 public final class KvConfig implements Serializable {
 
   private static final long serialVersionUID = -9019714539959567270L;

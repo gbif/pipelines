@@ -1,17 +1,13 @@
-package org.gbif.pipelines.parsers.config;
+package org.gbif.pipelines.parsers.config.model;
 
 import java.io.Serializable;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 
 /**
  * Pipeline Options to create Zookeeper shared locks using a ExponentialBackoffRetry strategy to connect.
  */
-@Getter
-@Data
-@AllArgsConstructor(staticName = "create")
+@Data(staticConstructor = "create")
 public class LockConfig implements Serializable {
 
   private static final long serialVersionUID = 7222736128801212446L;

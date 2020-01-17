@@ -18,7 +18,7 @@ import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
-import org.gbif.pipelines.parsers.config.LockConfig;
+import org.gbif.pipelines.parsers.config.model.LockConfig;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

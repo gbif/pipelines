@@ -2,7 +2,7 @@ package org.gbif.pipelines.kv;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.parsers.config.KvConfig;
+import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import lombok.SneakyThrows;

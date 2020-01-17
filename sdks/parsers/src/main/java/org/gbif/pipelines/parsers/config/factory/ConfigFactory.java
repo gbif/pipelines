@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.config;
+package org.gbif.pipelines.parsers.config.factory;
 
 import java.io.FileInputStream;
 import java.io.InputStream;

@@ -3,8 +3,8 @@ package org.gbif.pipelines.parsers.ws.client.blast;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.gbif.pipelines.parsers.config.RetryFactory;
-import org.gbif.pipelines.parsers.config.WsConfig;
+import org.gbif.pipelines.parsers.config.factory.RetryFactory;
+import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.blast.request.Sequence;
 import org.gbif.pipelines.parsers.ws.client.blast.response.Blast;
 

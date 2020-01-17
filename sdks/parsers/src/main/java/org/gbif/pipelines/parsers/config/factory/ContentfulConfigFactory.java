@@ -1,8 +1,12 @@
-package org.gbif.pipelines.parsers.config;
+package org.gbif.pipelines.parsers.config.factory;
 
 import java.nio.file.Path;
 import java.util.Properties;
 
+import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -15,8 +19,8 @@ import lombok.NonNull;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ContentfulConfigFactory {
 
-  private static final String CONTENTFUL_ELASTICSEARCH = "content.es";
-
+  @VisibleForTesting
+  public static final String CONTENTFUL_ELASTICSEARCH = "content.es";
 
   public static ElasticsearchContentConfig create(@NonNull Path propertiesPath) {
     // load properties or throw exception if cannot be loaded
@@ -25,10 +29,13 @@ public class ContentfulConfigFactory {
     return create(props);
   }
 
-
   public static ElasticsearchContentConfig create(@NonNull Properties props) {
     // get the base path or throw exception if not present
-    String[] hosts = props.getProperty(CONTENTFUL_ELASTICSEARCH).split(",");
+    String property = props.getProperty(CONTENTFUL_ELASTICSEARCH);
+    if(Strings.isNullOrEmpty(property)){
+      throw new IllegalArgumentException("Property " + CONTENTFUL_ELASTICSEARCH + " can't be null or emtry, check the property file");
+    }
+    String[] hosts = property.split(",");
     return ElasticsearchContentConfig.create(hosts);
   }
 }
