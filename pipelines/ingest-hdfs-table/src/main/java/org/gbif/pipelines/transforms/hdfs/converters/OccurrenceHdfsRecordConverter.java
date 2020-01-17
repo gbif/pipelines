@@ -52,10 +52,13 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /**
  * Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceHdfsRecordConverter {
 
   //Registered converters
@@ -393,7 +396,7 @@ public class OccurrenceHdfsRecordConverter {
 
     // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
     String triplet = String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
-    String gbifId = Optional.ofNullable(br.getGbifId()).map(x -> Long.toString(x)).orElse("");
+    String gbifId = Optional.ofNullable(br.getGbifId()).map(Object::toString).orElse("");
 
     String occId = er.getCoreTerms().get(DwcTerm.occurrenceID.qualifiedName());
 
