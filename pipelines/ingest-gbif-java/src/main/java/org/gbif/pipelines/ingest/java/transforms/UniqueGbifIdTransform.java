@@ -45,13 +45,13 @@ public class UniqueGbifIdTransform {
   private boolean skipTransform = false;
 
   public UniqueGbifIdTransform run() {
-    return useSyncMode ?  runSync() : runAsync();
+    return useSyncMode ? runSync() : runAsync();
   }
 
   @SneakyThrows
   private UniqueGbifIdTransform runAsync() {
     // Filter GBIF id duplicates
-    Consumer<ExtendedRecord> interpretBrFn = filterByGbifId(brMap, brInvalidMap);
+    Consumer<ExtendedRecord> interpretBrFn = filterByGbifId();
 
     // Run async
     CompletableFuture[] brFutures = erMap.values()
@@ -65,35 +65,40 @@ public class UniqueGbifIdTransform {
 
   @SneakyThrows
   private UniqueGbifIdTransform runSync() {
-    erMap.values().forEach(filterByGbifId(brMap, brInvalidMap));
+    erMap.values().forEach(filterByGbifId());
 
     return this;
   }
 
-  // Filter GBIF id duplicates
-  private Consumer<ExtendedRecord> filterByGbifId(Map<String, BasicRecord> map, Map<String, BasicRecord> invalidMap) {
+  /** Process GBIF id duplicates */
+  private Consumer<ExtendedRecord> filterByGbifId() {
     return er ->
         basicTransform.processElement(er)
             .ifPresent(br -> {
               if (skipTransform) {
-                map.put(br.getId(), br);
+                brMap.put(br.getId(), br);
               } else if (br.getGbifId() != null) {
-                BasicRecord record = map.get(br.getGbifId().toString());
-                if (record != null) {
-                  int compare = HashUtils.getSha1(br.getId()).compareTo(HashUtils.getSha1(record.getId()));
-                  if (compare < 0) {
-                    map.put(br.getGbifId().toString(), br);
-                    invalidMap.put(record.getId(), record);
-                  } else {
-                    invalidMap.put(br.getId(), br);
-                  }
-                } else {
-                  map.put(br.getGbifId().toString(), br);
-                }
+                filter(br);
               } else {
-                invalidMap.put(br.getId(), br);
+                brInvalidMap.put(br.getId(), br);
               }
             });
+  }
+
+  /** Filter GBIF id duplicates if it is exist */
+  private void filter(BasicRecord br) {
+    BasicRecord record = brMap.get(br.getGbifId().toString());
+    if (record != null) {
+      int compare = HashUtils.getSha1(br.getId()).compareTo(HashUtils.getSha1(record.getId()));
+      if (compare < 0) {
+        brMap.put(br.getGbifId().toString(), br);
+        brInvalidMap.put(record.getId(), record);
+      } else {
+        brInvalidMap.put(br.getId(), br);
+      }
+    } else {
+      brMap.put(br.getGbifId().toString(), br);
+    }
   }
 
 }
