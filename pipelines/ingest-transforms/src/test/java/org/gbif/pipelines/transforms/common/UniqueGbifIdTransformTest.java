@@ -26,6 +26,40 @@ public class UniqueGbifIdTransformTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   @Test
+  public void skipTransformTest() {
+    // State
+    final List<BasicRecord> input = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
+
+    // When
+    UniqueGbifIdTransform transform = UniqueGbifIdTransform.create(true);
+    PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
+    PCollection<BasicRecord> normal = tuple.get(transform.getTag());
+    PCollection<BasicRecord> invalid = tuple.get(transform.getInvalidTag());
+
+    // Should
+    PAssert.that(normal).containsInAnyOrder(input);
+    PAssert.that(invalid).empty();
+    p.run();
+  }
+
+  @Test
+  public void emptyGbifIdTest() {
+    // State
+    final List<BasicRecord> input = createCollection("1");
+
+    // When
+    UniqueGbifIdTransform transform = UniqueGbifIdTransform.create();
+    PCollectionTuple tuple = p.apply(Create.of(input)).apply(transform);
+    PCollection<BasicRecord> normal = tuple.get(transform.getTag());
+    PCollection<BasicRecord> invalid = tuple.get(transform.getInvalidTag());
+
+    // Should
+    PAssert.that(invalid).containsInAnyOrder(input);
+    PAssert.that(normal).empty();
+    p.run();
+  }
+
+  @Test
   public void withoutDuplicatesTest() {
     // State
     final List<BasicRecord> input = createCollection("1_1", "2_2", "3_3", "4_4", "5_5", "6_6");
