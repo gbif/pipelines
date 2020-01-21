@@ -88,7 +88,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * <p>How to run:
  *
  * <pre>{@code
- * java -jar target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline some.properties
+ * java -cp target/ingest-gbif-java-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline some.properties
  *
  * or pass all parameters:
  *
