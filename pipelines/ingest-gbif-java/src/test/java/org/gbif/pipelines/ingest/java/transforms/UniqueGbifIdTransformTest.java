@@ -166,7 +166,7 @@ public class UniqueGbifIdTransformTest {
   }
 
   @Test
-  public void mixedValuesTest() {
+  public void mixedValuesSyncTest() {
     // State
     final Map<String, ExtendedRecord> input = createErMap("1", "2_2", "3_3", "4_1", "5", "6_6");
     final Map<String, BasicRecord> expectedNormal = createBrGbifIdMap("2_2", "3_3", "4_1", "6_6");
@@ -177,6 +177,33 @@ public class UniqueGbifIdTransformTest {
         UniqueGbifIdTransform.builder()
             .erMap(input)
             .basicTransform(basicTransform)
+            .useSyncMode(true)
+            .build()
+            .run();
+
+    Map<String, BasicRecord> brMap = gbifIdTransform.getBrMap();
+    Map<String, BasicRecord> brInvalidMap = gbifIdTransform.getBrInvalidMap();
+
+    // Should
+    Assert.assertEquals(expectedNormal.size(), brMap.size());
+    Assert.assertEquals(expectedInvalid.size(), brInvalidMap.size());
+    assertMap(expectedNormal, brMap);
+    assertMap(expectedInvalid, brInvalidMap);
+  }
+
+  @Test
+  public void mixedValuesAsyncTest() {
+    // State
+    final Map<String, ExtendedRecord> input = createErMap("1", "2_2", "3_3", "4_1", "5", "6_6");
+    final Map<String, BasicRecord> expectedNormal = createBrGbifIdMap("2_2", "3_3", "4_1", "6_6");
+    final Map<String, BasicRecord> expectedInvalid = createBrIdMap("1", "5");
+
+    // When
+    UniqueGbifIdTransform gbifIdTransform =
+        UniqueGbifIdTransform.builder()
+            .erMap(input)
+            .basicTransform(basicTransform)
+            .useSyncMode(false)
             .build()
             .run();
 
