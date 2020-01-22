@@ -16,6 +16,7 @@ import java.util.function.Function;
 import org.gbif.pipelines.io.avro.BasicRecord;
 
 import org.apache.http.HttpHost;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
@@ -61,7 +62,7 @@ public class ElasticsearchWriter {
           }
         } catch (IOException ex) {
           log.error(ex.getMessage(), ex);
-          throw new RuntimeException(ex.getMessage(), ex);
+          throw new ElasticsearchException(ex.getMessage(), ex);
         }
       };
 
@@ -78,7 +79,7 @@ public class ElasticsearchWriter {
       // Push requests into ES
       for (BasicRecord br : records) {
         BulkRequest peek = requests.peek();
-        if (peek.numberOfActions() < esMaxBatchSize && peek.estimatedSizeInBytes() < esMaxBatchSizeBytes) {
+        if (peek != null && peek.numberOfActions() < esMaxBatchSize && peek.estimatedSizeInBytes() < esMaxBatchSizeBytes) {
           addIndexRequestFn.accept(br);
         } else {
           addIndexRequestFn.accept(br);
