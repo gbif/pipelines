@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,8 @@ public class GbifJsonConverter {
   private static final String ID = "id";
   private static final String ISSUES = "issues";
   private static final String CREATED_FIELD = "created";
+
+  private static final Set<String> EXCLUDE_ALL = Collections.singleton(DwcTerm.footprintWKT.qualifiedName());
 
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
@@ -284,7 +287,9 @@ public class GbifJsonConverter {
 
       //Copy to all field
       Set<TextNode> allFieldValues = new HashSet<>();
-      core.forEach((k, v) -> Optional.ofNullable(v).ifPresent(v1 -> allFieldValues.add(getEscapedTextNode(v1))));
+      core.entrySet().stream()
+          .filter(s -> !EXCLUDE_ALL.contains(s.getKey()))
+          .forEach(s -> Optional.ofNullable(s.getValue()).ifPresent(v1 -> allFieldValues.add(getEscapedTextNode(v1))));
       ext.forEach((k, v) -> Optional.ofNullable(v).ifPresent(v1 ->
           v1.forEach(v2 -> {
             v2.forEach((k2, v3) -> Optional.ofNullable(v3).ifPresent(v4 -> allFieldValues.add(getEscapedTextNode(v4))));
@@ -295,7 +300,8 @@ public class GbifJsonConverter {
       jc.getMainNode().set("verbatim", verbatimNode);
 
       //Classification verbatim
-      ObjectNode classificationNode = jc.getMainNode().has("gbifClassification")? (ObjectNode)jc.getMainNode().get("gbifClassification") : JsonConverter.createObjectNode();
+      ObjectNode classificationNode = jc.getMainNode().has("gbifClassification")
+          ? (ObjectNode)jc.getMainNode().get("gbifClassification") : JsonConverter.createObjectNode();
       Optional.ofNullable(coreNode.get(DwcTerm.taxonID.qualifiedName()))
         .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
       Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))

@@ -49,7 +49,8 @@ public class GbifJsonConverterTest {
     String expected =
         "{\"id\":\"777\",\"recordedBy\":\"Jeremia garde ,à elfutsone\",\"all\":[\"Jeremia garde ,à elfutsone\","
             + "\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"something:{something}\"],\"verbatim\":{\"core\":"
-            + "{\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
+            + "{\"http://rs.tdwg.org/dwc/terms/footprintWKT\":\"footprintWKTfootprintWKTfootprintWKT\","
+            + "\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"Jeremia garde ,à elfutsone\","
             + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},\"extensions\":{}},\"eventDateSingle\""
             + ":\"01-01-2011\",\"year\":2011,\"month\":1,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},"
@@ -81,6 +82,7 @@ public class GbifJsonConverterTest {
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
     erMap.put(DwcTerm.recordedBy.qualifiedName(), "Jeremia garde \u001Eà elfutsone");
+    erMap.put(DwcTerm.footprintWKT.qualifiedName(), "footprintWKTfootprintWKTfootprintWKT");
 
     MetadataRecord mr = MetadataRecord.newBuilder().setId("777").setCrawlId(1).setDatasetKey("datatesKey").build();
 
