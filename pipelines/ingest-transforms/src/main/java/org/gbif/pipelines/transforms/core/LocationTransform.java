@@ -162,4 +162,11 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     return result;
   }
 
+  public KeyValueStore<LatLng, GeocodeResponse> getKvStore() {
+    return kvStore;
+  }
+
+  public void setKvStore(KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+    this.kvStore = kvStore;
+  }
 }

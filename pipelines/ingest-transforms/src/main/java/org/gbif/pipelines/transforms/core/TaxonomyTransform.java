@@ -122,4 +122,11 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     return tr.getId() == null ? Optional.empty() : Optional.of(tr);
   }
 
+  public KeyValueStore<SpeciesMatchRequest, NameUsageMatch> getKvStore() {
+    return kvStore;
+  }
+
+  public void setKvStore(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
+    this.kvStore = kvStore;
+  }
 }
