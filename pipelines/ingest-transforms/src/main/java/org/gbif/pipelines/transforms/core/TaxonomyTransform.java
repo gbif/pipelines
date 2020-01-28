@@ -129,4 +129,8 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   public void setKvStore(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
     this.kvStore = kvStore;
   }
+
+  public KvConfig getKvConfig() {
+    return kvConfig;
+  }
 }
