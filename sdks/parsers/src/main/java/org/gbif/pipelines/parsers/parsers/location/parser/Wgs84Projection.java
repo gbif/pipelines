@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.parsers.location;
+package org.gbif.pipelines.parsers.parsers.location.parser;
 
 import java.util.Set;
 import java.util.TreeSet;

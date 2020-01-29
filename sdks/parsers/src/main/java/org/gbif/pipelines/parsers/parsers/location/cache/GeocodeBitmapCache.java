@@ -1,13 +1,12 @@
-package org.gbif.pipelines.parsers.parsers.location;
+package org.gbif.pipelines.parsers.parsers.location.cache;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
@@ -20,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GeocodeBitmapCache {
 
-  private final KeyValueStore<LatLng, GeocodeResponse> kvStore;
+  private final Function<LatLng, GeocodeResponse> loadFn;
 
   // World map image lookup
   private final BufferedImage img;
@@ -32,42 +31,15 @@ public class GeocodeBitmapCache {
   private final Map<Integer, GeocodeResponse> colourKey = new HashMap<>();
 
   @SneakyThrows
-  private GeocodeBitmapCache(KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage img) {
-    this.kvStore = kvStore;
+  private GeocodeBitmapCache(BufferedImage img, Function<LatLng, GeocodeResponse> loadFn) {
+    this.loadFn = loadFn;
     this.img = img;
     this.imgHeight = img != null ? img.getHeight() : -1;
     this.imgWidth = img != null ? img.getWidth() : -1;
   }
 
-  public static GeocodeBitmapCache create(@NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage img) {
-    return new GeocodeBitmapCache(kvStore, img);
-  }
-
-  public void close() {
-    if (kvStore != null) {
-      try {
-        kvStore.close();
-      } catch (IOException ex) {
-        log.error("Error closing KVStore", ex);
-      }
-    }
-  }
-
-  /** Simple get candidates by point. */
-  public GeocodeResponse get(LatLng latLng) {
-    GeocodeResponse locations = null;
-
-    // Check the image map for a sure location.
-    if (img != null) {
-      locations = getFromBitmap(latLng);
-    }
-
-    // If that doesn't help, use the database.
-    if (locations == null) {
-      locations = kvStore.get(latLng);
-    }
-
-    return locations;
+  public static GeocodeBitmapCache create(@NonNull BufferedImage img, @NonNull Function<LatLng, GeocodeResponse> loadFn) {
+    return new GeocodeBitmapCache(img, loadFn);
   }
 
   /**
@@ -78,7 +50,7 @@ public class GeocodeBitmapCache {
    *
    * @return Locations or null if the bitmap can't answer.
    */
-  private GeocodeResponse getFromBitmap(LatLng latLng) {
+  public GeocodeResponse getFromBitmap(LatLng latLng) {
     double lat = latLng.getLatitude();
     double lng = latLng.getLongitude();
     // Convert the latitude and longitude to x,y coordinates on the image.
@@ -113,7 +85,7 @@ public class GeocodeBitmapCache {
       return locations;
     }
 
-    locations = kvStore.get(LatLng.builder().withLatitude(lat).withLongitude(lng).build());
+    locations = loadFn.apply(LatLng.builder().withLatitude(lat).withLongitude(lng).build());
     // Don't store this if there aren't any locations.
     if (locations.getLocations().isEmpty()) {
       log.error("For colour {} (LL {},{}; pixel {},{}) the webservice gave zero locations.", hex, lat, lng, x, y);

@@ -13,10 +13,9 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.kv.NameUsageMatchStore;
 import org.gbif.pipelines.kv.NameUsageMatchStoreFactory;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
+import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.species.NameUsageMatch;
@@ -84,7 +83,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public TaxonomyTransform init() {
-    kvStore = NameUsageMatchStoreFactory.getInstance(kvConfig).getStore();
+    kvStore = NameUsageMatchStoreFactory.getInstance(kvConfig).getKvStore();
     return this;
   }
 
@@ -92,7 +91,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   @Setup
   public void setup() {
     if (kvStore == null) {
-      kvStore = NameUsageMatchStore.create(kvConfig);
+      kvStore = NameUsageMatchStoreFactory.create(kvConfig);
     }
   }
 

@@ -1,17 +1,14 @@
 package org.gbif.pipelines.transforms.extension;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.transforms.ExtendedRecordCustomBuilder;
-import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
 import org.apache.beam.sdk.testing.PAssert;

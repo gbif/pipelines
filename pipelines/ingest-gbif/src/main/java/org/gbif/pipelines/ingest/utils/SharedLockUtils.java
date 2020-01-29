@@ -5,8 +5,8 @@ import java.util.function.Function;
 
 import org.gbif.pipelines.common.PipelinesVariables.Lock;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.parsers.config.model.LockConfig;
 import org.gbif.pipelines.parsers.config.factory.LockConfigFactory;
+import org.gbif.pipelines.parsers.config.model.LockConfig;
 import org.gbif.wrangler.lock.Mutex;
 import org.gbif.wrangler.lock.zookeeper.ZookeeperSharedReadWriteMutex;
 

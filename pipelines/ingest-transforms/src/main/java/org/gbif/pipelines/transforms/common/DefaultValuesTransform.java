@@ -11,8 +11,8 @@ import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
+import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
 

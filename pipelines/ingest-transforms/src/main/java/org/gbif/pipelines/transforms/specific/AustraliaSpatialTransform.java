@@ -17,8 +17,8 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.AustraliaSpatialInterpreter;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
+import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 

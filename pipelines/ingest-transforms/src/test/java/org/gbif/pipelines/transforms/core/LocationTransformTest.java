@@ -15,7 +15,7 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeBitmapCache;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -60,7 +60,7 @@ public class LocationTransformTest {
   public void emptyLrTest() {
 
     // State
-    GeocodeBitmapCache cache = GeocodeBitmapCache.create(new KeyValueTestStore<>(), null);
+    GeocodeService service = GeocodeService.create(new KeyValueTestStore<>());
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
@@ -72,7 +72,7 @@ public class LocationTransformTest {
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(er)).apply(LocationTransform.create(cache).interpret(metadataView))
+        p.apply(Create.of(er)).apply(LocationTransform.create(service).interpret(metadataView))
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should
@@ -87,7 +87,7 @@ public class LocationTransformTest {
     KeyValueTestStore<LatLng, GeocodeResponse> kvStore = new KeyValueTestStore<>();
     kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK));
     kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN));
-    GeocodeBitmapCache cache = GeocodeBitmapCache.create(kvStore, null);
+    GeocodeService service = GeocodeService.create(kvStore);
 
     final String[] denmark = {
         "0",
@@ -152,7 +152,7 @@ public class LocationTransformTest {
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(records)).apply(LocationTransform.create(cache).interpret(metadataView))
+        p.apply(Create.of(records)).apply(LocationTransform.create(service).interpret(metadataView))
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should

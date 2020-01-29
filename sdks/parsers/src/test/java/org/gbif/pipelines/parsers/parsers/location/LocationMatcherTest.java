@@ -5,6 +5,9 @@ import java.util.Collections;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+import org.gbif.pipelines.parsers.parsers.location.parser.CoordinatesFunction;
+import org.gbif.pipelines.parsers.parsers.location.parser.LocationMatcher;
+import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -18,7 +21,7 @@ public class LocationMatcherTest {
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
 
-  private static final GeocodeBitmapCache CACHE;
+  private static final GeocodeService SERVICE;
 
   static {
     KeyValueTestStore store = new KeyValueTestStore();
@@ -28,7 +31,7 @@ public class LocationMatcherTest {
     store.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
     store.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
     store.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
-    CACHE = GeocodeBitmapCache.create(store, null);
+    SERVICE = GeocodeService.create(store);
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
@@ -37,8 +40,8 @@ public class LocationMatcherTest {
     return new GeocodeResponse(Collections.singletonList(location));
   }
 
-  private GeocodeBitmapCache getCache() {
-    return CACHE;
+  private GeocodeService getCache() {
+    return SERVICE;
   }
 
   @Test

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.parsers.location;
+package org.gbif.pipelines.parsers.parsers.location.parser;
 
 import java.io.BufferedReader;
 import java.io.IOException;

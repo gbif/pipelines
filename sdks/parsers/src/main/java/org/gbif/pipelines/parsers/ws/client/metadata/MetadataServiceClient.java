@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
 import org.gbif.pipelines.parsers.config.factory.RetryFactory;
+import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
 import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentService;
 import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentServiceFactory;

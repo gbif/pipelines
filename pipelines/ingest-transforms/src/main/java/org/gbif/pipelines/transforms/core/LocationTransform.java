@@ -11,11 +11,10 @@ import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.kv.GeocodeStore;
-import org.gbif.pipelines.kv.GeocodeStoreFactory;
+import org.gbif.pipelines.kv.GeocodeServiceFactory;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeBitmapCache;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
@@ -51,7 +50,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   @Getter
   @Setter
-  private GeocodeBitmapCache cache;
+  private GeocodeService service;
 
 
   private PCollectionView<MetadataRecord> metadataView;
@@ -62,9 +61,9 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     this.geocodeImage = geocodeImage;
   }
 
-  public LocationTransform(GeocodeBitmapCache cache) {
+  public LocationTransform(GeocodeService service) {
     super(LocationRecord.class, LOCATION, LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
-    this.cache = cache;
+    this.service = service;
     this.kvConfig = null;
     this.geocodeImage = null;
   }
@@ -73,8 +72,8 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     return new LocationTransform(null, null);
   }
 
-  public static LocationTransform create(GeocodeBitmapCache cache) {
-    return new LocationTransform(cache);
+  public static LocationTransform create(GeocodeService service) {
+    return new LocationTransform(service);
   }
 
   public static LocationTransform create(KvConfig kvConfig, BufferedImage geocodeImage) {
@@ -109,22 +108,22 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public LocationTransform init() {
-    cache = GeocodeStoreFactory.getInstance(kvConfig, geocodeImage).getCache();
+    service = GeocodeServiceFactory.getInstance(kvConfig, geocodeImage).getService();
     return this;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (cache == null) {
-      cache = GeocodeStore.create(kvConfig, geocodeImage);
+    if (service == null) {
+      service = GeocodeServiceFactory.create(kvConfig, geocodeImage);
     }
   }
 
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
-    cache.close();
+    service.close();
   }
 
   @Override
@@ -148,7 +147,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     Optional<LocationRecord> result = Interpretation.from(source)
         .to(lr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(LocationInterpreter.interpretCountryAndCoordinates(cache, mdr))
+        .via(LocationInterpreter.interpretCountryAndCoordinates(service, mdr))
         .via(LocationInterpreter::interpretContinent)
         .via(LocationInterpreter::interpretWaterBody)
         .via(LocationInterpreter::interpretStateProvince)

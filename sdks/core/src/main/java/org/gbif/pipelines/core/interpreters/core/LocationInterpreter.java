@@ -25,9 +25,9 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeBitmapCache;
-import org.gbif.pipelines.parsers.parsers.location.LocationParser;
-import org.gbif.pipelines.parsers.parsers.location.ParsedLocation;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.pipelines.parsers.parsers.location.parser.LocationParser;
+import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -84,11 +84,11 @@ public class LocationInterpreter {
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      GeocodeBitmapCache cache, MetadataRecord mdr) {
+      GeocodeService service, MetadataRecord mdr) {
     return (er, lr) -> {
-      if (cache != null) {
+      if (service != null) {
         // parse the terms
-        ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, cache);
+        ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, service);
 
         // set values in the location record
         ParsedLocation parsedLocation = parsedResult.getResult();

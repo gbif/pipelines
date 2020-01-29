@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.parsers.location;
+package org.gbif.pipelines.parsers.parsers.location.parser;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,18 +17,18 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.PRESUMED_SWAPPED_COORDINAT
 
 /** Models a function that can be applied to a coordinates. */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-class CoordinatesFunction {
+public class CoordinatesFunction {
 
-  static final UnaryOperator<LatLng> NEGATED_LAT_FN =
+  public static final UnaryOperator<LatLng> NEGATED_LAT_FN =
       latLng -> new LatLng(-1d * latLng.getLatitude(), latLng.getLongitude());
-  static final UnaryOperator<LatLng> NEGATED_LNG_FN =
+  public static final UnaryOperator<LatLng> NEGATED_LNG_FN =
       latLng -> new LatLng(latLng.getLatitude(), -1d * latLng.getLongitude());
-  static final UnaryOperator<LatLng> NEGATED_COORDS_FN =
+  public static final UnaryOperator<LatLng> NEGATED_COORDS_FN =
       latLng -> new LatLng(-1d * latLng.getLatitude(), -1d * latLng.getLongitude());
-  static final UnaryOperator<LatLng> SWAPPED_COORDS_FN =
+  public static final UnaryOperator<LatLng> SWAPPED_COORDS_FN =
       latLng -> new LatLng(latLng.getLongitude(), latLng.getLatitude());
 
-  static Set<String> getIssueTypes(UnaryOperator<LatLng> transformation) {
+  public static Set<String> getIssueTypes(UnaryOperator<LatLng> transformation) {
     if (transformation == NEGATED_LAT_FN) {
       return Collections.singleton(PRESUMED_NEGATED_LATITUDE.name());
     }

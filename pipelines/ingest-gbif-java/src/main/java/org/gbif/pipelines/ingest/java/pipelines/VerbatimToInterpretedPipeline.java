@@ -175,7 +175,7 @@ public class VerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create()
         .counterFn(incMetricFn);
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create()
-      .counterFn(incMetricFn);
+        .counterFn(incMetricFn);
     TemporalTransform temporalTransform = TemporalTransform.create()
         .counterFn(incMetricFn);
     // Extension
@@ -197,7 +197,7 @@ public class VerbatimToInterpretedPipeline {
         SyncDataFileWriter<MetadataRecord> metadataWriter =
             createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id, false);
         SyncDataFileWriter<TaggedValueRecord> taggedValueWriter =
-          createWriter(options, TaggedValueRecord.getClassSchema(), taggedValuesTransform, id, false);
+            createWriter(options, TaggedValueRecord.getClassSchema(), taggedValuesTransform, id, false);
         SyncDataFileWriter<BasicRecord> basicWriter =
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
         SyncDataFileWriter<BasicRecord> basicInvalidWriter =
@@ -309,7 +309,7 @@ public class VerbatimToInterpretedPipeline {
         .createSyncDataFileWriter();
   }
 
-  /** Closes resources only one time, before JVM shuts down  */
+  /** Closes resources only one time, before JVM shuts down */
   private static class Shutdown {
 
     private static volatile Shutdown instance;

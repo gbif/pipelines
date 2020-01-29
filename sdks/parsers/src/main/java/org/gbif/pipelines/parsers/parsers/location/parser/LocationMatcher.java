@@ -1,4 +1,4 @@
-package org.gbif.pipelines.parsers.parsers.location;
+package org.gbif.pipelines.parsers.parsers.location.parser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +14,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -26,22 +27,22 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_DERIVED_FROM_COORD
 /** Matches the location fields related to Country and Coordinates to find possible mismatches. */
 @Slf4j
 @AllArgsConstructor(staticName = "create")
-class LocationMatcher {
+public class LocationMatcher {
 
   // Antarctica: "Territories south of 60° south latitude"
   private static final double ANTARCTICA_LATITUDE = -60d;
 
   private final LatLng latLng;
   private final Country country;
-  private final GeocodeBitmapCache cache;
+  private final GeocodeService service;
   private final List<UnaryOperator<LatLng>> alternativeTransformations = new ArrayList<>();
 
-  LocationMatcher additionalTransform(UnaryOperator<LatLng> transformation) {
+  public LocationMatcher additionalTransform(UnaryOperator<LatLng> transformation) {
     alternativeTransformations.add(transformation);
     return this;
   }
 
-  ParsedField<ParsedLocation> apply() {
+  public ParsedField<ParsedLocation> apply() {
     // Check parameters
     Objects.requireNonNull(latLng);
     if (latLng.getLatitude() == null || latLng.getLongitude() == null) {
@@ -112,7 +113,7 @@ class LocationMatcher {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = null;
       try {
-        geocodeResponse = cache.get(latLng);
+        geocodeResponse = service.get(latLng);
       } catch (NoSuchElementException | NullPointerException ex) {
         log.error(ex.getMessage(), ex);
       }
