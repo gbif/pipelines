@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Properties;
@@ -107,7 +108,8 @@ public class VerbatimToInterpretedPipeline {
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
+    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty("geocode.bitmapPath", "bitmap.png"));
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -128,7 +130,7 @@ public class VerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties, img);
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
@@ -196,9 +198,9 @@ public class VerbatimToInterpretedPipeline {
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
 
     filteredUniqueRecords
-      .apply("Check tagged values transform condition", taggedValuesTransform.check(types))
-      .apply("Interpret tagged values", taggedValuesTransform.interpret(metadataView))
-      .apply("Write tagged values to avro", taggedValuesTransform.write(pathFn));
+        .apply("Check tagged values transform condition", taggedValuesTransform.check(types))
+        .apply("Interpret tagged values", taggedValuesTransform.interpret(metadataView))
+        .apply("Write tagged values to avro", taggedValuesTransform.write(pathFn));
 
     filteredUniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))

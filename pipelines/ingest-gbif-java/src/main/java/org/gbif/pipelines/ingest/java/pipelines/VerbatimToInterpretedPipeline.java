@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
+import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -147,6 +148,7 @@ public class VerbatimToInterpretedPipeline {
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty("geocode.bitmapPath", "bitmap.png"));
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -168,7 +170,7 @@ public class VerbatimToInterpretedPipeline {
         .counterFn(incMetricFn).init();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties)
         .counterFn(incMetricFn).init();
-    LocationTransform locationTransform = LocationTransform.create(properties)
+    LocationTransform locationTransform = LocationTransform.create(properties, img)
         .counterFn(incMetricFn).init();
     VerbatimTransform verbatimTransform = VerbatimTransform.create()
         .counterFn(incMetricFn);

@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeBitmapCache;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -37,18 +38,20 @@ import static org.junit.Assert.assertTrue;
 
 public class LocationInterpreterTest {
 
-  private static final KeyValueTestStore TEST_STORE = new KeyValueTestStore();
+  private static final GeocodeBitmapCache CACHE;
 
   private static final String ID = "777";
 
   static {
-    TEST_STORE.put(new LatLng(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
-    TEST_STORE.put(new LatLng(35.891353d, -99.721925d), toGeocodeResponse(Country.UNITED_STATES));
-    TEST_STORE.put(new LatLng(34.69545d, -94.65836d), toGeocodeResponse(Country.UNITED_STATES));
-    TEST_STORE.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
-    TEST_STORE.put(new LatLng(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
-    TEST_STORE.put(new LatLng(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
-    TEST_STORE.put(new LatLng(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
+    KeyValueTestStore store = new KeyValueTestStore();
+    store.put(new LatLng(15.958333d, -85.908333d), toGeocodeResponse(Country.HONDURAS));
+    store.put(new LatLng(35.891353d, -99.721925d), toGeocodeResponse(Country.UNITED_STATES));
+    store.put(new LatLng(34.69545d, -94.65836d), toGeocodeResponse(Country.UNITED_STATES));
+    store.put(new LatLng(-2.752778d, -58.653057d), toGeocodeResponse(Country.BRAZIL));
+    store.put(new LatLng(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
+    store.put(new LatLng(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
+    store.put(new LatLng(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
+    CACHE = GeocodeBitmapCache.create(store, null);
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
@@ -98,7 +101,7 @@ public class LocationInterpreterTest {
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
     return Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-        .via(LocationInterpreter.interpretCountryAndCoordinates(TEST_STORE, mdr))
+        .via(LocationInterpreter.interpretCountryAndCoordinates(CACHE, mdr))
         .get().orElse(null);
   }
 

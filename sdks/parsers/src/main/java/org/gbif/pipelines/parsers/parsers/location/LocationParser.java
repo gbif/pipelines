@@ -9,13 +9,11 @@ import java.util.TreeSet;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
-import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -32,9 +30,9 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationParser {
 
-  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, GeocodeBitmapCache cache) {
     ModelUtils.checkNullOrEmpty(er);
-    Objects.requireNonNull(kvStore, "Geolookup kvStore is required");
+    Objects.requireNonNull(cache, "Geolookup GeocodeBitmapCache is required");
 
     Set<String> issues = new TreeSet<>();
 
@@ -73,7 +71,7 @@ public class LocationParser {
 
     // If the coords parsing was successful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), kvStore)
+        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), cache)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)

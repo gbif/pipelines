@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.awt.image.BufferedImage;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -97,7 +98,9 @@ public class DwcaToInterpretedPipeline {
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
 
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    String hdfsSiteConfig = options.getHdfsSiteConfig();
+    Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
+    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty("geocode.bitmapPath", "bitmap.png"));
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
@@ -119,7 +122,7 @@ public class DwcaToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties, img);
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
 
     // Extension

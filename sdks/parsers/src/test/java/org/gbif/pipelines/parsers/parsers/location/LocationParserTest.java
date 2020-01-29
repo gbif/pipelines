@@ -26,15 +26,17 @@ public class LocationParserTest {
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
 
-  private static final KeyValueTestStore TEST_STORE = new KeyValueTestStore();
+  private static final GeocodeBitmapCache CACHE;
 
   static {
-    TEST_STORE.put(new LatLng(60.4d, -131.3d), toGeocodeResponse(Country.CANADA));
-    TEST_STORE.put(new LatLng(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
-    TEST_STORE.put(new LatLng(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
-    TEST_STORE.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
-    TEST_STORE.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
-    TEST_STORE.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    KeyValueTestStore testStore = new KeyValueTestStore();
+    testStore.put(new LatLng(60.4d, -131.3d), toGeocodeResponse(Country.CANADA));
+    testStore.put(new LatLng(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
+    testStore.put(new LatLng(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
+    testStore.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
+    testStore.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
+    testStore.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    CACHE = GeocodeBitmapCache.create(testStore, null);
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
@@ -43,8 +45,8 @@ public class LocationParserTest {
     return new GeocodeResponse(Collections.singletonList(location));
   }
 
-  private KeyValueTestStore getkvStore() {
-    return TEST_STORE;
+  private GeocodeBitmapCache getCache() {
+    return CACHE;
   }
 
   @Test
@@ -55,7 +57,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("Spain").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -69,7 +71,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).countryCode("ES").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -83,7 +85,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -97,7 +99,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("foo").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -113,7 +115,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).countryCode("foo").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -133,7 +135,7 @@ public class LocationParserTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -162,7 +164,7 @@ public class LocationParserTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -187,7 +189,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).verbatimCoords("30.2, 100.2344349").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -218,7 +220,7 @@ public class LocationParserTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getCache());
 
     // Should
     Assert.assertTrue(result.isSuccessful());

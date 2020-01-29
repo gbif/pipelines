@@ -1,9 +1,9 @@
 package org.gbif.pipelines.kv;
 
-import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.geocode.LatLng;
+import java.awt.image.BufferedImage;
+
 import org.gbif.pipelines.parsers.config.model.KvConfig;
-import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeBitmapCache;
 
 import lombok.SneakyThrows;
 
@@ -12,28 +12,28 @@ import lombok.SneakyThrows;
  */
 public class GeocodeStoreFactory {
 
-  private final KeyValueStore<LatLng, GeocodeResponse> store;
+  private final GeocodeBitmapCache cache;
   private static volatile GeocodeStoreFactory instance;
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private GeocodeStoreFactory(KvConfig config) {
-    store = GeocodeStore.create(config);
+  private GeocodeStoreFactory(KvConfig config, BufferedImage image) {
+    cache = GeocodeStore.create(config, image);
   }
 
-  public static GeocodeStoreFactory getInstance(KvConfig config) {
+  public static GeocodeStoreFactory getInstance(KvConfig config, BufferedImage image) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new GeocodeStoreFactory(config);
+          instance = new GeocodeStoreFactory(config, image);
         }
       }
     }
     return instance;
   }
 
-  public KeyValueStore<LatLng, GeocodeResponse> getStore() {
-    return store;
+  public GeocodeBitmapCache getCache() {
+    return cache;
   }
 
 }

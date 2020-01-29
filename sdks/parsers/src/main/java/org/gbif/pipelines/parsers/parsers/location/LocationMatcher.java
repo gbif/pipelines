@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.rest.client.geocode.GeocodeResponse;
@@ -34,7 +33,7 @@ class LocationMatcher {
 
   private final LatLng latLng;
   private final Country country;
-  private final KeyValueStore<LatLng, GeocodeResponse> kvStore;
+  private final GeocodeBitmapCache cache;
   private final List<UnaryOperator<LatLng>> alternativeTransformations = new ArrayList<>();
 
   LocationMatcher additionalTransform(UnaryOperator<LatLng> transformation) {
@@ -113,7 +112,7 @@ class LocationMatcher {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = null;
       try {
-        geocodeResponse = kvStore.get(latLng);
+        geocodeResponse = cache.get(latLng);
       } catch (NoSuchElementException | NullPointerException ex) {
         log.error(ex.getMessage(), ex);
       }

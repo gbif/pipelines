@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.awt.image.BufferedImage;
 import java.nio.file.Paths;
 import java.util.Properties;
 
@@ -116,7 +117,9 @@ public class DwcaToEsIndexPipeline {
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    String hdfsSiteConfig = options.getHdfsSiteConfig();
+    Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
+    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty("geocode.bitmapPath", "bitmap.png"));
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -141,7 +144,7 @@ public class DwcaToEsIndexPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
+    LocationTransform locationTransform = LocationTransform.create(properties, img);
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
 
     // Extension
