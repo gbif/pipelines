@@ -9,7 +9,6 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
-import org.gbif.pipelines.parsers.parsers.location.cache.GeocodeBitmapCache;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
@@ -44,9 +43,7 @@ public class GeocodeServiceFactory {
   /* TODO Comment */
   @SneakyThrows
   public static GeocodeService create(KvConfig config) {
-    KeyValueStore<LatLng, GeocodeResponse> kvStore = creatKvStore(config);
-    GeocodeBitmapCache cache = GeocodeBitmapCacheFactory.getInstance(config, kvStore::get);
-    return GeocodeService.create(kvStore, cache);
+    return GeocodeService.create(creatKvStore(config), BitmapFactory.getInstance(config));
   }
 
   private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(KvConfig config) throws IOException {

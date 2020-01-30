@@ -1,5 +1,6 @@
 package org.gbif.pipelines.parsers.parsers.location;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -19,13 +20,13 @@ public class GeocodeService implements Serializable {
   private final KeyValueStore<LatLng, GeocodeResponse> kvStore;
   private final GeocodeBitmapCache bitmapCache;
 
-  private GeocodeService(@NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore, GeocodeBitmapCache bitmapCache) {
+  private GeocodeService(@NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
     this.kvStore = kvStore;
-    this.bitmapCache = bitmapCache;
+    this.bitmapCache = image == null ? null : GeocodeBitmapCache.create(image, kvStore::get);
   }
 
-  public static GeocodeService create(KeyValueStore<LatLng, GeocodeResponse> kvStore, GeocodeBitmapCache bitmapCache) {
-    return new GeocodeService(kvStore, bitmapCache);
+  public static GeocodeService create(KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
+    return new GeocodeService(kvStore, image);
   }
 
   public static GeocodeService create(KeyValueStore<LatLng, GeocodeResponse> kvStore) {
