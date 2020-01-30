@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -24,7 +23,6 @@ import org.gbif.pipelines.ingest.java.transforms.AvroReader;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
-import org.gbif.pipelines.ingest.java.utils.BitmapFactory;
 import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -67,8 +65,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.BITMAP_FILE_NAME;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.BITMAP_PROPERTY_NAME;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
@@ -151,7 +147,6 @@ public class VerbatimToInterpretedPipeline {
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
-    BufferedImage img = BitmapFactory.getInstance(hdfsSiteConfig, properties).get();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -173,7 +168,7 @@ public class VerbatimToInterpretedPipeline {
         .counterFn(incMetricFn).init();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties)
         .counterFn(incMetricFn).init();
-    LocationTransform locationTransform = LocationTransform.create(properties, img)
+    LocationTransform locationTransform = LocationTransform.create(properties)
         .counterFn(incMetricFn).init();
     VerbatimTransform verbatimTransform = VerbatimTransform.create()
         .counterFn(incMetricFn);

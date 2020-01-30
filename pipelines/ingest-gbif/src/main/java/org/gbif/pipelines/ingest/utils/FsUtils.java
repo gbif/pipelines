@@ -1,13 +1,10 @@
 package org.gbif.pipelines.ingest.utils;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -29,7 +26,6 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 
 import com.google.common.base.Strings;
-import javax.imageio.ImageIO;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -292,13 +288,6 @@ public final class FsUtils {
   public static Properties readPropertiesFile(String hdfsSiteConfig, String filePath) {
     FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
     Path fPath = new Path(filePath);
-    if (!fPath.isAbsolute()) {
-      URL url = Thread.currentThread().getContextClassLoader().getResource(filePath);
-      if (url == null) {
-        throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
-      }
-      fPath = new Path(url.getPath());
-    }
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
       try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath)))) {
@@ -309,32 +298,6 @@ public final class FsUtils {
       }
     }
     throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
-  }
-
-  /**
-   * Load an image file from HDFS/Local FS
-   *
-   * @param hdfsSiteConfig HDFS config file
-   * @param filePath properties file path
-   */
-  @SneakyThrows
-  public static BufferedImage loadImageFile(String hdfsSiteConfig, String filePath) {
-    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
-    Path fPath = new Path(filePath);
-    if (!fPath.isAbsolute()) {
-      URL url = Thread.currentThread().getContextClassLoader().getResource(filePath);
-      if (url == null) {
-        throw new FileNotFoundException("The image file doesn't exist - " + filePath);
-      }
-      fPath = new Path(url.getPath());
-    }
-    if (fs.exists(fPath)) {
-      log.info("Loading the image file - {}", filePath);
-      try (InputStream is = fs.open(fPath).getWrappedStream()) {
-        return ImageIO.read(is);
-      }
-    }
-    throw new FileNotFoundException("The image file doesn't exist - " + filePath);
   }
 
   /**

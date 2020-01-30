@@ -26,7 +26,7 @@ public class NameUsageMatchStoreFactory {
   }
 
   /* TODO Comment */
-  public static NameUsageMatchStoreFactory getInstance(KvConfig config) {
+  public static KeyValueStore<SpeciesMatchRequest, NameUsageMatch> getInstance(KvConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
@@ -34,7 +34,7 @@ public class NameUsageMatchStoreFactory {
         }
       }
     }
-    return instance;
+    return instance.kvStore;
   }
 
   /* TODO Comment */
@@ -66,10 +66,6 @@ public class NameUsageMatchStoreFactory {
         .build();
 
     return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
-  }
-
-  public KeyValueStore<SpeciesMatchRequest, NameUsageMatch> getKvStore() {
-    return kvStore;
   }
 
 }

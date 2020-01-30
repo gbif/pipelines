@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transforms.core;
 
-import java.awt.image.BufferedImage;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
@@ -25,8 +24,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
@@ -44,50 +41,38 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
-  @Getter
   private final KvConfig kvConfig;
-  private final BufferedImage geocodeImage;
 
-  @Getter
-  @Setter
   private GeocodeService service;
-
-
   private PCollectionView<MetadataRecord> metadataView;
 
-  public LocationTransform(KvConfig kvConfig, BufferedImage geocodeImage) {
+  public LocationTransform(KvConfig kvConfig) {
     super(LocationRecord.class, LOCATION, LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
     this.kvConfig = kvConfig;
-    this.geocodeImage = geocodeImage;
-  }
-
-  public LocationTransform(GeocodeService service) {
-    super(LocationRecord.class, LOCATION, LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
-    this.service = service;
-    this.kvConfig = null;
-    this.geocodeImage = null;
   }
 
   public static LocationTransform create() {
-    return new LocationTransform(null, null);
+    return new LocationTransform(null);
+  }
+
+  public static LocationTransform create(KvConfig kvConfig) {
+    return new LocationTransform(kvConfig);
+  }
+
+  public static LocationTransform create(String propertiesPath) {
+    KvConfig config = KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.GEOCODE_PREFIX);
+    return new LocationTransform(config);
+  }
+
+  public static LocationTransform create(Properties properties) {
+    KvConfig config = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
+    return new LocationTransform(config);
   }
 
   public static LocationTransform create(GeocodeService service) {
-    return new LocationTransform(service);
-  }
-
-  public static LocationTransform create(KvConfig kvConfig, BufferedImage geocodeImage) {
-    return new LocationTransform(kvConfig, geocodeImage);
-  }
-
-  public static LocationTransform create(String propertiesPath, BufferedImage geocodeImage) {
-    KvConfig config = KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.GEOCODE_PREFIX);
-    return new LocationTransform(config, geocodeImage);
-  }
-
-  public static LocationTransform create(Properties properties, BufferedImage geocodeImage) {
-    KvConfig config = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
-    return new LocationTransform(config, geocodeImage);
+    LocationTransform lt = new LocationTransform(null);
+    lt.service = service;
+    return lt;
   }
 
   public SingleOutput<ExtendedRecord, LocationRecord> interpret(PCollectionView<MetadataRecord> metadataView) {
@@ -108,7 +93,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public LocationTransform init() {
-    service = GeocodeServiceFactory.getInstance(kvConfig, geocodeImage).getService();
+    service = GeocodeServiceFactory.getInstance(kvConfig);
     return this;
   }
 
@@ -116,7 +101,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @Setup
   public void setup() {
     if (service == null) {
-      service = GeocodeServiceFactory.create(kvConfig, geocodeImage);
+      service = GeocodeServiceFactory.create(kvConfig);
     }
   }
 

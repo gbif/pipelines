@@ -31,28 +31,13 @@ public class KvConfigFactory {
   private static final String DEFAULT_NUM_OF_KEY_BUCKETS = "10";
   private static final Boolean DEFAULT_REST_ONLY = Boolean.FALSE;
 
+  public static final String BITMAP_PROPERTY_NAME = GEOCODE_PREFIX + ".bitmapPath";
+  public static final String BITMAP_FILE_NAME = "bitmap/bitmap.png";
+
   public static KvConfig create(@NonNull Path propertiesPath, @NonNull String prefix) {
     // load properties or throw exception if cannot be loaded
     Properties props = ConfigFactory.loadProperties(propertiesPath);
-
     return create(props, prefix);
-  }
-
-  public static KvConfig create(String baseApiPath, String zookeeperUrl, int numOfKeyBuckets, String tableName) {
-    long timeoutInSec = Long.parseLong(DEFAULT_TIMEOUT_SEC);
-    long cacheInMb = Long.parseLong(DEFAULT_CACHE_SIZE_MB);
-    return KvConfig.create(baseApiPath, timeoutInSec, cacheInMb, tableName, zookeeperUrl, numOfKeyBuckets, DEFAULT_REST_ONLY);
-  }
-
-  public static KvConfig create(String baseApiPath, int numOfKeyBuckets, String tableName) {
-    long timeoutInSec = Long.parseLong(DEFAULT_TIMEOUT_SEC);
-    long cacheInMb = Long.parseLong(DEFAULT_CACHE_SIZE_MB);
-    return KvConfig.create(baseApiPath, timeoutInSec, cacheInMb, tableName, null, numOfKeyBuckets, DEFAULT_REST_ONLY);
-  }
-
-  public static KvConfig create(String baseApiPath, long timeoutInSec, long cacheInMb, String zookeeperUrl,
-      int numOfKeyBuckets, String tableName, boolean restOnly) {
-    return KvConfig.create(baseApiPath, timeoutInSec, cacheInMb, tableName, zookeeperUrl, numOfKeyBuckets, restOnly);
   }
 
   public static KvConfig create(@NonNull Properties props, @NonNull String prefix) {
@@ -60,13 +45,14 @@ public class KvConfigFactory {
     String basePath = ConfigFactory.getKey(props, WS_BASE_PATH_PROP) + "/v1/";
     String zookeeperUrl = props.getProperty(ZOOKEEPER_PROP);
     String tableName = props.getProperty(prefix + TABLE_NAME);
+    String imagePath = props.getProperty(BITMAP_PROPERTY_NAME, BITMAP_FILE_NAME);
 
     boolean restOnly = Boolean.parseBoolean(props.getProperty(prefix + REST_ONLY_NAME, DEFAULT_REST_ONLY.toString()));
     long cacheSize = Long.parseLong(props.getProperty(prefix + CACHE_SIZE_PROP, DEFAULT_CACHE_SIZE_MB));
     long timeout = Long.parseLong(props.getProperty(prefix + WS_TIMEOUT_PROP, DEFAULT_TIMEOUT_SEC));
     int numOfKeyBuckets = Integer.parseInt(props.getProperty(prefix + NUM_OF_KEY_BUCKETS, DEFAULT_NUM_OF_KEY_BUCKETS));
 
-    return KvConfig.create(basePath, timeout, cacheSize, tableName, zookeeperUrl, numOfKeyBuckets, restOnly);
+    return KvConfig.create(basePath, timeout, cacheSize, tableName, zookeeperUrl, numOfKeyBuckets, restOnly, imagePath);
   }
 
 }

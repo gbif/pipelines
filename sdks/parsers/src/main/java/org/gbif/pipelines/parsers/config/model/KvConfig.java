@@ -22,5 +22,7 @@ public final class KvConfig implements Serializable {
   private final int numOfKeyBuckets;
 
   private final boolean restOnly;
+
+  private final String imagePath;
 }
 

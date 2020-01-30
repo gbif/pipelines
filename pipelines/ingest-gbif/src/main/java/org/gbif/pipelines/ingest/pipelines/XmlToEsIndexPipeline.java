@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.awt.image.BufferedImage;
 import java.util.Properties;
 
 import org.gbif.pipelines.common.PipelinesVariables;
@@ -58,8 +57,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.BITMAP_FILE_NAME;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.BITMAP_PROPERTY_NAME;
 
 /**
  * Pipeline sequence:
@@ -128,7 +125,6 @@ public class XmlToEsIndexPipeline {
     log.info("Adding step 1: Options");
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
-    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty(BITMAP_PROPERTY_NAME, BITMAP_FILE_NAME));
 
     Pipeline p = Pipeline.create(options);
 
@@ -139,7 +135,7 @@ public class XmlToEsIndexPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties, img);
+    LocationTransform locationTransform = LocationTransform.create(properties);
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();

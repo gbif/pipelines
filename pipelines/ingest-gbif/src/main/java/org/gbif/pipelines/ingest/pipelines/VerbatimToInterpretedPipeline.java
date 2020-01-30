@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.awt.image.BufferedImage;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Properties;
@@ -49,9 +48,6 @@ import org.slf4j.MDC;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.BITMAP_FILE_NAME;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.BITMAP_PROPERTY_NAME;
 
 /**
  * Pipeline sequence:
@@ -112,7 +108,6 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
-    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty(BITMAP_PROPERTY_NAME, BITMAP_FILE_NAME));
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -133,7 +128,7 @@ public class VerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties, img);
+    LocationTransform locationTransform = LocationTransform.create(properties);
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();

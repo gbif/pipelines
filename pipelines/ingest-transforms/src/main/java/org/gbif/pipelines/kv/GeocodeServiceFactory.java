@@ -1,6 +1,5 @@
 package org.gbif.pipelines.kv;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import org.gbif.kvs.KeyValueStore;
@@ -25,30 +24,26 @@ public class GeocodeServiceFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private GeocodeServiceFactory(KvConfig config, BufferedImage image) {
-    service = create(config, image);
+  private GeocodeServiceFactory(KvConfig config) {
+    service = create(config);
   }
 
   /* TODO Comment */
-  public static GeocodeServiceFactory getInstance(KvConfig config, BufferedImage image) {
+  public static GeocodeService getInstance(KvConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new GeocodeServiceFactory(config, image);
+          instance = new GeocodeServiceFactory(config);
         }
       }
     }
-    return instance;
+    return instance.service;
   }
 
   /* TODO Comment */
   @SneakyThrows
-  public static GeocodeService create(KvConfig config, BufferedImage image) {
-    return GeocodeService.create(creatKvStore(config), image);
-  }
-
-  public GeocodeService getService() {
-    return service;
+  public static GeocodeService create(KvConfig config) {
+    return GeocodeService.create(creatKvStore(config), BitmapFactory.getInstance(config));
   }
 
   private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(KvConfig config) throws IOException {
