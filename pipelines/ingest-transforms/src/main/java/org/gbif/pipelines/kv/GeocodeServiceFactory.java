@@ -40,10 +40,6 @@ public class GeocodeServiceFactory {
     return instance.service;
   }
 
-  public static GeocodeService getInstance() {
-    return getInstance(null);
-  }
-
   /* TODO Comment */
   @SneakyThrows
   public static GeocodeService create(KvConfig config) {

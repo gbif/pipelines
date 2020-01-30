@@ -83,7 +83,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public TaxonomyTransform init() {
-    setup();
+    kvStore = NameUsageMatchStoreFactory.getInstance(kvConfig);
     return this;
   }
 
@@ -92,6 +92,18 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   public void setup() {
     if (kvStore == null) {
       kvStore = NameUsageMatchStoreFactory.create(kvConfig);
+    }
+  }
+
+  /** Beam @Teardown closes initialized resources */
+  @Teardown
+  public void tearDown() {
+    if (Objects.nonNull(kvStore)) {
+      try {
+        kvStore.close();
+      } catch (IOException ex) {
+        log.error("Error closing KV Store", ex);
+      }
     }
   }
 

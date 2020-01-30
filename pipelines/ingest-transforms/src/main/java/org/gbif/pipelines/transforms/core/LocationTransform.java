@@ -93,7 +93,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public LocationTransform init() {
-    setup();
+    service = GeocodeServiceFactory.getInstance(kvConfig);
     return this;
   }
 
@@ -103,6 +103,12 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     if (service == null) {
       service = GeocodeServiceFactory.create(kvConfig);
     }
+  }
+
+  /** Beam @Teardown closes initialized resources */
+  @Teardown
+  public void tearDown() {
+    service.close();
   }
 
   @Override

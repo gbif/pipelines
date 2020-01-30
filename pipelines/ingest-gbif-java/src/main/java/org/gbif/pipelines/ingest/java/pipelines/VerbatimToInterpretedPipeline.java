@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -40,9 +39,6 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
-import org.gbif.pipelines.kv.GeocodeServiceFactory;
-import org.gbif.pipelines.kv.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -287,7 +283,7 @@ public class VerbatimToInterpretedPipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(metadataTransform);
+      Shutdown.doOnExit(metadataTransform, basicTransform, locationTransform, taxonomyTransform);
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
@@ -318,26 +314,23 @@ public class VerbatimToInterpretedPipeline {
     private static final Object MUTEX = new Object();
 
     @SneakyThrows
-    private Shutdown(MetadataTransform mdTr) {
+    private Shutdown(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
       Runnable shudownHook = () -> {
-        try {
-          log.info("Close resources");
-          mdTr.tearDown();
-          GeocodeServiceFactory.getInstance().close();
-          NameUsageMatchStoreFactory.getInstance().close();
-          HbaseConnectionFactory.getInstance().close();
-        } catch (IOException ex) {
-          log.error("Error closing resources", ex);
-        }
+        log.info("Closing all resources");
+        mdTr.tearDown();
+        bTr.tearDown();
+        lTr.tearDown();
+        tTr.tearDown();
+        log.info("The resources were closed");
       };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
-    public static void doOnExit(MetadataTransform mdTr) {
+    public static void doOnExit(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
-            instance = new Shutdown(mdTr);
+            instance = new Shutdown(mdTr, bTr, lTr, tTr);
           }
         }
       }
