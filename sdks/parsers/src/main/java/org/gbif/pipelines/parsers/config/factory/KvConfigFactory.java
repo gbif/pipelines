@@ -31,8 +31,8 @@ public class KvConfigFactory {
   private static final String DEFAULT_NUM_OF_KEY_BUCKETS = "10";
   private static final Boolean DEFAULT_REST_ONLY = Boolean.FALSE;
 
-  public static final String BITMAP_PROPERTY_NAME = GEOCODE_PREFIX + ".bitmapPath";
-  public static final String BITMAP_FILE_NAME = "bitmap/bitmap.png";
+  private static final String BITMAP_PROPERTY_NAME = GEOCODE_PREFIX + ".bitmapPath";
+  private static final String BITMAP_FILE_NAME = "bitmap/bitmap.png";
 
   public static KvConfig create(@NonNull Path propertiesPath, @NonNull String prefix) {
     // load properties or throw exception if cannot be loaded

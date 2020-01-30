@@ -5,40 +5,44 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Function;
 
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.parsers.parsers.location.cache.GeocodeBitmapCache;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import javax.imageio.ImageIO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BitmapFactory {
+public class GeocodeBitmapCacheFactory {
 
-  private static volatile BitmapFactory instance;
+  private static volatile GeocodeBitmapCacheFactory instance;
 
-  private final BufferedImage image;
+  private final GeocodeBitmapCache cache;
 
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private BitmapFactory(KvConfig config) {
-    this.image = loadImageFile(config.getImagePath());
+  private GeocodeBitmapCacheFactory(KvConfig config, Function<LatLng, GeocodeResponse> loadFn) {
+    this.cache = GeocodeBitmapCache.create(loadImageFile(config.getImagePath()), loadFn);
   }
 
-  public static BufferedImage getInstance(KvConfig config) {
+  public static GeocodeBitmapCache getInstance(KvConfig config, Function<LatLng, GeocodeResponse> loadFn) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new BitmapFactory(config);
+          instance = new GeocodeBitmapCacheFactory(config, loadFn);
         }
       }
     }
-    return instance.image;
+    return instance.cache;
   }
 
   @SneakyThrows
-  public BufferedImage loadImageFile(String filePath) {
+  private BufferedImage loadImageFile(String filePath) {
     Path path = Paths.get(filePath);
     if (!path.isAbsolute()) {
       try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath)) {
