@@ -314,12 +314,12 @@ public final class FsUtils {
     FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
-      log.info("Reading properties path - {}", filePath);
+      log.info("Loading the image file - {}", filePath);
       try (InputStream is = fs.open(fPath).getWrappedStream()) {
         return ImageIO.read(is);
       }
     }
-    throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
+    throw new FileNotFoundException("The image file doesn't exist - " + filePath);
   }
 
   /**

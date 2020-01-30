@@ -66,6 +66,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.BITMAP_FILE_NAME;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.BITMAP_PROPERTY_NAME;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
 
 /**
@@ -148,7 +150,7 @@ public class VerbatimToInterpretedPipeline {
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
-    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty("geocode.bitmapPath", "bitmap.png"));
+    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty(BITMAP_PROPERTY_NAME, BITMAP_FILE_NAME));
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
