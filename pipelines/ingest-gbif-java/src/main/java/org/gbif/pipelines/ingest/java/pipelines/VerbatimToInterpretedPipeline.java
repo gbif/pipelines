@@ -24,6 +24,7 @@ import org.gbif.pipelines.ingest.java.transforms.AvroReader;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
+import org.gbif.pipelines.ingest.java.utils.BitmapFactory;
 import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -150,7 +151,7 @@ public class VerbatimToInterpretedPipeline {
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
-    BufferedImage img = FsUtils.loadImageFile(hdfsSiteConfig, properties.getProperty(BITMAP_PROPERTY_NAME, BITMAP_FILE_NAME));
+    BufferedImage img = BitmapFactory.getInstance(hdfsSiteConfig, properties).get();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 

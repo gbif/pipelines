@@ -35,7 +35,7 @@ public class PipelinesVariables {
       public static final String FILE_NAME = "interpret-";
 
       public static final String BITMAP_PROPERTY_NAME = "geocode.bitmapPath";
-      public static final String BITMAP_FILE_NAME = "bitmap.png";
+      public static final String BITMAP_FILE_NAME = "bitmap/bitmap.png";
 
       public interface InterpretationType extends Serializable {
 

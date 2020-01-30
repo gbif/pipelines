@@ -18,7 +18,7 @@ public class PropertiesFactory {
 
   @SneakyThrows
   private PropertiesFactory(String hdfsSiteConfig, String propertiesPath) {
-    properties = FsUtils.readPropertiesFile(hdfsSiteConfig, propertiesPath);
+    this.properties = FsUtils.readPropertiesFile(hdfsSiteConfig, propertiesPath);
   }
 
   public static PropertiesFactory getInstance(String hdfsSiteConfig, String propertiesPath) {
