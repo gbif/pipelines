@@ -10,10 +10,12 @@ import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Factory to get singleton instance of KV store {@link KeyValueStore}
  */
+@Slf4j
 public class NameUsageMatchStoreFactory {
 
   private final KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
@@ -35,6 +37,10 @@ public class NameUsageMatchStoreFactory {
       }
     }
     return instance.kvStore;
+  }
+
+  public static KeyValueStore<SpeciesMatchRequest, NameUsageMatch> getInstance() {
+    return getInstance(null);
   }
 
   /* TODO Comment */

@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Properties;
@@ -14,6 +15,9 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
+import org.gbif.pipelines.kv.GeocodeServiceFactory;
+import org.gbif.pipelines.kv.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.transforms.common.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
@@ -244,6 +248,15 @@ public class VerbatimToInterpretedPipeline {
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
     FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, tempPath, ".temp-beam");
+
+    try {
+      log.info("Close all resources");
+      GeocodeServiceFactory.getInstance().close();
+      NameUsageMatchStoreFactory.getInstance().close();
+      HbaseConnectionFactory.getInstance().close();
+    } catch (IOException ex) {
+      log.error("Error closing resources", ex);
+    }
 
     log.info("Pipeline has been finished");
   }

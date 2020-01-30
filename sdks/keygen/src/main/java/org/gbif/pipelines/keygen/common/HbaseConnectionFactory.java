@@ -17,8 +17,8 @@ public class HbaseConnectionFactory {
     connection = HbaseConnection.create(hbaseZk);
   }
 
-  public static HbaseConnectionFactory getInstance(String hbaseZk) {
-    Predicate<HbaseConnectionFactory> pr = i -> i == null || i.getConnection() == null || i.getConnection().isClosed();
+  public static Connection getInstance(String hbaseZk) {
+    Predicate<HbaseConnectionFactory> pr = i -> i == null || i.connection == null || i.connection.isClosed();
     if (pr.test(instance)) {
       synchronized (MUTEX) {
         if (pr.test(instance)) {
@@ -26,15 +26,11 @@ public class HbaseConnectionFactory {
         }
       }
     }
-    return instance;
+    return instance.connection;
   }
 
-  public static HbaseConnectionFactory getInstance() {
+  public static Connection getInstance() {
     return getInstance(null);
-  }
-
-  public Connection getConnection() {
-    return connection;
   }
 
 }

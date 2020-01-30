@@ -19,13 +19,13 @@ public class HbaseConnectionFactoryTest {
   }
 
   private final Supplier<CompletableFuture<Connection>> connectionAsyncSupplier =
-      () -> CompletableFuture.supplyAsync(HbaseConnectionFactory.getInstance()::getConnection);
+      () -> CompletableFuture.supplyAsync(HbaseConnectionFactory::getInstance);
 
   @Test
   public void instanceTest() throws IOException {
     // When
-    Connection conn1 = HbaseConnectionFactory.getInstance().getConnection();
-    Connection conn2 = HbaseConnectionFactory.getInstance().getConnection();
+    Connection conn1 = HbaseConnectionFactory.getInstance();
+    Connection conn2 = HbaseConnectionFactory.getInstance();
 
     // Should
     Assert.assertSame(conn1, conn2);
@@ -37,12 +37,12 @@ public class HbaseConnectionFactoryTest {
   @Test
   public void closeInstanceTest() throws IOException {
     // When
-    Connection conn1 = HbaseConnectionFactory.getInstance().getConnection();
-    Connection conn2 = HbaseConnectionFactory.getInstance().getConnection();
+    Connection conn1 = HbaseConnectionFactory.getInstance();
+    Connection conn2 = HbaseConnectionFactory.getInstance();
 
     conn1.close();
 
-    Connection conn3 = HbaseConnectionFactory.getInstance().getConnection();
+    Connection conn3 = HbaseConnectionFactory.getInstance();
 
     // Should
     Assert.assertTrue(conn1.isClosed());

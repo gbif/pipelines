@@ -107,10 +107,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public BasicTransform init() {
-    if (keygenConfig != null) {
-      connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
-      keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
-    }
+    setup();
     return this;
   }
 
@@ -119,17 +116,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   @Setup
   public void setup() {
     if (keygenConfig != null) {
-      connection = HbaseConnection.create(keygenConfig.getHbaseZk());
+      connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk());
       keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
-    }
-  }
-
-  /** Beam @Teardown closes initialized resources */
-  @SneakyThrows
-  @Teardown
-  public void tearDown() {
-    if (connection != null) {
-      connection.close();
     }
   }
 
