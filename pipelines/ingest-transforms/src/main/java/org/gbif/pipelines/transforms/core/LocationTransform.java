@@ -24,6 +24,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
@@ -41,8 +43,11 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
+  @Getter
   private final KvConfig kvConfig;
 
+  @Getter
+  @Setter
   private GeocodeService service;
   private PCollectionView<MetadataRecord> metadataView;
 
