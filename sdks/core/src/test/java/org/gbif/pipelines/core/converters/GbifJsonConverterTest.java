@@ -23,6 +23,7 @@ import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MachineTag;
 import org.gbif.pipelines.io.avro.MeasurementOrFact;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MediaType;
@@ -84,7 +85,16 @@ public class GbifJsonConverterTest {
     erMap.put(DwcTerm.recordedBy.qualifiedName(), "Jeremia garde \u001Eà elfutsone");
     erMap.put(DwcTerm.footprintWKT.qualifiedName(), "footprintWKTfootprintWKTfootprintWKT");
 
-    MetadataRecord mr = MetadataRecord.newBuilder().setId("777").setCrawlId(1).setDatasetKey("datatesKey").build();
+    MetadataRecord mr =
+        MetadataRecord.newBuilder()
+            .setId("777").setCrawlId(1)
+            .setDatasetKey("datatesKey")
+            .setMachineTags(
+                Collections.singletonList(
+                    MachineTag.newBuilder().setName("Name").setNamespace("Namespace").setValue("Value").build()
+                )
+            )
+            .build();
 
     ExtendedRecord er =
         ExtendedRecord.newBuilder()
@@ -93,7 +103,8 @@ public class GbifJsonConverterTest {
             .setCoreTerms(erMap)
             .build();
 
-    BasicRecord br = BasicRecord.newBuilder()
+    BasicRecord br =
+        BasicRecord.newBuilder()
         .setId("777")
         .setGbifId(111L)
         .setOrganismQuantity(2d)
