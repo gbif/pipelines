@@ -148,8 +148,8 @@ public class EsService {
     if (idxToRemove.size() == 1) {
       String indexName = idxToRemove.iterator().next();
       String idxStatEndpoint = buildEndpoint(indexName, "_stats");
-      long sleepTime = 500L;
-      long attempts = 30_000L / sleepTime; // 30 sec
+      long sleepTime = 300L;
+      long attempts = 60_000L / sleepTime; // timeout 1 min
       while (attempts > 0L) {
         Response response = esClient.performGetRequest(idxStatEndpoint);
         long queryCurrent = JsonHandler.readTree(response.getEntity())
