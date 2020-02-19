@@ -17,6 +17,7 @@ import java.util.function.BiConsumer;
 import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
@@ -25,6 +26,7 @@ import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Issues;
@@ -39,6 +41,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 
 import org.apache.avro.specific.SpecificRecordBase;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -98,7 +101,8 @@ public class GbifJsonConverter {
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
           .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
           .converter(MultimediaRecord.class, getMultimediaConverter())
-          .converter(TaggedValueRecord.class, geTaggedValueConverter());
+          .converter(TaggedValueRecord.class, getTaggedValueConverter())
+          .converter(BasicRecord .class, getBasicRecordConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -719,7 +723,7 @@ public class GbifJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> geTaggedValueConverter() {
+  private BiConsumer<JsonConverter, SpecificRecordBase> getTaggedValueConverter() {
     return (jc, record) -> {
       TaggedValueRecord tvr = (TaggedValueRecord) record;
       if (Objects.nonNull(tvr.getTaggedValues())) {
@@ -728,6 +732,31 @@ public class GbifJsonConverter {
         );
       }
 
+    };
+  }
+
+  /**
+   * String converter for {@link BasicRecord}, convert an object to specific string view.
+   * Copies all the value at the root node level.
+   *
+   * gbif/portal-feedback#2423
+   * Preserve record-level licences over dataset-level ones
+   */
+  private BiConsumer<JsonConverter, SpecificRecordBase> getBasicRecordConverter() {
+    return (jc, record) -> {
+      BasicRecord br = (BasicRecord) record;
+
+      // Use BasicRecord license insted of json node
+      JsonNode node = jc.getMainNode().get("license");
+      if(node != null) {
+        String license = node.asText();
+        if (br.getLicense() == null || br.getLicense().equals(License.UNSPECIFIED.name())
+            || br.getLicense().equals(License.UNSUPPORTED.name())) {
+          br.setLicense(license);
+        }
+      }
+
+      jc.addCommonFields(br);
     };
   }
 }

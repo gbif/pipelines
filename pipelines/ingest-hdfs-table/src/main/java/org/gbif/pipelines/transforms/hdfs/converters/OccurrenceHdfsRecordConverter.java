@@ -21,6 +21,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
@@ -210,12 +211,11 @@ public class OccurrenceHdfsRecordConverter {
    */
   private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> metadataMapper() {
     return (hr, sr) -> {
-      MetadataRecord mr = (MetadataRecord)sr;
+      MetadataRecord mr = (MetadataRecord) sr;
       hr.setCrawlid(mr.getCrawlId());
       hr.setDatasetkey(mr.getDatasetKey());
       hr.setDatasetname(mr.getDatasetTitle());
       hr.setInstallationkey(mr.getInstallationKey());
-      hr.setLicense(mr.getLicense());
       hr.setProtocol(mr.getProtocol());
       hr.setNetworkkey(mr.getNetworkKeys());
       hr.setPublisher(mr.getPublisherTitle());
@@ -223,6 +223,10 @@ public class OccurrenceHdfsRecordConverter {
       hr.setLastcrawled(mr.getLastCrawled());
       hr.setProjectid(mr.getProjectId());
       hr.setProgrammeacronym(mr.getProgrammeAcronym());
+
+      if (hr.getLicense() == null) {
+        hr.setLicense(mr.getLicense());
+      }
 
       setCreatedIfGreater(hr, mr.getCreated());
       addIssues(mr.getIssues(), hr);
@@ -375,6 +379,11 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizeunit(br.getSampleSizeUnit());
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
+
+      if (br.getLicense() != null && !License.UNSUPPORTED.name().equals(br.getLicense())
+          && !License.UNSPECIFIED.name().equals(br.getLicense())) {
+        hr.setLicense(br.getLicense());
+      }
 
       setCreatedIfGreater(hr, br.getCreated());
       addIssues(br.getIssues(), hr);

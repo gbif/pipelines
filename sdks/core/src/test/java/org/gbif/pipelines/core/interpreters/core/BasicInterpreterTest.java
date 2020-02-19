@@ -3,6 +3,8 @@ package org.gbif.pipelines.core.interpreters.core;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.gbif.api.vocabulary.License;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -202,6 +204,76 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertNull(br.getRelativeOrganismQuantity());
+  }
+
+
+  @Test
+  public void interpretLicenseTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put("http://purl.org/dc/terms/license", "http://creativecommons.org/licenses/by-nc/4.0/");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLicense(er, br);
+
+    // Should
+    Assert.assertEquals(License.CC_BY_NC_4_0.name(), br.getLicense());
+  }
+
+  @Test
+  public void interpretLicenseUnsupportedTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put("http://purl.org/dc/terms/license", "http://creativecommons.org/licenses/by-nc/5.0/");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLicense(er, br);
+
+    // Should
+    Assert.assertEquals(License.UNSUPPORTED.name(), br.getLicense());
+  }
+
+  @Test
+  public void interpretLicenseEmptyTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put("http://purl.org/dc/terms/license", "");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLicense(er, br);
+
+    // Should
+    Assert.assertEquals(License.UNSUPPORTED.name(), br.getLicense());
+  }
+
+
+  @Test
+  public void interpretLicenseNullTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put("http://purl.org/dc/terms/license", null);
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretLicense(er, br);
+
+    // Should
+    Assert.assertEquals(License.UNSPECIFIED.name(), br.getLicense());
   }
 
 }

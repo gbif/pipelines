@@ -81,9 +81,16 @@ public class OccurrenceHdfsRecordConverterTest {
         .setId("1")
         .setCoreTerms(coreTerms).build();
 
+    MetadataRecord metadataRecord = MetadataRecord.newBuilder()
+        .setId("1")
+        .setLicense(License.CC_BY_4_0.name())
+        .build();
+
+
     BasicRecord basicRecord = BasicRecord.newBuilder()
         .setId("1")
         .setCreated(1L)
+        .setLicense(License.CC0_1_0.name())
         .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -106,7 +113,8 @@ public class OccurrenceHdfsRecordConverterTest {
         .build();
 
     // When
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord, taxonRecord, temporalRecord, extendedRecord, taggedValueRecord);
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord, metadataRecord, taxonRecord, temporalRecord,
+        extendedRecord, taggedValueRecord);
 
     // Should
     // Test common fields
@@ -147,6 +155,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
     Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionkey());
+    Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
   }
 
   @Test
@@ -186,6 +195,8 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setSampleSizeUnit("unit");
     basicRecord.setSampleSizeValue(2d);
     basicRecord.setRelativeOrganismQuantity(2d);
+    basicRecord.setLicense(License.UNSPECIFIED.name());
+
 
     // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord);
@@ -203,6 +214,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("unit", hdfsRecord.getSamplesizeunit());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getSamplesizevalue());
     Assert.assertEquals(Double.valueOf(2d), hdfsRecord.getRelativeorganismquantity());
+    Assert.assertNull(hdfsRecord.getLicense());
   }
 
   @Test
@@ -341,6 +353,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(networkKey, hdfsRecord.getNetworkkey());
     Assert.assertEquals(installationKey, hdfsRecord.getInstallationkey());
     Assert.assertEquals(organizationKey, hdfsRecord.getPublishingorgkey());
+    Assert.assertEquals(License.CC_BY_4_0.name(), hdfsRecord.getLicense());
   }
 
   @Test

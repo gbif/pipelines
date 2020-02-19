@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.gbif.api.vocabulary.BasisOfRecord;
+import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -91,6 +92,7 @@ public class BasicRecordTransformTest {
         .setId("777")
         .setBasisOfRecord(BasisOfRecord.UNKNOWN.name())
         .setCreated(0L)
+        .setLicense(License.UNSPECIFIED.name())
         .setIssues(IssueRecord.newBuilder().setIssueList(Collections.singletonList(BASIS_OF_RECORD_INVALID.name())).build())
         .build();
 
@@ -140,6 +142,7 @@ public class BasicRecordTransformTest {
                     .setTypeStatus(x[5])
                     .setIndividualCount(Integer.valueOf(x[6]))
                     .setReferences(x[7])
+                    .setLicense(License.UNSPECIFIED.name())
                     .build())
         .collect(Collectors.toList());
   }

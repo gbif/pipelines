@@ -23,6 +23,7 @@
     {"name": "organismQuantityType", "type": ["null", "string"], "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/organismQuantityType"},
     {"name": "relativeOrganismQuantity", "type": ["null", "double"], "default" : null},
     {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
+    {"name": "license", "type":["null","string"], "default":null, "doc": "http://purl.org/dc/terms/license"},
     {"name": "issues", "type": "IssueRecord", "default":{}}
   ]
 }

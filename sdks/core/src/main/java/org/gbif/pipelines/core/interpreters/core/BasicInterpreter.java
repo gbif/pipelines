@@ -10,9 +10,11 @@ import java.util.function.Function;
 
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
+import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.Parsable;
@@ -289,5 +291,29 @@ public class BasicInterpreter {
         }
       }
     }
+  }
+
+  /** {@link DcTerm#license} interpretation. */
+  public static void interpretLicense(ExtendedRecord er, BasicRecord br) {
+    String license = extractOptValue(er, DcTerm.license)
+        .map(BasicInterpreter::getLicense)
+        .map(License::name)
+        .orElse(License.UNSPECIFIED.name());
+
+    br.setLicense(license);
+  }
+
+  /** Returns ENUM instead of url string */
+  private static License getLicense(String url) {
+    URI uri = Optional.ofNullable(url).map(x -> {
+      try {
+        return URI.create(x);
+      } catch (IllegalArgumentException ex) {
+        return null;
+      }
+    }).orElse(null);
+    License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
+    //UNSPECIFIED must be mapped to null
+    return License.UNSPECIFIED == license ? null : license;
   }
 }
