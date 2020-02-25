@@ -249,7 +249,7 @@ public class InterpretedToEsIndexPipeline {
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();
 
     log.info("Pushing data into Elasticsearch");
-    ElasticsearchWriter.builder()
+    ElasticsearchWriter.<BasicRecord>builder()
         .esHosts(options.getEsHosts())
         .esMaxBatchSize(options.getEsMaxBatchSize())
         .esMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())

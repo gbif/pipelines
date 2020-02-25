@@ -13,8 +13,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.gbif.pipelines.io.avro.BasicRecord;
-
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -31,13 +29,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Builder
-public class ElasticsearchWriter {
+public class ElasticsearchWriter<T> {
 
   private String[] esHosts;
   private boolean useSyncMode;
-  private Function<BasicRecord, IndexRequest> indexRequestFn;
+  private Function<T, IndexRequest> indexRequestFn;
   private ExecutorService executor;
-  private Collection<BasicRecord> records;
+  private Collection<T> records;
   private long esMaxBatchSize;
   private long esMaxBatchSizeBytes;
 
@@ -53,12 +51,13 @@ public class ElasticsearchWriter {
       Queue<BulkRequest> requests = new LinkedList<>();
       requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
 
-      Consumer<BasicRecord> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())
+      Consumer<T> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())
           .ifPresent(req -> req.add(indexRequestFn.apply(br)));
 
       Consumer<BulkRequest> clientBulkFn = br -> {
         try {
           if (br.numberOfActions() > 0) {
+            log.info("Push ES request, number of actions - {}", br.numberOfActions());
             BulkResponse bulk = client.bulk(br, RequestOptions.DEFAULT);
             if (bulk.hasFailures()) {
               log.error(bulk.buildFailureMessage());
@@ -73,7 +72,6 @@ public class ElasticsearchWriter {
 
       Runnable pushIntoEsFn = () -> Optional.ofNullable(requests.poll())
           .ifPresent(req -> {
-            log.info("Push ES request, number of actions - {}", req.numberOfActions());
             if (useSyncMode) {
               clientBulkFn.accept(req);
             } else {
@@ -82,12 +80,14 @@ public class ElasticsearchWriter {
           });
 
       // Push requests into ES
-      for (BasicRecord br : records) {
+      for (T t : records) {
         BulkRequest peek = requests.peek();
-        if (peek != null && peek.numberOfActions() < esMaxBatchSize && peek.estimatedSizeInBytes() < esMaxBatchSizeBytes) {
-          addIndexRequestFn.accept(br);
+        if (peek != null
+            && peek.numberOfActions() < esMaxBatchSize - 1
+            && peek.estimatedSizeInBytes() < esMaxBatchSizeBytes) {
+          addIndexRequestFn.accept(t);
         } else {
-          addIndexRequestFn.accept(br);
+          addIndexRequestFn.accept(t);
           pushIntoEsFn.run();
           requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
         }
