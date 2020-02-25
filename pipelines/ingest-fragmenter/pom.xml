@@ -11,5 +11,6 @@
 
   <artifactId>ingest-fragmenter</artifactId>
 
+  <name>Pipelines :: Pipelines :: Ingest-fragmenter</name>
 
 </project>
