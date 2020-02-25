@@ -128,10 +128,6 @@
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>elasticsearch-tools</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.gbif.pipelines</groupId>
-      <artifactId>ingest-hdfs-table</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
