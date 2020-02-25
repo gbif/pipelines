@@ -33,8 +33,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.hdfs.OccurrenceHdfsRecordConverterTransform;
-import org.gbif.pipelines.transforms.hdfs.OccurrenceHdfsRecordTransform;
+import org.gbif.pipelines.transforms.converters.OccurrenceHdfsRecordConverterTransform;
+import org.gbif.pipelines.transforms.common.OccurrenceHdfsRecordTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;

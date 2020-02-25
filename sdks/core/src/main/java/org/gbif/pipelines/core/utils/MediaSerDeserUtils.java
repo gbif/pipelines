@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.hdfs.utils;
+package org.gbif.pipelines.core.utils;
 
 import java.io.IOException;
 import java.util.List;

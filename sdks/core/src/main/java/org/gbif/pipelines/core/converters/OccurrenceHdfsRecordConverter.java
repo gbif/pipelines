@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.hdfs.converters;
+package org.gbif.pipelines.core.converters;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,6 +29,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.occurrence.download.hive.Terms;
+import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.Diagnostic;
@@ -43,7 +44,6 @@ import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.keygen.common.TermUtils;
-import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;

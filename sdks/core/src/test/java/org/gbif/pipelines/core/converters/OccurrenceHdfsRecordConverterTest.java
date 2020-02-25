@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.hdfs.converters;
+package org.gbif.pipelines.core.converters;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -46,13 +46,13 @@ import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.hdfs.utils.MediaSerDeserUtils;
+import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter.STRING_TO_DATE;
-import static org.gbif.pipelines.transforms.hdfs.converters.OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord;
+import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.STRING_TO_DATE;
+import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord;
 import static org.junit.Assert.assertEquals;
 
 public class OccurrenceHdfsRecordConverterTest {

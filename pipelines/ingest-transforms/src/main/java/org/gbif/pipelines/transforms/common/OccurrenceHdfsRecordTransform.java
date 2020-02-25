@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.hdfs;
+package org.gbif.pipelines.transforms.common;
 
 import java.util.Optional;
 
