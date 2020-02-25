@@ -15,6 +15,7 @@ import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.io.avro.BasicRecord;
 
 import org.apache.http.client.methods.HttpGet;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RestClient;
@@ -34,7 +35,8 @@ import static org.junit.Assert.assertTrue;
 public class ElasticsearchWriterIT {
 
   // files for testing
-  static final Path TEST_MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");
+  private static final Path MAPPINGS_PATH = Paths.get("mappings/simple-mapping.json");
+  private static final Path WRONG_MAPPINGS_PATH = Paths.get("mappings/wrong-mapping.json");
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule
@@ -54,7 +56,7 @@ public class ElasticsearchWriterIT {
     // State
     String idxName = "single-record-sync-test";
     List<BasicRecord> basicRecordList = generateBrList(0);
-    createIndex(idxName);
+    createIndex(idxName, MAPPINGS_PATH);
 
     // When
     ElasticsearchWriter.<BasicRecord>builder()
@@ -80,7 +82,7 @@ public class ElasticsearchWriterIT {
     // State
     String idxName = "single-record-async-test";
     List<BasicRecord> basicRecordList = generateBrList(0);
-    createIndex(idxName);
+    createIndex(idxName, MAPPINGS_PATH);
 
     // When
     ElasticsearchWriter.<BasicRecord>builder()
@@ -106,7 +108,7 @@ public class ElasticsearchWriterIT {
     // State
     String idxName = "one-hundred-record-sync-test";
     List<BasicRecord> basicRecordList = generateBrList(99);
-    createIndex(idxName);
+    createIndex(idxName, MAPPINGS_PATH);
 
     // When
     ElasticsearchWriter.<BasicRecord>builder()
@@ -132,7 +134,7 @@ public class ElasticsearchWriterIT {
     // State
     String idxName = "one-hundred-record-async-test";
     List<BasicRecord> basicRecordList = generateBrList(99);
-    createIndex(idxName);
+    createIndex(idxName, MAPPINGS_PATH);
 
     // When
     ElasticsearchWriter.<BasicRecord>builder()
@@ -158,7 +160,7 @@ public class ElasticsearchWriterIT {
     // State
     String idxName = "thirty-record-sync-big-batchtest";
     List<BasicRecord> basicRecordList = generateBrList(29);
-    createIndex(idxName);
+    createIndex(idxName, MAPPINGS_PATH);
 
     // When
     ElasticsearchWriter.<BasicRecord>builder()
@@ -184,7 +186,7 @@ public class ElasticsearchWriterIT {
     // State
     String idxName = "thirty-record-async-big-batch-test";
     List<BasicRecord> basicRecordList = generateBrList(29);
-    createIndex(idxName);
+    createIndex(idxName, MAPPINGS_PATH);
 
     // When
     ElasticsearchWriter.<BasicRecord>builder()
@@ -211,7 +213,7 @@ public class ElasticsearchWriterIT {
     // State
     String idxName = "zero-record-sync-big-batchtest";
     List<BasicRecord> basicRecordList = Collections.emptyList();
-    createIndex(idxName);
+    createIndex(idxName, MAPPINGS_PATH);
 
     // When
     ElasticsearchWriter.<BasicRecord>builder()
@@ -237,7 +239,7 @@ public class ElasticsearchWriterIT {
     // State
     String idxName = "zero-record-async-big-batch-test";
     List<BasicRecord> basicRecordList = Collections.emptyList();
-    createIndex(idxName);
+    createIndex(idxName, MAPPINGS_PATH);
 
     // When
     ElasticsearchWriter.<BasicRecord>builder()
@@ -246,6 +248,32 @@ public class ElasticsearchWriterIT {
         .esMaxBatchSizeBytes(250_000L)
         .executor(Executors.newSingleThreadExecutor())
         .useSyncMode(false)
+        .indexRequestFn(createindexRequestFn(idxName))
+        .records(basicRecordList)
+        .build()
+        .write();
+
+    EsService.refreshIndex(ES_SERVER.getEsClient(), idxName);
+
+    // Should
+    assertTrue(EsService.existsIndex(ES_SERVER.getEsClient(), idxName));
+    assertEquals(basicRecordList.size(), EsService.countIndexDocuments(ES_SERVER.getEsClient(), idxName));
+  }
+
+  @Test(expected = ElasticsearchException.class)
+  public void wrongMappingTest() {
+    // State
+    String idxName = "wrong-mapping-test";
+    List<BasicRecord> basicRecordList = generateBrList(0);
+    createIndex(idxName, WRONG_MAPPINGS_PATH);
+
+    // When
+    ElasticsearchWriter.<BasicRecord>builder()
+        .esHosts(ES_SERVER.getEsConfig().getRawHosts())
+        .esMaxBatchSize(10L)
+        .esMaxBatchSizeBytes(250L)
+        .executor(Executors.newSingleThreadExecutor())
+        .useSyncMode(true)
         .indexRequestFn(createindexRequestFn(idxName))
         .records(basicRecordList)
         .build()
@@ -274,11 +302,11 @@ public class ElasticsearchWriterIT {
   }
 
   /** Utility method to create an index. */
-  private static void createIndex(String idxName) {
+  private static void createIndex(String idxName, Path mappingPath) {
     String idx = EsService.createIndex(ES_SERVER.getEsClient(), IndexParams.builder()
         .indexName(idxName)
         .settingsType(INDEXING)
-        .pathMappings(TEST_MAPPINGS_PATH)
+        .pathMappings(mappingPath)
         .build());
     String endpoint = buildEndpoint(idx, "_mapping");
     try {

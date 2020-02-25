@@ -56,13 +56,11 @@ public class ElasticsearchWriter<T> {
 
       Consumer<BulkRequest> clientBulkFn = br -> {
         try {
-          if (br.numberOfActions() > 0) {
-            log.info("Push ES request, number of actions - {}", br.numberOfActions());
-            BulkResponse bulk = client.bulk(br, RequestOptions.DEFAULT);
-            if (bulk.hasFailures()) {
-              log.error(bulk.buildFailureMessage());
-              throw new ElasticsearchException(bulk.buildFailureMessage());
-            }
+          log.info("Push ES request, number of actions - {}", br.numberOfActions());
+          BulkResponse bulk = client.bulk(br, RequestOptions.DEFAULT);
+          if (bulk.hasFailures()) {
+            log.error(bulk.buildFailureMessage());
+            throw new ElasticsearchException(bulk.buildFailureMessage());
           }
         } catch (IOException ex) {
           log.error(ex.getMessage(), ex);
@@ -71,6 +69,7 @@ public class ElasticsearchWriter<T> {
       };
 
       Runnable pushIntoEsFn = () -> Optional.ofNullable(requests.poll())
+          .filter(req -> req.numberOfActions() > 0)
           .ifPresent(req -> {
             if (useSyncMode) {
               clientBulkFn.accept(req);
@@ -93,6 +92,7 @@ public class ElasticsearchWriter<T> {
         }
       }
 
+      // Final push
       pushIntoEsFn.run();
 
       // Wait for all futures
