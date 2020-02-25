@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java.transforms;
+package org.gbif.pipelines.ingest.java.io;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -87,6 +87,7 @@ public class ElasticsearchWriter {
           requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
         }
       }
+
       pushIntoEsFn.run();
 
       // Wait for all futures

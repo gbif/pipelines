@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java.transforms;
+package org.gbif.pipelines.ingest.java.io;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +20,7 @@ import lombok.SneakyThrows;
 
 import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 
-public class AvroReaderTransformTest {
+public class AvroReaderTest {
 
   private final Path verbatimPath1 = new Path("target/verbatim1.avro");
   private final Path verbatimPath2 = new Path("target/verbatim2.avro");

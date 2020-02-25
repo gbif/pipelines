@@ -1,4 +1,4 @@
-package org.gbif.pipelines.ingest.java.transforms;
+package org.gbif.pipelines.ingest.java.io;
 
 import java.io.File;
 import java.util.ArrayList;
