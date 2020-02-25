@@ -1,6 +1,9 @@
-package org.gbif.pipelines.hbase.beam;
+package org.gbif.pipelines.hbase.pipelines;
 
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
+import org.gbif.pipelines.hbase.utils.ConfigurationFactory;
+import org.gbif.pipelines.hbase.options.ExportHBaseOptions;
+import org.gbif.pipelines.hbase.utils.OccurrenceConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.CodecFactory;
@@ -24,7 +27,7 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
  * Executes a pipeline that reads an HBase snapshot and exports verbatim data into a single Avro file
  * using the {@link ExtendedRecord}. schema.
  */
-public class ExportHBaseSnapshotSingle {
+public class ExportHBaseSnapshotSinglePipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -34,8 +37,8 @@ public class ExportHBaseSnapshotSingle {
     options.setRunner(SparkRunner.class);
     Pipeline p = Pipeline.create(options);
 
-    Counter recordsExported = Metrics.counter(ExportHBaseSnapshotSingle.class, "recordsExported");
-    Counter recordsFailed = Metrics.counter(ExportHBaseSnapshotSingle.class, "recordsFailed");
+    Counter recordsExported = Metrics.counter(ExportHBaseSnapshotSinglePipeline.class, "recordsExported");
+    Counter recordsFailed = Metrics.counter(ExportHBaseSnapshotSinglePipeline.class, "recordsFailed");
 
     //Params
     String exportPath = options.getExportPath();

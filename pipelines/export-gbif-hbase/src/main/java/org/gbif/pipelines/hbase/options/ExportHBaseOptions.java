@@ -1,4 +1,4 @@
-package org.gbif.pipelines.hbase.beam;
+package org.gbif.pipelines.hbase.options;
 
 import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.Default;

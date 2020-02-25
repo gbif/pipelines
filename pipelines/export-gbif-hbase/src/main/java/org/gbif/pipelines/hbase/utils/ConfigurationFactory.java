@@ -1,4 +1,6 @@
-package org.gbif.pipelines.hbase.beam;
+package org.gbif.pipelines.hbase.utils;
+
+import org.gbif.pipelines.hbase.options.ExportHBaseOptions;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -24,7 +26,7 @@ import lombok.SneakyThrows;
 public class ConfigurationFactory {
 
   @SneakyThrows
-  static Configuration create(ExportHBaseOptions options) {
+  public static Configuration create(ExportHBaseOptions options) {
     Configuration hbaseConf = HBaseConfiguration.create();
     hbaseConf.set(HConstants.ZOOKEEPER_QUORUM, options.getHbaseZk());
     hbaseConf.set("hbase.rootdir", "/hbase");

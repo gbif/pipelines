@@ -1,4 +1,4 @@
-package org.gbif.pipelines.hbase.beam;
+package org.gbif.pipelines.hbase.utils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
  * Utility class to convert from HBase results and {@link VerbatimOccurrence} records into {@link ExtendedRecord}.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-class OccurrenceConverter {
+public class OccurrenceConverter {
 
   /**
    * Converts a Hbase result into a {@link VerbatimOccurrence} record.
@@ -29,7 +29,7 @@ class OccurrenceConverter {
    * @param row Hbase result
    * @return a {@link VerbatimOccurrence}
    */
-  static VerbatimOccurrence toVerbatimOccurrence(Result row) {
+  public static VerbatimOccurrence toVerbatimOccurrence(Result row) {
     return OccurrenceBuilder.buildVerbatimOccurrence(row);
   }
 
@@ -39,7 +39,7 @@ class OccurrenceConverter {
    * @param row Hbase result
    * @return a {@link ExtendedRecord}
    */
-  static ExtendedRecord toExtendedRecord(Result row) {
+  public static ExtendedRecord toExtendedRecord(Result row) {
     return toExtendedRecord(OccurrenceBuilder.buildVerbatimOccurrence(row));
   }
 
@@ -48,7 +48,7 @@ class OccurrenceConverter {
    *
    * @return a {@link ExtendedRecord}
    */
-  static ExtendedRecord toExtendedRecord(VerbatimOccurrence verbatimOccurrence) {
+  public static ExtendedRecord toExtendedRecord(VerbatimOccurrence verbatimOccurrence) {
     ExtendedRecord.Builder builder = ExtendedRecord.newBuilder()
         .setId(String.valueOf(verbatimOccurrence.getKey()))
         .setCoreTerms(toVerbatimMap(verbatimOccurrence.getVerbatimFields()));

@@ -1,7 +1,9 @@
-package org.gbif.pipelines.hbase.beam;
+package org.gbif.pipelines.hbase.pipelines;
 
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
 import org.gbif.pipelines.common.PipelinesVariables;
+import org.gbif.pipelines.hbase.options.ExportHBaseOptions;
+import org.gbif.pipelines.hbase.utils.OccurrenceConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.CodecFactory;
@@ -31,7 +33,7 @@ import static org.apache.beam.sdk.io.FileIO.Write.defaultNaming;
 
 /** Executes a pipeline that reads HBase and exports verbatim data into Avro using the {@link ExtendedRecord}. schema */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class ExportHBase {
+public class ExportHBasePipeline {
 
   private static final CodecFactory BASE_CODEC = CodecFactory.snappyCodec();
 
@@ -41,8 +43,8 @@ public class ExportHBase {
     options.setRunner(SparkRunner.class);
     Pipeline p = Pipeline.create(options);
 
-    Counter recordsExported = Metrics.counter(ExportHBase.class, "recordsExported");
-    Counter recordsFailed = Metrics.counter(ExportHBase.class, "recordsFailed");
+    Counter recordsExported = Metrics.counter(ExportHBasePipeline.class, "recordsExported");
+    Counter recordsFailed = Metrics.counter(ExportHBasePipeline.class, "recordsFailed");
 
     //Params
     String exportPath = options.getExportPath();
@@ -56,30 +58,26 @@ public class ExportHBase {
     scan.addFamily("o".getBytes());
 
     PCollection<Result> rows =
-        p.apply(
-            "Read HBase",
-            HBaseIO.read().withConfiguration(hbaseConfig).withScan(scan).withTableId(table));
+        p.apply("Read HBase", HBaseIO.read().withConfiguration(hbaseConfig).withScan(scan).withTableId(table));
 
     PCollection<KV<String, ExtendedRecord>> records =
-        rows.apply(
-            "Convert to extended record",
-            ParDo.of(
-                new DoFn<Result, KV<String, ExtendedRecord>>() {
+        rows.apply("Convert to extended record", ParDo.of(
+            new DoFn<Result, KV<String, ExtendedRecord>>() {
 
-                  @ProcessElement
-                  public void processElement(ProcessContext c) {
-                    Result row = c.element();
-                    try {
-                      VerbatimOccurrence verbatimOccurrence = OccurrenceConverter.toVerbatimOccurrence(row);
-                      String datasetKeyAsString = String.valueOf(verbatimOccurrence.getDatasetKey());
-                      c.output(KV.of(datasetKeyAsString, OccurrenceConverter.toExtendedRecord(verbatimOccurrence)));
-                      recordsExported.inc();
-                    } catch (NullPointerException e) {
-                      // Expected for bad data
-                      recordsFailed.inc();
-                    }
-                  }
-                }));
+              @ProcessElement
+              public void processElement(ProcessContext c) {
+                Result row = c.element();
+                try {
+                  VerbatimOccurrence verbatimOccurrence = OccurrenceConverter.toVerbatimOccurrence(row);
+                  String datasetKeyAsString = String.valueOf(verbatimOccurrence.getDatasetKey());
+                  c.output(KV.of(datasetKeyAsString, OccurrenceConverter.toExtendedRecord(verbatimOccurrence)));
+                  recordsExported.inc();
+                } catch (NullPointerException e) {
+                  // Expected for bad data
+                  recordsFailed.inc();
+                }
+              }
+            }));
 
     records.apply("Write avro file per dataset", FileIO.<String, KV<String, ExtendedRecord>>writeDynamic()
         .by(KV::getKey)
