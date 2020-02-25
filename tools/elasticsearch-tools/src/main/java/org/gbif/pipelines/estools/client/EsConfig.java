@@ -12,10 +12,12 @@ import lombok.NonNull;
 public class EsConfig {
 
   private final List<URL> hosts;
+  private final String[] rawHosts;
 
   private EsConfig(@NonNull String[] hostsAddresses) {
 
-    hosts =
+    this.rawHosts = hostsAddresses;
+    this.hosts =
         Arrays.stream(hostsAddresses)
             .map(
                 address -> {
@@ -40,5 +42,9 @@ public class EsConfig {
 
   public List<URL> getHosts() {
     return hosts;
+  }
+
+  public String[] getRawHosts() {
+    return rawHosts;
   }
 }

@@ -1,4 +1,4 @@
-package org.gbif.pipelines.estools.service;
+package org.gbif.pipelines.ingest.java.io;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -24,7 +24,7 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 @Slf4j
 public class EsServer extends ExternalResource {
 
-  private static final String CLUSTER_NAME = "EsClusterIT";
+  private static final String CLUSTER_NAME = "EsClusterWriterIT";
 
   private EmbeddedElastic embeddedElastic;
   private EsConfig esConfig;

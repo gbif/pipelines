@@ -305,7 +305,7 @@ public class EsService {
     return esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
   }
 
-  static String buildEndpoint(Object... strings) {
+  public static String buildEndpoint(Object... strings) {
     StringJoiner joiner = new StringJoiner("/");
     Arrays.stream(strings).forEach(x -> joiner.add(x.toString()));
     return "/" + joiner.toString();

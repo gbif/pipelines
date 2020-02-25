@@ -18,6 +18,7 @@ import org.gbif.pipelines.io.avro.BasicRecord;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
@@ -58,7 +59,11 @@ public class ElasticsearchWriter {
       Consumer<BulkRequest> clientBulkFn = br -> {
         try {
           if (br.numberOfActions() > 0) {
-            client.bulk(br, RequestOptions.DEFAULT);
+            BulkResponse bulk = client.bulk(br, RequestOptions.DEFAULT);
+            if (bulk.hasFailures()) {
+              log.error(bulk.buildFailureMessage());
+              throw new ElasticsearchException(bulk.buildFailureMessage());
+            }
           }
         } catch (IOException ex) {
           log.error(ex.getMessage(), ex);
