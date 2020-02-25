@@ -877,6 +877,9 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <argLine>${argLine}</argLine>
+              <excludes>
+                <exclude>**/*IT.java</exclude>
+              </excludes>
             </configuration>
           </plugin>
         </plugins>
