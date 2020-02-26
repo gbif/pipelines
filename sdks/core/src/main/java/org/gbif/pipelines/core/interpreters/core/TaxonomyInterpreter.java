@@ -28,6 +28,9 @@ import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.species.NameUsageMatch;
 
+import org.elasticsearch.common.Strings;
+
+import com.google.common.annotations.VisibleForTesting;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +92,7 @@ public class TaxonomyInterpreter {
           log.error(ex.getMessage(), ex);
         }
 
-        if (usageMatch == null || isEmpty(usageMatch)) {
+        if (usageMatch == null || isEmpty(usageMatch) || checkFuzzy(usageMatch, matchRequest)) {
           // "NO_MATCHING_RESULTS". This
           // happens when we get an empty response from the WS
           addIssue(tr, TAXON_MATCH_NONE);
@@ -126,6 +129,21 @@ public class TaxonomyInterpreter {
         tr.setId(er.getId());
       }
     };
+  }
+
+  /**
+   * To be able to return NONE, if response is FUZZY and higher taxa is null or empty
+   * Fix for https://github.com/gbif/pipelines/issues/254
+   */
+  @VisibleForTesting
+  protected static boolean checkFuzzy(NameUsageMatch usageMatch, SpeciesMatchRequest matchRequest) {
+    boolean isFuzzy = MatchType.FUZZY == usageMatch.getDiagnostics().getMatchType();
+    boolean isEmptyTaxa = Strings.isNullOrEmpty(matchRequest.getKingdom())
+        && Strings.isNullOrEmpty(matchRequest.getPhylum())
+        && Strings.isNullOrEmpty(matchRequest.getClazz())
+        && Strings.isNullOrEmpty(matchRequest.getOrder())
+        && Strings.isNullOrEmpty(matchRequest.getFamily());
+    return isFuzzy && isEmptyTaxa;
   }
 
   /**
