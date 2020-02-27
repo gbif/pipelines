@@ -9,10 +9,10 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>ingest-fragmenter</artifactId>
+  <artifactId>ingest-fragments-uploader</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: Pipelines :: Ingest-fragmenter</name>
+  <name>Pipelines :: Pipelines :: Ingest-fragments uploader</name>
   <description />
 
   <dependencies>
