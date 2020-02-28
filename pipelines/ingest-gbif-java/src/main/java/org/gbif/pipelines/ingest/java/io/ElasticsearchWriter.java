@@ -10,6 +10,7 @@ import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -38,6 +39,8 @@ public class ElasticsearchWriter<T> {
   private Collection<T> records;
   private long esMaxBatchSize;
   private long esMaxBatchSizeBytes;
+  @Builder.Default
+  private int backPressure = 10;
 
   @SneakyThrows
   public void write() {
@@ -80,6 +83,12 @@ public class ElasticsearchWriter<T> {
 
       // Push requests into ES
       for (T t : records) {
+
+        while (requests.size() > backPressure) {
+          log.info("Back pressure barrier: too many requests wainting...");
+          TimeUnit.MILLISECONDS.sleep(200L);
+        }
+
         BulkRequest peek = requests.peek();
         if (peek != null
             && peek.numberOfActions() < esMaxBatchSize - 1

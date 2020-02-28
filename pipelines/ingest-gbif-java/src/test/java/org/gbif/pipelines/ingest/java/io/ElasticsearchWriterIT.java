@@ -171,6 +171,7 @@ public class ElasticsearchWriterIT {
         .useSyncMode(true)
         .indexRequestFn(createindexRequestFn(idxName))
         .records(basicRecordList)
+        .backPressure(1)
         .build()
         .write();
 
@@ -197,6 +198,7 @@ public class ElasticsearchWriterIT {
         .useSyncMode(false)
         .indexRequestFn(createindexRequestFn(idxName))
         .records(basicRecordList)
+        .backPressure(1)
         .build()
         .write();
 
