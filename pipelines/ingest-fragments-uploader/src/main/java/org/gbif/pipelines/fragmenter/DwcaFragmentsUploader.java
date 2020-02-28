@@ -1,19 +1,110 @@
 package org.gbif.pipelines.fragmenter;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
+import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
 import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
-public class DwcaFragmentsUploader extends FragmentsUploader {
+import org.apache.hadoop.hbase.client.Row;
 
-  public DwcaFragmentsUploader(HbaseConfiguration config, Path pathToArchive) {
-    super(config, pathToArchive);
-  }
+import lombok.Builder;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
+
+@Slf4j
+@Builder
+public class DwcaFragmentsUploader implements FragmentsUploader {
+
+  private HbaseConfiguration config;
+  private Path pathToArchive;
+  private int batchSize;
+  private boolean useSyncMode;
+  private ExecutorService executor;
+
+  @Builder.Default
+  private int backPressure = 5;
+
+  @SneakyThrows
   @Override
-  public void upload() {
-    throw new UnsupportedOperationException("EMPTY!");
+  public long upload() {
+
+    List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+    Queue<List<Row>> rows = new LinkedBlockingQueue<>();
+    rows.add(new ArrayList<>(batchSize));
+
+    Function<ExtendedRecord, Row> erToRowFn = er -> {
+      // TODO: CONVERTER TO ROW
+      return null;
+    };
+
+    Consumer<ExtendedRecord> addRowFn = br -> Optional.ofNullable(rows.peek())
+        .ifPresent(req -> req.add(erToRowFn.apply(br)));
+
+    DwcaReader reader = DwcaReader.fromLocation(pathToArchive.toString());
+    log.info("Uploadind fragments from {}", pathToArchive);
+
+    Consumer<List<Row>> hbaseBulkFn = list -> {
+      // Push into Hbase
+    };
+
+    Runnable pushIntoHbaseFn = () -> Optional.ofNullable(rows.poll())
+        .filter(req -> !req.isEmpty())
+        .ifPresent(req -> {
+          if (useSyncMode) {
+            hbaseBulkFn.accept(req);
+          } else {
+            futures.add(CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor));
+          }
+        });
+
+    // Read all records
+    while (reader.advance()) {
+
+      while (backPressure < rows.size()) {
+        TimeUnit.MILLISECONDS.sleep(100L);
+      }
+
+      ExtendedRecord record = reader.getCurrent();
+      if (!record.getId().equals(RECORD_ID_ERROR)) {
+
+        List<Row> peek = rows.peek();
+        if (peek != null && peek.size() < batchSize - 1) {
+          addRowFn.accept(record);
+        } else {
+          addRowFn.accept(record);
+          pushIntoHbaseFn.run();
+          rows.add(new ArrayList<>(batchSize));
+        }
+
+      }
+    }
+    reader.close();
+
+    // Final push
+    pushIntoHbaseFn.run();
+
+    // Wait for all futures
+    if (!useSyncMode) {
+      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
+    }
+
+    return reader.getRecordsReturned();
+
   }
 
 }
