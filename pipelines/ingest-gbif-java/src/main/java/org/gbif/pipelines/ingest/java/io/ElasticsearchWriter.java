@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -48,7 +48,7 @@ public class ElasticsearchWriter<T> {
 
       List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-      Queue<BulkRequest> requests = new LinkedList<>();
+      Queue<BulkRequest> requests = new LinkedBlockingQueue<>();
       requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
 
       Consumer<T> addIndexRequestFn = br -> Optional.ofNullable(requests.peek())

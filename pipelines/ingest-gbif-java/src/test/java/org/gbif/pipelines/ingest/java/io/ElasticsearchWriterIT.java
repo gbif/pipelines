@@ -104,10 +104,10 @@ public class ElasticsearchWriterIT {
   }
 
   @Test
-  public void oneHundredRecordsSyncTest() {
+  public void oneThousandRecordsSyncTest() {
     // State
-    String idxName = "one-hundred-record-sync-test";
-    List<BasicRecord> basicRecordList = generateBrList(99);
+    String idxName = "one-thousand-record-sync-test";
+    List<BasicRecord> basicRecordList = generateBrList(999);
     createIndex(idxName, MAPPINGS_PATH);
 
     // When
@@ -130,10 +130,10 @@ public class ElasticsearchWriterIT {
   }
 
   @Test
-  public void oneHundredRecordsAsyncTest() {
+  public void oneThousandRecordsAsyncTest() {
     // State
-    String idxName = "one-hundred-record-async-test";
-    List<BasicRecord> basicRecordList = generateBrList(99);
+    String idxName = "one-thousand-record-async-test";
+    List<BasicRecord> basicRecordList = generateBrList(999);
     createIndex(idxName, MAPPINGS_PATH);
 
     // When
