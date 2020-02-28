@@ -75,8 +75,9 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
     // Read all records
     while (reader.advance()) {
 
-      while (backPressure < rows.size()) {
-        TimeUnit.MILLISECONDS.sleep(100L);
+      while (rows.size() > backPressure) {
+        log.info("Back pressure barrier: too many rows wainting...");
+        TimeUnit.MILLISECONDS.sleep(200L);
       }
 
       ExtendedRecord record = reader.getCurrent();
