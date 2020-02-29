@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -43,6 +44,7 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   public long upload() {
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
+    AtomicInteger backPressureCounter = new AtomicInteger(0);
 
     Queue<List<Row>> rows = new LinkedBlockingQueue<>();
     rows.add(new ArrayList<>(batchSize));
@@ -59,7 +61,9 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
     log.info("Uploadind fragments from {}", pathToArchive);
 
     Consumer<List<Row>> hbaseBulkFn = list -> {
+      backPressureCounter.incrementAndGet();
       // Push into Hbase
+      backPressureCounter.decrementAndGet();
     };
 
     Runnable pushIntoHbaseFn = () -> Optional.ofNullable(rows.poll())
@@ -75,7 +79,7 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
     // Read all records
     while (reader.advance()) {
 
-      while (rows.size() > backPressure) {
+      while (backPressureCounter.get() > backPressure) {
         log.info("Back pressure barrier: too many rows wainting...");
         TimeUnit.MILLISECONDS.sleep(200L);
       }

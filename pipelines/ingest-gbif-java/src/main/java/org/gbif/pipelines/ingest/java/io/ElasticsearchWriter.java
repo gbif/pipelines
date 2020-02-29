@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -50,6 +51,7 @@ public class ElasticsearchWriter<T> {
     try (RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(hosts))) {
 
       List<CompletableFuture<Void>> futures = new ArrayList<>();
+      AtomicInteger backPressureCounter = new AtomicInteger(0);
 
       Queue<BulkRequest> requests = new LinkedBlockingQueue<>();
       requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
@@ -60,7 +62,9 @@ public class ElasticsearchWriter<T> {
       Consumer<BulkRequest> clientBulkFn = br -> {
         try {
           log.info("Push ES request, number of actions - {}", br.numberOfActions());
+          backPressureCounter.incrementAndGet();
           BulkResponse bulk = client.bulk(br, RequestOptions.DEFAULT);
+          backPressureCounter.decrementAndGet();
           if (bulk.hasFailures()) {
             log.error(bulk.buildFailureMessage());
             throw new ElasticsearchException(bulk.buildFailureMessage());
@@ -84,7 +88,7 @@ public class ElasticsearchWriter<T> {
       // Push requests into ES
       for (T t : records) {
 
-        while (requests.size() > backPressure) {
+        while (backPressureCounter.get() > backPressure) {
           log.info("Back pressure barrier: too many requests wainting...");
           TimeUnit.MILLISECONDS.sleep(200L);
         }
