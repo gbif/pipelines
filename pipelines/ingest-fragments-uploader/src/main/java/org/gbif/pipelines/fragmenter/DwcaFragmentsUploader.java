@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,6 +22,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.apache.hadoop.hbase.client.Row;
 
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,11 +32,20 @@ import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_
 @Builder
 public class DwcaFragmentsUploader implements FragmentsUploader {
 
+  @NonNull
   private HbaseConfiguration config;
+
+  @NonNull
   private Path pathToArchive;
-  private int batchSize;
+
+  @Builder.Default
+  private int batchSize = 10;
+
+  @Builder.Default
   private boolean useSyncMode;
-  private ExecutorService executor;
+
+  @Builder.Default
+  private ExecutorService executor = Executors.newSingleThreadExecutor();
 
   @Builder.Default
   private int backPressure = 5;
@@ -62,7 +73,7 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
 
     Consumer<List<Row>> hbaseBulkFn = list -> {
       backPressureCounter.incrementAndGet();
-      // Push into Hbase
+      // TODO: Push into Hbase
       backPressureCounter.decrementAndGet();
     };
 
