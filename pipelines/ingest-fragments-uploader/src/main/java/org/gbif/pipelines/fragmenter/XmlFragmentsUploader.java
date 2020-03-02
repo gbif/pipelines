@@ -23,6 +23,7 @@ import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
 import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
+import org.gbif.pipelines.fragmenter.habse.FragmentRow;
 
 import org.apache.hadoop.hbase.client.Row;
 
@@ -45,7 +46,7 @@ public class XmlFragmentsUploader implements FragmentsUploader {
   private Path pathToArchive;
 
   @Builder.Default
-  private boolean useSyncMode;
+  private boolean useSyncMode = false;
 
   @Builder.Default
   private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -79,10 +80,9 @@ public class XmlFragmentsUploader implements FragmentsUploader {
               }
             });
 
-    File inputFile = ParserFileUtils.uncompressAndGetInputFile(pathToArchive.toString());
-
     try (UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
+      File inputFile = ParserFileUtils.uncompressAndGetInputFile(pathToArchive.toString());
       for (File f : getInputFiles(inputFile)) {
 
         while (backPressureCounter.get() > backPressure) {
@@ -91,9 +91,10 @@ public class XmlFragmentsUploader implements FragmentsUploader {
         }
 
         List<RawXmlOccurrence> xmlOccurrenceList = new OccurrenceParser().parseFile(f);
-        List<Row> rowList = convert(xmlOccurrenceList);
+        List<Row> rowList = convert(xmlOccurrenceList, validator);
         pushIntoHbaseFn.accept(rowList);
       }
+
     }
 
     // Wait for all futures
@@ -104,8 +105,10 @@ public class XmlFragmentsUploader implements FragmentsUploader {
     return occurrenceCounter.get();
   }
 
-  private List<Row> convert(List<RawXmlOccurrence> rawXmlOccurrences) {
-    throw new UnsupportedOperationException("!");
+  private List<Row> convert(List<RawXmlOccurrence> rawXmlOccurrences, UniquenessValidator validator) {
+    return rawXmlOccurrences.stream()
+        .map(x -> FragmentRow.create())
+        .collect(Collectors.toList());
   }
 
   /** Traverse the input directory and gets all the files. */

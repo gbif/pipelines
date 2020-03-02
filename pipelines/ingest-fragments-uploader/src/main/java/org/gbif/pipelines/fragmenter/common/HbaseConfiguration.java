@@ -1,4 +1,7 @@
 package org.gbif.pipelines.fragmenter.common;
 
-public interface HbaseConfiguration {
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(staticName = "create")
+public class HbaseConfiguration {
 }

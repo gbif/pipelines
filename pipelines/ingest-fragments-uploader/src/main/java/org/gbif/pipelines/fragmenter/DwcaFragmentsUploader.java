@@ -17,6 +17,7 @@ import java.util.function.Function;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
 import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
+import org.gbif.pipelines.fragmenter.habse.FragmentRow;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.hadoop.hbase.client.Row;
@@ -42,7 +43,7 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   private int batchSize = 10;
 
   @Builder.Default
-  private boolean useSyncMode;
+  private boolean useSyncMode = false;
 
   @Builder.Default
   private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -62,7 +63,7 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
 
     Function<ExtendedRecord, Row> erToRowFn = er -> {
       // TODO: CONVERTER TO ROW
-      return null;
+      return FragmentRow.create();
     };
 
     Consumer<ExtendedRecord> addRowFn = br -> Optional.ofNullable(rows.peek())
