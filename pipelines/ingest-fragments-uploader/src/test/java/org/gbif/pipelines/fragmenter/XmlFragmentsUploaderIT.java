@@ -6,6 +6,7 @@ import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class XmlFragmentsUploaderIT {
@@ -37,6 +38,7 @@ public class XmlFragmentsUploaderIT {
 
   }
 
+  @Ignore
   @Test
   public void test() {
     // When

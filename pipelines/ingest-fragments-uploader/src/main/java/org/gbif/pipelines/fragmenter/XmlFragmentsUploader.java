@@ -24,7 +24,11 @@ import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
 import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
 import org.gbif.pipelines.fragmenter.habse.FragmentRow;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
 
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Row;
 
 import lombok.Builder;
@@ -43,7 +47,13 @@ public class XmlFragmentsUploader implements FragmentsUploader {
   private HbaseConfiguration config;
 
   @NonNull
+  private KeygenConfig keygenConfig;
+
+  @NonNull
   private Path pathToArchive;
+
+  @NonNull
+  private String datasetId;
 
   @Builder.Default
   private boolean useSyncMode = false;
@@ -57,6 +67,9 @@ public class XmlFragmentsUploader implements FragmentsUploader {
   @SneakyThrows
   @Override
   public long upload() {
+
+    Connection connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
+    HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
     AtomicInteger backPressureCounter = new AtomicInteger(0);
@@ -91,7 +104,7 @@ public class XmlFragmentsUploader implements FragmentsUploader {
         }
 
         List<RawXmlOccurrence> xmlOccurrenceList = new OccurrenceParser().parseFile(f);
-        List<Row> rowList = convert(xmlOccurrenceList, validator);
+        List<Row> rowList = convert(keygenService, validator, xmlOccurrenceList);
         pushIntoHbaseFn.accept(rowList);
       }
 
@@ -105,9 +118,10 @@ public class XmlFragmentsUploader implements FragmentsUploader {
     return occurrenceCounter.get();
   }
 
-  private List<Row> convert(List<RawXmlOccurrence> rawXmlOccurrences, UniquenessValidator validator) {
+  private List<Row> convert(HBaseLockingKeyService keygenService, UniquenessValidator validator,
+      List<RawXmlOccurrence> rawXmlOccurrences) {
     return rawXmlOccurrences.stream()
-        .map(x -> FragmentRow.create())
+        .map(x -> FragmentRow.create("", ""))
         .collect(Collectors.toList());
   }
 

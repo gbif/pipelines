@@ -12,14 +12,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
 import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
 import org.gbif.pipelines.fragmenter.habse.FragmentRow;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.keygen.HBaseLockingKeyService;
+import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
 
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Row;
 
 import lombok.Builder;
@@ -37,7 +40,13 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   private HbaseConfiguration config;
 
   @NonNull
+  private KeygenConfig keygenConfig;
+
+  @NonNull
   private Path pathToArchive;
+
+  @NonNull
+  private String datasetId;
 
   @Builder.Default
   private int batchSize = 10;
@@ -55,19 +64,17 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   @Override
   public long upload() {
 
+    Connection connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
+    HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
+
     List<CompletableFuture<Void>> futures = new ArrayList<>();
     AtomicInteger backPressureCounter = new AtomicInteger(0);
 
     Queue<List<Row>> rows = new LinkedBlockingQueue<>();
     rows.add(new ArrayList<>(batchSize));
 
-    Function<ExtendedRecord, Row> erToRowFn = er -> {
-      // TODO: CONVERTER TO ROW
-      return FragmentRow.create();
-    };
-
-    Consumer<ExtendedRecord> addRowFn = br -> Optional.ofNullable(rows.peek())
-        .ifPresent(req -> req.add(erToRowFn.apply(br)));
+    Consumer<ExtendedRecord> addRowFn = er -> Optional.ofNullable(rows.peek())
+        .ifPresent(req -> req.add(convertErToRow(keygenService, er)));
 
     DwcaReader reader = DwcaReader.fromLocation(pathToArchive.toString());
     log.info("Uploadind fragments from {}", pathToArchive);
@@ -122,6 +129,11 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
 
     return reader.getRecordsReturned();
 
+  }
+
+  private FragmentRow convertErToRow(HBaseLockingKeyService keygenService, ExtendedRecord er) {
+    // TODO: CONVERTER TO ROW
+    return FragmentRow.create("", "");
   }
 
 }
