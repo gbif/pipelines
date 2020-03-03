@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,17 +14,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
+import org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
+import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
 import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
+import org.gbif.pipelines.fragmenter.common.Keygen;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
@@ -37,6 +41,8 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.pipelines.fragmenter.common.Keygen.ERROR_KEY;
 
 @Slf4j
 @Builder
@@ -61,7 +67,7 @@ public class XmlFragmentsUploader implements FragmentsUploader {
   private Integer attempt;
 
   @Builder.Default
-  private boolean useSyncMode = false;
+  private boolean useSyncMode = true;
 
   @Builder.Default
   private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -69,11 +75,14 @@ public class XmlFragmentsUploader implements FragmentsUploader {
   @Builder.Default
   private int backPressure = 5;
 
+  private Connection hbaseConnection;
+
   @SneakyThrows
   @Override
   public long upload() {
 
-    Connection connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
+    Connection connection = Optional.ofNullable(hbaseConnection)
+        .orElse(HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection());
     HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
@@ -129,8 +138,26 @@ public class XmlFragmentsUploader implements FragmentsUploader {
 
   private Map<Long, String> convert(HBaseLockingKeyService keygenService, UniquenessValidator validator,
       List<RawXmlOccurrence> xmlList) {
-    // TODO: CONVERT!
-    return Collections.emptyMap();
+
+    Function<RawXmlOccurrence, Long> keyFn = raw -> {
+
+      Optional<ExtendedRecord> first = XmlFragmentParser.parseRecord(raw).stream()
+          .map(ExtendedRecordConverter::from)
+          .findFirst();
+
+      if (!first.isPresent()) {
+        return ERROR_KEY;
+      }
+
+      Long key = Keygen.getKey(keygenService, first.get());
+      return validator.isUnique(key.toString()) ? key : ERROR_KEY;
+    };
+
+    Function<RawXmlOccurrence, String> valueFn = RawXmlOccurrence::getXml;
+
+    Map<Long, String> result = xmlList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
+    result.remove(ERROR_KEY);
+    return result;
   }
 
   /** Traverse the input directory and gets all the files. */

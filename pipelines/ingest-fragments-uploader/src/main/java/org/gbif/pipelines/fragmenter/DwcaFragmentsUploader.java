@@ -2,7 +2,6 @@ package org.gbif.pipelines.fragmenter;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,16 +13,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
+import org.gbif.pipelines.fragmenter.common.Keygen;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 
+import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Table;
 
@@ -33,6 +36,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
+import static org.gbif.pipelines.fragmenter.common.Keygen.ERROR_KEY;
 
 @Slf4j
 @Builder
@@ -57,7 +61,7 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   private int batchSize = 10;
 
   @Builder.Default
-  private boolean useSyncMode = false;
+  private boolean useSyncMode = true;
 
   @Builder.Default
   private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -65,11 +69,14 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   @Builder.Default
   private int backPressure = 5;
 
+  private Connection hbaseConnection;
+
   @SneakyThrows
   @Override
   public long upload() {
 
-    Connection connection = HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection();
+    Connection connection = Optional.ofNullable(hbaseConnection)
+        .orElse(HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection());
     HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
@@ -142,8 +149,13 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   }
 
   private Map<Long, String> convert(HBaseLockingKeyService keygenService, List<ExtendedRecord> erList) {
-    // TODO: CONVERT!
-    return Collections.emptyMap();
+
+    Function<ExtendedRecord, Long> keyFn = er -> Keygen.getKey(keygenService, er);
+    Function<ExtendedRecord, String> valueFn = SpecificRecordBase::toString;
+
+    Map<Long, String> result = erList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
+    result.remove(ERROR_KEY);
+    return result;
   }
 
 }

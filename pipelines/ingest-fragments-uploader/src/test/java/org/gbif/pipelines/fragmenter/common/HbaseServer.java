@@ -1,4 +1,4 @@
-package org.gbif.pipelines.fragmenter;
+package org.gbif.pipelines.fragmenter.common;
 
 import java.io.IOException;
 
@@ -11,18 +11,19 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Before;
 import org.junit.rules.ExternalResource;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Getter
 public class HbaseServer extends ExternalResource {
 
-  static final KeygenConfig CFG =
+  public static final KeygenConfig CFG =
       KeygenConfig.create("test_occurrence", "test_occurrence_counter", "test_occurrence_lookup", null);
 
-  static final String FRAGMENT_TABLE_NAME = "fragment_table";
-  private static final byte[] FRAGMENT_TABLE = Bytes.toBytes(FRAGMENT_TABLE_NAME);
-  private static final byte[] FF = Bytes.toBytes("o");
+  public static final String FRAGMENT_TABLE_NAME = "fragment_table";
+  public static final byte[] FRAGMENT_TABLE = Bytes.toBytes(FRAGMENT_TABLE_NAME);
 
   private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
   private static final String CF_NAME = "o";
@@ -50,7 +51,7 @@ public class HbaseServer extends ExternalResource {
     log.info("Create hbase mini-cluster");
     TEST_UTIL.startMiniCluster(1);
 
-    TEST_UTIL.createTable(FRAGMENT_TABLE, FF);
+    TEST_UTIL.createTable(FRAGMENT_TABLE, HbaseStore.getFragmentFamily());
     TEST_UTIL.createTable(LOOKUP_TABLE, CF);
     TEST_UTIL.createTable(COUNTER_TABLE, COUNTER_CF);
     TEST_UTIL.createTable(OCCURRENCE_TABLE, CF);
