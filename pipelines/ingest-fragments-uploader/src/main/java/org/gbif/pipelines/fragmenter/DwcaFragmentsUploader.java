@@ -25,7 +25,6 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 
-import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Table;
 

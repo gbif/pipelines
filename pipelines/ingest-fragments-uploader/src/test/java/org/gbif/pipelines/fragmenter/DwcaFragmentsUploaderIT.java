@@ -2,6 +2,7 @@ package org.gbif.pipelines.fragmenter;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.concurrent.Executors;
 
 import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
@@ -84,7 +85,9 @@ public class DwcaFragmentsUploaderIT {
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
         .attempt(attempt)
+        .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
+        .useSyncMode(false)
         .build()
         .upload();
 
@@ -108,6 +111,7 @@ public class DwcaFragmentsUploaderIT {
         .datasetId(datasetId)
         .attempt(attempt)
         .hbaseConnection(HBASE_SERVER.getConnection())
+        .executor(Executors.newFixedThreadPool(2))
         .build()
         .upload();
 
@@ -142,6 +146,8 @@ public class DwcaFragmentsUploaderIT {
         .datasetId(datasetId)
         .attempt(attempt)
         .hbaseConnection(HBASE_SERVER.getConnection())
+        .executor(Executors.newFixedThreadPool(2))
+        .useSyncMode(false)
         .build()
         .upload();
 
@@ -151,7 +157,9 @@ public class DwcaFragmentsUploaderIT {
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
         .attempt(attempt)
+        .batchSize(2)
         .hbaseConnection(HBASE_SERVER.getConnection())
+        .useSyncMode(false)
         .build()
         .upload();
 
