@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -21,15 +23,15 @@ import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
+import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
-import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
-import org.gbif.pipelines.fragmenter.habse.FragmentRow;
+import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Row;
+import org.apache.hadoop.hbase.client.Table;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -44,7 +46,7 @@ public class XmlFragmentsUploader implements FragmentsUploader {
   private static final String EXT_XML = ".xml";
 
   @NonNull
-  private HbaseConfiguration config;
+  private FragmentsConfiguration config;
 
   @NonNull
   private KeygenConfig keygenConfig;
@@ -54,6 +56,9 @@ public class XmlFragmentsUploader implements FragmentsUploader {
 
   @NonNull
   private String datasetId;
+
+  @NonNull
+  private Integer attempt;
 
   @Builder.Default
   private boolean useSyncMode = false;
@@ -75,25 +80,29 @@ public class XmlFragmentsUploader implements FragmentsUploader {
     AtomicInteger backPressureCounter = new AtomicInteger(0);
     AtomicInteger occurrenceCounter = new AtomicInteger(0);
 
-    Consumer<List<Row>> hbaseBulkFn = list -> {
-      backPressureCounter.incrementAndGet();
-      // TODO: Push into Hbase
-      occurrenceCounter.addAndGet(list.size());
-      backPressureCounter.decrementAndGet();
-    };
+    try (Table table = connection.getTable(config.getTableName());
+        UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
-    Consumer<List<Row>> pushIntoHbaseFn = list ->
-        Optional.ofNullable(list)
-            .filter(req -> !req.isEmpty())
-            .ifPresent(req -> {
-              if (useSyncMode) {
-                hbaseBulkFn.accept(req);
-              } else {
-                futures.add(CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor));
-              }
-            });
+      Consumer<List<RawXmlOccurrence>> convertAndPushBulkFn = list -> {
+        backPressureCounter.incrementAndGet();
 
-    try (UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
+        Map<Long, String> map = convert(keygenService, validator, list);
+        HbaseStore.putList(table, datasetId, attempt, map);
+
+        occurrenceCounter.addAndGet(map.size());
+        backPressureCounter.decrementAndGet();
+      };
+
+      Consumer<List<RawXmlOccurrence>> convertAndPushFn = list ->
+          Optional.ofNullable(list)
+              .filter(req -> !req.isEmpty())
+              .ifPresent(req -> {
+                if (useSyncMode) {
+                  convertAndPushBulkFn.accept(req);
+                } else {
+                  futures.add(CompletableFuture.runAsync(() -> convertAndPushBulkFn.accept(req), executor));
+                }
+              });
 
       File inputFile = ParserFileUtils.uncompressAndGetInputFile(pathToArchive.toString());
       for (File f : getInputFiles(inputFile)) {
@@ -104,25 +113,24 @@ public class XmlFragmentsUploader implements FragmentsUploader {
         }
 
         List<RawXmlOccurrence> xmlOccurrenceList = new OccurrenceParser().parseFile(f);
-        List<Row> rowList = convert(keygenService, validator, xmlOccurrenceList);
-        pushIntoHbaseFn.accept(rowList);
+        convertAndPushFn.accept(xmlOccurrenceList);
       }
 
-    }
+      // Wait for all async jobs
+      if (!useSyncMode) {
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
+      }
 
-    // Wait for all futures
-    if (!useSyncMode) {
-      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
     }
 
     return occurrenceCounter.get();
   }
 
-  private List<Row> convert(HBaseLockingKeyService keygenService, UniquenessValidator validator,
-      List<RawXmlOccurrence> rawXmlOccurrences) {
-    return rawXmlOccurrences.stream()
-        .map(x -> FragmentRow.create("", ""))
-        .collect(Collectors.toList());
+
+  private Map<Long, String> convert(HBaseLockingKeyService keygenService, UniquenessValidator validator,
+      List<RawXmlOccurrence> xmlList) {
+    // TODO: CONVERT!
+    return Collections.emptyMap();
   }
 
   /** Traverse the input directory and gets all the files. */

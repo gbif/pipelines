@@ -2,7 +2,9 @@ package org.gbif.pipelines.fragmenter;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -14,16 +16,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.gbif.pipelines.core.io.DwcaReader;
+import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
 import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
-import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
-import org.gbif.pipelines.fragmenter.habse.FragmentRow;
+import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Row;
+import org.apache.hadoop.hbase.client.Table;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -37,7 +39,7 @@ import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_
 public class DwcaFragmentsUploader implements FragmentsUploader {
 
   @NonNull
-  private HbaseConfiguration config;
+  private FragmentsConfiguration config;
 
   @NonNull
   private KeygenConfig keygenConfig;
@@ -47,6 +49,9 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
 
   @NonNull
   private String datasetId;
+
+  @NonNull
+  private Integer attempt;
 
   @Builder.Default
   private int batchSize = 10;
@@ -70,70 +75,75 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
     List<CompletableFuture<Void>> futures = new ArrayList<>();
     AtomicInteger backPressureCounter = new AtomicInteger(0);
 
-    Queue<List<Row>> rows = new LinkedBlockingQueue<>();
+    Queue<List<ExtendedRecord>> rows = new LinkedBlockingQueue<>();
     rows.add(new ArrayList<>(batchSize));
 
-    Consumer<ExtendedRecord> addRowFn = er -> Optional.ofNullable(rows.peek())
-        .ifPresent(req -> req.add(convertErToRow(keygenService, er)));
+    Consumer<ExtendedRecord> addRowFn = er -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(er));
 
     DwcaReader reader = DwcaReader.fromLocation(pathToArchive.toString());
     log.info("Uploadind fragments from {}", pathToArchive);
 
-    Consumer<List<Row>> hbaseBulkFn = list -> {
-      backPressureCounter.incrementAndGet();
-      // TODO: Push into Hbase
-      backPressureCounter.decrementAndGet();
-    };
+    try (Table table = connection.getTable(config.getTableName())) {
 
-    Runnable pushIntoHbaseFn = () -> Optional.ofNullable(rows.poll())
-        .filter(req -> !req.isEmpty())
-        .ifPresent(req -> {
-          if (useSyncMode) {
-            hbaseBulkFn.accept(req);
-          } else {
-            futures.add(CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor));
-          }
-        });
+      Consumer<List<ExtendedRecord>> hbaseBulkFn = list -> {
+        backPressureCounter.incrementAndGet();
 
-    // Read all records
-    while (reader.advance()) {
+        Map<Long, String> map = convert(keygenService, list);
+        HbaseStore.putList(table, datasetId, attempt, map);
 
-      while (backPressureCounter.get() > backPressure) {
-        log.info("Back pressure barrier: too many rows wainting...");
-        TimeUnit.MILLISECONDS.sleep(200L);
-      }
+        backPressureCounter.decrementAndGet();
+      };
 
-      ExtendedRecord record = reader.getCurrent();
-      if (!record.getId().equals(RECORD_ID_ERROR)) {
+      Runnable pushIntoHbaseFn = () -> Optional.ofNullable(rows.poll())
+          .filter(req -> !req.isEmpty())
+          .ifPresent(req -> {
+            if (useSyncMode) {
+              hbaseBulkFn.accept(req);
+            } else {
+              futures.add(CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor));
+            }
+          });
 
-        List<Row> peek = rows.peek();
-        if (peek != null && peek.size() < batchSize - 1) {
-          addRowFn.accept(record);
-        } else {
-          addRowFn.accept(record);
-          pushIntoHbaseFn.run();
-          rows.add(new ArrayList<>(batchSize));
+      // Read all records
+      while (reader.advance()) {
+
+        while (backPressureCounter.get() > backPressure) {
+          log.info("Back pressure barrier: too many rows wainting...");
+          TimeUnit.MILLISECONDS.sleep(200L);
         }
 
+        ExtendedRecord record = reader.getCurrent();
+        if (!record.getId().equals(RECORD_ID_ERROR)) {
+
+          List<ExtendedRecord> peek = rows.peek();
+          if (peek != null && peek.size() < batchSize - 1) {
+            addRowFn.accept(record);
+          } else {
+            addRowFn.accept(record);
+            pushIntoHbaseFn.run();
+            rows.add(new ArrayList<>(batchSize));
+          }
+
+        }
       }
-    }
-    reader.close();
+      reader.close();
 
-    // Final push
-    pushIntoHbaseFn.run();
+      // Final push
+      pushIntoHbaseFn.run();
 
-    // Wait for all futures
-    if (!useSyncMode) {
-      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
+      // Wait for all async jobs
+      if (!useSyncMode) {
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
+      }
     }
 
     return reader.getRecordsReturned();
 
   }
 
-  private FragmentRow convertErToRow(HBaseLockingKeyService keygenService, ExtendedRecord er) {
-    // TODO: CONVERTER TO ROW
-    return FragmentRow.create("", "");
+  private Map<Long, String> convert(HBaseLockingKeyService keygenService, List<ExtendedRecord> erList) {
+    // TODO: CONVERT!
+    return Collections.emptyMap();
   }
 
 }

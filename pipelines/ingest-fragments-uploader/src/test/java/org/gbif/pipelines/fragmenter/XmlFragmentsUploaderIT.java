@@ -2,13 +2,14 @@ package org.gbif.pipelines.fragmenter;
 
 import java.nio.file.Paths;
 
-import org.gbif.pipelines.fragmenter.common.HbaseConfiguration;
+import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class XmlFragmentsUploaderIT {
 
   /** {@link ClassRule} requires this field to be public. */
@@ -32,18 +33,17 @@ public class XmlFragmentsUploaderIT {
   public void pathToArchvieIsNullTest() {
     // When
     XmlFragmentsUploader.builder()
-        .config(HbaseConfiguration.create())
+        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .build()
         .upload();
 
   }
 
-  @Ignore
   @Test
   public void test() {
     // When
     long result = XmlFragmentsUploader.builder()
-        .config(HbaseConfiguration.create())
+        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .pathToArchive(Paths.get(inpPath))
         .build()
         .upload();
