@@ -25,8 +25,7 @@ import org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConve
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
-import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
-import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
+import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.fragmenter.common.Keygen;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -46,13 +45,13 @@ import static org.gbif.pipelines.fragmenter.common.Keygen.ERROR_KEY;
 
 @Slf4j
 @Builder
-public class XmlFragmentsUploader implements FragmentsUploader {
+public class XmlFragmentsUploader {
 
   private static final String EXT_RESPONSE = ".response";
   private static final String EXT_XML = ".xml";
 
   @NonNull
-  private FragmentsConfiguration config;
+  private FragmentsConfig config;
 
   @NonNull
   private KeygenConfig keygenConfig;
@@ -78,7 +77,6 @@ public class XmlFragmentsUploader implements FragmentsUploader {
   private Connection hbaseConnection;
 
   @SneakyThrows
-  @Override
   public long upload() {
 
     Connection connection = Optional.ofNullable(hbaseConnection)

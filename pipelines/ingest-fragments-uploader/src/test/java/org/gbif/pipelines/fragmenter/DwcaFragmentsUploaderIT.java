@@ -3,7 +3,7 @@ package org.gbif.pipelines.fragmenter;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
+import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
 
@@ -39,7 +39,7 @@ public class DwcaFragmentsUploaderIT {
   public void pathToArchvieIsNullTest() {
     // When
     DwcaFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .datasetId("50c9509d-22c7-4a22-a47d-8c48425ef4a8")
         .attempt(1)
@@ -56,7 +56,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long result = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -79,7 +79,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long result = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -102,7 +102,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long resultFirst = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -112,7 +112,7 @@ public class DwcaFragmentsUploaderIT {
         .upload();
 
     long resultSecond = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -136,7 +136,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long resultFirst = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -146,7 +146,7 @@ public class DwcaFragmentsUploaderIT {
         .upload();
 
     long resultSecond = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)

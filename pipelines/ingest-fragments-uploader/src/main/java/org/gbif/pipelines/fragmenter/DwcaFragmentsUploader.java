@@ -17,8 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.gbif.pipelines.core.io.DwcaReader;
-import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
-import org.gbif.pipelines.fragmenter.common.FragmentsUploader;
+import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.fragmenter.common.Keygen;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -40,10 +39,10 @@ import static org.gbif.pipelines.fragmenter.common.Keygen.ERROR_KEY;
 
 @Slf4j
 @Builder
-public class DwcaFragmentsUploader implements FragmentsUploader {
+public class DwcaFragmentsUploader {
 
   @NonNull
-  private FragmentsConfiguration config;
+  private FragmentsConfig config;
 
   @NonNull
   private KeygenConfig keygenConfig;
@@ -72,7 +71,6 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   private Connection hbaseConnection;
 
   @SneakyThrows
-  @Override
   public long upload() {
 
     Connection connection = Optional.ofNullable(hbaseConnection)
@@ -151,7 +149,10 @@ public class DwcaFragmentsUploader implements FragmentsUploader {
   private Map<Long, String> convert(HBaseLockingKeyService keygenService, List<ExtendedRecord> erList) {
 
     Function<ExtendedRecord, Long> keyFn = er -> Keygen.getKey(keygenService, er);
-    Function<ExtendedRecord, String> valueFn = SpecificRecordBase::toString;
+    Function<ExtendedRecord, String> valueFn = er -> {
+      // TODO: IMPLEMENT PROPER MAPPER!
+      return er.toString();
+    };
 
     Map<Long, String> result = erList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
     result.remove(ERROR_KEY);

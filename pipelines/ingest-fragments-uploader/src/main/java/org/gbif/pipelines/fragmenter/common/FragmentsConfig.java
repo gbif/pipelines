@@ -5,14 +5,14 @@ import org.apache.hadoop.hbase.TableName;
 import lombok.Getter;
 
 @Getter
-public class FragmentsConfiguration {
+public class FragmentsConfig {
 
-  public FragmentsConfiguration(String tableName) {
+  public FragmentsConfig(String tableName) {
     this.tableName = TableName.valueOf(tableName);
   }
 
-  public static FragmentsConfiguration create(String tableName) {
-    return new FragmentsConfiguration(tableName);
+  public static FragmentsConfig create(String tableName) {
+    return new FragmentsConfig(tableName);
   }
 
   private TableName tableName;

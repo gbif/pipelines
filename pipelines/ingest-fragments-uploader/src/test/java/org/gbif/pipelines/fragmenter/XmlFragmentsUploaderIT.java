@@ -3,7 +3,7 @@ package org.gbif.pipelines.fragmenter;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-import org.gbif.pipelines.fragmenter.common.FragmentsConfiguration;
+import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
 
@@ -40,7 +40,7 @@ public class XmlFragmentsUploaderIT {
   public void pathToArchvieIsNullTest() {
     // When
     XmlFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .datasetId("50c9509d-22c7-4a22-a47d-8c48425ef4a8")
         .attempt(1)
@@ -58,7 +58,7 @@ public class XmlFragmentsUploaderIT {
 
     // When
     long result = XmlFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -81,7 +81,7 @@ public class XmlFragmentsUploaderIT {
 
     // When
     long result = XmlFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -104,7 +104,7 @@ public class XmlFragmentsUploaderIT {
 
     // When
     long resultFirst = XmlFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -114,7 +114,7 @@ public class XmlFragmentsUploaderIT {
         .upload();
 
     long resultSecond = XmlFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -138,7 +138,7 @@ public class XmlFragmentsUploaderIT {
 
     // When
     long resultFirst = XmlFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
@@ -148,7 +148,7 @@ public class XmlFragmentsUploaderIT {
         .upload();
 
     long resultSecond = XmlFragmentsUploader.builder()
-        .config(FragmentsConfiguration.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
