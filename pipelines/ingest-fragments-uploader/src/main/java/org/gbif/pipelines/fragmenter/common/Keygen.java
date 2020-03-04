@@ -4,9 +4,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.Term;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
@@ -20,33 +17,35 @@ public class Keygen {
 
   private static final Long ERROR_KEY = -1L;
 
-  public static Long getKey(HBaseLockingKeyService keygenService, ExtendedRecord er) {
-    Set<String> set = new HashSet<>(2);
+  public static Long getKey(HBaseLockingKeyService keygenService, boolean useTriplet, boolean useOccurrenceId,
+      RecordUnit recordUnit) {
+
+    Set<String> uniqueStrings = new HashSet<>(2);
 
     // Adds occurrenceId
-    String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
-    if (!Strings.isNullOrEmpty(occurrenceId)) {
-      set.add(occurrenceId);
+    if (useOccurrenceId) {
+      String occurrenceId = recordUnit.getOccurrenceId();
+      if (!Strings.isNullOrEmpty(occurrenceId)) {
+        uniqueStrings.add(occurrenceId);
+      }
     }
 
     // Adds triplet
-    String ic = extractValue(er, DwcTerm.institutionCode);
-    String cc = extractValue(er, DwcTerm.collectionCode);
-    String cn = extractValue(er, DwcTerm.catalogNumber);
-    OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(set::add);
+    if (useTriplet) {
+      String ic = recordUnit.getInstitutionCode();
+      String cc = recordUnit.getCollectionCode();
+      String cn = recordUnit.getCatalogNumber();
+      OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+    }
 
-    if (set.isEmpty()) {
+    if (uniqueStrings.isEmpty()) {
       return ERROR_KEY;
     }
 
     // Finds or generate key
-    KeyLookupResult keyResult = Optional.ofNullable(keygenService.findKey(set))
-        .orElse(keygenService.generateKey(set));
+    KeyLookupResult keyResult = Optional.ofNullable(keygenService.findKey(uniqueStrings))
+        .orElse(keygenService.generateKey(uniqueStrings));
     return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey).orElse(ERROR_KEY);
-  }
-
-  private static String extractValue(ExtendedRecord er, Term term) {
-    return er.getCoreTerms().get(term.qualifiedName());
   }
 
   public static Long getErrorKey() {

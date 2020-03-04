@@ -1,7 +1,9 @@
 package org.gbif.pipelines.fragmenter;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,18 +15,22 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter;
-import org.gbif.pipelines.core.io.DwcaReader;
+import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
+import org.gbif.dwc.DwcFiles;
+import org.gbif.dwc.record.Record;
+import org.gbif.dwc.record.StarRecord;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
-import org.gbif.pipelines.fragmenter.common.Keygen;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.fragmenter.common.RecordUnit;
+import org.gbif.pipelines.fragmenter.common.RecordUnitConverter;
+import org.gbif.pipelines.fragmenter.common.StarRecordCopy;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
+import org.gbif.utils.file.ClosableIterator;
 
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Table;
@@ -48,10 +54,19 @@ public class DwcaFragmentsUploader {
   private Path pathToArchive;
 
   @NonNull
+  private Path tempDir;
+
+  @NonNull
   private String datasetId;
 
   @NonNull
   private Integer attempt;
+
+  @NonNull
+  Boolean useTriplet;
+
+  @NonNull
+  Boolean useOccurrenceId;
 
   @Builder.Default
   private int batchSize = 10;
@@ -76,48 +91,50 @@ public class DwcaFragmentsUploader {
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
     AtomicInteger backPressureCounter = new AtomicInteger(0);
+    AtomicInteger occurrenceCounter = new AtomicInteger(0);
 
-    Queue<List<ExtendedRecord>> rows = new LinkedBlockingQueue<>();
+    Queue<List<RecordUnit>> rows = new LinkedBlockingQueue<>();
     rows.add(new ArrayList<>(batchSize));
 
-    Consumer<ExtendedRecord> addRowFn = er -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(er));
+    Consumer<RecordUnit> addRowFn = er -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(er));
 
-    DwcaReader reader = DwcaReader.fromLocation(pathToArchive.toString());
     log.info("Uploadind fragments from {}", pathToArchive);
+    try (Table table = connection.getTable(config.getTableName());
+        ClosableIterator<StarRecord> starRecordIterator = readDwca();
+        UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
-    try (Table table = connection.getTable(config.getTableName())) {
-
-      Consumer<List<ExtendedRecord>> hbaseBulkFn = list -> {
+      Consumer<List<RecordUnit>> hbaseBulkFn = l -> {
         backPressureCounter.incrementAndGet();
 
-        Map<Long, String> map = convert(keygenService, list);
+        Map<Long, String> map = RecordUnitConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
         HbaseStore.putList(table, datasetId, attempt, map);
 
+        occurrenceCounter.addAndGet(map.size());
         backPressureCounter.decrementAndGet();
       };
 
-      Runnable pushIntoHbaseFn = () -> Optional.ofNullable(rows.poll())
-          .filter(req -> !req.isEmpty())
-          .ifPresent(req -> {
-            if (useSyncMode) {
-              hbaseBulkFn.accept(req);
-            } else {
-              futures.add(CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor));
-            }
-          });
+      Runnable pushIntoHbaseFn = () ->
+          Optional.ofNullable(rows.poll())
+              .filter(req -> !req.isEmpty())
+              .ifPresent(req -> {
+                if (useSyncMode) {
+                  hbaseBulkFn.accept(req);
+                } else {
+                  futures.add(CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor));
+                }
+              });
 
       // Read all records
-      while (reader.advance()) {
+      while (starRecordIterator.hasNext()) {
 
         while (backPressureCounter.get() > backPressure) {
           log.info("Back pressure barrier: too many rows wainting...");
           TimeUnit.MILLISECONDS.sleep(200L);
         }
 
-        ExtendedRecord record = reader.getCurrent();
-        if (!record.getId().equals(ExtendedRecordConverter.getRecordIdError())) {
-
-          List<ExtendedRecord> peek = rows.peek();
+        StarRecord starRecord = StarRecordCopy.create(starRecordIterator.next());
+        convertToRecordUnits(starRecord).forEach(record -> {
+          List<RecordUnit> peek = rows.peek();
           if (peek != null && peek.size() < batchSize - 1) {
             addRowFn.accept(record);
           } else {
@@ -125,10 +142,9 @@ public class DwcaFragmentsUploader {
             pushIntoHbaseFn.run();
             rows.add(new ArrayList<>(batchSize));
           }
+        });
 
-        }
       }
-      reader.close();
 
       // Final push
       pushIntoHbaseFn.run();
@@ -139,21 +155,25 @@ public class DwcaFragmentsUploader {
       }
     }
 
-    return reader.getRecordsReturned();
+    return occurrenceCounter.get();
 
   }
 
-  private Map<Long, String> convert(HBaseLockingKeyService keygenService, List<ExtendedRecord> erList) {
+  private ClosableIterator<StarRecord> readDwca() throws IOException {
+    if (pathToArchive.endsWith(".dwca")) {
+      return DwcFiles.fromCompressed(pathToArchive, tempDir).iterator();
+    } else {
+      return DwcFiles.fromLocation(pathToArchive).iterator();
+    }
+  }
 
-    Function<ExtendedRecord, Long> keyFn = er -> Keygen.getKey(keygenService, er);
-    Function<ExtendedRecord, String> valueFn = er -> {
-      // TODO: IMPLEMENT PROPER MAPPER!
-      return er.toString();
-    };
-
-    Map<Long, String> result = erList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
-    result.remove(Keygen.getErrorKey());
-    return result;
+  private List<RecordUnit> convertToRecordUnits(StarRecord starRecord) {
+    List<Record> records = starRecord.extension(DwcTerm.Occurrence);
+    if (records == null || records.isEmpty()) {
+      return Collections.singletonList(RecordUnit.create(starRecord));
+    } else {
+      return records.stream().map(r -> RecordUnit.create(starRecord.core(), r)).collect(Collectors.toList());
+    }
   }
 
 }

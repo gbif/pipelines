@@ -14,21 +14,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.gbif.converters.parser.xml.OccurrenceParser;
-import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
-import org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
-import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
 import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
-import org.gbif.pipelines.fragmenter.common.Keygen;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.fragmenter.common.RecordUnit;
+import org.gbif.pipelines.fragmenter.common.RecordUnitConverter;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
@@ -63,6 +59,12 @@ public class XmlFragmentsUploader {
   @NonNull
   private Integer attempt;
 
+  @NonNull
+  Boolean useTriplet;
+
+  @NonNull
+  Boolean useOccurrenceId;
+
   @Builder.Default
   private boolean useSyncMode = true;
 
@@ -88,18 +90,18 @@ public class XmlFragmentsUploader {
     try (Table table = connection.getTable(config.getTableName());
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
-      Consumer<List<RawXmlOccurrence>> convertAndPushBulkFn = list -> {
+      Consumer<List<RecordUnit>> convertAndPushBulkFn = l -> {
         backPressureCounter.incrementAndGet();
 
-        Map<Long, String> map = convert(keygenService, validator, list);
+        Map<Long, String> map = RecordUnitConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
         HbaseStore.putList(table, datasetId, attempt, map);
 
         occurrenceCounter.addAndGet(map.size());
         backPressureCounter.decrementAndGet();
       };
 
-      Consumer<List<RawXmlOccurrence>> convertAndPushFn = list ->
-          Optional.ofNullable(list)
+      Consumer<List<RecordUnit>> convertAndPushFn = l ->
+          Optional.ofNullable(l)
               .filter(req -> !req.isEmpty())
               .ifPresent(req -> {
                 if (useSyncMode) {
@@ -117,8 +119,10 @@ public class XmlFragmentsUploader {
           TimeUnit.MILLISECONDS.sleep(200L);
         }
 
-        List<RawXmlOccurrence> xmlOccurrenceList = new OccurrenceParser().parseFile(f);
-        convertAndPushFn.accept(xmlOccurrenceList);
+        List<RecordUnit> recordUnitList = new OccurrenceParser().parseFile(f).stream()
+            .map(RecordUnit::create)
+            .collect(Collectors.toList());
+        convertAndPushFn.accept(recordUnitList);
       }
 
       // Wait for all async jobs
@@ -129,31 +133,6 @@ public class XmlFragmentsUploader {
     }
 
     return occurrenceCounter.get();
-  }
-
-
-  private Map<Long, String> convert(HBaseLockingKeyService keygenService, UniquenessValidator validator,
-      List<RawXmlOccurrence> xmlList) {
-
-    Function<RawXmlOccurrence, Long> keyFn = raw -> {
-
-      Optional<ExtendedRecord> first = XmlFragmentParser.parseRecord(raw).stream()
-          .map(ExtendedRecordConverter::from)
-          .findFirst();
-
-      if (!first.isPresent()) {
-        return Keygen.getErrorKey();
-      }
-
-      Long key = Keygen.getKey(keygenService, first.get());
-      return validator.isUnique(key.toString()) ? key : Keygen.getErrorKey();
-    };
-
-    Function<RawXmlOccurrence, String> valueFn = RawXmlOccurrence::getXml;
-
-    Map<Long, String> result = xmlList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
-    result.remove(Keygen.getErrorKey());
-    return result;
   }
 
   /** Traverse the input directory and gets all the files. */

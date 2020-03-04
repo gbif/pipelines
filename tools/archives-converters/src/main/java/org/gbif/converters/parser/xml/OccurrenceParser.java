@@ -117,23 +117,23 @@ public class OccurrenceParser {
     ParsedSearchResponse responseBody = null;
     log.debug("Trying charset [{}]", charset);
     try (FileInputStream fis = new FileInputStream(gzipFile);
-         GZIPInputStream inputStream = new GZIPInputStream(fis);
-         BufferedReader inputReader = new BufferedReader(new XmlSanitizingReader(
-                 new InputStreamReader(inputStream, charset)))) {
+        GZIPInputStream inputStream = new GZIPInputStream(fis);
+        BufferedReader inputReader = new BufferedReader(new XmlSanitizingReader(
+            new InputStreamReader(inputStream, charset)))) {
       responseBody = new ParsedSearchResponse();
       parse(new InputSource(inputReader), responseBody);
       log.debug("Success with charset [{}] - skipping any others", charset);
       return responseBody;
     } catch (SAXException e) {
       log.debug("SAX exception when parsing gzipFile [{}] using encoding [{}] - trying another charset",
-              gzipFile.getAbsolutePath(), charset, e);
+          gzipFile.getAbsolutePath(), charset, e);
     } catch (MalformedByteSequenceException e) {
       log.debug("Malformed utf-8 byte when parsing with encoding [{}] - trying another charset", charset);
     } catch (IOException ex) {
       log.warn("Error reading input files", ex);
     } catch (ParserConfigurationException e) {
-      log.warn( "Failed to pull raw parsing from response gzipFile [{}] - skipping gzipFile",
-              gzipFile.getAbsolutePath(), e);
+      log.warn("Failed to pull raw parsing from response gzipFile [{}] - skipping gzipFile",
+          gzipFile.getAbsolutePath(), e);
     } catch (TransformerException e) {
       log.warn("Could not create parsing transformer for [{}] - skipping gzipFile", gzipFile.getAbsolutePath(), e);
     }
@@ -145,7 +145,8 @@ public class OccurrenceParser {
 
     log.debug(">> parseResponseFileToRawXml [{}]", gzipFile.getAbsolutePath());
     try {
-      Optional<ParsedSearchResponse> responseBody = getCharsets(gzipFile).stream().map(charset -> read(gzipFile,charset))
+      Optional<ParsedSearchResponse> responseBody =
+          getCharsets(gzipFile).stream().map(charset -> read(gzipFile, charset))
               .filter(Objects::nonNull).findFirst();
       if (!responseBody.isPresent()) {
         log.warn("Could not parse gzipFile (malformed parsing) - skipping gzipFile [{}]", gzipFile.getAbsolutePath());
@@ -166,13 +167,14 @@ public class OccurrenceParser {
    * from the raw gzipFile bytes
    */
   private static List<Charset> getCharsets(File gzipFile) throws IOException {
-    List<Charset> charsets = Stream.of(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1).collect(Collectors.toList());
+    List<Charset> charsets =
+        Stream.of(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1).collect(Collectors.toList());
 
     // read parsing declaration
     try (FileInputStream fis = new FileInputStream(gzipFile);
-         GZIPInputStream inputStream = new GZIPInputStream(fis);
-         InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.defaultCharset());
-         BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+        GZIPInputStream inputStream = new GZIPInputStream(fis);
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream, Charset.defaultCharset());
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
       boolean gotEncoding = false;
       int lineCount = 0;
       while (bufferedReader.ready() && !gotEncoding && lineCount < 5) {
@@ -189,8 +191,8 @@ public class OccurrenceParser {
             charsets.add(Charset.forName(encoding));
           } catch (Exception e) {
             log.debug(
-                    "Could not find supported charset matching detected encoding of [{}] - trying other guesses instead",
-                    encoding);
+                "Could not find supported charset matching detected encoding of [{}] - trying other guesses instead",
+                encoding);
           }
           gotEncoding = true;
         }
@@ -208,7 +210,7 @@ public class OccurrenceParser {
    * @param responseBody storage for Digester
    */
   private void parse(InputSource inputSource, ParsedSearchResponse responseBody)
-          throws ParserConfigurationException, SAXException, IOException {
+      throws ParserConfigurationException, SAXException, IOException {
 
     Digester digester = new Digester();
     digester.setNamespaceAware(true);
