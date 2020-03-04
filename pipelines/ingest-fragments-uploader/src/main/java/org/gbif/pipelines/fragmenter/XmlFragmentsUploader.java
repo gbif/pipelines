@@ -41,8 +41,6 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.pipelines.fragmenter.common.Keygen.ERROR_KEY;
-
 @Slf4j
 @Builder
 public class XmlFragmentsUploader {
@@ -144,17 +142,17 @@ public class XmlFragmentsUploader {
           .findFirst();
 
       if (!first.isPresent()) {
-        return ERROR_KEY;
+        return Keygen.getErrorKey();
       }
 
       Long key = Keygen.getKey(keygenService, first.get());
-      return validator.isUnique(key.toString()) ? key : ERROR_KEY;
+      return validator.isUnique(key.toString()) ? key : Keygen.getErrorKey();
     };
 
     Function<RawXmlOccurrence, String> valueFn = RawXmlOccurrence::getXml;
 
     Map<Long, String> result = xmlList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
-    result.remove(ERROR_KEY);
+    result.remove(Keygen.getErrorKey());
     return result;
   }
 

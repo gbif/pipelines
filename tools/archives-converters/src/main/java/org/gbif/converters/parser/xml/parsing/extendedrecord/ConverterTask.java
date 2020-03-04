@@ -14,8 +14,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter.RECORD_ID_ERROR;
-
 /**
  * The task for CompletableFuture which reads a xml response file, parses and converts to
  * ExtendedRecord avro file
@@ -57,7 +55,7 @@ public class ConverterTask implements Runnable {
    * Converts {@link ExtendedRecord#getId} into id hash, appends AVRO file and counts the number of records
    */
   private void appendExtendedRecord(ExtendedRecord record) {
-    if (!record.getId().equals(RECORD_ID_ERROR)) {
+    if (!record.getId().equals(ExtendedRecordConverter.getRecordIdError())) {
       dataFileWriter.append(record);
       counter.incrementAndGet();
     }

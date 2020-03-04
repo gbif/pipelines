@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.gbif.converters.parser.xml.parsing.extendedrecord.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
@@ -32,9 +33,6 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
-import static org.gbif.pipelines.fragmenter.common.Keygen.ERROR_KEY;
 
 @Slf4j
 @Builder
@@ -117,7 +115,7 @@ public class DwcaFragmentsUploader {
         }
 
         ExtendedRecord record = reader.getCurrent();
-        if (!record.getId().equals(RECORD_ID_ERROR)) {
+        if (!record.getId().equals(ExtendedRecordConverter.getRecordIdError())) {
 
           List<ExtendedRecord> peek = rows.peek();
           if (peek != null && peek.size() < batchSize - 1) {
@@ -154,7 +152,7 @@ public class DwcaFragmentsUploader {
     };
 
     Map<Long, String> result = erList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
-    result.remove(ERROR_KEY);
+    result.remove(Keygen.getErrorKey());
     return result;
   }
 

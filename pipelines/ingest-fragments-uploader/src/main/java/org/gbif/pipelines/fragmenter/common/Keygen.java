@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Keygen {
 
-  public static final Long ERROR_KEY = -1L;
+  private static final Long ERROR_KEY = -1L;
 
   public static Long getKey(HBaseLockingKeyService keygenService, ExtendedRecord er) {
     Set<String> set = new HashSet<>(2);
@@ -35,11 +35,11 @@ public class Keygen {
     String cn = extractValue(er, DwcTerm.catalogNumber);
     OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(set::add);
 
-    // Finds key
     if (set.isEmpty()) {
       return ERROR_KEY;
     }
 
+    // Finds or generate key
     KeyLookupResult keyResult = Optional.ofNullable(keygenService.findKey(set))
         .orElse(keygenService.generateKey(set));
     return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey).orElse(ERROR_KEY);
@@ -49,4 +49,7 @@ public class Keygen {
     return er.getCoreTerms().get(term.qualifiedName());
   }
 
+  public static Long getErrorKey() {
+    return ERROR_KEY;
+  }
 }

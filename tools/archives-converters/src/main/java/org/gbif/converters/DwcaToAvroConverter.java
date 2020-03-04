@@ -5,14 +5,13 @@ import java.nio.file.Path;
 
 import org.gbif.converters.converter.ConverterToVerbatim;
 import org.gbif.converters.converter.SyncDataFileWriter;
+import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.core.converters.ExtendedRecordConverter.RECORD_ID_ERROR;
 
 /**
  * Converts DWC archive into {@link ExtendedRecord} AVRO file
@@ -47,7 +46,7 @@ public class DwcaToAvroConverter extends ConverterToVerbatim {
     // Read all records
     while (reader.advance()) {
       ExtendedRecord record = reader.getCurrent();
-      if (!record.getId().equals(RECORD_ID_ERROR)) {
+      if (!record.getId().equals(ExtendedRecordConverter.getRecordIdError())) {
         dataFileWriter.append(record);
       }
     }

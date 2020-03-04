@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtendedRecordConverter {
 
-  public static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
+  private static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
 
   public static ExtendedRecord from(RawOccurrenceRecord rawRecord) {
 
@@ -117,5 +117,9 @@ public class ExtendedRecordConverter {
     mediaSetter.accept(DcTerm.license, imageRecord.getRights());
 
     return mediaTerms;
+  }
+
+  public static String getRecordIdError() {
+    return RECORD_ID_ERROR;
   }
 }
