@@ -21,34 +21,8 @@ public class XmlFragmentsUploaderIT {
   @ClassRule
   public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
-  private final String inpPath =
-      getClass().getResource("/xml").getFile();
+  private final String inpPath = getClass().getResource("/xml").getFile();
 
-  @Test(expected = NullPointerException.class)
-  public void hbaseConfigIsNullTest() {
-    // When
-    XmlFragmentsUploader.builder()
-        .pathToArchive(Paths.get(inpPath))
-        .keygenConfig(HbaseServer.CFG)
-        .datasetId("50c9509d-22c7-4a22-a47d-8c48425ef4a8")
-        .attempt(1)
-        .build()
-        .upload();
-
-  }
-
-  @Test(expected = NullPointerException.class)
-  public void pathToArchvieIsNullTest() {
-    // When
-    XmlFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
-        .keygenConfig(HbaseServer.CFG)
-        .datasetId("50c9509d-22c7-4a22-a47d-8c48425ef4a8")
-        .attempt(1)
-        .build()
-        .upload();
-
-  }
 
   @Test
   public void syncUploadTest() throws IOException {
@@ -102,7 +76,8 @@ public class XmlFragmentsUploaderIT {
     // State
     int expSize = 40;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
-    int attempt = 1;
+    int attemptFirst = 231;
+    int attemptSecond = 232;
 
     // When
     long resultFirst = XmlFragmentsUploader.builder()
@@ -110,7 +85,7 @@ public class XmlFragmentsUploaderIT {
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
-        .attempt(attempt)
+        .attempt(attemptFirst)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
@@ -120,7 +95,7 @@ public class XmlFragmentsUploaderIT {
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
-        .attempt(attempt)
+        .attempt(attemptSecond)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
@@ -128,7 +103,7 @@ public class XmlFragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond);
   }
 
   @Test
@@ -136,7 +111,8 @@ public class XmlFragmentsUploaderIT {
     // State
     int expSize = 40;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
-    int attempt = 1;
+    int attemptFirst = 231;
+    int attemptSecond = 232;
 
     // When
     long resultFirst = XmlFragmentsUploader.builder()
@@ -144,7 +120,7 @@ public class XmlFragmentsUploaderIT {
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
-        .attempt(attempt)
+        .attempt(attemptFirst)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .useSyncMode(false)
@@ -156,7 +132,7 @@ public class XmlFragmentsUploaderIT {
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(Paths.get(inpPath))
         .datasetId(datasetId)
-        .attempt(attempt)
+        .attempt(attemptSecond)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .backPressure(1)
         .useSyncMode(false)
@@ -166,7 +142,7 @@ public class XmlFragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond);
   }
 
 
