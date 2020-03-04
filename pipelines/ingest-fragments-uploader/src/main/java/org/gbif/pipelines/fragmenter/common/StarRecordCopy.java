@@ -1,5 +1,7 @@
 package org.gbif.pipelines.fragmenter.common;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +20,8 @@ public class StarRecordCopy implements StarRecord {
 
   private StarRecordCopy(StarRecord record) {
     this.core = record.core();
-    this.extensions = record.extensions();
+    this.extensions = new HashMap<>(record.size());
+    record.extensions().forEach((key, value) -> extensions.put(key, new ArrayList<>(value)));
   }
 
   public static StarRecord create(StarRecord record) {
@@ -32,7 +35,7 @@ public class StarRecordCopy implements StarRecord {
 
   @Override
   public boolean hasExtension(Term term) {
-    return false;
+    return extensions.containsKey(term);
   }
 
   @Override
@@ -47,17 +50,17 @@ public class StarRecordCopy implements StarRecord {
 
   @Override
   public Set<Term> rowTypes() {
-    return null;
+    throw new UnsupportedOperationException("The method is not implemented!");
   }
 
   @Override
   public int size() {
-    return 0;
+    throw new UnsupportedOperationException("The method is not implemented!");
   }
 
   @NotNull
   @Override
   public Iterator<Record> iterator() {
-    return null;
+    throw new UnsupportedOperationException("The method is not implemented!");
   }
 }

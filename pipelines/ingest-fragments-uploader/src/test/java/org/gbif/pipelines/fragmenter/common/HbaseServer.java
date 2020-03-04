@@ -37,13 +37,9 @@ public class HbaseServer extends ExternalResource {
 
   private Connection connection = null;
 
-  @Before
-  public void beforeClass() throws IOException {
+  public void truncateTable() throws IOException {
     log.info("Trancate the table");
     TEST_UTIL.truncateTable(FRAGMENT_TABLE);
-    TEST_UTIL.truncateTable(LOOKUP_TABLE);
-    TEST_UTIL.truncateTable(COUNTER_TABLE);
-    TEST_UTIL.truncateTable(OCCURRENCE_TABLE);
   }
 
   @Override

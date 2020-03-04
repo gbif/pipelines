@@ -1,6 +1,7 @@
 package org.gbif.pipelines.fragmenter;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
@@ -9,6 +10,7 @@ import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -21,9 +23,13 @@ public class XmlFragmentsUploaderIT {
   @ClassRule
   public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
-  private final String inpPath = getClass().getResource("/xml").getFile();
+  private final Path xmlArchivePath = Paths.get(getClass().getResource("/xml").getFile());
 
-
+  @Before
+  public void before() throws IOException {
+    HBASE_SERVER.truncateTable();
+  }
+  
   @Test
   public void syncUploadTest() throws IOException {
     // State
@@ -35,7 +41,7 @@ public class XmlFragmentsUploaderIT {
     long result = XmlFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
+        .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -60,7 +66,7 @@ public class XmlFragmentsUploaderIT {
     long result = XmlFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
+        .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -87,7 +93,7 @@ public class XmlFragmentsUploaderIT {
     long resultFirst = XmlFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
+        .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -99,7 +105,7 @@ public class XmlFragmentsUploaderIT {
     long resultSecond = XmlFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
+        .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -126,7 +132,7 @@ public class XmlFragmentsUploaderIT {
     long resultFirst = XmlFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
+        .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -140,7 +146,7 @@ public class XmlFragmentsUploaderIT {
     long resultSecond = XmlFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
+        .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
         .datasetId(datasetId)

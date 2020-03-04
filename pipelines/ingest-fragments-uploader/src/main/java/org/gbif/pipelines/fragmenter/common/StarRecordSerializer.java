@@ -76,13 +76,13 @@ public final class StarRecordSerializer {
         extensions.put(rowType, records);
 
         // iterate over extension records
-        rec.extension(rowType).forEach(erec -> {
+        for (Record erec : rec.extension(rowType)) {
           Map<String, String> edata = new TreeMap<>();
           records.add(edata);
           for (Term term : erec.terms()) {
             edata.put(term.simpleName(), erec.value(term));
           }
-        });
+        }
       }
     }
     // serialize to json

@@ -1,6 +1,7 @@
 package org.gbif.pipelines.fragmenter;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
@@ -9,6 +10,7 @@ import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -21,7 +23,14 @@ public class DwcaFragmentsUploaderIT {
   @ClassRule
   public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
-  private final String inpPath = getClass().getResource("/dwca").getFile();
+  private final Path regularDwca = Paths.get(getClass().getResource("/dwca/regular").getFile());
+  private final Path occurrenceAsExtensionDwca = Paths.get(getClass().getResource("/dwca/occext").getFile());
+  private final Path multimediaExtensionDwca = Paths.get(getClass().getResource("/dwca/multimedia").getFile());
+
+  @Before
+  public void before() throws IOException {
+    HBASE_SERVER.truncateTable();
+  }
 
   @Test
   public void syncUploadTest() throws IOException {
@@ -34,8 +43,8 @@ public class DwcaFragmentsUploaderIT {
     long result = DwcaFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
-        .tempDir(Paths.get(inpPath))
+        .pathToArchive(regularDwca)
+        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -60,8 +69,8 @@ public class DwcaFragmentsUploaderIT {
     long result = DwcaFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
-        .tempDir(Paths.get(inpPath))
+        .pathToArchive(regularDwca)
+        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -89,8 +98,8 @@ public class DwcaFragmentsUploaderIT {
     long resultFirst = DwcaFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
-        .tempDir(Paths.get(inpPath))
+        .pathToArchive(regularDwca)
+        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -103,8 +112,8 @@ public class DwcaFragmentsUploaderIT {
     long resultSecond = DwcaFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
-        .tempDir(Paths.get(inpPath))
+        .pathToArchive(regularDwca)
+        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -131,8 +140,8 @@ public class DwcaFragmentsUploaderIT {
     long resultFirst = DwcaFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
-        .tempDir(Paths.get(inpPath))
+        .pathToArchive(regularDwca)
+        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -146,8 +155,8 @@ public class DwcaFragmentsUploaderIT {
     long resultSecond = DwcaFragmentsUploader.builder()
         .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
         .keygenConfig(HbaseServer.CFG)
-        .pathToArchive(Paths.get(inpPath))
-        .tempDir(Paths.get(inpPath))
+        .pathToArchive(regularDwca)
+        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -162,5 +171,113 @@ public class DwcaFragmentsUploaderIT {
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
     TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond);
+  }
+
+  @Test
+  public void occExtSyncUploadTest() throws IOException {
+    // State
+    int expSize = 477;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attempt = 231;
+
+    // When
+    long result = DwcaFragmentsUploader.builder()
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(occurrenceAsExtensionDwca)
+        .tempDir(occurrenceAsExtensionDwca)
+        .useTriplet(false)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attempt)
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, result);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+  }
+
+  @Test
+  public void occExtAsyncUploadTest() throws IOException {
+    // State
+    int expSize = 477;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attempt = 231;
+
+    // When
+    long result = DwcaFragmentsUploader.builder()
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(occurrenceAsExtensionDwca)
+        .tempDir(occurrenceAsExtensionDwca)
+        .useTriplet(false)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attempt)
+        .executor(Executors.newFixedThreadPool(2))
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .useSyncMode(false)
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, result);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+  }
+
+  @Test
+  public void multimediaSyncUploadTest() throws IOException {
+    // State
+    int expSize = 368;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attempt = 231;
+
+    // When
+    long result = DwcaFragmentsUploader.builder()
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(multimediaExtensionDwca)
+        .tempDir(multimediaExtensionDwca)
+        .useTriplet(false)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attempt)
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, result);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+  }
+
+  @Test
+  public void multimediaAsyncUploadTest() throws IOException {
+    // State
+    int expSize = 368;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attempt = 231;
+
+    // When
+    long result = DwcaFragmentsUploader.builder()
+        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(multimediaExtensionDwca)
+        .tempDir(multimediaExtensionDwca)
+        .useTriplet(false)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attempt)
+        .executor(Executors.newFixedThreadPool(2))
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .useSyncMode(false)
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, result);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
   }
 }
