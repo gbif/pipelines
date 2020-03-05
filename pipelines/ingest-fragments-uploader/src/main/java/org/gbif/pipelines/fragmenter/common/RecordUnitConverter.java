@@ -14,19 +14,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RecordUnitConverter {
 
-  public static Map<Long, String> convert(HBaseLockingKeyService keygenService, UniquenessValidator validator,
+  public static Map<String, String> convert(HBaseLockingKeyService keygenService, UniquenessValidator validator,
       boolean useTriplet, boolean useOccurrenceId, List<RecordUnit> recordUnitList) {
 
-    Function<RecordUnit, Long> keyFn = ru -> {
+    Function<RecordUnit, String> keyFn = ru -> {
       Long key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, ru);
-      return validator.isUnique(key.toString()) ? key : Keygen.getErrorKey();
+      key = validator.isUnique(key.toString()) ? key : Keygen.getErrorKey();
+      return Keygen.getSaltedKey(key);
     };
 
     Function<RecordUnit, String> valueFn = RecordUnit::toString;
 
-    Map<Long, String> result = recordUnitList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
+    Map<String, String> result = recordUnitList.stream().collect(Collectors.toMap(keyFn, valueFn, (s, s2) -> s));
 
-    result.remove(Keygen.getErrorKey());
+    result.remove(Keygen.getErrorKey().toString());
     return result;
   }
 }

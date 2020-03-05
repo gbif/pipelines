@@ -16,14 +16,17 @@ import lombok.NoArgsConstructor;
 
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getAttemptQualifier;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDatasetIdQualifier;
+import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDateCreatedQualifier;
+import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDateUpdatedQualifier;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getFragmentFamily;
+import static org.gbif.pipelines.fragmenter.common.HbaseStore.getProtocolQualifier;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getRecordQualifier;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TableAssert {
 
   public static void assertTableData(Connection connection, int expectedSize, String expectedDatasetId,
-      Integer expectedAttempt) throws IOException {
+      Integer expectedAttempt, String expectedProtocol, boolean useDateUpdated) throws IOException {
     TableName tableName = TableName.valueOf(HbaseServer.FRAGMENT_TABLE_NAME);
     try (Table table = connection.getTable(tableName);
         ResultScanner rs = table.getScanner(getFragmentFamily())) {
@@ -31,18 +34,32 @@ public class TableAssert {
       int counter = 0;
       while (iterator.hasNext()) {
         Result r = iterator.next();
-        ByteBuffer attemptValue = ByteBuffer.wrap(r.getValue(getFragmentFamily(), getAttemptQualifier()));
-        byte[] datasetValue = r.getValue(getFragmentFamily(), getDatasetIdQualifier());
-        byte[] recordValue = r.getValue(getFragmentFamily(), getRecordQualifier());
 
-        Integer attemptInt = attemptValue.getInt();
+        byte[] datasetValue = r.getValue(getFragmentFamily(), getDatasetIdQualifier());
+        ByteBuffer attemptValue = ByteBuffer.wrap(r.getValue(getFragmentFamily(), getAttemptQualifier()));
+        byte[] protocolValue = r.getValue(getFragmentFamily(), getProtocolQualifier());
+        byte[] recordValue = r.getValue(getFragmentFamily(), getRecordQualifier());
+        ByteBuffer createdValue = ByteBuffer.wrap(r.getValue(getFragmentFamily(), getDateCreatedQualifier()));
+        ByteBuffer updatedValue = ByteBuffer.wrap(r.getValue(getFragmentFamily(), getDateUpdatedQualifier()));
+
         String datasetString = new String(datasetValue);
+        Integer attemptInt = attemptValue.getInt();
+        String protocolString = new String(protocolValue);
         String recordString = new String(recordValue);
+        long createdLong = createdValue.getLong();
+        long updatedLong = updatedValue.getLong();
 
         Assert.assertEquals(expectedDatasetId, datasetString);
         Assert.assertEquals(expectedAttempt, attemptInt);
+        Assert.assertEquals(expectedProtocol, protocolString);
         Assert.assertNotNull(recordString);
         Assert.assertTrue(recordString.length() > 0);
+
+        if (useDateUpdated) {
+          Assert.assertTrue(updatedLong > createdLong);
+        } else {
+          Assert.assertEquals(updatedLong, createdLong);
+        }
 
         counter++;
       }

@@ -60,6 +60,9 @@ public class XmlFragmentsUploader {
   private Integer attempt;
 
   @NonNull
+  private String protocol;
+
+  @NonNull
   Boolean useTriplet;
 
   @NonNull
@@ -93,8 +96,8 @@ public class XmlFragmentsUploader {
       Consumer<List<RecordUnit>> convertAndPushBulkFn = l -> {
         backPressureCounter.incrementAndGet();
 
-        Map<Long, String> map = RecordUnitConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
-        HbaseStore.putList(table, datasetId, attempt, map);
+        Map<String, String> map = RecordUnitConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
+        HbaseStore.putRecords(table, datasetId, attempt, protocol, map);
 
         occurrenceCounter.addAndGet(map.size());
         backPressureCounter.decrementAndGet();
@@ -133,6 +136,14 @@ public class XmlFragmentsUploader {
     }
 
     return occurrenceCounter.get();
+  }
+
+  public void close() {
+    try {
+      hbaseConnection.close();
+    } catch (IOException ex) {
+      log.error("Can't close HBase connection", ex);
+    }
   }
 
   /** Traverse the input directory and gets all the files. */

@@ -8,7 +8,6 @@ import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.junit.Before;
 import org.junit.rules.ExternalResource;
 
 import lombok.Getter;

@@ -36,6 +36,7 @@ public class XmlFragmentsUploaderIT {
     int expSize = 40;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 1;
+    String protocol = "BIOCASE";
 
     // When
     long result = XmlFragmentsUploader.builder()
@@ -46,13 +47,14 @@ public class XmlFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
+        .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
   }
 
   @Test
@@ -61,6 +63,7 @@ public class XmlFragmentsUploaderIT {
     int expSize = 40;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 1;
+    String protocol = "BIOCASE";
 
     // When
     long result = XmlFragmentsUploader.builder()
@@ -71,6 +74,7 @@ public class XmlFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
+        .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .build()
@@ -78,7 +82,7 @@ public class XmlFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
   }
 
   @Test
@@ -88,6 +92,7 @@ public class XmlFragmentsUploaderIT {
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
+    String protocol = "BIOCASE";
 
     // When
     long resultFirst = XmlFragmentsUploader.builder()
@@ -98,6 +103,7 @@ public class XmlFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptFirst)
+        .protocol("XML")
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
@@ -110,6 +116,7 @@ public class XmlFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptSecond)
+        .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
@@ -117,7 +124,7 @@ public class XmlFragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol, true);
   }
 
   @Test
@@ -127,6 +134,7 @@ public class XmlFragmentsUploaderIT {
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
+    String protocol = "BIOCASE";
 
     // When
     long resultFirst = XmlFragmentsUploader.builder()
@@ -137,6 +145,7 @@ public class XmlFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptFirst)
+        .protocol("XML")
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .useSyncMode(false)
@@ -151,6 +160,7 @@ public class XmlFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptSecond)
+        .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .backPressure(1)
         .useSyncMode(false)
@@ -160,7 +170,7 @@ public class XmlFragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol, true);
   }
 
 

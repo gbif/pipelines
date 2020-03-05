@@ -38,6 +38,7 @@ public class DwcaFragmentsUploaderIT {
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
+    String protocol = "DWCA";
 
     // When
     long result = DwcaFragmentsUploader.builder()
@@ -49,13 +50,14 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
+        .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
   }
 
   @Test
@@ -64,6 +66,7 @@ public class DwcaFragmentsUploaderIT {
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
+    String protocol = "DWCA";
 
     // When
     long result = DwcaFragmentsUploader.builder()
@@ -75,6 +78,7 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
+        .protocol(protocol)
         .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
@@ -83,7 +87,7 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
   }
 
   @Test
@@ -93,6 +97,7 @@ public class DwcaFragmentsUploaderIT {
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
+    String protocol = "DWCA";
 
     // When
     long resultFirst = DwcaFragmentsUploader.builder()
@@ -104,6 +109,7 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptFirst)
+        .protocol("XML")
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .build()
@@ -118,6 +124,7 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptSecond)
+        .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
@@ -125,7 +132,7 @@ public class DwcaFragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol, true);
   }
 
   @Test
@@ -135,6 +142,7 @@ public class DwcaFragmentsUploaderIT {
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
+    String protocol = "DWCA";
 
     // When
     long resultFirst = DwcaFragmentsUploader.builder()
@@ -146,6 +154,7 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptFirst)
+        .protocol("XML")
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .useSyncMode(false)
@@ -161,6 +170,7 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptSecond)
+        .protocol(protocol)
         .batchSize(2)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
@@ -170,7 +180,7 @@ public class DwcaFragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol, true);
   }
 
   @Test
@@ -179,6 +189,7 @@ public class DwcaFragmentsUploaderIT {
     int expSize = 477;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
+    String protocol = "DWCA";
 
     // When
     long result = DwcaFragmentsUploader.builder()
@@ -190,13 +201,14 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
+        .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
   }
 
   @Test
@@ -205,6 +217,7 @@ public class DwcaFragmentsUploaderIT {
     int expSize = 477;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
+    String protocol = "DWCA";
 
     // When
     long result = DwcaFragmentsUploader.builder()
@@ -216,6 +229,7 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
+        .protocol(protocol)
         .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
@@ -224,7 +238,7 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
   }
 
   @Test
@@ -233,6 +247,7 @@ public class DwcaFragmentsUploaderIT {
     int expSize = 368;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
+    String protocol = "DWCA";
 
     // When
     long result = DwcaFragmentsUploader.builder()
@@ -244,13 +259,14 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
+        .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
   }
 
   @Test
@@ -259,6 +275,7 @@ public class DwcaFragmentsUploaderIT {
     int expSize = 368;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
+    String protocol = "DWCA";
 
     // When
     long result = DwcaFragmentsUploader.builder()
@@ -270,6 +287,7 @@ public class DwcaFragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
+        .protocol(protocol)
         .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
@@ -278,6 +296,6 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt);
+    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
   }
 }

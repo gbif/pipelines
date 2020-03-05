@@ -1,6 +1,7 @@
 package org.gbif.pipelines.fragmenter.common;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -11,7 +12,9 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Keygen {
 
@@ -43,9 +46,22 @@ public class Keygen {
     }
 
     // Finds or generate key
-    KeyLookupResult keyResult = Optional.ofNullable(keygenService.findKey(uniqueStrings))
-        .orElse(keygenService.generateKey(uniqueStrings));
+    KeyLookupResult keyResult = keygenService.findKey(uniqueStrings);
+    if (keyResult == null) {
+      log.warn("GBIF ID wasn't found, generating a new key.");
+      keyResult = keygenService.generateKey(uniqueStrings);
+    }
+
     return Optional.ofNullable(keyResult).map(KeyLookupResult::getKey).orElse(ERROR_KEY);
+  }
+
+  public static String getSaltedKey(Long key) {
+    if (Objects.equals(key, ERROR_KEY)) {
+      return ERROR_KEY.toString();
+    }
+    long salt = key % 100;
+    String result = salt + ":" + key;
+    return salt >= 10 ? result : "0" + result;
   }
 
   public static Long getErrorKey() {
