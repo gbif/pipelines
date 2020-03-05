@@ -149,7 +149,7 @@
     <error_prone_core.version>2.3.2</error_prone_core.version>
 
     <!-- Sonar -->
-    <sonar.jacoco.reportPaths>${jacoco.ut.output.file}</sonar.jacoco.reportPaths>
+    <sonar.jacoco.reportPaths>${jacoco.merged.output.file}</sonar.jacoco.reportPaths>
     <sonar.exclusions>**/java-generated/**</sonar.exclusions>
     <sonar.cpd.exclusions>**/java-generated/**</sonar.cpd.exclusions>
     <sonar.language>java</sonar.language>
