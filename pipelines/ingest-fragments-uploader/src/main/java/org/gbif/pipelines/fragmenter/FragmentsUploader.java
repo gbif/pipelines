@@ -171,6 +171,7 @@ public class FragmentsUploader {
         TimeUnit.MILLISECONDS.sleep(200L);
       } catch (InterruptedException ex) {
         log.warn("Back pressure barrier", ex);
+        Thread.currentThread().interrupt();
       }
     }
   }
