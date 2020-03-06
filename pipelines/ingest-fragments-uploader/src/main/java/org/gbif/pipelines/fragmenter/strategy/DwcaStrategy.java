@@ -2,6 +2,7 @@ package org.gbif.pipelines.fragmenter.strategy;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,8 +36,9 @@ public class DwcaStrategy implements Strategy {
   }
 
   private ClosableIterator<StarRecord> readDwca(Path path) throws IOException {
-    if (path.endsWith(".dwca")) {
-      return DwcFiles.fromCompressed(path, path.getParent()).iterator();
+    if (path.toString().endsWith(".dwca")) {
+      Path tmp = path.getParent().resolve("tmp" + Instant.now().toEpochMilli());
+      return DwcFiles.fromCompressed(path, tmp).iterator();
     } else {
       return DwcFiles.fromLocation(path).iterator();
     }

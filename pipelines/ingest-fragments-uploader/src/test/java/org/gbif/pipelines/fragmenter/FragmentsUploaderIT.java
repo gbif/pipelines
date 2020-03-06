@@ -7,8 +7,6 @@ import java.util.concurrent.Executors;
 
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
-import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
-import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,6 +23,7 @@ public class FragmentsUploaderIT {
   public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
   private final Path regularDwca = Paths.get(getClass().getResource("/dwca/regular").getFile());
+  private final Path regularZipDwca = Paths.get(getClass().getResource("/dwca/dwca.dwca").getFile());
   private final Path occurrenceAsExtensionDwca = Paths.get(getClass().getResource("/dwca/occext").getFile());
   private final Path multimediaExtensionDwca = Paths.get(getClass().getResource("/dwca/multimedia").getFile());
   private final Path xmlArchivePath = Paths.get(getClass().getResource("/xml").getFile());
@@ -32,6 +31,34 @@ public class FragmentsUploaderIT {
   @Before
   public void before() throws IOException {
     HBASE_SERVER.truncateTable();
+  }
+
+  @Test
+  public void dwcaDwcaZipSyncUploadTest() throws IOException {
+
+    // State
+    int expSize = 210;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attempt = 231;
+    String protocol = "DWCA";
+
+    // When
+    long result = FragmentsUploader.dwcaBuilder()
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(regularZipDwca)
+        .useTriplet(false)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attempt)
+        .protocol(protocol)
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, result);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
   }
 
   @Test
@@ -43,8 +70,7 @@ public class FragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long result = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
@@ -71,8 +97,7 @@ public class FragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long result = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
@@ -102,8 +127,7 @@ public class FragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long resultFirst = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long resultFirst = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
@@ -117,8 +141,7 @@ public class FragmentsUploaderIT {
         .build()
         .upload();
 
-    long resultSecond = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long resultSecond = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
@@ -147,8 +170,7 @@ public class FragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long resultFirst = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long resultFirst = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
@@ -163,8 +185,7 @@ public class FragmentsUploaderIT {
         .build()
         .upload();
 
-    long resultSecond = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long resultSecond = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
@@ -194,8 +215,7 @@ public class FragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long result = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(occurrenceAsExtensionDwca)
@@ -222,8 +242,7 @@ public class FragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long result = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(occurrenceAsExtensionDwca)
@@ -252,8 +271,7 @@ public class FragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long result = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(multimediaExtensionDwca)
@@ -280,8 +298,7 @@ public class FragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = FragmentsUploader.builder()
-        .strategy(DwcaStrategy.create())
+    long result = FragmentsUploader.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(multimediaExtensionDwca)
@@ -311,8 +328,7 @@ public class FragmentsUploaderIT {
     String protocol = "BIOCASE";
 
     // When
-    long result = FragmentsUploader.builder()
-        .strategy(XmlStrategy.create())
+    long result = FragmentsUploader.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
@@ -339,8 +355,7 @@ public class FragmentsUploaderIT {
     String protocol = "BIOCASE";
 
     // When
-    long result = FragmentsUploader.builder()
-        .strategy(XmlStrategy.create())
+    long result = FragmentsUploader.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
@@ -369,8 +384,7 @@ public class FragmentsUploaderIT {
     String protocol = "BIOCASE";
 
     // When
-    long resultFirst = FragmentsUploader.builder()
-        .strategy(XmlStrategy.create())
+    long resultFirst = FragmentsUploader.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
@@ -383,8 +397,7 @@ public class FragmentsUploaderIT {
         .build()
         .upload();
 
-    long resultSecond = FragmentsUploader.builder()
-        .strategy(XmlStrategy.create())
+    long resultSecond = FragmentsUploader.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
@@ -414,8 +427,7 @@ public class FragmentsUploaderIT {
     String protocol = "BIOCASE";
 
     // When
-    long resultFirst = FragmentsUploader.builder()
-        .strategy(XmlStrategy.create())
+    long resultFirst = FragmentsUploader.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
@@ -430,8 +442,7 @@ public class FragmentsUploaderIT {
         .build()
         .upload();
 
-    long resultSecond = FragmentsUploader.builder()
-        .strategy(XmlStrategy.create())
+    long resultSecond = FragmentsUploader.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)

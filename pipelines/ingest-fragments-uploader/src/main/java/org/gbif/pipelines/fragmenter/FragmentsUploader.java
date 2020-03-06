@@ -19,7 +19,9 @@ import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecordConverter;
+import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
 import org.gbif.pipelines.fragmenter.strategy.Strategy;
+import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
@@ -84,6 +86,14 @@ public class FragmentsUploader {
   private int backPressure = 5;
 
   private Connection hbaseConnection;
+
+  public static FragmentsUploaderBuilder xmlBuilder() {
+    return FragmentsUploader.builder().strategy(XmlStrategy.create());
+  }
+
+  public static FragmentsUploaderBuilder dwcaBuilder() {
+    return FragmentsUploader.builder().strategy(DwcaStrategy.create());
+  }
 
   @SneakyThrows
   public long upload() {
