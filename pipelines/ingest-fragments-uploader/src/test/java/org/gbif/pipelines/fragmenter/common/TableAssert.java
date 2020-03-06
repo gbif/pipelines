@@ -25,7 +25,17 @@ import static org.gbif.pipelines.fragmenter.common.HbaseStore.getRecordQualifier
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TableAssert {
 
-  public static void assertTableData(Connection connection, int expectedSize, String expectedDatasetId,
+  public static void assertTablDateUpdated(Connection connection, int expectedSize, String expectedDatasetId,
+      Integer expectedAttempt, String expectedProtocol) throws IOException {
+    assertTable(connection, expectedSize, expectedDatasetId, expectedAttempt, expectedProtocol, true);
+  }
+
+  public static void assertTable(Connection connection, int expectedSize, String expectedDatasetId,
+      Integer expectedAttempt, String expectedProtocol) throws IOException {
+    assertTable(connection, expectedSize, expectedDatasetId, expectedAttempt, expectedProtocol, false);
+  }
+
+  private static void assertTable(Connection connection, int expectedSize, String expectedDatasetId,
       Integer expectedAttempt, String expectedProtocol, boolean useDateUpdated) throws IOException {
     TableName tableName = TableName.valueOf(HbaseServer.FRAGMENT_TABLE_NAME);
     try (Table table = connection.getTable(tableName);

@@ -3,7 +3,6 @@ package org.gbif.pipelines.fragmenter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,21 +14,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
-import org.gbif.dwc.DwcFiles;
-import org.gbif.dwc.record.Record;
-import org.gbif.dwc.record.StarRecord;
-import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
-import org.gbif.pipelines.fragmenter.common.RecordUnit;
-import org.gbif.pipelines.fragmenter.common.RecordUnitConverter;
-import org.gbif.pipelines.fragmenter.common.StarRecordCopy;
+import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
+import org.gbif.pipelines.fragmenter.record.OccurrenceRecordConverter;
+import org.gbif.pipelines.fragmenter.strategy.Strategy;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
-import org.gbif.utils.file.ClosableIterator;
 
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
@@ -42,7 +35,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Builder
-public class DwcaFragmentsUploader {
+public class FragmentsUploader {
+
+  protected final List<CompletableFuture<Void>> futures = new ArrayList<>();
+  protected final AtomicInteger backPressureCounter = new AtomicInteger(0);
+  protected final AtomicInteger occurrenceCounter = new AtomicInteger(0);
+  protected final Queue<List<OccurrenceRecord>> rows = new LinkedBlockingQueue<>();
+  protected final Consumer<OccurrenceRecord> addRowFn =
+      r -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(r));
+
+  @NonNull
+  private Strategy strategy;
 
   @NonNull
   private String tableName;
@@ -52,9 +55,6 @@ public class DwcaFragmentsUploader {
 
   @NonNull
   private Path pathToArchive;
-
-  @NonNull
-  private Path tempDir;
 
   @NonNull
   private String datasetId;
@@ -92,24 +92,16 @@ public class DwcaFragmentsUploader {
         .orElse(HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection());
     HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
 
-    List<CompletableFuture<Void>> futures = new ArrayList<>();
-    AtomicInteger backPressureCounter = new AtomicInteger(0);
-    AtomicInteger occurrenceCounter = new AtomicInteger(0);
-
-    Queue<List<RecordUnit>> rows = new LinkedBlockingQueue<>();
     rows.add(new ArrayList<>(batchSize));
-
-    Consumer<RecordUnit> addRowFn = er -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(er));
 
     log.info("Uploadind fragments from {}", pathToArchive);
     try (Table table = connection.getTable(TableName.valueOf(tableName));
-        ClosableIterator<StarRecord> starRecordIterator = readDwca();
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
-      Consumer<List<RecordUnit>> hbaseBulkFn = l -> {
+      Consumer<List<OccurrenceRecord>> hbaseBulkFn = l -> {
         backPressureCounter.incrementAndGet();
 
-        Map<String, String> map = RecordUnitConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
+        Map<String, String> map = OccurrenceRecordConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
         HbaseStore.putRecords(table, datasetId, attempt, protocol, map);
 
         occurrenceCounter.addAndGet(map.size());
@@ -127,27 +119,19 @@ public class DwcaFragmentsUploader {
                 }
               });
 
-      // Read all records
-      while (starRecordIterator.hasNext()) {
-
-        while (backPressureCounter.get() > backPressure) {
-          log.info("Back pressure barrier: too many rows wainting...");
-          TimeUnit.MILLISECONDS.sleep(200L);
+      Consumer<OccurrenceRecord> pushRecordFn = record -> {
+        checkBackpressure();
+        List<OccurrenceRecord> peek = rows.peek();
+        if (peek != null && peek.size() < batchSize - 1) {
+          addRowFn.accept(record);
+        } else {
+          addRowFn.accept(record);
+          pushIntoHbaseFn.run();
+          rows.add(new ArrayList<>(batchSize));
         }
+      };
 
-        StarRecord starRecord = StarRecordCopy.create(starRecordIterator.next());
-        convertToRecordUnits(starRecord).forEach(record -> {
-          List<RecordUnit> peek = rows.peek();
-          if (peek != null && peek.size() < batchSize - 1) {
-            addRowFn.accept(record);
-          } else {
-            addRowFn.accept(record);
-            pushIntoHbaseFn.run();
-            rows.add(new ArrayList<>(batchSize));
-          }
-        });
-
-      }
+      strategy.process(pathToArchive, pushRecordFn);
 
       // Final push
       pushIntoHbaseFn.run();
@@ -170,21 +154,14 @@ public class DwcaFragmentsUploader {
     }
   }
 
-  private ClosableIterator<StarRecord> readDwca() throws IOException {
-    if (pathToArchive.endsWith(".dwca")) {
-      return DwcFiles.fromCompressed(pathToArchive, tempDir).iterator();
-    } else {
-      return DwcFiles.fromLocation(pathToArchive).iterator();
+  private void checkBackpressure() {
+    while (backPressureCounter.get() > backPressure) {
+      log.info("Back pressure barrier: too many rows wainting...");
+      try {
+        TimeUnit.MILLISECONDS.sleep(200L);
+      } catch (InterruptedException ex) {
+        log.warn("Back pressure barrier", ex);
+      }
     }
   }
-
-  private List<RecordUnit> convertToRecordUnits(StarRecord starRecord) {
-    List<Record> records = starRecord.extension(DwcTerm.Occurrence);
-    if (records == null || records.isEmpty()) {
-      return Collections.singletonList(RecordUnit.create(starRecord));
-    } else {
-      return records.stream().map(r -> RecordUnit.create(starRecord.core(), r)).collect(Collectors.toList());
-    }
-  }
-
 }

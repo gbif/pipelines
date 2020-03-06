@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
@@ -21,13 +22,13 @@ public class Keygen {
   private static final Long ERROR_KEY = -1L;
 
   public static Long getKey(HBaseLockingKeyService keygenService, boolean useTriplet, boolean useOccurrenceId,
-      RecordUnit recordUnit) {
+      OccurrenceRecord record) {
 
     Set<String> uniqueStrings = new HashSet<>(2);
 
     // Adds occurrenceId
     if (useOccurrenceId) {
-      String occurrenceId = recordUnit.getOccurrenceId();
+      String occurrenceId = record.getOccurrenceId();
       if (!Strings.isNullOrEmpty(occurrenceId)) {
         uniqueStrings.add(occurrenceId);
       }
@@ -35,9 +36,9 @@ public class Keygen {
 
     // Adds triplet
     if (useTriplet) {
-      String ic = recordUnit.getInstitutionCode();
-      String cc = recordUnit.getCollectionCode();
-      String cn = recordUnit.getCatalogNumber();
+      String ic = record.getInstitutionCode();
+      String cc = record.getCollectionCode();
+      String cn = record.getCatalogNumber();
       OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
     }
 

@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
+import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
+import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -16,7 +18,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.JVM)
-public class DwcaFragmentsUploaderIT {
+public class FragmentsUploaderIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule
@@ -25,6 +27,7 @@ public class DwcaFragmentsUploaderIT {
   private final Path regularDwca = Paths.get(getClass().getResource("/dwca/regular").getFile());
   private final Path occurrenceAsExtensionDwca = Paths.get(getClass().getResource("/dwca/occext").getFile());
   private final Path multimediaExtensionDwca = Paths.get(getClass().getResource("/dwca/multimedia").getFile());
+  private final Path xmlArchivePath = Paths.get(getClass().getResource("/xml").getFile());
 
   @Before
   public void before() throws IOException {
@@ -32,7 +35,7 @@ public class DwcaFragmentsUploaderIT {
   }
 
   @Test
-  public void syncUploadTest() throws IOException {
+  public void dwcaSyncUploadTest() throws IOException {
     // State
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
@@ -40,11 +43,11 @@ public class DwcaFragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = DwcaFragmentsUploader.builder()
+    long result = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
-        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -56,11 +59,11 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
   }
 
   @Test
-  public void asyncUploadTest() throws IOException {
+  public void dwcaAsyncUploadTest() throws IOException {
     // State
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
@@ -68,11 +71,11 @@ public class DwcaFragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = DwcaFragmentsUploader.builder()
+    long result = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
-        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -86,11 +89,11 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
   }
 
   @Test
-  public void syncUpdateUploadTest() throws IOException {
+  public void dwcaSyncUpdateUploadTest() throws IOException {
     // State
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
@@ -99,11 +102,11 @@ public class DwcaFragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long resultFirst = DwcaFragmentsUploader.builder()
+    long resultFirst = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
-        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -114,11 +117,11 @@ public class DwcaFragmentsUploaderIT {
         .build()
         .upload();
 
-    long resultSecond = DwcaFragmentsUploader.builder()
+    long resultSecond = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
-        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -131,11 +134,11 @@ public class DwcaFragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol, true);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol);
   }
 
   @Test
-  public void asyncUpdateUploadTest() throws IOException {
+  public void dwcaAsyncUpdateUploadTest() throws IOException {
     // State
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
@@ -144,11 +147,11 @@ public class DwcaFragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long resultFirst = DwcaFragmentsUploader.builder()
+    long resultFirst = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
-        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -160,11 +163,11 @@ public class DwcaFragmentsUploaderIT {
         .build()
         .upload();
 
-    long resultSecond = DwcaFragmentsUploader.builder()
+    long resultSecond = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
-        .tempDir(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -179,11 +182,11 @@ public class DwcaFragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol, true);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol);
   }
 
   @Test
-  public void occExtSyncUploadTest() throws IOException {
+  public void dwcaOccExtSyncUploadTest() throws IOException {
     // State
     int expSize = 477;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
@@ -191,11 +194,11 @@ public class DwcaFragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = DwcaFragmentsUploader.builder()
+    long result = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(occurrenceAsExtensionDwca)
-        .tempDir(occurrenceAsExtensionDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -207,11 +210,11 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
   }
 
   @Test
-  public void occExtAsyncUploadTest() throws IOException {
+  public void dwcaOccExtAsyncUploadTest() throws IOException {
     // State
     int expSize = 477;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
@@ -219,11 +222,11 @@ public class DwcaFragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = DwcaFragmentsUploader.builder()
+    long result = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(occurrenceAsExtensionDwca)
-        .tempDir(occurrenceAsExtensionDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -237,11 +240,11 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
   }
 
   @Test
-  public void multimediaSyncUploadTest() throws IOException {
+  public void dwcaMultimediaSyncUploadTest() throws IOException {
     // State
     int expSize = 368;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
@@ -249,11 +252,11 @@ public class DwcaFragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = DwcaFragmentsUploader.builder()
+    long result = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(multimediaExtensionDwca)
-        .tempDir(multimediaExtensionDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -265,11 +268,11 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
   }
 
   @Test
-  public void multimediaAsyncUploadTest() throws IOException {
+  public void dwcaMultimediaAsyncUploadTest() throws IOException {
     // State
     int expSize = 368;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
@@ -277,11 +280,11 @@ public class DwcaFragmentsUploaderIT {
     String protocol = "DWCA";
 
     // When
-    long result = DwcaFragmentsUploader.builder()
+    long result = FragmentsUploader.builder()
+        .strategy(DwcaStrategy.create())
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(multimediaExtensionDwca)
-        .tempDir(multimediaExtensionDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
         .datasetId(datasetId)
@@ -295,6 +298,158 @@ public class DwcaFragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTableData(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol, false);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+  }
+
+
+  @Test
+  public void xmlSyncUploadTest() throws IOException {
+    // State
+    int expSize = 40;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attempt = 1;
+    String protocol = "BIOCASE";
+
+    // When
+    long result = FragmentsUploader.builder()
+        .strategy(XmlStrategy.create())
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(xmlArchivePath)
+        .useTriplet(true)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attempt)
+        .protocol(protocol)
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, result);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+  }
+
+  @Test
+  public void xmlAsyncUploadTest() throws IOException {
+    // State
+    int expSize = 40;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attempt = 1;
+    String protocol = "BIOCASE";
+
+    // When
+    long result = FragmentsUploader.builder()
+        .strategy(XmlStrategy.create())
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(xmlArchivePath)
+        .useTriplet(true)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attempt)
+        .protocol(protocol)
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .useSyncMode(false)
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, result);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+  }
+
+  @Test
+  public void xmlSyncDoubeUploadTest() throws IOException {
+    // State
+    int expSize = 40;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attemptFirst = 231;
+    int attemptSecond = 232;
+    String protocol = "BIOCASE";
+
+    // When
+    long resultFirst = FragmentsUploader.builder()
+        .strategy(XmlStrategy.create())
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(xmlArchivePath)
+        .useTriplet(true)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attemptFirst)
+        .protocol("XML")
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .build()
+        .upload();
+
+    long resultSecond = FragmentsUploader.builder()
+        .strategy(XmlStrategy.create())
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(xmlArchivePath)
+        .useTriplet(true)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attemptSecond)
+        .protocol(protocol)
+        .batchSize(1)
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, resultFirst);
+    Assert.assertEquals(expSize, resultSecond);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol);
+  }
+
+  @Test
+  public void xmlAsyncDoubeUploadTest() throws IOException {
+    // State
+    int expSize = 40;
+    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    int attemptFirst = 231;
+    int attemptSecond = 232;
+    String protocol = "BIOCASE";
+
+    // When
+    long resultFirst = FragmentsUploader.builder()
+        .strategy(XmlStrategy.create())
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(xmlArchivePath)
+        .useTriplet(true)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attemptFirst)
+        .protocol("XML")
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .executor(Executors.newFixedThreadPool(2))
+        .useSyncMode(false)
+        .build()
+        .upload();
+
+    long resultSecond = FragmentsUploader.builder()
+        .strategy(XmlStrategy.create())
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
+        .keygenConfig(HbaseServer.CFG)
+        .pathToArchive(xmlArchivePath)
+        .useTriplet(true)
+        .useOccurrenceId(true)
+        .datasetId(datasetId)
+        .attempt(attemptSecond)
+        .protocol(protocol)
+        .hbaseConnection(HBASE_SERVER.getConnection())
+        .backPressure(1)
+        .batchSize(1)
+        .useSyncMode(false)
+        .build()
+        .upload();
+
+    // Should
+    Assert.assertEquals(expSize, resultFirst);
+    Assert.assertEquals(expSize, resultSecond);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol);
   }
 }
