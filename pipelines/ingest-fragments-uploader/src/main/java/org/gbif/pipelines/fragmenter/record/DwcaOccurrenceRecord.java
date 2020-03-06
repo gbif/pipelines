@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.gbif.dwc.record.Record;
@@ -67,7 +66,7 @@ public class DwcaOccurrenceRecord implements OccurrenceRecord {
     }
 
     if (!starRecord.extensions().isEmpty()) {
-      SortedMap<Term, List<Map<String, String>>> extensions = new TreeMap<>(Comparator.comparing(Term::qualifiedName));
+      Map<Term, List<Map<String, String>>> extensions = new TreeMap<>(Comparator.comparing(Term::qualifiedName));
       data.put("extensions", extensions);
 
       // iterate over extensions
