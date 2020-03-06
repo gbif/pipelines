@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
-import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
 
@@ -42,7 +41,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long result = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .tempDir(regularDwca)
@@ -70,7 +69,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long result = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .tempDir(regularDwca)
@@ -101,7 +100,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long resultFirst = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .tempDir(regularDwca)
@@ -116,7 +115,7 @@ public class DwcaFragmentsUploaderIT {
         .upload();
 
     long resultSecond = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .tempDir(regularDwca)
@@ -146,7 +145,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long resultFirst = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .tempDir(regularDwca)
@@ -162,7 +161,7 @@ public class DwcaFragmentsUploaderIT {
         .upload();
 
     long resultSecond = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .tempDir(regularDwca)
@@ -193,7 +192,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long result = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(occurrenceAsExtensionDwca)
         .tempDir(occurrenceAsExtensionDwca)
@@ -221,7 +220,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long result = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(occurrenceAsExtensionDwca)
         .tempDir(occurrenceAsExtensionDwca)
@@ -251,7 +250,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long result = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(multimediaExtensionDwca)
         .tempDir(multimediaExtensionDwca)
@@ -279,7 +278,7 @@ public class DwcaFragmentsUploaderIT {
 
     // When
     long result = DwcaFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(multimediaExtensionDwca)
         .tempDir(multimediaExtensionDwca)

@@ -22,7 +22,6 @@ import org.gbif.dwc.DwcFiles;
 import org.gbif.dwc.record.Record;
 import org.gbif.dwc.record.StarRecord;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.fragmenter.common.RecordUnit;
 import org.gbif.pipelines.fragmenter.common.RecordUnitConverter;
@@ -32,6 +31,7 @@ import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.utils.file.ClosableIterator;
 
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Table;
 
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DwcaFragmentsUploader {
 
   @NonNull
-  private FragmentsConfig config;
+  private String tableName;
 
   @NonNull
   private KeygenConfig keygenConfig;
@@ -102,7 +102,7 @@ public class DwcaFragmentsUploader {
     Consumer<RecordUnit> addRowFn = er -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(er));
 
     log.info("Uploadind fragments from {}", pathToArchive);
-    try (Table table = connection.getTable(config.getTableName());
+    try (Table table = connection.getTable(TableName.valueOf(tableName));
         ClosableIterator<StarRecord> starRecordIterator = readDwca();
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 

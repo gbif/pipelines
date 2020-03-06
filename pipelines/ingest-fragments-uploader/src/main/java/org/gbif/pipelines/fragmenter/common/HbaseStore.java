@@ -39,7 +39,7 @@ public class HbaseStore {
     Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsMap);
 
     List<Put> putList = fragmentsMap.entrySet().stream()
-        .map(es -> createPut(datasetId, attempt, protocol, es.getKey(), es.getValue(), dateMap.get(es.getKey())))
+        .map(es -> createFragmentPut(datasetId, attempt, protocol, es.getKey(), es.getValue(), dateMap.get(es.getKey())))
         .collect(Collectors.toList());
 
     table.put(putList);
@@ -60,7 +60,7 @@ public class HbaseStore {
     return createdDateMap;
   }
 
-  private static Put createPut(String datasetId, Integer attempt, String protocol, String key, String record,
+  private static Put createFragmentPut(String datasetId, Integer attempt, String protocol, String key, String record,
       Long created) {
     long timestampUpdated = Instant.now().toEpochMilli();
     long timestampCreated = Optional.ofNullable(created).orElse(timestampUpdated);

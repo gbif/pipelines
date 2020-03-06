@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
-import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
 
@@ -40,7 +39,7 @@ public class XmlFragmentsUploaderIT {
 
     // When
     long result = XmlFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
@@ -67,7 +66,7 @@ public class XmlFragmentsUploaderIT {
 
     // When
     long result = XmlFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
@@ -96,7 +95,7 @@ public class XmlFragmentsUploaderIT {
 
     // When
     long resultFirst = XmlFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
@@ -109,7 +108,7 @@ public class XmlFragmentsUploaderIT {
         .upload();
 
     long resultSecond = XmlFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
@@ -117,6 +116,7 @@ public class XmlFragmentsUploaderIT {
         .datasetId(datasetId)
         .attempt(attemptSecond)
         .protocol(protocol)
+        .batchSize(1)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
@@ -138,7 +138,7 @@ public class XmlFragmentsUploaderIT {
 
     // When
     long resultFirst = XmlFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
@@ -153,7 +153,7 @@ public class XmlFragmentsUploaderIT {
         .upload();
 
     long resultSecond = XmlFragmentsUploader.builder()
-        .config(FragmentsConfig.create(HbaseServer.FRAGMENT_TABLE_NAME))
+        .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
@@ -163,6 +163,7 @@ public class XmlFragmentsUploaderIT {
         .protocol(protocol)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .backPressure(1)
+        .batchSize(1)
         .useSyncMode(false)
         .build()
         .upload();

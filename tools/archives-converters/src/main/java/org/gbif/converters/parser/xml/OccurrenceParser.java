@@ -66,6 +66,10 @@ public class OccurrenceParser {
   public static final String ADD_RECORD_AS_XML = "addRecordAsXml";
   public static final String SET_ABCD_1_HEADER = "setAbcd1Header";
 
+  public static List<RawXmlOccurrence> parse(File file) {
+    return new OccurrenceParser().parseFile(file);
+  }
+
   public List<RawOccurrenceRecord> parseResponseFileToRor(File inputFile) {
     List<RawXmlOccurrence> raws = parseResponseFileToRawXml(inputFile);
     return parseRawXmlToRor(raws);

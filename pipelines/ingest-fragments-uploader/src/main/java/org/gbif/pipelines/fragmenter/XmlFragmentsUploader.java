@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -21,7 +23,6 @@ import java.util.stream.Stream;
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
-import org.gbif.pipelines.fragmenter.common.FragmentsConfig;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.fragmenter.common.RecordUnit;
 import org.gbif.pipelines.fragmenter.common.RecordUnitConverter;
@@ -29,6 +30,7 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Table;
 
@@ -45,7 +47,7 @@ public class XmlFragmentsUploader {
   private static final String EXT_XML = ".xml";
 
   @NonNull
-  private FragmentsConfig config;
+  private String tableName;
 
   @NonNull
   private KeygenConfig keygenConfig;
@@ -69,6 +71,9 @@ public class XmlFragmentsUploader {
   Boolean useOccurrenceId;
 
   @Builder.Default
+  private int batchSize = 10;
+
+  @Builder.Default
   private boolean useSyncMode = true;
 
   @Builder.Default
@@ -90,10 +95,15 @@ public class XmlFragmentsUploader {
     AtomicInteger backPressureCounter = new AtomicInteger(0);
     AtomicInteger occurrenceCounter = new AtomicInteger(0);
 
-    try (Table table = connection.getTable(config.getTableName());
+    Queue<List<RecordUnit>> rows = new LinkedBlockingQueue<>();
+    rows.add(new ArrayList<>(batchSize));
+
+    Consumer<RecordUnit> addRowFn = er -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(er));
+
+    try (Table table = connection.getTable(TableName.valueOf(tableName));
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
-      Consumer<List<RecordUnit>> convertAndPushBulkFn = l -> {
+      Consumer<List<RecordUnit>> hbaseBulkFn = l -> {
         backPressureCounter.incrementAndGet();
 
         Map<String, String> map = RecordUnitConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
@@ -103,14 +113,14 @@ public class XmlFragmentsUploader {
         backPressureCounter.decrementAndGet();
       };
 
-      Consumer<List<RecordUnit>> convertAndPushFn = l ->
-          Optional.ofNullable(l)
+      Runnable pushIntoHbaseFn = () ->
+          Optional.ofNullable(rows.poll())
               .filter(req -> !req.isEmpty())
               .ifPresent(req -> {
                 if (useSyncMode) {
-                  convertAndPushBulkFn.accept(req);
+                  hbaseBulkFn.accept(req);
                 } else {
-                  futures.add(CompletableFuture.runAsync(() -> convertAndPushBulkFn.accept(req), executor));
+                  futures.add(CompletableFuture.runAsync(() -> hbaseBulkFn.accept(req), executor));
                 }
               });
 
@@ -122,11 +132,23 @@ public class XmlFragmentsUploader {
           TimeUnit.MILLISECONDS.sleep(200L);
         }
 
-        List<RecordUnit> recordUnitList = new OccurrenceParser().parseFile(f).stream()
+        OccurrenceParser.parse(f).stream()
             .map(RecordUnit::create)
-            .collect(Collectors.toList());
-        convertAndPushFn.accept(recordUnitList);
+            .forEach(record -> {
+              List<RecordUnit> peek = rows.peek();
+              if (peek != null && peek.size() < batchSize - 1) {
+                addRowFn.accept(record);
+              } else {
+                addRowFn.accept(record);
+                pushIntoHbaseFn.run();
+                rows.add(new ArrayList<>(batchSize));
+              }
+            });
+
       }
+
+      // Final push
+      pushIntoHbaseFn.run();
 
       // Wait for all async jobs
       if (!useSyncMode) {
