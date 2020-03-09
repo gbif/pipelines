@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.pipelines.fragmenter.common.HbaseStore;
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
@@ -35,6 +36,32 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+/**
+ * FragmentsUploader reads dwca/xml based archive and uploads raw json/xml records into HBase table.
+ * <p>
+ * Processing workflow:
+ * 1. Read a dwca/xml archive
+ * 2. Collect raw records into small batches (batch size is configurable)
+ * 3. Get or create GBIF id for each element of the batch and create keys (salt + ":" + GBIF id)
+ * 4. Get **dateCreated** from the table using GBIF id, if a record is exist
+ * 5. Create HBase put(create new or update existing) records and upload them into HBase
+ *
+ * <pre>{@code
+ *    long recordsProcessed = FragmentsUploader.dwcaBuilder()
+ *         .tableName("Tabe name")
+ *         .keygenConfig(config)
+ *         .pathToArchive(path)
+ *         .useTriplet(true)
+ *         .useOccurrenceId(true)
+ *         .datasetId(datasetId)
+ *         .attempt(attempt)
+ *         .endpointType(EndpointType.DWC_ARCHIVE)
+ *         .hbaseConnection(connection)
+ *         .build()
+ *         .upload();
+ * }</pre>
+ */
 
 @Slf4j
 @Builder
@@ -59,7 +86,7 @@ public class FragmentsUploader {
   private Integer attempt;
 
   @NonNull
-  private String protocol;
+  private EndpointType endpointType;
 
   @NonNull
   private Boolean useTriplet;
@@ -91,6 +118,7 @@ public class FragmentsUploader {
   @SneakyThrows
   public long upload() {
 
+    // Init values
     final Phaser phaser = new Phaser(1);
     final AtomicInteger occurrenceCounter = new AtomicInteger(0);
     final Queue<List<OccurrenceRecord>> rows = new LinkedBlockingQueue<>();
@@ -105,16 +133,17 @@ public class FragmentsUploader {
     try (Table table = connection.getTable(TableName.valueOf(tableName));
         UniquenessValidator validator = UniquenessValidator.getNewInstance()) {
 
+      // Main function receives batch and puts it into HBase table
       Consumer<List<OccurrenceRecord>> hbaseBulkFn = l -> {
-
         Map<String, String> map =
             OccurrenceRecordConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
-        HbaseStore.putRecords(table, datasetId, attempt, protocol, map);
+        HbaseStore.putRecords(table, datasetId, attempt, endpointType, map);
 
         occurrenceCounter.addAndGet(map.size());
         phaser.arriveAndDeregister();
       };
 
+      // Function gets a batch and pushed using sync or async way
       Runnable pushIntoHbaseFn = () ->
           Optional.ofNullable(rows.poll())
               .filter(req -> !req.isEmpty())
@@ -127,7 +156,8 @@ public class FragmentsUploader {
                 }
               });
 
-      Consumer<OccurrenceRecord> pushRecordFn = record -> {
+      // Function accumulates and pushes batches
+      Consumer<OccurrenceRecord> batchAndPushFn = record -> {
         checkBackpressure(phaser);
         List<OccurrenceRecord> peek = rows.peek();
         addRowFn.accept(record);
@@ -137,7 +167,7 @@ public class FragmentsUploader {
         }
       };
 
-      strategy.process(pathToArchive, pushRecordFn);
+      strategy.process(pathToArchive, batchAndPushFn);
 
       // Final push
       pushIntoHbaseFn.run();

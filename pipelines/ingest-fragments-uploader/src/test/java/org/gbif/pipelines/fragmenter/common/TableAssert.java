@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+import org.gbif.api.vocabulary.EndpointType;
+
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
@@ -26,17 +28,17 @@ import static org.gbif.pipelines.fragmenter.common.HbaseStore.getRecordQualifier
 public class TableAssert {
 
   public static void assertTablDateUpdated(Connection connection, int expectedSize, String expectedDatasetId,
-      Integer expectedAttempt, String expectedProtocol) throws IOException {
-    assertTable(connection, expectedSize, expectedDatasetId, expectedAttempt, expectedProtocol, true);
+      Integer expectedAttempt, EndpointType expectedEndpointType) throws IOException {
+    assertTable(connection, expectedSize, expectedDatasetId, expectedAttempt, expectedEndpointType, true);
   }
 
   public static void assertTable(Connection connection, int expectedSize, String expectedDatasetId,
-      Integer expectedAttempt, String expectedProtocol) throws IOException {
-    assertTable(connection, expectedSize, expectedDatasetId, expectedAttempt, expectedProtocol, false);
+      Integer expectedAttempt, EndpointType expectedEndpointType) throws IOException {
+    assertTable(connection, expectedSize, expectedDatasetId, expectedAttempt, expectedEndpointType, false);
   }
 
   private static void assertTable(Connection connection, int expectedSize, String expectedDatasetId,
-      Integer expectedAttempt, String expectedProtocol, boolean useDateUpdated) throws IOException {
+      Integer expectedAttempt, EndpointType expectedEndpointType, boolean useDateUpdated) throws IOException {
     TableName tableName = TableName.valueOf(HbaseServer.FRAGMENT_TABLE_NAME);
     try (Table table = connection.getTable(tableName);
         ResultScanner rs = table.getScanner(getFragmentFamily())) {
@@ -61,7 +63,7 @@ public class TableAssert {
 
         Assert.assertEquals(expectedDatasetId, datasetString);
         Assert.assertEquals(expectedAttempt, attemptInt);
-        Assert.assertEquals(expectedProtocol, protocolString);
+        Assert.assertEquals(expectedEndpointType.name(), protocolString);
         Assert.assertNotNull(recordString);
         Assert.assertTrue(recordString.length() > 0);
 

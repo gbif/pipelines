@@ -13,6 +13,9 @@ import org.gbif.dwc.terms.Term;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Helps to avoid the issue with StarRecordImpl iterator which returns the same object pointer
+ */
 public class StarRecordCopy implements StarRecord {
 
   private final Record core;

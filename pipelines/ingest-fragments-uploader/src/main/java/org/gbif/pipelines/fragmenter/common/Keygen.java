@@ -21,6 +21,9 @@ public class Keygen {
 
   private static final Long ERROR_KEY = -1L;
 
+  /**
+   * Get or generate GBIF ID key
+   */
   public static Long getKey(HBaseLockingKeyService keygenService, boolean useTriplet, boolean useOccurrenceId,
       OccurrenceRecord record) {
 
@@ -49,7 +52,7 @@ public class Keygen {
     // Finds or generate key
     KeyLookupResult keyResult = keygenService.findKey(uniqueStrings);
     if (keyResult == null) {
-      log.warn("GBIF ID wasn't found, generating a new key.");
+      log.error("GBIF ID wasn't found, generating a new key.");
       keyResult = keygenService.generateKey(uniqueStrings);
     }
 

@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.gbif.api.vocabulary.EndpointType;
+
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
@@ -33,13 +35,14 @@ public class HbaseStore {
   private static final byte[] DUQ_BYTES = Bytes.toBytes("dateUpdated");
 
   @SneakyThrows
-  public static void putRecords(Table table, String datasetId, Integer attempt, String protocol,
+  public static void putRecords(Table table, String datasetId, Integer attempt, EndpointType endpointType,
       Map<String, String> fragmentsMap) {
 
     Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsMap);
 
     List<Put> putList = fragmentsMap.entrySet().stream()
-        .map(es -> createFragmentPut(datasetId, attempt, protocol, es.getKey(), es.getValue(), dateMap.get(es.getKey())))
+        .map(es -> createFragmentPut(datasetId, attempt, endpointType.name(), es.getKey(), es.getValue(),
+            dateMap.get(es.getKey())))
         .collect(Collectors.toList());
 
     table.put(putList);

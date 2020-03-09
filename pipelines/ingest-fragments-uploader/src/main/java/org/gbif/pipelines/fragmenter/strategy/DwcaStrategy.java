@@ -21,6 +21,9 @@ import org.gbif.utils.file.ClosableIterator;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
+/**
+ * Processing strategy for DWCA archives
+ */
 @NoArgsConstructor(staticName = "create")
 public class DwcaStrategy implements Strategy {
 

@@ -5,6 +5,9 @@ import java.util.function.Consumer;
 
 import org.gbif.pipelines.fragmenter.record.OccurrenceRecord;
 
+/**
+ * Processing strategy for different archives to specify how to read an archive
+ */
 public interface Strategy {
 
   void process(Path path, Consumer<OccurrenceRecord> pushRecordFn);

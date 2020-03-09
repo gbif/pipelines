@@ -18,6 +18,9 @@ import org.gbif.pipelines.fragmenter.record.XmlOccurrenceRecord;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
+/**
+ * Processing strategy for XML based archives
+ */
 @NoArgsConstructor(staticName = "create")
 public class XmlStrategy implements Strategy {
 

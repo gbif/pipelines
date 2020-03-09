@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
 import org.gbif.pipelines.fragmenter.common.TableAssert;
 
@@ -40,7 +41,7 @@ public class FragmentsUploaderIT {
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long result = FragmentsUploader.dwcaBuilder()
@@ -51,14 +52,14 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
   @Test
@@ -67,7 +68,7 @@ public class FragmentsUploaderIT {
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long result = FragmentsUploader.dwcaBuilder()
@@ -78,14 +79,14 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
   @Test
@@ -94,7 +95,7 @@ public class FragmentsUploaderIT {
     int expSize = 210;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long result = FragmentsUploader.dwcaBuilder()
@@ -105,7 +106,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
@@ -114,7 +115,7 @@ public class FragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
   @Test
@@ -124,7 +125,7 @@ public class FragmentsUploaderIT {
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long resultFirst = FragmentsUploader.dwcaBuilder()
@@ -135,7 +136,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptFirst)
-        .protocol("XML")
+        .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .build()
@@ -149,7 +150,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptSecond)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
@@ -157,7 +158,7 @@ public class FragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, endpointType);
   }
 
   @Test
@@ -167,7 +168,7 @@ public class FragmentsUploaderIT {
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long resultFirst = FragmentsUploader.dwcaBuilder()
@@ -178,7 +179,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptFirst)
-        .protocol("XML")
+        .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .useSyncMode(false)
@@ -193,7 +194,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptSecond)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .batchSize(2)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
@@ -203,7 +204,7 @@ public class FragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, endpointType);
   }
 
   @Test
@@ -212,7 +213,7 @@ public class FragmentsUploaderIT {
     int expSize = 477;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long result = FragmentsUploader.dwcaBuilder()
@@ -223,14 +224,14 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
   @Test
@@ -239,7 +240,7 @@ public class FragmentsUploaderIT {
     int expSize = 477;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long result = FragmentsUploader.dwcaBuilder()
@@ -250,7 +251,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
@@ -259,7 +260,7 @@ public class FragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
   @Test
@@ -268,7 +269,7 @@ public class FragmentsUploaderIT {
     int expSize = 368;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long result = FragmentsUploader.dwcaBuilder()
@@ -279,14 +280,14 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
   @Test
@@ -295,7 +296,7 @@ public class FragmentsUploaderIT {
     int expSize = 368;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
-    String protocol = "DWCA";
+    EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
     long result = FragmentsUploader.dwcaBuilder()
@@ -306,16 +307,17 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
+        .backPressure(5)
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
 
@@ -325,7 +327,7 @@ public class FragmentsUploaderIT {
     int expSize = 40;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 1;
-    String protocol = "BIOCASE";
+    EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
     long result = FragmentsUploader.xmlBuilder()
@@ -336,14 +338,14 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
   @Test
@@ -352,7 +354,7 @@ public class FragmentsUploaderIT {
     int expSize = 40;
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 1;
-    String protocol = "BIOCASE";
+    EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
     long result = FragmentsUploader.xmlBuilder()
@@ -363,7 +365,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attempt)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .build()
@@ -371,7 +373,7 @@ public class FragmentsUploaderIT {
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, protocol);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
   }
 
   @Test
@@ -381,7 +383,7 @@ public class FragmentsUploaderIT {
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
-    String protocol = "BIOCASE";
+    EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
     long resultFirst = FragmentsUploader.xmlBuilder()
@@ -392,7 +394,8 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptFirst)
-        .protocol("XML")
+        .endpointType(EndpointType.DWC_ARCHIVE)
+        .backPressure(5)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
         .upload();
@@ -405,7 +408,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptSecond)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .batchSize(1)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
@@ -414,7 +417,7 @@ public class FragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, endpointType);
   }
 
   @Test
@@ -424,7 +427,7 @@ public class FragmentsUploaderIT {
     String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
-    String protocol = "BIOCASE";
+    EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
     long resultFirst = FragmentsUploader.xmlBuilder()
@@ -435,7 +438,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptFirst)
-        .protocol("XML")
+        .endpointType(EndpointType.DWC_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .useSyncMode(false)
@@ -450,7 +453,7 @@ public class FragmentsUploaderIT {
         .useOccurrenceId(true)
         .datasetId(datasetId)
         .attempt(attemptSecond)
-        .protocol(protocol)
+        .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .backPressure(1)
         .batchSize(1)
@@ -461,6 +464,6 @@ public class FragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, protocol);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, endpointType);
   }
 }
