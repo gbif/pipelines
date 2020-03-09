@@ -68,10 +68,10 @@ public class FragmentsUploader {
   private String protocol;
 
   @NonNull
-  Boolean useTriplet;
+  private Boolean useTriplet;
 
   @NonNull
-  Boolean useOccurrenceId;
+  private Boolean useOccurrenceId;
 
   @Builder.Default
   private int batchSize = 10;
@@ -156,6 +156,9 @@ public class FragmentsUploader {
 
   }
 
+  /**
+   * Close HBase connection
+   */
   public void close() {
     try {
       hbaseConnection.close();
@@ -164,14 +167,19 @@ public class FragmentsUploader {
     }
   }
 
+  /**
+   * If the mode is async, check back pressure, the number of running async tasks must be less than backPressure setting
+   */
   private void checkBackpressure() {
-    while (backPressureCounter.get() > backPressure) {
-      log.info("Back pressure barrier: too many rows wainting...");
-      try {
-        TimeUnit.MILLISECONDS.sleep(200L);
-      } catch (InterruptedException ex) {
-        log.warn("Back pressure barrier", ex);
-        Thread.currentThread().interrupt();
+    if (!useSyncMode) {
+      while (backPressureCounter.get() > backPressure) {
+        log.info("Back pressure barrier: too many rows wainting...");
+        try {
+          TimeUnit.MILLISECONDS.sleep(200L);
+        } catch (InterruptedException ex) {
+          log.warn("Back pressure barrier", ex);
+          Thread.currentThread().interrupt();
+        }
       }
     }
   }
