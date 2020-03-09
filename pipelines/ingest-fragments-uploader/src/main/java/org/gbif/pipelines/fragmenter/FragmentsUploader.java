@@ -132,10 +132,8 @@ public class FragmentsUploader {
       Consumer<OccurrenceRecord> pushRecordFn = record -> {
         checkBackpressure();
         List<OccurrenceRecord> peek = rows.peek();
-        if (peek != null && peek.size() < batchSize - 1) {
-          addRowFn.accept(record);
-        } else {
-          addRowFn.accept(record);
+        addRowFn.accept(record);
+        if (peek == null || peek.size() < batchSize - 1) {
           pushIntoHbaseFn.run();
           rows.add(new ArrayList<>(batchSize));
         }
