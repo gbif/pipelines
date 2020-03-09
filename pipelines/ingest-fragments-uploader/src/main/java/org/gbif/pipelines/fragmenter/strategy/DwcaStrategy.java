@@ -33,7 +33,7 @@ public class DwcaStrategy implements Strategy {
     try (ClosableIterator<StarRecord> starRecordIterator = readDwca(path)) {
       while (starRecordIterator.hasNext()) {
         StarRecord starRecord = StarRecordCopy.create(starRecordIterator.next());
-        convertToRecordUnits(starRecord).forEach(pushRecordFn);
+        convertToOccurrenceRecords(starRecord).forEach(pushRecordFn);
       }
     }
   }
@@ -47,7 +47,7 @@ public class DwcaStrategy implements Strategy {
     }
   }
 
-  private List<OccurrenceRecord> convertToRecordUnits(StarRecord starRecord) {
+  private List<OccurrenceRecord> convertToOccurrenceRecords(StarRecord starRecord) {
     List<Record> records = starRecord.extension(DwcTerm.Occurrence);
     if (records == null || records.isEmpty()) {
       return Collections.singletonList(DwcaOccurrenceRecord.create(starRecord));
