@@ -66,7 +66,7 @@ public class TableAssert {
         Assert.assertTrue(recordString.length() > 0);
 
         if (useDateUpdated) {
-          Assert.assertTrue(updatedLong > createdLong);
+          Assert.assertNotEquals(updatedLong, createdLong);
         } else {
           Assert.assertEquals(updatedLong, createdLong);
         }
