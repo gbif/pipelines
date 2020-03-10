@@ -68,13 +68,14 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.46</gbif-parsers.version>
     <dwca-io.version>2.7</dwca-io.version>
-    <gbif-api.version>0.103</gbif-api.version>
+    <gbif-api.version>0.105-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
-    <dwc-api.version>1.24</dwc-api.version>
+    <dwc-api.version>1.25-SNAPSHOT</dwc-api.version>
     <kvs.version>1.6</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-occurrence.version>0.106</gbif-occurrence.version>
+    <data-repo-api.version>1.2</data-repo-api.version>
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
@@ -489,6 +490,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-wrangler</artifactId>
         <version>${gbif-wrangler.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.data</groupId>
+        <artifactId>data-repo-api</artifactId>
+        <version>${data-repo-api.version}</version>
       </dependency>
 
       <!-- Avro -->

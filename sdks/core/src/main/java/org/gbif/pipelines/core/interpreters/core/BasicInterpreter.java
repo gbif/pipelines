@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -24,11 +25,13 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.UserIdentifier;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
+import org.gbif.pipelines.parsers.parsers.identifier.UserIdentifierParser;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -250,7 +253,7 @@ public class BasicInterpreter {
     extractOptValue(er, DwcTerm.sampleSizeValue)
         .map(String::trim)
         .map(NumberParser::parseDouble)
-        .filter(x-> !x.isInfinite() && !x.isNaN())
+        .filter(x -> !x.isInfinite() && !x.isNaN())
         .ifPresent(br::setSampleSizeValue);
   }
 
@@ -266,7 +269,7 @@ public class BasicInterpreter {
     extractOptValue(er, DwcTerm.organismQuantity)
         .map(String::trim)
         .map(NumberParser::parseDouble)
-        .filter(x-> !x.isInfinite() && !x.isNaN())
+        .filter(x -> !x.isInfinite() && !x.isNaN())
         .ifPresent(br::setOrganismQuantity);
   }
 
@@ -301,6 +304,23 @@ public class BasicInterpreter {
         .orElse(License.UNSPECIFIED.name());
 
     br.setLicense(license);
+  }
+
+  /** {@link GbifTerm#identifiedByID} and {@link GbifTerm#recordedByID} interpretation. */
+  public static void interpretUserIds(ExtendedRecord er, BasicRecord br) {
+    Function<GbifTerm, Set<UserIdentifier>> fn = t -> extractOptValue(er, t)
+        .filter(x -> !x.isEmpty())
+        .map(UserIdentifierParser::parse)
+        .orElse(Collections.emptySet());
+
+    Set<UserIdentifier> recordedByIdSet = fn.apply(GbifTerm.recordedByID);
+    Set<UserIdentifier> identifiedByIdSet = fn.apply(GbifTerm.identifiedByID);
+    if (!recordedByIdSet.isEmpty() || !identifiedByIdSet.isEmpty()) {
+      Set<UserIdentifier> resultSet = new HashSet<>();
+      resultSet.addAll(recordedByIdSet);
+      resultSet.addAll(identifiedByIdSet);
+      br.getUserIdentifiers().addAll(resultSet);
+    }
   }
 
   /** Returns ENUM instead of url string */

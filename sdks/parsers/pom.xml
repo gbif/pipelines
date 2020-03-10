@@ -48,6 +48,10 @@
       <groupId>org.gbif.kvs</groupId>
       <artifactId>kvs-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.data</groupId>
+      <artifactId>data-repo-api</artifactId>
+    </dependency>
 
     <!-- Geotools -->
     <dependency>
