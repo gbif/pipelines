@@ -62,6 +62,13 @@
       "typeStatus": {"type": "keyword", "copy_to": "all"},
       "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
+      "recordedByIds": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "keyword" },
+          "value": { "type": "keyword", "copy_to": "all"  }
+        }
+      },
       "recordedBy": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "recordNumber": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "organismId": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
