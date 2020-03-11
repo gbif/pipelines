@@ -55,16 +55,20 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}.
  */
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceHdfsRecordConverter {
 
   //Registered converters
   private static Map<Class<? extends SpecificRecordBase>, BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase>>
     converters;
+
+  private static final TermFactory TERM_FACTORY =  TermFactory.instance();
 
   //Converters
   static {
@@ -141,11 +145,6 @@ public class OccurrenceHdfsRecordConverter {
           return null;
         }
       };
-
-  private static final TermFactory TERM_FACTORY =  TermFactory.instance();
-
-
-  private static final Logger LOG = LoggerFactory.getLogger(OccurrenceHdfsRecordConverter.class);
 
   /**
    * Sets the lastInterpreted and lastParsed dates if the new value is greater that the existing one or if it is not set.
@@ -379,6 +378,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizeunit(br.getSampleSizeUnit());
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
+      hr.setRecordedByIds(br.getUserIdentifiers());
 
       if (br.getLicense() != null && !License.UNSUPPORTED.name().equals(br.getLicense())
           && !License.UNSPECIFIED.name().equals(br.getLicense())) {
@@ -449,7 +449,7 @@ public class OccurrenceHdfsRecordConverter {
           break;
       }
     } catch (Exception ex) {
-      LOG.error("Ignoring error setting field {}", avroField, ex);
+      log.error("Ignoring error setting field {}", avroField, ex);
     }
   }
 

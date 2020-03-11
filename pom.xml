@@ -74,7 +74,7 @@
     <kvs.version>1.6</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-occurrence.version>0.106</gbif-occurrence.version>
+    <gbif-occurrence.version>0.115-ES</gbif-occurrence.version>
     <data-repo-api.version>1.2</data-repo-api.version>
 
     <!-- Common libraries -->
