@@ -26,7 +26,7 @@ import org.gbif.api.vocabulary.UserIdentifierType;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
-import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
+import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -48,6 +48,7 @@ import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.io.avro.UserIdentifier;
 
 import org.junit.Assert;
@@ -78,6 +79,8 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.sampleSizeValue.simpleName(), "value");
     coreTerms.put(DwcTerm.organismQuantity.simpleName(), "quantity");
     coreTerms.put(DwcTerm.organismQuantityType.simpleName(), "type");
+    coreTerms.put(GbifTerm.identifiedByID.simpleName(), "13123|21312");
+    coreTerms.put(GbifTerm.recordedByID.simpleName(), "53453|5785");
 
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
         .setId("1")
@@ -140,6 +143,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("type", hdfsRecord.getVOrganismquantitytype());
     Assert.assertEquals("unit", hdfsRecord.getVSamplesizeunit());
     Assert.assertEquals("value", hdfsRecord.getVSamplesizevalue());
+    Assert.assertEquals("53453|5785", hdfsRecord.getVRecordedbyid());
+    Assert.assertEquals("13123|21312", hdfsRecord.getVIdentifiedbyid());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());

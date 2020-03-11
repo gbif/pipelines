@@ -220,6 +220,8 @@
     {"name": "v_taxonomicstatus", "type": ["string", "null"]},
     {"name": "v_nomenclaturalstatus", "type": ["string", "null"]},
     {"name": "v_taxonremarks", "type": ["string", "null"]},
+    {"name": "v_recordedbyid", "type": ["string", "null"]},
+    {"name": "v_identifiedbyid", "type": ["string", "null"]},
     {"name": "identifiercount", "type": ["int", "null"]},
     {"name": "crawlid", "type": ["int", "null"]},
     {"name": "fragmentcreated", "type": ["long", "null"]},
