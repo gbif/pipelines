@@ -16,7 +16,7 @@ public interface EsPipelineOptions extends PipelineOptions {
   void setEsMaxBatchSizeBytes(Long batchSize);
 
   @Description("Es max batch size")
-  @Default.Long(10_000L)
+  @Default.Long(1_500L)
   long getEsMaxBatchSize();
 
   void setEsMaxBatchSize(long esBatchSize);
