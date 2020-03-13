@@ -27,6 +27,7 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -48,7 +49,6 @@ import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.io.avro.UserIdentifier;
 
 import org.junit.Assert;
@@ -91,11 +91,8 @@ public class OccurrenceHdfsRecordConverterTest {
         .setLicense(License.CC_BY_4_0.name())
         .build();
 
-    List<UserIdentifier> userIdentifiers = Arrays.asList(
-        UserIdentifier.newBuilder().setType(UserIdentifierType.OTHER.name()).setValue("13123").build(),
-        UserIdentifier.newBuilder().setType(UserIdentifierType.OTHER.name()).setValue("21312").build(),
-        UserIdentifier.newBuilder().setType(UserIdentifierType.OTHER.name()).setValue("53453").build(),
-        UserIdentifier.newBuilder().setType(UserIdentifierType.OTHER.name()).setValue("5785").build()
+    List<UserIdentifier> userIdentifiers = Collections.singletonList(
+        UserIdentifier.newBuilder().setType(UserIdentifierType.OTHER.name()).setValue("13123").build()
     );
 
     BasicRecord basicRecord = BasicRecord.newBuilder()
@@ -170,7 +167,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
     Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionkey());
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
-    Assert.assertEquals(userIdentifiers, hdfsRecord.getRecordedByIds());
+    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getRecordedByIds());
   }
 
   @Test

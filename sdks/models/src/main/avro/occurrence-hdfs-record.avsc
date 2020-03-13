@@ -472,6 +472,6 @@
     {"name": "lastcrawled", "type": ["long", "null"]},
     {"name": "repatriated", "type": ["boolean", "null"]},
     {"name": "ext_multimedia", "type": ["string", "null"]},
-    {"name": "recordedByIds", "type": {"type": "array", "items": "UserIdentifier"}, "default": {}}
+    {"name": "recordedByIds", "type": [{"type": "array","items": ["string", "null"]}, "null"]}
   ]
 }

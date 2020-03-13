@@ -43,13 +43,12 @@ import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.UserIdentifier;
 import org.gbif.pipelines.keygen.common.TermUtils;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.commons.beanutils.PropertyUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
@@ -378,7 +377,13 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizeunit(br.getSampleSizeUnit());
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
-      hr.setRecordedByIds(br.getUserIdentifiers());
+
+      Optional.ofNullable(br.getUserIdentifiers())
+          .ifPresent(
+              uis -> hr.setRecordedByIds(uis.stream()
+                  .map(UserIdentifier::getValue)
+                  .collect(Collectors.toList()))
+          );
 
       if (br.getLicense() != null && !License.UNSUPPORTED.name().equals(br.getLicense())
           && !License.UNSPECIFIED.name().equals(br.getLicense())) {
