@@ -89,7 +89,6 @@ public class GbifJsonConverter {
 
   private final JsonConverter.JsonConverterBuilder builder =
       JsonConverter.builder()
-          .skipKey("userIdentifiers")
           .skipKey("decimalLatitude")
           .skipKey("decimalLongitude")
           .skipKey("machineTags")
@@ -760,16 +759,6 @@ public class GbifJsonConverter {
           br.setLicense(license);
         }
       }
-
-      // Add recordedByIDs, ORCID, WIKIDATA, OTHER
-      List<ObjectNode> recordedByIdNodes = br.getUserIdentifiers().stream()
-          .map(ui -> {
-            ObjectNode n = JsonConverter.createObjectNode();
-            n.put("type", ui.getType());
-            n.put("value", ui.getValue());
-            return n;
-          }).collect(Collectors.toList());
-      jc.addJsonArray("recordedByIds", recordedByIdNodes);
 
       // Add other fields
       jc.addCommonFields(br);

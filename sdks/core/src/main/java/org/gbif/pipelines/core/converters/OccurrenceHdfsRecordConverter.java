@@ -31,6 +31,7 @@ import org.gbif.occurrence.download.hive.HiveColumns;
 import org.gbif.occurrence.download.hive.Terms;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.core.utils.TemporalUtils;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.Diagnostic;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -43,7 +44,6 @@ import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.UserIdentifier;
 import org.gbif.pipelines.keygen.common.TermUtils;
 
 import org.apache.avro.Schema;
@@ -378,10 +378,10 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
 
-      Optional.ofNullable(br.getUserIdentifiers())
+      Optional.ofNullable(br.getAgentIds())
           .ifPresent(
               uis -> hr.setRecordedByIds(uis.stream()
-                  .map(UserIdentifier::getValue)
+                  .map(AgentIdentifier::getValue)
                   .collect(Collectors.toList()))
           );
 

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -22,12 +23,12 @@ import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
-import org.gbif.api.vocabulary.UserIdentifierType;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -49,7 +50,6 @@ import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.UserIdentifier;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -91,15 +91,15 @@ public class OccurrenceHdfsRecordConverterTest {
         .setLicense(License.CC_BY_4_0.name())
         .build();
 
-    List<UserIdentifier> userIdentifiers = Collections.singletonList(
-        UserIdentifier.newBuilder().setType(UserIdentifierType.OTHER.name()).setValue("13123").build()
+    List<AgentIdentifier> agentIds = Collections.singletonList(
+        AgentIdentifier.newBuilder().setType(AgentIdentifierType.OTHER.name()).setValue("13123").build()
     );
 
     BasicRecord basicRecord = BasicRecord.newBuilder()
         .setId("1")
         .setCreated(1L)
         .setLicense(License.CC0_1_0.name())
-        .setUserIdentifiers(userIdentifiers)
+        .setAgentIds(agentIds)
         .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
 
     List<RankedName> classification = new ArrayList<>();

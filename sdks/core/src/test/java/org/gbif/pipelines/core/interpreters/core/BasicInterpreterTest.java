@@ -1,21 +1,18 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.gbif.api.vocabulary.UserIdentifierType;
+import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UserIdentifier;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -284,7 +281,7 @@ public class BasicInterpreterTest {
   }
 
   @Test
-  public void interpretUserIdsEmtyOrNullTest() {
+  public void interpretAgentIdsEmtyOrNullTest() {
 
     // State
     Map<String, String> coreMap = new HashMap<>();
@@ -295,31 +292,31 @@ public class BasicInterpreterTest {
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
     // When
-    BasicInterpreter.interpretUserIds(er, br);
+    BasicInterpreter.interpretAgentIds(er, br);
 
     // Should
-    Assert.assertTrue(br.getUserIdentifiers().isEmpty());
+    Assert.assertTrue(br.getAgentIds().isEmpty());
   }
 
   @Test
-  public void interpretUserIdsTest() {
+  public void interpretAgentIdsTest() {
 
     // Expected
-    List<UserIdentifier> expected = Stream.of(
-        UserIdentifier.newBuilder()
-            .setType(UserIdentifierType.ORCID.name())
+    List<AgentIdentifier> expected = Stream.of(
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.ORCID.name())
             .setValue("https://orcid.org/0000-0002-0144-1997")
             .build(),
-        UserIdentifier.newBuilder()
-            .setType(UserIdentifierType.WIKIDATA.name())
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.WIKIDATA.name())
             .setValue("https://www.wikidata.org/entity/1997")
             .build(),
-        UserIdentifier.newBuilder()
-            .setType(UserIdentifierType.OTHER.name())
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.OTHER.name())
             .setValue("http://www.somelink.org/id/idid")
             .build(),
-        UserIdentifier.newBuilder()
-            .setType(UserIdentifierType.OTHER.name())
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.OTHER.name())
             .setValue("someid")
             .build()
     ).sorted().collect(Collectors.toList());
@@ -335,10 +332,10 @@ public class BasicInterpreterTest {
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
     // When
-    BasicInterpreter.interpretUserIds(er, br);
+    BasicInterpreter.interpretAgentIds(er, br);
 
     // Should
-    Assert.assertEquals(expected, br.getUserIdentifiers().stream().sorted().collect(Collectors.toList()));
+    Assert.assertEquals(expected, br.getAgentIds().stream().sorted().collect(Collectors.toList()));
   }
 
 }

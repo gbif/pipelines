@@ -5,17 +5,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.gbif.api.vocabulary.UserIdentifierType;
+import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.datarepo.api.validation.identifierschemes.OrcidValidator;
 import org.gbif.datarepo.api.validation.identifierschemes.OtherValidator;
-import org.gbif.pipelines.io.avro.UserIdentifier;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class UserIdentifierParser {
+public class AgentIdentifierParser {
 
   private static final OrcidValidator ORCID_VALIDATOR = new OrcidValidator();
   private static final WikidataValidator WIKIDATA_VALIDATOR = new WikidataValidator();
@@ -23,31 +23,31 @@ public class UserIdentifierParser {
 
   private static final String DELIMITER = "\\|";
 
-  public static Set<UserIdentifier> parse(String raw) {
+  public static Set<AgentIdentifier> parse(String raw) {
     if (Strings.isNullOrEmpty(raw)) {
       return Collections.emptySet();
     }
     return Stream.of(raw.split(DELIMITER))
         .map(String::trim)
-        .map(UserIdentifierParser::parseValue)
+        .map(AgentIdentifierParser::parseValue)
         .collect(Collectors.toSet());
   }
 
-  private static UserIdentifier parseValue(String raw) {
+  private static AgentIdentifier parseValue(String raw) {
     if (ORCID_VALIDATOR.isValid(raw)) {
-      return UserIdentifier.newBuilder()
-          .setType(UserIdentifierType.ORCID.name())
+      return AgentIdentifier.newBuilder()
+          .setType(AgentIdentifierType.ORCID.name())
           .setValue(ORCID_VALIDATOR.normalize(raw))
           .build();
     }
     if (WIKIDATA_VALIDATOR.isValid(raw)) {
-      return UserIdentifier.newBuilder()
-          .setType(UserIdentifierType.WIKIDATA.name())
+      return AgentIdentifier.newBuilder()
+          .setType(AgentIdentifierType.WIKIDATA.name())
           .setValue(WIKIDATA_VALIDATOR.normalize(raw))
           .build();
     }
-    return UserIdentifier.newBuilder()
-        .setType(UserIdentifierType.OTHER.name())
+    return AgentIdentifier.newBuilder()
+        .setType(AgentIdentifierType.OTHER.name())
         .setValue(OTHER_VALIDATOR.normalize(raw))
         .build();
   }

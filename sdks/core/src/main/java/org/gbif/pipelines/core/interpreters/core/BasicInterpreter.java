@@ -23,15 +23,15 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.UserIdentifier;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
-import org.gbif.pipelines.parsers.parsers.identifier.UserIdentifierParser;
+import org.gbif.pipelines.parsers.parsers.identifier.AgentIdentifierParser;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -307,19 +307,19 @@ public class BasicInterpreter {
   }
 
   /** {@link GbifTerm#identifiedByID} and {@link GbifTerm#recordedByID} interpretation. */
-  public static void interpretUserIds(ExtendedRecord er, BasicRecord br) {
-    Function<GbifTerm, Set<UserIdentifier>> fn = t -> extractOptValue(er, t)
+  public static void interpretAgentIds(ExtendedRecord er, BasicRecord br) {
+    Function<GbifTerm, Set<AgentIdentifier>> fn = t -> extractOptValue(er, t)
         .filter(x -> !x.isEmpty())
-        .map(UserIdentifierParser::parse)
+        .map(AgentIdentifierParser::parse)
         .orElse(Collections.emptySet());
 
-    Set<UserIdentifier> recordedByIdSet = fn.apply(GbifTerm.recordedByID);
-    Set<UserIdentifier> identifiedByIdSet = fn.apply(GbifTerm.identifiedByID);
+    Set<AgentIdentifier> recordedByIdSet = fn.apply(GbifTerm.recordedByID);
+    Set<AgentIdentifier> identifiedByIdSet = fn.apply(GbifTerm.identifiedByID);
     if (!recordedByIdSet.isEmpty() || !identifiedByIdSet.isEmpty()) {
-      Set<UserIdentifier> resultSet = new HashSet<>();
+      Set<AgentIdentifier> resultSet = new HashSet<>();
       resultSet.addAll(recordedByIdSet);
       resultSet.addAll(identifiedByIdSet);
-      br.getUserIdentifiers().addAll(resultSet);
+      br.getAgentIds().addAll(resultSet);
     }
   }
 

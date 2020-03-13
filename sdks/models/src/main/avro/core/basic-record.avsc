@@ -3,7 +3,7 @@
  */
 [
   {
-    "name":"UserIdentifier",
+    "name":"AgentIdentifier",
     "namespace":"org.gbif.pipelines.io.avro",
     "type":"record",
     "fields":[
@@ -34,7 +34,7 @@
       {"name": "relativeOrganismQuantity", "type": ["null", "double"], "default" : null},
       {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
       {"name": "license", "type":["null","string"], "default":null, "doc": "http://purl.org/dc/terms/license"},
-      {"name": "userIdentifiers", "type": {"type" : "array", "items" : "UserIdentifier"}, "default" : {}},
+      {"name": "agentIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : {}},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

@@ -5,8 +5,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.gbif.api.vocabulary.UserIdentifierType;
-import org.gbif.pipelines.io.avro.UserIdentifier;
+import org.gbif.api.vocabulary.AgentIdentifierType;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 
 import org.junit.Test;
 
@@ -14,12 +14,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class UserIdentifierParserTest {
+public class AgentIdentifierParserTest {
 
   @Test
   public void parseNullTest() {
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(null);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(null);
 
     // Should
     assertTrue(set.isEmpty());
@@ -31,7 +31,7 @@ public class UserIdentifierParserTest {
     String raw = "";
 
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(raw);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
     assertTrue(set.isEmpty());
@@ -43,7 +43,7 @@ public class UserIdentifierParserTest {
     String raw = "|||";
 
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(raw);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
     assertTrue(set.isEmpty());
@@ -52,8 +52,8 @@ public class UserIdentifierParserTest {
   @Test
   public void parseOrcidTest() {
     // Expected
-    Set<UserIdentifier> expected = Collections.singleton(UserIdentifier.newBuilder()
-        .setType(UserIdentifierType.ORCID.name())
+    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
+        .setType(AgentIdentifierType.ORCID.name())
         .setValue("https://orcid.org/0000-0002-0144-1997")
         .build());
 
@@ -61,7 +61,7 @@ public class UserIdentifierParserTest {
     String raw = "https://orcid.org/0000-0002-0144-1997";
 
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(raw);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
     assertFalse(set.isEmpty());
@@ -71,8 +71,8 @@ public class UserIdentifierParserTest {
   @Test
   public void parseOrcidWithoutSchemaTest() {
     // Expected
-    Set<UserIdentifier> expected = Collections.singleton(UserIdentifier.newBuilder()
-        .setType(UserIdentifierType.ORCID.name())
+    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
+        .setType(AgentIdentifierType.ORCID.name())
         .setValue("https://orcid.org/0000-0002-0144-1997")
         .build());
 
@@ -80,7 +80,7 @@ public class UserIdentifierParserTest {
     String raw = "0000-0002-0144-1997";
 
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(raw);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
     assertFalse(set.isEmpty());
@@ -90,8 +90,8 @@ public class UserIdentifierParserTest {
   @Test
   public void parseWikidataTest() {
     // Expected
-    Set<UserIdentifier> expected = Collections.singleton(UserIdentifier.newBuilder()
-        .setType(UserIdentifierType.WIKIDATA.name())
+    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
+        .setType(AgentIdentifierType.WIKIDATA.name())
         .setValue("https://www.wikidata.org/wiki/0000")
         .build());
 
@@ -99,7 +99,7 @@ public class UserIdentifierParserTest {
     String raw = "https://www.wikidata.org/wiki/0000";
 
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(raw);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
     assertFalse(set.isEmpty());
@@ -109,8 +109,8 @@ public class UserIdentifierParserTest {
   @Test
   public void parseWikidataWithoutSchemaTest() {
     // Expected
-    Set<UserIdentifier> expected = Collections.singleton(UserIdentifier.newBuilder()
-        .setType(UserIdentifierType.WIKIDATA.name())
+    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
+        .setType(AgentIdentifierType.WIKIDATA.name())
         .setValue("https://www.wikidata.org/wiki/0000")
         .build());
 
@@ -118,7 +118,7 @@ public class UserIdentifierParserTest {
     String raw = "wikidata.org/wiki/0000";
 
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(raw);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
     assertFalse(set.isEmpty());
@@ -128,8 +128,8 @@ public class UserIdentifierParserTest {
   @Test
   public void parseOtherTest() {
     // Expected
-    Set<UserIdentifier> expected = Collections.singleton(UserIdentifier.newBuilder()
-        .setType(UserIdentifierType.OTHER.name())
+    Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
+        .setType(AgentIdentifierType.OTHER.name())
         .setValue("something")
         .build());
 
@@ -137,7 +137,7 @@ public class UserIdentifierParserTest {
     String raw = "something";
 
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(raw);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
     assertFalse(set.isEmpty());
@@ -147,17 +147,17 @@ public class UserIdentifierParserTest {
   @Test
   public void parseMixedTest() {
     // Expected
-    Set<UserIdentifier> expected = Stream.of(
-        UserIdentifier.newBuilder()
-            .setType(UserIdentifierType.ORCID.name())
+    Set<AgentIdentifier> expected = Stream.of(
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.ORCID.name())
             .setValue("https://orcid.org/0000-0002-0144-1997")
             .build(),
-        UserIdentifier.newBuilder()
-            .setType(UserIdentifierType.WIKIDATA.name())
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.WIKIDATA.name())
             .setValue("https://www.wikidata.org/wiki/0000")
             .build(),
-        UserIdentifier.newBuilder()
-            .setType(UserIdentifierType.OTHER.name())
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.OTHER.name())
             .setValue("something")
             .build()
     ).collect(Collectors.toSet());
@@ -166,7 +166,7 @@ public class UserIdentifierParserTest {
     String raw = "wikidata.org/wiki/0000| something|0000-0002-0144-1997";
 
     // When
-    Set<UserIdentifier> set = UserIdentifierParser.parse(raw);
+    Set<AgentIdentifier> set = AgentIdentifierParser.parse(raw);
 
     // Should
     assertFalse(set.isEmpty());

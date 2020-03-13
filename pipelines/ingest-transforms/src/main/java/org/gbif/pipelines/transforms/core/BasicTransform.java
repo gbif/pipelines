@@ -164,7 +164,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretSampleSizeValue)
         .via(BasicInterpreter::interpretRelativeOrganismQuantity)
         .via(BasicInterpreter::interpretLicense)
-        .via(BasicInterpreter::interpretUserIds)
+        .via(BasicInterpreter::interpretAgentIds)
         .get();
   }
 }
