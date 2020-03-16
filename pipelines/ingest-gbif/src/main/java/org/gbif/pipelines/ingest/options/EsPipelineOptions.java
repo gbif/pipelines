@@ -10,7 +10,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBI
 public interface EsPipelineOptions extends PipelineOptions {
 
   @Description("Target ES Max Batch Size bytes")
-  @Default.Long(10_485_760L) // 10mb
+  @Default.Long(8_388_608L) // 8mb
   Long getEsMaxBatchSizeBytes();
 
   void setEsMaxBatchSizeBytes(Long batchSize);
