@@ -167,7 +167,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
     Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionkey());
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
-    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getRecordedByIds());
+    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getAgentid());
   }
 
   @Test

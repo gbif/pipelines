@@ -380,7 +380,7 @@ public class OccurrenceHdfsRecordConverter {
 
       Optional.ofNullable(br.getAgentIds())
           .ifPresent(
-              uis -> hr.setRecordedByIds(uis.stream()
+              uis -> hr.setAgentid(uis.stream()
                   .map(AgentIdentifier::getValue)
                   .collect(Collectors.toList()))
           );
