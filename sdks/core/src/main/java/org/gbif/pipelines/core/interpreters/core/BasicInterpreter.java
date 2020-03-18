@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -22,6 +23,7 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -29,6 +31,7 @@ import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
+import org.gbif.pipelines.parsers.parsers.identifier.AgentIdentifierParser;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -73,39 +76,40 @@ public class BasicInterpreter {
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
       boolean isTripletValid, boolean isOccurrenceIdValid) {
     return (er, br) -> {
-      if (keygenService != null) {
+      if (keygenService == null) {
+        return;
+      }
 
-        Set<String> uniqueStrings = new HashSet<>(2);
+      Set<String> uniqueStrings = new HashSet<>(2);
 
-        // Adds occurrenceId
-        if (isOccurrenceIdValid) {
-          String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
-          if (!Strings.isNullOrEmpty(occurrenceId)) {
-            uniqueStrings.add(occurrenceId);
-          }
+      // Adds occurrenceId
+      if (isOccurrenceIdValid) {
+        String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
+        if (!Strings.isNullOrEmpty(occurrenceId)) {
+          uniqueStrings.add(occurrenceId);
         }
+      }
 
-        // Adds triplet
-        if (isTripletValid) {
-          String ic = extractValue(er, DwcTerm.institutionCode);
-          String cc = extractValue(er, DwcTerm.collectionCode);
-          String cn = extractValue(er, DwcTerm.catalogNumber);
-          OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
-        }
+      // Adds triplet
+      if (isTripletValid) {
+        String ic = extractValue(er, DwcTerm.institutionCode);
+        String cc = extractValue(er, DwcTerm.collectionCode);
+        String cn = extractValue(er, DwcTerm.catalogNumber);
+        OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+      }
 
-        if (!uniqueStrings.isEmpty()) {
-          try {
-            KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
-                .orElse(keygenService.generateKey(uniqueStrings));
+      if (!uniqueStrings.isEmpty()) {
+        try {
+          KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
+              .orElse(keygenService.generateKey(uniqueStrings));
 
-            br.setGbifId(key.getKey());
-          } catch (IllegalStateException ex) {
-            log.warn(ex.getMessage());
-            addIssue(br, GBIF_ID_INVALID);
-          }
-        } else {
+          br.setGbifId(key.getKey());
+        } catch (IllegalStateException ex) {
+          log.warn(ex.getMessage());
           addIssue(br, GBIF_ID_INVALID);
         }
+      } else {
+        addIssue(br, GBIF_ID_INVALID);
       }
     };
   }
@@ -250,7 +254,7 @@ public class BasicInterpreter {
     extractOptValue(er, DwcTerm.sampleSizeValue)
         .map(String::trim)
         .map(NumberParser::parseDouble)
-        .filter(x-> !x.isInfinite() && !x.isNaN())
+        .filter(x -> !x.isInfinite() && !x.isNaN())
         .ifPresent(br::setSampleSizeValue);
   }
 
@@ -266,7 +270,7 @@ public class BasicInterpreter {
     extractOptValue(er, DwcTerm.organismQuantity)
         .map(String::trim)
         .map(NumberParser::parseDouble)
-        .filter(x-> !x.isInfinite() && !x.isNaN())
+        .filter(x -> !x.isInfinite() && !x.isNaN())
         .ifPresent(br::setOrganismQuantity);
   }
 
@@ -301,6 +305,23 @@ public class BasicInterpreter {
         .orElse(License.UNSPECIFIED.name());
 
     br.setLicense(license);
+  }
+
+  /** {@link GbifTerm#identifiedByID} and {@link GbifTerm#recordedByID} interpretation. */
+  public static void interpretAgentIds(ExtendedRecord er, BasicRecord br) {
+    Function<GbifTerm, Set<AgentIdentifier>> fn = t -> extractOptValue(er, t)
+        .filter(x -> !x.isEmpty())
+        .map(AgentIdentifierParser::parse)
+        .orElse(Collections.emptySet());
+
+    Set<AgentIdentifier> recordedByIdSet = fn.apply(GbifTerm.recordedByID);
+    Set<AgentIdentifier> identifiedByIdSet = fn.apply(GbifTerm.identifiedByID);
+    if (!recordedByIdSet.isEmpty() || !identifiedByIdSet.isEmpty()) {
+      Set<AgentIdentifier> resultSet = new HashSet<>();
+      resultSet.addAll(recordedByIdSet);
+      resultSet.addAll(identifiedByIdSet);
+      br.getAgentIds().addAll(resultSet);
+    }
   }
 
   /** Returns ENUM instead of url string */

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -25,6 +26,9 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
+import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Authorship;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.EventDate;
@@ -46,7 +50,6 @@ import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -76,6 +79,8 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.sampleSizeValue.simpleName(), "value");
     coreTerms.put(DwcTerm.organismQuantity.simpleName(), "quantity");
     coreTerms.put(DwcTerm.organismQuantityType.simpleName(), "type");
+    coreTerms.put(GbifTerm.identifiedByID.simpleName(), "13123|21312");
+    coreTerms.put(GbifTerm.recordedByID.simpleName(), "53453|5785");
 
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
         .setId("1")
@@ -86,11 +91,15 @@ public class OccurrenceHdfsRecordConverterTest {
         .setLicense(License.CC_BY_4_0.name())
         .build();
 
+    List<AgentIdentifier> agentIds = Collections.singletonList(
+        AgentIdentifier.newBuilder().setType(AgentIdentifierType.OTHER.name()).setValue("13123").build()
+    );
 
     BasicRecord basicRecord = BasicRecord.newBuilder()
         .setId("1")
         .setCreated(1L)
         .setLicense(License.CC0_1_0.name())
+        .setAgentIds(agentIds)
         .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -131,6 +140,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("type", hdfsRecord.getVOrganismquantitytype());
     Assert.assertEquals("unit", hdfsRecord.getVSamplesizeunit());
     Assert.assertEquals("value", hdfsRecord.getVSamplesizevalue());
+    Assert.assertEquals("53453|5785", hdfsRecord.getVRecordedbyid());
+    Assert.assertEquals("13123|21312", hdfsRecord.getVIdentifiedbyid());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
@@ -156,6 +167,7 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
     Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionkey());
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
+    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getAgentid());
   }
 
   @Test

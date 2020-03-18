@@ -98,13 +98,12 @@ public class MetadataInterpreter {
   /** Gets the latest crawl attempt time, if exists. */
   private static Optional<Date> getLastCrawledDate(List<MachineTag> machineTags) {
     return Optional.ofNullable(machineTags)
-        .map(x -> x.stream()
+        .flatMap(x -> x.stream()
             .filter(tag -> TagName.CRAWL_ATTEMPT.getName().equals(tag.getName())
                 && TagName.CRAWL_ATTEMPT.getNamespace().getNamespace().equals(tag.getNamespace()))
             .sorted(Comparator.comparing(MachineTag::getCreated).reversed())
             .map(MachineTag::getCreated)
-            .findFirst())
-        .get();
+            .findFirst());
   }
 
   /** Copy MachineTags into the Avro Metadata record. */

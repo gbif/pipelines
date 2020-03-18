@@ -1,5 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -14,7 +16,6 @@ import org.gbif.pipelines.io.avro.MachineTag;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 
-import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -28,10 +29,13 @@ public class TaggedValuesInterpreter {
   public static final String COLLECTION_TO_INSTITUTION_TAG_NAME = "collectionToInstitutionCode";
   public static final String INSTITUTION_TO_COLLECTION_TAG_NAME = "institutionToCollectionCode";
 
-  private static final Set<String> GRSCICOLL_TAG_NAME = Sets.newHashSet(INSTITUTION_TAG_NAME,
-                                                                        COLLECTION_TAG_NAME,
-                                                                        COLLECTION_TO_INSTITUTION_TAG_NAME,
-                                                                        INSTITUTION_TO_COLLECTION_TAG_NAME);
+  private static final Set<String> GRSCICOLL_TAG_NAME =
+      new HashSet<>(Arrays.asList(
+          INSTITUTION_TAG_NAME,
+          COLLECTION_TAG_NAME,
+          COLLECTION_TO_INSTITUTION_TAG_NAME,
+          INSTITUTION_TO_COLLECTION_TAG_NAME)
+      );
 
   /** Interpreter of ExtenderRecord and TaggedValueRecord using the MachineTags of MetdataRecord.*/
   public static BiConsumer<ExtendedRecord, TaggedValueRecord> interpret(MetadataRecord mr) {

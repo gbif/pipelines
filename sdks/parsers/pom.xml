@@ -3,7 +3,7 @@
   <parent>
     <artifactId>sdks</artifactId>
     <groupId>org.gbif.pipelines</groupId>
-    <version>2.3.7-SNAPSHOT</version>
+    <version>2.3.8-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -47,6 +47,10 @@
     <dependency>
       <groupId>org.gbif.kvs</groupId>
       <artifactId>kvs-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.data</groupId>
+      <artifactId>data-repo-api</artifactId>
     </dependency>
 
     <!-- Geotools -->

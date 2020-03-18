@@ -102,7 +102,7 @@ public class GbifJsonConverter {
           .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
           .converter(MultimediaRecord.class, getMultimediaConverter())
           .converter(TaggedValueRecord.class, getTaggedValueConverter())
-          .converter(BasicRecord .class, getBasicRecordConverter());
+          .converter(BasicRecord.class, getBasicRecordConverter());
 
   @Builder.Default
   private boolean skipIssues = false;
@@ -306,11 +306,12 @@ public class GbifJsonConverter {
 
       //Classification verbatim
       ObjectNode classificationNode = jc.getMainNode().has("gbifClassification")
-          ? (ObjectNode)jc.getMainNode().get("gbifClassification") : JsonConverter.createObjectNode();
+          ? (ObjectNode) jc.getMainNode().get("gbifClassification") : JsonConverter.createObjectNode();
       Optional.ofNullable(coreNode.get(DwcTerm.taxonID.qualifiedName()))
-        .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
+          .ifPresent(taxonID -> classificationNode.set(DwcTerm.taxonID.simpleName(), taxonID));
       Optional.ofNullable(coreNode.get(DwcTerm.scientificName.qualifiedName()))
-        .ifPresent(verbatimScientificName -> classificationNode.set(GbifTerm.verbatimScientificName.simpleName(), verbatimScientificName));
+          .ifPresent(verbatimScientificName -> classificationNode.set(GbifTerm.verbatimScientificName.simpleName(),
+              verbatimScientificName));
       if (!jc.getMainNode().has("gbifClassification") && classificationNode.size() > 0) {
         jc.addJsonObject("gbifClassification", classificationNode);
       }
@@ -434,7 +435,9 @@ public class GbifJsonConverter {
       TaxonRecord tr = trBuilder.build();
 
       //Create a ObjectNode with the specific fields copied from the original record
-      ObjectNode classificationNode = jc.getMainNode().has("gbifClassification")? (ObjectNode)jc.getMainNode().get("gbifClassification") : JsonConverter.createObjectNode();
+      ObjectNode classificationNode =
+          jc.getMainNode().has("gbifClassification") ? (ObjectNode) jc.getMainNode().get("gbifClassification") :
+              JsonConverter.createObjectNode();
       jc.addCommonFields(tr, classificationNode);
       List<RankedName> classifications = tr.getClassification();
       Set<IntNode> taxonKey = new HashSet<>();
@@ -727,8 +730,9 @@ public class GbifJsonConverter {
     return (jc, record) -> {
       TaggedValueRecord tvr = (TaggedValueRecord) record;
       if (Objects.nonNull(tvr.getTaggedValues())) {
-        tvr.getTaggedValues().forEach((k,v) ->
-          Optional.ofNullable(TERM_FACTORY.findTerm(k)).ifPresent( term -> jc.addJsonTextFieldNoCheck(term.simpleName(), v))
+        tvr.getTaggedValues().forEach((k, v) ->
+            Optional.ofNullable(TERM_FACTORY.findTerm(k))
+                .ifPresent(term -> jc.addJsonTextFieldNoCheck(term.simpleName(), v))
         );
       }
 
@@ -738,7 +742,7 @@ public class GbifJsonConverter {
   /**
    * String converter for {@link BasicRecord}, convert an object to specific string view.
    * Copies all the value at the root node level.
-   *
+   * <p>
    * gbif/portal-feedback#2423
    * Preserve record-level licences over dataset-level ones
    */
@@ -748,7 +752,7 @@ public class GbifJsonConverter {
 
       // Use BasicRecord license insted of json node
       JsonNode node = jc.getMainNode().get("license");
-      if(node != null) {
+      if (node != null) {
         String license = node.asText();
         if (br.getLicense() == null || br.getLicense().equals(License.UNSPECIFIED.name())
             || br.getLicense().equals(License.UNSUPPORTED.name())) {
@@ -756,6 +760,7 @@ public class GbifJsonConverter {
         }
       }
 
+      // Add other fields
       jc.addCommonFields(br);
     };
   }

@@ -654,6 +654,12 @@
     "name" : "v_taxonremarks",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_identifiedbyid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_recordedbyid",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "identifiercount",
     "type" : [ "int", "null" ]
   }, {
@@ -687,13 +693,12 @@
     "name" : "programmeacronym",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "collectionkey",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "institutionkey",
     "type" : [ "string", "null" ]
   }, {
-    "name" : "collectionkey",
-    "type" : [ "string", "null" ]
-  },
-  {
     "name" : "abstract",
     "type" : [ "string", "null" ]
   }, {
@@ -912,9 +917,6 @@
   }, {
     "name" : "organismquantitytype",
     "type" : [ "string", "null" ]
-  }, {
-    "name" : "relativeorganismquantity",
-    "type" : [ "double", "null" ]
   }, {
     "name" : "sex",
     "type" : [ "string", "null" ]
@@ -1410,6 +1412,21 @@
   }, {
     "name" : "repatriated",
     "type" : [ "boolean", "null" ]
+  }, {
+    "name" : "relativeorganismquantity",
+    "type" : [ "double", "null" ]
+  }, {
+    "name" : "recordedbyid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "identifiedbyid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "agentid",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]

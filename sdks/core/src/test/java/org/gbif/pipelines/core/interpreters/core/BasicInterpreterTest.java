@@ -1,11 +1,16 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -258,7 +263,6 @@ public class BasicInterpreterTest {
     Assert.assertEquals(License.UNSUPPORTED.name(), br.getLicense());
   }
 
-
   @Test
   public void interpretLicenseNullTest() {
 
@@ -274,6 +278,64 @@ public class BasicInterpreterTest {
 
     // Should
     Assert.assertEquals(License.UNSPECIFIED.name(), br.getLicense());
+  }
+
+  @Test
+  public void interpretAgentIdsEmtyOrNullTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(GbifTerm.recordedByID.qualifiedName(), null);
+    coreMap.put(GbifTerm.identifiedByID.qualifiedName(), "");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretAgentIds(er, br);
+
+    // Should
+    Assert.assertTrue(br.getAgentIds().isEmpty());
+  }
+
+  @Test
+  public void interpretAgentIdsTest() {
+
+    // Expected
+    List<AgentIdentifier> expected = Stream.of(
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.ORCID.name())
+            .setValue("https://orcid.org/0000-0002-0144-1997")
+            .build(),
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.WIKIDATA.name())
+            .setValue("https://www.wikidata.org/entity/1997")
+            .build(),
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.OTHER.name())
+            .setValue("http://www.somelink.org/id/idid")
+            .build(),
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.OTHER.name())
+            .setValue("someid")
+            .build()
+    ).sorted().collect(Collectors.toList());
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(GbifTerm.recordedByID.qualifiedName(),
+        " https://orcid.org/0000-0002-0144-1997| https://orcid.org/0000-0002-0144-1997 | https://orcid.org/0000-0002-0144-1997|someid");
+    coreMap.put(GbifTerm.identifiedByID.qualifiedName(),
+        " https://orcid.org/0000-0002-0144-1997|https://orcid.org/0000-0002-0144-1997 |http://www.wikidata.org/entity/1997|http://www.somelink.org/id/idid");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretAgentIds(er, br);
+
+    // Should
+    Assert.assertEquals(expected, br.getAgentIds().stream().sorted().collect(Collectors.toList()));
   }
 
 }

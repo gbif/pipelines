@@ -7,12 +7,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -65,7 +67,8 @@ public class GbifJsonConverterTest {
             + "\"accepted usage\",\"rank\":\"SPECIES\"},\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,"
             + "\"aberration\":\"Name2\",\"classificationPath\":\"_1_2\",\"taxonKey\":[1,2,10,11]},\"gbifId\":111,\"sampleSizeValue\""
             + ":2.0,\"sampleSizeUnit\":\"SampleSizeUnit\",\"organismQuantity\":2.0,\"organismQuantityType\":\"OrganismQuantityType\""
-            + ",\"relativeOrganismQuantity\":0.001,\"collectionKey\":\"75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d\",\"institutionKey\""
+            + ",\"relativeOrganismQuantity\":0.001,\"agentIds\":[{\"type\":\"OTHER\",\"value\":\"someId\"}],"
+            + "\"collectionKey\":\"75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d\",\"institutionKey\""
             + ":\"6ac3f774-d9fb-4796-b3e9-92bf6c81c084\",\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
             + "\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
             + "\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\",\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\","
@@ -117,6 +120,8 @@ public class GbifJsonConverterTest {
             .setSampleSizeValue(2d)
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
+            .setAgentIds(Collections.singletonList(
+                AgentIdentifier.newBuilder().setType(AgentIdentifierType.OTHER.name()).setValue("someId").build()))
             .build();
 
     TemporalRecord tmr =
@@ -160,13 +165,13 @@ public class GbifJsonConverterTest {
         .build();
 
     TaggedValueRecord tvr = TaggedValueRecord
-      .newBuilder()
-      .setId("123")
-      .setTaggedValues(new ImmutableMap.Builder<String,String>()
-                         .put(GbifInternalTerm.collectionKey.qualifiedName(), "75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d")
-                         .put(GbifInternalTerm.institutionKey.qualifiedName(), "6ac3f774-d9fb-4796-b3e9-92bf6c81c084")
-                         .build())
-      .build();
+        .newBuilder()
+        .setId("123")
+        .setTaggedValues(new ImmutableMap.Builder<String, String>()
+            .put(GbifInternalTerm.collectionKey.qualifiedName(), "75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d")
+            .put(GbifInternalTerm.institutionKey.qualifiedName(), "6ac3f774-d9fb-4796-b3e9-92bf6c81c084")
+            .build())
+        .build();
 
     // When
     String result = GbifJsonConverter.toStringJson(mr, er, tmr, lr, tr, br, tvr);
@@ -387,12 +392,12 @@ public class GbifJsonConverterTest {
         .build();
 
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
-      .setId("777")
-      .setCoreTerms(new ImmutableMap.Builder<String,String>()
-                      .put(DwcTerm.taxonID.qualifiedName(), "T1")
-                      .put(DwcTerm.scientificName.qualifiedName(), "Name")
-                      .build())
-      .build();
+        .setId("777")
+        .setCoreTerms(new ImmutableMap.Builder<String, String>()
+            .put(DwcTerm.taxonID.qualifiedName(), "T1")
+            .put(DwcTerm.scientificName.qualifiedName(), "Name")
+            .build())
+        .build();
 
     // When
     String result = GbifJsonConverter.toStringPartialJson(extendedRecord, taxonRecord);
