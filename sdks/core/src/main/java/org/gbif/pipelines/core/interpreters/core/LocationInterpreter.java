@@ -1,13 +1,13 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -61,12 +61,12 @@ public class LocationInterpreter {
 
   //List of Geospatial Issues
   private static final Set<String> SPATIAL_ISSUES =
-      Stream.of(
+      new HashSet<>(Arrays.asList(
           ZERO_COORDINATE.name(),
           COORDINATE_INVALID.name(),
           COORDINATE_OUT_OF_RANGE.name(),
           COUNTRY_COORDINATE_MISMATCH.name()
-      ).collect(Collectors.toSet());
+      ));
 
   private static final CountryParser COUNTRY_PARSER = CountryParser.getInstance();
 

@@ -76,39 +76,40 @@ public class BasicInterpreter {
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
       boolean isTripletValid, boolean isOccurrenceIdValid) {
     return (er, br) -> {
-      if (keygenService != null) {
+      if (keygenService == null) {
+        return;
+      }
 
-        Set<String> uniqueStrings = new HashSet<>(2);
+      Set<String> uniqueStrings = new HashSet<>(2);
 
-        // Adds occurrenceId
-        if (isOccurrenceIdValid) {
-          String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
-          if (!Strings.isNullOrEmpty(occurrenceId)) {
-            uniqueStrings.add(occurrenceId);
-          }
+      // Adds occurrenceId
+      if (isOccurrenceIdValid) {
+        String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
+        if (!Strings.isNullOrEmpty(occurrenceId)) {
+          uniqueStrings.add(occurrenceId);
         }
+      }
 
-        // Adds triplet
-        if (isTripletValid) {
-          String ic = extractValue(er, DwcTerm.institutionCode);
-          String cc = extractValue(er, DwcTerm.collectionCode);
-          String cn = extractValue(er, DwcTerm.catalogNumber);
-          OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
-        }
+      // Adds triplet
+      if (isTripletValid) {
+        String ic = extractValue(er, DwcTerm.institutionCode);
+        String cc = extractValue(er, DwcTerm.collectionCode);
+        String cn = extractValue(er, DwcTerm.catalogNumber);
+        OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+      }
 
-        if (!uniqueStrings.isEmpty()) {
-          try {
-            KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
-                .orElse(keygenService.generateKey(uniqueStrings));
+      if (!uniqueStrings.isEmpty()) {
+        try {
+          KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
+              .orElse(keygenService.generateKey(uniqueStrings));
 
-            br.setGbifId(key.getKey());
-          } catch (IllegalStateException ex) {
-            log.warn(ex.getMessage());
-            addIssue(br, GBIF_ID_INVALID);
-          }
-        } else {
+          br.setGbifId(key.getKey());
+        } catch (IllegalStateException ex) {
+          log.warn(ex.getMessage());
           addIssue(br, GBIF_ID_INVALID);
         }
+      } else {
+        addIssue(br, GBIF_ID_INVALID);
       }
     };
   }

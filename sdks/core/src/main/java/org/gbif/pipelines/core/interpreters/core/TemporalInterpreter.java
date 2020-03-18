@@ -230,7 +230,9 @@ public class TemporalInterpreter {
     }
 
     //if partial dates should be considered valid
-    int year, month = 1, day = 1;
+    int year;
+    int month = 1;
+    int day = 1;
     if (temporalAccessor.isSupported(ChronoField.YEAR)) {
       year = temporalAccessor.get(ChronoField.YEAR);
     } else {
@@ -257,11 +259,9 @@ public class TemporalInterpreter {
     if (!Strings.isNullOrEmpty(dateString)) {
       OccurrenceParseResult<TemporalAccessor> result = new OccurrenceParseResult<>(TEXTDATE_PARSER.parse(dateString));
       // check year makes sense
-      if (result.isSuccessful()) {
-        if (!isValidDate(result.getPayload(), true, likelyRange)) {
-          log.debug("Unlikely date parsed, ignore [{}].", dateString);
-          result.addIssue(unlikelyIssue);
-        }
+      if (result.isSuccessful() && !isValidDate(result.getPayload(), true, likelyRange)) {
+        log.debug("Unlikely date parsed, ignore [{}].", dateString);
+        result.addIssue(unlikelyIssue);
       }
       return result;
     }
