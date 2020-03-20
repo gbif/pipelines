@@ -378,9 +378,16 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
 
-      Optional.ofNullable(br.getAgentIds())
+      Optional.ofNullable(br.getRecordedByIds())
           .ifPresent(
-              uis -> hr.setAgentid(uis.stream()
+              uis -> hr.setRecordedbyid(uis.stream()
+                  .map(AgentIdentifier::getValue)
+                  .collect(Collectors.toList()))
+          );
+
+      Optional.ofNullable(br.getIdentifiedByIds())
+          .ifPresent(
+              uis -> hr.setIdentifiedbyid(uis.stream()
                   .map(AgentIdentifier::getValue)
                   .collect(Collectors.toList()))
           );

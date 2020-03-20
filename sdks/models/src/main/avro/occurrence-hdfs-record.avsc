@@ -1417,12 +1417,12 @@
     "type" : [ "double", "null" ]
   }, {
     "name" : "recordedbyid",
-    "type" : [ "string", "null" ]
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
   }, {
     "name" : "identifiedbyid",
-    "type" : [ "string", "null" ]
-  }, {
-    "name" : "agentid",
     "type" : [ {
       "type" : "array",
       "items" : [ "string", "null" ]

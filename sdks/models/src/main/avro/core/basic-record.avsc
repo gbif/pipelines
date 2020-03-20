@@ -34,7 +34,8 @@
       {"name": "relativeOrganismQuantity", "type": ["null", "double"], "default" : null},
       {"name": "references", "type": ["null", "string"], "default" : null, "doc": "http://purl.org/dc/terms/references"},
       {"name": "license", "type":["null","string"], "default":null, "doc": "http://purl.org/dc/terms/license"},
-      {"name": "agentIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : {}},
+      {"name": "identifiedByIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : {}},
+      {"name": "recordedByIds", "type": {"type" : "array", "items" : "AgentIdentifier"}, "default" : {}},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
   }

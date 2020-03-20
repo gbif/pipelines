@@ -1,7 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import java.net.URI;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -23,7 +23,6 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -307,21 +306,22 @@ public class BasicInterpreter {
     br.setLicense(license);
   }
 
-  /** {@link GbifTerm#identifiedByID} and {@link GbifTerm#recordedByID} interpretation. */
-  public static void interpretAgentIds(ExtendedRecord er, BasicRecord br) {
-    Function<GbifTerm, Set<AgentIdentifier>> fn = t -> extractOptValue(er, t)
+  /** {@link GbifTerm#identifiedByID}. */
+  public static void interpretIdentifiedByIds(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, GbifTerm.identifiedByID)
         .filter(x -> !x.isEmpty())
         .map(AgentIdentifierParser::parse)
-        .orElse(Collections.emptySet());
+        .map(ArrayList::new)
+        .ifPresent(br::setIdentifiedByIds);
+  }
 
-    Set<AgentIdentifier> recordedByIdSet = fn.apply(GbifTerm.recordedByID);
-    Set<AgentIdentifier> identifiedByIdSet = fn.apply(GbifTerm.identifiedByID);
-    if (!recordedByIdSet.isEmpty() || !identifiedByIdSet.isEmpty()) {
-      Set<AgentIdentifier> resultSet = new HashSet<>();
-      resultSet.addAll(recordedByIdSet);
-      resultSet.addAll(identifiedByIdSet);
-      br.getAgentIds().addAll(resultSet);
-    }
+  /** {@link GbifTerm#recordedByID} interpretation. */
+  public static void interpretRecordedByIds(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, GbifTerm.recordedByID)
+        .filter(x -> !x.isEmpty())
+        .map(AgentIdentifierParser::parse)
+        .map(ArrayList::new)
+        .ifPresent(br::setRecordedByIds);
   }
 
   /** Returns ENUM instead of url string */

@@ -99,7 +99,8 @@ public class OccurrenceHdfsRecordConverterTest {
         .setId("1")
         .setCreated(1L)
         .setLicense(License.CC0_1_0.name())
-        .setAgentIds(agentIds)
+        .setIdentifiedByIds(agentIds)
+        .setRecordedByIds(agentIds)
         .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
 
     List<RankedName> classification = new ArrayList<>();
@@ -167,7 +168,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastinterpreted());
     Assert.assertEquals("7ddf754f-d193-4cc9-b351-99906754a03b", hdfsRecord.getCollectionkey());
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
-    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getAgentid());
+    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getRecordedbyid());
+    Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());
   }
 
   @Test

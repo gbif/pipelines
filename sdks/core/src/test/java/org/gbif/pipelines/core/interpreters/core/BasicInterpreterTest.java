@@ -292,17 +292,30 @@ public class BasicInterpreterTest {
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
     // When
-    BasicInterpreter.interpretAgentIds(er, br);
+    BasicInterpreter.interpretRecordedByIds(er, br);
+    BasicInterpreter.interpretIdentifiedByIds(er, br);
 
     // Should
-    Assert.assertTrue(br.getAgentIds().isEmpty());
+    Assert.assertTrue(br.getRecordedByIds().isEmpty());
+    Assert.assertTrue(br.getIdentifiedByIds().isEmpty());
   }
 
   @Test
   public void interpretAgentIdsTest() {
 
     // Expected
-    List<AgentIdentifier> expected = Stream.of(
+    List<AgentIdentifier> expectedRecorded = Stream.of(
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.ORCID.name())
+            .setValue("https://orcid.org/0000-0002-0144-1997")
+            .build(),
+        AgentIdentifier.newBuilder()
+            .setType(AgentIdentifierType.OTHER.name())
+            .setValue("someid")
+            .build()
+    ).sorted().collect(Collectors.toList());
+
+    List<AgentIdentifier> expectedIdentified = Stream.of(
         AgentIdentifier.newBuilder()
             .setType(AgentIdentifierType.ORCID.name())
             .setValue("https://orcid.org/0000-0002-0144-1997")
@@ -314,10 +327,6 @@ public class BasicInterpreterTest {
         AgentIdentifier.newBuilder()
             .setType(AgentIdentifierType.OTHER.name())
             .setValue("http://www.somelink.org/id/idid")
-            .build(),
-        AgentIdentifier.newBuilder()
-            .setType(AgentIdentifierType.OTHER.name())
-            .setValue("someid")
             .build()
     ).sorted().collect(Collectors.toList());
 
@@ -332,10 +341,12 @@ public class BasicInterpreterTest {
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
     // When
-    BasicInterpreter.interpretAgentIds(er, br);
+    BasicInterpreter.interpretIdentifiedByIds(er, br);
+    BasicInterpreter.interpretRecordedByIds(er, br);
 
     // Should
-    Assert.assertEquals(expected, br.getAgentIds().stream().sorted().collect(Collectors.toList()));
+    Assert.assertEquals(expectedIdentified, br.getIdentifiedByIds().stream().sorted().collect(Collectors.toList()));
+    Assert.assertEquals(expectedRecorded, br.getRecordedByIds().stream().sorted().collect(Collectors.toList()));
   }
 
 }
