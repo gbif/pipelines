@@ -67,7 +67,8 @@ public class GbifJsonConverterTest {
             + "\"accepted usage\",\"rank\":\"SPECIES\"},\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,"
             + "\"aberration\":\"Name2\",\"classificationPath\":\"_1_2\",\"taxonKey\":[1,2,10,11]},\"gbifId\":111,\"sampleSizeValue\""
             + ":2.0,\"sampleSizeUnit\":\"SampleSizeUnit\",\"organismQuantity\":2.0,\"organismQuantityType\":\"OrganismQuantityType\""
-            + ",\"relativeOrganismQuantity\":0.001,\"agentIds\":[{\"type\":\"OTHER\",\"value\":\"someId\"}],"
+            + ",\"relativeOrganismQuantity\":0.001,\"identifiedByIds\":[{\"type\":\"OTHER\",\"value\":\"someId\"}],"
+            + "\"recordedByIds\":[{\"type\":\"OTHER\",\"value\":\"someId\"}],"
             + "\"collectionKey\":\"75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d\",\"institutionKey\""
             + ":\"6ac3f774-d9fb-4796-b3e9-92bf6c81c084\",\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
             + "\"MODIFIED_DATE_INVALID\",\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\","
@@ -120,7 +121,9 @@ public class GbifJsonConverterTest {
             .setSampleSizeValue(2d)
             .setRelativeOrganismQuantity(0.001d)
             .setLicense(License.CC_BY_NC_4_0.name())
-            .setAgentIds(Collections.singletonList(
+            .setRecordedByIds(Collections.singletonList(
+                AgentIdentifier.newBuilder().setType(AgentIdentifierType.OTHER.name()).setValue("someId").build()))
+            .setIdentifiedByIds(Collections.singletonList(
                 AgentIdentifier.newBuilder().setType(AgentIdentifierType.OTHER.name()).setValue("someId").build()))
             .build();
 

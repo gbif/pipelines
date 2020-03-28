@@ -62,7 +62,14 @@
       "typeStatus": {"type": "keyword", "copy_to": "all"},
       "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
-      "agentIds": {
+      "recordedByIds": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "keyword" },
+          "value": { "type": "keyword", "copy_to": "all"  }
+        }
+      },
+      "identifiedByIds": {
         "type": "object",
         "properties": {
           "type": { "type": "keyword" },
