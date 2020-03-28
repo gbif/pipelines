@@ -26,7 +26,7 @@ public class HbaseStore {
 
   private static final byte[] FF_BYTES = Bytes.toBytes("fragment");
 
-  private static final byte[] DQ_BYTES = Bytes.toBytes("datasetId");
+  private static final byte[] DQ_BYTES = Bytes.toBytes("datasetKey");
   private static final byte[] AQ_BYTES = Bytes.toBytes("attempt");
   private static final byte[] PQ_BYTES = Bytes.toBytes("protocol");
 
@@ -35,13 +35,13 @@ public class HbaseStore {
   private static final byte[] DUQ_BYTES = Bytes.toBytes("dateUpdated");
 
   @SneakyThrows
-  public static void putRecords(Table table, String datasetId, Integer attempt, EndpointType endpointType,
+  public static void putRecords(Table table, String datasetKey, Integer attempt, EndpointType endpointType,
       Map<String, String> fragmentsMap) {
 
     Map<String, Long> dateMap = getCreatedDateMap(table, fragmentsMap);
 
     List<Put> putList = fragmentsMap.entrySet().stream()
-        .map(es -> createFragmentPut(datasetId, attempt, endpointType.name(), es.getKey(), es.getValue(),
+        .map(es -> createFragmentPut(datasetKey, attempt, endpointType.name(), es.getKey(), es.getValue(),
             dateMap.get(es.getKey())))
         .collect(Collectors.toList());
 
@@ -63,14 +63,14 @@ public class HbaseStore {
     return createdDateMap;
   }
 
-  private static Put createFragmentPut(String datasetId, Integer attempt, String protocol, String key, String record,
+  private static Put createFragmentPut(String datasetKey, Integer attempt, String protocol, String key, String record,
       Long created) {
     long timestampUpdated = Instant.now().toEpochMilli();
     long timestampCreated = Optional.ofNullable(created).orElse(timestampUpdated);
 
     Put put = new Put(Bytes.toBytes(key));
 
-    put.addColumn(FF_BYTES, DQ_BYTES, Bytes.toBytes(datasetId));
+    put.addColumn(FF_BYTES, DQ_BYTES, Bytes.toBytes(datasetKey));
     put.addColumn(FF_BYTES, AQ_BYTES, Bytes.toBytes(attempt));
     put.addColumn(FF_BYTES, PQ_BYTES, Bytes.toBytes(protocol));
 
@@ -90,7 +90,7 @@ public class HbaseStore {
     return FF_BYTES;
   }
 
-  public static byte[] getDatasetIdQualifier() {
+  public static byte[] getDatasetKeyQualifier() {
     return DQ_BYTES;
   }
 

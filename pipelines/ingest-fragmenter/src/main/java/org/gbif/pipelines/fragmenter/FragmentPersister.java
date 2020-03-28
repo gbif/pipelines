@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  *         .pathToArchive(path)
  *         .useTriplet(true)
  *         .useOccurrenceId(true)
- *         .datasetId(datasetId)
+ *         .datasetKey(datasetKey)
  *         .attempt(attempt)
  *         .endpointType(EndpointType.DWC_ARCHIVE)
  *         .hbaseConnection(connection)
@@ -65,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Builder
-public class FragmentsUploader {
+public class FragmentPersister {
 
   @NonNull
   private Strategy strategy;
@@ -80,7 +80,7 @@ public class FragmentsUploader {
   private Path pathToArchive;
 
   @NonNull
-  private String datasetId;
+  private String datasetKey;
 
   @NonNull
   private Integer attempt;
@@ -107,16 +107,16 @@ public class FragmentsUploader {
 
   private Connection hbaseConnection;
 
-  public static FragmentsUploaderBuilder xmlBuilder() {
-    return FragmentsUploader.builder().strategy(XmlStrategy.create());
+  public static FragmentPersisterBuilder xmlBuilder() {
+    return FragmentPersister.builder().strategy(XmlStrategy.create());
   }
 
-  public static FragmentsUploaderBuilder dwcaBuilder() {
-    return FragmentsUploader.builder().strategy(DwcaStrategy.create());
+  public static FragmentPersisterBuilder dwcaBuilder() {
+    return FragmentPersister.builder().strategy(DwcaStrategy.create());
   }
 
   @SneakyThrows
-  public long upload() {
+  public long persist() {
 
     // Init values
     final Phaser phaser = new Phaser(1);
@@ -125,7 +125,7 @@ public class FragmentsUploader {
     final Consumer<OccurrenceRecord> addRowFn = r -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(r));
     final Connection connection = Optional.ofNullable(hbaseConnection)
         .orElse(HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection());
-    final HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
+    final HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetKey);
 
     rows.add(new ArrayList<>(batchSize));
 
@@ -137,7 +137,7 @@ public class FragmentsUploader {
       Consumer<List<OccurrenceRecord>> hbaseBulkFn = l -> {
         Map<String, String> map =
             OccurrenceRecordConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
-        HbaseStore.putRecords(table, datasetId, attempt, endpointType, map);
+        HbaseStore.putRecords(table, datasetKey, attempt, endpointType, map);
 
         occurrenceCounter.addAndGet(map.size());
         phaser.arriveAndDeregister();
@@ -197,7 +197,7 @@ public class FragmentsUploader {
   private void checkBackpressure(Phaser phaser) {
     if (!useSyncMode && backPressure != null && backPressure > 0) {
       while (phaser.getUnarrivedParties() > backPressure) {
-        log.info("Back pressure barrier: too many rows wainting...");
+        log.info("Back pressure barrier: too many rows waiting...");
         try {
           TimeUnit.MILLISECONDS.sleep(200L);
         } catch (InterruptedException ex) {

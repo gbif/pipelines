@@ -17,7 +17,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getAttemptQualifier;
-import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDatasetIdQualifier;
+import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDatasetKeyQualifier;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDateCreatedQualifier;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getDateUpdatedQualifier;
 import static org.gbif.pipelines.fragmenter.common.HbaseStore.getFragmentFamily;
@@ -27,17 +27,17 @@ import static org.gbif.pipelines.fragmenter.common.HbaseStore.getRecordQualifier
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TableAssert {
 
-  public static void assertTablDateUpdated(Connection connection, int expectedSize, String expectedDatasetId,
+  public static void assertTablDateUpdated(Connection connection, int expectedSize, String expectedDatasetKey,
       Integer expectedAttempt, EndpointType expectedEndpointType) throws IOException {
-    assertTable(connection, expectedSize, expectedDatasetId, expectedAttempt, expectedEndpointType, true);
+    assertTable(connection, expectedSize, expectedDatasetKey, expectedAttempt, expectedEndpointType, true);
   }
 
-  public static void assertTable(Connection connection, int expectedSize, String expectedDatasetId,
+  public static void assertTable(Connection connection, int expectedSize, String expectedDatasetKey,
       Integer expectedAttempt, EndpointType expectedEndpointType) throws IOException {
-    assertTable(connection, expectedSize, expectedDatasetId, expectedAttempt, expectedEndpointType, false);
+    assertTable(connection, expectedSize, expectedDatasetKey, expectedAttempt, expectedEndpointType, false);
   }
 
-  private static void assertTable(Connection connection, int expectedSize, String expectedDatasetId,
+  private static void assertTable(Connection connection, int expectedSize, String expectedDatasetKey,
       Integer expectedAttempt, EndpointType expectedEndpointType, boolean useDateUpdated) throws IOException {
     TableName tableName = TableName.valueOf(HbaseServer.FRAGMENT_TABLE_NAME);
     try (Table table = connection.getTable(tableName);
@@ -47,7 +47,7 @@ public class TableAssert {
       while (iterator.hasNext()) {
         Result r = iterator.next();
 
-        byte[] datasetValue = r.getValue(getFragmentFamily(), getDatasetIdQualifier());
+        byte[] datasetValue = r.getValue(getFragmentFamily(), getDatasetKeyQualifier());
         ByteBuffer attemptValue = ByteBuffer.wrap(r.getValue(getFragmentFamily(), getAttemptQualifier()));
         byte[] protocolValue = r.getValue(getFragmentFamily(), getProtocolQualifier());
         byte[] recordValue = r.getValue(getFragmentFamily(), getRecordQualifier());
@@ -61,7 +61,7 @@ public class TableAssert {
         long createdLong = createdValue.getLong();
         long updatedLong = updatedValue.getLong();
 
-        Assert.assertEquals(expectedDatasetId, datasetString);
+        Assert.assertEquals(expectedDatasetKey, datasetString);
         Assert.assertEquals(expectedAttempt, attemptInt);
         Assert.assertEquals(expectedEndpointType.name(), protocolString);
         Assert.assertNotNull(recordString);

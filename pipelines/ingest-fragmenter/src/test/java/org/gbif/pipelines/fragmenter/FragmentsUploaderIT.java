@@ -39,273 +39,273 @@ public class FragmentsUploaderIT {
 
     // State
     int expSize = 210;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.dwcaBuilder()
+    long result = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularZipDwca)
         .useTriplet(true)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
   public void dwcaSyncUploadTest() throws IOException {
     // State
     int expSize = 210;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.dwcaBuilder()
+    long result = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
   public void dwcaAsyncUploadTest() throws IOException {
     // State
     int expSize = 210;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.dwcaBuilder()
+    long result = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
   public void dwcaSyncUpdateUploadTest() throws IOException {
     // State
     int expSize = 210;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long resultFirst = FragmentsUploader.dwcaBuilder()
+    long resultFirst = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attemptFirst)
         .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .build()
-        .upload();
+        .persist();
 
-    long resultSecond = FragmentsUploader.dwcaBuilder()
+    long resultSecond = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attemptSecond)
         .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, endpointType);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
   public void dwcaAsyncUpdateUploadTest() throws IOException {
     // State
     int expSize = 210;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long resultFirst = FragmentsUploader.dwcaBuilder()
+    long resultFirst = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attemptFirst)
         .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .useSyncMode(false)
         .build()
-        .upload();
+        .persist();
 
-    long resultSecond = FragmentsUploader.dwcaBuilder()
+    long resultSecond = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(regularDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attemptSecond)
         .endpointType(endpointType)
         .batchSize(2)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, endpointType);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
   public void dwcaOccExtSyncUploadTest() throws IOException {
     // State
     int expSize = 477;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.dwcaBuilder()
+    long result = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(occurrenceAsExtensionDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
   public void dwcaOccExtAsyncUploadTest() throws IOException {
     // State
     int expSize = 477;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.dwcaBuilder()
+    long result = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(occurrenceAsExtensionDwca)
         .useTriplet(true)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .executor(Executors.newFixedThreadPool(2))
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
   public void dwcaMultimediaSyncUploadTest() throws IOException {
     // State
     int expSize = 368;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.dwcaBuilder()
+    long result = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(multimediaExtensionDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
   public void dwcaMultimediaAsyncUploadTest() throws IOException {
     // State
     int expSize = 368;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 231;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.dwcaBuilder()
+    long result = FragmentPersister.dwcaBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(multimediaExtensionDwca)
         .useTriplet(false)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .executor(Executors.newFixedThreadPool(2))
@@ -313,11 +313,11 @@ public class FragmentsUploaderIT {
         .useSyncMode(false)
         .backPressure(5)
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
 
@@ -325,133 +325,133 @@ public class FragmentsUploaderIT {
   public void xmlSyncUploadTest() throws IOException {
     // State
     int expSize = 40;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 1;
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.xmlBuilder()
+    long result = FragmentPersister.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
   public void xmlAsyncUploadTest() throws IOException {
     // State
     int expSize = 40;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attempt = 1;
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
-    long result = FragmentsUploader.xmlBuilder()
+    long result = FragmentPersister.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, result);
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetId, attempt, endpointType);
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, datasetKey, attempt, endpointType);
   }
 
   @Test
   public void xmlSyncDoubeUploadTest() throws IOException {
     // State
     int expSize = 40;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
-    long resultFirst = FragmentsUploader.xmlBuilder()
+    long resultFirst = FragmentPersister.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attemptFirst)
         .endpointType(EndpointType.DWC_ARCHIVE)
         .backPressure(5)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
-        .upload();
+        .persist();
 
-    long resultSecond = FragmentsUploader.xmlBuilder()
+    long resultSecond = FragmentPersister.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attemptSecond)
         .endpointType(endpointType)
         .batchSize(1)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, endpointType);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
   public void xmlAsyncDoubeUploadTest() throws IOException {
     // State
     int expSize = 40;
-    String datasetId = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
+    String datasetKey = "50c9509d-22c7-4a22-a47d-8c48425ef4a8";
     int attemptFirst = 231;
     int attemptSecond = 232;
     EndpointType endpointType = EndpointType.BIOCASE_XML_ARCHIVE;
 
     // When
-    long resultFirst = FragmentsUploader.xmlBuilder()
+    long resultFirst = FragmentPersister.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attemptFirst)
         .endpointType(EndpointType.DWC_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
         .executor(Executors.newFixedThreadPool(2))
         .useSyncMode(false)
         .build()
-        .upload();
+        .persist();
 
-    long resultSecond = FragmentsUploader.xmlBuilder()
+    long resultSecond = FragmentPersister.xmlBuilder()
         .tableName(HbaseServer.FRAGMENT_TABLE_NAME)
         .keygenConfig(HbaseServer.CFG)
         .pathToArchive(xmlArchivePath)
         .useTriplet(true)
         .useOccurrenceId(true)
-        .datasetId(datasetId)
+        .datasetKey(datasetKey)
         .attempt(attemptSecond)
         .endpointType(endpointType)
         .hbaseConnection(HBASE_SERVER.getConnection())
@@ -459,11 +459,11 @@ public class FragmentsUploaderIT {
         .batchSize(1)
         .useSyncMode(false)
         .build()
-        .upload();
+        .persist();
 
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetId, attemptSecond, endpointType);
+    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 }
