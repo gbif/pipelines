@@ -16,6 +16,7 @@
   <modules>
     <module>tools</module>
     <module>sdks</module>
+    <module>crawler</module>
     <module>pipelines</module>
     <module>examples</module>
   </modules>
@@ -387,6 +388,11 @@
       <dependency>
         <groupId>org.gbif.pipelines</groupId>
         <artifactId>ingest-gbif</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>ingest-gbif-java</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
