@@ -107,7 +107,7 @@ public class FragmentsUploaderIT {
         .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
-        .executor(Executors.newFixedThreadPool(2))
+        .executor(Executors.newSingleThreadExecutor())
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .build()
