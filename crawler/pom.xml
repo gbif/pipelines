@@ -115,6 +115,7 @@
     <commons-lang.version>2.6</commons-lang.version>
     <commons-io.version>2.5</commons-io.version>
     <log4j-api.version>2.3</log4j-api.version>
+    <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
 
     <!-- this version has to match with the one of pipelines -->
     <resilience4j.version>1.1.0</resilience4j.version>
@@ -280,6 +281,11 @@
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
       <version>${jcommander.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson</groupId>
+      <artifactId>jackson-datatype-guava</artifactId>
+      <version>${jackson-datatype-guava.version}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
