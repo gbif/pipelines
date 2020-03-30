@@ -83,11 +83,11 @@ public class ElasticsearchWriter<T> {
 
       // Push requests into ES
       for (T t : records) {
-        BulkRequest peek = requests.peek();
         addIndexRequestFn.accept(t);
+        BulkRequest peek = requests.peek();
         if (peek == null
-            || peek.numberOfActions() < esMaxBatchSize - 1
-            || peek.estimatedSizeInBytes() < esMaxBatchSizeBytes) {
+            || peek.numberOfActions() > esMaxBatchSize - 1
+            || peek.estimatedSizeInBytes() > esMaxBatchSizeBytes) {
           checkBackpressure(phaser);
           pushIntoEsFn.run();
           requests.add(new BulkRequest().timeout(TimeValue.timeValueMinutes(5L)));
