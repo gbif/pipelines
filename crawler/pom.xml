@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -55,7 +56,7 @@
             <configuration>
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.gbif.cli.Application</mainClass>
                 </transformer>
@@ -75,6 +76,7 @@
   </build>
 
   <properties>
+    <pipelines.lucene.version>7.5.0</pipelines.lucene.version>
     <amqp-client.version>4.8.0</amqp-client.version>
     <curator.version>4.0.1</curator.version>
     <curator-test.version>2.12.0</curator-test.version>
@@ -114,8 +116,10 @@
     <zookeeper.version>3.4.5</zookeeper.version>
     <commons-lang.version>2.6</commons-lang.version>
     <commons-io.version>2.5</commons-io.version>
+    <commons-configuration.version>1.10</commons-configuration.version>
     <log4j-api.version>2.3</log4j-api.version>
     <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
+    <jackson-old.version>1.9.12</jackson-old.version>
 
     <!-- this version has to match with the one of pipelines -->
     <resilience4j.version>1.1.0</resilience4j.version>
@@ -185,7 +189,7 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common-ws</artifactId>
-      <version>${gbif-common-service.version}</version>
+      <version>${gbif-common-ws.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
@@ -267,7 +271,59 @@
       </exclusions>
     </dependency>
 
+    <!-- Jackson -->
+    <dependency>
+      <groupId>com.fasterxml.jackson</groupId>
+      <artifactId>jackson-datatype-guava</artifactId>
+      <version>${jackson-datatype-guava.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>${jackson-old.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>${jackson-old.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-jaxrs</artifactId>
+      <version>${jackson-old.version}</version>
+    </dependency>
+
+    <!-- Hadoop -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
     <!-- Main list -->
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-core</artifactId>
+      <version>${pipelines.lucene.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.elasticsearch.client</groupId>
       <artifactId>elasticsearch-rest-high-level-client</artifactId>
@@ -281,15 +337,6 @@
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
       <version>${jcommander.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson</groupId>
-      <artifactId>jackson-datatype-guava</artifactId>
-      <version>${jackson-datatype-guava.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
     </dependency>
     <dependency>
       <groupId>org.kohsuke.metainf-services</groupId>
@@ -363,18 +410,6 @@
       <version>${httpcore.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-hdfs</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
@@ -390,6 +425,7 @@
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-framework</artifactId>
+      <version>${curator.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.curator</groupId>
@@ -399,6 +435,7 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
+      <version>${zookeeper.version}</version>
       <exclusions>
         <exclusion>
           <artifactId>log4j</artifactId>
@@ -419,6 +456,11 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>${commons-io.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-configuration</groupId>
+      <artifactId>commons-configuration</artifactId>
+      <version>${commons-configuration.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.avro</groupId>
