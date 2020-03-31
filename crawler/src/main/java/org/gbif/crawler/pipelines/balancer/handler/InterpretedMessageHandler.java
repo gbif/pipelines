@@ -13,22 +13,18 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Populates and sends the {@link PipelinesInterpretedMessage} message, the main method
  * is {@link InterpretedMessageHandler#handle}
  */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InterpretedMessageHandler {
-
-  private static final Logger LOG = LoggerFactory.getLogger(InterpretedMessageHandler.class);
-
-  private InterpretedMessageHandler() {
-    // NOP
-  }
 
   /**
    * Main handler, basically computes the runner type and sends to the same consumer
@@ -36,7 +32,7 @@ public class InterpretedMessageHandler {
   public static void handle(BalancerConfiguration config, MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
 
-    LOG.info("Process PipelinesInterpretedMessage - {}", message);
+    log.info("Process PipelinesInterpretedMessage - {}", message);
 
     // Populate message fields
     ObjectMapper mapper = new ObjectMapper();
@@ -56,11 +52,12 @@ public class InterpretedMessageHandler {
             m.isRepeatAttempt(),
             m.getResetPrefix(),
             m.getOnlyForStep(),
-            m.getExecutionId());
+            m.getExecutionId()
+        );
 
     publisher.send(outputMessage);
 
-    LOG.info("The message has been sent - {}", outputMessage);
+    log.info("The message has been sent - {}", outputMessage);
   }
 
   /**
@@ -79,7 +76,7 @@ public class InterpretedMessageHandler {
     // Strategy 1: Chooses a runner type by number of records in a dataset
     if (recordsNumber > 0) {
       runner = recordsNumber >= config.switchRecordsNumber ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
-      LOG.info("Records number - {}, Spark Runner type - {}", recordsNumber, runner);
+      log.info("Records number - {}, Spark Runner type - {}", recordsNumber, runner);
       return runner;
     }
 
@@ -90,7 +87,7 @@ public class InterpretedMessageHandler {
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
-      LOG.info("File size - {}, Spark Runner type - {}", fileSizeByte, runner);
+      log.info("File size - {}, Spark Runner type - {}", fileSizeByte, runner);
       return runner;
     }
 

@@ -12,66 +12,30 @@ import java.util.function.BiFunction;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Class to build an instance of ProcessBuilder for direct or spark command
  */
+@Slf4j
+@Builder
 final class ProcessRunnerBuilder {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ProcessRunnerBuilder.class);
 
   private static final String DELIMITER = " ";
 
   private InterpreterConfiguration config;
+  @NonNull
   private PipelinesVerbatimMessage message;
   private int sparkParallelism;
   private int sparkExecutorNumbers;
   private String sparkExecutorMemory;
   private String sparkEventLogDir;
+  @NonNull
   private String inputPath;
 
-  ProcessRunnerBuilder config(InterpreterConfiguration config) {
-    this.config = Objects.requireNonNull(config);
-    return this;
-  }
-
-  ProcessRunnerBuilder message(PipelinesVerbatimMessage message) {
-    this.message = Objects.requireNonNull(message);
-    return this;
-  }
-
-  ProcessRunnerBuilder sparkParallelism(int sparkParallelism) {
-    this.sparkParallelism = sparkParallelism;
-    return this;
-  }
-
-  ProcessRunnerBuilder sparkExecutorNumbers(int sparkExecutorNumbers) {
-    this.sparkExecutorNumbers = sparkExecutorNumbers;
-    return this;
-  }
-
-  ProcessRunnerBuilder sparkExecutorMemory(String sparkExecutorMemory) {
-    this.sparkExecutorMemory = sparkExecutorMemory;
-    return this;
-  }
-
-  ProcessRunnerBuilder sparkEventLogDir(String sparkEventLogDir) {
-    this.sparkEventLogDir = sparkEventLogDir;
-    return this;
-  }
-
-  ProcessRunnerBuilder inputPath(String inputPath) {
-    this.inputPath = Objects.requireNonNull(inputPath);
-    return this;
-  }
-
-  static ProcessRunnerBuilder create() {
-    return new ProcessRunnerBuilder();
-  }
-
-  ProcessBuilder build() {
+  ProcessBuilder get() {
     if (StepRunner.STANDALONE.name().equals(config.processRunner)) {
       return buildDirect();
     }
@@ -187,7 +151,7 @@ final class ProcessRunnerBuilder {
 
     // The result
     String result = joiner.toString();
-    LOG.info("Command - {}", result);
+    log.info("Command - {}", result);
 
     ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", result);
 
@@ -195,7 +159,7 @@ final class ProcessRunnerBuilder {
       try {
         Files.createDirectories(Paths.get(path));
         File file = new File(path + message.getDatasetUuid() + "_" + message.getAttempt() + "_int_" + type + ".log");
-        LOG.info("{} file - {}", type, file);
+        log.info("{} file - {}", type, file);
         return file;
       } catch (IOException ex) {
         throw new RuntimeException(ex);

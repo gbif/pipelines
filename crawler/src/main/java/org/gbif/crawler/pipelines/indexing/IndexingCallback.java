@@ -23,6 +23,7 @@ import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.crawler.common.utils.HdfsUtils;
 import org.gbif.crawler.pipelines.PipelineCallback;
+import org.gbif.crawler.pipelines.indexing.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.crawler.pipelines.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
@@ -35,48 +36,40 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.crawler.common.utils.HdfsUtils.buildOutputPathAsString;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
  * <p>
  * The main method is {@link IndexingCallback#handleMessage}
  */
+@Slf4j
+@Builder
 public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(IndexingCallback.class);
   private static final StepType STEP = StepType.INTERPRETED_TO_INDEX;
-  private static  final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
+  @NonNull
   private final IndexingConfiguration config;
   private final MessagePublisher publisher;
+  @NonNull
   private final DatasetService datasetService;
+  @NonNull
   private final CuratorFramework curator;
   private final HttpClient httpClient;
   private final PipelinesHistoryWsClient historyWsClient;
   private final ExecutorService executor;
-
-  IndexingCallback(IndexingConfiguration config, MessagePublisher publisher, DatasetService datasetService,
-      CuratorFramework curator, HttpClient httpClient, PipelinesHistoryWsClient historyWsClient, ExecutorService executor) {
-    this.curator = checkNotNull(curator, "curator cannot be null");
-    this.config = checkNotNull(config, "config cannot be null");
-    this.datasetService = checkNotNull(datasetService, "config cannot be null");
-    this.publisher = publisher;
-    this.httpClient = httpClient;
-    this.historyWsClient = historyWsClient;
-    this.executor = executor;
-  }
 
   /**
    * Handles a MQ {@link PipelinesInterpretedMessage} message
@@ -92,17 +85,17 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         MDCCloseable mdc3 = MDC.putCloseable("step", STEP.name())) {
 
       if (!isMessageCorrect(message)) {
-        LOG.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
+        log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
         return;
       }
 
-      LOG.info("Message handler began - {}", message);
+      log.info("Message handler began - {}", message);
 
       Set<String> steps = message.getPipelineSteps();
       Runnable runnable = createRunnable(message);
 
       // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
-      PipelineCallback.create()
+      PipelineCallback.builder()
           .incomingMessage(message)
           .outgoingMessage(new PipelinesIndexedMessage(datasetId, attempt, steps))
           .curator(curator)
@@ -111,11 +104,11 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
           .publisher(publisher)
           .runnable(runnable)
           .historyWsClient(historyWsClient)
-          .metricsSupplier(metricsSupplier(datasetId, attempt))
+          .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();
 
-      LOG.info("Message handler ended - {}", message);
+      log.info("Message handler ended - {}", message);
 
     }
   }
@@ -145,7 +138,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         String indexName = computeIndexName(message, recordsNumber);
         int numberOfShards = computeNumberOfShards(indexName, recordsNumber);
 
-        ProcessRunnerBuilder builder = ProcessRunnerBuilder.create()
+        ProcessRunnerBuilderBuilder builder = ProcessRunnerBuilder.builder()
             .config(config)
             .message(message)
             .esIndexName(indexName)
@@ -154,36 +147,36 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
-        LOG.info("Start the process. Message - {}", message);
+        log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
           runDistributed(message, builder, recordsNumber);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(builder);
         }
       } catch (Exception ex) {
-        LOG.error(ex.getMessage(), ex);
+        log.error(ex.getMessage(), ex);
         throw new IllegalStateException("Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
 
     };
   }
 
-  private void runLocal(ProcessRunnerBuilder builder) throws Exception {
+  private void runLocal(ProcessRunnerBuilderBuilder builder) throws Exception {
     if (config.standaloneUseJava) {
-      InterpretedToEsIndexExtendedPipeline.run(builder.buildOptions(), executor);
+      InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
     } else {
       // Assembles a terminal java process and runs it
-      int exitValue = builder.build().start().waitFor();
+      int exitValue = builder.build().get().start().waitFor();
 
       if (exitValue != 0) {
         throw new RuntimeException("Process has been finished with exit value - " + exitValue);
       } else {
-        LOG.info("Process has been finished with exit value - {}", exitValue);
+        log.info("Process has been finished with exit value - {}", exitValue);
       }
     }
   }
 
-  private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilder builder, long recordsNumber)
+  private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder, long recordsNumber)
       throws Exception {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
@@ -194,12 +187,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
         .sparkExecutorNumbers(sparkExecutorNumbers);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().start().waitFor();
+    int exitValue = builder.build().get().start().waitFor();
 
     if (exitValue != 0) {
       throw new RuntimeException("Process has been finished with exit value - " + exitValue);
     } else {
-      LOG.info("Process has been finished with exit value - {}", exitValue);
+      log.info("Process has been finished with exit value - {}", exitValue);
     }
   }
 
@@ -226,7 +219,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
    * max is config.sparkExecutorMemoryGbMax
    */
   private String computeSparkExecutorMemory(int sparkExecutorNumbers) {
-    int size =  sparkExecutorNumbers * 2;
+    int size = sparkExecutorNumbers * 2;
     if (size < config.sparkExecutorMemoryGbMin) {
       return config.sparkExecutorMemoryGbMin + "G";
     }
@@ -243,7 +236,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
    * 500_000d is records per executor
    */
   private int computeSparkExecutorNumbers(long recordsNumber) {
-    int sparkExecutorNumbers = (int) Math.ceil(recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread));
+    int sparkExecutorNumbers =
+        (int) Math.ceil(recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread));
     if (sparkExecutorNumbers < config.sparkExecutorNumbersMin) {
       return config.sparkExecutorNumbersMin;
     }
@@ -272,7 +266,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       idxName = datasetId + "_" + message.getAttempt();
       idxName = prefix == null ? idxName : idxName + "_" + prefix;
       idxName = idxName + "_" + Instant.now().toEpochMilli();
-      LOG.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
+      log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
       return idxName;
     }
 
@@ -285,14 +279,14 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     if (diff >= config.indexDefStaticDateDurationDd) {
       String esPr = prefix == null ? config.indexDefStaticPrefixName : config.indexDefStaticPrefixName + "_" + prefix;
       idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
-      LOG.info("ES Index name - {}, lastChangedDate - {}, diff days - {}", idxName, lastChangedDate, diff);
+      log.info("ES Index name - {}, lastChangedDate - {}, diff days - {}", idxName, lastChangedDate, diff);
       return idxName;
     }
 
     // Default dynamic index name for all other datasets
     String esPr = prefix == null ? config.indexDefDynamicPrefixName : config.indexDefDynamicPrefixName + "_" + prefix;
     idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
-    LOG.info("ES Index name - {}, lastChangedDate - {}, diff days - {}", idxName, lastChangedDate, diff);
+    log.info("ES Index name - {}, lastChangedDate - {}, diff days - {}", idxName, lastChangedDate, diff);
     return idxName;
   }
 
@@ -302,12 +296,13 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
    * 2) in case of independent index -> recordsNumber / config.indexRecordsPerShard
    */
   private int computeNumberOfShards(String indexName, long recordsNumber) {
-    if (indexName.startsWith(config.indexDefDynamicPrefixName) || indexName.startsWith(config.indexDefStaticPrefixName)) {
+    if (indexName.startsWith(config.indexDefDynamicPrefixName) || indexName.startsWith(
+        config.indexDefStaticPrefixName)) {
       return (int) Math.ceil((double) config.indexDefSize / (double) config.indexRecordsPerShard);
     }
 
     double shards = (double) recordsNumber / (double) config.indexRecordsPerShard;
-    shards = shards > 1d ? shards : 1d;
+    shards = Math.max(shards, 1d);
     boolean isCeil = (shards - Math.floor(shards)) > 0.25d;
     return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
   }
@@ -331,10 +326,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
-    String fileNumber = HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
+    String fileNumber =
+        HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
-      throw new IllegalArgumentException( "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+      throw new IllegalArgumentException(
+          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
@@ -358,21 +355,18 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     if (response.getStatusLine().getStatusCode() != 200) {
       throw new IOException("ES _cat API exception " + response.getStatusLine().getReasonPhrase());
     }
-    List<EsCatIndex> indices = MAPPER.readValue(response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
-    if (indices.size() != 0 && indices.get(0).getCount() <= config.indexDefNewIfSize) {
+    List<EsCatIndex> indices =
+        MAPPER.readValue(response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
+    if (!indices.isEmpty() && indices.get(0).getCount() <= config.indexDefNewIfSize) {
       return Optional.of(indices.get(0).getName());
     }
     return Optional.empty();
   }
 
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(UUID datasetId, int attempt) {
-    return () ->
-        HdfsUtils.readMetricsFromMetaFile(
-            config.hdfsSiteConfig,
-            buildOutputPathAsString(
-                config.repositoryPath,
-                datasetId.toString(),
-                String.valueOf(attempt),
-                config.metaFileName));
+  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(String datasetId, String attempt) {
+    return () -> {
+      String path = buildOutputPathAsString(config.repositoryPath, datasetId, attempt, config.metaFileName);
+      return HdfsUtils.readMetricsFromMetaFile(config.hdfsSiteConfig, path);
+    };
   }
 }

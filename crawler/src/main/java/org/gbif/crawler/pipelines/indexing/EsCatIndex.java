@@ -3,7 +3,11 @@ package org.gbif.crawler.pipelines.indexing;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class EsCatIndex implements Serializable {
 
   private static final long serialVersionUID = 7134020816642786944L;
@@ -13,22 +17,4 @@ public class EsCatIndex implements Serializable {
 
   @JsonProperty("index")
   private String name;
-
-  public long getCount() {
-    return count;
-  }
-
-  public EsCatIndex setCount(long count) {
-    this.count = count;
-    return this;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public EsCatIndex setName(String name) {
-    this.name = name;
-    return this;
-  }
 }

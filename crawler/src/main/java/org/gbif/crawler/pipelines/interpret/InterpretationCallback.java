@@ -19,6 +19,7 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.crawler.common.utils.HdfsUtils;
 import org.gbif.crawler.pipelines.PipelineCallback;
 import org.gbif.crawler.pipelines.dwca.DwcaToAvroConfiguration;
+import org.gbif.crawler.pipelines.interpret.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
@@ -27,41 +28,35 @@ import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 import com.google.common.base.Strings;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.crawler.common.utils.HdfsUtils.buildOutputPathAsString;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Callback which is called when the {@link PipelinesVerbatimMessage} is received.
  * <p>
  * The main method is {@link InterpretationCallback#handleMessage}
  */
+@Slf4j
+@AllArgsConstructor
 public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(InterpretationCallback.class);
+  
   private static final StepType STEP = StepType.VERBATIM_TO_INTERPRETED;
 
+  @NonNull
   private final InterpreterConfiguration config;
   private final MessagePublisher publisher;
+  @NonNull
   private final CuratorFramework curator;
   private PipelinesHistoryWsClient historyWsClient;
   private final ExecutorService executor;
-
-  InterpretationCallback(InterpreterConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-                         PipelinesHistoryWsClient historyWsClient, ExecutorService executor) {
-    this.curator = checkNotNull(curator, "curator cannot be null");
-    this.config = checkNotNull(config, "config cannot be null");
-    this.publisher = publisher;
-    this.historyWsClient = historyWsClient;
-    this.executor = executor;
-  }
 
   /**
    * Handles a MQ {@link PipelinesVerbatimMessage} message
@@ -77,11 +72,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         MDCCloseable mdc3 = MDC.putCloseable("step", STEP.name())) {
 
       if (!isMessageCorrect(message)) {
-        LOG.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
+        log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
         return;
       }
 
-      LOG.info("Message handler began - {}", message);
+      log.info("Message handler began - {}", message);
 
       // Common variables
       Set<String> steps = message.getPipelineSteps();
@@ -95,7 +90,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       boolean repeatAttempt = pathExists(message);
 
       // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
-      PipelineCallback.create()
+      PipelineCallback.builder()
           .incomingMessage(message)
           .outgoingMessage(new PipelinesInterpretedMessage(datasetId, attempt, steps, recordsNumber, repeatAttempt, message.getResetPrefix()))
           .curator(curator)
@@ -104,11 +99,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
           .publisher(publisher)
           .runnable(runnable)
           .historyWsClient(historyWsClient)
-          .metricsSupplier(metricsSupplier(datasetId, attempt))
+          .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();
 
-      LOG.info("Message handler ended - {}", message);
+      log.info("Message handler ended - {}", message);
 
     }
   }
@@ -136,14 +131,14 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       String path = message.getExtraPath() != null ? message.getExtraPath() :
           String.join("/", config.repositoryPath, datasetId, attempt, verbatim);
 
-      ProcessRunnerBuilder builder = ProcessRunnerBuilder.create()
+      ProcessRunnerBuilderBuilder builder = ProcessRunnerBuilder.builder()
           .config(config)
           .message(message)
           .inputPath(path);
 
       Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
-      LOG.info("Start the process. Message - {}", message);
+      log.info("Start the process. Message - {}", message);
       try {
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
           runDistributed(message, builder);
@@ -151,33 +146,33 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
           runLocal(builder);
         }
 
-        LOG.info("Deleting old attempts directories");
+        log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.repositoryPath, datasetId);
         HdfsUtils.deleteSubFolders(config.hdfsSiteConfig, pathToDelete, config.deleteAfterDays);
 
       } catch (Exception ex) {
-        LOG.error(ex.getMessage(), ex);
+        log.error(ex.getMessage(), ex);
         throw new IllegalStateException("Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
     };
   }
 
-  private void runLocal(ProcessRunnerBuilder builder) throws Exception {
+  private void runLocal(ProcessRunnerBuilderBuilder builder) throws Exception {
     if (config.standaloneUseJava) {
-      VerbatimToInterpretedPipeline.run(builder.buildOptions(), executor);
+      VerbatimToInterpretedPipeline.run(builder.build().buildOptions(), executor);
     } else {
       // Assembles a terminal java process and runs it
-      int exitValue = builder.build().start().waitFor();
+      int exitValue = builder.build().get().start().waitFor();
 
       if (exitValue != 0) {
         throw new RuntimeException("Process has been finished with exit value - " + exitValue);
       } else {
-        LOG.info("Process has been finished with exit value - {}", exitValue);
+        log.info("Process has been finished with exit value - {}", exitValue);
       }
     }
   }
 
-  private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilder builder) throws Exception {
+  private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder) throws Exception {
     long recordsNumber = getRecordNumber(message);
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
 
@@ -186,12 +181,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         .sparkExecutorNumbers(sparkExecutorNumbers);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().start().waitFor();
+    int exitValue = builder.build().get().start().waitFor();
 
     if (exitValue != 0) {
       throw new RuntimeException("Process has been finished with exit value - " + exitValue);
     } else {
-      LOG.info("Process has been finished with exit value - {}", exitValue);
+      log.info("Process has been finished with exit value - {}", exitValue);
     }
   }
 
@@ -249,7 +244,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
-    LOG.info("Getting records number from the file - {}", metaPath);
+    log.info("Getting records number from the file - {}", metaPath);
 
     Long messageNumber = message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null
         ? message.getValidationResult().getNumberOfRecords() : null;
@@ -273,44 +268,36 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   /**
    * Checks if the directory exists
    */
+  @SneakyThrows
   private boolean pathExists(PipelinesVerbatimMessage message) {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String path = String.join("/", config.repositoryPath, datasetId, attempt, Interpretation.DIRECTORY_NAME);
-    try {
-      return HdfsUtils.exists(config.hdfsSiteConfig, path);
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
+
+    return HdfsUtils.exists(config.hdfsSiteConfig, path);
   }
 
   /**
    * Finds the latest attempt number in HDFS
    */
+  @SneakyThrows
   private Integer getLatestAttempt(PipelinesVerbatimMessage message) {
     String datasetId = message.getDatasetUuid().toString();
     String path = String.join("/", config.repositoryPath, datasetId);
-    try {
-      return HdfsUtils.getSubDirList(config.hdfsSiteConfig, path)
-          .stream()
-          .map(y -> y.getPath().getName())
-          .filter(x -> x.chars().allMatch(Character::isDigit))
-          .mapToInt(Integer::valueOf)
-          .max()
-          .orElseThrow(() -> new RuntimeException("Can't find the maximum attempt"));
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
+
+    return HdfsUtils.getSubDirList(config.hdfsSiteConfig, path)
+        .stream()
+        .map(y -> y.getPath().getName())
+        .filter(x -> x.chars().allMatch(Character::isDigit))
+        .mapToInt(Integer::valueOf)
+        .max()
+        .orElseThrow(() -> new RuntimeException("Can't find the maximum attempt"));
   }
 
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(UUID datasetId, int attempt) {
-    return () ->
-        HdfsUtils.readMetricsFromMetaFile(
-            config.hdfsSiteConfig,
-            buildOutputPathAsString(
-                config.repositoryPath,
-                datasetId.toString(),
-                String.valueOf(attempt),
-                config.metaFileName));
+  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(String datasetId, String attempt) {
+    return () -> {
+      String path = buildOutputPathAsString(config.repositoryPath, datasetId, attempt, config.metaFileName);
+      return HdfsUtils.readMetricsFromMetaFile(config.hdfsSiteConfig, path);
+    };
   }
 }

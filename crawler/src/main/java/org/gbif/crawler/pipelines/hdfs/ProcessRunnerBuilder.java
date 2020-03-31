@@ -12,19 +12,22 @@ import java.util.function.BiFunction;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Class to build an instance of ProcessBuilder for direct or spark command
  */
+@Slf4j
+@Builder
 final class ProcessRunnerBuilder {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ProcessRunnerBuilder.class);
 
   private static final String DELIMITER = " ";
 
+  @NonNull
   private HdfsViewConfiguration config;
+  @NonNull
   private PipelinesInterpretedMessage message;
   private int sparkParallelism;
   private int sparkExecutorNumbers;
@@ -32,46 +35,7 @@ final class ProcessRunnerBuilder {
   private String sparkEventLogDir;
   private int numberOfShards;
 
-  ProcessRunnerBuilder config(HdfsViewConfiguration config) {
-    this.config = Objects.requireNonNull(config);
-    return this;
-  }
-
-  ProcessRunnerBuilder message(PipelinesInterpretedMessage message) {
-    this.message = Objects.requireNonNull(message);
-    return this;
-  }
-
-  ProcessRunnerBuilder sparkParallelism(int sparkParallelism) {
-    this.sparkParallelism = sparkParallelism;
-    return this;
-  }
-
-  ProcessRunnerBuilder sparkExecutorNumbers(int sparkExecutorNumbers) {
-    this.sparkExecutorNumbers = sparkExecutorNumbers;
-    return this;
-  }
-
-  ProcessRunnerBuilder sparkExecutorMemory(String sparkExecutorMemory) {
-    this.sparkExecutorMemory = sparkExecutorMemory;
-    return this;
-  }
-
-  ProcessRunnerBuilder sparkEventLogDir(String sparkEventLogDir) {
-    this.sparkEventLogDir = sparkEventLogDir;
-    return this;
-  }
-
-  ProcessRunnerBuilder numberOfShards(int numberOfShards) {
-    this.numberOfShards = numberOfShards;
-    return this;
-  }
-
-  static ProcessRunnerBuilder create() {
-    return new ProcessRunnerBuilder();
-  }
-
-  ProcessBuilder build() {
+  ProcessBuilder get() {
     if (StepRunner.STANDALONE.name().equals(config.processRunner)) {
       return buildDirect();
     }
@@ -99,8 +63,8 @@ final class ProcessRunnerBuilder {
         .add(Objects.requireNonNull(config.standaloneMainClass))
         .add("--pipelineStep=INTERPRETED_TO_HDFS");
 
-    Optional.ofNullable(sparkEventLogDir).ifPresent(sparkEventLogDir -> joiner.add("--conf spark.eventLog.enabled=true")
-                                                                              .add("--conf spark.eventLog.dir=" +  sparkEventLogDir));
+    Optional.ofNullable(sparkEventLogDir)
+        .ifPresent(dir -> joiner.add("--conf spark.eventLog.enabled=true").add("--conf spark.eventLog.dir=" + dir));
 
     return buildCommon(joiner);
   }
@@ -169,7 +133,7 @@ final class ProcessRunnerBuilder {
 
     // The result
     String result = joiner.toString();
-    LOG.info("Command - {}", result);
+    log.info("Command - {}", result);
 
     ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", result);
 
@@ -177,7 +141,7 @@ final class ProcessRunnerBuilder {
       try {
         Files.createDirectories(Paths.get(path));
         File file = new File(path + message.getDatasetUuid() + "_" + message.getAttempt() + "_idx_" + type + ".log");
-        LOG.info("{} file - {}", type, file);
+        log.info("{} file - {}", type, file);
         return file;
       } catch (IOException ex) {
         throw new RuntimeException(ex);

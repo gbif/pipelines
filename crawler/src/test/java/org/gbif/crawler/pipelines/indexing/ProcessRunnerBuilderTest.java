@@ -17,14 +17,14 @@ public class ProcessRunnerBuilderTest {
   @Test(expected = NullPointerException.class)
   public void testEmptyRunner() {
     // Should
-    ProcessRunnerBuilder.create().build();
+    ProcessRunnerBuilder.builder().build();
   }
 
   @Test(expected = NullPointerException.class)
   public void testEmptyParameters() {
 
     // Should
-    ProcessRunnerBuilder.create().build();
+    ProcessRunnerBuilder.builder().build();
   }
 
   @Test
@@ -60,11 +60,12 @@ public class ProcessRunnerBuilderTest {
 
     // When
     ProcessBuilder builder =
-        ProcessRunnerBuilder.create()
+        ProcessRunnerBuilder.builder()
             .config(config)
             .message(message)
             .esIndexName(indexName)
-            .build();
+            .build()
+            .get();
 
     String result = builder.command().get(2);
 
@@ -110,14 +111,15 @@ public class ProcessRunnerBuilderTest {
 
     // Expected
     ProcessBuilder builder =
-        ProcessRunnerBuilder.create()
+        ProcessRunnerBuilder.builder()
             .config(config)
             .message(message)
             .esIndexName(indexName)
             .sparkParallelism(1)
             .sparkExecutorMemory("1G")
             .sparkExecutorNumbers(1)
-            .build();
+            .build()
+            .get();
 
     String result = builder.command().get(2);
 
@@ -170,14 +172,15 @@ public class ProcessRunnerBuilderTest {
 
     // Expected
     ProcessBuilder builder =
-        ProcessRunnerBuilder.create()
+        ProcessRunnerBuilder.builder()
             .config(config)
             .message(message)
             .sparkParallelism(1)
             .sparkExecutorMemory("1G")
             .sparkExecutorNumbers(1)
             .esIndexName(indexName)
-            .build();
+            .build()
+            .get();
 
     String result = builder.command().get(2);
 

@@ -21,42 +21,36 @@ import org.gbif.crawler.pipelines.xml.XmlToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 import com.google.common.collect.Sets;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.crawler.common.utils.HdfsUtils.buildOutputPathAsString;
 import static org.gbif.crawler.pipelines.xml.XmlToAvroCallback.SKIP_RECORDS_CHECK;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Call back which is called when the {@link PipelinesXmlMessage} is received.
  * <p>
  * The main method is {@link AbcdToAvroCallback#handleMessage}
  */
+@Slf4j
+@AllArgsConstructor
 public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMessage> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AbcdToAvroCallback.class);
   private static final StepType STEP = StepType.ABCD_TO_VERBATIM;
 
-  private final XmlToAvroConfiguration config;
-  private final MessagePublisher publisher;
+  @NonNull
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient historyWsClient;
+  @NonNull
+  private final XmlToAvroConfiguration config;
+  @NonNull
   private final ExecutorService executor;
-
-  public AbcdToAvroCallback(XmlToAvroConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient historyWsClient, ExecutorService executor) {
-    this.curator = checkNotNull(curator, "curator cannot be null");
-    this.config = checkNotNull(config, "config cannot be null");
-    this.executor = checkNotNull(executor, "executor cannot be null");
-    this.publisher = publisher;
-    this.historyWsClient = historyWsClient;
-  }
+  private final MessagePublisher publisher;
+  private final PipelinesHistoryWsClient historyWsClient;
 
   /**
    * Handles a MQ {@link PipelinesAbcdMessage} message
@@ -72,11 +66,11 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
         MDCCloseable mdc3 = MDC.putCloseable("step", STEP.name())) {
 
       if (!message.isModified()) {
-        LOG.info("Skip the message, cause it wasn't modified, exit from handler");
+        log.info("Skip the message, cause it wasn't modified, exit from handler");
         return;
       }
 
-      LOG.info("Message handler began - {}", message);
+      log.info("Message handler began - {}", message);
 
       if (message.getPipelineSteps().isEmpty()) {
         message.setPipelineSteps(Sets.newHashSet(
@@ -94,7 +88,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
           XmlToAvroCallback.createRunnable(config, datasetId, attempt.toString(), endpointType, executor, SKIP_RECORDS_CHECK);
 
       // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
-      PipelineCallback.create()
+      PipelineCallback.builder()
           .incomingMessage(message)
           .outgoingMessage(new PipelinesVerbatimMessage(datasetId, attempt, config.interpretTypes, steps, endpointType))
           .curator(curator)
@@ -103,22 +97,18 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
           .publisher(publisher)
           .runnable(runnable)
           .historyWsClient(historyWsClient)
-          .metricsSupplier(metricsSupplier(datasetId, attempt))
+          .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();
 
-      LOG.info("Message handler ended - {}", message);
+      log.info("Message handler ended - {}", message);
     }
   }
 
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(UUID datasetId, int attempt) {
-    return () ->
-        HdfsUtils.readMetricsFromMetaFile(
-            config.hdfsSiteConfig,
-            buildOutputPathAsString(
-                config.repositoryPath,
-                datasetId.toString(),
-                String.valueOf(attempt),
-                config.metaFileName));
+  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(String datasetId, String attempt) {
+    return () -> {
+      String path = buildOutputPathAsString(config.repositoryPath, datasetId, attempt, config.metaFileName);
+      return HdfsUtils.readMetricsFromMetaFile(config.hdfsSiteConfig, path);
+    };
   }
 }

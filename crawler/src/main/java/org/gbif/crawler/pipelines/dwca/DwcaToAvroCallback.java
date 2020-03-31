@@ -25,41 +25,35 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.crawler.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.crawler.common.utils.HdfsUtils.buildOutputPathAsString;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Callback which is called when the {@link PipelinesDwcaMessage} is received.
  * <p>
  * The main method is {@link DwcaToAvroCallback#handleMessage}
  */
+@Slf4j
+@AllArgsConstructor
 public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMessage> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaToAvroCallback.class);
   private static final StepType STEP = StepType.DWCA_TO_VERBATIM;
 
+  @NonNull
   private final DwcaToAvroConfiguration config;
   private final MessagePublisher publisher;
+  @NonNull
   private final CuratorFramework curator;
   private final PipelinesHistoryWsClient historyWsClient;
-
-  DwcaToAvroCallback(DwcaToAvroConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-                     PipelinesHistoryWsClient historyWsClient) {
-    this.curator = checkNotNull(curator, "curator cannot be null");
-    this.config = checkNotNull(config, "config cannot be null");
-    this.publisher = publisher;
-    this.historyWsClient = historyWsClient;
-  }
 
   /**
    * Handles a MQ {@link PipelinesDwcaMessage} message
@@ -68,7 +62,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   public void handleMessage(PipelinesDwcaMessage message) {
 
     if (!Platform.PIPELINES.equivalent(message.getPlatform())) {
-      LOG.info("Skip message because pipelines don't support the platform {}", message);
+      log.info("Skip message because pipelines don't support the platform {}", message);
       return;
     }
 
@@ -79,10 +73,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         MDCCloseable mdc2 = MDC.putCloseable("attempt", attempt.toString());
         MDCCloseable mdc3 = MDC.putCloseable("step", STEP.name())) {
 
-      LOG.info("Message handler began - {}", message);
+      log.info("Message handler began - {}", message);
 
       if (!isMessageCorrect(message)) {
-        LOG.info("Skip the message, cause it is not correct or it wasn't modified, exit from handler");
+        log.info("Skip the message, cause it is not correct or it wasn't modified, exit from handler");
         return;
       }
 
@@ -105,7 +99,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           new ValidationResult(tripletsValid(occReport), occurrenceIdsValid(occReport), null, numberOfRecords);
 
       // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
-      PipelineCallback.create()
+      PipelineCallback.builder()
           .incomingMessage(message)
           .outgoingMessage(new PipelinesVerbatimMessage(datasetId, attempt, config.interpretTypes, steps, endpointType, validationResult))
           .curator(curator)
@@ -114,11 +108,11 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           .publisher(publisher)
           .runnable(runnable)
           .historyWsClient(historyWsClient)
-          .metricsSupplier(metricsSupplier(datasetId, attempt))
+          .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();
 
-      LOG.info("Message handler ended - {}", message);
+      log.info("Message handler ended - {}", message);
 
     }
   }
@@ -199,14 +193,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
     return report.getCheckedRecords() > 0 && report.getUniqueOccurrenceIds() == report.getCheckedRecords();
   }
 
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(UUID datasetId, int attempt) {
-    return () ->
-        HdfsUtils.readMetricsFromMetaFile(
-            config.hdfsSiteConfig,
-            buildOutputPathAsString(
-                config.repositoryPath,
-                datasetId.toString(),
-                String.valueOf(attempt),
-                config.metaFileName));
+  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(String datasetId, String attempt) {
+    return () -> {
+      String path = buildOutputPathAsString(config.repositoryPath, datasetId, attempt, config.metaFileName);
+      return HdfsUtils.readMetricsFromMetaFile(config.hdfsSiteConfig, path);
+    };
   }
 }

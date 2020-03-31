@@ -6,17 +6,16 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A service which listens to the  {@link org.gbif.common.messaging.api.messages.PipelinesDwcaMessage } and perform conversion
  */
+@Slf4j
 public class DwcaToAvroService extends AbstractIdleService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DwcaToAvroService.class);
   private final DwcaToAvroConfiguration config;
   private MessageListener listener;
   private MessagePublisher publisher;
@@ -28,14 +27,14 @@ public class DwcaToAvroService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    LOG.info("Started pipelines-to-avro-from-dwca service with parameters : {}", config);
+    log.info("Started pipelines-to-avro-from-dwca service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
     listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
     curator = config.zooKeeper.getCuratorFramework();
-    PipelinesHistoryWsClient historyWsClient = config.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryWsClient client = config.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
-    listener.listen(config.queueName, config.poolSize, new DwcaToAvroCallback(config, publisher, curator, historyWsClient));
+    listener.listen(config.queueName, config.poolSize, new DwcaToAvroCallback(config, publisher, curator, client));
   }
 
   @Override
@@ -43,6 +42,6 @@ public class DwcaToAvroService extends AbstractIdleService {
     publisher.close();
     listener.close();
     curator.close();
-    LOG.info("Stopping pipelines-to-avro-from-dwca service");
+    log.info("Stopping pipelines-to-avro-from-dwca service");
   }
 }

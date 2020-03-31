@@ -14,10 +14,9 @@ import org.gbif.crawler.pipelines.balancer.handler.PipelinesHdfsViewBuiltMessage
 import org.gbif.crawler.pipelines.balancer.handler.PipelinesIndexedMessageHandler;
 import org.gbif.crawler.pipelines.balancer.handler.VerbatimMessageHandler;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Callback which is called when the {@link PipelinesBalancerMessage} is received.
@@ -26,22 +25,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <p>
  * The main method is {@link BalancerCallback#handleMessage}
  */
+@Slf4j
+@AllArgsConstructor
 public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerMessage> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(BalancerCallback.class);
-
+  @NonNull
   private final BalancerConfiguration config;
   private final MessagePublisher publisher;
-
-  BalancerCallback(BalancerConfiguration config, MessagePublisher publisher) {
-    this.config = checkNotNull(config, "config cannot be null");
-    this.publisher = publisher;
-  }
 
   /** Handles a MQ {@link PipelinesBalancerMessage} message */
   @Override
   public void handleMessage(PipelinesBalancerMessage message) {
-    LOG.info("Message handler began - {}", message);
+    log.info("Message handler began - {}", message);
 
     String className = message.getMessageClass();
 
@@ -53,16 +48,16 @@ public class BalancerCallback extends AbstractMessageCallback<PipelinesBalancerM
         InterpretedMessageHandler.handle(config, publisher, message);
       } else if (PipelinesIndexedMessage.class.getSimpleName().equals(className)) {
         PipelinesIndexedMessageHandler.handle(config, publisher, message);
-      } else if (PipelinesHdfsViewBuiltMessage.class.getSimpleName().equals(className)){
+      } else if (PipelinesHdfsViewBuiltMessage.class.getSimpleName().equals(className)) {
         PipelinesHdfsViewBuiltMessageHandler.handle(config, publisher, message);
       } else {
-        LOG.error("Handler for {} wasn't found!", className);
+        log.error("Handler for {} wasn't found!", className);
       }
     } catch (IOException ex) {
-      LOG.error("Exception during balancing the message", ex);
+      log.error("Exception during balancing the message", ex);
     }
 
-    LOG.info("Message handler ended - {}", message);
+    log.info("Message handler ended - {}", message);
   }
 
 }

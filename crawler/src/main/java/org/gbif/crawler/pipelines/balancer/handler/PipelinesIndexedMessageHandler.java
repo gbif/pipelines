@@ -7,22 +7,18 @@ import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.crawler.pipelines.balancer.BalancerConfiguration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Populates and sends the {@link PipelinesIndexedMessage} message, the main method
  * is {@link PipelinesIndexedMessageHandler#handle}
  */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class PipelinesIndexedMessageHandler {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PipelinesIndexedMessageHandler.class);
-
-  private PipelinesIndexedMessageHandler() {
-    // NOP
-  }
 
   /**
    * Main handler, basically computes the runner type and sends to the same consumer
@@ -30,7 +26,7 @@ public class PipelinesIndexedMessageHandler {
   public static void handle(BalancerConfiguration config, MessagePublisher publisher, PipelinesBalancerMessage message)
       throws IOException {
 
-    LOG.info("Process PipelinesIndexedMessage - {}", message);
+    log.info("Process PipelinesIndexedMessage - {}", message);
 
     ObjectMapper mapper = new ObjectMapper();
     PipelinesIndexedMessage m = mapper.readValue(message.getPayload(), PipelinesIndexedMessage.class);
@@ -45,6 +41,6 @@ public class PipelinesIndexedMessageHandler {
 
     publisher.send(outputMessage);
 
-    LOG.info("The message has been sent - {}", outputMessage);
+    log.info("The message has been sent - {}", outputMessage);
   }
 }

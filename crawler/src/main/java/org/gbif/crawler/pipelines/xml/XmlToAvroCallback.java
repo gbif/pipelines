@@ -31,45 +31,39 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 import com.google.common.collect.Sets;
+import lombok.Builder;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.crawler.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.crawler.common.utils.HdfsUtils.buildOutputPathAsString;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Call back which is called when the {@link PipelinesXmlMessage} is received.
  * <p>
  * The main method is {@link XmlToAvroCallback#handleMessage}
  */
+@Slf4j
+@Builder
 public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(XmlToAvroCallback.class);
+  
   private static final StepType STEP = StepType.XML_TO_VERBATIM;
   private static final String TAR_EXT = ".tar.xz";
 
   public static final int SKIP_RECORDS_CHECK = -1;
 
+  @NonNull
   private final XmlToAvroConfiguration config;
   private final MessagePublisher publisher;
+  @NonNull
   private final CuratorFramework curator;
   private final PipelinesHistoryWsClient historyWsClient;
+  @NonNull
   private final ExecutorService executor;
-
-  public XmlToAvroCallback(XmlToAvroConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient historyWsClient, ExecutorService executor) {
-    this.curator = checkNotNull(curator, "curator cannot be null");
-    this.config = checkNotNull(config, "config cannot be null");
-    this.executor = checkNotNull(executor, "executor cannot be null");
-    this.publisher = publisher;
-    this.historyWsClient = historyWsClient;
-  }
 
   /**
    * Handles a MQ {@link PipelinesXmlMessage} message
@@ -78,12 +72,12 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   public void handleMessage(PipelinesXmlMessage message) {
 
     if (!Platform.PIPELINES.equivalent(message.getPlatform())) {
-      LOG.info("Skip message because pipelines don't support the platform {}", message);
+      log.info("Skip message because pipelines don't support the platform {}", message);
       return;
     }
 
     if(message.getTotalRecordCount() == 0){
-      LOG.info("Skip empty dataset {}", message);
+      log.info("Skip empty dataset {}", message);
       return;
     }
 
@@ -93,10 +87,10 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     try (MDCCloseable mdc1 = MDC.putCloseable("datasetId", message.getDatasetUuid().toString());
         MDCCloseable mdc2 = MDC.putCloseable("attempt", message.getAttempt().toString());
         MDCCloseable mdc3 = MDC.putCloseable("step", STEP.name())) {
-      LOG.info("Message handler began - {}", message);
+      log.info("Message handler began - {}", message);
 
       if (message.getReason() != FinishReason.NORMAL) {
-        LOG.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
+        log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
         return;
       }
 
@@ -116,7 +110,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
           createRunnable(config, datasetId, attempt.toString(), endpointType, executor, message.getTotalRecordCount());
 
       // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
-      PipelineCallback.create()
+      PipelineCallback.builder()
           .incomingMessage(message)
           .outgoingMessage(new PipelinesVerbatimMessage(datasetId, attempt, config.interpretTypes, steps, endpointType))
           .curator(curator)
@@ -125,11 +119,11 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
           .publisher(publisher)
           .runnable(runnable)
           .historyWsClient(historyWsClient)
-          .metricsSupplier(metricsSupplier(datasetId, attempt))
+          .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();
 
-      LOG.info("Message handler ended - {}", message);
+      log.info("Message handler ended - {}", message);
 
     }
   }
@@ -146,7 +140,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
       // Calculates and checks existence of DwC Archive
       Path inputPath = buildInputPath(config, datasetId, attempt);
-      LOG.info("XML path - {}", inputPath);
+      log.info("XML path - {}", inputPath);
 
       // Calculates export path of avro as extended record
       org.apache.hadoop.fs.Path outputPath =
@@ -183,7 +177,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     }
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
     String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
-    LOG.info("Getting records number from the file - {}", metaPath);
+    log.info("Getting records number from the file - {}", metaPath);
     String fileNumber;
     try {
       fileNumber = HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
@@ -196,7 +190,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     }
     double recordsNumber = Double.parseDouble(fileNumber);
     double persentage = recordsNumber * 100 / (double) expectedRecords;
-    LOG.info("The dataset conversion from xml to avro got {}% of records", persentage);
+    log.info("The dataset conversion from xml to avro got {}% of records", persentage);
     if (persentage < 80d) {
       throw new IllegalArgumentException("Dataset - " + datasetId + " attempt - " + attempt
           + " the dataset conversion from xml to avro got less 80% of records");
@@ -251,21 +245,17 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
         return sibling;
       }
     } catch (IOException ex) {
-      LOG.error(ex.getMessage(), ex);
+      log.error(ex.getMessage(), ex);
     }
 
     // Return general
     return directoryPath;
   }
 
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(UUID datasetId, int attempt) {
-    return () ->
-        HdfsUtils.readMetricsFromMetaFile(
-            config.hdfsSiteConfig,
-            buildOutputPathAsString(
-                config.repositoryPath,
-                datasetId.toString(),
-                String.valueOf(attempt),
-                config.metaFileName));
+  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(String datasetId, String attempt) {
+    return () -> {
+      String path = buildOutputPathAsString(config.repositoryPath, datasetId, attempt, config.metaFileName);
+      return HdfsUtils.readMetricsFromMetaFile(config.hdfsSiteConfig, path);
+    };
   }
 }

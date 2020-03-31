@@ -21,21 +21,18 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Utils help to work with HDFS files
  */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class HdfsUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(HdfsUtils.class);
-
-  private HdfsUtils() {
-    // NOP
-  }
 
   /**
    * Returns the file size in bytes
@@ -149,7 +146,7 @@ public class HdfsUtils {
         }
       }
     } catch (IOException e) {
-      LOG.warn("Couldn't read meta file from {}", filePath, e);
+      log.warn("Couldn't read meta file from {}", filePath, e);
     }
     return new ArrayList<>();
   }

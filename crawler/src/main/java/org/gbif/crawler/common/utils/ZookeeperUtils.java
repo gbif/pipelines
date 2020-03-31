@@ -1,5 +1,6 @@
 package org.gbif.crawler.common.utils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -7,10 +8,10 @@ import java.util.Optional;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.zookeeper.CreateMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
@@ -20,13 +21,9 @@ import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath
 /**
  * Utils help to work with Zookeeper
  */
+@Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ZookeeperUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ZookeeperUtils.class);
-
-  private ZookeeperUtils() {
-    // NOP
-  }
 
   /**
    * Check exists a Zookeeper monitoring root node by crawlId
@@ -37,7 +34,7 @@ public class ZookeeperUtils {
     try {
       return curator.checkExists().forPath(crawlId) != null;
     } catch (Exception ex) {
-      LOG.error("Exception while calling ZooKeeper", ex);
+      log.error("Exception while calling ZooKeeper", ex);
     }
     return false;
   }
@@ -55,7 +52,7 @@ public class ZookeeperUtils {
         mutex.acquire();
         int counter = getAsInteger(curator, crawlId, SIZE).orElse(0) + 1;
         if (counter >= size) {
-          LOG.info("Delete zookeeper node, crawlId - {}", crawlId);
+          log.info("Delete zookeeper node, crawlId - {}", crawlId);
           curator.delete().deletingChildrenIfNeeded().forPath(path);
         } else {
           updateMonitoring(curator, crawlId, SIZE, Integer.toString(counter));
@@ -63,7 +60,7 @@ public class ZookeeperUtils {
         mutex.release();
       }
     } catch (Exception ex) {
-      LOG.error("Exception while updating ZooKeeper", ex);
+      log.error("Exception while updating ZooKeeper", ex);
     }
   }
 
@@ -76,7 +73,7 @@ public class ZookeeperUtils {
     if (checkExists(curator, infoPath)) {
       byte[] responseData = curator.getData().forPath(infoPath);
       if (responseData != null && responseData.length > 0) {
-        return Optional.of(Integer.valueOf(new String(responseData, Charsets.UTF_8)));
+        return Optional.of(Integer.valueOf(new String(responseData, StandardCharsets.UTF_8)));
       }
     }
     return Optional.empty();
@@ -92,14 +89,14 @@ public class ZookeeperUtils {
   public static void updateMonitoring(CuratorFramework curator, String crawlId, String path, String value) {
     try {
       String fullPath = getPipelinesInfoPath(crawlId, path);
-      byte[] bytes = value.getBytes(Charsets.UTF_8);
+      byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
       if (checkExists(curator, fullPath)) {
         curator.setData().forPath(fullPath, bytes);
       } else {
         curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(fullPath, bytes);
       }
     } catch (Exception ex) {
-      LOG.error("Exception while updating ZooKeeper", ex);
+      log.error("Exception while updating ZooKeeper", ex);
     }
   }
 

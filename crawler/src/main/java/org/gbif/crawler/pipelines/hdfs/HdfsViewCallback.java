@@ -17,6 +17,7 @@ import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.crawler.common.utils.HdfsUtils;
 import org.gbif.crawler.pipelines.PipelineCallback;
+import org.gbif.crawler.pipelines.hdfs.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.crawler.pipelines.indexing.IndexingConfiguration;
 import org.gbif.crawler.pipelines.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
@@ -24,42 +25,35 @@ import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
 
 import com.google.common.base.Strings;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.crawler.common.utils.HdfsUtils.buildOutputPathAsString;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
  * <p>
  * The main method is {@link HdfsViewCallback#handleMessage}
  */
+@Slf4j
+@AllArgsConstructor
 public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpretedMessage> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HdfsViewCallback.class);
   private static final StepType STEP = StepType.HDFS_VIEW;
 
+  @NonNull
   private final HdfsViewConfiguration config;
   private final MessagePublisher publisher;
+  @NonNull
   private final CuratorFramework curator;
   private final PipelinesHistoryWsClient historyWsClient;
   private final ExecutorService executor;
-
-  HdfsViewCallback(HdfsViewConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient historyWsClient, ExecutorService executor) {
-    this.curator = checkNotNull(curator, "curator cannot be null");
-    this.config = checkNotNull(config, "config cannot be null");
-    this.publisher = publisher;
-    this.historyWsClient = historyWsClient;
-    this.executor = executor;
-  }
 
   /** Handles a MQ {@link PipelinesInterpretedMessage} message */
   @Override
@@ -73,17 +67,17 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         MDCCloseable mdc3 = MDC.putCloseable("step", STEP.name())) {
 
       if (!isMessageCorrect(message)) {
-        LOG.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
+        log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
         return;
       }
 
-      LOG.info("Message handler began - {}", message);
+      log.info("Message handler began - {}", message);
 
       Set<String> steps = message.getPipelineSteps();
       Runnable runnable = createRunnable(message);
 
       // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
-      PipelineCallback.create()
+      PipelineCallback.builder()
           .incomingMessage(message)
           .outgoingMessage(new PipelinesHdfsViewBuiltMessage(datasetId, attempt, steps))
           .curator(curator)
@@ -92,11 +86,11 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
           .publisher(publisher)
           .runnable(runnable)
           .historyWsClient(historyWsClient)
-          .metricsSupplier(metricsSupplier(datasetId, attempt))
+          .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();
 
-      LOG.info("Message handler ended - {}", message);
+      log.info("Message handler ended - {}", message);
 
     }
   }
@@ -108,43 +102,43 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     return () -> {
       try {
 
-        ProcessRunnerBuilder builder = ProcessRunnerBuilder.create()
+        ProcessRunnerBuilderBuilder builder = ProcessRunnerBuilder.builder()
             .config(config)
             .message(message)
             .numberOfShards(computeNumberOfShards(message));
 
         Predicate<StepRunner> runnerPr = sr -> config.processRunner.equalsIgnoreCase(sr.name());
 
-        LOG.info("Start the process. Message - {}", message);
+        log.info("Start the process. Message - {}", message);
         if (runnerPr.test(StepRunner.DISTRIBUTED)) {
           runDistributed(message, builder);
         } else if (runnerPr.test(StepRunner.STANDALONE)) {
           runLocal(builder);
         }
       } catch (Exception ex) {
-        LOG.error(ex.getMessage(), ex);
+        log.error(ex.getMessage(), ex);
         throw new IllegalStateException("Failed interpretation on " + message.getDatasetUuid().toString(), ex);
       }
 
     };
   }
 
-  private void runLocal(ProcessRunnerBuilder builder) throws Exception {
+  private void runLocal(ProcessRunnerBuilderBuilder builder) throws Exception {
     if (config.standaloneUseJava) {
-      InterpretedToHdfsViewPipeline.run(builder.buildOptions(), executor);
+      InterpretedToHdfsViewPipeline.run(builder.build().buildOptions(), executor);
     } else {
       // Assembles a terminal java process and runs it
-      int exitValue = builder.build().start().waitFor();
+      int exitValue = builder.build().get().start().waitFor();
 
       if (exitValue != 0) {
         throw new RuntimeException("Process has been finished with exit value - " + exitValue);
       } else {
-        LOG.info("Process has been finished with exit value - {}", exitValue);
+        log.info("Process has been finished with exit value - {}", exitValue);
       }
     }
   }
 
-  private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilder builder)
+  private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder)
       throws Exception {
 
     long recordNumber = getRecordNumber(message);
@@ -155,12 +149,12 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
         .sparkExecutorNumbers(sparkExecutorNumbers);
 
     // Assembles a terminal java process and runs it
-    int exitValue = builder.build().start().waitFor();
+    int exitValue = builder.build().get().start().waitFor();
 
     if (exitValue != 0) {
       throw new RuntimeException("Process has been finished with exit value - " + exitValue);
     } else {
-      LOG.info("Process has been finished with exit value - {}", exitValue);
+      log.info("Process has been finished with exit value - {}", exitValue);
     }
   }
 
@@ -236,10 +230,12 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
-    String fileNumber = HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
+    String fileNumber =
+        HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
-      throw new IllegalArgumentException( "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
+      throw new IllegalArgumentException(
+          "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");
     }
 
     if (messageNumber == null) {
@@ -268,14 +264,10 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     return numberOfShards <= 0 ? 1 : (int) numberOfShards;
   }
 
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(UUID datasetId, int attempt) {
-    return () ->
-        HdfsUtils.readMetricsFromMetaFile(
-            config.hdfsSiteConfig,
-            buildOutputPathAsString(
-                config.repositoryPath,
-                datasetId.toString(),
-                String.valueOf(attempt),
-                config.metaFileName));
+  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(String datasetId, String attempt) {
+    return () -> {
+      String path = buildOutputPathAsString(config.repositoryPath, datasetId, attempt, config.metaFileName);
+      return HdfsUtils.readMetricsFromMetaFile(config.hdfsSiteConfig, path);
+    };
   }
 }

@@ -9,19 +9,17 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.AbstractIdleService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Service for the {@link XmlToAvroCommand}.
  * <p>
  * This service listens to {@link org.gbif.common.messaging.api.messages.PipelinesXmlMessage}.
  */
+@Slf4j
 public class XmlToAvroService extends AbstractIdleService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(XmlToAvroService.class);
 
   private final XmlToAvroConfiguration config;
   private MessageListener listener;
@@ -35,7 +33,7 @@ public class XmlToAvroService extends AbstractIdleService {
 
   @Override
   protected void startUp() throws Exception {
-    LOG.info("Started pipelines-to-avro-from-xml service with parameters : {}", config);
+    log.info("Started pipelines-to-avro-from-xml service with parameters : {}", config);
     // create the listener.
     listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
     // creates a binding between the queue specified in the configuration and the exchange and routing key specified in
@@ -43,9 +41,9 @@ public class XmlToAvroService extends AbstractIdleService {
     publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
     curator = config.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.xmlReaderParallelism);
-    PipelinesHistoryWsClient historyWsClient = config.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryWsClient client = config.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
-    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyWsClient, executor);
+    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, client, executor);
     listener.listen(config.queueName, config.poolSize, callback);
   }
 
@@ -55,7 +53,7 @@ public class XmlToAvroService extends AbstractIdleService {
     listener.close();
     curator.close();
     executor.shutdown();
-    LOG.info("Stopping pipelines-to-avro-from-xml service");
+    log.info("Stopping pipelines-to-avro-from-xml service");
   }
 
 }

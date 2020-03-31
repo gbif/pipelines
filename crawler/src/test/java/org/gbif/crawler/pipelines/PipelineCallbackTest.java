@@ -68,7 +68,7 @@ public class PipelineCallbackTest {
   @Test(expected = NullPointerException.class)
   public void testEmptyBuilder() {
     // When
-    PipelineCallback.create().build().handleMessage();
+    PipelineCallback.builder().build().handleMessage();
   }
 
   @Test
@@ -92,7 +92,7 @@ public class PipelineCallbackTest {
     MessagePublisher publisher = null;
 
     // When
-    PipelineCallback.create()
+    PipelineCallback.builder()
         .incomingMessage(incomingMessage)
         .outgoingMessage(outgoingMessage)
         .curator(curator)
@@ -109,7 +109,7 @@ public class PipelineCallbackTest {
     Optional<LocalDateTime> endDate = getAsDate(crawlId, Fn.END_DATE.apply(rootPath));
 
     // Run second time to check
-    PipelineCallback.create()
+    PipelineCallback.builder()
         .incomingMessage(incomingMessage)
         .outgoingMessage(outgoingMessage)
         .curator(curator)
@@ -165,7 +165,7 @@ public class PipelineCallbackTest {
     PipelineBasedMessage outgoingMessage = createMessage(datasetKey, attempt, pipelineSteps);
 
     // When
-    PipelineCallback.create()
+    PipelineCallback.builder()
         .incomingMessage(incomingMessage)
         .outgoingMessage(outgoingMessage)
         .curator(curator)
@@ -210,7 +210,7 @@ public class PipelineCallbackTest {
     PipelineBasedMessage outgoingMessage = createMessage(datasetKey, attempt, pipelineSteps);
 
     // When
-    PipelineCallback.create()
+    PipelineCallback.builder()
         .incomingMessage(incomingMessage)
         .outgoingMessage(outgoingMessage)
         .curator(curator)
@@ -250,7 +250,7 @@ public class PipelineCallbackTest {
     PipelineBasedMessage outgoingMessage = createMessage(datasetKey, attempt, pipelineSteps);
 
     // When
-    PipelineCallback.create()
+    PipelineCallback.builder()
         .incomingMessage(incomingMessage)
         .outgoingMessage(outgoingMessage)
         .curator(curator)
@@ -296,7 +296,7 @@ public class PipelineCallbackTest {
     updateMonitoring(crawlId, SIZE, String.valueOf(4));
 
     // When
-    PipelineCallback.create()
+    PipelineCallback.builder()
         .incomingMessage(incomingMessage)
         .outgoingMessage(outgoingMessage)
         .curator(curator)
@@ -338,7 +338,7 @@ public class PipelineCallbackTest {
     updateMonitoring(crawlId, SIZE, String.valueOf(2));
 
     // When
-    PipelineCallback.create()
+    PipelineCallback.builder()
         .incomingMessage(incomingMessage)
         .outgoingMessage(outgoingMessage)
         .curator(curator)
