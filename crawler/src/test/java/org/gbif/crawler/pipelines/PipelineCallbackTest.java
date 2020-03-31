@@ -52,10 +52,10 @@ public class PipelineCallbackTest {
   public static void setUp() throws Exception {
     server = new TestingServer();
     curator = CuratorFrameworkFactory.builder()
-      .connectString(server.getConnectString())
-      .namespace("crawler")
-      .retryPolicy(new RetryOneTime(1))
-      .build();
+        .connectString(server.getConnectString())
+        .namespace("crawler")
+        .retryPolicy(new RetryOneTime(1))
+        .build();
     curator.start();
   }
 
@@ -166,17 +166,17 @@ public class PipelineCallbackTest {
 
     // When
     PipelineCallback.create()
-      .incomingMessage(incomingMessage)
-      .outgoingMessage(outgoingMessage)
-      .curator(curator)
-      .zkRootElementPath(rootPath)
-      .pipelinesStepName(nextStepName)
-      .runnable(runnable)
-      .publisher(mockPublisher)
-      .historyWsClient(historyWsClient)
-      .metricsSupplier(ArrayList::new)
-      .build()
-      .handleMessage();
+        .incomingMessage(incomingMessage)
+        .outgoingMessage(outgoingMessage)
+        .curator(curator)
+        .zkRootElementPath(rootPath)
+        .pipelinesStepName(nextStepName)
+        .runnable(runnable)
+        .publisher(mockPublisher)
+        .historyWsClient(historyWsClient)
+        .metricsSupplier(ArrayList::new)
+        .build()
+        .handleMessage();
 
     // Should
     Assert.assertTrue(getAsDate(crawlId, Fn.START_DATE.apply(rootPath)).isPresent());
@@ -211,17 +211,17 @@ public class PipelineCallbackTest {
 
     // When
     PipelineCallback.create()
-      .incomingMessage(incomingMessage)
-      .outgoingMessage(outgoingMessage)
-      .curator(curator)
-      .zkRootElementPath(rootPath)
-      .pipelinesStepName(nextStepName)
-      .runnable(runnable)
-      .publisher(mockPublisher)
-      .historyWsClient(historyWsClient)
-      .metricsSupplier(ArrayList::new)
-      .build()
-      .handleMessage();
+        .incomingMessage(incomingMessage)
+        .outgoingMessage(outgoingMessage)
+        .curator(curator)
+        .zkRootElementPath(rootPath)
+        .pipelinesStepName(nextStepName)
+        .runnable(runnable)
+        .publisher(mockPublisher)
+        .historyWsClient(historyWsClient)
+        .metricsSupplier(ArrayList::new)
+        .build()
+        .handleMessage();
 
     // Should
     Assert.assertFalse(checkExists(getPipelinesInfoPath(crawlId)));
@@ -251,17 +251,17 @@ public class PipelineCallbackTest {
 
     // When
     PipelineCallback.create()
-      .incomingMessage(incomingMessage)
-      .outgoingMessage(outgoingMessage)
-      .curator(curator)
-      .zkRootElementPath(rootPath)
-      .pipelinesStepName(nextStepName)
-      .runnable(runnable)
-      .publisher(mockPublisher)
-      .historyWsClient(historyWsClient)
-      .metricsSupplier(ArrayList::new)
-      .build()
-      .handleMessage();
+        .incomingMessage(incomingMessage)
+        .outgoingMessage(outgoingMessage)
+        .curator(curator)
+        .zkRootElementPath(rootPath)
+        .pipelinesStepName(nextStepName)
+        .runnable(runnable)
+        .publisher(mockPublisher)
+        .historyWsClient(historyWsClient)
+        .metricsSupplier(ArrayList::new)
+        .build()
+        .handleMessage();
 
     // Should
     Assert.assertTrue(getAsDate(crawlId, Fn.START_DATE.apply(rootPath)).isPresent());
@@ -297,17 +297,17 @@ public class PipelineCallbackTest {
 
     // When
     PipelineCallback.create()
-      .incomingMessage(incomingMessage)
-      .outgoingMessage(outgoingMessage)
-      .curator(curator)
-      .zkRootElementPath(rootPath)
-      .pipelinesStepName(nextStepName)
-      .runnable(runnable)
-      .publisher(mockPublisher)
-      .historyWsClient(historyWsClient)
-      .metricsSupplier(ArrayList::new)
-      .build()
-      .handleMessage();
+        .incomingMessage(incomingMessage)
+        .outgoingMessage(outgoingMessage)
+        .curator(curator)
+        .zkRootElementPath(rootPath)
+        .pipelinesStepName(nextStepName)
+        .runnable(runnable)
+        .publisher(mockPublisher)
+        .historyWsClient(historyWsClient)
+        .metricsSupplier(ArrayList::new)
+        .build()
+        .handleMessage();
 
     // Should
     Assert.assertFalse(checkExists(getPipelinesInfoPath(crawlId)));
@@ -339,17 +339,17 @@ public class PipelineCallbackTest {
 
     // When
     PipelineCallback.create()
-      .incomingMessage(incomingMessage)
-      .outgoingMessage(outgoingMessage)
-      .curator(curator)
-      .zkRootElementPath(rootPath)
-      .pipelinesStepName(nextStepName)
-      .runnable(runnable)
-      .publisher(mockPublisher)
-      .historyWsClient(historyWsClient)
-      .metricsSupplier(ArrayList::new)
-      .build()
-      .handleMessage();
+        .incomingMessage(incomingMessage)
+        .outgoingMessage(outgoingMessage)
+        .curator(curator)
+        .zkRootElementPath(rootPath)
+        .pipelinesStepName(nextStepName)
+        .runnable(runnable)
+        .publisher(mockPublisher)
+        .historyWsClient(historyWsClient)
+        .metricsSupplier(ArrayList::new)
+        .build()
+        .handleMessage();
 
     // Should
     Assert.assertTrue(checkExists(getPipelinesInfoPath(crawlId)));
@@ -424,8 +424,8 @@ public class PipelineCallbackTest {
    * Creates or updates a String value for a Zookeeper monitoring node
    *
    * @param crawlId root node path
-   * @param path    child node path
-   * @param value   some String value
+   * @param path child node path
+   * @param value some String value
    */
   private void updateMonitoring(String crawlId, String path, String value) throws Exception {
     String fullPath = getPipelinesInfoPath(crawlId, path);

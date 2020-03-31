@@ -50,11 +50,11 @@ public class LocationTransformTest {
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
-    private static GeocodeResponse toGeocodeResponse(Country country) {
-        Location location = new Location();
-        location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-        return new GeocodeResponse(Collections.singletonList(location));
-    }
+  private static GeocodeResponse toGeocodeResponse(Country country) {
+    Location location = new Location();
+    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
+    return new GeocodeResponse(Collections.singletonList(location));
+  }
 
   @Test
   public void emptyLrTest() {
@@ -67,7 +67,7 @@ public class LocationTransformTest {
     MetadataRecord mdr = MetadataRecord.newBuilder().setId("777").build();
 
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Create test metadata",Create.of(mdr))
+        p.apply("Create test metadata", Create.of(mdr))
             .apply("Convert into view", View.asSingleton());
 
     // When
@@ -135,19 +135,19 @@ public class LocationTransformTest {
         "44.5",
         "105.0",
         "5.0",
-         "true"
+        "true"
     };
 
     final MetadataRecord mdr = MetadataRecord.newBuilder()
-                                .setId("0")
-                                .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode())
-                                .setDatasetKey(UUID.randomUUID().toString())
-                                .build();
+        .setId("0")
+        .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode())
+        .setDatasetKey(UUID.randomUUID().toString())
+        .build();
     final List<ExtendedRecord> records = createExtendedRecordList(mdr, denmark, japan);
     final List<LocationRecord> locations = createLocationList(mdr, denmark, japan);
 
     PCollectionView<MetadataRecord> metadataView =
-            p.apply("Create test metadata",Create.of(mdr))
+        p.apply("Create test metadata", Create.of(mdr))
             .apply("Convert into view", View.asSingleton());
 
     // When
