@@ -4,14 +4,15 @@ import org.gbif.common.messaging.config.MessagingConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import com.google.common.base.MoreObjects;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import lombok.ToString;
 
 /**
  * Configuration required to start Balancer service
  */
+@ToString
 public class BalancerConfiguration {
 
   @ParametersDelegate
@@ -54,17 +55,5 @@ public class BalancerConfiguration {
   @NotNull
   @Min(1)
   public int switchRecordsNumber;
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("messaging", messaging)
-        .add("queueName", queueName)
-        .add("poolSize", poolSize)
-        .add("hdfsSiteConfig", hdfsSiteConfig)
-        .add("coreSiteConfig", coreSiteConfig)
-        .add("repositoryPath", repositoryPath)
-        .toString();
-  }
 
 }

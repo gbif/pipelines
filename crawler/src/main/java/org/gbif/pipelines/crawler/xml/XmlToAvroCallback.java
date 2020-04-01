@@ -61,7 +61,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   private final MessagePublisher publisher;
   @NonNull
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient historyWsClient;
+  private final PipelinesHistoryWsClient historyClient;
   @NonNull
   private final ExecutorService executor;
 
@@ -118,7 +118,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
           .pipelinesStepName(STEP)
           .publisher(publisher)
           .runnable(runnable)
-          .historyWsClient(historyWsClient)
+          .historyClient(historyClient)
           .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();

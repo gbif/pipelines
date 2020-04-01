@@ -46,7 +46,7 @@ public class XmlToAvroCallbackTest {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyWsClient;
+  private static PipelinesHistoryWsClient historyClient;
   private static ExecutorService executor;
 
   @BeforeClass
@@ -63,7 +63,7 @@ public class XmlToAvroCallbackTest {
     executor = Executors.newSingleThreadExecutor();
 
     publisher = MessagePublisherStub.create();
-    historyWsClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryWsClient.class);
   }
 
   @AfterClass
@@ -83,7 +83,7 @@ public class XmlToAvroCallbackTest {
     config.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
-    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyWsClient, executor);
+    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             DATASET_UUID,
@@ -123,7 +123,7 @@ public class XmlToAvroCallbackTest {
     config.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
-    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyWsClient, executor);
+    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             DATASET_UUID,
@@ -163,7 +163,7 @@ public class XmlToAvroCallbackTest {
     config.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
-    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyWsClient, executor);
+    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             DATASET_UUID,

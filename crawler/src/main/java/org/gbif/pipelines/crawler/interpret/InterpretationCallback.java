@@ -53,7 +53,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private final MessagePublisher publisher;
   @NonNull
   private final CuratorFramework curator;
-  private PipelinesHistoryWsClient historyWsClient;
+  private PipelinesHistoryWsClient historyClient;
   private final ExecutorService executor;
 
   /**
@@ -96,7 +96,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
           .pipelinesStepName(STEP)
           .publisher(publisher)
           .runnable(runnable)
-          .historyWsClient(historyWsClient)
+          .historyClient(historyClient)
           .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();

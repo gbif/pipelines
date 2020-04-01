@@ -7,14 +7,15 @@ import org.gbif.pipelines.common.configs.ZooKeeperConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import com.google.common.base.MoreObjects;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import lombok.ToString;
 
 /**
  * Configuration required to start Indexing Pipeline on provided dataset
  */
+@ToString
 public class IndexingConfiguration {
 
   @ParametersDelegate
@@ -195,47 +196,5 @@ public class IndexingConfiguration {
   @Valid
   @NotNull
   public String pipelinesConfig;
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("messaging", messaging)
-        .add("queueName", queueName)
-        .add("poolSize", poolSize)
-        .add("hdfsSiteConfig", hdfsSiteConfig)
-        .add("otherUser", otherUser)
-        .add("standaloneStackSize", standaloneStackSize)
-        .add("standaloneHeapSize", standaloneHeapSize)
-        .add("sparkMemoryOverhead", sparkMemoryOverhead)
-        .add("sparkExecutorMemoryGbMin", sparkExecutorMemoryGbMin)
-        .add("sparkExecutorMemoryGbMax", sparkExecutorMemoryGbMax)
-        .add("sparkExecutorCores", sparkExecutorCores)
-        .add("sparkExecutorNumbersMin", sparkExecutorNumbersMin)
-        .add("sparkExecutorNumbersMax", sparkExecutorNumbersMax)
-        .add("standaloneJarPath", standaloneJarPath)
-        .add("distributedJarPath", distributedJarPath)
-        .add("repositoryPath", repositoryPath)
-        .add("distributedMainClass", distributedMainClass)
-        .add("standaloneMainClass", standaloneMainClass)
-        .add("processErrorDirectory", processErrorDirectory)
-        .add("processOutputDirectory", processOutputDirectory)
-        .add("metricsPropertiesPath", metricsPropertiesPath)
-        .add("extraClassPath", extraClassPath)
-        .add("driverJavaOptions", driverJavaOptions)
-        .add("indexIndepRecord", indexIndepRecord)
-        .add("indexDefStaticPrefixName", indexDefStaticPrefixName)
-        .add("indexIndepRecord", indexIndepRecord)
-        .add("indexDefDynamicPrefixName", indexDefDynamicPrefixName)
-        .add("indexDefStaticDate", indexDefStaticDateDurationDd)
-        .add("indexRecordsPerShard", indexRecordsPerShard)
-        .add("metaFileName", metaFileName)
-        .add("processRunner", processRunner)
-        .add("sparkParallelismMax", sparkParallelismMax)
-        .add("yarnQueue", yarnQueue)
-        .add("pipelinesConfig", pipelinesConfig)
-        .add("esIndexCatUrl", esIndexCatUrl)
-        .add("indexDefNewIfSize", indexDefNewIfSize)
-        .toString();
-  }
 
 }

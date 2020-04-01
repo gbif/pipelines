@@ -43,7 +43,7 @@ public class PipelineCallbackTest {
   private static TestingServer server;
 
   @Mock
-  private PipelinesHistoryWsClient historyWsClient;
+  private PipelinesHistoryWsClient historyClient;
 
   @Mock
   private MessagePublisher mockPublisher;
@@ -100,7 +100,7 @@ public class PipelineCallbackTest {
         .pipelinesStepName(nextStepName)
         .runnable(runnable)
         .publisher(publisher)
-        .historyWsClient(historyWsClient)
+        .historyClient(historyClient)
         .metricsSupplier(ArrayList::new)
         .build()
         .handleMessage();
@@ -117,7 +117,7 @@ public class PipelineCallbackTest {
         .pipelinesStepName(nextStepName)
         .runnable(runnable)
         .publisher(publisher)
-        .historyWsClient(historyWsClient)
+        .historyClient(historyClient)
         .metricsSupplier(ArrayList::new)
         .build()
         .handleMessage();
@@ -173,7 +173,7 @@ public class PipelineCallbackTest {
         .pipelinesStepName(nextStepName)
         .runnable(runnable)
         .publisher(mockPublisher)
-        .historyWsClient(historyWsClient)
+        .historyClient(historyClient)
         .metricsSupplier(ArrayList::new)
         .build()
         .handleMessage();
@@ -218,7 +218,7 @@ public class PipelineCallbackTest {
         .pipelinesStepName(nextStepName)
         .runnable(runnable)
         .publisher(mockPublisher)
-        .historyWsClient(historyWsClient)
+        .historyClient(historyClient)
         .metricsSupplier(ArrayList::new)
         .build()
         .handleMessage();
@@ -258,7 +258,7 @@ public class PipelineCallbackTest {
         .pipelinesStepName(nextStepName)
         .runnable(runnable)
         .publisher(mockPublisher)
-        .historyWsClient(historyWsClient)
+        .historyClient(historyClient)
         .metricsSupplier(ArrayList::new)
         .build()
         .handleMessage();
@@ -304,7 +304,7 @@ public class PipelineCallbackTest {
         .pipelinesStepName(nextStepName)
         .runnable(runnable)
         .publisher(mockPublisher)
-        .historyWsClient(historyWsClient)
+        .historyClient(historyClient)
         .metricsSupplier(ArrayList::new)
         .build()
         .handleMessage();
@@ -346,7 +346,7 @@ public class PipelineCallbackTest {
         .pipelinesStepName(nextStepName)
         .runnable(runnable)
         .publisher(mockPublisher)
-        .historyWsClient(historyWsClient)
+        .historyClient(historyClient)
         .metricsSupplier(ArrayList::new)
         .build()
         .handleMessage();

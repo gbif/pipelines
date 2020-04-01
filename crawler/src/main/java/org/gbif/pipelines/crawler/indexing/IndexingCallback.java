@@ -68,7 +68,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   @NonNull
   private final CuratorFramework curator;
   private final HttpClient httpClient;
-  private final PipelinesHistoryWsClient historyWsClient;
+  private final PipelinesHistoryWsClient historyClient;
   private final ExecutorService executor;
 
   /**
@@ -103,7 +103,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
           .pipelinesStepName(STEP)
           .publisher(publisher)
           .runnable(runnable)
-          .historyWsClient(historyWsClient)
+          .historyClient(historyClient)
           .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();

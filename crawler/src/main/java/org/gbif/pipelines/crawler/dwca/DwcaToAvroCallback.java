@@ -50,7 +50,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   private final MessagePublisher publisher;
   @NonNull
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient historyWsClient;
+  private final PipelinesHistoryWsClient historyClient;
 
   /**
    * Handles a MQ {@link PipelinesDwcaMessage} message
@@ -104,7 +104,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
           .pipelinesStepName(STEP)
           .publisher(publisher)
           .runnable(runnable)
-          .historyWsClient(historyWsClient)
+          .historyClient(historyClient)
           .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();

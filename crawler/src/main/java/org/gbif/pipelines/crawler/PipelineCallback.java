@@ -70,7 +70,7 @@ public class PipelineCallback {
   private StepType pipelinesStepName;
   private String zkRootElementPath;
   private Runnable runnable;
-  private PipelinesHistoryWsClient historyWsClient;
+  private PipelinesHistoryWsClient historyClient;
   private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier;
 
   /**
@@ -176,7 +176,7 @@ public class PipelineCallback {
     try {
       // create pipeline process. If it already exists it returns the existing one (the db query does an upsert).
       long processKey =
-          historyWsClient.createOrGetPipelineProcess(incomingMessage.getDatasetUuid(), incomingMessage.getAttempt());
+          historyClient.createOrGetPipelineProcess(incomingMessage.getDatasetUuid(), incomingMessage.getAttempt());
 
       Long executionId = incomingMessage.getExecutionId();
       if (executionId == null) {
@@ -184,7 +184,7 @@ public class PipelineCallback {
         PipelineExecution execution =
             new PipelineExecution().setStepsToRun(Collections.singletonList(pipelinesStepName));
 
-        executionId = historyWsClient.addPipelineExecution(processKey, execution);
+        executionId = historyClient.addPipelineExecution(processKey, execution);
         incomingMessage.setExecutionId(executionId);
       }
 
@@ -197,7 +197,7 @@ public class PipelineCallback {
               .setRunner(StepRunner.valueOf(getRunner(incomingMessage)))
               .setPipelinesVersion(getPipelinesVersion());
 
-      long stepKey = historyWsClient.addPipelineStep(processKey, executionId, step);
+      long stepKey = historyClient.addPipelineStep(processKey, executionId, step);
 
       return Optional.of(new TrackingInfo(processKey, executionId, stepKey));
     } catch (Exception ex) {
@@ -213,7 +213,7 @@ public class PipelineCallback {
     long executionId = trackingInfo.executionId;
     PipelineStepParameters psp = new PipelineStepParameters(status, metricsSupplier.get());
     try {
-      Runnable r = () -> historyWsClient.updatePipelineStepStatusAndMetrics(processKey, executionId, stepKey, psp);
+      Runnable r = () -> historyClient.updatePipelineStepStatusAndMetrics(processKey, executionId, stepKey, psp);
       Retry.decorateRunnable(retry, r).run();
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails

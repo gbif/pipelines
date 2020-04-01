@@ -13,14 +13,15 @@ import org.gbif.pipelines.common.configs.ZooKeeperConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import com.google.common.base.MoreObjects;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import lombok.ToString;
 
 /**
  * Configuration required to convert downloaded DwCArchive and etc to avro (ExtendedRecord)
  */
+@ToString
 public class DwcaToAvroConfiguration {
 
   @ParametersDelegate
@@ -74,24 +75,4 @@ public class DwcaToAvroConfiguration {
   @Valid
   public RegistryConfiguration registry = new RegistryConfiguration();
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("queueName", queueName)
-        .add("virtualHost", messaging.virtualHost)
-        .add("userName", messaging.username)
-        .add("password", messaging.password)
-        .add("port", messaging.port)
-        .add("connectionHost", messaging.host)
-        .add("poolSize", poolSize)
-        .add("archiveRepository", archiveRepository)
-        .add("repositoryPath", repositoryPath)
-        .add("fileName", fileName)
-        .add("syncInterval", avroConfig.syncInterval)
-        .add("compressionCodec", avroConfig.compressionType)
-        .add("hdfsSiteConfig", hdfsSiteConfig)
-        .add("interpretTypes", interpretTypes.toString())
-        .add("metaFileName", metaFileName)
-        .toString();
-  }
 }

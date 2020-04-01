@@ -8,14 +8,15 @@ import org.gbif.pipelines.common.configs.ZooKeeperConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
-import com.google.common.base.MoreObjects;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import lombok.ToString;
 
 /**
  * Configuration required to start Interpretation Pipeline on provided dataset
  */
+@ToString
 public class InterpreterConfiguration {
 
   @ParametersDelegate
@@ -149,43 +150,6 @@ public class InterpreterConfiguration {
   public String yarnQueue;
 
   @Parameter(names = "--delete-after-days")
-public long deleteAfterDays = 7L;
+  public long deleteAfterDays = 7L;
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("messaging", messaging)
-        .add("queueName", queueName)
-        .add("poolSize", poolSize)
-        .add("avroConfig", avroConfig)
-        .add("hdfsSiteConfig", hdfsSiteConfig)
-        .add("pipelinesConfig", pipelinesConfig)
-        .add("otherUser", otherUser)
-        .add("standaloneStackSize", standaloneStackSize)
-        .add("standaloneHeapSize", standaloneHeapSize)
-        .add("sparkMemoryOverhead", sparkMemoryOverhead)
-        .add("sparkExecutorMemoryGbMin", sparkExecutorMemoryGbMin)
-        .add("sparkExecutorMemoryGbMax", sparkExecutorMemoryGbMax)
-        .add("sparkExecutorCores", sparkExecutorCores)
-        .add("sparkExecutorNumbersMin", sparkExecutorNumbersMin)
-        .add("sparkExecutorNumbersMax", sparkExecutorNumbersMax)
-        .add("standaloneJarPath", standaloneJarPath)
-        .add("distributedJarPath", distributedJarPath)
-        .add("repositoryPath", repositoryPath)
-        .add("distributedMainClass", distributedMainClass)
-        .add("standaloneMainClass", standaloneMainClass)
-        .add("processErrorDirectory", processErrorDirectory)
-        .add("processOutputDirectory", processOutputDirectory)
-        .add("metricsPropertiesPath", metricsPropertiesPath)
-        .add("extraClassPath", extraClassPath)
-        .add("driverJavaOptions", driverJavaOptions)
-        .add("sparkRecordsPerThread", sparkRecordsPerThread)
-        .add("metaFileName", metaFileName)
-        .add("processRunner", processRunner)
-        .add("sparkParallelismMax", sparkParallelismMax)
-        .add("sparkParallelismMin", sparkParallelismMin)
-        .add("yarnQueue", yarnQueue)
-        .add("registry", registry)
-        .toString();
-  }
 }

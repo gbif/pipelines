@@ -19,7 +19,6 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelineCallback;
 import org.gbif.pipelines.crawler.hdfs.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
-import org.gbif.pipelines.crawler.indexing.IndexingConfiguration;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
@@ -51,7 +50,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private final MessagePublisher publisher;
   @NonNull
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient historyWsClient;
+  private final PipelinesHistoryWsClient historyClient;
   private final ExecutorService executor;
 
   /** Handles a MQ {@link PipelinesInterpretedMessage} message */
@@ -84,7 +83,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
           .pipelinesStepName(STEP)
           .publisher(publisher)
           .runnable(runnable)
-          .historyWsClient(historyWsClient)
+          .historyClient(historyClient)
           .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();
@@ -159,7 +158,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
 
   /**
    * Only correct messages can be handled, by now is only messages with the same runner as runner in service config
-   * {@link IndexingConfiguration#processRunner}
+   * {@link HdfsViewConfiguration#processRunner}
    */
   private boolean isMessageCorrect(PipelinesInterpretedMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {

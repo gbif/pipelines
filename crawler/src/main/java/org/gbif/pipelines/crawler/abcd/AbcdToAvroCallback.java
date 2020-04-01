@@ -49,7 +49,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
   @NonNull
   private final ExecutorService executor;
   private final MessagePublisher publisher;
-  private final PipelinesHistoryWsClient historyWsClient;
+  private final PipelinesHistoryWsClient historyClient;
 
   /**
    * Handles a MQ {@link PipelinesAbcdMessage} message
@@ -95,7 +95,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
           .pipelinesStepName(STEP)
           .publisher(publisher)
           .runnable(runnable)
-          .historyWsClient(historyWsClient)
+          .historyClient(historyClient)
           .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
           .build()
           .handleMessage();
