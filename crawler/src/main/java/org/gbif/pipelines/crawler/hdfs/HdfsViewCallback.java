@@ -20,7 +20,6 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.apache.curator.framework.CuratorFramework;
 
 import com.google.common.base.Strings;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.DIRECTORY_NAME;
@@ -35,7 +34,7 @@ public class HdfsViewCallback extends PipelineCallback<PipelinesInterpretedMessa
   private final ExecutorService executor;
 
   public HdfsViewCallback(HdfsViewConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient client, @NonNull ExecutorService executor) {
+      PipelinesHistoryWsClient client, ExecutorService executor) {
     super(StepType.HDFS_VIEW, curator, publisher, client, config);
     this.config = config;
     this.executor = executor;

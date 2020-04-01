@@ -23,7 +23,6 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.apache.curator.framework.CuratorFramework;
 
 import com.google.common.base.Strings;
-import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,7 +36,7 @@ public class InterpretationCallback extends PipelineCallback<PipelinesVerbatimMe
   private final ExecutorService executor;
 
   public InterpretationCallback(InterpreterConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient client, @NonNull ExecutorService executor) {
+      PipelinesHistoryWsClient client, ExecutorService executor) {
     super(StepType.VERBATIM_TO_INTERPRETED, curator, publisher, client, config);
     this.config = config;
     this.executor = executor;
@@ -202,7 +201,8 @@ public class InterpretationCallback extends PipelineCallback<PipelinesVerbatimMe
     String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
-    Long messageNumber = message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null
+    Long messageNumber =
+        message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords() : null;
     String fileNumber = HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
 
