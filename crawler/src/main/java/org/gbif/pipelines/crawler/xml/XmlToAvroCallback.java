@@ -5,19 +5,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.gbif.api.model.crawler.FinishReason;
-import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
@@ -31,112 +25,36 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
-import org.slf4j.MDC;
-import org.slf4j.MDC.MDCCloseable;
 
 import com.google.common.collect.Sets;
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
-import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPathAsString;
 
 /**
  * Call back which is called when the {@link PipelinesXmlMessage} is received.
- * <p>
- * The main method is {@link XmlToAvroCallback#handleMessage}
  */
 @Slf4j
-@Builder
-public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage> {
-  
-  private static final StepType STEP = StepType.XML_TO_VERBATIM;
+public class XmlToAvroCallback extends PipelineCallback<PipelinesXmlMessage, PipelinesVerbatimMessage> {
+
   private static final String TAR_EXT = ".tar.xz";
 
   public static final int SKIP_RECORDS_CHECK = -1;
 
-  @NonNull
   private final XmlToAvroConfiguration config;
-  private final MessagePublisher publisher;
-  @NonNull
-  private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient historyClient;
-  @NonNull
   private final ExecutorService executor;
 
-  /**
-   * Handles a MQ {@link PipelinesXmlMessage} message
-   */
-  @Override
-  public void handleMessage(PipelinesXmlMessage message) {
-
-    if (!Platform.PIPELINES.equivalent(message.getPlatform())) {
-      log.info("Skip message because pipelines don't support the platform {}", message);
-      return;
-    }
-
-    if(message.getTotalRecordCount() == 0){
-      log.info("Skip empty dataset {}", message);
-      return;
-    }
-
-    UUID datasetId = message.getDatasetUuid();
-    Integer attempt = message.getAttempt();
-
-    try (MDCCloseable mdc1 = MDC.putCloseable("datasetId", message.getDatasetUuid().toString());
-        MDCCloseable mdc2 = MDC.putCloseable("attempt", message.getAttempt().toString());
-        MDCCloseable mdc3 = MDC.putCloseable("step", STEP.name())) {
-      log.info("Message handler began - {}", message);
-
-      if (message.getReason() != FinishReason.NORMAL) {
-        log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
-        return;
-      }
-
-      if (message.getPipelineSteps().isEmpty()) {
-        message.setPipelineSteps(Sets.newHashSet(
-            StepType.XML_TO_VERBATIM.name(),
-            StepType.VERBATIM_TO_INTERPRETED.name(),
-            StepType.INTERPRETED_TO_INDEX.name(),
-            StepType.HDFS_VIEW.name()
-        ));
-      }
-
-      // Common variables
-      EndpointType endpointType = message.getEndpointType();
-      Set<String> steps = message.getPipelineSteps();
-      Runnable runnable =
-          createRunnable(config, datasetId, attempt.toString(), endpointType, executor, message.getTotalRecordCount());
-
-      // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
-      PipelineCallback.builder()
-          .incomingMessage(message)
-          .outgoingMessage(new PipelinesVerbatimMessage(datasetId, attempt, config.interpretTypes, steps, endpointType))
-          .curator(curator)
-          .zkRootElementPath(STEP.getLabel())
-          .pipelinesStepName(STEP)
-          .publisher(publisher)
-          .runnable(runnable)
-          .historyClient(historyClient)
-          .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
-          .build()
-          .handleMessage();
-
-      log.info("Message handler ended - {}", message);
-
-    }
+  public XmlToAvroCallback(XmlToAvroConfiguration config, MessagePublisher publisher, CuratorFramework curator,
+      PipelinesHistoryWsClient client, @NonNull ExecutorService executor) {
+    super(StepType.XML_TO_VERBATIM, curator, publisher, client, config);
+    this.config = config;
+    this.executor = executor;
   }
 
-  /**
-   * Main message processing logic, converts an ABCD archive to an avro file.
-   */
   public static Runnable createRunnable(XmlToAvroConfiguration config, UUID datasetId, String attempt,
-      EndpointType endpointType, ExecutorService executor, int expectedRecords) {
+      ExecutorService executor, int expectedRecords) {
     return () -> {
-
-      Optional.ofNullable(endpointType)
-          .orElseThrow(() -> new IllegalArgumentException("endpointType can't bew NULL!"));
 
       // Calculates and checks existence of DwC Archive
       Path inputPath = buildInputPath(config, datasetId, attempt);
@@ -168,6 +86,43 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
             + " avro was deleted, cause it is empty! Please check XML files in the directory -> " + inputPath);
       }
     };
+  }
+
+  @Override
+  protected Runnable createRunnable(PipelinesXmlMessage message) {
+    UUID datasetId = message.getDatasetUuid();
+    String attempt = message.getAttempt().toString();
+    return createRunnable(config, datasetId, attempt, executor, message.getTotalRecordCount());
+  }
+
+  @Override
+  protected PipelinesVerbatimMessage createOutgoingMessage(PipelinesXmlMessage message) {
+
+    Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
+
+    if (message.getPipelineSteps().isEmpty()) {
+      message.setPipelineSteps(Sets.newHashSet(
+          StepType.XML_TO_VERBATIM.name(),
+          StepType.VERBATIM_TO_INTERPRETED.name(),
+          StepType.INTERPRETED_TO_INDEX.name(),
+          StepType.HDFS_VIEW.name()
+      ));
+    }
+
+    return new PipelinesVerbatimMessage(
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        config.interpretTypes,
+        message.getPipelineSteps(),
+        message.getEndpointType()
+    );
+  }
+
+  @Override
+  protected boolean isMessageCorrect(PipelinesXmlMessage message) {
+    return Platform.PIPELINES.equivalent(message.getPlatform())
+        && message.getTotalRecordCount() != 0
+        && message.getReason() == FinishReason.NORMAL;
   }
 
   private static void checkRecordsSize(XmlToAvroConfiguration config, String datasetId, String attempt,
@@ -250,12 +205,5 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
     // Return general
     return directoryPath;
-  }
-
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(String datasetId, String attempt) {
-    return () -> {
-      String path = buildOutputPathAsString(config.repositoryPath, datasetId, attempt, config.metaFileName);
-      return HdfsUtils.readMetricsFromMetaFile(config.hdfsSiteConfig, path);
-    };
   }
 }

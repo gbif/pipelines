@@ -4,6 +4,7 @@ import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.RegistryConfiguration;
 import org.gbif.pipelines.common.configs.ZooKeeperConfiguration;
+import org.gbif.pipelines.crawler.BaseConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
@@ -16,7 +17,7 @@ import lombok.ToString;
  * Configuration required to start Indexing Pipeline on provided dataset
  */
 @ToString
-public class IndexingConfiguration {
+public class IndexingConfiguration implements BaseConfiguration {
 
   @ParametersDelegate
   @Valid
@@ -196,5 +197,20 @@ public class IndexingConfiguration {
   @Valid
   @NotNull
   public String pipelinesConfig;
+
+  @Override
+  public String getHdfsSiteConfig() {
+    return hdfsSiteConfig;
+  }
+
+  @Override
+  public String getRepositoryPath() {
+    return repositoryPath;
+  }
+
+  @Override
+  public String getMetaFileName() {
+    return metaFileName;
+  }
 
 }

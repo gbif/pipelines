@@ -36,7 +36,8 @@ public class FragmenterService extends AbstractIdleService {
     listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
     curator = config.zooKeeper.getCuratorFramework();
-    executor = config.numberThreads == null ? null : Executors.newFixedThreadPool(config.numberThreads);
+    executor = config.numberThreads == null
+        ? Executors.newSingleThreadExecutor() : Executors.newFixedThreadPool(config.numberThreads);
     PipelinesHistoryWsClient client = config.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
     FragmenterCallback callback = new FragmenterCallback(config, publisher, curator, client, executor);

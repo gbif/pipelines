@@ -416,12 +416,17 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.pipelines</groupId>
+        <artifactId>ingest-fragmenter</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- GBIF -->
+      <dependency>
         <groupId>org.gbif.occurrence</groupId>
         <artifactId>occurrence-hdfs-table</artifactId>
         <version>${gbif-occurrence.version}</version>
       </dependency>
-
-      <!-- GBIF -->
       <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>dwca-io</artifactId>

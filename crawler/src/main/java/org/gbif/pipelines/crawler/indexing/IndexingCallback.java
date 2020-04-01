@@ -5,19 +5,15 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
-import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
-import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
@@ -36,92 +32,44 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.slf4j.MDC;
-import org.slf4j.MDC.MDCCloseable;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import lombok.Builder;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPathAsString;
 
 /**
  * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
- * <p>
- * The main method is {@link IndexingCallback#handleMessage}
  */
 @Slf4j
-@Builder
-public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage> {
+public class IndexingCallback extends PipelineCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
 
-  private static final StepType STEP = StepType.INTERPRETED_TO_INDEX;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  @NonNull
   private final IndexingConfiguration config;
-  private final MessagePublisher publisher;
-  @NonNull
-  private final DatasetService datasetService;
-  @NonNull
-  private final CuratorFramework curator;
-  private final HttpClient httpClient;
-  private final PipelinesHistoryWsClient historyClient;
   private final ExecutorService executor;
+  private final DatasetService datasetService;
+  private final HttpClient httpClient;
 
-  /**
-   * Handles a MQ {@link PipelinesInterpretedMessage} message
-   */
-  @Override
-  public void handleMessage(PipelinesInterpretedMessage message) {
-
-    UUID datasetId = message.getDatasetUuid();
-    Integer attempt = message.getAttempt();
-
-    try (MDCCloseable mdc1 = MDC.putCloseable("datasetId", datasetId.toString());
-        MDCCloseable mdc2 = MDC.putCloseable("attempt", attempt.toString());
-        MDCCloseable mdc3 = MDC.putCloseable("step", STEP.name())) {
-
-      if (!isMessageCorrect(message)) {
-        log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
-        return;
-      }
-
-      log.info("Message handler began - {}", message);
-
-      Set<String> steps = message.getPipelineSteps();
-      Runnable runnable = createRunnable(message);
-
-      // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
-      PipelineCallback.builder()
-          .incomingMessage(message)
-          .outgoingMessage(new PipelinesIndexedMessage(datasetId, attempt, steps))
-          .curator(curator)
-          .zkRootElementPath(STEP.getLabel())
-          .pipelinesStepName(STEP)
-          .publisher(publisher)
-          .runnable(runnable)
-          .historyClient(historyClient)
-          .metricsSupplier(metricsSupplier(datasetId.toString(), attempt.toString()))
-          .build()
-          .handleMessage();
-
-      log.info("Message handler ended - {}", message);
-
-    }
+  public IndexingCallback(IndexingConfiguration config, MessagePublisher publisher, DatasetService datasetService,
+      CuratorFramework curator, HttpClient httpClient, PipelinesHistoryWsClient client, ExecutorService executor) {
+    super(StepType.INTERPRETED_TO_INDEX, curator, publisher, client, config);
+    this.config = config;
+    this.executor = executor;
+    this.datasetService = datasetService;
+    this.httpClient = httpClient;
   }
 
   /**
    * Only correct messages can be handled, by now is only messages with the same runner as runner in service config
    * {@link IndexingConfiguration#processRunner}
    */
-  private boolean isMessageCorrect(PipelinesInterpretedMessage message) {
+  @Override
+  protected boolean isMessageCorrect(PipelinesInterpretedMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message.toString());
     }
-    if (message.getOnlyForStep() != null && !message.getOnlyForStep().equalsIgnoreCase(STEP.name())) {
+    if (message.getOnlyForStep() != null && !message.getOnlyForStep().equalsIgnoreCase(getStepType().name())) {
       return false;
     }
     return config.processRunner.equals(message.getRunner());
@@ -130,7 +78,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   /**
    * Main message processing logic, creates a terminal java process, which runs interpreted-to-index pipeline
    */
-  private Runnable createRunnable(PipelinesInterpretedMessage message) {
+  @Override
+  protected Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
       try {
         long recordsNumber = getRecordNumber(message);
@@ -161,6 +110,15 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     };
   }
 
+  @Override
+  protected PipelinesIndexedMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
+    return new PipelinesIndexedMessage(
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        message.getPipelineSteps()
+    );
+  }
+
   private void runLocal(ProcessRunnerBuilderBuilder builder) throws Exception {
     if (config.standaloneUseJava) {
       InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
@@ -176,8 +134,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     }
   }
 
-  private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder, long recordsNumber)
-      throws Exception {
+  private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder,
+      long recordsNumber) throws Exception {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
@@ -361,12 +319,5 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       return Optional.of(indices.get(0).getName());
     }
     return Optional.empty();
-  }
-
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier(String datasetId, String attempt) {
-    return () -> {
-      String path = buildOutputPathAsString(config.repositoryPath, datasetId, attempt, config.metaFileName);
-      return HdfsUtils.readMetricsFromMetaFile(config.hdfsSiteConfig, path);
-    };
   }
 }

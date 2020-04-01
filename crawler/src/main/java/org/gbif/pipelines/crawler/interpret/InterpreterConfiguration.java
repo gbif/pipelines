@@ -5,6 +5,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.RegistryConfiguration;
 import org.gbif.pipelines.common.configs.ZooKeeperConfiguration;
+import org.gbif.pipelines.crawler.BaseConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
@@ -17,7 +18,7 @@ import lombok.ToString;
  * Configuration required to start Interpretation Pipeline on provided dataset
  */
 @ToString
-public class InterpreterConfiguration {
+public class InterpreterConfiguration implements BaseConfiguration {
 
   @ParametersDelegate
   @Valid
@@ -151,5 +152,20 @@ public class InterpreterConfiguration {
 
   @Parameter(names = "--delete-after-days")
   public long deleteAfterDays = 7L;
+
+  @Override
+  public String getHdfsSiteConfig() {
+    return hdfsSiteConfig;
+  }
+
+  @Override
+  public String getRepositoryPath() {
+    return repositoryPath;
+  }
+
+  @Override
+  public String getMetaFileName() {
+    return metaFileName;
+  }
 
 }

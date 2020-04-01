@@ -10,6 +10,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.Reco
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
 import org.gbif.pipelines.common.configs.RegistryConfiguration;
 import org.gbif.pipelines.common.configs.ZooKeeperConfiguration;
+import org.gbif.pipelines.crawler.BaseConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
@@ -22,7 +23,7 @@ import lombok.ToString;
  * Configuration required to convert downloaded ABCD and etc to avro (ExtendedRecord)
  */
 @ToString
-public class XmlToAvroConfiguration {
+public class XmlToAvroConfiguration implements BaseConfiguration {
 
   @ParametersDelegate
   @Valid
@@ -82,4 +83,19 @@ public class XmlToAvroConfiguration {
   @NotNull
   @Valid
   public RegistryConfiguration registry = new RegistryConfiguration();
+
+  @Override
+  public String getHdfsSiteConfig() {
+    return hdfsSiteConfig;
+  }
+
+  @Override
+  public String getRepositoryPath() {
+    return repositoryPath;
+  }
+
+  @Override
+  public String getMetaFileName() {
+    return metaFileName;
+  }
 }

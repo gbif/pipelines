@@ -7,13 +7,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.UUID;
 
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
+import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
@@ -24,6 +26,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
@@ -39,6 +42,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
@@ -48,12 +52,31 @@ import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath
  * and main handling process. Please see the main method {@link PipelineCallback#handleMessage}
  */
 @Slf4j
-@Builder
-public class PipelineCallback {
+@AllArgsConstructor
+public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends PipelineBasedMessage> extends
+    AbstractMessageCallback<I> {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final Retry RETRY =
+      Retry.of(
+          "registryCall",
+          RetryConfig.custom()
+              .maxAttempts(3)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(1)))
+              .build()
+      );
+
   private static Properties properties;
-  private final Retry retry = createRetry();
+  @NonNull
+  private final StepType stepType;
+  @NonNull
+  private final CuratorFramework curator;
+  @NonNull
+  private final MessagePublisher publisher;
+  @NonNull
+  private final PipelinesHistoryWsClient client;
+  @NonNull
+  private final BaseConfiguration config;
 
   static {
     try {
@@ -62,16 +85,6 @@ public class PipelineCallback {
       log.error("Couldn't load pipelines properties", e);
     }
   }
-
-  private MessagePublisher publisher;
-  private CuratorFramework curator;
-  private PipelineBasedMessage incomingMessage;
-  private PipelineBasedMessage outgoingMessage;
-  private StepType pipelinesStepName;
-  private String zkRootElementPath;
-  private Runnable runnable;
-  private PipelinesHistoryWsClient historyClient;
-  private Supplier<List<PipelineStep.MetricInfo>> metricsSupplier;
 
   /**
    * The main process handling:
@@ -86,50 +99,59 @@ public class PipelineCallback {
    * 8) Updates Zookeeper successful or error monitoring metrics
    * 9) Cleans Zookeeper monitoring metrics if the received message is the last
    */
-  public void handleMessage() {
+  @Override
+  public void handleMessage(I message) {
 
-    // Short variables
-    PipelineBasedMessage inMessage = incomingMessage;
-    Set<String> steps = inMessage.getPipelineSteps();
-
-    // Check the step
-    if (!steps.contains(pipelinesStepName.name())) {
-      return;
-    }
-
-    // Start main process
-    String crawlId = inMessage.getDatasetUuid().toString() + "_" + inMessage.getAttempt();
+    String crawlId = message.getDatasetUuid().toString() + "_" + message.getAttempt();
+    O outgoingMessage = createOutgoingMessage(message);
     Optional<TrackingInfo> trackingInfo = Optional.empty();
 
-    try (MDCCloseable mdc = MDC.putCloseable("crawlId", crawlId)) {
+    try (MDCCloseable mdc = MDC.putCloseable("crawlId", crawlId);
+        MDCCloseable mdc1 = MDC.putCloseable("step", stepType.name())) {
 
-      log.info("Message has been received {}", inMessage);
-      if (ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, zkRootElementPath))) {
-        log.warn("Dataset is already in pipelines queue, please check the pipeline-ingestion monitoring tool - {}",
-            crawlId);
+      if (!isMessageCorrect(message)) {
+        log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
+        return;
+      }
+
+      log.info("Message handler began - {}", message);
+      Runnable runnable = createRunnable(message);
+
+      // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
+      // Short variables
+      Set<String> steps = message.getPipelineSteps();
+
+      // Check the step
+      if (!steps.contains(stepType.name())) {
+        return;
+      }
+
+      log.info("Message has been received {}", message);
+      if (ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, stepType.getLabel()))) {
+        log.warn("Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}", crawlId);
         return;
       }
 
       // track the pipeline step
-      trackingInfo = trackPipelineStep();
+      trackingInfo = trackPipelineStep(message, stepType);
 
-      String mqMessagePath = Fn.MQ_MESSAGE.apply(zkRootElementPath);
-      ZookeeperUtils.updateMonitoring(curator, crawlId, mqMessagePath, inMessage.toString());
+      String mqMessagePath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
+      ZookeeperUtils.updateMonitoring(curator, crawlId, mqMessagePath, message.toString());
 
-      String mqClassNamePath = Fn.MQ_CLASS_NAME.apply(zkRootElementPath);
-      ZookeeperUtils.updateMonitoring(curator, crawlId, mqClassNamePath, inMessage.getClass().getCanonicalName());
+      String mqClassNamePath = Fn.MQ_CLASS_NAME.apply(stepType.getLabel());
+      ZookeeperUtils.updateMonitoring(curator, crawlId, mqClassNamePath, message.getClass().getCanonicalName());
 
-      String startDatePath = Fn.START_DATE.apply(zkRootElementPath);
+      String startDatePath = Fn.START_DATE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoringDate(curator, crawlId, startDatePath);
 
-      String runnerPath = Fn.RUNNER.apply(zkRootElementPath);
-      ZookeeperUtils.updateMonitoring(curator, crawlId, runnerPath, getRunner(inMessage));
+      String runnerPath = Fn.RUNNER.apply(stepType.getLabel());
+      ZookeeperUtils.updateMonitoring(curator, crawlId, runnerPath, getRunner(message));
 
       log.info("Handler has been started, crawlId - {}", crawlId);
       runnable.run();
       log.info("Handler has been finished, crawlId - {}", crawlId);
 
-      String endDatePath = Fn.END_DATE.apply(zkRootElementPath);
+      String endDatePath = Fn.END_DATE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoringDate(curator, crawlId, endDatePath);
 
       // update tracking status
@@ -137,7 +159,7 @@ public class PipelineCallback {
 
       // Send a wrapped outgoing message to Balancer queue
       if (outgoingMessage != null) {
-        String successfulPath = Fn.SUCCESSFUL_AVAILABILITY.apply(zkRootElementPath);
+        String successfulPath = Fn.SUCCESSFUL_AVAILABILITY.apply(stepType.getLabel());
         ZookeeperUtils.updateMonitoring(curator, crawlId, successfulPath, Boolean.TRUE.toString());
 
         // set the executionId
@@ -150,7 +172,7 @@ public class PipelineCallback {
         String info = "Next message has been sent - " + outgoingMessage;
         log.info(info);
 
-        String successfulMessagePath = Fn.SUCCESSFUL_MESSAGE.apply(zkRootElementPath);
+        String successfulMessagePath = Fn.SUCCESSFUL_MESSAGE.apply(stepType.getLabel());
         ZookeeperUtils.updateMonitoring(curator, crawlId, successfulMessagePath, info);
       }
 
@@ -161,63 +183,78 @@ public class PipelineCallback {
       String error = "Error for crawlId - " + crawlId + " : " + ex.getMessage();
       log.error(error, ex);
 
-      String errorPath = Fn.ERROR_AVAILABILITY.apply(zkRootElementPath);
+      String errorPath = Fn.ERROR_AVAILABILITY.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, crawlId, errorPath, Boolean.TRUE.toString());
 
-      String errorMessagePath = Fn.ERROR_MESSAGE.apply(zkRootElementPath);
+      String errorMessagePath = Fn.ERROR_MESSAGE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, crawlId, errorMessagePath, error);
 
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));
     }
+
+    log.info("Message handler ended - {}", message);
+
   }
 
-  private Optional<TrackingInfo> trackPipelineStep() {
+  protected abstract Runnable createRunnable(I message);
+
+  protected abstract O createOutgoingMessage(I message);
+
+  protected abstract boolean isMessageCorrect(I message);
+
+  protected StepType getStepType() {
+    return stepType;
+  }
+
+  private Optional<TrackingInfo> trackPipelineStep(I message, StepType stepType) {
     try {
       // create pipeline process. If it already exists it returns the existing one (the db query does an upsert).
-      long processKey =
-          historyClient.createOrGetPipelineProcess(incomingMessage.getDatasetUuid(), incomingMessage.getAttempt());
+      UUID datasetUuid = message.getDatasetUuid();
+      Integer attempt = message.getAttempt();
+      long processKey = client.createOrGetPipelineProcess(datasetUuid, attempt);
 
-      Long executionId = incomingMessage.getExecutionId();
+      Long executionId = message.getExecutionId();
       if (executionId == null) {
         // create execution
-        PipelineExecution execution =
-            new PipelineExecution().setStepsToRun(Collections.singletonList(pipelinesStepName));
+        PipelineExecution execution = new PipelineExecution().setStepsToRun(Collections.singletonList(stepType));
 
-        executionId = historyClient.addPipelineExecution(processKey, execution);
-        incomingMessage.setExecutionId(executionId);
+        executionId = client.addPipelineExecution(processKey, execution);
+        message.setExecutionId(executionId);
       }
 
       // add step to the process
       PipelineStep step =
           new PipelineStep()
-              .setMessage(OBJECT_MAPPER.writeValueAsString(incomingMessage))
-              .setType(pipelinesStepName)
+              .setMessage(OBJECT_MAPPER.writeValueAsString(message))
+              .setType(stepType)
               .setState(PipelineStep.Status.RUNNING)
-              .setRunner(StepRunner.valueOf(getRunner(incomingMessage)))
+              .setRunner(StepRunner.valueOf(getRunner(message)))
               .setPipelinesVersion(getPipelinesVersion());
 
-      long stepKey = historyClient.addPipelineStep(processKey, executionId, step);
+      long stepKey = client.addPipelineStep(processKey, executionId, step);
 
-      return Optional.of(new TrackingInfo(processKey, executionId, stepKey));
+      return Optional.of(
+          new TrackingInfo(processKey, executionId, stepKey, datasetUuid.toString(), attempt.toString()));
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
-      log.error("Couldn't track pipeline step for message {}", incomingMessage, ex);
+      log.error("Couldn't track pipeline step for message {}", message, ex);
       return Optional.empty();
     }
   }
 
-  private void updateTrackingStatus(TrackingInfo trackingInfo, PipelineStep.Status status) {
-    long processKey = trackingInfo.processKey;
-    long stepKey = trackingInfo.stepKey;
-    long executionId = trackingInfo.executionId;
-    PipelineStepParameters psp = new PipelineStepParameters(status, metricsSupplier.get());
+  private void updateTrackingStatus(TrackingInfo ti, PipelineStep.Status status) {
+    String path =
+        HdfsUtils.buildOutputPathAsString(config.getRepositoryPath(), ti.datasetId, ti.attempt,
+            config.getMetaFileName());
+    List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), path);
+    PipelineStepParameters psp = new PipelineStepParameters(status, metricInfos);
     try {
-      Runnable r = () -> historyClient.updatePipelineStepStatusAndMetrics(processKey, executionId, stepKey, psp);
-      Retry.decorateRunnable(retry, r).run();
+      Runnable r = () -> client.updatePipelineStepStatusAndMetrics(ti.processKey, ti.executionId, ti.stepKey, psp);
+      Retry.decorateRunnable(RETRY, r).run();
     } catch (Exception ex) {
       // we don't want to break the crawling if the tracking fails
-      log.error("Couldn't update tracking status for process {} and step {}", processKey, stepKey, ex);
+      log.error("Couldn't update tracking status for process {} and step {}", ti.processKey, ti.stepKey, ex);
     }
   }
 
@@ -244,21 +281,15 @@ public class PipelineCallback {
     return StepRunner.UNKNOWN.name();
   }
 
-  private Retry createRetry() {
-    RetryConfig retryConfig =
-        RetryConfig.custom()
-            .maxAttempts(3)
-            .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(1)))
-            .build();
-
-    return Retry.of("registryCall", retryConfig);
-  }
-
   @AllArgsConstructor
   private static class TrackingInfo {
 
     long processKey;
     long executionId;
     long stepKey;
+    String datasetId;
+    String attempt;
+
   }
+
 }
