@@ -138,7 +138,7 @@ public class FragmentsUploaderIT {
         .attempt(attemptFirst)
         .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
-        .executor(Executors.newFixedThreadPool(2))
+        .executor(Executors.newSingleThreadExecutor())
         .build()
         .persist();
 
@@ -181,7 +181,7 @@ public class FragmentsUploaderIT {
         .attempt(attemptFirst)
         .endpointType(EndpointType.BIOCASE_XML_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
-        .executor(Executors.newFixedThreadPool(2))
+        .executor(Executors.newSingleThreadExecutor())
         .useSyncMode(false)
         .build()
         .persist();
@@ -252,7 +252,7 @@ public class FragmentsUploaderIT {
         .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
-        .executor(Executors.newFixedThreadPool(2))
+        .executor(Executors.newSingleThreadExecutor())
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .build()
@@ -308,7 +308,7 @@ public class FragmentsUploaderIT {
         .datasetKey(datasetKey)
         .attempt(attempt)
         .endpointType(endpointType)
-        .executor(Executors.newFixedThreadPool(2))
+        .executor(Executors.newSingleThreadExecutor())
         .hbaseConnection(HBASE_SERVER.getConnection())
         .useSyncMode(false)
         .backPressure(5)
@@ -440,7 +440,7 @@ public class FragmentsUploaderIT {
         .attempt(attemptFirst)
         .endpointType(EndpointType.DWC_ARCHIVE)
         .hbaseConnection(HBASE_SERVER.getConnection())
-        .executor(Executors.newFixedThreadPool(2))
+        .executor(Executors.newSingleThreadExecutor())
         .useSyncMode(false)
         .build()
         .persist();
