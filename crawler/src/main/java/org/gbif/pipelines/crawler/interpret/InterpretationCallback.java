@@ -133,7 +133,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     );
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) throws Exception {
+  private void runLocal(ProcessRunnerBuilderBuilder builder) throws IOException, InterruptedException {
     if (config.standaloneUseJava) {
       VerbatimToInterpretedPipeline.run(builder.build().buildOptions(), executor);
     } else {
@@ -141,14 +141,15 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
       int exitValue = builder.build().get().start().waitFor();
 
       if (exitValue != 0) {
-        throw new RuntimeException("Process has been finished with exit value - " + exitValue);
+        throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
       } else {
         log.info("Process has been finished with exit value - {}", exitValue);
       }
     }
   }
 
-  private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder) throws Exception {
+  private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
+      throws IOException, InterruptedException {
     long recordsNumber = getRecordNumber(message);
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
 
@@ -160,7 +161,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     int exitValue = builder.build().get().start().waitFor();
 
     if (exitValue != 0) {
-      throw new RuntimeException("Process has been finished with exit value - " + exitValue);
+      throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
     } else {
       log.info("Process has been finished with exit value - {}", exitValue);
     }
@@ -203,7 +204,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
    */
   private int computeSparkExecutorNumbers(long recordsNumber) {
     int sparkExecutorNumbers =
-        (int) Math.ceil(recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread));
+        (int) Math.ceil((double) recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread));
     if (sparkExecutorNumbers < config.sparkExecutorNumbersMin) {
       return config.sparkExecutorNumbersMin;
     }

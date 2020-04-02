@@ -143,7 +143,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     );
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) throws Exception {
+  private void runLocal(ProcessRunnerBuilderBuilder builder) throws IOException, InterruptedException {
     if (config.standaloneUseJava) {
       InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
     } else {
@@ -151,7 +151,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       int exitValue = builder.build().get().start().waitFor();
 
       if (exitValue != 0) {
-        throw new RuntimeException("Process has been finished with exit value - " + exitValue);
+        throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
       } else {
         log.info("Process has been finished with exit value - {}", exitValue);
       }
@@ -159,7 +159,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder,
-      long recordsNumber) throws Exception {
+      long recordsNumber) throws IOException, InterruptedException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
@@ -172,7 +172,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     int exitValue = builder.build().get().start().waitFor();
 
     if (exitValue != 0) {
-      throw new RuntimeException("Process has been finished with exit value - " + exitValue);
+      throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
     } else {
       log.info("Process has been finished with exit value - {}", exitValue);
     }
@@ -219,7 +219,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
    */
   private int computeSparkExecutorNumbers(long recordsNumber) {
     int sparkExecutorNumbers =
-        (int) Math.ceil(recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread));
+        (int) Math.ceil((double) recordsNumber / (config.sparkExecutorCores * config.sparkRecordsPerThread));
     if (sparkExecutorNumbers < config.sparkExecutorNumbersMin) {
       return config.sparkExecutorNumbersMin;
     }
@@ -278,8 +278,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
    * 2) in case of independent index -> recordsNumber / config.indexRecordsPerShard
    */
   private int computeNumberOfShards(String indexName, long recordsNumber) {
-    if (indexName.startsWith(config.indexDefDynamicPrefixName) || indexName.startsWith(
-        config.indexDefStaticPrefixName)) {
+    if (indexName.startsWith(config.indexDefDynamicPrefixName)
+        || indexName.startsWith(config.indexDefStaticPrefixName)) {
       return (int) Math.ceil((double) config.indexDefSize / (double) config.indexRecordsPerShard);
     }
 

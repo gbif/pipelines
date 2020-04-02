@@ -106,7 +106,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
       try {
         Files.write(path, lines);
       } catch (IOException ex) {
-        throw new RuntimeException(ex.getMessage(), ex);
+        throw new IllegalStateException(ex.getMessage(), ex);
       }
       getLog().info("Modified - " + path.toString());
     }
@@ -171,7 +171,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     int ovrdIdx = idxs.get(2);
     int idIdx = idxs.get(3);
     if (interIdx != -1 && ovrdIdx == -1 && idIdx != -1) {
-      String replace =  INTER_BASE + ", " + defaultPackage + ".Record {";
+      String replace = INTER_BASE + ", " + defaultPackage + ".Record {";
       replace = lines.get(interIdx).replace(INTER, replace);
       lines.set(interIdx, replace);
     }
@@ -189,7 +189,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     int idIdx = -1;
     for (int x = 0; x < lines.size(); x++) {
       String line = lines.get(x);
-      if (beforeIdx != -1 && interIdx != -1 && ovrdIdx != -1&& idIdx != -1) {
+      if (beforeIdx != -1 && interIdx != -1 && ovrdIdx != -1 && idIdx != -1) {
         break;
       }
       if (line.equals(BEFORE)) {
@@ -215,7 +215,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     try {
       return Files.readAllLines(path);
     } catch (IOException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
+      throw new IllegalStateException(ex.getMessage(), ex);
     }
   }
 
@@ -224,7 +224,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
     try (Stream<Path> paths = Files.walk(Paths.get(directory))) {
       return paths.filter(path -> path.toFile().isFile()).collect(Collectors.toList());
     } catch (IOException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
+      throw new IllegalStateException(ex.getMessage(), ex);
     }
   }
 
@@ -243,7 +243,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
       }
       return exists;
     } catch (IOException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
+      throw new IllegalStateException(ex.getMessage(), ex);
     }
   }
 
@@ -262,7 +262,7 @@ public class AvroPostprocessMojo extends AbstractMojo {
       }
       return exists;
     } catch (IOException ex) {
-      throw new RuntimeException(ex.getMessage(), ex);
+      throw new IllegalStateException(ex.getMessage(), ex);
     }
   }
 }

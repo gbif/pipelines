@@ -1,8 +1,8 @@
 package org.gbif.pipelines.hbase.pipelines;
 
 import org.gbif.api.model.occurrence.VerbatimOccurrence;
-import org.gbif.pipelines.hbase.utils.ConfigurationFactory;
 import org.gbif.pipelines.hbase.options.ExportHBaseOptions;
+import org.gbif.pipelines.hbase.utils.ConfigurationFactory;
 import org.gbif.pipelines.hbase.utils.OccurrenceConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 

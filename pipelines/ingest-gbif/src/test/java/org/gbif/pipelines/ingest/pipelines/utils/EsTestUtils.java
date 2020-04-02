@@ -80,7 +80,7 @@ public class EsTestUtils {
     try {
       return READER.readTree(response.getEntity().getContent()).get("hits").get("total").asLong();
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 

@@ -3,6 +3,7 @@ package org.gbif.pipelines.transforms.converters;
 import java.io.Serializable;
 
 import org.gbif.pipelines.core.converters.MultimediaConverter;
+import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -15,7 +16,6 @@ import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
 
 import org.apache.beam.sdk.metrics.Counter;
 import org.apache.beam.sdk.metrics.Metrics;

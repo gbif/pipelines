@@ -450,7 +450,7 @@ public class PipelinesCallbackTest {
 
     @Override
     public Runnable createRunnable(PipelineBasedMessage message) {
-      return () -> {throw new RuntimeException("Oops!");};
+      return () -> {throw new IllegalStateException("Oops!");};
     }
 
     @Override

@@ -146,7 +146,7 @@ final class ProcessRunnerBuilder {
         log.info("{} file - {}", type, file);
         return file;
       } catch (IOException ex) {
-        throw new RuntimeException(ex);
+        throw new IllegalStateException(ex);
       }
     };
 

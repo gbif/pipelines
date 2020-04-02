@@ -115,7 +115,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     return config.processRunner.equals(message.getRunner());
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) throws Exception {
+  private void runLocal(ProcessRunnerBuilderBuilder builder) throws IOException, InterruptedException {
     if (config.standaloneUseJava) {
       InterpretedToHdfsViewPipeline.run(builder.build().buildOptions(), executor);
     } else {
@@ -123,7 +123,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
       int exitValue = builder.build().get().start().waitFor();
 
       if (exitValue != 0) {
-        throw new RuntimeException("Process has been finished with exit value - " + exitValue);
+        throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
       } else {
         log.info("Process has been finished with exit value - {}", exitValue);
       }
@@ -131,7 +131,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   }
 
   private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder)
-      throws Exception {
+      throws IOException, InterruptedException {
 
     long recordNumber = getRecordNumber(message);
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordNumber);
@@ -144,7 +144,7 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     int exitValue = builder.build().get().start().waitFor();
 
     if (exitValue != 0) {
-      throw new RuntimeException("Process has been finished with exit value - " + exitValue);
+      throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
     } else {
       log.info("Process has been finished with exit value - {}", exitValue);
     }

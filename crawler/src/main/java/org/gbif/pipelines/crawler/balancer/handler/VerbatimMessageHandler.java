@@ -162,7 +162,7 @@ public class VerbatimMessageHandler {
         .filter(x -> x.chars().allMatch(Character::isDigit))
         .mapToInt(Integer::valueOf)
         .max()
-        .orElseThrow(() -> new RuntimeException("Can't find the maximum attempt"));
+        .orElseThrow(() -> new IllegalStateException("Can't find the maximum attempt"));
   }
 
 }
