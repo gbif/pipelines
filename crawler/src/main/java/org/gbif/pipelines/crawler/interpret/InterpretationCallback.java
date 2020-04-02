@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -14,7 +15,8 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.crawler.PipelineCallback;
+import org.gbif.pipelines.crawler.PipelinesCallback;
+import org.gbif.pipelines.crawler.PipelinesHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 import org.gbif.pipelines.crawler.interpret.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
@@ -30,16 +32,36 @@ import lombok.extern.slf4j.Slf4j;
  * Callback which is called when the {@link PipelinesVerbatimMessage} is received.
  */
 @Slf4j
-public class InterpretationCallback extends PipelineCallback<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
+public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage> implements
+    PipelinesHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
 
   private final InterpreterConfiguration config;
+  private final MessagePublisher publisher;
+  private final CuratorFramework curator;
+  private final PipelinesHistoryWsClient client;
   private final ExecutorService executor;
 
-  public InterpretationCallback(InterpreterConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient client, ExecutorService executor) {
-    super(StepType.VERBATIM_TO_INTERPRETED, curator, publisher, client, config);
+  public InterpretationCallback(InterpreterConfiguration config, MessagePublisher publisher,
+      CuratorFramework curator, PipelinesHistoryWsClient client, ExecutorService executor) {
     this.config = config;
+    this.publisher = publisher;
+    this.curator = curator;
+    this.client = client;
     this.executor = executor;
+  }
+
+  @Override
+  public void handleMessage(PipelinesVerbatimMessage message) {
+    PipelinesCallback.<PipelinesVerbatimMessage, PipelinesInterpretedMessage>builder()
+        .client(client)
+        .config(config)
+        .curator(curator)
+        .stepType(StepType.VERBATIM_TO_INTERPRETED)
+        .publisher(publisher)
+        .message(message)
+        .handler(this)
+        .build()
+        .handleMessage();
   }
 
   /**
@@ -47,7 +69,7 @@ public class InterpretationCallback extends PipelineCallback<PipelinesVerbatimMe
    * {@link InterpreterConfiguration#processRunner}
    */
   @Override
-  protected boolean isMessageCorrect(PipelinesVerbatimMessage message) {
+  public boolean isMessageCorrect(PipelinesVerbatimMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message.toString());
     }
@@ -58,7 +80,7 @@ public class InterpretationCallback extends PipelineCallback<PipelinesVerbatimMe
    * Main message processing logic, creates a terminal java process, which runs verbatim-to-interpreted pipeline
    */
   @Override
-  protected Runnable createRunnable(PipelinesVerbatimMessage message) {
+  public Runnable createRunnable(PipelinesVerbatimMessage message) {
     return () -> {
       String datasetId = message.getDatasetUuid().toString();
       String attempt = Integer.toString(message.getAttempt());
@@ -94,7 +116,7 @@ public class InterpretationCallback extends PipelineCallback<PipelinesVerbatimMe
   }
 
   @Override
-  protected PipelinesInterpretedMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
+  public PipelinesInterpretedMessage createOutgoingMessage(PipelinesVerbatimMessage message) {
     Long recordsNumber = null;
     if (message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null) {
       recordsNumber = message.getValidationResult().getNumberOfRecords();

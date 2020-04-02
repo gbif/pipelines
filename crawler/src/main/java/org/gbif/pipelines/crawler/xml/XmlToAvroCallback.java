@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
@@ -19,7 +20,8 @@ import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.XmlToAvroConverter;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.crawler.PipelineCallback;
+import org.gbif.pipelines.crawler.PipelinesCallback;
+import org.gbif.pipelines.crawler.PipelinesHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
@@ -27,7 +29,6 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
 
 import com.google.common.collect.Sets;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
@@ -36,20 +37,39 @@ import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
  * Call back which is called when the {@link PipelinesXmlMessage} is received.
  */
 @Slf4j
-public class XmlToAvroCallback extends PipelineCallback<PipelinesXmlMessage, PipelinesVerbatimMessage> {
+public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage> implements
+    PipelinesHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
 
   private static final String TAR_EXT = ".tar.xz";
-
   public static final int SKIP_RECORDS_CHECK = -1;
 
   private final XmlToAvroConfiguration config;
+  private final MessagePublisher publisher;
+  private final CuratorFramework curator;
+  private final PipelinesHistoryWsClient client;
   private final ExecutorService executor;
 
-  public XmlToAvroCallback(XmlToAvroConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient client, @NonNull ExecutorService executor) {
-    super(StepType.XML_TO_VERBATIM, curator, publisher, client, config);
+  public XmlToAvroCallback(XmlToAvroConfiguration config, MessagePublisher publisher,
+      CuratorFramework curator, PipelinesHistoryWsClient client, ExecutorService executor) {
     this.config = config;
+    this.publisher = publisher;
+    this.curator = curator;
+    this.client = client;
     this.executor = executor;
+  }
+
+  @Override
+  public void handleMessage(PipelinesXmlMessage message) {
+    PipelinesCallback.<PipelinesXmlMessage, PipelinesVerbatimMessage>builder()
+        .client(client)
+        .config(config)
+        .curator(curator)
+        .stepType(StepType.XML_TO_VERBATIM)
+        .publisher(publisher)
+        .message(message)
+        .handler(this)
+        .build()
+        .handleMessage();
   }
 
   public static Runnable createRunnable(XmlToAvroConfiguration config, UUID datasetId, String attempt,
@@ -89,14 +109,14 @@ public class XmlToAvroCallback extends PipelineCallback<PipelinesXmlMessage, Pip
   }
 
   @Override
-  protected Runnable createRunnable(PipelinesXmlMessage message) {
+  public Runnable createRunnable(PipelinesXmlMessage message) {
     UUID datasetId = message.getDatasetUuid();
     String attempt = message.getAttempt().toString();
     return createRunnable(config, datasetId, attempt, executor, message.getTotalRecordCount());
   }
 
   @Override
-  protected PipelinesVerbatimMessage createOutgoingMessage(PipelinesXmlMessage message) {
+  public PipelinesVerbatimMessage createOutgoingMessage(PipelinesXmlMessage message) {
 
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
@@ -119,7 +139,7 @@ public class XmlToAvroCallback extends PipelineCallback<PipelinesXmlMessage, Pip
   }
 
   @Override
-  protected boolean isMessageCorrect(PipelinesXmlMessage message) {
+  public boolean isMessageCorrect(PipelinesXmlMessage message) {
     return Platform.PIPELINES.equivalent(message.getPlatform())
         && message.getTotalRecordCount() != 0
         && message.getReason() == FinishReason.NORMAL;

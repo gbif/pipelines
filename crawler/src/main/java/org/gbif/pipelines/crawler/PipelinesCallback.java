@@ -15,7 +15,6 @@ import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
-import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
@@ -49,12 +48,11 @@ import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath
 
 /**
  * Common class for building and handling a pipeline step. Contains {@link Builder} to simplify the creation process
- * and main handling process. Please see the main method {@link PipelineCallback#handleMessage}
+ * and main handling process. Please see the main method {@link PipelinesCallback#handleMessage}
  */
 @Slf4j
-@AllArgsConstructor
-public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends PipelineBasedMessage> extends
-    AbstractMessageCallback<I> {
+@Builder
+public class PipelinesCallback<I extends PipelineBasedMessage, O extends PipelineBasedMessage> {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final Retry RETRY =
@@ -67,16 +65,19 @@ public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends
       );
 
   private static Properties properties;
+  private final MessagePublisher publisher;
   @NonNull
   private final StepType stepType;
   @NonNull
   private final CuratorFramework curator;
   @NonNull
-  private final MessagePublisher publisher;
-  @NonNull
   private final PipelinesHistoryWsClient client;
   @NonNull
   private final BaseConfiguration config;
+  @NonNull
+  private final I message;
+  @NonNull
+  private final PipelinesHandler<I, O> handler;
 
   static {
     try {
@@ -99,23 +100,22 @@ public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends
    * 8) Updates Zookeeper successful or error monitoring metrics
    * 9) Cleans Zookeeper monitoring metrics if the received message is the last
    */
-  @Override
-  public void handleMessage(I message) {
+  public void handleMessage() {
 
     String crawlId = message.getDatasetUuid().toString() + "_" + message.getAttempt();
-    O outgoingMessage = createOutgoingMessage(message);
+    O outgoingMessage = handler.createOutgoingMessage(message);
     Optional<TrackingInfo> trackingInfo = Optional.empty();
 
     try (MDCCloseable mdc = MDC.putCloseable("crawlId", crawlId);
         MDCCloseable mdc1 = MDC.putCloseable("step", stepType.name())) {
 
-      if (!isMessageCorrect(message)) {
+      if (!handler.isMessageCorrect(message)) {
         log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
         return;
       }
 
       log.info("Message handler began - {}", message);
-      Runnable runnable = createRunnable(message);
+      Runnable runnable = handler.createRunnable(message);
 
       // Message callback handler, updates zookeeper info, runs process logic and sends next MQ message
       // Short variables
@@ -133,7 +133,7 @@ public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends
       }
 
       // track the pipeline step
-      trackingInfo = trackPipelineStep(message, stepType);
+      trackingInfo = trackPipelineStep();
 
       String mqMessagePath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, crawlId, mqMessagePath, message.toString());
@@ -145,7 +145,7 @@ public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends
       ZookeeperUtils.updateMonitoringDate(curator, crawlId, startDatePath);
 
       String runnerPath = Fn.RUNNER.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, crawlId, runnerPath, getRunner(message));
+      ZookeeperUtils.updateMonitoring(curator, crawlId, runnerPath, getRunner());
 
       log.info("Handler has been started, crawlId - {}", crawlId);
       runnable.run();
@@ -197,17 +197,7 @@ public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends
 
   }
 
-  protected abstract Runnable createRunnable(I message);
-
-  protected abstract O createOutgoingMessage(I message);
-
-  protected abstract boolean isMessageCorrect(I message);
-
-  protected StepType getStepType() {
-    return stepType;
-  }
-
-  private Optional<TrackingInfo> trackPipelineStep(I message, StepType stepType) {
+  private Optional<TrackingInfo> trackPipelineStep() {
     try {
       // create pipeline process. If it already exists it returns the existing one (the db query does an upsert).
       UUID datasetUuid = message.getDatasetUuid();
@@ -229,7 +219,7 @@ public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends
               .setMessage(OBJECT_MAPPER.writeValueAsString(message))
               .setType(stepType)
               .setState(PipelineStep.Status.RUNNING)
-              .setRunner(StepRunner.valueOf(getRunner(message)))
+              .setRunner(StepRunner.valueOf(getRunner()))
               .setPipelinesVersion(getPipelinesVersion());
 
       long stepKey = client.addPipelineStep(processKey, executionId, step);
@@ -245,8 +235,7 @@ public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends
 
   private void updateTrackingStatus(TrackingInfo ti, PipelineStep.Status status) {
     String path =
-        HdfsUtils.buildOutputPathAsString(config.getRepositoryPath(), ti.datasetId, ti.attempt,
-            config.getMetaFileName());
+        HdfsUtils.buildOutputPathAsString(config.getRepositoryPath(), ti.datasetId, ti.attempt, config.getMetaFileName());
     List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), path);
     PipelineStepParameters psp = new PipelineStepParameters(status, metricInfos);
     try {
@@ -263,20 +252,20 @@ public abstract class PipelineCallback<I extends PipelineBasedMessage, O extends
     return properties == null ? null : properties.getProperty("pipelines.version");
   }
 
-  private String getRunner(PipelineBasedMessage inMessage) {
-    if (inMessage instanceof PipelinesAbcdMessage
-        || inMessage instanceof PipelinesXmlMessage
-        || inMessage instanceof PipelinesDwcaMessage) {
+  private String getRunner() {
+    if (message instanceof PipelinesAbcdMessage
+        || message instanceof PipelinesXmlMessage
+        || message instanceof PipelinesDwcaMessage) {
       return StepRunner.STANDALONE.name();
     }
-    if (inMessage instanceof PipelinesIndexedMessage) {
-      return ((PipelinesIndexedMessage) inMessage).getRunner();
+    if (message instanceof PipelinesIndexedMessage) {
+      return ((PipelinesIndexedMessage) message).getRunner();
     }
-    if (inMessage instanceof PipelinesInterpretedMessage) {
-      return ((PipelinesInterpretedMessage) inMessage).getRunner();
+    if (message instanceof PipelinesInterpretedMessage) {
+      return ((PipelinesInterpretedMessage) message).getRunner();
     }
-    if (inMessage instanceof PipelinesVerbatimMessage) {
-      return ((PipelinesVerbatimMessage) inMessage).getRunner();
+    if (message instanceof PipelinesVerbatimMessage) {
+      return ((PipelinesVerbatimMessage) message).getRunner();
     }
     return StepRunner.UNKNOWN.name();
   }

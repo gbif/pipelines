@@ -6,12 +6,14 @@ import java.util.function.Predicate;
 
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.crawler.PipelineCallback;
+import org.gbif.pipelines.crawler.PipelinesCallback;
+import org.gbif.pipelines.crawler.PipelinesHandler;
 import org.gbif.pipelines.crawler.hdfs.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
@@ -28,23 +30,45 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
  */
 @Slf4j
-public class HdfsViewCallback extends PipelineCallback<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
+public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
+    implements PipelinesHandler<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
+
+  private static final StepType TYPE = StepType.HDFS_VIEW;
 
   private final HdfsViewConfiguration config;
+  private final MessagePublisher publisher;
+  private final CuratorFramework curator;
+  private final PipelinesHistoryWsClient client;
   private final ExecutorService executor;
 
-  public HdfsViewCallback(HdfsViewConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient client, ExecutorService executor) {
-    super(StepType.HDFS_VIEW, curator, publisher, client, config);
+  public HdfsViewCallback(HdfsViewConfiguration config, MessagePublisher publisher,
+      CuratorFramework curator, PipelinesHistoryWsClient client, ExecutorService executor) {
     this.config = config;
+    this.publisher = publisher;
+    this.curator = curator;
+    this.client = client;
     this.executor = executor;
+  }
+
+  @Override
+  public void handleMessage(PipelinesInterpretedMessage message) {
+    PipelinesCallback.<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage>builder()
+        .client(client)
+        .config(config)
+        .curator(curator)
+        .stepType(TYPE)
+        .publisher(publisher)
+        .message(message)
+        .handler(this)
+        .build()
+        .handleMessage();
   }
 
   /**
    * Main message processing logic, creates a terminal java process, which runs
    */
   @Override
-  protected Runnable createRunnable(PipelinesInterpretedMessage message) {
+  public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
       try {
         ProcessRunnerBuilderBuilder builder = ProcessRunnerBuilder.builder()
@@ -68,7 +92,7 @@ public class HdfsViewCallback extends PipelineCallback<PipelinesInterpretedMessa
   }
 
   @Override
-  protected PipelinesHdfsViewBuiltMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
+  public PipelinesHdfsViewBuiltMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
     return new PipelinesHdfsViewBuiltMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
@@ -81,11 +105,11 @@ public class HdfsViewCallback extends PipelineCallback<PipelinesInterpretedMessa
    * {@link HdfsViewConfiguration#processRunner}
    */
   @Override
-  protected boolean isMessageCorrect(PipelinesInterpretedMessage message) {
+  public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message.toString());
     }
-    if (message.getOnlyForStep() != null && !message.getOnlyForStep().equalsIgnoreCase(getStepType().name())) {
+    if (message.getOnlyForStep() != null && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {
       return false;
     }
     return config.processRunner.equals(message.getRunner());

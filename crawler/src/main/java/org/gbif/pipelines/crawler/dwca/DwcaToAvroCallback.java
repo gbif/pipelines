@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -16,7 +17,8 @@ import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.Validatio
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.crawler.PipelineCallback;
+import org.gbif.pipelines.crawler.PipelinesCallback;
+import org.gbif.pipelines.crawler.PipelinesHandler;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.avro.file.CodecFactory;
@@ -28,21 +30,41 @@ import lombok.extern.slf4j.Slf4j;
  * Callback which is called when the {@link PipelinesDwcaMessage} is received.
  */
 @Slf4j
-public class DwcaToAvroCallback extends PipelineCallback<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
+public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMessage>
+    implements PipelinesHandler<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
 
   private final DwcaToAvroConfiguration config;
+  private final MessagePublisher publisher;
+  private final CuratorFramework curator;
+  private final PipelinesHistoryWsClient client;
 
   public DwcaToAvroCallback(DwcaToAvroConfiguration config, MessagePublisher publisher, CuratorFramework curator,
       PipelinesHistoryWsClient client) {
-    super(StepType.DWCA_TO_VERBATIM, curator, publisher, client, config);
     this.config = config;
+    this.publisher = publisher;
+    this.curator = curator;
+    this.client = client;
+  }
+
+  @Override
+  public void handleMessage(PipelinesDwcaMessage message) {
+    PipelinesCallback.<PipelinesDwcaMessage, PipelinesVerbatimMessage>builder()
+        .client(client)
+        .config(config)
+        .curator(curator)
+        .stepType(StepType.DWCA_TO_VERBATIM)
+        .publisher(publisher)
+        .message(message)
+        .handler(this)
+        .build()
+        .handleMessage();
   }
 
   /**
    * Only correct messages can be handled, by now is only OCCURRENCE type messages
    */
   @Override
-  protected boolean isMessageCorrect(PipelinesDwcaMessage message) {
+  public boolean isMessageCorrect(PipelinesDwcaMessage message) {
     boolean isPlatformCorrect = Platform.PIPELINES.equivalent(message.getPlatform());
     boolean isReportValid = message.getDatasetType() != null && message.getValidationReport().isValid()
         && message.getValidationReport().getOccurrenceReport().getCheckedRecords() > 0;
@@ -53,7 +75,7 @@ public class DwcaToAvroCallback extends PipelineCallback<PipelinesDwcaMessage, P
    * Main message processing logic, converts a DwCA archive to an avro file.
    */
   @Override
-  protected Runnable createRunnable(PipelinesDwcaMessage message) {
+  public Runnable createRunnable(PipelinesDwcaMessage message) {
     return () -> {
 
       UUID datasetId = message.getDatasetUuid();
@@ -83,7 +105,7 @@ public class DwcaToAvroCallback extends PipelineCallback<PipelinesDwcaMessage, P
   }
 
   @Override
-  protected PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
+  public PipelinesVerbatimMessage createOutgoingMessage(PipelinesDwcaMessage message) {
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
     if (message.getPipelineSteps().isEmpty()) {

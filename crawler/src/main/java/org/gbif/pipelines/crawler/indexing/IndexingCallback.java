@@ -14,6 +14,7 @@ import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
@@ -21,7 +22,8 @@ import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.crawler.PipelineCallback;
+import org.gbif.pipelines.crawler.PipelinesCallback;
+import org.gbif.pipelines.crawler.PipelinesHandler;
 import org.gbif.pipelines.crawler.indexing.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
@@ -42,22 +44,44 @@ import lombok.extern.slf4j.Slf4j;
  * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
  */
 @Slf4j
-public class IndexingCallback extends PipelineCallback<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
+public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
+    implements PipelinesHandler<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
 
+  private static final StepType TYPE = StepType.INTERPRETED_TO_INDEX;
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final IndexingConfiguration config;
-  private final ExecutorService executor;
+  private final MessagePublisher publisher;
   private final DatasetService datasetService;
+  private final CuratorFramework curator;
   private final HttpClient httpClient;
+  private final PipelinesHistoryWsClient client;
+  private final ExecutorService executor;
 
-  public IndexingCallback(IndexingConfiguration config, MessagePublisher publisher, DatasetService datasetService,
-      CuratorFramework curator, HttpClient httpClient, PipelinesHistoryWsClient client, ExecutorService executor) {
-    super(StepType.INTERPRETED_TO_INDEX, curator, publisher, client, config);
+  public IndexingCallback(IndexingConfiguration config, MessagePublisher publisher,
+      DatasetService datasetService, CuratorFramework curator, HttpClient httpClient,
+      PipelinesHistoryWsClient client, ExecutorService executor) {
     this.config = config;
-    this.executor = executor;
+    this.publisher = publisher;
     this.datasetService = datasetService;
+    this.curator = curator;
     this.httpClient = httpClient;
+    this.client = client;
+    this.executor = executor;
+  }
+
+  @Override
+  public void handleMessage(PipelinesInterpretedMessage message) {
+    PipelinesCallback.<PipelinesInterpretedMessage, PipelinesIndexedMessage>builder()
+        .client(client)
+        .config(config)
+        .curator(curator)
+        .stepType(TYPE)
+        .publisher(publisher)
+        .message(message)
+        .handler(this)
+        .build()
+        .handleMessage();
   }
 
   /**
@@ -65,11 +89,11 @@ public class IndexingCallback extends PipelineCallback<PipelinesInterpretedMessa
    * {@link IndexingConfiguration#processRunner}
    */
   @Override
-  protected boolean isMessageCorrect(PipelinesInterpretedMessage message) {
+  public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
     if (Strings.isNullOrEmpty(message.getRunner())) {
       throw new IllegalArgumentException("Runner can't be null or empty " + message.toString());
     }
-    if (message.getOnlyForStep() != null && !message.getOnlyForStep().equalsIgnoreCase(getStepType().name())) {
+    if (message.getOnlyForStep() != null && !message.getOnlyForStep().equalsIgnoreCase(TYPE.name())) {
       return false;
     }
     return config.processRunner.equals(message.getRunner());
@@ -79,7 +103,7 @@ public class IndexingCallback extends PipelineCallback<PipelinesInterpretedMessa
    * Main message processing logic, creates a terminal java process, which runs interpreted-to-index pipeline
    */
   @Override
-  protected Runnable createRunnable(PipelinesInterpretedMessage message) {
+  public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
       try {
         long recordsNumber = getRecordNumber(message);
@@ -111,7 +135,7 @@ public class IndexingCallback extends PipelineCallback<PipelinesInterpretedMessa
   }
 
   @Override
-  protected PipelinesIndexedMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
+  public PipelinesIndexedMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
     return new PipelinesIndexedMessage(
         message.getDatasetUuid(),
         message.getAttempt(),
@@ -320,4 +344,5 @@ public class IndexingCallback extends PipelineCallback<PipelinesInterpretedMessa
     }
     return Optional.empty();
   }
+
 }
