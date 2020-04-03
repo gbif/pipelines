@@ -158,7 +158,7 @@ public class FragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    TableAssert.assertTableDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
@@ -204,7 +204,7 @@ public class FragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    TableAssert.assertTableDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
@@ -417,7 +417,7 @@ public class FragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    TableAssert.assertTableDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 
   @Test
@@ -464,6 +464,6 @@ public class FragmentsUploaderIT {
     // Should
     Assert.assertEquals(expSize, resultFirst);
     Assert.assertEquals(expSize, resultSecond);
-    TableAssert.assertTablDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
+    TableAssert.assertTableDateUpdated(HBASE_SERVER.getConnection(), expSize, datasetKey, attemptSecond, endpointType);
   }
 }

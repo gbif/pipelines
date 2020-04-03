@@ -27,7 +27,7 @@ import static org.gbif.pipelines.fragmenter.common.HbaseStore.getRecordQualifier
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TableAssert {
 
-  public static void assertTablDateUpdated(Connection connection, int expectedSize, String expectedDatasetKey,
+  public static void assertTableDateUpdated(Connection connection, int expectedSize, String expectedDatasetKey,
       Integer expectedAttempt, EndpointType expectedEndpointType) throws IOException {
     assertTable(connection, expectedSize, expectedDatasetKey, expectedAttempt, expectedEndpointType, true);
   }
