@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
+import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.PipelinesHandler;
@@ -20,7 +20,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
-    implements PipelinesHandler<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
+    implements PipelinesHandler<PipelinesInterpretedMessage, PipelinesFragmenterMessage> {
+
+  private static final StepType TYPE = StepType.FRAGMENTER;
 
   private final FragmenterConfiguration config;
   private final MessagePublisher publisher;
@@ -39,11 +41,11 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
 
   @Override
   public void handleMessage(PipelinesInterpretedMessage message) {
-    PipelinesCallback.<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage>builder()
+    PipelinesCallback.<PipelinesInterpretedMessage, PipelinesFragmenterMessage>builder()
         .client(client)
         .config(config)
         .curator(curator)
-        .stepType(StepType.FRAGMENTER)
+        .stepType(TYPE)
         .publisher(publisher)
         .message(message)
         .handler(this)
@@ -54,16 +56,20 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
 
   @Override
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
-    throw new UnsupportedOperationException("EMPTY!");
+    return () -> log.warn("Empty!");
   }
 
   @Override
-  public PipelinesHdfsViewBuiltMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
-    throw new UnsupportedOperationException("EMPTY!");
+  public PipelinesFragmenterMessage createOutgoingMessage(PipelinesInterpretedMessage message) {
+    return new PipelinesFragmenterMessage(
+        message.getDatasetUuid(),
+        message.getAttempt(),
+        message.getPipelineSteps()
+    );
   }
 
   @Override
   public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
-    throw new UnsupportedOperationException("EMPTY!");
+    return message.getOnlyForStep() == null || message.getOnlyForStep().equalsIgnoreCase(TYPE.name());
   }
 }

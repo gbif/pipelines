@@ -129,7 +129,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         message.getPipelineSteps(),
         recordsNumber,
         repeatAttempt,
-        message.getResetPrefix()
+        message.getResetPrefix(),
+        message.getEndpointType()
     );
   }
 

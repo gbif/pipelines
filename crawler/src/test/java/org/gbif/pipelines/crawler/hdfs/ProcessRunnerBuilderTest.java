@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 
@@ -53,7 +54,8 @@ public class ProcessRunnerBuilderTest {
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
     Set<String> steps = Collections.singleton(RecordType.ALL.name());
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(datasetId, attempt, steps, 100L, false, null);
+    PipelinesInterpretedMessage message
+        = new PipelinesInterpretedMessage(datasetId, attempt, steps, 100L, false, null, EndpointType.DWC_ARCHIVE);
 
     // When
     ProcessBuilder builder =
@@ -100,7 +102,8 @@ public class ProcessRunnerBuilderTest {
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
     Set<String> steps = Collections.singleton(RecordType.ALL.name());
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(datasetId, attempt, steps, null, false, null);
+    PipelinesInterpretedMessage message =
+        new PipelinesInterpretedMessage(datasetId, attempt, steps, null, false, null, EndpointType.DWC_ARCHIVE);
 
     // Expected
     ProcessBuilder builder =
@@ -159,7 +162,8 @@ public class ProcessRunnerBuilderTest {
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
     Set<String> steps = Collections.singleton(RecordType.ALL.name());
-    PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(datasetId, attempt, steps, 100L, false, null);
+    PipelinesInterpretedMessage message =
+        new PipelinesInterpretedMessage(datasetId, attempt, steps, 100L, false, null, EndpointType.DWC_ARCHIVE);
 
     // Expected
     ProcessBuilder builder =

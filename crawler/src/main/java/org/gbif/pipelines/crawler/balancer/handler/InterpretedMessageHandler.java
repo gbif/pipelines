@@ -52,7 +52,8 @@ public class InterpretedMessageHandler {
             m.isRepeatAttempt(),
             m.getResetPrefix(),
             m.getOnlyForStep(),
-            m.getExecutionId()
+            m.getExecutionId(),
+            m.getEndpointType()
         );
 
     publisher.send(outputMessage);
