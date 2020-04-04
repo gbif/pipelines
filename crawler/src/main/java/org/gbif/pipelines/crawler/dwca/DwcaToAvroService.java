@@ -30,13 +30,13 @@ public class DwcaToAvroService extends AbstractIdleService {
   protected void startUp() throws Exception {
     log.info("Started pipelines-to-avro-from-dwca service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
-    StepConfiguration stepConfig = config.stepConfig;
-    listener = new MessageListener(stepConfig.messaging.getConnectionParameters(), 1);
-    publisher = new DefaultMessagePublisher(stepConfig.messaging.getConnectionParameters());
-    curator = stepConfig.zooKeeper.getCuratorFramework();
-    PipelinesHistoryWsClient client = stepConfig.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    StepConfiguration c = config.stepConfig;
+    listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
+    publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
+    curator = c.zooKeeper.getCuratorFramework();
+    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
-    listener.listen(stepConfig.queueName, stepConfig.poolSize, new DwcaToAvroCallback(this.config, publisher, curator, client));
+    listener.listen(c.queueName, c.poolSize, new DwcaToAvroCallback(this.config, publisher, curator, client));
   }
 
   @Override

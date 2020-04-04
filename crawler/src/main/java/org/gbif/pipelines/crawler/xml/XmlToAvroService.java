@@ -36,17 +36,17 @@ public class XmlToAvroService extends AbstractIdleService {
   protected void startUp() throws Exception {
     log.info("Started pipelines-to-avro-from-xml service with parameters : {}", config);
     // create the listener.
-    StepConfiguration stepConfig = config.stepConfig;
-    listener = new MessageListener(stepConfig.messaging.getConnectionParameters(), 1);
+    StepConfiguration c = config.stepConfig;
+    listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     // creates a binding between the queue specified in the configuration and the exchange and routing key specified in
     // CrawlFinishedMessage
-    publisher = new DefaultMessagePublisher(stepConfig.messaging.getConnectionParameters());
-    curator = stepConfig.zooKeeper.getCuratorFramework();
+    publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
+    curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.xmlReaderParallelism);
-    PipelinesHistoryWsClient client = stepConfig.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
     XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, client, executor);
-    listener.listen(stepConfig.queueName, stepConfig.poolSize, callback);
+    listener.listen(c.queueName, c.poolSize, callback);
   }
 
   @Override
