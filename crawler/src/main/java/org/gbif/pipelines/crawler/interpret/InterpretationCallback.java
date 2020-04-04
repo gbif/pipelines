@@ -16,7 +16,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
-import org.gbif.pipelines.crawler.PipelinesHandler;
+import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 import org.gbif.pipelines.crawler.interpret.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class InterpretationCallback extends AbstractMessageCallback<PipelinesVerbatimMessage> implements
-    PipelinesHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
+    StepHandler<PipelinesVerbatimMessage, PipelinesInterpretedMessage> {
 
   private final InterpreterConfiguration config;
   private final MessagePublisher publisher;
@@ -87,7 +87,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
       String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
       String path = message.getExtraPath() != null ? message.getExtraPath() :
-          String.join("/", config.repositoryPath, datasetId, attempt, verbatim);
+          String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, verbatim);
 
       ProcessRunnerBuilderBuilder builder = ProcessRunnerBuilder.builder()
           .config(config)
@@ -105,8 +105,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
         }
 
         log.info("Deleting old attempts directories");
-        String pathToDelete = String.join("/", config.repositoryPath, datasetId);
-        HdfsUtils.deleteSubFolders(config.hdfsSiteConfig, pathToDelete, config.deleteAfterDays);
+        String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
+        HdfsUtils.deleteSubFolders(config.stepConfig.hdfsSiteConfig, pathToDelete, config.deleteAfterDays);
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -222,13 +222,13 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
-    String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
+    String metaPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
 
     Long messageNumber =
         message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords() : null;
-    String fileNumber = HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+    String fileNumber = HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(
@@ -253,8 +253,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private boolean pathExists(PipelinesVerbatimMessage message) {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String path = String.join("/", config.repositoryPath, datasetId, attempt, Interpretation.DIRECTORY_NAME);
+    String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, Interpretation.DIRECTORY_NAME);
 
-    return HdfsUtils.exists(config.hdfsSiteConfig, path);
+    return HdfsUtils.exists(config.stepConfig.hdfsSiteConfig, path);
   }
 }

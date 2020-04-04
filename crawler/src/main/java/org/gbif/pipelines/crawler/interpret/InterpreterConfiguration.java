@@ -1,16 +1,13 @@
 package org.gbif.pipelines.crawler.interpret;
 
-import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.AvroWriteConfiguration;
-import org.gbif.pipelines.common.configs.RegistryConfiguration;
-import org.gbif.pipelines.common.configs.ZooKeeperConfiguration;
-import org.gbif.pipelines.crawler.BaseConfiguration;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 
@@ -23,42 +20,15 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @ParametersDelegate
   @Valid
   @NotNull
-  public ZooKeeperConfiguration zooKeeper = new ZooKeeperConfiguration();
-
-  @ParametersDelegate
-  @NotNull
-  @Valid
-  public RegistryConfiguration registry = new RegistryConfiguration();
-
-  @ParametersDelegate
-  @Valid
-  @NotNull
-  public MessagingConfiguration messaging = new MessagingConfiguration();
+  public StepConfiguration stepConfig = new StepConfiguration();
 
   @ParametersDelegate
   @Valid
   @NotNull
   public AvroWriteConfiguration avroConfig = new AvroWriteConfiguration();
 
-  @Parameter(names = "--queue-name")
-  @NotNull
-  public String queueName;
-
-  @Parameter(names = "--pool-size")
-  @NotNull
-  @Min(1)
-  public int poolSize;
-
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.VERBATIM_TO_INTERPRETED + ".yml";
-
-  @Parameter(names = "--hdfs-site-config")
-  @NotNull
-  public String hdfsSiteConfig;
-
-  @Parameter(names = "--core-site-config")
-  @NotNull
-  public String coreSiteConfig;
 
   @Parameter(names = "--pipelines-config")
   @Valid
@@ -122,9 +92,6 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Parameter(names = "--standalone-use-java")
   public boolean standaloneUseJava = false;
 
-  @Parameter(names = "--repository-path")
-  public String repositoryPath;
-
   @Parameter(names = "--process-error-directory")
   public String processErrorDirectory;
 
@@ -155,12 +122,12 @@ public class InterpreterConfiguration implements BaseConfiguration {
 
   @Override
   public String getHdfsSiteConfig() {
-    return hdfsSiteConfig;
+    return stepConfig.hdfsSiteConfig;
   }
 
   @Override
   public String getRepositoryPath() {
-    return repositoryPath;
+    return stepConfig.repositoryPath;
   }
 
   @Override

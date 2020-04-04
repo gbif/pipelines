@@ -1,4 +1,4 @@
-package org.gbif.pipelines.crawler;
+package org.gbif.pipelines.common.configs;
 
 public interface BaseConfiguration {
 
@@ -7,5 +7,4 @@ public interface BaseConfiguration {
   String getRepositoryPath();
 
   String getMetaFileName();
-
 }

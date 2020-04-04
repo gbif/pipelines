@@ -23,7 +23,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
-import org.gbif.pipelines.crawler.PipelinesHandler;
+import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.indexing.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
-    implements PipelinesHandler<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
+    implements StepHandler<PipelinesInterpretedMessage, PipelinesIndexedMessage> {
 
   private static final StepType TYPE = StepType.INTERPRETED_TO_INDEX;
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -185,8 +185,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     // Chooses a runner type by calculating number of files
     String basic = RecordType.BASIC.name().toLowerCase();
     String directoryName = Interpretation.DIRECTORY_NAME;
-    String basicPath = String.join("/", config.repositoryPath, datasetId, attempt, directoryName, basic);
-    int count = HdfsUtils.getFileCount(basicPath, config.hdfsSiteConfig);
+    String basicPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, directoryName, basic);
+    int count = HdfsUtils.getFileCount(basicPath, config.stepConfig.hdfsSiteConfig);
     if (count < config.sparkParallelismMin) {
       return config.sparkParallelismMin;
     }
@@ -305,11 +305,11 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new InterpreterConfiguration().metaFileName;
-    String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
+    String metaPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
-        HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
+        HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(

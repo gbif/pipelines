@@ -12,6 +12,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -446,7 +447,7 @@ public class PipelinesCallbackTest {
   }
 
   @NoArgsConstructor(staticName = "create")
-  private static class TestExceptionHandler implements PipelinesHandler<PipelineBasedMessage, PipelineBasedMessage> {
+  private static class TestExceptionHandler implements StepHandler<PipelineBasedMessage, PipelineBasedMessage> {
 
     @Override
     public Runnable createRunnable(PipelineBasedMessage message) {
@@ -473,7 +474,7 @@ public class PipelinesCallbackTest {
   }
 
   @NoArgsConstructor(staticName = "create")
-  private static class TestHandler implements PipelinesHandler<PipelineBasedMessage, PipelineBasedMessage> {
+  private static class TestHandler implements StepHandler<PipelineBasedMessage, PipelineBasedMessage> {
 
     @Override
     public Runnable createRunnable(PipelineBasedMessage message) {

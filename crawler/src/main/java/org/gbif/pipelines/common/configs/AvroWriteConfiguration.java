@@ -4,7 +4,9 @@ import org.apache.avro.file.CodecFactory;
 
 import com.beust.jcommander.Parameter;
 import javax.validation.constraints.NotNull;
+import lombok.ToString;
 
+@ToString
 public class AvroWriteConfiguration {
 
   @Parameter(names = "--compression-type")

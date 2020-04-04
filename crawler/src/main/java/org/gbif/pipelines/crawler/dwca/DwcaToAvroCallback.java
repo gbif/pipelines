@@ -18,7 +18,7 @@ import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
-import org.gbif.pipelines.crawler.PipelinesHandler;
+import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.avro.file.CodecFactory;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMessage>
-    implements PipelinesHandler<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
+    implements StepHandler<PipelinesDwcaMessage, PipelinesVerbatimMessage> {
 
   private final DwcaToAvroConfiguration config;
   private final MessagePublisher publisher;
@@ -86,17 +86,17 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
       // Calculates export path of avro as extended record
       org.apache.hadoop.fs.Path outputPath =
-          HdfsUtils.buildOutputPath(config.repositoryPath, datasetId.toString(), attempt, config.fileName);
+          HdfsUtils.buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.fileName);
 
       // Calculates metadata path, the yaml file with total number of converted records
       org.apache.hadoop.fs.Path metaPath =
-          HdfsUtils.buildOutputPath(config.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
+          HdfsUtils.buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
 
       // Run main conversion process
       DwcaToAvroConverter.create()
           .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
           .syncInterval(config.avroConfig.syncInterval)
-          .hdfsSiteConfig(config.hdfsSiteConfig)
+          .hdfsSiteConfig(config.stepConfig.hdfsSiteConfig)
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)

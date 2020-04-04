@@ -21,7 +21,7 @@ import org.gbif.converters.XmlToAvroConverter;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
-import org.gbif.pipelines.crawler.PipelinesHandler;
+import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
@@ -38,7 +38,7 @@ import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
  */
 @Slf4j
 public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage> implements
-    PipelinesHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
+    StepHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
 
   private static final String TAR_EXT = ".tar.xz";
   public static final int SKIP_RECORDS_CHECK = -1;
@@ -82,18 +82,18 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
 
       // Calculates export path of avro as extended record
       org.apache.hadoop.fs.Path outputPath =
-          buildOutputPath(config.repositoryPath, datasetId.toString(), attempt, config.fileName);
+          buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.fileName);
 
       // Calculates metadata path, the yaml file with total number of converted records
       org.apache.hadoop.fs.Path metaPath =
-          buildOutputPath(config.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
+          buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
 
       // Run main conversion process
       boolean isConverted = XmlToAvroConverter.create()
           .executor(executor)
           .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
           .syncInterval(config.avroConfig.syncInterval)
-          .hdfsSiteConfig(config.hdfsSiteConfig)
+          .hdfsSiteConfig(config.stepConfig.hdfsSiteConfig)
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)
@@ -151,11 +151,11 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
       return;
     }
     String metaFileName = new DwcaToAvroConfiguration().metaFileName;
-    String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
+    String metaPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
     log.info("Getting records number from the file - {}", metaPath);
     String fileNumber;
     try {
-      fileNumber = HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+      fileNumber = HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
     } catch (IOException e) {
       throw new IllegalArgumentException(e.getMessage(), e);
     }

@@ -1,15 +1,12 @@
 package org.gbif.pipelines.crawler.indexing;
 
-import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
-import org.gbif.pipelines.common.configs.RegistryConfiguration;
-import org.gbif.pipelines.common.configs.ZooKeeperConfiguration;
-import org.gbif.pipelines.crawler.BaseConfiguration;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 
@@ -22,37 +19,10 @@ public class IndexingConfiguration implements BaseConfiguration {
   @ParametersDelegate
   @Valid
   @NotNull
-  public ZooKeeperConfiguration zooKeeper = new ZooKeeperConfiguration();
-
-  @ParametersDelegate
-  @NotNull
-  @Valid
-  public RegistryConfiguration registry = new RegistryConfiguration();
-
-  @ParametersDelegate
-  @Valid
-  @NotNull
-  public MessagingConfiguration messaging = new MessagingConfiguration();
-
-  @Parameter(names = "--queue-name")
-  @NotNull
-  public String queueName;
-
-  @Parameter(names = "--pool-size")
-  @NotNull
-  @Min(1)
-  public int poolSize;
+  public StepConfiguration stepConfig = new StepConfiguration();
 
   @Parameter(names = "--meta-file-name")
   public String metaFileName = Pipeline.INTERPRETED_TO_INDEX + ".yml";
-
-  @Parameter(names = "--hdfs-site-config")
-  @NotNull
-  public String hdfsSiteConfig;
-
-  @Parameter(names = "--core-site-config")
-  @NotNull
-  public String coreSiteConfig;
 
   @Parameter(names = "--other-user")
   public String otherUser;
@@ -110,9 +80,6 @@ public class IndexingConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--distributed-main-class")
   public String distributedMainClass;
-
-  @Parameter(names = "--repository-path")
-  public String repositoryPath;
 
   @Parameter(names = "--process-error-directory")
   public String processErrorDirectory;
@@ -200,12 +167,12 @@ public class IndexingConfiguration implements BaseConfiguration {
 
   @Override
   public String getHdfsSiteConfig() {
-    return hdfsSiteConfig;
+    return stepConfig.hdfsSiteConfig;
   }
 
   @Override
   public String getRepositoryPath() {
-    return repositoryPath;
+    return stepConfig.repositoryPath;
   }
 
   @Override

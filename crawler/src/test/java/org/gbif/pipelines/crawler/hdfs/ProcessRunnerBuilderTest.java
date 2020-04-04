@@ -41,15 +41,15 @@ public class ProcessRunnerBuilderTest {
     HdfsViewConfiguration config = new HdfsViewConfiguration();
     config.standaloneJarPath = "java.jar";
     config.standaloneMainClass = "org.gbif.Test";
-    config.repositoryPath = "tmp";
     config.standaloneHeapSize = "1G";
     config.standaloneStackSize = "1G";
-    config.coreSiteConfig = "core.xml";
-    config.hdfsSiteConfig = "hdfs.xml";
     config.driverJavaOptions = "-Dlog4j.configuration=file:/home/crap/config/log4j-pipelines.properties";
     config.processRunner = StepRunner.STANDALONE.name();
     config.pipelinesConfig = "/path/ws.config";
     config.repositoryTargetPath = "target";
+    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
+    config.stepConfig.coreSiteConfig = "core.xml";
+    config.stepConfig.repositoryPath = "tmp";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
@@ -84,7 +84,6 @@ public class ProcessRunnerBuilderTest {
     HdfsViewConfiguration config = new HdfsViewConfiguration();
     config.distributedJarPath = "java.jar";
     config.distributedMainClass = "org.gbif.Test";
-    config.repositoryPath = "tmp";
     config.sparkExecutorMemoryGbMax = 10;
     config.sparkExecutorMemoryGbMin = 1;
     config.sparkExecutorCores = 1;
@@ -92,12 +91,13 @@ public class ProcessRunnerBuilderTest {
     config.sparkExecutorNumbersMax = 2;
     config.sparkMemoryOverhead = 1;
     config.sparkDriverMemory = "4G";
-    config.coreSiteConfig = "core.xml";
-    config.hdfsSiteConfig = "hdfs.xml";
     config.deployMode = "cluster";
     config.processRunner = StepRunner.DISTRIBUTED.name();
     config.pipelinesConfig = "/path/ws.config";
     config.repositoryTargetPath = "target";
+    config.stepConfig.coreSiteConfig = "core.xml";
+    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
+    config.stepConfig.repositoryPath = "tmp";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
@@ -138,7 +138,6 @@ public class ProcessRunnerBuilderTest {
     HdfsViewConfiguration config = new HdfsViewConfiguration();
     config.distributedJarPath = "java.jar";
     config.distributedMainClass = "org.gbif.Test";
-    config.repositoryPath = "tmp";
     config.sparkExecutorMemoryGbMax = 10;
     config.sparkExecutorMemoryGbMin = 1;
     config.sparkExecutorCores = 1;
@@ -146,8 +145,6 @@ public class ProcessRunnerBuilderTest {
     config.sparkExecutorNumbersMax = 2;
     config.sparkMemoryOverhead = 1;
     config.sparkDriverMemory = "4G";
-    config.coreSiteConfig = "core.xml";
-    config.hdfsSiteConfig = "hdfs.xml";
     config.metricsPropertiesPath = "metrics.properties";
     config.extraClassPath = "logstash-gelf.jar";
     config.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";
@@ -158,6 +155,9 @@ public class ProcessRunnerBuilderTest {
     config.repositoryTargetPath = "target";
     config.yarnQueue = "pipelines";
     config.otherUser = "user";
+    config.stepConfig.coreSiteConfig = "core.xml";
+    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
+    config.stepConfig.repositoryPath = "tmp";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;

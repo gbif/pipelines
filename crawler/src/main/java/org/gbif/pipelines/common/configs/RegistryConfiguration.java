@@ -8,16 +8,16 @@ import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
 import org.gbif.ws.client.guice.SingleUserAuthModule;
 
 import com.beust.jcommander.Parameter;
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import javax.validation.constraints.NotNull;
+import lombok.ToString;
 
 /**
  * A configuration class which can be used to get all the details needed to create a writable connection to the
  * GBIF registry.
  */
+@ToString
 public class RegistryConfiguration {
 
   @Parameter(names = "--registry-ws")
@@ -32,12 +32,6 @@ public class RegistryConfiguration {
   @Parameter(names = "--registry-password", password = true)
   @NotNull
   public String password;
-
-  @Override
-  public String toString() {
-    return Objects.toStringHelper(this).add("registryWsUrl", wsUrl).add("registryUser", user)
-      .add("registryPassword", Strings.repeat("*", Strings.nullToEmpty(password).length())).toString();
-  }
 
   /**
    * Convenience method to setup a guice injector with a writable registry client module using the configuration

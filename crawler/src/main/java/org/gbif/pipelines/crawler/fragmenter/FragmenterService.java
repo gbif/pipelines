@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -33,15 +34,15 @@ public class FragmenterService extends AbstractIdleService {
   protected void startUp() throws Exception {
     log.info("Started pipelines-fragmenter service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
-    listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
-    publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
-    curator = config.zooKeeper.getCuratorFramework();
-    executor = config.numberThreads == null
-        ? Executors.newSingleThreadExecutor() : Executors.newFixedThreadPool(config.numberThreads);
-    PipelinesHistoryWsClient client = config.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    StepConfiguration stepConfig = config.stepConfig;
+    listener = new MessageListener(stepConfig.messaging.getConnectionParameters(), 1);
+    publisher = new DefaultMessagePublisher(stepConfig.messaging.getConnectionParameters());
+    curator = stepConfig.zooKeeper.getCuratorFramework();
+    executor = Executors.newFixedThreadPool(config.numberThreads);
+    PipelinesHistoryWsClient client = stepConfig.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
     FragmenterCallback callback = new FragmenterCallback(config, publisher, curator, client, executor);
-    listener.listen(config.queueName, config.poolSize, callback);
+    listener.listen(stepConfig.queueName, stepConfig.poolSize, callback);
   }
 
   @Override

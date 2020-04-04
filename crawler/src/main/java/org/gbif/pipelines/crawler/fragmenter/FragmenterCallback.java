@@ -8,7 +8,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.crawler.PipelinesCallback;
-import org.gbif.pipelines.crawler.PipelinesHandler;
+import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
-    implements PipelinesHandler<PipelinesInterpretedMessage, PipelinesFragmenterMessage> {
+    implements StepHandler<PipelinesInterpretedMessage, PipelinesFragmenterMessage> {
 
   private static final StepType TYPE = StepType.FRAGMENTER;
 

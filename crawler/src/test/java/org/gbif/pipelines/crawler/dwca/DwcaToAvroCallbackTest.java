@@ -79,7 +79,7 @@ public class DwcaToAvroCallbackTest {
     // State
     DwcaToAvroConfiguration config = new DwcaToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
-    config.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     DwcaToAvroCallback callback = new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
 
@@ -106,7 +106,7 @@ public class DwcaToAvroCallbackTest {
     callback.handleMessage(message);
 
     // Should
-    Path path = Paths.get(config.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
+    Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
     assertTrue(Files.exists(path));
     assertTrue(Files.size(path) > 0L);
     assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, DWCA_LABEL)));
@@ -126,7 +126,7 @@ public class DwcaToAvroCallbackTest {
     // State
     DwcaToAvroConfiguration config = new DwcaToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
-    config.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     DwcaToAvroCallback callback = new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
 
@@ -153,7 +153,7 @@ public class DwcaToAvroCallbackTest {
     callback.handleMessage(message);
 
     // Should
-    Path path = Paths.get(config.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
+    Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
     assertTrue(Files.exists(path));
     assertTrue(Files.size(path) > 0L);
     assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, DWCA_LABEL)));
@@ -172,7 +172,7 @@ public class DwcaToAvroCallbackTest {
     // State
     DwcaToAvroConfiguration config = new DwcaToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile() + "/1";
-    config.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     DwcaToAvroCallback callback = new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
 
@@ -199,7 +199,7 @@ public class DwcaToAvroCallbackTest {
     callback.handleMessage(message);
 
     // Should
-    Path path = Paths.get(config.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
+    Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
     assertFalse(Files.exists(path));
     assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, DWCA_LABEL)));
     assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.ERROR_MESSAGE.apply(DWCA_LABEL))));
@@ -217,7 +217,7 @@ public class DwcaToAvroCallbackTest {
     // State
     DwcaToAvroConfiguration config = new DwcaToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
-    config.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
     DwcaToAvroCallback callback = new DwcaToAvroCallback(config, publisher, curator, historyWsClient);
 
@@ -244,7 +244,7 @@ public class DwcaToAvroCallbackTest {
     callback.handleMessage(message);
 
     // Should
-    Path path = Paths.get(config.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
+    Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
     assertFalse(Files.exists(path));
     assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, DWCA_LABEL)));
     assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL))));

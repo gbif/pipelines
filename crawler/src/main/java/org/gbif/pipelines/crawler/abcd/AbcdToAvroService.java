@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.crawler.xml.XmlToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
@@ -36,16 +37,17 @@ public class AbcdToAvroService extends AbstractIdleService {
   protected void startUp() throws Exception {
     log.info("Started pipelines-to-avro-from-abcd service with parameters : {}", config);
     // create the listener.
-    listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
+    StepConfiguration stepConfig = config.stepConfig;
+    listener = new MessageListener(stepConfig.messaging.getConnectionParameters(), 1);
     // creates a binding between the queue specified in the configuration and the exchange and routing key specified in
     // CrawlFinishedMessage
-    publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
-    curator = config.zooKeeper.getCuratorFramework();
+    publisher = new DefaultMessagePublisher(stepConfig.messaging.getConnectionParameters());
+    curator = stepConfig.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.xmlReaderParallelism);
-    PipelinesHistoryWsClient client = config.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryWsClient client = stepConfig.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
     AbcdToAvroCallback callback = new AbcdToAvroCallback(curator, config, executor, publisher, client);
-    listener.listen(config.queueName, config.poolSize, callback);
+    listener.listen(stepConfig.queueName, stepConfig.poolSize, callback);
   }
 
   @Override

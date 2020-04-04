@@ -10,7 +10,7 @@ import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.pipelines.crawler.PipelinesCallback;
-import org.gbif.pipelines.crawler.PipelinesHandler;
+import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.xml.XmlToAvroCallback;
 import org.gbif.pipelines.crawler.xml.XmlToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMessage>
-    implements PipelinesHandler<PipelinesAbcdMessage, PipelinesVerbatimMessage> {
+    implements StepHandler<PipelinesAbcdMessage, PipelinesVerbatimMessage> {
 
   private final CuratorFramework curator;
   private final XmlToAvroConfiguration config;

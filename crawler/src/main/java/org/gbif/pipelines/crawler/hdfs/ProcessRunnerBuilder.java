@@ -111,10 +111,10 @@ final class ProcessRunnerBuilder {
         .add("--attempt=" + message.getAttempt())
         .add("--runner=SparkRunner")
         .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
-        .add("--inputPath=" + Objects.requireNonNull(config.repositoryPath))
+        .add("--inputPath=" + Objects.requireNonNull(config.stepConfig.repositoryPath))
         .add("--targetPath=" + Objects.requireNonNull(config.repositoryTargetPath))
-        .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.hdfsSiteConfig))
-        .add("--coreSiteConfig=" + Objects.requireNonNull(config.coreSiteConfig))
+        .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
+        .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--numberOfShards=" + numberOfShards)
         .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig));
 

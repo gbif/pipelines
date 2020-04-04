@@ -80,7 +80,7 @@ public class XmlToAvroCallbackTest {
     int attempt = 61;
     XmlToAvroConfiguration config = new XmlToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
-    config.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
     XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
@@ -101,7 +101,7 @@ public class XmlToAvroCallbackTest {
     callback.handleMessage(message);
 
     // Should
-    Path path = Paths.get(config.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
+    Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
     assertTrue(Files.exists(path));
     assertTrue(Files.size(path) > 0L);
     assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, XML_LABEL)));
@@ -120,7 +120,7 @@ public class XmlToAvroCallbackTest {
     int attempt = 62;
     XmlToAvroConfiguration config = new XmlToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
-    config.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
     XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
@@ -141,7 +141,7 @@ public class XmlToAvroCallbackTest {
     callback.handleMessage(message);
 
     // Should
-    Path path = Paths.get(config.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
+    Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
     assertFalse(Files.exists(path));
     assertFalse(Files.exists(path.getParent()));
     assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, XML_LABEL)));
@@ -160,7 +160,7 @@ public class XmlToAvroCallbackTest {
     int attempt = 60;
     XmlToAvroConfiguration config = new XmlToAvroConfiguration();
     config.archiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
-    config.repositoryPath = getClass().getResource("/dataset/").getFile();
+    config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
     XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
@@ -181,7 +181,7 @@ public class XmlToAvroCallbackTest {
     callback.handleMessage(message);
 
     // Should
-    Path path = Paths.get(config.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
+    Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
     assertFalse(Files.exists(path));
     assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, XML_LABEL)));
     assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(XML_LABEL))));

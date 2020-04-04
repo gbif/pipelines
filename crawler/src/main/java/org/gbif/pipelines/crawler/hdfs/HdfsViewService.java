@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -33,14 +34,15 @@ public class HdfsViewService extends AbstractIdleService {
   protected void startUp() throws Exception {
     log.info("Started pipelines-hdfs-view service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
-    listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
-    publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
-    curator = config.zooKeeper.getCuratorFramework();
+    StepConfiguration stepConfig = config.stepConfig;
+    listener = new MessageListener(stepConfig.messaging.getConnectionParameters(), 1);
+    publisher = new DefaultMessagePublisher(stepConfig.messaging.getConnectionParameters());
+    curator = stepConfig.zooKeeper.getCuratorFramework();
     executor = config.standaloneNumberThreads == null ? null : Executors.newFixedThreadPool(config.standaloneNumberThreads);
-    PipelinesHistoryWsClient historyWsClient = config.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryWsClient historyWsClient = stepConfig.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
     HdfsViewCallback callback = new HdfsViewCallback(config, publisher, curator, historyWsClient, executor);
-    listener.listen(config.queueName, config.poolSize, callback);
+    listener.listen(stepConfig.queueName, stepConfig.poolSize, callback);
   }
 
   @Override

@@ -25,6 +25,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
@@ -77,7 +78,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   @NonNull
   private final I message;
   @NonNull
-  private final PipelinesHandler<I, O> handler;
+  private final StepHandler<I, O> handler;
 
   static {
     try {

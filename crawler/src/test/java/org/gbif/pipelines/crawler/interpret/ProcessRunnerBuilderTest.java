@@ -45,16 +45,16 @@ public class ProcessRunnerBuilderTest {
     InterpreterConfiguration config = new InterpreterConfiguration();
     config.standaloneJarPath = "java.jar";
     config.standaloneMainClass = "org.gbif.Test";
-    config.repositoryPath = "tmp";
-    config.avroConfig.compressionType = "SNAPPY";
-    config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
     config.standaloneHeapSize = "1G";
     config.standaloneStackSize = "1G";
-    config.coreSiteConfig = "core.xml";
-    config.hdfsSiteConfig = "hdfs.xml";
     config.driverJavaOptions = "-Dlog4j.configuration=file:/home/crap/config/log4j-interpretation-pipeline.properties";
     config.processRunner = StepRunner.STANDALONE.name();
+    config.avroConfig.syncInterval = 1;
+    config.avroConfig.compressionType = "SNAPPY";
+    config.stepConfig.coreSiteConfig = "core.xml";
+    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
+    config.stepConfig.repositoryPath = "tmp";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
@@ -88,7 +88,6 @@ public class ProcessRunnerBuilderTest {
     InterpreterConfiguration config = new InterpreterConfiguration();
     config.distributedJarPath = "java.jar";
     config.distributedMainClass = "org.gbif.Test";
-    config.repositoryPath = "tmp";
     config.sparkExecutorMemoryGbMax = 10;
     config.sparkExecutorMemoryGbMin = 1;
     config.sparkExecutorCores = 1;
@@ -99,10 +98,11 @@ public class ProcessRunnerBuilderTest {
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
     config.sparkDriverMemory = "4G";
-    config.coreSiteConfig = "core.xml";
-    config.hdfsSiteConfig = "hdfs.xml";
     config.deployMode = "cluster";
     config.processRunner = StepRunner.DISTRIBUTED.name();
+    config.stepConfig.repositoryPath = "tmp";
+    config.stepConfig.coreSiteConfig = "core.xml";
+    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
@@ -146,7 +146,6 @@ public class ProcessRunnerBuilderTest {
     InterpreterConfiguration config = new InterpreterConfiguration();
     config.distributedJarPath = "java.jar";
     config.distributedMainClass = "org.gbif.Test";
-    config.repositoryPath = "tmp";
     config.sparkExecutorMemoryGbMax = 10;
     config.sparkExecutorMemoryGbMin = 1;
     config.sparkExecutorCores = 1;
@@ -157,8 +156,6 @@ public class ProcessRunnerBuilderTest {
     config.avroConfig.syncInterval = 1;
     config.pipelinesConfig = "/path/ws.config";
     config.sparkDriverMemory = "4G";
-    config.coreSiteConfig = "core.xml";
-    config.hdfsSiteConfig = "hdfs.xml";
     config.metricsPropertiesPath = "metrics.properties";
     config.extraClassPath = "logstash-gelf.jar";
     config.driverJavaOptions = "-Dlog4j.configuration=file:log4j.properties";
@@ -166,6 +163,9 @@ public class ProcessRunnerBuilderTest {
     config.processRunner = StepRunner.DISTRIBUTED.name();
     config.yarnQueue = "pipelines";
     config.otherUser = "user";
+    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
+    config.stepConfig.coreSiteConfig = "core.xml";
+    config.stepConfig.repositoryPath = "tmp";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;

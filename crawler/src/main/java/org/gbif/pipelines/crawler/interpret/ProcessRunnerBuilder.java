@@ -115,13 +115,13 @@ final class ProcessRunnerBuilder {
         .add("--attempt=" + message.getAttempt())
         .add("--interpretationTypes=" + Objects.requireNonNull(interpretationTypes))
         .add("--runner=SparkRunner")
-        .add("--targetPath=" + Objects.requireNonNull(config.repositoryPath))
+        .add("--targetPath=" + Objects.requireNonNull(config.stepConfig.repositoryPath))
         .add("--metaFileName=" + Objects.requireNonNull(config.metaFileName))
         .add("--inputPath=" + Objects.requireNonNull(inputPath))
         .add("--avroCompressionType=" + Objects.requireNonNull(config.avroConfig.compressionType))
         .add("--avroSyncInterval=" + config.avroConfig.syncInterval)
-        .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.hdfsSiteConfig))
-        .add("--coreSiteConfig=" + Objects.requireNonNull(config.coreSiteConfig))
+        .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
+        .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
         .add("--endPointType=" + Objects.requireNonNull(message.getEndpointType()));
 

@@ -13,7 +13,7 @@ import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
-import org.gbif.pipelines.crawler.PipelinesHandler;
+import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.hdfs.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
@@ -31,7 +31,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 @Slf4j
 public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpretedMessage>
-    implements PipelinesHandler<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
+    implements StepHandler<PipelinesInterpretedMessage, PipelinesHdfsViewBuiltMessage> {
 
   private static final StepType TYPE = StepType.HDFS_VIEW;
 
@@ -205,11 +205,11 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
     String metaFileName = new InterpreterConfiguration().metaFileName;
-    String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
+    String metaPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
-        HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
+        HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(
@@ -230,8 +230,8 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private int computeNumberOfShards(PipelinesInterpretedMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String dirPath = String.join("/", config.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
-    long sizeByte = HdfsUtils.getFileSizeByte(dirPath, config.hdfsSiteConfig);
+    String dirPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
+    long sizeByte = HdfsUtils.getFileSizeByte(dirPath, config.stepConfig.hdfsSiteConfig);
     if (sizeByte == -1d) {
       throw new IllegalArgumentException("Please check interpretation source directory! - " + dirPath);
     }
