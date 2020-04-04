@@ -1,17 +1,26 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
+import org.gbif.pipelines.fragmenter.FragmentPersister;
+import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
+import org.gbif.pipelines.fragmenter.strategy.Strategy;
+import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.hadoop.hbase.client.Connection;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,14 +38,19 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   private final CuratorFramework curator;
   private final PipelinesHistoryWsClient client;
   private final ExecutorService executor;
+  private final Connection hbaseConnection;
+  private final KeygenConfig keygenConfig;
 
-  public FragmenterCallback(FragmenterConfiguration config, MessagePublisher publisher,
-      CuratorFramework curator, PipelinesHistoryWsClient client, ExecutorService executor) {
+  public FragmenterCallback(FragmenterConfiguration config, MessagePublisher publisher, CuratorFramework curator,
+      PipelinesHistoryWsClient client, ExecutorService executor, Connection hbaseConnection,
+      KeygenConfig keygenConfig) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
     this.client = client;
     this.executor = executor;
+    this.hbaseConnection = hbaseConnection;
+    this.keygenConfig = keygenConfig;
   }
 
   @Override
@@ -56,7 +70,30 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
 
   @Override
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
-    return () -> log.warn("Empty!");
+    return () -> {
+
+      Strategy strategy = message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)
+          ? DwcaStrategy.create() : XmlStrategy.create();
+
+      Supplier<Path> todo = () -> { throw new UnsupportedOperationException("!");};
+
+      Path pathToArchive = todo.get();
+
+      long result = FragmentPersister.builder()
+          .strategy(strategy)
+          .endpointType(message.getEndpointType())
+          .datasetKey(message.getDatasetUuid().toString())
+          .attempt(message.getAttempt())
+          .tableName(config.hbaseFragmentsTable)
+          .hbaseConnection(hbaseConnection)
+          .executor(executor)
+          .useOccurrenceId(true)
+          .useTriplet(true)
+          .pathToArchive(pathToArchive)
+          .keygenConfig(keygenConfig)
+          .build()
+          .persist();
+    };
   }
 
   @Override

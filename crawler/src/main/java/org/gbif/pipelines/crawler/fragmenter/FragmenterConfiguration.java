@@ -36,6 +36,11 @@ public class FragmenterConfiguration implements BaseConfiguration {
   @NotNull
   public String pipelinesConfig;
 
+  @Parameter(names = "--hbase-fragments-table")
+  @Valid
+  @NotNull
+  public String hbaseFragmentsTable;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;
