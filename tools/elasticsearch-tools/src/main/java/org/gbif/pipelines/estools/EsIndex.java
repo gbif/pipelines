@@ -83,7 +83,7 @@ public class EsIndex {
   public static void swapIndexInAliases(EsConfig config, Set<String> aliases, String index) {
     Preconditions.checkArgument(aliases != null && !aliases.isEmpty(), "alias is required");
     Preconditions.checkArgument(!Strings.isNullOrEmpty(index), "index is required");
-    swapIndexInAliases(config, aliases, index, Collections.emptySet(), Searching.DEFAULT_SEARCH_SETTINGS);
+    swapIndexInAliases(config, aliases, index, Collections.emptySet(), Searching.getDefaultSearchSettings());
   }
 
   /**

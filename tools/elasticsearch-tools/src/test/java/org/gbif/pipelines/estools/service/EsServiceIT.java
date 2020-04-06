@@ -97,7 +97,7 @@ public class EsServiceIT extends EsApiIntegration {
     assertIndexingSettings(idx);
 
     // When
-    EsService.updateIndexSettings(ES_SERVER.getEsClient(), idx, Searching.DEFAULT_SEARCH_SETTINGS);
+    EsService.updateIndexSettings(ES_SERVER.getEsClient(), idx, Searching.getDefaultSearchSettings());
 
     // Should
     assertSearchSettings(idx);
@@ -107,7 +107,7 @@ public class EsServiceIT extends EsApiIntegration {
   public void updateMissingIndexTest() {
 
     // When
-    EsService.updateIndexSettings(ES_SERVER.getEsClient(), "fake-index", Indexing.DEFAULT_INDEXING_SETTINGS);
+    EsService.updateIndexSettings(ES_SERVER.getEsClient(), "fake-index", Indexing.getDefaultIndexingSettings());
 
     // Should
     thrown.expectMessage(CoreMatchers.containsString("Error updating index"));

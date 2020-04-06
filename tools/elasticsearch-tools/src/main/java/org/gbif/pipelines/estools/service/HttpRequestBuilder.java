@@ -71,9 +71,9 @@ class HttpRequestBuilder {
 
   /** Adds a {@link SettingsType} to the body. */
   HttpRequestBuilder withSettingsType(@NonNull SettingsType settingsType) {
-    this.settings =
-        (settingsType == SettingsType.INDEXING) ? JsonHandler.convertToJsonNode(Indexing.DEFAULT_INDEXING_SETTINGS) :
-            JsonHandler.convertToJsonNode(Searching.DEFAULT_SEARCH_SETTINGS);
+    this.settings = (settingsType == SettingsType.INDEXING)
+        ? JsonHandler.convertToJsonNode(Indexing.getDefaultIndexingSettings())
+        : JsonHandler.convertToJsonNode(Searching.getDefaultSearchSettings());
     return this;
   }
 

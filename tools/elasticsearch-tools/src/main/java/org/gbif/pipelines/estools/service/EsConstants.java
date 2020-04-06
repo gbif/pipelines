@@ -58,7 +58,7 @@ public final class EsConstants {
     public static final String NUMBER_REPLICAS = "0";
     public static final String NORMALIZER =
         "{\"normalizer\":{\"lowercase_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\"]}}}";
-    public static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>();
+    private static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>();
 
     static {
       DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Indexing.REFRESH_INTERVAL);
@@ -67,6 +67,10 @@ public final class EsConstants {
       DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_TRANSLOG_DURABILITY, Constant.TRANSLOG_DURABILITY);
       DEFAULT_INDEXING_SETTINGS.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
     }
+
+    public static Map<String, String> getDefaultIndexingSettings() {
+      return DEFAULT_INDEXING_SETTINGS;
+    }
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -74,11 +78,15 @@ public final class EsConstants {
 
     public static final String REFRESH_INTERVAL = "1s";
     public static final String NUMBER_REPLICAS = "1";
-    public static final Map<String, String> DEFAULT_SEARCH_SETTINGS = new HashMap<>();
+    private static final Map<String, String> DEFAULT_SEARCH_SETTINGS = new HashMap<>();
 
     static {
       DEFAULT_SEARCH_SETTINGS.put(Field.INDEX_REFRESH_INTERVAL, Searching.REFRESH_INTERVAL);
       DEFAULT_SEARCH_SETTINGS.put(Field.INDEX_NUMBER_REPLICAS, Searching.NUMBER_REPLICAS);
+    }
+
+    public static Map<String, String> getDefaultSearchSettings() {
+      return DEFAULT_SEARCH_SETTINGS;
     }
   }
 
