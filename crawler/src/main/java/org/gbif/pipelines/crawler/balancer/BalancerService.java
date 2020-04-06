@@ -25,10 +25,10 @@ public class BalancerService extends AbstractIdleService {
   protected void startUp() throws Exception {
     log.info("Started pipelines-balancer service with parameters : {}", config);
     // Prefetch is one, since this is a long-running process.
-    listener = new MessageListener(config.messaging.getConnectionParameters(), 1);
-    publisher = new DefaultMessagePublisher(config.messaging.getConnectionParameters());
+    listener = new MessageListener(config.stepConfig.messaging.getConnectionParameters(), 1);
+    publisher = new DefaultMessagePublisher(config.stepConfig.messaging.getConnectionParameters());
 
-    listener.listen(config.queueName, config.poolSize, new BalancerCallback(config, publisher));
+    listener.listen(config.stepConfig.queueName, config.stepConfig.poolSize, new BalancerCallback(config, publisher));
   }
 
   @Override

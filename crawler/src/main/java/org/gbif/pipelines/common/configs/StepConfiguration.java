@@ -14,11 +14,9 @@ public class StepConfiguration {
 
   @ParametersDelegate
   @Valid
-  @NotNull
   public ZooKeeperConfiguration zooKeeper = new ZooKeeperConfiguration();
 
   @ParametersDelegate
-  @NotNull
   @Valid
   public RegistryConfiguration registry = new RegistryConfiguration();
 

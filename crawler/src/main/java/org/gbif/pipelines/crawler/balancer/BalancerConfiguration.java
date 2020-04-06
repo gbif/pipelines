@@ -1,6 +1,6 @@
 package org.gbif.pipelines.crawler.balancer;
 
-import org.gbif.common.messaging.config.MessagingConfiguration;
+import org.gbif.pipelines.common.configs.StepConfiguration;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParametersDelegate;
@@ -18,28 +18,7 @@ public class BalancerConfiguration {
   @ParametersDelegate
   @Valid
   @NotNull
-  public MessagingConfiguration messaging = new MessagingConfiguration();
-
-  @Parameter(names = "--queue-name")
-  @NotNull
-  public String queueName;
-
-  @Parameter(names = "--pool-size")
-  @NotNull
-  @Min(1)
-  public int poolSize;
-
-  @Parameter(names = "--hdfs-site-config")
-  @NotNull
-  public String hdfsSiteConfig;
-
-  @Parameter(names = "--core-site-config")
-  @NotNull
-  public String coreSiteConfig;
-
-  @Parameter(names = "--repository-path")
-  @NotNull
-  public String repositoryPath;
+  public StepConfiguration stepConfig = new StepConfiguration();
 
   @Parameter(names = "--switch-files-number")
   @NotNull
