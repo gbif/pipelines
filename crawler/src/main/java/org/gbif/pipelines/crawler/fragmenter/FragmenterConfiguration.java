@@ -1,5 +1,7 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
+import java.util.Set;
+
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.configs.StepConfiguration;
@@ -40,6 +42,18 @@ public class FragmenterConfiguration implements BaseConfiguration {
   @Valid
   @NotNull
   public String hbaseFragmentsTable;
+
+  @Parameter(names = "--dwca-archive-repository")
+  @NotNull
+  public String dwcaArchiveRepository;
+
+  @Parameter(names = "--xml-archive-repository")
+  @NotNull
+  public String xmlArchiveRepository;
+
+  @Parameter(names = "--xml-archive-repository-subdir")
+  @NotNull
+  public Set<String> xmlArchiveRepositorySubdir;
 
   @Override
   public String getHdfsSiteConfig() {
