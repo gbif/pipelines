@@ -17,7 +17,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.JVM)
-public class FragmentsUploaderIT {
+public class FragmentPersisterIT {
 
   /** {@link ClassRule} requires this field to be public. */
   @ClassRule
