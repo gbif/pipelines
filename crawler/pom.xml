@@ -111,17 +111,6 @@
     <jackson-old.version>1.9.12</jackson-old.version>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
-    </repository>
-    <repository>
-      <id>gbif-thirdparty</id>
-      <url>http://repository.gbif.org/content/repositories/thirdparty/</url>
-    </repository>
-  </repositories>
-
   <dependencies>
 
     <!-- Tools -->
