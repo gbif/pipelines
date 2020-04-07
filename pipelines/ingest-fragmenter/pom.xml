@@ -16,10 +16,6 @@
   <name>Pipelines :: Pipelines :: Ingest-fragmenter</name>
   <description>Uploads fragments (raw records) from archives into Hbase table.</description>
 
-  <properties>
-    <guava.hbase.version>12.0.1</guava.hbase.version>
-  </properties>
-
   <build>
     <plugins>
       <plugin>
