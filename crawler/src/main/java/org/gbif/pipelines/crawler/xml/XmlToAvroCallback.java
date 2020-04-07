@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -28,7 +30,6 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
 
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
@@ -121,12 +122,13 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     Objects.requireNonNull(message.getEndpointType(), "endpointType can't be NULL!");
 
     if (message.getPipelineSteps().isEmpty()) {
-      message.setPipelineSteps(Sets.newHashSet(
+      message.setPipelineSteps(new HashSet<>(Arrays.asList(
           StepType.XML_TO_VERBATIM.name(),
           StepType.VERBATIM_TO_INTERPRETED.name(),
           StepType.INTERPRETED_TO_INDEX.name(),
-          StepType.HDFS_VIEW.name()
-      ));
+          StepType.HDFS_VIEW.name(),
+          StepType.FRAGMENTER.name()
+      )));
     }
 
     return new PipelinesVerbatimMessage(
