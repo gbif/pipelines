@@ -1,9 +1,13 @@
 package org.gbif.pipelines.crawler;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -28,15 +32,13 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Sets;
 import lombok.NoArgsConstructor;
 
 import static org.gbif.crawler.constants.PipelinesNodePaths.SIZE;
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
 @RunWith(MockitoJUnitRunner.class)
-public class PipelinesCallbackTest {
+public class PipelinesCallbackIT {
 
   private static final Long EXECUTION_ID = 1L;
 
@@ -81,12 +83,12 @@ public class PipelinesCallbackTest {
     String crawlId = datasetKey + "_" + attempt;
     String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps = Sets.newHashSet(
+    Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
         StepType.DWCA_TO_VERBATIM.name(),
         StepType.VERBATIM_TO_INTERPRETED.name(),
         StepType.INTERPRETED_TO_INDEX.name(),
         StepType.HDFS_VIEW.name()
-    );
+    ));
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
     MessagePublisher publisher = null;
 
@@ -149,12 +151,12 @@ public class PipelinesCallbackTest {
     String crawlId = datasetKey + "_" + attempt;
     String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps = Sets.newHashSet(
+    Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
         StepType.DWCA_TO_VERBATIM.name(),
         StepType.VERBATIM_TO_INTERPRETED.name(),
         StepType.INTERPRETED_TO_INDEX.name(),
         StepType.HDFS_VIEW.name()
-    );
+    ));
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
 
     // When
@@ -194,7 +196,7 @@ public class PipelinesCallbackTest {
     int attempt = 1;
     String crawlId = datasetKey + "_" + attempt;
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps = Sets.newHashSet(StepType.DWCA_TO_VERBATIM.name());
+    Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
 
     // When
@@ -224,12 +226,12 @@ public class PipelinesCallbackTest {
     String crawlId = datasetKey + "_" + attempt;
     String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps = Sets.newHashSet(
+    Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
         StepType.DWCA_TO_VERBATIM.name(),
         StepType.VERBATIM_TO_INTERPRETED.name(),
         StepType.INTERPRETED_TO_INDEX.name(),
         StepType.HDFS_VIEW.name()
-    );
+    ));
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
 
     // When
@@ -268,7 +270,7 @@ public class PipelinesCallbackTest {
     int attempt = 1;
     String crawlId = datasetKey + "_" + attempt;
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps = Sets.newHashSet(StepType.DWCA_TO_VERBATIM.name());
+    Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
 
     updateMonitoring(crawlId, SIZE, String.valueOf(4));
@@ -300,12 +302,12 @@ public class PipelinesCallbackTest {
     int attempt = 1;
     String crawlId = datasetKey + "_" + attempt;
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
-    Set<String> pipelineSteps = Sets.newHashSet(
+    Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
         StepType.DWCA_TO_VERBATIM.name(),
         StepType.VERBATIM_TO_INTERPRETED.name(),
         StepType.INTERPRETED_TO_INDEX.name(),
         StepType.HDFS_VIEW.name()
-    );
+    ));
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
 
     updateMonitoring(crawlId, SIZE, String.valueOf(2));
@@ -400,7 +402,7 @@ public class PipelinesCallbackTest {
    */
   private void updateMonitoring(String crawlId, String path, String value) throws Exception {
     String fullPath = getPipelinesInfoPath(crawlId, path);
-    byte[] bytes = value.getBytes(Charsets.UTF_8);
+    byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
     if (checkExists(fullPath)) {
       curator.setData().forPath(fullPath, bytes);
     } else {
@@ -416,7 +418,7 @@ public class PipelinesCallbackTest {
     if (curator.checkExists().forPath(infoPath) != null) {
       byte[] responseData = curator.getData().forPath(infoPath);
       if (responseData != null) {
-        return Optional.of(new String(responseData, Charsets.UTF_8));
+        return Optional.of(new String(responseData, StandardCharsets.UTF_8));
       }
     }
     return Optional.empty();
@@ -458,12 +460,12 @@ public class PipelinesCallbackTest {
     public PipelineBasedMessage createOutgoingMessage(PipelineBasedMessage message) {
       UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
       int attempt = 1;
-      Set<String> pipelineSteps = Sets.newHashSet(
+      Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
           StepType.DWCA_TO_VERBATIM.name(),
           StepType.VERBATIM_TO_INTERPRETED.name(),
           StepType.INTERPRETED_TO_INDEX.name(),
           StepType.HDFS_VIEW.name()
-      );
+      ));
       return createMessage(datasetKey, attempt, pipelineSteps);
     }
 
@@ -485,12 +487,12 @@ public class PipelinesCallbackTest {
     public PipelineBasedMessage createOutgoingMessage(PipelineBasedMessage message) {
       UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
       int attempt = 1;
-      Set<String> pipelineSteps = Sets.newHashSet(
+      Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
           StepType.DWCA_TO_VERBATIM.name(),
           StepType.VERBATIM_TO_INTERPRETED.name(),
           StepType.INTERPRETED_TO_INDEX.name(),
           StepType.HDFS_VIEW.name()
-      );
+      ));
       return createMessage(datasetKey, attempt, pipelineSteps);
     }
 

@@ -1,0 +1,93 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.gbif.pipelines</groupId>
+    <artifactId>cli</artifactId>
+    <version>2.4.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>crawler-integration-tests</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Pipelines :: Crawler CLI IT</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+  <properties>
+    <curator-test.version>2.12.0</curator-test.version>
+    <fest.version>2.0M10</fest.version>
+    <mockito.version>2.8.9</mockito.version>
+  </properties>
+
+  <dependencies>
+
+    <!-- Tools -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+      <scope>test</scope>
+      <version>${curator-test.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+      <version>${mockito.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.easytesting</groupId>
+      <artifactId>fest-assert-core</artifactId>
+      <scope>test</scope>
+      <version>${fest.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>crawler</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
+      <artifactId>ingest-fragmenter</artifactId>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-testing-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.hbase.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+</project>

@@ -11,9 +11,9 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
-import org.gbif.pipelines.crawler.HbaseConnectionStub;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
-import org.gbif.pipelines.keygen.config.KeygenConfig;
+import org.gbif.pipelines.fragmenter.common.HbaseServer;
+import org.gbif.pipelines.fragmenter.common.TableAssert;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -23,6 +23,7 @@ import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -31,17 +32,18 @@ import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class FragmenterCallbackTest {
+public class FragmenterCallbackIT {
 
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final String INPUT_DATASET_FOLDER = "/dataset/dwca";
   private static final String FRAGMENTER_LABEL = StepType.FRAGMENTER.getLabel();
-  public static final KeygenConfig CFG =
-      KeygenConfig.create("test_occurrence", "test_occurrence_counter", "test_occurrence_lookup", null);
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
   private static PipelinesHistoryWsClient client;
+
+  @ClassRule
+  public static final HbaseServer HBASE_SERVER = new HbaseServer();
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -104,8 +106,8 @@ public class FragmenterCallbackTest {
         curator,
         client,
         Executors.newSingleThreadExecutor(),
-        HbaseConnectionStub.create(),
-        CFG);
+        HBASE_SERVER.getConnection(),
+        HbaseServer.CFG);
 
     // When
     callback.handleMessage(message);
@@ -116,6 +118,7 @@ public class FragmenterCallbackTest {
     assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
     assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
     assertEquals(1, publisher.getMessages().size());
+    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, DATASET_UUID, attempt, endpointType);
 
     // Clean
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));

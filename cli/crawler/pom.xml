@@ -4,12 +4,12 @@
 
   <parent>
     <groupId>org.gbif.pipelines</groupId>
-    <artifactId>pipelines-parent</artifactId>
+    <artifactId>cli</artifactId>
     <version>2.4.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>pipelines-crawler-cli</artifactId>
+  <artifactId>crawler</artifactId>
   <packaging>jar</packaging>
 
   <name>Pipelines :: Crawler CLI</name>
@@ -79,8 +79,6 @@
     <pipelines.lucene.version>7.5.0</pipelines.lucene.version>
     <amqp-client.version>4.8.0</amqp-client.version>
     <curator.version>4.0.1</curator.version>
-    <curator-test.version>2.12.0</curator-test.version>
-    <fest.version>2.0M10</fest.version>
 
     <gbif-cli.version>0.13</gbif-cli.version>
     <gbif-common-ws.version>0.48</gbif-common-ws.version>
@@ -100,7 +98,6 @@
     <jsr305.version>3.0.1</jsr305.version>
     <logstash-encoder.version>4.11</logstash-encoder.version>
     <metainf-services.version>1.7</metainf-services.version>
-    <mockito.version>2.8.9</mockito.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
     <zookeeper.version>3.4.5</zookeeper.version>
@@ -455,24 +452,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.curator</groupId>
-      <artifactId>curator-test</artifactId>
-      <scope>test</scope>
-      <version>${curator-test.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-      <version>${mockito.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.easytesting</groupId>
-      <artifactId>fest-assert-core</artifactId>
-      <scope>test</scope>
-      <version>${fest.version}</version>
     </dependency>
 
   </dependencies>

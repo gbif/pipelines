@@ -35,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class XmlToAvroCallbackTest {
+public class XmlToAvroCallbackIT {
 
   private static final String AVRO = "/verbatim.avro";
   private static final String STRING_UUID = "7ef15372-1387-11e2-bb2e-00145eb45e9a";
