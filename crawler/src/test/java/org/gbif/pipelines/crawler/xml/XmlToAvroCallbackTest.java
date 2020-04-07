@@ -22,6 +22,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,6 +75,11 @@ public class XmlToAvroCallbackTest {
     executor.shutdown();
   }
 
+  @After
+  public void after() {
+    publisher.close();
+  }
+
   @Test
   public void testNormalCaseWhenFilesInDirectory() throws Exception {
     // State
@@ -104,14 +110,13 @@ public class XmlToAvroCallbackTest {
     Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
     assertTrue(Files.exists(path));
     assertTrue(Files.size(path) > 0L);
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, XML_LABEL)));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(XML_LABEL))));
+    assertTrue(checkExists(curator, crawlId, XML_LABEL));
+    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(XML_LABEL)));
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
     HdfsUtils.deleteDirectory(null, path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, XML_LABEL));
-    publisher.close();
   }
 
   @Test
@@ -144,14 +149,13 @@ public class XmlToAvroCallbackTest {
     Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
     assertFalse(Files.exists(path));
     assertFalse(Files.exists(path.getParent()));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, XML_LABEL)));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.ERROR_MESSAGE.apply(XML_LABEL))));
+    assertTrue(checkExists(curator, crawlId, XML_LABEL));
+    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(XML_LABEL)));
     assertTrue(publisher.getMessages().isEmpty());
 
     // Clean
     HdfsUtils.deleteDirectory(null, path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, XML_LABEL));
-    publisher.close();
   }
 
   @Test
@@ -183,13 +187,16 @@ public class XmlToAvroCallbackTest {
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + STRING_UUID + "/" + attempt + AVRO);
     assertFalse(Files.exists(path));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, XML_LABEL)));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(XML_LABEL))));
+    assertFalse(checkExists(curator, crawlId, XML_LABEL));
+    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(XML_LABEL)));
     assertTrue(publisher.getMessages().isEmpty());
 
     // Clean
     HdfsUtils.deleteDirectory(null, path.toString());
-    publisher.close();
+  }
+
+  private boolean checkExists(CuratorFramework curator, String id, String path) {
+    return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
   }
 
 }

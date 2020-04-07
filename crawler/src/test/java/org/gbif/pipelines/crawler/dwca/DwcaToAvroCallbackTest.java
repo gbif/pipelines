@@ -25,6 +25,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class DwcaToAvroCallbackTest {
 
+  private static final String DWCA_LABEL = StepType.DWCA_TO_VERBATIM.getLabel();
   private static final String DATASET_UUID = "9bed66b3-4caa-42bb-9c93-71d7ba109dad";
   private static final String DUMMY_URL = "http://some.new.url";
   private static final String INPUT_DATASET_FOLDER = "/dataset/dwca";
@@ -49,7 +51,6 @@ public class DwcaToAvroCallbackTest {
   private static TestingServer server;
   private static MessagePublisherStub publisher;
   private static PipelinesHistoryWsClient historyWsClient;
-  private static final String DWCA_LABEL = StepType.DWCA_TO_VERBATIM.getLabel();
 
   @BeforeClass
   public static void setUp() throws Exception {
@@ -71,6 +72,11 @@ public class DwcaToAvroCallbackTest {
   public static void tearDown() throws IOException {
     curator.close();
     server.stop();
+    publisher.close();
+  }
+
+  @After
+  public void after() {
     publisher.close();
   }
 
@@ -109,16 +115,15 @@ public class DwcaToAvroCallbackTest {
     Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
     assertTrue(Files.exists(path));
     assertTrue(Files.size(path) > 0L);
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, DWCA_LABEL)));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL))));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL))));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL))));
+    assertTrue(checkExists(curator, crawlId, DWCA_LABEL));
+    assertTrue(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL)));
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
     HdfsUtils.deleteDirectory(null, path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
-    publisher.close();
   }
 
   @Test
@@ -156,15 +161,14 @@ public class DwcaToAvroCallbackTest {
     Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
     assertTrue(Files.exists(path));
     assertTrue(Files.size(path) > 0L);
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, DWCA_LABEL)));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL))));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL))));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL))));
+    assertFalse(checkExists(curator, crawlId, DWCA_LABEL));
+    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL)));
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
     HdfsUtils.deleteDirectory(null, path.toString());
-    publisher.close();
   }
 
   @Test
@@ -201,15 +205,14 @@ public class DwcaToAvroCallbackTest {
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
     assertFalse(Files.exists(path));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, DWCA_LABEL)));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.ERROR_MESSAGE.apply(DWCA_LABEL))));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL))));
-    assertTrue(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL))));
+    assertTrue(checkExists(curator, crawlId, DWCA_LABEL));
+    assertTrue(checkExists(curator, crawlId, Fn.ERROR_MESSAGE.apply(DWCA_LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL)));
+    assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL)));
     assertTrue(publisher.getMessages().isEmpty());
 
     // Clean
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
-    publisher.close();
   }
 
   @Test
@@ -246,13 +249,15 @@ public class DwcaToAvroCallbackTest {
     // Should
     Path path = Paths.get(config.stepConfig.repositoryPath + DATASET_UUID + "/2/verbatim.avro");
     assertFalse(Files.exists(path));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, DWCA_LABEL)));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL))));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL))));
-    assertFalse(ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL))));
+    assertFalse(checkExists(curator, crawlId, DWCA_LABEL));
+    assertFalse(checkExists(curator, crawlId, Fn.SUCCESSFUL_MESSAGE.apply(DWCA_LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(DWCA_LABEL)));
+    assertFalse(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(DWCA_LABEL)));
     assertTrue(publisher.getMessages().isEmpty());
+  }
 
-    publisher.close();
+  private boolean checkExists(CuratorFramework curator, String id, String path) {
+    return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
   }
 
 }
