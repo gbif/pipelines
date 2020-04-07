@@ -12,7 +12,7 @@
   <artifactId>crawler</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: Crawler CLI</name>
+  <name>Pipelines :: CLI :: Crawler</name>
 
   <build>
     <extensions>

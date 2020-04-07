@@ -12,7 +12,7 @@
   <artifactId>crawler-integration-tests</artifactId>
   <packaging>jar</packaging>
 
-  <name>Pipelines :: Crawler CLI IT</name>
+  <name>Pipelines :: CLI :: Crawler IT</name>
 
   <build>
     <plugins>
