@@ -1,13 +1,12 @@
 package org.gbif.pipelines.transforms.core;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.gbif.kvs.KeyValueStore;
 
-public class KeyValueTestStore<K, V> implements KeyValueStore<K, V>, Serializable {
+public class KeyValueTestStoreStub<K, V> implements KeyValueStore<K, V>, Serializable {
 
   private final Map<K, V> map = new HashMap<>();
 
@@ -17,7 +16,8 @@ public class KeyValueTestStore<K, V> implements KeyValueStore<K, V>, Serializabl
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
+    // NOP
   }
 
   void put(K key, V value) {

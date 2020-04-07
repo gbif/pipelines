@@ -1,7 +1,6 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
@@ -51,7 +50,7 @@ public class XmlFragmentParserTest {
             "Tiroler Landesmuseum Ferdinandeum",
             "82D45C93-B297-490E-B7B0-E0A9BEED1326",
             null);
-    byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
+    byte[] xmlBytes = xml.getBytes(StandardCharsets.UTF_8);
     Set<IdentifierExtractionResult> extractionResults =
         XmlFragmentParser.extractIdentifiers(
             datasetKey, xmlBytes, OccurrenceSchemaType.ABCD_1_2, true, true);
@@ -69,7 +68,7 @@ public class XmlFragmentParserTest {
             Resources.getResource("id_extraction/abcd2_multi.xml"), StandardCharsets.UTF_8);
 
     UUID datasetKey = UUID.randomUUID();
-    byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
+    byte[] xmlBytes = xml.getBytes(StandardCharsets.UTF_8);
     Set<IdentifierExtractionResult> extractionResults =
         XmlFragmentParser.extractIdentifiers(
             datasetKey, xmlBytes, OccurrenceSchemaType.ABCD_2_0_6, true, true);
@@ -98,7 +97,7 @@ public class XmlFragmentParserTest {
         Resources.toString(
             Resources.getResource("id_extraction/triplet_and_dwc_id.xml"), StandardCharsets.UTF_8);
     UUID datasetKey = UUID.randomUUID();
-    byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
+    byte[] xmlBytes = xml.getBytes(StandardCharsets.UTF_8);
     Set<IdentifierExtractionResult> extractionResults =
         XmlFragmentParser.extractIdentifiers(
             datasetKey, xmlBytes, OccurrenceSchemaType.DWC_1_4, true, true);
@@ -120,7 +119,7 @@ public class XmlFragmentParserTest {
         Resources.toString(
             Resources.getResource("id_extraction/tapir_triplet_contains_unrecorded.xml"),
             StandardCharsets.UTF_8);
-    byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
+    byte[] xmlBytes = xml.getBytes(StandardCharsets.UTF_8);
     Set<IdentifierExtractionResult> extractionResults =
         XmlFragmentParser.extractIdentifiers(
             UUID.randomUUID(), xmlBytes, OccurrenceSchemaType.DWC_1_4, true, true);
@@ -132,7 +131,7 @@ public class XmlFragmentParserTest {
     String xml =
         Resources.toString(
             Resources.getResource("id_extraction/manis_no_cc.xml"), StandardCharsets.UTF_8);
-    byte[] xmlBytes = xml.getBytes(Charset.forName("UTF8"));
+    byte[] xmlBytes = xml.getBytes(StandardCharsets.UTF_8);
     Set<IdentifierExtractionResult> extractionResults =
         XmlFragmentParser.extractIdentifiers(
             UUID.randomUUID(), xmlBytes, OccurrenceSchemaType.DWC_MANIS, true, true);

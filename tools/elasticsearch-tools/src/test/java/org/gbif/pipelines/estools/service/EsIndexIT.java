@@ -162,7 +162,7 @@ public class EsIndexIT extends EsApiIntegration {
 
     // wait the refresh interval for the documents to become searchable.
     Thread.sleep(
-        Long.valueOf(Iterables.get(Splitter.on('s').split(Searching.REFRESH_INTERVAL), 0)) * 1000
+        Long.parseLong(Iterables.get(Splitter.on('s').split(Searching.REFRESH_INTERVAL), 0)) * 1000
             + 500);
 
     // assert results against the alias

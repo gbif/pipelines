@@ -1,6 +1,5 @@
 package org.gbif.pipelines.core.interpreters.specific;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +30,8 @@ public class AustraliaSpatialInterpreterTest {
       }
 
       @Override
-      public void close() throws IOException {
+      public void close() {
+        // NOP
       }
     };
 

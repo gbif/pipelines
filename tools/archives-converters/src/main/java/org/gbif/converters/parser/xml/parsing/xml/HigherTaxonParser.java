@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 public class HigherTaxonParser {
 
   private final Properties taxonRankMapping = new Properties();
-  private final String taxonRankMappingFilename = "/taxonRankMapping.properties";
 
   public HigherTaxonParser() {
     init();
@@ -38,7 +37,7 @@ public class HigherTaxonParser {
   private void init() {
     // load taxonRank mappings
     try {
-      InputStream is = getClass().getResourceAsStream(taxonRankMappingFilename);
+      InputStream is = getClass().getResourceAsStream("/taxonRankMapping.properties");
       taxonRankMapping.load(is);
     } catch (IOException e) {
       log.error("Unable to load taxonRankMapping - parsing higher taxons will fail", e);
@@ -53,7 +52,7 @@ public class HigherTaxonParser {
     Taxon taxon = null;
     String processedTaxonRank = Strings.emptyToNull(rawTaxonRank);
     if (processedTaxonRank != null && !"null".equals(processedTaxonRank)) {
-      processedTaxonRank = processedTaxonRank.replaceAll(" ", "").toUpperCase();
+      processedTaxonRank = processedTaxonRank.replace(" ", "").toUpperCase();
       String rawRank = taxonRankMapping.getProperty(processedTaxonRank);
       if (rawRank == null) {
         log.info("Could not process taxon ranking of [{}], skipping.", processedTaxonRank);
@@ -75,6 +74,8 @@ public class HigherTaxonParser {
             break;
           case 5000:
             taxon = new Taxon(TaxonRankEnum.FAMILY, taxonName);
+            break;
+          default:
             break;
         }
       }

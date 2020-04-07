@@ -20,7 +20,6 @@ public class LocationMatcherTest {
 
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
-
   private static final GeocodeService SERVICE;
 
   static {
@@ -40,10 +39,6 @@ public class LocationMatcherTest {
     return new GeocodeResponse(Collections.singletonList(location));
   }
 
-  private GeocodeService getCache() {
-    return SERVICE;
-  }
-
   @Test
   public void countryAndCoordsMatchIdentityTest() {
 
@@ -53,7 +48,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coordsCanada, canada, getCache()).apply();
+        LocationMatcher.create(coordsCanada, canada, SERVICE).apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -71,7 +66,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coordsCanada, canada, getCache())
+        LocationMatcher.create(coordsCanada, canada, SERVICE)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -92,7 +87,7 @@ public class LocationMatcherTest {
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(coordsCanada, null, getCache()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(coordsCanada, null, SERVICE).apply();
 
     // Should
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
@@ -109,7 +104,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(wrongCoords, null, getCache())
+        LocationMatcher.create(wrongCoords, null, SERVICE)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -128,7 +123,7 @@ public class LocationMatcherTest {
     LatLng antarcticaEdgeCoords = new LatLng(-61d, -130d);
 
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(antarcticaEdgeCoords, null, getCache()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(antarcticaEdgeCoords, null, SERVICE).apply();
 
     // Should
     Assert.assertTrue(result.isSuccessful());
@@ -143,7 +138,7 @@ public class LocationMatcherTest {
     LatLng negatedLatCoords = new LatLng(-LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(negatedLatCoords, canada, getCache()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(negatedLatCoords, canada, SERVICE).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -160,7 +155,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedLatCoords, canada, getCache())
+        LocationMatcher.create(negatedLatCoords, canada, SERVICE)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .apply();
 
@@ -184,7 +179,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedLngCoords, canada, getCache())
+        LocationMatcher.create(negatedLngCoords, canada, SERVICE)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .apply();
 
@@ -208,7 +203,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedCoords, canada, getCache())
+        LocationMatcher.create(negatedCoords, canada, SERVICE)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
             .apply();
 
@@ -232,7 +227,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(swappedCoords, canada, getCache())
+        LocationMatcher.create(swappedCoords, canada, SERVICE)
             .additionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
             .apply();
 
@@ -253,7 +248,7 @@ public class LocationMatcherTest {
     LatLng coords = new LatLng(27.15, -13.20);
 
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(coords, Country.WESTERN_SAHARA, getCache()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(coords, Country.WESTERN_SAHARA, SERVICE).apply();
 
     // Should
     Assert.assertEquals(Country.MOROCCO, result.getResult().getCountry());
@@ -270,7 +265,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coords, Country.FRANCE, getCache()).apply();
+        LocationMatcher.create(coords, Country.FRANCE, SERVICE).apply();
 
     // Should
     Assert.assertEquals(Country.FRENCH_POLYNESIA, result.getResult().getCountry());
@@ -286,7 +281,7 @@ public class LocationMatcherTest {
     LatLng coords = new LatLng(71.7d, -42.6d);
 
     // When
-    ParsedField<ParsedLocation> match = LocationMatcher.create(coords, Country.DENMARK, getCache()).apply();
+    ParsedField<ParsedLocation> match = LocationMatcher.create(coords, Country.DENMARK, SERVICE).apply();
 
     // Should
     Assert.assertEquals(Country.GREENLAND, match.getResult().getCountry());
@@ -298,13 +293,13 @@ public class LocationMatcherTest {
   @Test(expected = NullPointerException.class)
   public void nullValuesTest() {
     // When
-    LocationMatcher.create(null, null, getCache()).apply();
+    LocationMatcher.create(null, null, SERVICE).apply();
   }
 
   @Test
   public void outOfRangeCoordinatesTest() {
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(new LatLng(200d, 200d), null, getCache()).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(new LatLng(200d, 200d), null, SERVICE).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());

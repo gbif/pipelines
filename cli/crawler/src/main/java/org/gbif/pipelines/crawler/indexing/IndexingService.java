@@ -30,7 +30,6 @@ public class IndexingService extends AbstractIdleService {
   private MessagePublisher publisher;
   private CuratorFramework curator;
   private CloseableHttpClient httpClient;
-  private DatasetService datasetService;
   private ExecutorService executor;
 
   public IndexingService(IndexingConfiguration config) {
@@ -45,7 +44,7 @@ public class IndexingService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    datasetService = c.registry.newRegistryInjector().getInstance(DatasetService.class);
+    DatasetService datasetService = c.registry.newRegistryInjector().getInstance(DatasetService.class);
     executor = config.standaloneNumberThreads == null ? null : Executors.newFixedThreadPool(config.standaloneNumberThreads);
     httpClient = HttpClients.custom()
         .setDefaultRequestConfig(RequestConfig.custom()

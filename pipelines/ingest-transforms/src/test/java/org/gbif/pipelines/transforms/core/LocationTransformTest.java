@@ -60,7 +60,7 @@ public class LocationTransformTest {
   public void emptyLrTest() {
 
     // State
-    GeocodeService service = GeocodeService.create(new KeyValueTestStore<>());
+    GeocodeService service = GeocodeService.create(new KeyValueTestStoreStub<>());
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
@@ -84,7 +84,7 @@ public class LocationTransformTest {
   public void transformationTest() {
 
     // State
-    KeyValueTestStore<LatLng, GeocodeResponse> kvStore = new KeyValueTestStore<>();
+    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK));
     kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN));
     GeocodeService service = GeocodeService.create(kvStore);
