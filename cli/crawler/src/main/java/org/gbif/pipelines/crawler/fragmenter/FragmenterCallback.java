@@ -25,6 +25,7 @@ import org.apache.hadoop.hbase.client.Connection;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
+import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 
 /**
  * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
@@ -75,6 +76,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
     return () -> {
 
       UUID datasetId = message.getDatasetUuid();
+      Integer attempt = message.getAttempt();
 
       Strategy strategy;
       Path pathToArchive;
@@ -84,14 +86,21 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
         pathToArchive = buildDwcaInputPath(config.dwcaArchiveRepository, datasetId);
       } else {
         strategy = XmlStrategy.create();
-        pathToArchive = null;
+        pathToArchive = buildXmlInputPath(
+            config.xmlArchiveRepository,
+            config.xmlArchiveRepositorySubdir,
+            datasetId,
+            attempt.toString()
+        );
       }
+
+      boolean useSync = message.getNumberOfRecords() < config.asyncThreshold;
 
       long result = FragmentPersister.builder()
           .strategy(strategy)
           .endpointType(message.getEndpointType())
           .datasetKey(datasetId.toString())
-          .attempt(message.getAttempt())
+          .attempt(attempt)
           .tableName(config.hbaseFragmentsTable)
           .hbaseConnection(hbaseConnection)
           .executor(executor)
@@ -99,6 +108,7 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
           .useTriplet(true)
           .pathToArchive(pathToArchive)
           .keygenConfig(keygenConfig)
+          .useSyncMode(useSync)
           .build()
           .persist();
 

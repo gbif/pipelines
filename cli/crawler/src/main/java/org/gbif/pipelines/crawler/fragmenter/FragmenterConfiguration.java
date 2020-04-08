@@ -55,6 +55,9 @@ public class FragmenterConfiguration implements BaseConfiguration {
   @NotNull
   public Set<String> xmlArchiveRepositorySubdir;
 
+  @Parameter(names = "--async-threshold")
+  public int asyncThreshold = 5_000;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

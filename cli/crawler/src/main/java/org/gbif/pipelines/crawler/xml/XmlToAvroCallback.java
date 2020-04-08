@@ -1,16 +1,12 @@
 package org.gbif.pipelines.crawler.xml;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Stream;
 
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.StepType;
@@ -33,6 +29,7 @@ import org.apache.curator.framework.CuratorFramework;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
+import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 
 /**
  * Call back which is called when the {@link PipelinesXmlMessage} is received.
@@ -41,7 +38,6 @@ import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessage> implements
     StepHandler<PipelinesXmlMessage, PipelinesVerbatimMessage> {
 
-  private static final String TAR_EXT = ".tar.xz";
   public static final int SKIP_RECORDS_CHECK = -1;
 
   private final XmlToAvroConfiguration config;
@@ -78,7 +74,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     return () -> {
 
       // Calculates and checks existence of DwC Archive
-      Path inputPath = buildInputPath(config, datasetId, attempt);
+      Path inputPath = buildXmlInputPath(config.archiveRepository, config.archiveRepositorySubdir, datasetId, attempt);
       log.info("XML path - {}", inputPath);
 
       // Calculates export path of avro as extended record
@@ -172,60 +168,5 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
       throw new IllegalArgumentException("Dataset - " + datasetId + " attempt - " + attempt
           + " the dataset conversion from xml to avro got less 80% of records");
     }
-  }
-
-  /**
-   * Input path result example, directory - /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2,
-   * if directory is absent, tries check a tar archive  - /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2.tar.xz
-   */
-  private static Path buildInputPath(XmlToAvroConfiguration config, UUID dataSetUuid, String attempt) {
-
-    Path directoryPath = config.archiveRepositorySubdir.stream()
-        .map(subdir -> Paths.get(config.archiveRepository, subdir, dataSetUuid.toString()).toFile())
-        .filter(File::exists)
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("Can't find directory for dataset - " + dataSetUuid))
-        .toPath();
-
-    // Check dir, as an example - /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2
-    Path sibling = directoryPath.resolve(String.valueOf(attempt));
-    if (sibling.toFile().exists()) {
-      return sibling;
-    }
-
-    // Check dir, as an example - /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2.tar.xz
-    sibling = directoryPath.resolve(attempt + TAR_EXT);
-    if (sibling.toFile().exists()) {
-      return sibling;
-    }
-
-    // TODO: Do we need this? Try to find last attempt
-    try (Stream<Path> walk = Files.list(directoryPath)) {
-      String parsedAttempt = walk.map(Path::toFile)
-          .map(File::getName)
-          .map(name -> name.replace(TAR_EXT, ""))
-          .filter(f -> f.matches("[0-9]+"))
-          .map(Integer::valueOf)
-          .max(Integer::compareTo)
-          .map(String::valueOf)
-          .orElse("0");
-
-      // Check dir, as an example - /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2
-      sibling = directoryPath.resolve(parsedAttempt);
-      if (sibling.toFile().exists()) {
-        return sibling;
-      }
-
-      // Check dir, as an example - /mnt/auto/crawler/xml/9bed66b3-4caa-42bb-9c93-71d7ba109dad/2.tar.xz
-      sibling = directoryPath.resolve(parsedAttempt + TAR_EXT);
-      if (sibling.toFile().exists()) {
-        return sibling;
-      }
-    } catch (IOException ex) {
-      log.error(ex.getMessage(), ex);
-    }
-
-    // Return general
-    return directoryPath;
   }
 }
