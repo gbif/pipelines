@@ -1,8 +1,8 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
 import java.nio.file.Path;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
@@ -23,6 +23,8 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.hbase.client.Connection;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 /**
  * Callback which is called when the {@link PipelinesInterpretedMessage} is received.
@@ -72,17 +74,23 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   public Runnable createRunnable(PipelinesInterpretedMessage message) {
     return () -> {
 
-      Strategy strategy = message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)
-          ? DwcaStrategy.create() : XmlStrategy.create();
+      UUID datasetId = message.getDatasetUuid();
 
-      Supplier<Path> todo = () -> { throw new UnsupportedOperationException("!");};
+      Strategy strategy;
+      Path pathToArchive;
 
-      Path pathToArchive = todo.get();
+      if (message.getEndpointType().equals(EndpointType.DWC_ARCHIVE)) {
+        strategy = DwcaStrategy.create();
+        pathToArchive = buildDwcaInputPath(config.dwcaArchiveRepository, datasetId);
+      } else {
+        strategy = XmlStrategy.create();
+        pathToArchive = null;
+      }
 
       long result = FragmentPersister.builder()
           .strategy(strategy)
           .endpointType(message.getEndpointType())
-          .datasetKey(message.getDatasetUuid().toString())
+          .datasetKey(datasetId.toString())
           .attempt(message.getAttempt())
           .tableName(config.hbaseFragmentsTable)
           .hbaseConnection(hbaseConnection)
@@ -93,6 +101,8 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
           .keygenConfig(keygenConfig)
           .build()
           .persist();
+
+      log.info("Result - {} records", result);
     };
   }
 

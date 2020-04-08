@@ -1,7 +1,8 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
@@ -24,7 +25,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -73,11 +73,11 @@ public class FragmenterCallbackIT {
     publisher.close();
   }
 
-  @Ignore("NOT READY")
   @Test
   public void testNormalCase() throws Exception {
     // State
     FragmenterConfiguration config = new FragmenterConfiguration();
+    config.hbaseFragmentsTable = HbaseServer.FRAGMENT_TABLE_NAME;
     config.dwcaArchiveRepository = getClass().getResource(INPUT_DATASET_FOLDER).getFile();
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
 
@@ -90,7 +90,7 @@ public class FragmenterCallbackIT {
     PipelinesInterpretedMessage message = new PipelinesInterpretedMessage(
         uuid,
         attempt,
-        Collections.singleton(StepType.FRAGMENTER.name()),
+        new HashSet<>(Arrays.asList(StepType.HDFS_VIEW.name(), StepType.FRAGMENTER.name())),
         (long) expSize,
         StepRunner.STANDALONE.name(),
         true,

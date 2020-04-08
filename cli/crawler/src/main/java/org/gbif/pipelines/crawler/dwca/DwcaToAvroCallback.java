@@ -1,7 +1,6 @@
 package org.gbif.pipelines.crawler.dwca;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
@@ -25,6 +24,8 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 
 /**
  * Callback which is called when the {@link PipelinesDwcaMessage} is received.
@@ -82,7 +83,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
       String attempt = String.valueOf(message.getAttempt());
 
       // Calculates and checks existence of DwC Archive
-      Path inputPath = buildInputPath(config.archiveRepository, datasetId);
+      Path inputPath = buildDwcaInputPath(config.archiveRepository, datasetId);
 
       // Calculates export path of avro as extended record
       org.apache.hadoop.fs.Path outputPath =
@@ -90,7 +91,8 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
 
       // Calculates metadata path, the yaml file with total number of converted records
       org.apache.hadoop.fs.Path metaPath =
-          HdfsUtils.buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
+          HdfsUtils.buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt,
+              config.metaFileName);
 
       // Run main conversion process
       DwcaToAvroConverter.create()
@@ -131,17 +133,6 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
         message.getEndpointType(),
         validationResult
     );
-  }
-
-  /**
-   * Input path example - /mnt/auto/crawler/dwca/9bed66b3-4caa-42bb-9c93-71d7ba109dad
-   */
-  private Path buildInputPath(String archiveRepository, UUID dataSetUuid) {
-    Path directoryPath = Paths.get(archiveRepository, dataSetUuid.toString());
-    if (!directoryPath.toFile().exists()) {
-      throw new IllegalStateException("Directory does not exist! - " + directoryPath);
-    }
-    return directoryPath;
   }
 
   /**
