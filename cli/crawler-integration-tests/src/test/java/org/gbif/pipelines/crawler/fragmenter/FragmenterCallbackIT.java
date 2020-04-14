@@ -4,24 +4,28 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
+import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.converters.converter.FileSystemFactory;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
-import org.gbif.pipelines.fragmenter.common.TableAssert;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
+import org.apache.hadoop.fs.FileSystem;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -30,6 +34,8 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
+import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
+import static org.gbif.pipelines.fragmenter.common.TableAssert.assertTable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -123,7 +129,8 @@ public class FragmenterCallbackIT {
     assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
     assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
     assertEquals(1, publisher.getMessages().size());
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, DWCA_DATASET_UUID, attempt, endpointType);
+    assertTable(HBASE_SERVER.getConnection(), expSize, DWCA_DATASET_UUID, attempt, endpointType);
+    assertMetaFile(config, uuid, attempt, expSize);
 
     // Clean
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
@@ -175,7 +182,8 @@ public class FragmenterCallbackIT {
     assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
     assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
     assertEquals(1, publisher.getMessages().size());
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, uuid.toString(), attempt, endpointType);
+    assertTable(HBASE_SERVER.getConnection(), expSize, uuid.toString(), attempt, endpointType);
+    assertMetaFile(config, uuid, attempt, expSize);
 
     // Clean
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
@@ -227,7 +235,8 @@ public class FragmenterCallbackIT {
     assertTrue(checkExists(curator, crawlId, Fn.MQ_CLASS_NAME.apply(FRAGMENTER_LABEL)));
     assertTrue(checkExists(curator, crawlId, Fn.MQ_MESSAGE.apply(FRAGMENTER_LABEL)));
     assertEquals(1, publisher.getMessages().size());
-    TableAssert.assertTable(HBASE_SERVER.getConnection(), expSize, uuid.toString(), attempt, endpointType);
+    assertTable(HBASE_SERVER.getConnection(), expSize, uuid.toString(), attempt, endpointType);
+    assertMetaFile(config, uuid, attempt, expSize);
 
     // Clean
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, FRAGMENTER_LABEL));
@@ -329,6 +338,18 @@ public class FragmenterCallbackIT {
 
   private boolean checkExists(CuratorFramework curator, String id, String path) {
     return ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(id, path));
+  }
+
+  private void assertMetaFile(FragmenterConfiguration config, UUID datasetId, int attempt, int expSize)
+      throws IOException {
+    org.apache.hadoop.fs.Path path =
+        buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), String.valueOf(attempt),
+            config.metaFileName);
+    FileSystem fs = FileSystemFactory.getInstance(config.getHdfsSiteConfig()).getFs(path.toString());
+    List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), path.toString());
+    assertTrue(fs.exists(path));
+    assertEquals(1, metricInfos.size());
+    assertEquals(String.valueOf(expSize), metricInfos.get(0).getValue());
   }
 
 }

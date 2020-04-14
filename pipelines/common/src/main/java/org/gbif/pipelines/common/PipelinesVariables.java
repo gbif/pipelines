@@ -123,6 +123,7 @@ public class PipelinesVariables {
     public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
 
     public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
+    public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
     public static final String AUSTRALIA_SPATIAL_RECORDS_COUNT = "australiaSpatialRecordsCount";
   }

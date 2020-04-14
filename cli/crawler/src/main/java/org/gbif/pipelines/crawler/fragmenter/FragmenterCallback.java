@@ -1,5 +1,6 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -10,6 +11,9 @@ import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesFragmenterMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.converters.converter.FileSystemFactory;
+import org.gbif.converters.converter.FsUtils;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.fragmenter.FragmentPersister;
@@ -20,10 +24,12 @@ import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hbase.client.Connection;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildDwcaInputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
 
@@ -112,6 +118,8 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
           .build()
           .persist();
 
+      createMetafile(datasetId.toString(), attempt.toString(), result);
+
       log.info("Result - {} records", result);
     };
   }
@@ -128,5 +136,18 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   @Override
   public boolean isMessageCorrect(PipelinesInterpretedMessage message) {
     return message.getOnlyForStep() == null || message.getOnlyForStep().equalsIgnoreCase(TYPE.name());
+  }
+
+  /** Create yaml file with total number of converted records */
+  private void createMetafile(String datasetId, String attempt, long numberOfRecords) {
+    try {
+      org.apache.hadoop.fs.Path path =
+          buildOutputPath(config.stepConfig.repositoryPath, datasetId, attempt, config.metaFileName);
+      FileSystem fs = FileSystemFactory.getInstance(config.getHdfsSiteConfig()).getFs(path.toString());
+      String info = Metrics.FRAGMENTER_COUNT + ": " + numberOfRecords + "\n";
+      FsUtils.createFile(fs, path, info);
+    } catch (IOException ex) {
+      log.error(ex.getMessage(), ex);
+    }
   }
 }
