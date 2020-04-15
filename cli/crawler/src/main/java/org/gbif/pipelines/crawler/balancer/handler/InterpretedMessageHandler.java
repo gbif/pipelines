@@ -54,7 +54,7 @@ public class InterpretedMessageHandler {
             m.getOnlyForStep(),
             m.getExecutionId(),
             m.getEndpointType(),
-            m.getValidationReport()
+            m.getValidationResult()
         );
 
     publisher.send(outputMessage);
