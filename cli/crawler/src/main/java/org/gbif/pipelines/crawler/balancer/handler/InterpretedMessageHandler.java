@@ -53,7 +53,8 @@ public class InterpretedMessageHandler {
             m.getResetPrefix(),
             m.getOnlyForStep(),
             m.getExecutionId(),
-            m.getEndpointType()
+            m.getEndpointType(),
+            m.getValidationReport()
         );
 
     publisher.send(outputMessage);

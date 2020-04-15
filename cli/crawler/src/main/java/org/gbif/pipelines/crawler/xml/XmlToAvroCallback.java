@@ -73,15 +73,15 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
       ExecutorService executor, int expectedRecords) {
     return () -> {
 
-      // Calculates and checks existence of DwC Archive
+      // Build and checks existence of DwC Archive
       Path inputPath = buildXmlInputPath(config.archiveRepository, config.archiveRepositorySubdir, datasetId, attempt);
       log.info("XML path - {}", inputPath);
 
-      // Calculates export path of avro as extended record
+      // Builds export path of avro as extended record
       org.apache.hadoop.fs.Path outputPath =
           buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.fileName);
 
-      // Calculates metadata path, the yaml file with total number of converted records
+      // Builds metadata path, the yaml file with total number of converted records
       org.apache.hadoop.fs.Path metaPath =
           buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), attempt, config.metaFileName);
 

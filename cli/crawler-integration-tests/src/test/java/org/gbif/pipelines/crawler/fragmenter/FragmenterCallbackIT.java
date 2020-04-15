@@ -13,6 +13,7 @@ import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.converters.converter.FileSystemFactory;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.utils.HdfsUtils;
@@ -34,7 +35,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
-import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.fragmenter.common.TableAssert.assertTable;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,6 +46,7 @@ public class FragmenterCallbackIT {
   private static final String DWCA_INPUT_DATASET_DIR = "/dataset/dwca";
   private static final String REPO_PATH = "/dataset/";
   private static final String FRAGMENTER_LABEL = StepType.FRAGMENTER.getLabel();
+  private static final ValidationResult VALIDATION_RESULT = new ValidationResult(true, true, false, 0L);
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
@@ -108,7 +109,8 @@ public class FragmenterCallbackIT {
         null,
         null,
         null,
-        endpointType
+        endpointType,
+        VALIDATION_RESULT
     );
 
     FragmenterCallback callback = new FragmenterCallback(
@@ -161,7 +163,8 @@ public class FragmenterCallbackIT {
         null,
         null,
         null,
-        endpointType
+        endpointType,
+        VALIDATION_RESULT
     );
 
     FragmenterCallback callback = new FragmenterCallback(
@@ -214,7 +217,8 @@ public class FragmenterCallbackIT {
         null,
         null,
         null,
-        endpointType
+        endpointType,
+        VALIDATION_RESULT
     );
 
     FragmenterCallback callback = new FragmenterCallback(
@@ -266,7 +270,8 @@ public class FragmenterCallbackIT {
         null,
         StepType.FRAGMENTER.name(),
         null,
-        endpointType
+        endpointType,
+        VALIDATION_RESULT
     );
 
     FragmenterCallback callback = new FragmenterCallback(
@@ -313,7 +318,8 @@ public class FragmenterCallbackIT {
         null,
         StepType.HDFS_VIEW.name(),
         null,
-        endpointType
+        endpointType,
+        VALIDATION_RESULT
     );
 
     FragmenterCallback callback = new FragmenterCallback(
@@ -343,8 +349,12 @@ public class FragmenterCallbackIT {
   private void assertMetaFile(FragmenterConfiguration config, UUID datasetId, int attempt, int expSize)
       throws IOException {
     org.apache.hadoop.fs.Path path =
-        buildOutputPath(config.stepConfig.repositoryPath, datasetId.toString(), String.valueOf(attempt),
-            config.metaFileName);
+        HdfsUtils.buildOutputPath(
+            config.stepConfig.repositoryPath,
+            datasetId.toString(),
+            String.valueOf(attempt),
+            config.metaFileName
+        );
     FileSystem fs = FileSystemFactory.getInstance(config.getHdfsSiteConfig()).getFs(path.toString());
     List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), path.toString());
     assertTrue(fs.exists(path));

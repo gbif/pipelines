@@ -51,7 +51,7 @@ public class Keygen {
 
     KeyLookupResult keyResult = null;
     try {
-      // Finds or generate key
+      // Finds or generates key
       keyResult = keygenService.findKey(uniqueStrings);
       if (keyResult == null) {
         log.error("GBIF ID wasn't found, generating a new key.");

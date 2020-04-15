@@ -110,11 +110,13 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
           .tableName(config.hbaseFragmentsTable)
           .hbaseConnection(hbaseConnection)
           .executor(executor)
-          .useOccurrenceId(true)
-          .useTriplet(true)
+          .useOccurrenceId(message.getValidationReport().isOccurrenceIdValid())
+          .useTriplet(message.getValidationReport().isTripletValid())
           .pathToArchive(pathToArchive)
           .keygenConfig(keygenConfig)
           .useSyncMode(useSync)
+          .backPressure(config.backPressure)
+          .batchSize(config.batchSize)
           .build()
           .persist();
 

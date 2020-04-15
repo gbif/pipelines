@@ -58,6 +58,12 @@ public class FragmenterConfiguration implements BaseConfiguration {
   @Parameter(names = "--async-threshold")
   public int asyncThreshold = 5_000;
 
+  @Parameter(names = "--batch-size")
+  public int batchSize = 100;
+
+  @Parameter(names = "--back-pressure")
+  public Integer backPressure;
+
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;
