@@ -139,7 +139,10 @@ public class FragmentPersister {
             OccurrenceRecordConverter.convert(keygenService, validator, useTriplet, useOccurrenceId, l);
         HbaseStore.putRecords(table, datasetKey, attempt, endpointType, map);
 
-        occurrenceCounter.addAndGet(map.size());
+        int recordsReturned = occurrenceCounter.addAndGet(map.size());
+        if (recordsReturned % 10_000 == 0) {
+          log.info("{}_{}: Pushed [{}] records", datasetKey, attempt, recordsReturned);
+        }
         phaser.arriveAndDeregister();
       };
 
