@@ -200,7 +200,7 @@ public class FragmentPersister {
   private void checkBackpressure(Phaser phaser) {
     if (!useSyncMode && backPressure != null && backPressure > 0) {
       while (phaser.getUnarrivedParties() > backPressure) {
-        log.debug("Back pressure barrier: too many rows waiting...");
+        log.debug("Back pressure barrier: pushing too much data, waiting...");
         try {
           TimeUnit.MILLISECONDS.sleep(200L);
         } catch (InterruptedException ex) {
