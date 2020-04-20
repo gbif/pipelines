@@ -46,5 +46,5 @@ How to use:
          .endpointType(EndpointType.DWC_ARCHIVE)
          .hbaseConnection(connection)
          .build()
-         .upload();
+         .persist();
 ```
