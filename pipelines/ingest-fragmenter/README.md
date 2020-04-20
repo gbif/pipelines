@@ -7,9 +7,9 @@ HBase table key is - **salt:gbifId** and value has following structure:
 |   |   |   |fragment(CF)|   |   |
 |---|---|---|------------|---|---|
 |datasetKey(Q)|attempt(Q)|protocol(Q)|record(Q)|dateCreated(Q)|dateUpdated(Q)  |
-|5e4b68f2-23df-4382-8f79-ba449812f1f9|1|DWCA_ARCHIVE|BLOB|1587372235|1587372235|
+|5e4b68f2-23df-4382-8f79-ba449812f1f9|1|DWCA_ARCHIVE|CLOB|1587372235|1587372235|
 
-Exapmle for dev:
+Example for dev:
 ```
 create 'dev_fragment', {NAME => 'fragment', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF', BLOOMFILTER => 'ROW'},
   {SPLITS => [
