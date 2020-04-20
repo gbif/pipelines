@@ -35,7 +35,7 @@ Processing workflow:
 
 How to use:
 ```java
-    long recordsProcessed = FragmentsUploader.dwcaBuilder()
+    long recordsProcessed = FragmentPersister.dwcaBuilder()
          .tableName("Tabe name")
          .keygenConfig(config)
          .pathToArchive(path)
