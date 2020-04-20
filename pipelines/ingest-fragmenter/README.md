@@ -1,26 +1,15 @@
-# Ingest-fragments uploader
+# Ingest-fragmenter
 
-[Fragments uploader](src/main/java/org/gbif/pipelines/fragmenter/FragmentsUploader.java) - reads dwca/xml based archive and uploads raw json/xml records into HBase table.
+[Fragments persister](src/main/java/org/gbif/pipelines/fragmenter/FragmentPersister.java) - reads dwca/xml based archive and persists raw json/xml records into HBase table.
 
-HBase table has following structure:
+HBase table key is - **salt:gbifId** and value has following structure:
 
-- Table (Table)
-    - **fragment** (Column family)
-        - **datasetKey** (Qualifier)
-        - **attempt** (Qualifier)
-        - **protocol** (Qualifier)
-        - **record** (Qualifier)
-        - **dateCreated** (Qualifier)
-        - **dateUpdated** (Qualifier)
+|   |   |   |fragment(CF)|   |   |   |
+|---|---|---|------------|---|---|---|
+|datasetKey(Q)|attempt(Q)|protocol(Q)|record(Q)|dateCreated(Q)|dateUpdated(Q)  |
+|5e4b68f2-23df-4382-8f79-ba449812f1f9|1|DWCA_ARCHIVE|BLOB|1587372235|1587372235|
 
-Processing workflow:
-1. Read a dwca/xml archive
-2. Collect raw records into small batches (batch size is configurable)
-3. Get or create GBIF id for each element of the batch and create keys (salt + ":" + GBIF id)
-4. Get **dateCreated** from the table using GBIF id, if a record already exists
-5. Create HBase put(create new or update existing) records and upload them into HBase
-
-Table:
+Exapmle for dev:
 ```
 create 'dev_fragment', {NAME => 'fragment', VERSIONS => 1, COMPRESSION => 'SNAPPY', DATA_BLOCK_ENCODING => 'FAST_DIFF', BLOOMFILTER => 'ROW'},
   {SPLITS => [
@@ -36,6 +25,13 @@ create 'dev_fragment', {NAME => 'fragment', VERSIONS => 1, COMPRESSION => 'SNAPP
     '91','92','93','94','95','96','97','98','99'
   ]}
 ```
+
+Processing workflow:
+1. Read a dwca/xml archive
+2. Collect raw records into small batches (batch size is configurable)
+3. Get or create GBIF id for each element of the batch and create keys (salt + ":" + GBIF id)
+4. Get **dateCreated** from the table using key salt:gbifId, if record already exists
+5. Create HBase put(create new or update existing) records and persist them into HBase
 
 How to use:
 ```java
