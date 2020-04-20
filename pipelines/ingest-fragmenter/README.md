@@ -4,8 +4,8 @@
 
 HBase table key is - **salt:gbifId** and value has following structure:
 
-|   |   |   |fragment(CF)|   |   |   |
-|---|---|---|------------|---|---|---|
+|   |   |   |fragment(CF)|   |   |
+|---|---|---|------------|---|---|
 |datasetKey(Q)|attempt(Q)|protocol(Q)|record(Q)|dateCreated(Q)|dateUpdated(Q)  |
 |5e4b68f2-23df-4382-8f79-ba449812f1f9|1|DWCA_ARCHIVE|BLOB|1587372235|1587372235|
 
