@@ -111,7 +111,7 @@ Please read [Apache Maven how-to](https://maven.apache.org/run.html).
 # Codestyle and tools recommendations
 
 - Use [Intellij IDEA Community](https://www.jetbrains.com/idea/download/) (or better)
-- Use [pipelines codestyle](./pipelines-style.xml)
+- Use [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format) (Please, do not reformat old codebase, only new)
 - The project uses [Project Lombok](https://projectlombok.org/), please install [Lombok plugin for Intellij IDEA](https://plugins.jetbrains.com/plugin/6317-lombok-plugin).
 - Because the project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during the build process from IDEA.  To avoid these issues please install the [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and build the project using the [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ and select `Javac with error-prone` in the `Use compiler` box.
 - Add a custom parameter to avoid a debugging problem.  To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ → _Additional command line parameters_ and add `-Xep:ParameterName:OFF`
