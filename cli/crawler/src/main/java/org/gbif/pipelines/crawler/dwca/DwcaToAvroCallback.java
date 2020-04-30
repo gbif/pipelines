@@ -67,9 +67,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   @Override
   public boolean isMessageCorrect(PipelinesDwcaMessage message) {
     boolean isPlatformCorrect = Platform.PIPELINES.equivalent(message.getPlatform());
-    boolean isReportValid = message.getDatasetType() != null && message.getValidationReport().isValid()
-        && message.getValidationReport().getOccurrenceReport().getCheckedRecords() > 0;
-    return isPlatformCorrect && isReportValid;
+    boolean isMessageValid = message.getDatasetType() != null && message.getValidationReport().isValid();
+    boolean isReportValid = message.getValidationReport().getOccurrenceReport() != null
+            && message.getValidationReport().getOccurrenceReport().getCheckedRecords() > 0;
+    return isPlatformCorrect && isMessageValid && isReportValid;
   }
 
   /**
