@@ -67,7 +67,7 @@
     <lombok.version>1.18.12</lombok.version>
 
     <!-- GBIF libraries -->
-    <gbif-parsers.version>0.46</gbif-parsers.version>
+    <gbif-parsers.version>0.47-SNAPSHOT</gbif-parsers.version>
     <dwca-io.version>2.8</dwca-io.version>
     <gbif-api.version>0.109</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
@@ -75,7 +75,7 @@
     <kvs.version>1.6</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-occurrence.version>0.117-ES</gbif-occurrence.version>
+    <gbif-occurrence.version>0.123-SNAPSHOT</gbif-occurrence.version>
     <data-repo-api.version>1.2</data-repo-api.version>
 
     <!-- Common libraries -->
@@ -992,7 +992,7 @@
               </execution>
             </executions>
           </plugin>
-            
+
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
