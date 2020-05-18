@@ -80,7 +80,7 @@
 
     <!-- Common libraries -->
     <avro.version>1.8.2</avro.version>
-    <apache.beam.version>2.20.0</apache.beam.version>
+    <apache.beam.version>2.17.0</apache.beam.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
     <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
     <hbase.version>1.2.0-cdh5.16.2</hbase.version>
