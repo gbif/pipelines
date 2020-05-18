@@ -99,7 +99,6 @@
     <metainf-services.version>1.7</metainf-services.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
     <yammer-metrics.version>2.2.0</yammer-metrics.version>
-    <zookeeper.version>3.4.5</zookeeper.version>
     <commons-lang.version>2.6</commons-lang.version>
     <commons-io.version>2.5</commons-io.version>
     <commons-configuration.version>1.10</commons-configuration.version>
@@ -399,7 +398,7 @@
     <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-      <version>${zookeeper.version}</version>
+      <scope>compile</scope>
       <exclusions>
         <exclusion>
           <artifactId>log4j</artifactId>
