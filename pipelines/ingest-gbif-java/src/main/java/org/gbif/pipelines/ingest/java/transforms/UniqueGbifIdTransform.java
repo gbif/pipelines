@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.pipelines.core.utils.HashUtils;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -22,6 +23,7 @@ import lombok.SneakyThrows;
  * 1 - normal collection with regular GBIF ids
  * 2 - contains invalid records with GBIF ids, as duplicates or missed GBIF ids
  */
+@Slf4j
 @Getter
 @Builder
 public class UniqueGbifIdTransform {
@@ -81,6 +83,7 @@ public class UniqueGbifIdTransform {
                 filter(br);
               } else {
                 brInvalidMap.put(br.getId(), br);
+                log.error("GBIF ID is null, occurrenceId - {}", br.getId());
               }
             });
   }
@@ -96,6 +99,7 @@ public class UniqueGbifIdTransform {
       } else {
         brInvalidMap.put(br.getId(), br);
       }
+      log.error("GBIF ID collision, gbifId - {}, occurrenceId - {}", br.getGbifId(), br.getId());
     } else {
       brMap.put(br.getGbifId().toString(), br);
     }
