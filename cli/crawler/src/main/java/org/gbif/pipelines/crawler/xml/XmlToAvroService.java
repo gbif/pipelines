@@ -1,18 +1,19 @@
 package org.gbif.pipelines.crawler.xml;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import com.google.common.util.concurrent.AbstractIdleService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.HttpClients;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.curator.framework.CuratorFramework;
-
-import com.google.common.util.concurrent.AbstractIdleService;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Service for the {@link XmlToAvroCommand}.
@@ -45,7 +46,14 @@ public class XmlToAvroService extends AbstractIdleService {
     executor = Executors.newFixedThreadPool(config.xmlReaderParallelism);
     PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
-    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, client, executor);
+    HttpClient httpClient =
+        HttpClients.custom()
+            .setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(60_000).setSocketTimeout(60_000).build())
+            .build();
+
+    XmlToAvroCallback callback =
+        new XmlToAvroCallback(config, publisher, curator, client, executor, httpClient);
     listener.listen(c.queueName, c.poolSize, callback);
   }
 

@@ -140,7 +140,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
    * For XML datasets triplets are always valid. For DwC-A datasets triplets are valid if there are more than 0 unique
    * triplets in the dataset, and exactly 0 triplets referenced by more than one record.
    */
-  private static boolean tripletsValid(OccurrenceValidationReport report) {
+  private boolean tripletsValid(OccurrenceValidationReport report) {
     if (report == null) {
       return true;
     }
@@ -152,7 +152,7 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
    * For XML datasets occurrenceIds are always accepted. For DwC-A datasets occurrenceIds are valid if each record has a
    * unique occurrenceId.
    */
-  private static boolean occurrenceIdsValid(OccurrenceValidationReport report) {
+  private boolean occurrenceIdsValid(OccurrenceValidationReport report) {
     if (report == null) {
       return true;
     }

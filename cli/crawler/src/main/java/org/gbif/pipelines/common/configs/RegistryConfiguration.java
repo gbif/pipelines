@@ -23,7 +23,7 @@ public class RegistryConfiguration {
   @Parameter(names = "--registry-ws")
   @PropertyName("registry.ws.url")
   @NotNull
-  public String wsUrl = "http://api.gbif.org/";
+  public String wsUrl = "http://api.gbif.org/v1";
 
   @Parameter(names = "--registry-user")
   @NotNull

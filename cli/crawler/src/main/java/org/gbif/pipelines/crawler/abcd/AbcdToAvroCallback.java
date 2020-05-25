@@ -1,10 +1,8 @@
 package org.gbif.pipelines.crawler.abcd;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.client.HttpClient;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -17,9 +15,10 @@ import org.gbif.pipelines.crawler.xml.XmlToAvroCallback;
 import org.gbif.pipelines.crawler.xml.XmlToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import org.apache.curator.framework.CuratorFramework;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Call back which is called when the {@link PipelinesXmlMessage} is received.
@@ -30,17 +29,22 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
 
   private final CuratorFramework curator;
   private final XmlToAvroConfiguration config;
-  private final ExecutorService executor;
   private final MessagePublisher publisher;
   private final PipelinesHistoryWsClient client;
+  private final XmlToAvroCallback callback;
 
-  public AbcdToAvroCallback(CuratorFramework curator, XmlToAvroConfiguration config, ExecutorService executor,
-      MessagePublisher publisher, PipelinesHistoryWsClient client) {
+  public AbcdToAvroCallback(
+      CuratorFramework curator,
+      XmlToAvroConfiguration config,
+      ExecutorService executor,
+      MessagePublisher publisher,
+      PipelinesHistoryWsClient client,
+      HttpClient httpClient) {
     this.curator = curator;
     this.config = config;
-    this.executor = executor;
     this.publisher = publisher;
     this.client = client;
+    this.callback = new XmlToAvroCallback(config, publisher, curator, client, executor, httpClient);
   }
 
   @Override
@@ -59,13 +63,10 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
 
   @Override
   public Runnable createRunnable(PipelinesAbcdMessage message) {
-    return XmlToAvroCallback.createRunnable(
-        config,
+    return callback.createRunnable(
         message.getDatasetUuid(),
         message.getAttempt().toString(),
-        executor,
-        XmlToAvroCallback.SKIP_RECORDS_CHECK
-    );
+        XmlToAvroCallback.SKIP_RECORDS_CHECK);
   }
 
   @Override

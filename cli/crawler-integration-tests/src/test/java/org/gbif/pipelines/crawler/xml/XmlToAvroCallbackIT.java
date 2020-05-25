@@ -1,14 +1,9 @@
 package org.gbif.pipelines.crawler.xml;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
@@ -17,16 +12,20 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.RetryOneTime;
-import org.apache.curator.test.TestingServer;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.gbif.api.model.pipelines.StepType.XML_TO_VERBATIM;
 import static org.gbif.crawler.constants.PipelinesNodePaths.Fn;
@@ -89,7 +88,8 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
-    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
+    XmlToAvroCallback callback =
+        new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             DATASET_UUID,
@@ -128,7 +128,8 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
-    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
+    XmlToAvroCallback callback =
+        new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             DATASET_UUID,
@@ -167,7 +168,8 @@ public class XmlToAvroCallbackIT {
     config.stepConfig.repositoryPath = getClass().getResource("/dataset/").getFile();
     config.xmlReaderParallelism = 4;
     config.archiveRepositorySubdir = Collections.singleton("xml");
-    XmlToAvroCallback callback = new XmlToAvroCallback(config, publisher, curator, historyClient, executor);
+    XmlToAvroCallback callback =
+        new XmlToAvroCallback(config, publisher, curator, historyClient, executor, null);
     PipelinesXmlMessage message =
         new PipelinesXmlMessage(
             DATASET_UUID,
