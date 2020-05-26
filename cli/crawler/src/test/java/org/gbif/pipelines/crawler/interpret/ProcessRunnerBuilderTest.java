@@ -1,17 +1,16 @@
 package org.gbif.pipelines.crawler.interpret;
 
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType;
-
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 
@@ -79,6 +78,7 @@ public class ProcessRunnerBuilderTest {
     // When
     String expected =
         "spark2-submit --conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
+            + "--conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn --deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 "
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
             + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro "
@@ -136,7 +136,7 @@ public class ProcessRunnerBuilderTest {
     String expected =
         "sudo -u user spark2-submit --conf spark.metrics.conf=metrics.properties --conf \"spark.driver.extraClassPath=logstash-gelf.jar\" "
             + "--driver-java-options \"-Dlog4j.configuration=file:log4j.properties\" --queue pipelines --conf spark.default.parallelism=1 "
-            + "--conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false "
+            + "--conf spark.executor.memoryOverhead=1 --conf spark.dynamicAllocation.enabled=false --conf spark.yarn.am.waitTime=360s "
             + "--class org.gbif.Test --master yarn "
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL --runner=SparkRunner "
