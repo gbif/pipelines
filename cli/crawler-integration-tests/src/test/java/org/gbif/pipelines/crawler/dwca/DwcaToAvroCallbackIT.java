@@ -91,7 +91,7 @@ public class DwcaToAvroCallbackIT {
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
-    String crawlId = DATASET_UUID + "_" + attempt;
+    String crawlId = DATASET_UUID;
 
     OccurrenceValidationReport report = new OccurrenceValidationReport(1, 1, 0, 1, 0, true);
     DwcaValidationReport reason = new DwcaValidationReport(uuid, report);
@@ -137,7 +137,7 @@ public class DwcaToAvroCallbackIT {
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
-    String crawlId = DATASET_UUID + "_" + attempt;
+    String crawlId = DATASET_UUID;
 
     OccurrenceValidationReport report = new OccurrenceValidationReport(1, 1, 0, 1, 0, true);
     DwcaValidationReport reason = new DwcaValidationReport(uuid, report);
@@ -182,7 +182,7 @@ public class DwcaToAvroCallbackIT {
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
-    String crawlId = DATASET_UUID + "_" + attempt;
+    String crawlId = DATASET_UUID;
 
     OccurrenceValidationReport report = new OccurrenceValidationReport(1, 1, 0, 1, 0, true);
     DwcaValidationReport reason = new DwcaValidationReport(uuid, report);
@@ -226,7 +226,7 @@ public class DwcaToAvroCallbackIT {
 
     UUID uuid = UUID.fromString(DATASET_UUID);
     int attempt = 2;
-    String crawlId = DATASET_UUID + "_" + attempt;
+    String crawlId = DATASET_UUID;
 
     OccurrenceValidationReport report = new OccurrenceValidationReport(0, 1, 0, 1, 1, true);
     DwcaValidationReport reason = new DwcaValidationReport(uuid, report);

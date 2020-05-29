@@ -95,7 +95,7 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;
-    String crawlId = DWCA_DATASET_UUID + "_" + attempt;
+    String crawlId = DWCA_DATASET_UUID;
     int expSize = 1534;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
@@ -149,7 +149,7 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString("830c56c4-57bf-4858-9795-c1f8c7ff9b1e");
     int attempt = 61;
-    String crawlId = uuid.toString() + "_" + attempt;
+    String crawlId = uuid.toString();
     int expSize = 20;
     EndpointType endpointType = EndpointType.TAPIR;
 
@@ -203,7 +203,7 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString("7ef15372-1387-11e2-bb2e-00145eb45e9a");
     int attempt = 61;
-    String crawlId = uuid.toString() + "_" + attempt;
+    String crawlId = uuid.toString();
     int expSize = 20;
     EndpointType endpointType = EndpointType.BIOCASE;
 
@@ -256,7 +256,7 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;
-    String crawlId = DWCA_DATASET_UUID + "_" + attempt;
+    String crawlId = DWCA_DATASET_UUID;
     int expSize = 1534;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 
@@ -304,7 +304,7 @@ public class FragmenterCallbackIT {
 
     UUID uuid = UUID.fromString(DWCA_DATASET_UUID);
     int attempt = 2;
-    String crawlId = DWCA_DATASET_UUID + "_" + attempt;
+    String crawlId = DWCA_DATASET_UUID;
     int expSize = 1534;
     EndpointType endpointType = EndpointType.DWC_ARCHIVE;
 

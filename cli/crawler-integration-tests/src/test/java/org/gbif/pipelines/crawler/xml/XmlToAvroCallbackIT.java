@@ -101,7 +101,7 @@ public class XmlToAvroCallbackIT {
             Platform.PIPELINES,
             EXECUTION_ID
         );
-    String crawlId = DATASET_UUID + "_" + attempt;
+    String crawlId = DATASET_UUID.toString();
 
     // When
     callback.handleMessage(message);
@@ -141,7 +141,7 @@ public class XmlToAvroCallbackIT {
             Platform.PIPELINES,
             EXECUTION_ID
         );
-    String crawlId = DATASET_UUID + "_" + attempt;
+    String crawlId = DATASET_UUID.toString();
 
     // When
     callback.handleMessage(message);
@@ -181,7 +181,7 @@ public class XmlToAvroCallbackIT {
             Platform.PIPELINES,
             EXECUTION_ID
         );
-    String crawlId = DATASET_UUID + "_" + attempt;
+    String crawlId = DATASET_UUID.toString();
 
     // When
     callback.handleMessage(message);

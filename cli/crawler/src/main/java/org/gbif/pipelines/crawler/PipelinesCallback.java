@@ -1,41 +1,5 @@
 package org.gbif.pipelines.crawler;
 
-import java.io.IOException;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
-import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
-import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
-import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
-import org.gbif.utils.file.properties.PropertiesUtil;
-
-import org.apache.curator.framework.CuratorFramework;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.MDC;
-import org.slf4j.MDC.MDCCloseable;
-
 import com.google.common.annotations.VisibleForTesting;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
@@ -44,6 +8,28 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.CuratorFramework;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.gbif.api.model.pipelines.PipelineExecution;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
+import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.*;
+import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.utils.file.properties.PropertiesUtil;
+import org.slf4j.MDC;
+import org.slf4j.MDC.MDCCloseable;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.*;
 
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
@@ -103,12 +89,13 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
    */
   public void handleMessage() {
 
-    String crawlId = message.getDatasetUuid().toString() + "_" + message.getAttempt();
+    String datasetKey = message.getDatasetUuid().toString();
     O outgoingMessage = handler.createOutgoingMessage(message);
     Optional<TrackingInfo> trackingInfo = Optional.empty();
 
-    try (MDCCloseable mdc = MDC.putCloseable("crawlId", crawlId);
-        MDCCloseable mdc1 = MDC.putCloseable("step", stepType.name())) {
+    try (MDCCloseable mdc = MDC.putCloseable("datasetKey", datasetKey);
+        MDCCloseable mdc1 = MDC.putCloseable("attempt", message.getAttempt().toString());
+        MDCCloseable mdc2 = MDC.putCloseable("step", stepType.name())) {
 
       if (!handler.isMessageCorrect(message)) {
         log.info("Skip the message, cause the runner is different or it wasn't modified, exit from handler");
@@ -128,8 +115,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       }
 
       log.info("Message has been received {}", message);
-      if (ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(crawlId, stepType.getLabel()))) {
-        log.warn("Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}", crawlId);
+      if (ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(datasetKey, stepType.getLabel()))) {
+        log.warn("Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}", datasetKey);
         return;
       }
 
@@ -137,23 +124,23 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       trackingInfo = trackPipelineStep();
 
       String mqMessagePath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, crawlId, mqMessagePath, message.toString());
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, mqMessagePath, message.toString());
 
       String mqClassNamePath = Fn.MQ_CLASS_NAME.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, crawlId, mqClassNamePath, message.getClass().getCanonicalName());
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, mqClassNamePath, message.getClass().getCanonicalName());
 
       String startDatePath = Fn.START_DATE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoringDate(curator, crawlId, startDatePath);
+      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDatePath);
 
       String runnerPath = Fn.RUNNER.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, crawlId, runnerPath, getRunner());
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerPath, getRunner());
 
-      log.info("Handler has been started, crawlId - {}", crawlId);
+      log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
-      log.info("Handler has been finished, crawlId - {}", crawlId);
+      log.info("Handler has been finished, datasetKey - {}", datasetKey);
 
       String endDatePath = Fn.END_DATE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoringDate(curator, crawlId, endDatePath);
+      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, endDatePath);
 
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.COMPLETED));
@@ -161,7 +148,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // Send a wrapped outgoing message to Balancer queue
       if (outgoingMessage != null) {
         String successfulPath = Fn.SUCCESSFUL_AVAILABILITY.apply(stepType.getLabel());
-        ZookeeperUtils.updateMonitoring(curator, crawlId, successfulPath, Boolean.TRUE.toString());
+        ZookeeperUtils.updateMonitoring(curator, datasetKey, successfulPath, Boolean.TRUE.toString());
 
         // set the executionId
         trackingInfo.ifPresent(info -> outgoingMessage.setExecutionId(info.executionId));
@@ -174,21 +161,21 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
         log.info(info);
 
         String successfulMessagePath = Fn.SUCCESSFUL_MESSAGE.apply(stepType.getLabel());
-        ZookeeperUtils.updateMonitoring(curator, crawlId, successfulMessagePath, info);
+        ZookeeperUtils.updateMonitoring(curator, datasetKey, successfulMessagePath, info);
       }
 
       // Change zookeeper counter for passed steps
-      ZookeeperUtils.checkMonitoringById(curator, steps.size(), crawlId);
+      ZookeeperUtils.checkMonitoringById(curator, steps.size(), datasetKey);
 
     } catch (Exception ex) {
-      String error = "Error for crawlId - " + crawlId + " : " + ex.getMessage();
+      String error = "Error for datasetKey - " + datasetKey + " : " + ex.getMessage();
       log.error(error, ex);
 
       String errorPath = Fn.ERROR_AVAILABILITY.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, crawlId, errorPath, Boolean.TRUE.toString());
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, errorPath, Boolean.TRUE.toString());
 
       String errorMessagePath = Fn.ERROR_MESSAGE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, crawlId, errorMessagePath, error);
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, errorMessagePath, error);
 
       // update tracking status
       trackingInfo.ifPresent(info -> updateTrackingStatus(info, PipelineStep.Status.FAILED));

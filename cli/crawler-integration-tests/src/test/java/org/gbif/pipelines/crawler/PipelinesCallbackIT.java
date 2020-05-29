@@ -80,7 +80,7 @@ public class PipelinesCallbackIT {
     // State
     UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
     int attempt = 1;
-    String crawlId = datasetKey + "_" + attempt;
+    String crawlId = datasetKey.toString();
     String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
@@ -148,7 +148,7 @@ public class PipelinesCallbackIT {
     // State
     UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
     int attempt = 1;
-    String crawlId = datasetKey + "_" + attempt;
+    String crawlId = datasetKey.toString();
     String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
@@ -194,7 +194,7 @@ public class PipelinesCallbackIT {
     // State
     UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
     int attempt = 1;
-    String crawlId = datasetKey + "_" + attempt;
+    String crawlId = datasetKey.toString();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
@@ -223,7 +223,7 @@ public class PipelinesCallbackIT {
 
     UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
     int attempt = 1;
-    String crawlId = datasetKey + "_" + attempt;
+    String crawlId = datasetKey.toString();
     String rootPath = StepType.DWCA_TO_VERBATIM.getLabel();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
@@ -268,7 +268,7 @@ public class PipelinesCallbackIT {
     // State
     UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
     int attempt = 1;
-    String crawlId = datasetKey + "_" + attempt;
+    String crawlId = datasetKey.toString();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
@@ -300,7 +300,7 @@ public class PipelinesCallbackIT {
     // State
     UUID datasetKey = UUID.fromString("a731e3b1-bc81-4c1f-aad7-aba75ce3cf3b");
     int attempt = 1;
-    String crawlId = datasetKey + "_" + attempt;
+    String crawlId = datasetKey.toString();
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = new HashSet<>(Arrays.asList(
         StepType.DWCA_TO_VERBATIM.name(),
