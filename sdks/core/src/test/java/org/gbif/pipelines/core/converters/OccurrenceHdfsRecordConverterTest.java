@@ -79,6 +79,8 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.sampleSizeValue.simpleName(), "value");
     coreTerms.put(DwcTerm.organismQuantity.simpleName(), "quantity");
     coreTerms.put(DwcTerm.organismQuantityType.simpleName(), "type");
+    coreTerms.put(DwcTerm.recordedBy.simpleName(), "recordedBy");
+    coreTerms.put(DwcTerm.identifiedBy.simpleName(), "identifiedBy");
     coreTerms.put(GbifTerm.identifiedByID.simpleName(), "13123|21312");
     coreTerms.put(GbifTerm.recordedByID.simpleName(), "53453|5785");
 
@@ -141,7 +143,9 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("type", hdfsRecord.getVOrganismquantitytype());
     Assert.assertEquals("unit", hdfsRecord.getVSamplesizeunit());
     Assert.assertEquals("value", hdfsRecord.getVSamplesizevalue());
-    Assert.assertEquals("53453|5785", hdfsRecord.getVRecordedbyid());
+    Assert.assertEquals("recordedBy", hdfsRecord.getVRecordedby());
+    Assert.assertEquals("identifiedBy", hdfsRecord.getIdentifiedby());
+    Assert.assertEquals("13123|21312", hdfsRecord.getVIdentifiedbyid());
     Assert.assertEquals("13123|21312", hdfsRecord.getVIdentifiedbyid());
 
     // Test fields names with reserved words

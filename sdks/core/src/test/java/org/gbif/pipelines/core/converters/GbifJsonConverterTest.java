@@ -52,9 +52,10 @@ public class GbifJsonConverterTest {
     // Expected
     String expected =
         "{\"datasetKey\":\"datatesKey\",\"crawlId\":1,\"license\":\"CC_BY_NC_4_0\",\"issues\":[\"BASIS_OF_RECORD_INVALID\","
-            + "\"ZERO_COORDINATE\"],\"id\":\"777\",\"recordedBy\":\"Jeremia garde ,à elfutsone\",\"all\":"
-            + "[\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"something:{something}\"],"
-            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/footprintWKT\":\"footprintWKTfootprintWKTfootprintWKT\","
+            + "\"ZERO_COORDINATE\"],\"id\":\"777\",\"recordedBy\":\"Jeremia garde ,à elfutsone\",\"identifiedBy\":\"D2R2\",\"all\":"
+            + "[\"D2R2\",\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"something:{something}\"],"
+            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/identifiedBy\":\"D2R2\","
+            + "\"http://rs.tdwg.org/dwc/terms/footprintWKT\":\"footprintWKTfootprintWKTfootprintWKT\","
             + "\"http://purl.org/dc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
             + "\"http://rs.tdwg.org/dwc/terms/recordedBy\":\"Jeremia garde ,à elfutsone\","
             + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},\"extensions\":{}},\"eventDateSingle\":"
@@ -90,6 +91,7 @@ public class GbifJsonConverterTest {
     erMap.put("http://rs.tdwg.org/dwc/terms/locality", "something:{something}");
     erMap.put("http://purl.org/dc/terms/remark", "{\"something\":1}{\"something\":1}");
     erMap.put(DwcTerm.recordedBy.qualifiedName(), "Jeremia garde \u001Eà elfutsone");
+    erMap.put(DwcTerm.identifiedBy.qualifiedName(), "D2R2");
     erMap.put(DwcTerm.footprintWKT.qualifiedName(), "footprintWKTfootprintWKTfootprintWKT");
 
     MetadataRecord mr =

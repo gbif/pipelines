@@ -77,6 +77,7 @@
         }
       },
       "recordedBy": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "identifiedBy": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "recordNumber": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "organismId": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "samplingProtocol":  {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
