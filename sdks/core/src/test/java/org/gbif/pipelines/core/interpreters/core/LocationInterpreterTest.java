@@ -13,6 +13,7 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.Interpretation;
+import org.gbif.pipelines.core.interpreters.KeyValueTestStore;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;

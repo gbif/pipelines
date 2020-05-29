@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.core;
+package org.gbif.pipelines.transforms.metadata;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -8,7 +8,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.core.interpreters.core.MetadataInterpreter;
+import org.gbif.pipelines.core.interpreters.metadata.MetadataInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.config.factory.ContentfulConfigFactory;

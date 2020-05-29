@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpreters.core;
+package org.gbif.pipelines.core.interpreters;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class KeyValueTestStore implements KeyValueStore<LatLng, GeocodeResponse>
   public void close() {
   }
 
-  void put(LatLng latLng, GeocodeResponse value) {
+  public void put(LatLng latLng, GeocodeResponse value) {
     map.put(latLng, value);
   }
 

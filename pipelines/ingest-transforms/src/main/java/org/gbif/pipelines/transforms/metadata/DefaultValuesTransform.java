@@ -1,4 +1,4 @@
-package org.gbif.pipelines.transforms.common;
+package org.gbif.pipelines.transforms.metadata;
 
 import java.nio.file.Paths;
 import java.util.Collections;

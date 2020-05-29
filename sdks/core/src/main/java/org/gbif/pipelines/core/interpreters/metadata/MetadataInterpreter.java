@@ -1,4 +1,4 @@
-package org.gbif.pipelines.core.interpreters.core;
+package org.gbif.pipelines.core.interpreters.metadata;
 
 import java.net.URI;
 import java.util.Collections;
