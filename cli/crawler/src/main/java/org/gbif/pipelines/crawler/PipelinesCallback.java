@@ -116,7 +116,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
       log.info("Message has been received {}", message);
       if (ZookeeperUtils.checkExists(curator, getPipelinesInfoPath(datasetKey, stepType.getLabel()))) {
-        log.warn("Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}", datasetKey);
+        log.error("Dataset is in the queue, please check the pipeline-ingestion monitoring tool - {}", datasetKey);
         return;
       }
 
