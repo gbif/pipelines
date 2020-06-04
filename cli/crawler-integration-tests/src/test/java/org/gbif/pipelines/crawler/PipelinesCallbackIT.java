@@ -15,6 +15,7 @@ import java.util.UUID;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
@@ -34,6 +35,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import lombok.NoArgsConstructor;
 
+import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
 import static org.gbif.crawler.constants.PipelinesNodePaths.SIZE;
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
@@ -214,6 +216,11 @@ public class PipelinesCallbackIT {
     // Should
     Assert.assertFalse(checkExists(getPipelinesInfoPath(crawlId)));
 
+    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
+    Assert.assertTrue(checkExists(crawlInfoPath));
+    Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
+    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
+
     // Postprocess
     deleteMonitoringById(crawlId);
   }
@@ -258,6 +265,11 @@ public class PipelinesCallbackIT {
 
     Assert.assertFalse(getAsString(crawlId, SIZE).isPresent());
 
+    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
+    Assert.assertTrue(checkExists(crawlInfoPath));
+    Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
+    Assert.assertEquals("RUNNING", getAsString(crawlInfoPath).get());
+
     // Postprocess
     deleteMonitoringById(crawlId);
   }
@@ -289,6 +301,11 @@ public class PipelinesCallbackIT {
 
     // Should
     Assert.assertFalse(checkExists(getPipelinesInfoPath(crawlId)));
+
+    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
+    Assert.assertTrue(checkExists(crawlInfoPath));
+    Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
+    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
 
     // Postprocess
     deleteMonitoringById(crawlId);
@@ -328,6 +345,11 @@ public class PipelinesCallbackIT {
     Assert.assertTrue(checkExists(getPipelinesInfoPath(crawlId)));
     Assert.assertTrue(getAsString(crawlId, SIZE).isPresent());
     Assert.assertEquals("3", getAsString(crawlId, SIZE).get());
+
+    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
+    Assert.assertTrue(checkExists(crawlInfoPath));
+    Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
+    Assert.assertEquals("RUNNING", getAsString(crawlInfoPath).get());
 
     // Postprocess
     deleteMonitoringById(crawlId);
@@ -415,6 +437,13 @@ public class PipelinesCallbackIT {
    */
   private Optional<String> getAsString(String crawlId, String path) throws Exception {
     String infoPath = getPipelinesInfoPath(crawlId, path);
+    return getAsString(infoPath);
+  }
+
+  /**
+   * Read value from Zookeeper as a {@link String}
+   */
+  private Optional<String> getAsString(String infoPath) throws Exception {
     if (curator.checkExists().forPath(infoPath) != null) {
       byte[] responseData = curator.getData().forPath(infoPath);
       if (responseData != null) {

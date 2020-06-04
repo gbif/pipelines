@@ -4,6 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
+import java.util.UUID;
+
+import org.gbif.crawler.constants.CrawlerNodePaths;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
@@ -15,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
 import static org.gbif.crawler.constants.PipelinesNodePaths.SIZE;
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
@@ -52,8 +56,14 @@ public class ZookeeperUtils {
         mutex.acquire();
         int counter = getAsInteger(curator, crawlId, SIZE).orElse(0) + 1;
         if (counter >= size) {
+
           log.info("Delete zookeeper node, crawlId - {}", crawlId);
           curator.delete().deletingChildrenIfNeeded().forPath(path);
+
+          String crawlerZkPath = CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), PROCESS_STATE_OCCURRENCE);
+          log.info("Set crawler {} status to FINISHED", crawlerZkPath);
+          ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "FINISHED");
+
         } else {
           updateMonitoring(curator, crawlId, SIZE, Integer.toString(counter));
         }
@@ -63,7 +73,6 @@ public class ZookeeperUtils {
       log.error("Exception while updating ZooKeeper", ex);
     }
   }
-
 
   /**
    * Read value from Zookeeper as a {@link String}
@@ -87,17 +96,37 @@ public class ZookeeperUtils {
    * @param value some String value
    */
   public static void updateMonitoring(CuratorFramework curator, String crawlId, String path, String value) {
+    String fullPath = getPipelinesInfoPath(crawlId, path);
+    updateMonitoring(curator, fullPath, value, CreateMode.EPHEMERAL);
+  }
+
+  /**
+   * Creates or updates a String value for a Zookeeper monitoring node
+   *
+   * @param path child node path
+   * @param value some String value
+   */
+  public static void updateMonitoring(CuratorFramework curator, String path, String value, CreateMode mode) {
     try {
-      String fullPath = getPipelinesInfoPath(crawlId, path);
       byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
-      if (checkExists(curator, fullPath)) {
-        curator.setData().forPath(fullPath, bytes);
+      if (checkExists(curator, path)) {
+        curator.setData().forPath(path, bytes);
       } else {
-        curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(fullPath, bytes);
+        curator.create().creatingParentsIfNeeded().withMode(mode).forPath(path, bytes);
       }
     } catch (Exception ex) {
       log.error("Exception while updating ZooKeeper", ex);
     }
+  }
+
+  /**
+   * Creates or updates a String value for a Zookeeper monitoring node
+   *
+   * @param path child node path
+   * @param value some String value
+   */
+  public static void updateMonitoring(CuratorFramework curator, String path, String value) {
+    updateMonitoring(curator, path, value, CreateMode.PERSISTENT);
   }
 
   /**

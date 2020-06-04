@@ -1,5 +1,43 @@
 package org.gbif.pipelines.crawler;
 
+import java.io.IOException;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.UUID;
+
+import org.gbif.api.model.pipelines.PipelineExecution;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
+import org.gbif.api.model.pipelines.StepRunner;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
+import org.gbif.common.messaging.api.MessagePublisher;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
+import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
+import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
+import org.gbif.crawler.constants.CrawlerNodePaths;
+import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
+import org.gbif.pipelines.common.configs.BaseConfiguration;
+import org.gbif.pipelines.common.utils.HdfsUtils;
+import org.gbif.pipelines.common.utils.ZookeeperUtils;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.utils.file.properties.PropertiesUtil;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.CreateMode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.MDC;
+import org.slf4j.MDC.MDCCloseable;
+
 import com.google.common.annotations.VisibleForTesting;
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
@@ -8,29 +46,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
-import org.gbif.api.model.pipelines.StepRunner;
-import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
-import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.*;
-import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
-import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.pipelines.common.utils.HdfsUtils;
-import org.gbif.pipelines.common.utils.ZookeeperUtils;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
-import org.gbif.utils.file.properties.PropertiesUtil;
-import org.slf4j.MDC;
-import org.slf4j.MDC.MDCCloseable;
 
-import java.io.IOException;
-import java.time.Duration;
-import java.util.*;
-
+import static org.gbif.crawler.constants.CrawlerNodePaths.PROCESS_STATE_OCCURRENCE;
 import static org.gbif.crawler.constants.PipelinesNodePaths.getPipelinesInfoPath;
 
 /**
@@ -47,7 +64,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
           "registryCall",
           RetryConfig.custom()
               .maxAttempts(3)
-              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(1)))
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(3)))
               .build()
       );
 
@@ -123,17 +140,20 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       // track the pipeline step
       trackingInfo = trackPipelineStep();
 
-      String mqMessagePath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, mqMessagePath, message.toString());
+      String crawlerZkPath = CrawlerNodePaths.getCrawlInfoPath(message.getDatasetUuid(), PROCESS_STATE_OCCURRENCE);
+      ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "RUNNING");
 
-      String mqClassNamePath = Fn.MQ_CLASS_NAME.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, mqClassNamePath, message.getClass().getCanonicalName());
+      String mqMessageZkPath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, mqMessageZkPath, message.toString());
 
-      String startDatePath = Fn.START_DATE.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDatePath);
+      String mqClassNameZkPath = Fn.MQ_CLASS_NAME.apply(stepType.getLabel());
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, mqClassNameZkPath, message.getClass().getCanonicalName());
 
-      String runnerPath = Fn.RUNNER.apply(stepType.getLabel());
-      ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerPath, getRunner());
+      String startDateZkPath = Fn.START_DATE.apply(stepType.getLabel());
+      ZookeeperUtils.updateMonitoringDate(curator, datasetKey, startDateZkPath);
+
+      String runnerZkPath = Fn.RUNNER.apply(stepType.getLabel());
+      ZookeeperUtils.updateMonitoring(curator, datasetKey, runnerZkPath, getRunner());
 
       log.info("Handler has been started, datasetKey - {}", datasetKey);
       runnable.run();
