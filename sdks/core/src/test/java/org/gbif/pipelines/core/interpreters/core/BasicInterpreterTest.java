@@ -322,7 +322,7 @@ public class BasicInterpreterTest {
             .build(),
         AgentIdentifier.newBuilder()
             .setType(AgentIdentifierType.WIKIDATA.name())
-            .setValue("https://www.wikidata.org/entity/1997")
+            .setValue("http://www.wikidata.org/entity/1997")
             .build(),
         AgentIdentifier.newBuilder()
             .setType(AgentIdentifierType.OTHER.name())

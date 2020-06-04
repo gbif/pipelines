@@ -111,7 +111,7 @@ public class AgentIdentifierParserTest {
     // Expected
     Set<AgentIdentifier> expected = Collections.singleton(AgentIdentifier.newBuilder()
         .setType(AgentIdentifierType.WIKIDATA.name())
-        .setValue("https://www.wikidata.org/wiki/0000")
+        .setValue("wikidata.org/wiki/0000")
         .build());
 
     // State
@@ -154,7 +154,7 @@ public class AgentIdentifierParserTest {
             .build(),
         AgentIdentifier.newBuilder()
             .setType(AgentIdentifierType.WIKIDATA.name())
-            .setValue("https://www.wikidata.org/wiki/0000")
+            .setValue("wikidata.org/wiki/0000")
             .build(),
         AgentIdentifier.newBuilder()
             .setType(AgentIdentifierType.OTHER.name())

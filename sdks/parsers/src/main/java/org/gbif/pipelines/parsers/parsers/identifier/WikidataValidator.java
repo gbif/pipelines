@@ -28,13 +28,8 @@ public class WikidataValidator implements IdentifierSchemeValidator {
     String trimmedValue = value.trim();
     Matcher matcher = WIKIDATA_PATTERN.matcher(trimmedValue);
     if (matcher.matches()) {
-      return "https://www." + withoutScheme(matcher, trimmedValue);
+      return value;
     }
     throw new IllegalArgumentException(value + " it not a valid Wikidata");
-  }
-
-  private static String withoutScheme(Matcher matcher, String value) {
-    String schemeGroup = matcher.group("scheme");
-    return schemeGroup == null ? value : value.substring(schemeGroup.length());
   }
 }
