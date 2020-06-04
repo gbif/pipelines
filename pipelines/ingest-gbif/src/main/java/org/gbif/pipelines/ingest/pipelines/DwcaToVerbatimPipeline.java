@@ -55,7 +55,7 @@ public class DwcaToVerbatimPipeline {
 
   public static void run(BasePipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.DWCA_TO_VERBATIM.name());
 

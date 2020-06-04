@@ -117,7 +117,7 @@ public class XmlToEsIndexPipeline {
     boolean skipRegisrtyCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
 
-    MDC.put("datasetId", datasetId);
+    MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
 
     EsIndexUtils.createIndex(options);

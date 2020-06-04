@@ -123,7 +123,7 @@ public class InterpretedToHdfsViewPipeline {
   @SneakyThrows
   public static void run(InterpretationPipelineOptions options, ExecutorService executor) {
 
-    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 

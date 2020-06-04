@@ -111,7 +111,7 @@ public class InterpretedToHdfsViewPipeline {
     Set<String> types = Collections.singleton(OCCURRENCE_HDFS_RECORD.name());
     String targetTempPath = buildFilePathHdfsViewUsingInputPath(options, datasetId + '_' + attempt);
 
-    MDC.put("datasetId", datasetId);
+    MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.HDFS_VIEW.name());
 

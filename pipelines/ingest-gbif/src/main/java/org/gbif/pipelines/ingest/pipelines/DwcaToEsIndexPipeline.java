@@ -119,7 +119,7 @@ public class DwcaToEsIndexPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
 
-    MDC.put("datasetId", datasetId);
+    MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
 
     EsIndexUtils.createIndex(options);

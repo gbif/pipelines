@@ -71,7 +71,7 @@ public class VerbatimToInterpretedAmpPipeline {
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
 
-    MDC.put("datasetId", datasetId);
+    MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
     MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 

@@ -73,7 +73,7 @@ public class InterpretedToEsIndexExtendedPipeline {
   }
 
   public static void run(EsIndexingPipelineOptions options) {
-    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 

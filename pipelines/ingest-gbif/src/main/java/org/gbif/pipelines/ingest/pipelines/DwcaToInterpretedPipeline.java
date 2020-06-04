@@ -94,7 +94,7 @@ public class DwcaToInterpretedPipeline {
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
     boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
 
-    MDC.put("datasetId", datasetId);
+    MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
 
     String hdfsSiteConfig = options.getHdfsSiteConfig();
