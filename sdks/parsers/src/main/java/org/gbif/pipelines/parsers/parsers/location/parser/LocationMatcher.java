@@ -132,7 +132,11 @@ public class LocationMatcher {
   }
 
   private static Optional<Country> containsAnyCountry(Set<Country> possibilities, List<Country> countries) {
-    return Optional.ofNullable(possibilities).flatMap(set -> set.stream().filter(countries::contains).findFirst());
+    if (possibilities == null || possibilities.isEmpty() || countries == null || countries.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return countries.stream().filter(possibilities::contains).findFirst();
   }
 
   private static ParsedField<ParsedLocation> success(Country country, LatLng latLng, Set<String> issues) {
