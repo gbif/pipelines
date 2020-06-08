@@ -23,28 +23,47 @@ public class FileSystemFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private FileSystemFactory(String hdfsSiteConfig) {
+  private FileSystemFactory(String hdfsSiteConfig, String hdfsPrefix) {
     if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-      hdfsFs = FileSystem.get(URI.create(HDFS_PREFIX), getHdfsConfiguration(hdfsSiteConfig));
+      hdfsFs = FileSystem.get(URI.create(hdfsPrefix), getHdfsConfiguration(hdfsSiteConfig));
     } else {
       hdfsFs = null;
     }
     localFs = FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
   }
 
-  public static FileSystemFactory getInstance(String hdfsSiteConfig) {
+  public static FileSystemFactory getInstance(String hdfsSiteConfig, String hdfsPrefix) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new FileSystemFactory(hdfsSiteConfig);
+          instance = new FileSystemFactory(hdfsSiteConfig, hdfsPrefix);
         }
       }
     }
     return instance;
   }
 
+  /** Use predefined HDFS_PREFIX = "hdfs://ha-nn" */
+  public static FileSystemFactory getInstance(String hdfsSiteConfig) {
+    return getInstance(hdfsSiteConfig, HDFS_PREFIX);
+  }
+
+  public static FileSystemFactory create(String hdfsSiteConfig, String hdfsPrefix){
+    return new FileSystemFactory(hdfsSiteConfig, hdfsPrefix);
+  }
+
+  /** Use predefined HDFS_PREFIX = "hdfs://ha-nn" */
+  public static FileSystemFactory create(String hdfsSiteConfig){
+    return new FileSystemFactory(hdfsSiteConfig, HDFS_PREFIX);
+  }
+
+  public FileSystem getFs(String path, String hdfsPrefix) {
+    return path != null && path.startsWith(hdfsPrefix) ? hdfsFs : localFs;
+  }
+
+  /** Use predefined HDFS_PREFIX = "hdfs://ha-nn" */
   public FileSystem getFs(String path) {
-    return path != null && path.startsWith(HDFS_PREFIX) ? hdfsFs : localFs;
+    return getFs(path, HDFS_PREFIX);
   }
 
   public FileSystem getLocalFs() {
