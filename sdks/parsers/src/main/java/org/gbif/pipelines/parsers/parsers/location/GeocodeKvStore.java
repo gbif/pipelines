@@ -13,27 +13,28 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class GeocodeService implements Serializable {
+public class GeocodeKvStore implements KeyValueStore<LatLng, GeocodeResponse>, Serializable {
 
   private static final long serialVersionUID = -2090636199984570712L;
 
   private final KeyValueStore<LatLng, GeocodeResponse> kvStore;
   private final GeocodeBitmapCache bitmapCache;
 
-  private GeocodeService(@NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
+  private GeocodeKvStore(@NonNull KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
     this.kvStore = kvStore;
     this.bitmapCache = image == null ? null : GeocodeBitmapCache.create(image, kvStore::get);
   }
 
-  public static GeocodeService create(KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
-    return new GeocodeService(kvStore, image);
+  public static GeocodeKvStore create(KeyValueStore<LatLng, GeocodeResponse> kvStore, BufferedImage image) {
+    return new GeocodeKvStore(kvStore, image);
   }
 
-  public static GeocodeService create(KeyValueStore<LatLng, GeocodeResponse> kvStore) {
-    return new GeocodeService(kvStore, null);
+  public static GeocodeKvStore create(KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+    return new GeocodeKvStore(kvStore, null);
   }
 
   /** Simple get candidates by point. */
+  @Override
   public GeocodeResponse get(LatLng latLng) {
     GeocodeResponse locations = null;
 
@@ -50,6 +51,7 @@ public class GeocodeService implements Serializable {
     return locations;
   }
 
+  @Override
   public void close() {
     if (kvStore != null) {
       try {

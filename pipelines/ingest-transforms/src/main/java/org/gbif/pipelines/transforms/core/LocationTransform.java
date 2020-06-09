@@ -1,21 +1,24 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Properties;
 
+import org.gbif.kvs.KeyValueStore;
+import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.kv.GeocodeServiceFactory;
+import org.gbif.pipelines.kv.GeocodeKvStoreFactory;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -48,7 +51,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   @Getter
   @Setter
-  private GeocodeService service;
+  private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
   private PCollectionView<MetadataRecord> metadataView;
 
   public LocationTransform(KvConfig kvConfig) {
@@ -74,9 +77,9 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     return new LocationTransform(config);
   }
 
-  public static LocationTransform create(GeocodeService service) {
+  public static LocationTransform create(KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
     LocationTransform lt = new LocationTransform(null);
-    lt.service = service;
+    lt.geocodeKvStore = geocodeKvStore;
     return lt;
   }
 
@@ -98,22 +101,26 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public LocationTransform init() {
-    service = GeocodeServiceFactory.getInstance(kvConfig);
+    geocodeKvStore = GeocodeKvStoreFactory.getInstance(kvConfig);
     return this;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (service == null) {
-      service = GeocodeServiceFactory.create(kvConfig);
+    if (geocodeKvStore == null) {
+      geocodeKvStore = GeocodeKvStoreFactory.create(kvConfig);
     }
   }
 
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
-    service.close();
+    try {
+      geocodeKvStore.close();
+    } catch (IOException ex) {
+      log.warn("Can't close geocodeKvStore - {}", ex.getMessage());
+    }
   }
 
   @Override
@@ -137,7 +144,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     Optional<LocationRecord> result = Interpretation.from(source)
         .to(lr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(LocationInterpreter.interpretCountryAndCoordinates(service, mdr))
+        .via(LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr))
         .via(LocationInterpreter::interpretContinent)
         .via(LocationInterpreter::interpretWaterBody)
         .via(LocationInterpreter::interpretStateProvince)

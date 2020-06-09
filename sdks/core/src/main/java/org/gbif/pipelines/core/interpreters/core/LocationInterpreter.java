@@ -18,6 +18,7 @@ import org.gbif.common.parsers.geospatial.DoubleAccuracy;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
@@ -25,9 +26,10 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.parsers.parsers.location.parser.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -84,11 +86,11 @@ public class LocationInterpreter {
    * DwcTerm#decimalLatitude} and the {@link DwcTerm#decimalLongitude} terms.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretCountryAndCoordinates(
-      GeocodeService service, MetadataRecord mdr) {
+      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore, MetadataRecord mdr) {
     return (er, lr) -> {
-      if (service != null) {
+      if (geocodeKvStore != null) {
         // parse the terms
-        ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, service);
+        ParsedField<ParsedLocation> parsedResult = LocationParser.parse(er, geocodeKvStore);
 
         // set values in the location record
         ParsedLocation parsedLocation = parsedResult.getResult();

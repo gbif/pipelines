@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.KeyValueTestStore;
@@ -18,7 +19,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.IssueRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 
 public class LocationInterpreterTest {
 
-  private static final GeocodeService SERVICE;
+  private static final KeyValueStore<LatLng, GeocodeResponse> KEY_VALUE_STORE;
 
   private static final String ID = "777";
 
@@ -52,7 +53,7 @@ public class LocationInterpreterTest {
     store.put(new LatLng(-6.623889d, -45.869164d), toGeocodeResponse(Country.BRAZIL));
     store.put(new LatLng(-17.05d, -66d), toGeocodeResponse(Country.BOLIVIA));
     store.put(new LatLng(-8.023319, 110.279078), toGeocodeResponse(Country.INDONESIA));
-    SERVICE = GeocodeService.create(store);
+    KEY_VALUE_STORE = GeocodeKvStore.create(store);
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
@@ -102,7 +103,7 @@ public class LocationInterpreterTest {
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
     return Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-        .via(LocationInterpreter.interpretCountryAndCoordinates(SERVICE, mdr))
+        .via(LocationInterpreter.interpretCountryAndCoordinates(KEY_VALUE_STORE, mdr))
         .get().orElse(null);
   }
 
