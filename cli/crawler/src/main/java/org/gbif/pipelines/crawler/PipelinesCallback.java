@@ -33,7 +33,6 @@ import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.zookeeper.CreateMode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.MDC;
 import org.slf4j.MDC.MDCCloseable;
@@ -141,7 +140,9 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
       trackingInfo = trackPipelineStep();
 
       String crawlerZkPath = CrawlerNodePaths.getCrawlInfoPath(message.getDatasetUuid(), PROCESS_STATE_OCCURRENCE);
-      ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "RUNNING");
+      if (ZookeeperUtils.checkExists(curator, crawlerZkPath)) {
+        ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "RUNNING");
+      }
 
       String mqMessageZkPath = Fn.MQ_MESSAGE.apply(stepType.getLabel());
       ZookeeperUtils.updateMonitoring(curator, datasetKey, mqMessageZkPath, message.toString());
