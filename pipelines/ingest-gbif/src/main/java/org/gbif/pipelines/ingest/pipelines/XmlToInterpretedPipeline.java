@@ -13,6 +13,9 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.kv.GeocodeKvStoreFactory;
+import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
+import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
@@ -109,15 +112,16 @@ public class XmlToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     log.info("Creating transformations");
-    // Core
+    // Metadata
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
     MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegisrtyCalls);
+    // Core
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
-
+    KvConfig geocodeKvConfig = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
+    LocationTransform locationTransform = LocationTransform.create(GeocodeKvStoreFactory.createSupplier(geocodeKvConfig));
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();

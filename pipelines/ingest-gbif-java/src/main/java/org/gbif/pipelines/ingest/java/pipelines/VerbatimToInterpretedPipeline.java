@@ -39,12 +39,13 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.kv.GeocodeKvStoreFactory;
+import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
+import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -52,6 +53,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
@@ -168,8 +171,13 @@ public class VerbatimToInterpretedPipeline {
         .counterFn(incMetricFn).init();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties)
         .counterFn(incMetricFn).init();
-    LocationTransform locationTransform = LocationTransform.create(properties)
-        .counterFn(incMetricFn).init();
+
+    KvConfig geocodeKvConfig = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
+    LocationTransform locationTransform =
+        LocationTransform.create(GeocodeKvStoreFactory.getInstanceSupplier(geocodeKvConfig))
+            .counterFn(incMetricFn)
+            .init();
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create()
         .counterFn(incMetricFn);
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create()

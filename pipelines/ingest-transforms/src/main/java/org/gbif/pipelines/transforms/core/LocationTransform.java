@@ -1,10 +1,8 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Properties;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
@@ -13,10 +11,8 @@ import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.kv.GeocodeKvStoreFactory;
-import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
@@ -47,40 +43,24 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
   @Getter
-  private final KvConfig kvConfig;
+  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
 
   @Getter
   @Setter
   private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
   private PCollectionView<MetadataRecord> metadataView;
 
-  public LocationTransform(KvConfig kvConfig) {
+  public LocationTransform(SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier) {
     super(LocationRecord.class, LOCATION, LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
-    this.kvConfig = kvConfig;
+    this.geocodeKvStoreSupplier = geocodeKvStoreSupplier;
   }
 
   public static LocationTransform create() {
     return new LocationTransform(null);
   }
 
-  public static LocationTransform create(KvConfig kvConfig) {
-    return new LocationTransform(kvConfig);
-  }
-
-  public static LocationTransform create(String propertiesPath) {
-    KvConfig config = KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.GEOCODE_PREFIX);
-    return new LocationTransform(config);
-  }
-
-  public static LocationTransform create(Properties properties) {
-    KvConfig config = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
-    return new LocationTransform(config);
-  }
-
-  public static LocationTransform create(KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
-    LocationTransform lt = new LocationTransform(null);
-    lt.geocodeKvStore = geocodeKvStore;
-    return lt;
+  public static LocationTransform create(SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier) {
+    return new LocationTransform(geocodeKvStoreSupplier);
   }
 
   public SingleOutput<ExtendedRecord, LocationRecord> interpret(PCollectionView<MetadataRecord> metadataView) {
@@ -101,15 +81,15 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
   public LocationTransform init() {
-    geocodeKvStore = GeocodeKvStoreFactory.getInstance(kvConfig);
+    setup();
     return this;
   }
 
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (geocodeKvStore == null) {
-      geocodeKvStore = GeocodeKvStoreFactory.create(kvConfig);
+    if (geocodeKvStore == null && geocodeKvStoreSupplier != null) {
+      geocodeKvStore = geocodeKvStoreSupplier.get();
     }
   }
 

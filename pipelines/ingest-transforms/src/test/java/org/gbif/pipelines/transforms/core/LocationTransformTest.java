@@ -17,6 +17,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -61,7 +62,8 @@ public class LocationTransformTest {
   public void emptyLrTest() {
 
     // State
-    KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore = GeocodeKvStore.create(new KeyValueTestStoreStub<>());
+    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
+        () -> GeocodeKvStore.create(new KeyValueTestStoreStub<>());
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
@@ -88,7 +90,8 @@ public class LocationTransformTest {
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK));
     kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN));
-    KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore = GeocodeKvStore.create(kvStore);
+    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
+        () -> GeocodeKvStore.create(kvStore);
 
     final String[] denmark = {
         "0",

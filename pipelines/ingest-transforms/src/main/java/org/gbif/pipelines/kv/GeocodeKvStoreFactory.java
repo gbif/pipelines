@@ -1,6 +1,7 @@
 package org.gbif.pipelines.kv;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
@@ -9,6 +10,7 @@ import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
@@ -44,6 +46,14 @@ public class GeocodeKvStoreFactory {
   @SneakyThrows
   public static KeyValueStore<LatLng, GeocodeResponse> create(KvConfig config) {
     return GeocodeKvStore.create(creatKvStore(config), BitmapFactory.getInstance(config));
+  }
+
+  public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> createSupplier(KvConfig config) {
+    return () -> GeocodeKvStoreFactory.create(config);
+  }
+
+  public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> getInstanceSupplier(KvConfig config) {
+    return () -> GeocodeKvStoreFactory.getInstance(config);
   }
 
   private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(KvConfig config) throws IOException {
