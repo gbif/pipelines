@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.converters;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -57,7 +58,11 @@ public class JsonConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private static final Map<Character, Character> CHAR_MAP = Collections.singletonMap('\u001E', ',');
+  private static final Map<Character, Character> CHAR_MAP = new HashMap<>();
+  static {
+    CHAR_MAP.put('\u001E', ',');
+    CHAR_MAP.put('\u001f', ' ');
+  }
 
   private final ObjectNode mainNode = MAPPER.createObjectNode();
 
