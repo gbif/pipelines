@@ -9,12 +9,14 @@ import java.util.TreeSet;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
+import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -31,9 +33,9 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LocationParser {
 
-  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, GeocodeService service) {
+  public static ParsedField<ParsedLocation> parse(ExtendedRecord er, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
     ModelUtils.checkNullOrEmpty(er);
-    Objects.requireNonNull(service, "GeocodeService service is required");
+    Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
 
     Set<String> issues = new TreeSet<>();
 
@@ -72,7 +74,7 @@ public class LocationParser {
 
     // If the coords parsing was successful we try to do a country match with the coordinates
     ParsedField<ParsedLocation> match =
-        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), service)
+        LocationMatcher.create(parsedLocation.getLatLng(), parsedLocation.getCountry(), kvStore)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)

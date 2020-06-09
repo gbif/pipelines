@@ -3,6 +3,7 @@ package org.gbif.pipelines.parsers.parsers.location;
 import java.util.Collections;
 
 import org.gbif.api.vocabulary.Country;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.parser.CoordinatesFunction;
@@ -20,7 +21,7 @@ public class LocationMatcherTest {
 
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
-  private static final GeocodeService SERVICE;
+  private static final KeyValueStore<LatLng, GeocodeResponse> GEOCODE_KV_STORE;
 
   static {
     KeyValueTestStore store = new KeyValueTestStore();
@@ -30,7 +31,7 @@ public class LocationMatcherTest {
     store.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
     store.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
     store.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
-    SERVICE = GeocodeService.create(store);
+    GEOCODE_KV_STORE = GeocodeKvStore.create(store);
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
@@ -48,7 +49,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coordsCanada, canada, SERVICE).apply();
+        LocationMatcher.create(coordsCanada, canada, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertEquals(canada, result.getResult().getCountry());
@@ -66,7 +67,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coordsCanada, canada, SERVICE)
+        LocationMatcher.create(coordsCanada, canada, GEOCODE_KV_STORE)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -87,7 +88,7 @@ public class LocationMatcherTest {
     LatLng coordsCanada = new LatLng(LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(coordsCanada, null, SERVICE).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(coordsCanada, null, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertEquals(Country.CANADA, result.getResult().getCountry());
@@ -104,7 +105,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(wrongCoords, null, SERVICE)
+        LocationMatcher.create(wrongCoords, null, GEOCODE_KV_STORE)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
@@ -123,7 +124,7 @@ public class LocationMatcherTest {
     LatLng antarcticaEdgeCoords = new LatLng(-61d, -130d);
 
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(antarcticaEdgeCoords, null, SERVICE).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(antarcticaEdgeCoords, null, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertTrue(result.isSuccessful());
@@ -138,7 +139,7 @@ public class LocationMatcherTest {
     LatLng negatedLatCoords = new LatLng(-LATITUDE_CANADA, LONGITUDE_CANADA);
 
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(negatedLatCoords, canada, SERVICE).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(negatedLatCoords, canada, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -155,7 +156,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedLatCoords, canada, SERVICE)
+        LocationMatcher.create(negatedLatCoords, canada, GEOCODE_KV_STORE)
             .additionalTransform(CoordinatesFunction.NEGATED_LAT_FN)
             .apply();
 
@@ -179,7 +180,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedLngCoords, canada, SERVICE)
+        LocationMatcher.create(negatedLngCoords, canada, GEOCODE_KV_STORE)
             .additionalTransform(CoordinatesFunction.NEGATED_LNG_FN)
             .apply();
 
@@ -203,7 +204,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(negatedCoords, canada, SERVICE)
+        LocationMatcher.create(negatedCoords, canada, GEOCODE_KV_STORE)
             .additionalTransform(CoordinatesFunction.NEGATED_COORDS_FN)
             .apply();
 
@@ -227,7 +228,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(swappedCoords, canada, SERVICE)
+        LocationMatcher.create(swappedCoords, canada, GEOCODE_KV_STORE)
             .additionalTransform(CoordinatesFunction.SWAPPED_COORDS_FN)
             .apply();
 
@@ -248,7 +249,7 @@ public class LocationMatcherTest {
     LatLng coords = new LatLng(27.15, -13.20);
 
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(coords, Country.WESTERN_SAHARA, SERVICE).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(coords, Country.WESTERN_SAHARA, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertEquals(Country.MOROCCO, result.getResult().getCountry());
@@ -265,7 +266,7 @@ public class LocationMatcherTest {
 
     // When
     ParsedField<ParsedLocation> result =
-        LocationMatcher.create(coords, Country.FRANCE, SERVICE).apply();
+        LocationMatcher.create(coords, Country.FRANCE, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertEquals(Country.FRENCH_POLYNESIA, result.getResult().getCountry());
@@ -281,7 +282,7 @@ public class LocationMatcherTest {
     LatLng coords = new LatLng(71.7d, -42.6d);
 
     // When
-    ParsedField<ParsedLocation> match = LocationMatcher.create(coords, Country.DENMARK, SERVICE).apply();
+    ParsedField<ParsedLocation> match = LocationMatcher.create(coords, Country.DENMARK, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertEquals(Country.GREENLAND, match.getResult().getCountry());
@@ -293,13 +294,13 @@ public class LocationMatcherTest {
   @Test(expected = NullPointerException.class)
   public void nullValuesTest() {
     // When
-    LocationMatcher.create(null, null, SERVICE).apply();
+    LocationMatcher.create(null, null, GEOCODE_KV_STORE).apply();
   }
 
   @Test
   public void outOfRangeCoordinatesTest() {
     // When
-    ParsedField<ParsedLocation> result = LocationMatcher.create(new LatLng(200d, 200d), null, SERVICE).apply();
+    ParsedField<ParsedLocation> result = LocationMatcher.create(new LatLng(200d, 200d), null, GEOCODE_KV_STORE).apply();
 
     // Should
     Assert.assertFalse(result.isSuccessful());

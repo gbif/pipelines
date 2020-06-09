@@ -8,42 +8,42 @@ import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeService;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import lombok.SneakyThrows;
 
 /**
- * Factory to get singleton instance of {@link GeocodeService}
+ * Factory to get singleton instance of {@link KeyValueStore<LatLng, GeocodeResponse>}
  */
-public class GeocodeServiceFactory {
+public class GeocodeKvStoreFactory {
 
-  private final GeocodeService service;
-  private static volatile GeocodeServiceFactory instance;
+  private final KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
+  private static volatile GeocodeKvStoreFactory instance;
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private GeocodeServiceFactory(KvConfig config) {
-    service = create(config);
+  private GeocodeKvStoreFactory(KvConfig config) {
+    geocodeKvStore = create(config);
   }
 
   /* TODO Comment */
-  public static GeocodeService getInstance(KvConfig config) {
+  public static KeyValueStore<LatLng, GeocodeResponse> getInstance(KvConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new GeocodeServiceFactory(config);
+          instance = new GeocodeKvStoreFactory(config);
         }
       }
     }
-    return instance.service;
+    return instance.geocodeKvStore;
   }
 
   /* TODO Comment */
   @SneakyThrows
-  public static GeocodeService create(KvConfig config) {
-    return GeocodeService.create(creatKvStore(config), BitmapFactory.getInstance(config));
+  public static KeyValueStore<LatLng, GeocodeResponse> create(KvConfig config) {
+    return GeocodeKvStore.create(creatKvStore(config), BitmapFactory.getInstance(config));
   }
 
   private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(KvConfig config) throws IOException {
