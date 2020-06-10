@@ -134,7 +134,7 @@ public class BasicInterpreter {
           }
         };
 
-    SimpleTypeParser.parseInt(er, DwcTerm.individualCount, fn);
+    SimpleTypeParser.parsePositiveInt(er, DwcTerm.individualCount, fn);
   }
 
   /** {@link DwcTerm#typeStatus} interpretation. */
