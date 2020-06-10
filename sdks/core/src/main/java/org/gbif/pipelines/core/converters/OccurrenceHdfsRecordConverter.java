@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -133,7 +134,7 @@ public class OccurrenceHdfsRecordConverter {
           Date date = TEMPORAL_TO_DATE.apply(temporalAccessor);
 
           if (date != null && firstYear) {
-            Calendar cal = Calendar.getInstance();
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             cal.setTime(date);
             cal.set(Calendar.YEAR, 1);
             return cal.getTime();
