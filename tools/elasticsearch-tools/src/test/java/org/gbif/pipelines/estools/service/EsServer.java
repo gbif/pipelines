@@ -2,6 +2,7 @@ package org.gbif.pipelines.estools.service;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.file.Files;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -24,7 +25,7 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 @Slf4j
 public class EsServer extends ExternalResource {
 
-  private static final String CLUSTER_NAME = "EsClusterIT";
+  private static final String CLUSTER_NAME = "EsClusterPipelinesIT";
 
   private EmbeddedElastic embeddedElastic;
   private EsConfig esConfig;
@@ -39,6 +40,8 @@ public class EsServer extends ExternalResource {
         EmbeddedElastic.builder()
             .withElasticVersion(getEsVersion())
             .withEsJavaOpts("-Xms128m -Xmx512m")
+            .withInstallationDirectory(Files.createTempDirectory("pipelines-elasticsearch").toFile())
+            .withCleanInstallationDirectoryOnStop(true)
             .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
             .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
             .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
