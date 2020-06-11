@@ -1,11 +1,9 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.species.SpeciesMatchRequest;
@@ -13,10 +11,8 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.kv.NameUsageMatchStoreFactory;
-import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.species.NameUsageMatch;
 
@@ -41,33 +37,20 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
-  private final KvConfig kvConfig;
+  private final SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier;
   private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
 
-  private TaxonomyTransform(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore, KvConfig kvConfig) {
+  private TaxonomyTransform(SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier) {
     super(TaxonRecord.class, TAXONOMY, TaxonomyTransform.class.getName(), TAXON_RECORDS_COUNT);
-    this.kvStore = kvStore;
-    this.kvConfig = kvConfig;
+    this.kvStoreSupplier = kvStoreSupplier;
   }
 
   public static TaxonomyTransform create() {
-    return new TaxonomyTransform(null, null);
+    return new TaxonomyTransform(null);
   }
 
-  public static TaxonomyTransform create(KvConfig kvConfig) {
-    return new TaxonomyTransform(null, kvConfig);
-  }
-
-  public static TaxonomyTransform create(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
-    return new TaxonomyTransform(kvStore, null);
-  }
-
-  public static TaxonomyTransform create(String propertiesPath) {
-    return new TaxonomyTransform(null, KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.TAXONOMY_PREFIX));
-  }
-
-  public static TaxonomyTransform create(Properties propertiesPath) {
-    return new TaxonomyTransform(null, KvConfigFactory.create(propertiesPath, KvConfigFactory.TAXONOMY_PREFIX));
+  public static TaxonomyTransform create(SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier) {
+    return new TaxonomyTransform(kvStoreSupplier);
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
@@ -81,17 +64,11 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     return this;
   }
 
-  /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
-  public TaxonomyTransform init() {
-    kvStore = NameUsageMatchStoreFactory.getInstance(kvConfig);
-    return this;
-  }
-
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (kvStore == null) {
-      kvStore = NameUsageMatchStoreFactory.create(kvConfig);
+    if (kvStore == null && kvStoreSupplier != null) {
+      kvStore = kvStoreSupplier.get();
     }
   }
 
@@ -119,17 +96,5 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
     // the id is null when there is an error in the interpretation. In these
     // cases we do not write the taxonRecord because it is totally empty.
     return tr.getId() == null ? Optional.empty() : Optional.of(tr);
-  }
-
-  public KeyValueStore<SpeciesMatchRequest, NameUsageMatch> getKvStore() {
-    return kvStore;
-  }
-
-  public void setKvStore(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
-    this.kvStore = kvStore;
-  }
-
-  public KvConfig getKvConfig() {
-    return kvConfig;
   }
 }

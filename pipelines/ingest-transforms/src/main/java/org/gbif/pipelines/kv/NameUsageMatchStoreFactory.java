@@ -6,6 +6,7 @@ import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
@@ -66,6 +67,14 @@ public class NameUsageMatchStoreFactory {
         .build();
 
     return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
+  }
+
+  public static SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> createSupplier(KvConfig config) {
+    return () -> NameUsageMatchStoreFactory.create(config);
+  }
+
+  public static SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> getInstanceSupplier(KvConfig config) {
+    return () -> NameUsageMatchStoreFactory.getInstance(config);
   }
 
 }

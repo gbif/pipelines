@@ -79,12 +79,6 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     return this;
   }
 
-  /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
-  public LocationTransform init() {
-    setup();
-    return this;
-  }
-
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
