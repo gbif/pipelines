@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.java.io;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.file.Files;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +40,8 @@ public class EsServer extends ExternalResource {
         EmbeddedElastic.builder()
             .withElasticVersion(getEsVersion())
             .withEsJavaOpts("-Xms128m -Xmx512m")
+            .withInstallationDirectory(Files.createTempDirectory("pipelines-elasticsearch").toFile())
+            .withCleanInstallationDirectoryOnStop(true)
             .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
             .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
             .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)

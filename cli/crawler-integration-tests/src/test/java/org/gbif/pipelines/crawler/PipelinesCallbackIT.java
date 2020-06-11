@@ -217,9 +217,7 @@ public class PipelinesCallbackIT {
     Assert.assertFalse(checkExists(getPipelinesInfoPath(crawlId)));
 
     String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
-    Assert.assertTrue(checkExists(crawlInfoPath));
-    Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
-    Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
+    Assert.assertFalse(checkExists(crawlInfoPath));
 
     // Postprocess
     deleteMonitoringById(crawlId);
@@ -284,8 +282,10 @@ public class PipelinesCallbackIT {
     StepType nextStepName = StepType.DWCA_TO_VERBATIM;
     Set<String> pipelineSteps = Collections.singleton(StepType.DWCA_TO_VERBATIM.name());
     PipelineBasedMessage incomingMessage = createMessage(datasetKey, attempt, pipelineSteps);
-
     updateMonitoring(crawlId, SIZE, String.valueOf(4));
+
+    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
+    updateMonitoring(crawlInfoPath, "RUNNING");
 
     // When
     PipelinesCallback.builder()
@@ -302,7 +302,6 @@ public class PipelinesCallbackIT {
     // Should
     Assert.assertFalse(checkExists(getPipelinesInfoPath(crawlId)));
 
-    String crawlInfoPath = CrawlerNodePaths.getCrawlInfoPath(datasetKey, PROCESS_STATE_OCCURRENCE);
     Assert.assertTrue(checkExists(crawlInfoPath));
     Assert.assertTrue(getAsString(crawlInfoPath).isPresent());
     Assert.assertEquals("FINISHED", getAsString(crawlInfoPath).get());
@@ -424,6 +423,16 @@ public class PipelinesCallbackIT {
    */
   private void updateMonitoring(String crawlId, String path, String value) throws Exception {
     String fullPath = getPipelinesInfoPath(crawlId, path);
+    updateMonitoring(fullPath, value);
+  }
+
+  /**
+   * Creates or updates a String value for a Zookeeper monitoring node
+   *
+   * @param fullPath node path
+   * @param value some String value
+   */
+  private void updateMonitoring(String fullPath, String value) throws Exception {
     byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
     if (checkExists(fullPath)) {
       curator.setData().forPath(fullPath, bytes);

@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.gbif.api.vocabulary.AgentIdentifierType;
@@ -453,7 +454,7 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void dateParserTest() {
     Date date = STRING_TO_DATE.apply("2019");
-    Calendar cal = Calendar.getInstance();
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     cal.setTime(date);
     assertEquals(2019, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
@@ -499,7 +500,7 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void dateWithYearZeroTest() {
     Date date = STRING_TO_DATE.apply("0000");
-    Calendar cal = Calendar.getInstance();
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     cal.setTime(date);
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));

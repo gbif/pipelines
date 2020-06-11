@@ -12,6 +12,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
@@ -121,7 +122,7 @@ public class TemporalInterpreterTest {
     TemporalInterpreter.interpretTemporal(er, tr);
     assertEquals(0, tr.getIssues().getIssueList().size());
 
-    Calendar cal = Calendar.getInstance();
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     er.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), (cal.get(Calendar.YEAR) + 1) + "-01-11");
     TemporalInterpreter.interpretTemporal(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
@@ -149,7 +150,7 @@ public class TemporalInterpreterTest {
     assertEquals(0, tr.getIssues().getIssueList().size());
 
     tr = TemporalRecord.newBuilder().setId("1").build();
-    Calendar cal = Calendar.getInstance();
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     er.getCoreTerms().put(DcTerm.modified.qualifiedName(), (cal.get(Calendar.YEAR) + 1) + "-01-11");
     TemporalInterpreter.interpretTemporal(er, tr);
     assertEquals(1, tr.getIssues().getIssueList().size());
@@ -171,7 +172,7 @@ public class TemporalInterpreterTest {
   @Test
   public void testLikelyRecorded() {
     Map<String, String> map = new HashMap<>();
-    Calendar cal = Calendar.getInstance();
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     map.put(DwcTerm.eventDate.qualifiedName(), "24.12." + (cal.get(Calendar.YEAR) + 1));
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
 
@@ -391,7 +392,7 @@ public class TemporalInterpreterTest {
       fail(e.getMessage());
     }
 
-    Calendar cal = Calendar.getInstance();
+    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     result = interpretEventDate(DateFormatUtils.ISO_DATETIME_FORMAT.format(cal.getTime()));
     assertEquals(ParseResult.CONFIDENCE.DEFINITE, result.getConfidence());
   }

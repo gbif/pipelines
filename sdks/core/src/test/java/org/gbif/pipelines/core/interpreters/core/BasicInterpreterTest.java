@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
@@ -20,6 +21,59 @@ import org.junit.Test;
 public class BasicInterpreterTest {
 
   private static final String ID = "777";
+
+  @Test
+  public void interpretIndividaulCountTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.individualCount.qualifiedName(), "2");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIndividualCount(er, br);
+
+    // Should
+    Assert.assertEquals(Integer.valueOf(2), br.getIndividualCount());
+  }
+
+  @Test
+  public void interpretIndividaulCountNegativedTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.individualCount.qualifiedName(), "-2");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIndividualCount(er, br);
+
+    // Should
+    Assert.assertNull(br.getIndividualCount());
+    Assert.assertTrue(br.getIssues().getIssueList().contains(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID.name()));
+  }
+
+  @Test
+  public void interpretIndividaulCountInvalidTest() {
+
+    // State
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.individualCount.qualifiedName(), "2.666666667");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+
+    BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    // When
+    BasicInterpreter.interpretIndividualCount(er, br);
+
+    // Should
+    Assert.assertNull(br.getIndividualCount());
+    Assert.assertTrue(br.getIssues().getIssueList().contains(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID.name()));
+  }
 
   @Test
   public void interpretSampleSizeValueTest() {
