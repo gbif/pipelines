@@ -85,6 +85,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_JSON_
  *         .apply("Merging to json", gbifJsonDoFn);
  * }</pre>
  */
+@SuppressWarnings("ConstantConditions")
 @AllArgsConstructor(staticName = "create")
 public class GbifJsonTransform implements Serializable {
 

@@ -69,6 +69,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_
  *  c.output(record);
  * }</pre>
  */
+@SuppressWarnings("ConstantConditions")
 @AllArgsConstructor(staticName = "create")
 public class OccurrenceHdfsRecordConverterTransform implements Serializable {
 
