@@ -18,6 +18,7 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.ingest.java.io.AvroReader;
@@ -42,6 +43,8 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
+import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.ContentfulConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
@@ -180,8 +183,14 @@ public class VerbatimToInterpretedPipeline {
             .create()
             .counterFn(incMetricFn);
 
-    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId)
-        .counterFn(incMetricFn).init();
+    KeygenConfig keygenConfig = KeygenConfigFactory.create(properties);
+    BasicTransform basicTransform = BasicTransform.builder()
+        .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(keygenConfig, datasetId))
+        .isTripletValid(tripletValid)
+        .isOccurrenceIdValid(occIdValid)
+        .useExtendedRecordId(useErdId)
+        .create()
+        .counterFn(incMetricFn);
 
     KvConfig taxonomyKvConfig = KvConfigFactory.create(properties, KvConfigFactory.TAXONOMY_PREFIX);
     TaxonomyTransform taxonomyTransform =
@@ -229,6 +238,7 @@ public class VerbatimToInterpretedPipeline {
             .create();
 
     // Init transforms
+    basicTransform.setup();
     locationTransform.setup();
     taxonomyTransform.setup();
     metadataTransform.setup();

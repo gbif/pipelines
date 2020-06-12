@@ -419,6 +419,13 @@ public class HBaseLockingKeyService implements Serializable {
     deleteKeyByUniques(uniqueStrings, datasetId);
   }
 
+  @SneakyThrows
+  public void close() {
+    if (connection != null) {
+      connection.close();
+    }
+  }
+
   private static void failWithConflictingLookup(Map<String, Long> conflictingKeys) {
     StringBuilder sb = new StringBuilder("Found inconsistent occurrence keys in looking up unique identifiers:");
     for (Map.Entry<String, Long> entry : conflictingKeys.entrySet()) {

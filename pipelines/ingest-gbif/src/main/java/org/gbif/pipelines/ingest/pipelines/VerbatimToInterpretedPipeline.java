@@ -7,6 +7,10 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -14,9 +18,8 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
-import org.gbif.pipelines.factory.MetadataServiceClientFactory;
-import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.keygen.config.KeygenConfig;
+import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.ContentfulConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
@@ -143,9 +146,14 @@ public class VerbatimToInterpretedPipeline {
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
 
     // Core
+    KeygenConfig keygenConfig = KeygenConfigFactory.create(properties);
     BasicTransform basicTransform =
-        BasicTransform.create(
-            properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+        BasicTransform.builder()
+            .keygenServiceSupplier(KeygenServiceFactory.createSupplier(keygenConfig, datasetId))
+            .isTripletValid(tripletValid)
+            .isOccurrenceIdValid(occurrenceIdValid)
+            .useExtendedRecordId(useExtendedRecordId)
+            .create();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
 

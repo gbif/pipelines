@@ -117,7 +117,7 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Adding step 2: Creating transformations");
     // Core
-    BasicTransform basicTransform = BasicTransform.create();
+    BasicTransform basicTransform = BasicTransform.builder().create();
     MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();

@@ -65,7 +65,7 @@ public class UniqueGbifIdTransform extends PTransform<PCollection<BasicRecord>, 
     // Convert from list to map where, key - occurrenceId, value - object instance and group by key
     PCollection<KV<String, Iterable<BasicRecord>>> groupedCollection =
         input
-            .apply("Mapping to KV", BasicTransform.create().toGbifIdKv())
+            .apply("Mapping to KV", BasicTransform.builder().create().toGbifIdKv())
             .apply("Grouping by gbifId", GroupByKey.create());
 
     // Filter duplicate occurrenceIds, all groups where value size != 1

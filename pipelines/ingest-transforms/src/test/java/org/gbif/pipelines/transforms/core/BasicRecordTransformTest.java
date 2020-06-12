@@ -62,7 +62,7 @@ public class BasicRecordTransformTest {
 
     // When
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(records)).apply(BasicTransform.create().interpret())
+        p.apply(Create.of(records)).apply(BasicTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -77,7 +77,7 @@ public class BasicRecordTransformTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(er)).apply(BasicTransform.create().interpret())
+        p.apply(Create.of(er)).apply(BasicTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -103,7 +103,7 @@ public class BasicRecordTransformTest {
         .build();
 
     PCollection<BasicRecord> recordCollection =
-        p.apply(Create.of(er)).apply(BasicTransform.create().interpret())
+        p.apply(Create.of(er)).apply(BasicTransform.builder().create().interpret())
             .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
