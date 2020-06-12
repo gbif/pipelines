@@ -14,7 +14,7 @@ public class KvConfigFactory {
 
   public static final String TAXONOMY_PREFIX = "taxonomy";
   public static final String GEOCODE_PREFIX = "geocode";
-  public static final String AUSTRALIA_PREFIX = "australia.spatial";
+  public static final String LOCATION_FEATURE_PREFIX = "locationFeature.spatial";
 
   // property suffixes
   private static final String WS_BASE_PATH_PROP = "gbif.api.url";

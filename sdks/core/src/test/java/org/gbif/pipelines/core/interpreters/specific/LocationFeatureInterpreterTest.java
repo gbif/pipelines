@@ -5,23 +5,23 @@ import java.util.Map;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AustraliaSpatialInterpreterTest {
+public class LocationFeatureInterpreterTest {
 
   @Test
-  public void australiaSpatialInterpreterTest() {
+  public void locationFeaturesInterpreterTest() {
 
     // State
     LocationRecord locationRecord = LocationRecord.newBuilder()
         .setId("777")
         .build();
 
-    AustraliaSpatialRecord australiaSpatialRecord = AustraliaSpatialRecord.newBuilder().setId("777").build();
+    LocationFeatureRecord record = LocationFeatureRecord.newBuilder().setId("777").build();
 
     KeyValueStore<LatLng, String> kvStore = new KeyValueStore<LatLng, String>() {
       @Override
@@ -39,13 +39,13 @@ public class AustraliaSpatialInterpreterTest {
     resultMap.put("cb1", "1");
     resultMap.put("cb2", "2");
     resultMap.put("cb3", "3");
-    AustraliaSpatialRecord result = AustraliaSpatialRecord.newBuilder().setId("777").setItems(resultMap).build();
+    LocationFeatureRecord result = LocationFeatureRecord.newBuilder().setId("777").setItems(resultMap).build();
 
     // When
-    AustraliaSpatialInterpreter.interpret(kvStore).accept(locationRecord, australiaSpatialRecord);
+    LocationFeatureInterpreter.interpret(kvStore).accept(locationRecord, record);
 
     // Should
-    Assert.assertEquals(result, australiaSpatialRecord);
+    Assert.assertEquals(result, record);
   }
 
 }

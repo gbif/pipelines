@@ -8,7 +8,7 @@ import java.util.function.BiConsumer;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -18,12 +18,12 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/** Interprets the location of a {@link AustraliaSpatialRecord}. */
+/** Interprets the location of a {@link LocationFeatureRecord}. */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class AustraliaSpatialInterpreter {
+public class LocationFeatureInterpreter {
 
-  public static BiConsumer<LocationRecord, AustraliaSpatialRecord> interpret(KeyValueStore<LatLng, String> kvStore) {
+  public static BiConsumer<LocationRecord, LocationFeatureRecord> interpret(KeyValueStore<LatLng, String> kvStore) {
     return (lr, asr) -> {
       if (kvStore != null) {
         try {

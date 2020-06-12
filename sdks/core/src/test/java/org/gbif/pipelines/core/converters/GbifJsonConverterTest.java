@@ -18,7 +18,7 @@ import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.DeterminedDate;
@@ -215,7 +215,7 @@ public class GbifJsonConverterTest {
             + "\"Code 1'2\\\"\",\"gbifClassification\":{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},\"classification\":"
             + "[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],"
             + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\","
-            + "\"taxonKey\":[1,2]},\"australiaSpatialLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"measurementOrFactItems\":[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
+            + "\"taxonKey\":[1,2]},\"locationFeatureLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"measurementOrFactItems\":[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
             + "{\\\"something\\\":1}\",\"value\":1.1,\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}},{\"id\":\"124\",\"type\":null,\"value\":null,"
             + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2012\"}}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\","
             + "\"CONTINENT_COUNTRY_MISMATCH\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COORDINATE_OUT_OF_RANGE\","
@@ -293,8 +293,8 @@ public class GbifJsonConverterTest {
             .build();
     lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
-    AustraliaSpatialRecord asr =
-        AustraliaSpatialRecord.newBuilder()
+    LocationFeatureRecord asr =
+        LocationFeatureRecord.newBuilder()
             .setId("777")
             .setItems(Collections.singletonMap("data", "value"))
             .build();
@@ -464,14 +464,14 @@ public class GbifJsonConverterTest {
   }
 
   @Test
-  public void australiaSpatialRecordSkipIssuesWithIdTest() {
+  public void locationFeaturesRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"australiaSpatialLayers\":[{\"key\":\"{awdawd}\","
+    String expected = "{\"id\":\"777\",\"locationFeatureLayers\":[{\"key\":\"{awdawd}\","
         + "\"value\":\"\\\"{\\\"wad\\\":\\\"adw\\\"}\\\"\"}],\"created\":\"1970-01-01T00:00\"}";
 
     // State
-    AustraliaSpatialRecord record = AustraliaSpatialRecord.newBuilder()
+    LocationFeatureRecord record = LocationFeatureRecord.newBuilder()
         .setId("777")
         .setCreated(0L)
         .setItems(Collections.singletonMap("{awdawd}", "\"{\"wad\":\"adw\"}\""))

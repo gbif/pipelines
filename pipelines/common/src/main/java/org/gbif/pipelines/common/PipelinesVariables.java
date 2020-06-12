@@ -60,7 +60,7 @@ public class PipelinesVariables {
         MEASUREMENT_OR_FACT,
         AMPLIFICATION,
         // Specific
-        AUSTRALIA_SPATIAL,
+        LOCATION_FEATURE,
         OCCURRENCE_HDFS_RECORD;
 
         @Override
@@ -125,7 +125,7 @@ public class PipelinesVariables {
     public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
     public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
-    public static final String AUSTRALIA_SPATIAL_RECORDS_COUNT = "australiaSpatialRecordsCount";
+    public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)

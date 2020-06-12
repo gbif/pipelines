@@ -45,7 +45,7 @@ import static org.apache.avro.Schema.Type.UNION;
  *  .converter(LocationRecord.class, getLocationRecordConverter())
  *  .converter(TemporalRecord.class, getTemporalRecordConverter())
  *  .converter(TaxonRecord.class, getTaxonomyRecordConverter())
- *  .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
+ *  .converter(LocationFeatureRecord.class, getLocationFeatureRecordConverter())
  *  .build()
  *  .toString()
  *

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class AlaGeocodeKvStoreFactory {
+public class LocationFeatureKvStoreFactory {
 
   public static SerializableSupplier<KeyValueStore<LatLng, String>> createSupplier(
       KvConfig kvConfig) {

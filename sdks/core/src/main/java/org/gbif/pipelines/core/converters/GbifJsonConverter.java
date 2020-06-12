@@ -25,7 +25,7 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.BlastResult;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -97,7 +97,7 @@ public class GbifJsonConverter {
           .converter(LocationRecord.class, getLocationRecordConverter())
           .converter(TemporalRecord.class, getTemporalRecordConverter())
           .converter(TaxonRecord.class, getTaxonomyRecordConverter())
-          .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
+          .converter(LocationFeatureRecord.class, getLocationFeatureRecordConverter())
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
           .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
           .converter(MultimediaRecord.class, getMultimediaConverter())
@@ -477,12 +477,12 @@ public class GbifJsonConverter {
   }
 
   /**
-   * String converter for {@link AustraliaSpatialRecord}, convert an object to specific string view
+   * String converter for {@link LocationFeatureRecord}, convert an object to specific string view
    *
    * <pre>{@code
    * Result example:
    *
-   * "australiaSpatialLayers": [
+   * "locationFeatureLayers": [
    *     {
    *      "key": "c22",
    *      "value": "234"
@@ -495,9 +495,9 @@ public class GbifJsonConverter {
    *
    * }</pre>
    */
-  private BiConsumer<JsonConverter, SpecificRecordBase> getAustraliaSpatialRecordConverter() {
+  private BiConsumer<JsonConverter, SpecificRecordBase> getLocationFeatureRecordConverter() {
     return (jc, record) -> {
-      AustraliaSpatialRecord asr = (AustraliaSpatialRecord) record;
+      LocationFeatureRecord asr = (LocationFeatureRecord) record;
 
       if (!skipId) {
         jc.addJsonTextFieldNoCheck(ID, asr.getId());
@@ -513,7 +513,7 @@ public class GbifJsonConverter {
               node.put("value", v);
               nodes.add(node);
             });
-            jc.addJsonArray("australiaSpatialLayers", nodes);
+            jc.addJsonArray("locationFeatureLayers", nodes);
           });
     };
   }

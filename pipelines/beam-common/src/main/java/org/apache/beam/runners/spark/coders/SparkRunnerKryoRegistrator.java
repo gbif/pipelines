@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
@@ -67,7 +67,7 @@ public class SparkRunnerKryoRegistrator implements KryoRegistrator {
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(ImageRecord.SCHEMA$));
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(MeasurementOrFact.SCHEMA$));
     AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(MultimediaRecord.SCHEMA$));
-    AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(AustraliaSpatialRecord.SCHEMA$));
+    AVRO_SCHEMAS.$plus(TUPLE_SCHEMA.apply(LocationFeatureRecord.SCHEMA$));
   }
 
   /** Copied from BEAM, except last line */

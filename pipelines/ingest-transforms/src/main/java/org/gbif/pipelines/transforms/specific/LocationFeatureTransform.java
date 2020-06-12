@@ -8,8 +8,8 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.core.interpreters.specific.AustraliaSpatialInterpreter;
-import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
+import org.gbif.pipelines.core.interpreters.specific.LocationFeatureInterpreter;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.SerializableSupplier;
@@ -22,38 +22,39 @@ import org.apache.beam.sdk.values.TypeDescriptor;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUSTRALIA_SPATIAL_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AUSTRALIA_SPATIAL;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_FEATURE_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION_FEATURE;
 
 /**
  * Beam level transformations for the Australia location, reads an avro, writes an avro, maps from value to keyValue
- * and transforms form {@link LocationRecord} to {@link AustraliaSpatialRecord}.
+ * and transforms form {@link LocationRecord} to {@link LocationFeatureRecord}.
  * <p>
- * ParDo runs sequence of interpretations for {@link AustraliaSpatialRecord} using {@link LocationRecord} as
- * a source and {@link AustraliaSpatialInterpreter} as interpretation steps
+ * ParDo runs sequence of interpretations for {@link LocationFeatureRecord} using {@link LocationRecord} as
+ * a source and {@link LocationFeatureInterpreter} as interpretation steps
  */
 @Slf4j
-public class AustraliaSpatialTransform extends Transform<LocationRecord, AustraliaSpatialRecord> {
+public class LocationFeatureTransform extends Transform<LocationRecord, LocationFeatureRecord> {
 
   private SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier;
   private KeyValueStore<LatLng, String> kvStore;
 
   @Builder(buildMethodName = "create")
-  private AustraliaSpatialTransform(
+  private LocationFeatureTransform(
       SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier,
       KeyValueStore<LatLng, String> kvStore) {
-    super(AustraliaSpatialRecord.class, AUSTRALIA_SPATIAL, AustraliaSpatialTransform.class.getName(), AUSTRALIA_SPATIAL_RECORDS_COUNT);
+    super(LocationFeatureRecord.class, LOCATION_FEATURE, LocationFeatureTransform.class.getName(),
+        LOCATION_FEATURE_RECORDS_COUNT);
     this.kvStoreSupplier = kvStoreSupplier;
     this.kvStore = kvStore;
   }
 
-  /** Maps {@link AustraliaSpatialRecord} to key value, where key is {@link AustraliaSpatialRecord#getId} */
-  public MapElements<AustraliaSpatialRecord, KV<String, AustraliaSpatialRecord>> toKv() {
-    return MapElements.into(new TypeDescriptor<KV<String, AustraliaSpatialRecord>>() {})
-        .via((AustraliaSpatialRecord ar) -> KV.of(ar.getId(), ar));
+  /** Maps {@link LocationFeatureRecord} to key value, where key is {@link LocationFeatureRecord#getId} */
+  public MapElements<LocationFeatureRecord, KV<String, LocationFeatureRecord>> toKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, LocationFeatureRecord>>() {})
+        .via((LocationFeatureRecord ar) -> KV.of(ar.getId(), ar));
   }
 
-  public AustraliaSpatialTransform counterFn(SerializableConsumer<String> counterFn) {
+  public LocationFeatureTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
   }
@@ -77,9 +78,9 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
   }
 
   @Override
-  public Optional<AustraliaSpatialRecord> convert(LocationRecord source) {
+  public Optional<LocationFeatureRecord> convert(LocationRecord source) {
     return Interpretation.from(source)
-        .to(lr -> AustraliaSpatialRecord.newBuilder()
+        .to(lr -> LocationFeatureRecord.newBuilder()
             .setId(lr.getId())
             .setCreated(Instant.now().toEpochMilli())
             .build())
@@ -87,7 +88,7 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
             .filter(c -> c.equals(Country.AUSTRALIA.getIso2LetterCode()))
             .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
             .isPresent())
-        .via(AustraliaSpatialInterpreter.interpret(kvStore))
+        .via(LocationFeatureInterpreter.interpret(kvStore))
         .get();
   }
 
