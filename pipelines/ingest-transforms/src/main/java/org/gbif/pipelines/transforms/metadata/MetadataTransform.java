@@ -18,6 +18,7 @@ import org.gbif.pipelines.transforms.common.CheckTransforms;
 import org.apache.beam.sdk.values.PCollection;
 
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
@@ -32,6 +33,7 @@ import static org.gbif.pipelines.transforms.common.CheckTransforms.checkRecordTy
  * <p>
  * wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
  */
+@Slf4j
 public class MetadataTransform extends Transform<String, MetadataRecord> {
 
   private Integer attempt;
@@ -61,6 +63,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
   @Setup
   public void setup() {
     if (client == null && clientSupplier != null) {
+      log.info("Initialize MetadataServiceClient");
       client = clientSupplier.get();
     }
   }
@@ -69,6 +72,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
   @Teardown
   public void tearDown() {
     if (client != null) {
+      log.info("Close MetadataServiceClient");
       client.close();
     }
   }

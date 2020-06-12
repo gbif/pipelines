@@ -79,6 +79,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @Setup
   public void setup() {
     if (geocodeKvStore == null && geocodeKvStoreSupplier != null) {
+      log.info("Initialize geocodeKvStore");
       geocodeKvStore = geocodeKvStoreSupplier.get();
     }
   }
@@ -87,6 +88,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @Teardown
   public void tearDown() {
     try {
+      log.info("Close geocodeKvStore");
       geocodeKvStore.close();
     } catch (IOException ex) {
       log.warn("Can't close geocodeKvStore - {}", ex.getMessage());

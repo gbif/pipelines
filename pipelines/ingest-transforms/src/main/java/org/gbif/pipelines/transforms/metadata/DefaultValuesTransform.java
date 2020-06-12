@@ -22,11 +22,13 @@ import org.apache.beam.sdk.values.PCollection;
 
 import com.google.common.base.Strings;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Beam level transformations to use verbatim default term values defined as MachineTags in an MetadataRecord.
  * transforms form {@link ExtendedRecord} to {@link ExtendedRecord}.
  */
+@Slf4j
 @Builder(buildMethodName = "create")
 public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
 
@@ -41,6 +43,7 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
   @Setup
   public void setup() {
     if (client == null && clientSupplier != null) {
+      log.info("Initialize MetadataServiceClient");
       client = clientSupplier.get();
     }
   }
@@ -49,6 +52,7 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
   @Teardown
   public void tearDown() {
     if (client != null) {
+      log.info("Close MetadataServiceClient");
       client.close();
     }
   }

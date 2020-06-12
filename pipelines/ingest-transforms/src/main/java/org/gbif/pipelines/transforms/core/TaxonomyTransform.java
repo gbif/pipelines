@@ -65,6 +65,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   @Setup
   public void setup() {
     if (kvStore == null && kvStoreSupplier != null) {
+      log.info("Initialize NameUsageMatchKvStore");
       kvStore = kvStoreSupplier.get();
     }
   }
@@ -74,6 +75,7 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
   public void tearDown() {
     if (Objects.nonNull(kvStore)) {
       try {
+        log.info("Close NameUsageMatchKvStore");
         kvStore.close();
       } catch (IOException ex) {
         log.error("Error closing KV Store", ex);
