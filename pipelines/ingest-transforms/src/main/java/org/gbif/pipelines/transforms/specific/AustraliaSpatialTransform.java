@@ -1,33 +1,25 @@
 package org.gbif.pipelines.transforms.specific;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.geocode.LatLng;
-import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
-import org.gbif.kvs.hbase.ReadOnlyHBaseStore;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.specific.AustraliaSpatialInterpreter;
 import org.gbif.pipelines.io.avro.AustraliaSpatialRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.apache.hadoop.hbase.util.Bytes;
 
-import lombok.SneakyThrows;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AUSTRALIA_SPATIAL_RECORDS_COUNT;
@@ -43,35 +35,16 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class AustraliaSpatialTransform extends Transform<LocationRecord, AustraliaSpatialRecord> {
 
-  private final KvConfig kvConfig;
+  private SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier;
   private KeyValueStore<LatLng, String> kvStore;
 
-  private AustraliaSpatialTransform(KeyValueStore<LatLng, String> kvStore, KvConfig kvConfig) {
+  @Builder(buildMethodName = "create")
+  private AustraliaSpatialTransform(
+      SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier,
+      KeyValueStore<LatLng, String> kvStore) {
     super(AustraliaSpatialRecord.class, AUSTRALIA_SPATIAL, AustraliaSpatialTransform.class.getName(), AUSTRALIA_SPATIAL_RECORDS_COUNT);
+    this.kvStoreSupplier = kvStoreSupplier;
     this.kvStore = kvStore;
-    this.kvConfig = kvConfig;
-  }
-
-  public static AustraliaSpatialTransform create() {
-    return new AustraliaSpatialTransform(null, null);
-  }
-
-  public static AustraliaSpatialTransform create(KvConfig kvConfig) {
-    return new AustraliaSpatialTransform(null, kvConfig);
-  }
-
-  public static AustraliaSpatialTransform create(KeyValueStore<LatLng, String> kvStore) {
-    return new AustraliaSpatialTransform(kvStore, null);
-  }
-
-  public static AustraliaSpatialTransform create(String propertiesPath) {
-    KvConfig config = KvConfigFactory.create(Paths.get(propertiesPath), KvConfigFactory.AUSTRALIA_PREFIX);
-    return new AustraliaSpatialTransform(null, config);
-  }
-
-  public static AustraliaSpatialTransform create(Properties properties) {
-    KvConfig config = KvConfigFactory.create(properties, KvConfigFactory.AUSTRALIA_PREFIX);
-    return new AustraliaSpatialTransform(null, config);
   }
 
   /** Maps {@link AustraliaSpatialRecord} to key value, where key is {@link AustraliaSpatialRecord#getId} */
@@ -85,38 +58,16 @@ public class AustraliaSpatialTransform extends Transform<LocationRecord, Austral
     return this;
   }
 
-  public AustraliaSpatialTransform init() {
-    setup();
-    return this;
-  }
-
-  @SneakyThrows
   @Setup
   public void setup() {
-    if (kvConfig != null) {
-
-      CachedHBaseKVStoreConfiguration hBaseKVStoreConfiguration = CachedHBaseKVStoreConfiguration.builder()
-          .withValueColumnQualifier("json") //stores JSON data
-          .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-              .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
-              .withColumnFamily("v") //Column in which qualifiers are stored
-              .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
-              .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-              .build())
-          .withCacheCapacity(15_000L)
-          .build();
-
-      kvStore = ReadOnlyHBaseStore.<LatLng, String>builder()
-          .withHBaseStoreConfiguration(hBaseKVStoreConfiguration.getHBaseKVStoreConfiguration())
-          .withResultMapper(result -> Bytes.toString(result.getValue(Bytes.toBytes("v"), Bytes.toBytes("json"))))
-          .build();
-
+    if (kvStore == null && kvStoreSupplier != null) {
+      kvStore = kvStoreSupplier.get();
     }
   }
 
   @Teardown
   public void tearDown() {
-    if (Objects.nonNull(kvStore)) {
+    if (kvStore != null) {
       try {
         kvStore.close();
       } catch (IOException ex) {
