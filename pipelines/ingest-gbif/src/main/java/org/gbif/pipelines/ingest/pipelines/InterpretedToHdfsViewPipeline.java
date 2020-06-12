@@ -26,8 +26,6 @@ import org.gbif.pipelines.transforms.common.OccurrenceHdfsRecordTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceHdfsRecordConverterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -35,6 +33,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -126,11 +126,11 @@ public class InterpretedToHdfsViewPipeline {
     log.info("Adding step 2: Reading AVROs");
     // Core
     BasicTransform basicTransform = BasicTransform.create();
-    MetadataTransform metadataTransform = MetadataTransform.create();
+    MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
-    LocationTransform locationTransform = LocationTransform.create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    LocationTransform locationTransform = LocationTransform.builder().create();
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
@@ -186,10 +186,18 @@ public class InterpretedToHdfsViewPipeline {
     log.info("Adding step 3: Converting into a OccurrenceHdfsRecord object");
     SingleOutput<KV<String, CoGbkResult>, OccurrenceHdfsRecord> toHdfsRecordDoFn =
         OccurrenceHdfsRecordConverterTransform.create(
-            verbatimTransform.getTag(), basicTransform.getTag(), temporalTransform.getTag(), locationTransform.getTag(),
-            taxonomyTransform.getTag(),  multimediaTransform.getTag(), imageTransform.getTag(), audubonTransform.getTag(),
-            measurementOrFactTransform.getTag(), taggedValuesTransform.getTag(), metadataView
-        ).converter();
+                verbatimTransform.getTag(),
+                basicTransform.getTag(),
+                temporalTransform.getTag(),
+                locationTransform.getTag(),
+                taxonomyTransform.getTag(),
+                multimediaTransform.getTag(),
+                imageTransform.getTag(),
+                audubonTransform.getTag(),
+                measurementOrFactTransform.getTag(),
+                taggedValuesTransform.getTag(),
+                metadataView)
+            .converter();
 
     KeyedPCollectionTuple
         // Core

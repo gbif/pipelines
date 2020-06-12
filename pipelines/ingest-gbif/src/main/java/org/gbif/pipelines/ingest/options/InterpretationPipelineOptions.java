@@ -82,12 +82,6 @@ public interface InterpretationPipelineOptions
 
   void setUseExtendedRecordId(boolean useExtendedRecordId);
 
-  @Description("Skips GBIF registry calls")
-  @Default.Boolean(false)
-  boolean isSkipRegisrtyCalls();
-
-  void setSkipRegisrtyCalls(boolean skipRegisrtyCalls);
-
   @Description("Number of file shards")
   Integer getNumberOfShards();
 

@@ -22,8 +22,6 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -31,6 +29,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -118,11 +118,11 @@ public class InterpretedToEsIndexPipeline {
     log.info("Adding step 2: Creating transformations");
     // Core
     BasicTransform basicTransform = BasicTransform.create();
-    MetadataTransform metadataTransform = MetadataTransform.create();
+    MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
-    LocationTransform locationTransform = LocationTransform.create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    LocationTransform locationTransform = LocationTransform.builder().create();
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
 
     // Extension
@@ -141,8 +141,8 @@ public class InterpretedToEsIndexPipeline {
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
 
     PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
-      p.apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.read(pathFn))
-        .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
+        p.apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.read(pathFn))
+            .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         p.apply("Read Basic", basicTransform.read(pathFn))
@@ -179,10 +179,18 @@ public class InterpretedToEsIndexPipeline {
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
         GbifJsonTransform.create(
-            verbatimTransform.getTag(), basicTransform.getTag(), temporalTransform.getTag(), locationTransform.getTag(),
-            taxonomyTransform.getTag(),  multimediaTransform.getTag(), imageTransform.getTag(), audubonTransform.getTag(),
-            measurementOrFactTransform.getTag(), taggedValuesTransform.getTag(), metadataView
-        ).converter();
+                verbatimTransform.getTag(),
+                basicTransform.getTag(),
+                temporalTransform.getTag(),
+                locationTransform.getTag(),
+                taxonomyTransform.getTag(),
+                multimediaTransform.getTag(),
+                imageTransform.getTag(),
+                audubonTransform.getTag(),
+                measurementOrFactTransform.getTag(),
+                taggedValuesTransform.getTag(),
+                metadataView)
+            .converter();
 
     PCollection<String> jsonCollection =
         KeyedPCollectionTuple

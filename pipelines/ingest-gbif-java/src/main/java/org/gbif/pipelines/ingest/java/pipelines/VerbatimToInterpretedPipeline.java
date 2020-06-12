@@ -17,6 +17,9 @@ import java.util.stream.Stream;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.ingest.java.io.AvroReader;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
@@ -39,10 +42,12 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.kv.GeocodeKvStoreFactory;
-import org.gbif.pipelines.kv.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.parsers.config.factory.ContentfulConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
+import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
+import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -145,7 +150,6 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occIdValid = options.isOccurrenceIdValid();
     boolean useErdId = options.isUseExtendedRecordId();
-    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     Set<String> types = Collections.singleton(ALL.name());
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
@@ -166,43 +170,69 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Creating pipelines transforms");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls)
-        .counterFn(incMetricFn).init();
+    WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+    ElasticsearchContentConfig esContentConfig = ContentfulConfigFactory.create(properties);
+    MetadataTransform metadataTransform =
+        MetadataTransform.builder()
+            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(wsConfig, esContentConfig))
+            .attempt(attempt)
+            .endpointType(endPointType)
+            .create()
+            .counterFn(incMetricFn);
+
     BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId)
         .counterFn(incMetricFn).init();
 
     KvConfig taxonomyKvConfig = KvConfigFactory.create(properties, KvConfigFactory.TAXONOMY_PREFIX);
     TaxonomyTransform taxonomyTransform =
-        TaxonomyTransform.create(NameUsageMatchStoreFactory.getInstanceSupplier(taxonomyKvConfig))
+        TaxonomyTransform.builder()
+            .kvStoreSupplier(NameUsageMatchStoreFactory.getInstanceSupplier(taxonomyKvConfig))
+            .create()
             .counterFn(incMetricFn);
 
     KvConfig geocodeKvConfig = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
     LocationTransform locationTransform =
-        LocationTransform.create(GeocodeKvStoreFactory.getInstanceSupplier(geocodeKvConfig))
+        LocationTransform.builder()
+            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(geocodeKvConfig))
+            .create()
             .counterFn(incMetricFn);
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create()
         .counterFn(incMetricFn);
+
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create()
         .counterFn(incMetricFn);
+
     TemporalTransform temporalTransform = TemporalTransform.create()
         .counterFn(incMetricFn);
+
     // Extension
     MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create()
         .counterFn(incMetricFn);
+
     MultimediaTransform multimediaTransform = MultimediaTransform.create()
         .counterFn(incMetricFn);
+
     AudubonTransform audubonTransform = AudubonTransform.create()
         .counterFn(incMetricFn);
+
     ImageTransform imageTransform = ImageTransform.create()
         .counterFn(incMetricFn);
     // Extra
-    OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
-    DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
+    OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create()
+        .counterFn(incMetricFn);
+
+    DefaultValuesTransform defaultValuesTransform =
+        DefaultValuesTransform.builder()
+            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(wsConfig, esContentConfig))
+            .datasetId(datasetId)
+            .create();
 
     // Init transforms
     locationTransform.setup();
     taxonomyTransform.setup();
+    metadataTransform.setup();
+    defaultValuesTransform.setup();
 
     try (
         SyncDataFileWriter<ExtendedRecord> verbatimWriter =
@@ -298,7 +328,7 @@ public class VerbatimToInterpretedPipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(metadataTransform, basicTransform, locationTransform, taxonomyTransform);
+      Shutdown.doOnExit(metadataTransform, basicTransform, locationTransform, taxonomyTransform, defaultValuesTransform);
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
@@ -334,28 +364,38 @@ public class VerbatimToInterpretedPipeline {
     private static final Object MUTEX = new Object();
 
     @SneakyThrows
-    private Shutdown(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
+    private Shutdown(
+        MetadataTransform mdTr,
+        BasicTransform bTr,
+        LocationTransform lTr,
+        TaxonomyTransform tTr,
+        DefaultValuesTransform dTr) {
       Runnable shudownHook = () -> {
         log.info("Closing all resources");
         mdTr.tearDown();
         bTr.tearDown();
         lTr.tearDown();
         tTr.tearDown();
+        dTr.tearDown();
         log.info("The resources were closed");
       };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
-    public static void doOnExit(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
+    public static void doOnExit(
+        MetadataTransform mdTr,
+        BasicTransform bTr,
+        LocationTransform lTr,
+        TaxonomyTransform tTr,
+        DefaultValuesTransform dTr) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
-            instance = new Shutdown(mdTr, bTr, lTr, tTr);
+            instance = new Shutdown(mdTr, bTr, lTr, tTr, dTr);
           }
         }
       }
     }
-
   }
 
 }

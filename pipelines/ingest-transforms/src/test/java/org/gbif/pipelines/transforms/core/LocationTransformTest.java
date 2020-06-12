@@ -75,7 +75,13 @@ public class LocationTransformTest {
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(er)).apply(LocationTransform.create(geocodeKvStore).interpret(metadataView))
+        p.apply(Create.of(er))
+            .apply(
+                LocationTransform.builder()
+                    .geocodeKvStoreSupplier(geocodeKvStore)
+                    .metadataView(metadataView)
+                    .create()
+                    .interpret())
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should
@@ -156,7 +162,13 @@ public class LocationTransformTest {
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(records)).apply(LocationTransform.create(geocodeKvStore).interpret(metadataView))
+        p.apply(Create.of(records))
+            .apply(
+                LocationTransform.builder()
+                    .geocodeKvStoreSupplier(geocodeKvStore)
+                    .metadataView(metadataView)
+                    .create()
+                    .interpret())
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should

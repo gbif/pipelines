@@ -141,11 +141,11 @@ public class InterpretedToEsIndexPipeline {
     log.info("Creating transformations");
     // Core
     BasicTransform basicTransform = BasicTransform.create();
-    MetadataTransform metadataTransform = MetadataTransform.create();
+    MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
-    LocationTransform locationTransform = LocationTransform.create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    LocationTransform locationTransform = LocationTransform.builder().create();
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
 
     // Extension

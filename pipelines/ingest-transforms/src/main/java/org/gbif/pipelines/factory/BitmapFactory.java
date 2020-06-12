@@ -1,4 +1,4 @@
-package org.gbif.pipelines.kv;
+package org.gbif.pipelines.factory;
 
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;

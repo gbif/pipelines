@@ -20,6 +20,7 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
@@ -37,20 +38,16 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
-  private final SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier;
+  private SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier;
   private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
 
-  private TaxonomyTransform(SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier) {
+  @Builder(buildMethodName = "create")
+  private TaxonomyTransform(
+      SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier,
+      KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
     super(TaxonRecord.class, TAXONOMY, TaxonomyTransform.class.getName(), TAXON_RECORDS_COUNT);
     this.kvStoreSupplier = kvStoreSupplier;
-  }
-
-  public static TaxonomyTransform create() {
-    return new TaxonomyTransform(null);
-  }
-
-  public static TaxonomyTransform create(SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier) {
-    return new TaxonomyTransform(kvStoreSupplier);
+    this.kvStore = kvStore;
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */

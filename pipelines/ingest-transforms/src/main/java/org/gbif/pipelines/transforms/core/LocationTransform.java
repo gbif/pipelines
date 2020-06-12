@@ -23,7 +23,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
-import lombok.Getter;
+import lombok.Builder;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,30 +42,21 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
-  @Getter
-  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
-
-  @Getter
-  @Setter
+  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
   private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
+
+  @Setter
   private PCollectionView<MetadataRecord> metadataView;
 
-  public LocationTransform(SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier) {
+  @Builder(buildMethodName = "create")
+  private LocationTransform(
+      SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
+      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore,
+      PCollectionView<MetadataRecord> metadataView) {
     super(LocationRecord.class, LOCATION, LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
     this.geocodeKvStoreSupplier = geocodeKvStoreSupplier;
-  }
-
-  public static LocationTransform create() {
-    return new LocationTransform(null);
-  }
-
-  public static LocationTransform create(SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier) {
-    return new LocationTransform(geocodeKvStoreSupplier);
-  }
-
-  public SingleOutput<ExtendedRecord, LocationRecord> interpret(PCollectionView<MetadataRecord> metadataView) {
+    this.geocodeKvStore = geocodeKvStore;
     this.metadataView = metadataView;
-    return ParDo.of(this).withSideInputs(metadataView);
   }
 
   /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getId} */
@@ -77,6 +68,11 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   public LocationTransform counterFn(SerializableConsumer<String> counterFn) {
     setCounterFn(counterFn);
     return this;
+  }
+
+  @Override
+  public SingleOutput<ExtendedRecord, LocationRecord> interpret() {
+    return ParDo.of(this).withSideInputs(metadataView);
   }
 
   /** Beam @Setup initializes resources */

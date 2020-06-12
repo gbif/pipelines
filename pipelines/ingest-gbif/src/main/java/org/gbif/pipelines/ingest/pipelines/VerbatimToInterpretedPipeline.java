@@ -14,19 +14,21 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.kv.GeocodeKvStoreFactory;
-import org.gbif.pipelines.kv.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.parsers.config.factory.ContentfulConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
+import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
+import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
 import org.gbif.pipelines.parsers.config.model.KvConfig;
-import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
+import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -34,6 +36,9 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -106,7 +111,6 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
-    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
@@ -127,21 +131,47 @@ public class VerbatimToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Metadata
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
+    WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
+    ElasticsearchContentConfig esContentConfig = ContentfulConfigFactory.create(properties);
+    MetadataTransform metadataTransform =
+        MetadataTransform.builder()
+            .clientSupplier(MetadataServiceClientFactory.createSupplier(wsConfig, esContentConfig))
+            .attempt(attempt)
+            .endpointType(endPointType)
+            .create();
+
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+
     // Core
-    BasicTransform basicTransform =  BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    BasicTransform basicTransform =
+        BasicTransform.create(
+            properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
+
     TemporalTransform temporalTransform = TemporalTransform.create();
+
     KvConfig taxonomyKvConfig = KvConfigFactory.create(properties, KvConfigFactory.TAXONOMY_PREFIX);
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(NameUsageMatchStoreFactory.createSupplier(taxonomyKvConfig));
+    TaxonomyTransform taxonomyTransform =
+        TaxonomyTransform.builder()
+            .kvStoreSupplier(NameUsageMatchStoreFactory.createSupplier(taxonomyKvConfig))
+            .create();
+
     KvConfig geocodeKvConfig = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
-    LocationTransform locationTransform = LocationTransform.create(GeocodeKvStoreFactory.createSupplier(geocodeKvConfig));
+    LocationTransform locationTransform =
+        LocationTransform.builder()
+            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.createSupplier(geocodeKvConfig))
+            .create();
+
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
+
     AudubonTransform audubonTransform = AudubonTransform.create();
+
     ImageTransform imageTransform = ImageTransform.create();
+
     // Extra
     UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create(useExtendedRecordId);
 
@@ -159,12 +189,18 @@ public class VerbatimToInterpretedPipeline {
             .apply("Check verbatim transform condition", metadataTransform.checkMetadata(types))
             .apply("Convert into view", View.asSingleton());
 
+    locationTransform.setMetadataView(metadataView);
+
     PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?
         verbatimTransform.emptyCollection(p) :
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls));
+            .apply("Set default values",
+                DefaultValuesTransform.builder()
+                    .clientSupplier(MetadataServiceClientFactory.createSupplier(wsConfig, esContentConfig))
+                    .datasetId(datasetId)
+                    .create());
 
     PCollectionTuple basicCollection =
         uniqueRecords.apply("Check basic transform condition", basicTransform.check(types))
@@ -239,7 +275,7 @@ public class VerbatimToInterpretedPipeline {
 
     filteredUniqueRecords
         .apply("Check location transform condition", locationTransform.check(types))
-        .apply("Interpret location", locationTransform.interpret(metadataView))
+        .apply("Interpret location", locationTransform.interpret())
         .apply("Write location to avro", locationTransform.write(pathFn));
 
     log.info("Running the pipeline");

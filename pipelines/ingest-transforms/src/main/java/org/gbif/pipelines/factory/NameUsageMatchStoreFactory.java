@@ -1,4 +1,4 @@
-package org.gbif.pipelines.kv;
+package org.gbif.pipelines.factory;
 
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;

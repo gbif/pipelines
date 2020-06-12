@@ -1,26 +1,23 @@
 package org.gbif.pipelines.transforms.metadata;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.metadata.MetadataInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.config.factory.ContentfulConfigFactory;
 import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
-import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.common.CheckTransforms;
 
 import org.apache.beam.sdk.values.PCollection;
+
+import lombok.Builder;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.METADATA_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.METADATA;
@@ -37,47 +34,22 @@ import static org.gbif.pipelines.transforms.common.CheckTransforms.checkRecordTy
  */
 public class MetadataTransform extends Transform<String, MetadataRecord> {
 
-  private final Integer attempt;
-  private final WsConfig wsConfig;
-  private final ElasticsearchContentConfig elasticsearchContentConfig;
-  private final String endpointType;
+  private Integer attempt;
+  private String endpointType;
+  private SerializableSupplier<MetadataServiceClient> clientSupplier;
   private MetadataServiceClient client;
 
-  private MetadataTransform(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig, String endpointType, Integer attempt) {
+  @Builder(buildMethodName = "create")
+  private MetadataTransform(
+      Integer attempt,
+      String endpointType,
+      SerializableSupplier<MetadataServiceClient> clientSupplier,
+      MetadataServiceClient client) {
     super(MetadataRecord.class, METADATA, MetadataTransform.class.getName(), METADATA_RECORDS_COUNT);
-    this.wsConfig = wsConfig;
-    this.elasticsearchContentConfig = elasticsearchContentConfig;
-    this.endpointType = endpointType;
     this.attempt = attempt;
-  }
-
-  public static MetadataTransform create() {
-    return new MetadataTransform(null, null, null, null);
-  }
-
-  public static MetadataTransform create(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig, String endpointType, Integer attempt) {
-    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
-  }
-
-  public static MetadataTransform create(String propertiesPath, String endpointType, Integer attempt, boolean skipRegistryCalls) {
-    WsConfig wsConfig = null;
-    ElasticsearchContentConfig elasticsearchContentConfig = null;
-    if (!skipRegistryCalls) {
-      Path properties = Paths.get(propertiesPath);
-      wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
-      elasticsearchContentConfig = ContentfulConfigFactory.create(properties);
-    }
-    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
-  }
-
-  public static MetadataTransform create(Properties properties, String endpointType, Integer attempt, boolean skipRegistryCalls) {
-    WsConfig wsConfig = null;
-    ElasticsearchContentConfig elasticsearchContentConfig = null;
-    if (!skipRegistryCalls) {
-      wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
-      elasticsearchContentConfig = ContentfulConfigFactory.create(properties);
-    }
-    return new MetadataTransform(wsConfig, elasticsearchContentConfig, endpointType, attempt);
+    this.endpointType = endpointType;
+    this.clientSupplier = clientSupplier;
+    this.client = client;
   }
 
   public MetadataTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -85,17 +57,11 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
     return this;
   }
 
-  /** Initializes resources using singleton factory can be useful in case of non-Beam pipeline */
-  public MetadataTransform init() {
-    setup();
-    return this;
-  }
-
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (wsConfig != null && elasticsearchContentConfig != null) {
-      client = MetadataServiceClient.create(wsConfig, elasticsearchContentConfig);
+    if (client == null && clientSupplier != null) {
+      client = clientSupplier.get();
     }
   }
 
