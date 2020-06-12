@@ -140,7 +140,7 @@ public class VerbatimToInterpretedPipeline {
             .endpointType(endPointType)
             .create();
 
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
 
     // Core
     BasicTransform basicTransform =
@@ -190,6 +190,7 @@ public class VerbatimToInterpretedPipeline {
             .apply("Convert into view", View.asSingleton());
 
     locationTransform.setMetadataView(metadataView);
+    taggedValuesTransform.setMetadataView(metadataView);
 
     PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?
         verbatimTransform.emptyCollection(p) :
@@ -240,7 +241,7 @@ public class VerbatimToInterpretedPipeline {
 
     filteredUniqueRecords
         .apply("Check tagged values transform condition", taggedValuesTransform.check(types))
-        .apply("Interpret tagged values", taggedValuesTransform.interpret(metadataView))
+        .apply("Interpret tagged values", taggedValuesTransform.interpret())
         .apply("Write tagged values to avro", taggedValuesTransform.write(pathFn));
 
     filteredUniqueRecords

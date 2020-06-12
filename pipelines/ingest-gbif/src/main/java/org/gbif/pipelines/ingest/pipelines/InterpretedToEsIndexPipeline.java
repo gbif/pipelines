@@ -123,7 +123,7 @@ public class InterpretedToEsIndexPipeline {
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
 
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();

@@ -200,7 +200,7 @@ public class VerbatimToInterpretedPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create()
         .counterFn(incMetricFn);
 
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create()
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create()
         .counterFn(incMetricFn);
 
     TemporalTransform temporalTransform = TemporalTransform.create()
