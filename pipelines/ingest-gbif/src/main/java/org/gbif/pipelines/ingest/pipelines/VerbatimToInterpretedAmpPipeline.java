@@ -6,10 +6,13 @@ import java.util.Properties;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.factory.BlastServiceClientFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
+import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AmplificationTransform;
 
@@ -85,7 +88,12 @@ public class VerbatimToInterpretedAmpPipeline {
 
     log.info("Creating transformations");
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    AmplificationTransform amplificationTransform = AmplificationTransform.create(properties);
+
+    WsConfig config = WsConfigFactory.create(properties, WsConfigFactory.BLAST_PREFIX);
+    AmplificationTransform amplificationTransform =
+        AmplificationTransform.builder()
+            .clientSupplier(BlastServiceClientFactory.createSupplier(config))
+            .create();
 
     log.info("Adding pipeline transforms");
     p.apply("Read Verbatim", verbatimTransform.read(pathVerbatimFn))

@@ -1,23 +1,22 @@
 package org.gbif.pipelines.transforms.extension;
 
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Properties;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AmplificationInterpreter;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.blast.BlastServiceClient;
 import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
+
+import lombok.Builder;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION;
@@ -33,30 +32,14 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class AmplificationTransform extends Transform<ExtendedRecord, AmplificationRecord> {
 
-  private final WsConfig wsConfig;
+  private SerializableSupplier<BlastServiceClient> clientSupplier;
   private BlastServiceClient client;
 
-  private AmplificationTransform(WsConfig wsConfig) {
+  @Builder(buildMethodName = "create")
+  private AmplificationTransform(SerializableSupplier<BlastServiceClient> clientSupplier, BlastServiceClient client) {
     super(AmplificationRecord.class, AMPLIFICATION, AmplificationTransform.class.getName(), AMPLIFICATION_RECORDS_COUNT);
-    this.wsConfig = wsConfig;
-  }
-
-  public static AmplificationTransform create() {
-    return new AmplificationTransform(null);
-  }
-
-  public static AmplificationTransform create(WsConfig wsConfig) {
-    return new AmplificationTransform(wsConfig);
-  }
-
-  public static AmplificationTransform create(String propertiesPath) {
-    WsConfig config = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.BLAST_PREFIX);
-    return new AmplificationTransform(config);
-  }
-
-  public static AmplificationTransform create(Properties properties) {
-    WsConfig config = WsConfigFactory.create(properties, WsConfigFactory.BLAST_PREFIX);
-    return new AmplificationTransform(config);
+    this.clientSupplier = clientSupplier;
+    this.client = client;
   }
 
   /** Maps {@link AmplificationRecord} to key value, where key is {@link AmplificationRecord#getId} */
@@ -70,15 +53,10 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
     return this;
   }
 
-  public AmplificationTransform init() {
-    setup();
-    return this;
-  }
-
   @Setup
   public void setup() {
-    if (wsConfig != null) {
-      client = BlastServiceClient.create(wsConfig);
+    if (client == null && clientSupplier != null) {
+      client = clientSupplier.get();
     }
   }
 

@@ -82,7 +82,7 @@ public class InterpretedToEsIndexAmpPipeline {
 
     log.info("Adding step 2: Reading avros and converting into a json object");
     PCollection<String> jsonCollection =
-        p.apply("Read Amplification", AmplificationTransform.create().read(pathFn))
+        p.apply("Read Amplification", AmplificationTransform.builder().create().read(pathFn))
             .apply("Merging into json", ParDo.of(new DoFn<AmplificationRecord, String>() {
 
               private final Counter counter = Metrics.counter(GbifJsonConverter.class, AVRO_TO_JSON_COUNT);
