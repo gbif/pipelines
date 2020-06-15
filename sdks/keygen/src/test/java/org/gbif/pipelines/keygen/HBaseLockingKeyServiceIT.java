@@ -41,7 +41,12 @@ public class HBaseLockingKeyServiceIT {
   private static final String C = "c";
 
   private static final KeygenConfig CFG =
-      KeygenConfig.create("test_occurrence", "test_occurrence_counter", "test_occurrence_lookup", null);
+      KeygenConfig.builder()
+          .zkConnectionString(null)
+          .occurrenceTable("test_occurrence")
+          .lookupTable("test_occurrence_lookup")
+          .counterTable("test_occurrence_counter")
+          .create();
 
   private static final byte[] LOOKUP_TABLE = Bytes.toBytes(CFG.getLookupTable());
   private static final String CF_NAME = "o";
@@ -49,7 +54,7 @@ public class HBaseLockingKeyServiceIT {
   private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
   private static final String COUNTER_CF_NAME = "o";
   private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
-  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccTable());
+  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
 
   private static Connection connection = null;
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();

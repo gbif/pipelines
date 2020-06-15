@@ -30,7 +30,7 @@ public class LocationFeatureKvStoreFactory {
             .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
             .withColumnFamily("v") //Column in which qualifiers are stored
             .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
-            .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
+            .withHBaseZk(kvConfig.getZkConnectionString()) //HBase Zookeeper ensemble
             .build())
         .withCacheCapacity(15_000L)
         .build();

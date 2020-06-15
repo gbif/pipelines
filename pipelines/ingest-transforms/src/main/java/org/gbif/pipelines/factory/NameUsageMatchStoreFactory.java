@@ -5,16 +5,14 @@ import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
 import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.SpeciesMatchRequest;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
 import lombok.SneakyThrows;
 
-/**
- * Factory to get singleton instance of KV store {@link KeyValueStore}
- */
+/** Factory to get singleton instance of KV store {@link KeyValueStore} */
 public class NameUsageMatchStoreFactory {
 
   private final KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
@@ -22,12 +20,13 @@ public class NameUsageMatchStoreFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private NameUsageMatchStoreFactory(KvConfig config) {
+  private NameUsageMatchStoreFactory(PipelinesConfig config) {
     this.kvStore = create(config);
   }
 
   /* TODO Comment */
-  public static KeyValueStore<SpeciesMatchRequest, NameUsageMatch> getInstance(KvConfig config) {
+  public static KeyValueStore<SpeciesMatchRequest, NameUsageMatch> getInstance(
+      PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
@@ -40,41 +39,46 @@ public class NameUsageMatchStoreFactory {
 
   /* TODO Comment */
   @SneakyThrows
-  public static KeyValueStore<SpeciesMatchRequest, NameUsageMatch> create(KvConfig config) {
+  public static KeyValueStore<SpeciesMatchRequest, NameUsageMatch> create(PipelinesConfig config) {
     if (config == null) {
       return null;
     }
 
-    ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-        .withBaseApiUrl(config.getBasePath()) //GBIF base API url
-        .withFileCacheMaxSizeMb(config.getCacheSizeMb()) //Max file cache size
-        .withTimeOut(config.getTimeout()) //Geocode service connection time-out
-        .build();
+    ClientConfiguration clientConfiguration =
+        ClientConfiguration.builder()
+            .withBaseApiUrl(config.getNameUsageMatch().getTableName())
+            .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
+            .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
+            .build();
 
-    if (config.getZookeeperUrl() == null || config.isRestOnly()) {
+    if (config.getNameUsageMatch().getZkConnectionString() == null
+        || config.getNameUsageMatch().isRestOnly()) {
       return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
     }
 
-    CachedHBaseKVStoreConfiguration matchConfig = CachedHBaseKVStoreConfiguration.builder()
-        .withValueColumnQualifier("j") //stores JSON data
-        .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-            .withTableName(config.getTableName()) //Geocode KV HBase table
-            .withColumnFamily("v") //Column in which qualifiers are stored
-            .withNumOfKeyBuckets(config.getNumOfKeyBuckets()) //Buckets for salted key generations
-            .withHBaseZk(config.getZookeeperUrl()) //HBase Zookeeper ensemble
-            .build())
-        .withCacheCapacity(15_000L)
-        .build();
+    CachedHBaseKVStoreConfiguration matchConfig =
+        CachedHBaseKVStoreConfiguration.builder()
+            .withValueColumnQualifier("j") // stores JSON data
+            .withHBaseKVStoreConfiguration(
+                HBaseKVStoreConfiguration.builder()
+                    .withTableName(config.getNameUsageMatch().getTableName())
+                    .withColumnFamily("v") // Column in which qualifiers are stored
+                    .withNumOfKeyBuckets(config.getNameUsageMatch().getNumOfKeyBuckets())
+                    .withHBaseZk(config.getNameUsageMatch().getZkConnectionString())
+                    .build())
+            .withCacheCapacity(15_000L)
+            .build();
 
     return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
   }
 
-  public static SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> createSupplier(KvConfig config) {
+  public static SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
+      createSupplier(PipelinesConfig config) {
     return () -> NameUsageMatchStoreFactory.create(config);
   }
 
-  public static SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> getInstanceSupplier(KvConfig config) {
+  public static SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>>
+      getInstanceSupplier(PipelinesConfig config) {
     return () -> NameUsageMatchStoreFactory.getInstance(config);
   }
-
 }

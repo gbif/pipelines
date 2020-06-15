@@ -8,7 +8,6 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.metadata.MetadataInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.SerializableSupplier;
@@ -31,7 +30,6 @@ import static org.gbif.pipelines.transforms.common.CheckTransforms.checkRecordTy
  * ParDo runs sequence of interpretations for {@link MetadataRecord} using {@link ExtendedRecord}
  * as a source and {@link MetadataInterpreter} as interpretation steps
  * <p>
- * wsConfig to create a WsConfig object, please use {@link WsConfigFactory}
  */
 @Slf4j
 public class MetadataTransform extends Transform<String, MetadataRecord> {

@@ -2,7 +2,6 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
@@ -18,14 +17,7 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.keygen.config.KeygenConfig;
-import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
-import org.gbif.pipelines.parsers.config.factory.ContentfulConfigFactory;
-import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
-import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
@@ -118,7 +110,7 @@ public class VerbatimToInterpretedPipeline {
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
+    PipelinesConfig config = FsUtils.readConfigFile(hdfsSiteConfig, options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -134,11 +126,9 @@ public class VerbatimToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Metadata
-    WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
-    ElasticsearchContentConfig esContentConfig = ContentfulConfigFactory.create(properties);
     MetadataTransform metadataTransform =
         MetadataTransform.builder()
-            .clientSupplier(MetadataServiceClientFactory.createSupplier(wsConfig, esContentConfig))
+            .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
             .attempt(attempt)
             .endpointType(endPointType)
             .create();
@@ -146,10 +136,9 @@ public class VerbatimToInterpretedPipeline {
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
 
     // Core
-    KeygenConfig keygenConfig = KeygenConfigFactory.create(properties);
     BasicTransform basicTransform =
         BasicTransform.builder()
-            .keygenServiceSupplier(KeygenServiceFactory.createSupplier(keygenConfig, datasetId))
+            .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occurrenceIdValid)
             .useExtendedRecordId(useExtendedRecordId)
@@ -159,16 +148,14 @@ public class VerbatimToInterpretedPipeline {
 
     TemporalTransform temporalTransform = TemporalTransform.create();
 
-    KvConfig taxonomyKvConfig = KvConfigFactory.create(properties, KvConfigFactory.TAXONOMY_PREFIX);
     TaxonomyTransform taxonomyTransform =
         TaxonomyTransform.builder()
-            .kvStoreSupplier(NameUsageMatchStoreFactory.createSupplier(taxonomyKvConfig))
+            .kvStoreSupplier(NameUsageMatchStoreFactory.createSupplier(config))
             .create();
 
-    KvConfig geocodeKvConfig = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
     LocationTransform locationTransform =
         LocationTransform.builder()
-            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.createSupplier(geocodeKvConfig))
+            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.createSupplier(config))
             .create();
 
     // Extension
@@ -207,7 +194,7 @@ public class VerbatimToInterpretedPipeline {
             .apply("Filter duplicates", UniqueIdTransform.create())
             .apply("Set default values",
                 DefaultValuesTransform.builder()
-                    .clientSupplier(MetadataServiceClientFactory.createSupplier(wsConfig, esContentConfig))
+                    .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
                     .datasetId(datasetId)
                     .create());
 

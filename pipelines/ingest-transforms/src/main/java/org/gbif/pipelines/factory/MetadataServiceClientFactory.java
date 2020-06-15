@@ -1,7 +1,6 @@
 package org.gbif.pipelines.factory;
 
-import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 
@@ -14,18 +13,16 @@ public class MetadataServiceClientFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private MetadataServiceClientFactory(
-      WsConfig wsConfig, ElasticsearchContentConfig esContentConfig) {
-    this.client = MetadataServiceClient.create(wsConfig, esContentConfig);
+  private MetadataServiceClientFactory(PipelinesConfig config) {
+    this.client = MetadataServiceClient.create(config.getGbifApi(), config.getContent());
   }
 
   /* TODO Comment */
-  public static MetadataServiceClient getInstance(
-      WsConfig wsConfig, ElasticsearchContentConfig esContentConfig) {
+  public static MetadataServiceClient getInstance(PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new MetadataServiceClientFactory(wsConfig, esContentConfig);
+          instance = new MetadataServiceClientFactory(config);
         }
       }
     }
@@ -33,14 +30,12 @@ public class MetadataServiceClientFactory {
   }
 
   /* TODO Comment */
-  public static SerializableSupplier<MetadataServiceClient> createSupplier(
-      WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
-    return () -> new MetadataServiceClientFactory(wsConfig, elasticsearchContentConfig).client;
+  public static SerializableSupplier<MetadataServiceClient> createSupplier(PipelinesConfig config) {
+    return () -> new MetadataServiceClientFactory(config).client;
   }
 
   /* TODO Comment */
-  public static SerializableSupplier<MetadataServiceClient> getInstanceSupplier(
-      WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
-    return () -> getInstance(wsConfig, elasticsearchContentConfig);
+  public static SerializableSupplier<MetadataServiceClient> getInstanceSupplier(PipelinesConfig config) {
+    return () -> getInstance(config);
   }
 }

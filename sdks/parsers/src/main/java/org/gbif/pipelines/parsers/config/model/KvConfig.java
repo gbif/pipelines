@@ -2,27 +2,27 @@ package org.gbif.pipelines.parsers.config.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Data(staticConstructor = "create")
-public final class KvConfig implements Serializable {
+@Data
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class KvConfig implements Serializable {
 
-  private static final long serialVersionUID = -9019714539959567270L;
-  // ws path
-  private final String basePath;
-  // timeout in seconds
-  private final long timeout;
-  // cache size in mb
-  private final long cacheSizeMb;
-  //
-  private final String tableName;
+  private static final long serialVersionUID = 9165679151024130462L;
 
-  private final String zookeeperUrl;
+  /** List of Zookeeper servers to connect to */
+  private String zkConnectionString;
 
-  private final int numOfKeyBuckets;
+  private long wsTimeoutSec = 60L;
 
-  private final boolean restOnly;
+  private long wsCacheSizeMb = 64L;
 
-  private final String imagePath;
+  private int numOfKeyBuckets;
+
+  private String tableName;
+
+  private boolean restOnly = false;
 }
-

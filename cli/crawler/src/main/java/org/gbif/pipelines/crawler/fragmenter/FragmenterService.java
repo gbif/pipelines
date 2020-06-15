@@ -46,7 +46,7 @@ public class FragmenterService extends AbstractIdleService {
     curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.numberThreads);
     PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
-    KeygenConfig keygenConfig = KeygenConfigFactory.create(Paths.get(config.pipelinesConfig));
+    KeygenConfig keygenConfig = KeygenConfigFactory.read(Paths.get(config.pipelinesConfig));
 
     FragmenterCallback callback =
         new FragmenterCallback(config, publisher, curator, client, executor, hbaseConnection, keygenConfig);

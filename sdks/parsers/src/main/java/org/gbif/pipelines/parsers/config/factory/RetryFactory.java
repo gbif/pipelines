@@ -2,11 +2,10 @@ package org.gbif.pipelines.parsers.config.factory;
 
 import java.util.Objects;
 
-import org.gbif.pipelines.parsers.config.model.PipelinesRetryConfig;
+import org.gbif.pipelines.parsers.config.model.RetryConfig;
 
 import io.github.resilience4j.retry.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -22,12 +21,12 @@ public class RetryFactory {
   /**
    * @return a new {@link Retry} instance using the supplied configuration.
    */
-  public static Retry create(@Nullable PipelinesRetryConfig pipelinesRetryConfig, String name) {
-    PipelinesRetryConfig config = Objects.isNull(pipelinesRetryConfig) ? RetryConfigFactory.create() : pipelinesRetryConfig;
+  public static Retry create(@Nullable RetryConfig retryConfig, String name) {
+    RetryConfig config = Objects.isNull(retryConfig) ? new RetryConfig() : retryConfig;
     IntervalFunction intervalFn = IntervalFunction.ofExponentialRandomBackoff(config.getInitialIntervalMillis(),
         config.getMultiplier(),
         config.getRandomizationFactor());
-    RetryConfig resilienceRetryConfig = RetryConfig.custom()
+    io.github.resilience4j.retry.RetryConfig resilienceRetryConfig = io.github.resilience4j.retry.RetryConfig.custom()
         .maxAttempts(config.getMaxAttempts())
         .intervalFunction(intervalFn)
         .build();

@@ -128,15 +128,4 @@ public class PipelinesVariables {
     public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
   }
 
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class Lock {
-
-    //Elasticsearch lock prefix
-    public static final String ES_LOCK_PREFIX = "es.";
-
-    //HDFS view lock prefix
-    public static final String HDFS_LOCK_PREFIX = "hdfs.";
-  }
-
-
 }

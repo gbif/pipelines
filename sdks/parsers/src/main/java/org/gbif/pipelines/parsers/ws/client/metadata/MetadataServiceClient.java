@@ -6,7 +6,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.gbif.pipelines.parsers.config.factory.RetryFactory;
-import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
+import org.gbif.pipelines.parsers.config.model.ContentConfig;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentService;
 import org.gbif.pipelines.parsers.ws.client.metadata.contentful.ContentServiceFactory;
@@ -28,11 +29,11 @@ public class MetadataServiceClient {
   private final ContentService contentService;
   private final Retry retry;
 
-  private MetadataServiceClient(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
+  private MetadataServiceClient(WsConfig wsConfig, ContentConfig contentConfig) {
     rest = MetadataServiceFactory.getInstance(wsConfig);
-    retry = RetryFactory.create(wsConfig.getPipelinesRetryConfig(), "RegistryApiCall");
-    contentService = Optional.ofNullable(elasticsearchContentConfig)
-        .map(x -> ContentServiceFactory.getInstance(x.getHosts()).getService())
+    retry = RetryFactory.create(wsConfig.getRetryConfig(), "RegistryApiCall");
+    contentService = Optional.ofNullable(contentConfig)
+        .map(x -> ContentServiceFactory.getInstance(x.getEsHosts()).getService())
         .orElse(null);
   }
 
@@ -41,9 +42,9 @@ public class MetadataServiceClient {
     return new MetadataServiceClient(wsConfig, null);
   }
 
-  public static MetadataServiceClient create(WsConfig wsConfig, ElasticsearchContentConfig elasticsearchContentConfig) {
+  public static MetadataServiceClient create(WsConfig wsConfig, ContentConfig contentConfig) {
     Objects.requireNonNull(wsConfig, "WS config is required");
-    return new MetadataServiceClient(wsConfig, elasticsearchContentConfig);
+    return new MetadataServiceClient(wsConfig, contentConfig);
   }
 
   /** Release ES content client */

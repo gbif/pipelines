@@ -6,31 +6,31 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 
 import javax.imageio.ImageIO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BitmapFactory {
+public class BufferedImageFactory {
 
-  private static volatile BitmapFactory instance;
+  private static volatile BufferedImageFactory instance;
 
   private final BufferedImage image;
 
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private BitmapFactory(KvConfig config) {
-    this.image = loadImageFile(config.getImagePath());
+  private BufferedImageFactory(PipelinesConfig config) {
+    this.image = loadImageFile(config.getImageCahcePath());
   }
 
-  public static BufferedImage getInstance(KvConfig config) {
+  public static BufferedImage getInstance(PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new BitmapFactory(config);
+          instance = new BufferedImageFactory(config);
         }
       }
     }
@@ -41,7 +41,8 @@ public class BitmapFactory {
   public BufferedImage loadImageFile(String filePath) {
     Path path = Paths.get(filePath);
     if (!path.isAbsolute()) {
-      try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath)) {
+      try (InputStream is =
+          Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath)) {
         if (is == null) {
           throw new FileNotFoundException("Can't load image from resource - " + filePath);
         }

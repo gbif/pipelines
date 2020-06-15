@@ -19,15 +19,15 @@ public class MetadataServiceFactory {
     // create client
     OkHttpClient client =
         new OkHttpClient.Builder()
-            .connectTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
-            .readTimeout(wsConfig.getTimeout(), TimeUnit.SECONDS)
+            .connectTimeout(wsConfig.getTimeoutSec(), TimeUnit.SECONDS)
+            .readTimeout(wsConfig.getTimeoutSec(), TimeUnit.SECONDS)
             .build();
 
     // create service
     Retrofit retrofit =
         new Retrofit.Builder()
             .client(client)
-            .baseUrl(wsConfig.getBasePath())
+            .baseUrl(wsConfig.getWsUrl())
             .addConverterFactory(JacksonConverterFactory.create())
             .validateEagerly(true)
             .build();

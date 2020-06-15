@@ -19,7 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 public class HbaseServer extends ExternalResource {
 
   public static final KeygenConfig CFG =
-      KeygenConfig.create("test_occurrence", "test_occurrence_counter", "test_occurrence_lookup", null);
+      KeygenConfig.builder()
+          .counterTable("test_occurrence_counter")
+          .lookupTable("test_occurrence_lookup")
+          .occurrenceTable("test_occurrence")
+          .zkConnectionString(null)
+          .create();
 
   public static final String FRAGMENT_TABLE_NAME = "fragment_table";
   public static final byte[] FRAGMENT_TABLE = Bytes.toBytes(FRAGMENT_TABLE_NAME);
@@ -30,7 +35,7 @@ public class HbaseServer extends ExternalResource {
   private static final byte[] COUNTER_TABLE = Bytes.toBytes(CFG.getCounterTable());
   private static final String COUNTER_CF_NAME = "o";
   private static final byte[] COUNTER_CF = Bytes.toBytes(COUNTER_CF_NAME);
-  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccTable());
+  private static final byte[] OCCURRENCE_TABLE = Bytes.toBytes(CFG.getOccurrenceTable());
 
   private static final HBaseTestingUtility TEST_UTIL = new HBaseTestingUtility();
 

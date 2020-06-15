@@ -5,7 +5,6 @@ import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -27,7 +26,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
-import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
+import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -43,14 +42,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.keygen.config.KeygenConfig;
-import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
-import org.gbif.pipelines.parsers.config.factory.ContentfulConfigFactory;
-import org.gbif.pipelines.parsers.config.factory.KvConfigFactory;
-import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
-import org.gbif.pipelines.parsers.config.model.ElasticsearchContentConfig;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
@@ -157,7 +149,7 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+    PipelinesConfig config = PipelinesConfigFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -173,36 +165,32 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Creating pipelines transforms");
     // Core
-    WsConfig wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
-    ElasticsearchContentConfig esContentConfig = ContentfulConfigFactory.create(properties);
     MetadataTransform metadataTransform =
         MetadataTransform.builder()
-            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(wsConfig, esContentConfig))
+            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(config))
             .attempt(attempt)
             .endpointType(endPointType)
             .create()
             .counterFn(incMetricFn);
 
-    KeygenConfig keygenConfig = KeygenConfigFactory.create(properties);
-    BasicTransform basicTransform = BasicTransform.builder()
-        .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(keygenConfig, datasetId))
-        .isTripletValid(tripletValid)
-        .isOccurrenceIdValid(occIdValid)
-        .useExtendedRecordId(useErdId)
-        .create()
-        .counterFn(incMetricFn);
-
-    KvConfig taxonomyKvConfig = KvConfigFactory.create(properties, KvConfigFactory.TAXONOMY_PREFIX);
-    TaxonomyTransform taxonomyTransform =
-        TaxonomyTransform.builder()
-            .kvStoreSupplier(NameUsageMatchStoreFactory.getInstanceSupplier(taxonomyKvConfig))
+    BasicTransform basicTransform =
+        BasicTransform.builder()
+            .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
+            .isTripletValid(tripletValid)
+            .isOccurrenceIdValid(occIdValid)
+            .useExtendedRecordId(useErdId)
             .create()
             .counterFn(incMetricFn);
 
-    KvConfig geocodeKvConfig = KvConfigFactory.create(properties, KvConfigFactory.GEOCODE_PREFIX);
+    TaxonomyTransform taxonomyTransform =
+        TaxonomyTransform.builder()
+            .kvStoreSupplier(NameUsageMatchStoreFactory.getInstanceSupplier(config))
+            .create()
+            .counterFn(incMetricFn);
+
     LocationTransform locationTransform =
         LocationTransform.builder()
-            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(geocodeKvConfig))
+            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
             .create()
             .counterFn(incMetricFn);
 
@@ -233,7 +221,7 @@ public class VerbatimToInterpretedPipeline {
 
     DefaultValuesTransform defaultValuesTransform =
         DefaultValuesTransform.builder()
-            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(wsConfig, esContentConfig))
+            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(config))
             .datasetId(datasetId)
             .create();
 

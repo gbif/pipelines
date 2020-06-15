@@ -7,7 +7,7 @@ import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
 import org.gbif.kvs.geocode.GeocodeKVStoreFactory;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
-import org.gbif.pipelines.parsers.config.model.KvConfig;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.configuration.ClientConfiguration;
@@ -15,9 +15,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import lombok.SneakyThrows;
 
-/**
- * Factory to get singleton instance of {@link KeyValueStore<LatLng, GeocodeResponse>}
- */
+/** Factory to get singleton instance of {@link KeyValueStore<LatLng, GeocodeResponse>} */
 public class GeocodeKvStoreFactory {
 
   private final KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
@@ -25,12 +23,12 @@ public class GeocodeKvStoreFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private GeocodeKvStoreFactory(KvConfig config) {
-    geocodeKvStore = GeocodeKvStore.create(creatKvStore(config), BitmapFactory.getInstance(config));
+  private GeocodeKvStoreFactory(PipelinesConfig config) {
+    geocodeKvStore = GeocodeKvStore.create(creatKvStore(config), BufferedImageFactory.getInstance(config));
   }
 
   /* TODO Comment */
-  public static KeyValueStore<LatLng, GeocodeResponse> getInstance(KvConfig config) {
+  public static KeyValueStore<LatLng, GeocodeResponse> getInstance(PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
@@ -41,41 +39,46 @@ public class GeocodeKvStoreFactory {
     return instance.geocodeKvStore;
   }
 
-  public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> createSupplier(KvConfig config) {
+  public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> createSupplier(
+      PipelinesConfig config) {
     return () -> new GeocodeKvStoreFactory(config).geocodeKvStore;
   }
 
-  public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> getInstanceSupplier(KvConfig config) {
+  public static SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> getInstanceSupplier(
+      PipelinesConfig config) {
     return () -> GeocodeKvStoreFactory.getInstance(config);
   }
 
-  private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(KvConfig config) throws IOException {
+  private static KeyValueStore<LatLng, GeocodeResponse> creatKvStore(PipelinesConfig config)
+      throws IOException {
     if (config == null) {
       return null;
     }
 
-    ClientConfiguration clientConfig = ClientConfiguration.builder()
-        .withBaseApiUrl(config.getBasePath()) //GBIF base API url
-        .withFileCacheMaxSizeMb(config.getCacheSizeMb()) //Max file cache size
-        .withTimeOut(config.getTimeout()) //Geocode service connection time-out
-        .build();
+    ClientConfiguration clientConfig =
+        ClientConfiguration.builder()
+            .withBaseApiUrl(config.getGbifApi().getWsUrl())
+            .withFileCacheMaxSizeMb(config.getGeocode().getWsCacheSizeMb())
+            .withTimeOut(config.getGeocode().getWsTimeoutSec())
+            .build();
 
-    if (config.getZookeeperUrl() == null || config.isRestOnly()) {
+    if (config.getGeocode().getZkConnectionString() == null || config.getGeocode().isRestOnly()) {
       return GeocodeKVStoreFactory.simpleGeocodeKVStore(clientConfig);
     }
 
-    CachedHBaseKVStoreConfiguration geocodeKvStoreConfig = CachedHBaseKVStoreConfiguration.builder()
-        .withValueColumnQualifier("j") //stores JSON data
-        .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-            .withTableName(config.getTableName()) //Geocode KV HBase table
-            .withColumnFamily("v") //Column in which qualifiers are stored
-            .withNumOfKeyBuckets(config.getNumOfKeyBuckets()) //Buckets for salted key generations == to # of region servers
-            .withHBaseZk(config.getZookeeperUrl()) //HBase Zookeeper ensemble
-            .build())
-        .withCacheCapacity(15_000L)
-        .build();
+    CachedHBaseKVStoreConfiguration geocodeKvStoreConfig =
+        CachedHBaseKVStoreConfiguration.builder()
+            .withValueColumnQualifier("j") // stores JSON data
+            .withHBaseKVStoreConfiguration(
+                HBaseKVStoreConfiguration.builder()
+                    .withTableName(config.getGeocode().getTableName())
+                    .withColumnFamily("v") // Column in which qualifiers are stored
+                    .withNumOfKeyBuckets(config.getGeocode().getNumOfKeyBuckets())
+                    .withHBaseZk(config.getGeocode().getZkConnectionString())
+                    .build())
+            .withCacheCapacity(15_000L)
+            .build();
 
     return GeocodeKVStoreFactory.simpleGeocodeKVStore(geocodeKvStoreConfig, clientConfig);
   }
-
 }

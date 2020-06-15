@@ -1,9 +1,11 @@
-package org.gbif.pipelines.keygen.config;
+package org.gbif.pipelines.parsers.config.factory;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.function.Function;
+
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +14,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class KeygenConfigFactory {
+public class PipelinesConfigFactory {
 
   private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
 
@@ -21,7 +23,7 @@ public class KeygenConfigFactory {
     MAPPER.findAndRegisterModules();
   }
 
-  public static KeygenConfig read(Path path) {
+  public static PipelinesConfig read(Path path) {
     Function<Path, InputStream> absolute =
         p -> {
           try {
@@ -39,7 +41,7 @@ public class KeygenConfigFactory {
 
     try (InputStream in = function.apply(path)) {
       // read properties from input stream
-      return MAPPER.readValue(in, KeygenConfig.class);
+      return MAPPER.readValue(in, PipelinesConfig.class);
     } catch (Exception ex) {
       String msg = "Properties with absolute path could not be read from " + path;
       throw new IllegalArgumentException(msg, ex);
