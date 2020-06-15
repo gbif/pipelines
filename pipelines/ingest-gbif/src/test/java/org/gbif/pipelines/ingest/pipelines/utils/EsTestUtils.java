@@ -44,7 +44,7 @@ public class EsTestUtils {
 
   public static EsIndexingPipelineOptions createPipelineOptions(EsServer server, String datasetKey, String idxName,
       String alias, int attempt) {
-    String propertiesPath = Thread.currentThread().getContextClassLoader().getResource("lock.properties").getPath();
+    String propertiesPath = Thread.currentThread().getContextClassLoader().getResource("lock.yaml").getPath();
     String[] args = {
         "--esIndexName=" + idxName,
         "--datasetId=" + datasetKey,
