@@ -6,8 +6,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
-
 import javax.imageio.ImageIO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -22,15 +20,15 @@ public class BufferedImageFactory {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private BufferedImageFactory(PipelinesConfig config) {
-    this.image = loadImageFile(config.getImageCahcePath());
+  private BufferedImageFactory(String imageCachePath) {
+    this.image = loadImageFile(imageCachePath);
   }
 
-  public static BufferedImage getInstance(PipelinesConfig config) {
+  public static BufferedImage getInstance(String imageCachePath) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new BufferedImageFactory(config);
+          instance = new BufferedImageFactory(imageCachePath);
         }
       }
     }

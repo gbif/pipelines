@@ -13,9 +13,11 @@ public class PipelinesConfig implements Serializable {
 
   private static final long serialVersionUID = 8102560635064341713L;
 
+  private String zkConnectionString;
+
   private WsConfig gbifApi;
 
-  private String imageCahcePath = "bitmap/bitmap.png";
+  private String imageCachePath = "bitmap/bitmap.png";
 
   private KvConfig nameUsageMatch;
 

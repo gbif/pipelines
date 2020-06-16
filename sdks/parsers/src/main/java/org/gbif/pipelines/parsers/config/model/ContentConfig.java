@@ -13,6 +13,6 @@ public class ContentConfig implements Serializable {
 
   private static final long serialVersionUID = 6493134179456736118L;
 
-  private int wsTimeoutSec;
+  private int wsTimeoutSec = 60;
   private String[] esHosts;
 }

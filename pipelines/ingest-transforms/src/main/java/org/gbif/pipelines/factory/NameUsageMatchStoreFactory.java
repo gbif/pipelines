@@ -51,8 +51,9 @@ public class NameUsageMatchStoreFactory {
             .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
             .build();
 
-    if (config.getNameUsageMatch().getZkConnectionString() == null
-        || config.getNameUsageMatch().isRestOnly()) {
+    String zk = config.getNameUsageMatch().getZkConnectionString();
+    zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
+    if (zk == null || config.getNameUsageMatch().isRestOnly()) {
       return NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
     }
 
@@ -64,7 +65,7 @@ public class NameUsageMatchStoreFactory {
                     .withTableName(config.getNameUsageMatch().getTableName())
                     .withColumnFamily("v") // Column in which qualifiers are stored
                     .withNumOfKeyBuckets(config.getNameUsageMatch().getNumOfKeyBuckets())
-                    .withHBaseZk(config.getNameUsageMatch().getZkConnectionString())
+                    .withHBaseZk(zk)
                     .build())
             .withCacheCapacity(15_000L)
             .build();

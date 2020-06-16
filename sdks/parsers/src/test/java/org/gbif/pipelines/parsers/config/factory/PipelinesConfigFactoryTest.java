@@ -79,7 +79,7 @@ public class PipelinesConfigFactoryTest {
     assertEquals(69, content.getWsTimeoutSec());
     assertEquals("http://content.test.org:9200/", content.getEsHosts()[0]);
 
-    assertEquals("bitmap/bitmap.png", config.getImageCahcePath());
+    assertEquals("bitmap/bitmap.png", config.getImageCachePath());
 
     LockConfig indexLock = config.getIndexLock();
     assertEquals(6, indexLock.getMaxRetries());

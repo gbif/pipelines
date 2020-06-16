@@ -1,5 +1,6 @@
 package org.gbif.pipelines.factory;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import org.gbif.kvs.KeyValueStore;
@@ -15,7 +16,7 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 
 import lombok.SneakyThrows;
 
-/** Factory to get singleton instance of {@link KeyValueStore<LatLng, GeocodeResponse>} */
+/** Factory to get singleton instance of {@link KeyValueStore} */
 public class GeocodeKvStoreFactory {
 
   private final KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
@@ -24,7 +25,9 @@ public class GeocodeKvStoreFactory {
 
   @SneakyThrows
   private GeocodeKvStoreFactory(PipelinesConfig config) {
-    geocodeKvStore = GeocodeKvStore.create(creatKvStore(config), BufferedImageFactory.getInstance(config));
+    BufferedImage image = BufferedImageFactory.getInstance(config.getImageCachePath());
+    KeyValueStore<LatLng, GeocodeResponse> kvStore = creatKvStore(config);
+    geocodeKvStore = GeocodeKvStore.create(kvStore, image);
   }
 
   /* TODO Comment */
@@ -62,7 +65,9 @@ public class GeocodeKvStoreFactory {
             .withTimeOut(config.getGeocode().getWsTimeoutSec())
             .build();
 
-    if (config.getGeocode().getZkConnectionString() == null || config.getGeocode().isRestOnly()) {
+    String zk = config.getGeocode().getZkConnectionString();
+    zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
+    if (zk == null || config.getGeocode().isRestOnly()) {
       return GeocodeKVStoreFactory.simpleGeocodeKVStore(clientConfig);
     }
 
@@ -74,7 +79,7 @@ public class GeocodeKvStoreFactory {
                     .withTableName(config.getGeocode().getTableName())
                     .withColumnFamily("v") // Column in which qualifiers are stored
                     .withNumOfKeyBuckets(config.getGeocode().getNumOfKeyBuckets())
-                    .withHBaseZk(config.getGeocode().getZkConnectionString())
+                    .withHBaseZk(zk)
                     .build())
             .withCacheCapacity(15_000L)
             .build();
