@@ -46,7 +46,7 @@ public class NameUsageMatchStoreFactory {
 
     ClientConfiguration clientConfiguration =
         ClientConfiguration.builder()
-            .withBaseApiUrl(config.getNameUsageMatch().getTableName())
+            .withBaseApiUrl(config.getGbifApi().getWsUrl())
             .withFileCacheMaxSizeMb(config.getNameUsageMatch().getWsCacheSizeMb())
             .withTimeOut(config.getNameUsageMatch().getWsTimeoutSec())
             .build();
