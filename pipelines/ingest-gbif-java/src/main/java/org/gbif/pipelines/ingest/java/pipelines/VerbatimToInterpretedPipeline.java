@@ -5,7 +5,6 @@ import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -17,13 +16,17 @@ import java.util.stream.Stream;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.ingest.java.io.AvroReader;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
-import org.gbif.pipelines.ingest.java.utils.PropertiesFactory;
+import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -39,12 +42,11 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -52,6 +54,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
@@ -141,12 +145,11 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occIdValid = options.isOccurrenceIdValid();
     boolean useErdId = options.isUseExtendedRecordId();
-    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     Set<String> types = Collections.singleton(ALL.name());
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = PropertiesFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+    PipelinesConfig config = PipelinesConfigFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -162,58 +165,98 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Creating pipelines transforms");
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls)
-        .counterFn(incMetricFn).init();
-    BasicTransform basicTransform = BasicTransform.create(properties, datasetId, tripletValid, occIdValid, useErdId)
-        .counterFn(incMetricFn).init();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties)
-        .counterFn(incMetricFn).init();
-    LocationTransform locationTransform = LocationTransform.create(properties)
-        .counterFn(incMetricFn).init();
+    MetadataTransform metadataTransform =
+        MetadataTransform.builder()
+            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(config))
+            .attempt(attempt)
+            .endpointType(endPointType)
+            .create()
+            .counterFn(incMetricFn);
+
+    BasicTransform basicTransform =
+        BasicTransform.builder()
+            .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
+            .isTripletValid(tripletValid)
+            .isOccurrenceIdValid(occIdValid)
+            .useExtendedRecordId(useErdId)
+            .create()
+            .counterFn(incMetricFn);
+
+    TaxonomyTransform taxonomyTransform =
+        TaxonomyTransform.builder()
+            .kvStoreSupplier(NameUsageMatchStoreFactory.getInstanceSupplier(config))
+            .create()
+            .counterFn(incMetricFn);
+
+    LocationTransform locationTransform =
+        LocationTransform.builder()
+            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
+            .create()
+            .counterFn(incMetricFn);
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create()
         .counterFn(incMetricFn);
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create()
+
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create()
         .counterFn(incMetricFn);
+
     TemporalTransform temporalTransform = TemporalTransform.create()
         .counterFn(incMetricFn);
+
     // Extension
     MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create()
         .counterFn(incMetricFn);
+
     MultimediaTransform multimediaTransform = MultimediaTransform.create()
         .counterFn(incMetricFn);
+
     AudubonTransform audubonTransform = AudubonTransform.create()
         .counterFn(incMetricFn);
+
     ImageTransform imageTransform = ImageTransform.create()
         .counterFn(incMetricFn);
     // Extra
-    OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create().counterFn(incMetricFn);
-    DefaultValuesTransform defaultValuesTransform = DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
+    OccurrenceExtensionTransform occExtensionTransform = OccurrenceExtensionTransform.create()
+        .counterFn(incMetricFn);
+
+    DefaultValuesTransform defaultValuesTransform =
+        DefaultValuesTransform.builder()
+            .clientSupplier(MetadataServiceClientFactory.getInstanceSupplier(config))
+            .datasetId(datasetId)
+            .create();
+
+    // Init transforms
+    basicTransform.setup();
+    locationTransform.setup();
+    taxonomyTransform.setup();
+    metadataTransform.setup();
+    defaultValuesTransform.setup();
 
     try (
         SyncDataFileWriter<ExtendedRecord> verbatimWriter =
-            createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id, false);
+            createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
         SyncDataFileWriter<MetadataRecord> metadataWriter =
-            createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id, false);
+            createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id);
         SyncDataFileWriter<TaggedValueRecord> taggedValueWriter =
-            createWriter(options, TaggedValueRecord.getClassSchema(), taggedValuesTransform, id, false);
+            createWriter(options, TaggedValueRecord.getClassSchema(), taggedValuesTransform, id);
         SyncDataFileWriter<BasicRecord> basicWriter =
-            createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, false);
+            createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
         SyncDataFileWriter<BasicRecord> basicInvalidWriter =
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id, true);
         SyncDataFileWriter<TemporalRecord> temporalWriter =
-            createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id, false);
+            createWriter(options, TemporalRecord.getClassSchema(), temporalTransform, id);
         SyncDataFileWriter<MultimediaRecord> multimediaWriter =
-            createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id, false);
+            createWriter(options, MultimediaRecord.getClassSchema(), multimediaTransform, id);
         SyncDataFileWriter<ImageRecord> imageWriter =
-            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id, false);
+            createWriter(options, ImageRecord.getClassSchema(), imageTransform, id);
         SyncDataFileWriter<AudubonRecord> audubonWriter =
-            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id, false);
+            createWriter(options, AudubonRecord.getClassSchema(), audubonTransform, id);
         SyncDataFileWriter<MeasurementOrFactRecord> measurementWriter =
-            createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id, false);
+            createWriter(options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
         SyncDataFileWriter<TaxonRecord> taxonWriter =
-            createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id, false);
+            createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id);
         SyncDataFileWriter<LocationRecord> locationWriter =
-            createWriter(options, LocationRecord.getClassSchema(), locationTransform, id, false)
+            createWriter(options, LocationRecord.getClassSchema(), locationTransform, id)
     ) {
 
       // Create MetadataRecord
@@ -283,7 +326,7 @@ public class VerbatimToInterpretedPipeline {
       log.error("Failed performing conversion on {}", e.getMessage());
       throw new IllegalStateException("Failed performing conversion on ", e);
     } finally {
-      Shutdown.doOnExit(metadataTransform, basicTransform, locationTransform, taxonomyTransform);
+      Shutdown.doOnExit(metadataTransform, basicTransform, locationTransform, taxonomyTransform, defaultValuesTransform);
     }
 
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
@@ -307,6 +350,11 @@ public class VerbatimToInterpretedPipeline {
         .createSyncDataFileWriter();
   }
 
+  private static <T> SyncDataFileWriter<T> createWriter(InterpretationPipelineOptions options, Schema schema,
+      Transform transform, String id) {
+    return createWriter(options, schema, transform, id, false);
+  }
+
   /** Closes resources only one time, before JVM shuts down */
   private static class Shutdown {
 
@@ -314,28 +362,38 @@ public class VerbatimToInterpretedPipeline {
     private static final Object MUTEX = new Object();
 
     @SneakyThrows
-    private Shutdown(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
+    private Shutdown(
+        MetadataTransform mdTr,
+        BasicTransform bTr,
+        LocationTransform lTr,
+        TaxonomyTransform tTr,
+        DefaultValuesTransform dTr) {
       Runnable shudownHook = () -> {
         log.info("Closing all resources");
         mdTr.tearDown();
         bTr.tearDown();
         lTr.tearDown();
         tTr.tearDown();
+        dTr.tearDown();
         log.info("The resources were closed");
       };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
     }
 
-    public static void doOnExit(MetadataTransform mdTr, BasicTransform bTr, LocationTransform lTr, TaxonomyTransform tTr) {
+    public static void doOnExit(
+        MetadataTransform mdTr,
+        BasicTransform bTr,
+        LocationTransform lTr,
+        TaxonomyTransform tTr,
+        DefaultValuesTransform dTr) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
-            instance = new Shutdown(mdTr, bTr, lTr, tTr);
+            instance = new Shutdown(mdTr, bTr, lTr, tTr, dTr);
           }
         }
       }
     }
-
   }
 
 }

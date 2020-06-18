@@ -2,14 +2,15 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Properties;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.factory.BlastServiceClientFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AmplificationTransform;
 
@@ -67,7 +68,7 @@ public class VerbatimToInterpretedAmpPipeline {
     Integer attempt = options.getAttempt();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils.readPropertiesFile(options.getHdfsSiteConfig(), options.getProperties());
+    PipelinesConfig config = FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
 
@@ -85,7 +86,11 @@ public class VerbatimToInterpretedAmpPipeline {
 
     log.info("Creating transformations");
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    AmplificationTransform amplificationTransform = AmplificationTransform.create(properties);
+
+    AmplificationTransform amplificationTransform =
+        AmplificationTransform.builder()
+            .clientSupplier(BlastServiceClientFactory.createSupplier(config.getAmplification()))
+            .create();
 
     log.info("Adding pipeline transforms");
     p.apply("Read Verbatim", verbatimTransform.read(pathVerbatimFn))

@@ -20,6 +20,7 @@ import lombok.NonNull;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
 
 /** Filter uses invalid BasicRecord collection as a source to find and skip ExtendedRecord record */
+@SuppressWarnings("ConstantConditions")
 @AllArgsConstructor(staticName = "create")
 public class FilterExtendedRecordTransform implements Serializable {
 

@@ -1,9 +1,7 @@
 package org.gbif.pipelines.transforms.metadata;
 
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 import org.gbif.api.model.registry.MachineTag;
@@ -11,49 +9,52 @@ import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.config.factory.WsConfigFactory;
-import org.gbif.pipelines.parsers.config.model.WsConfig;
 import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
 import org.gbif.pipelines.parsers.ws.client.metadata.response.Dataset;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.DoFn.Setup;
+import org.apache.beam.sdk.transforms.DoFn.Teardown;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 
 import com.google.common.base.Strings;
+import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Beam level transformations to use verbatim default term values defined as MachineTags in an MetadataRecord.
  * transforms form {@link ExtendedRecord} to {@link ExtendedRecord}.
  */
+@Slf4j
+@Builder(buildMethodName = "create")
 public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecord>, PCollection<ExtendedRecord>> {
 
   private static final String DEFAULT_TERM_NAMESPACE = TagNamespace.GBIF_DEFAULT_TERM.getNamespace();
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
   private final String datasetId;
-  private final WsConfig wsConfig;
+  private SerializableSupplier<MetadataServiceClient> clientSupplier;
+  private MetadataServiceClient client;
 
-  private DefaultValuesTransform(WsConfig wsConfig, String datasetId) {
-    this.wsConfig = wsConfig;
-    this.datasetId = datasetId;
+  /** Beam @Setup initializes resources */
+  @Setup
+  public void setup() {
+    if (client == null && clientSupplier != null) {
+      log.info("Initialize MetadataServiceClient");
+      client = clientSupplier.get();
+    }
   }
 
-  public static DefaultValuesTransform create(String propertiesPath, String datasetId, boolean skipRegistryCalls) {
-    WsConfig wsConfig = null;
-    if (!skipRegistryCalls) {
-      wsConfig = WsConfigFactory.create(Paths.get(propertiesPath), WsConfigFactory.METADATA_PREFIX);
+  /** Beam @Teardown closes initialized resources */
+  @Teardown
+  public void tearDown() {
+    if (client != null) {
+      log.info("Close MetadataServiceClient");
+      client.close();
     }
-    return new DefaultValuesTransform(wsConfig, datasetId);
-  }
-
-  public static DefaultValuesTransform create(Properties properties, String datasetId, boolean skipRegistryCalls) {
-    WsConfig wsConfig = null;
-    if (!skipRegistryCalls) {
-      wsConfig = WsConfigFactory.create(properties, WsConfigFactory.METADATA_PREFIX);
-    }
-    return new DefaultValuesTransform(wsConfig, datasetId);
   }
 
   /**
@@ -77,8 +78,8 @@ public class DefaultValuesTransform extends PTransform<PCollection<ExtendedRecor
 
   public List<MachineTag> getMachineTags() {
     List<MachineTag> tags = Collections.emptyList();
-    if (wsConfig != null) {
-      Dataset dataset = MetadataServiceClient.create(wsConfig).getDataset(datasetId);
+    if (client != null) {
+      Dataset dataset = client.getDataset(datasetId);
       if (dataset != null && dataset.getMachineTags() != null && !dataset.getMachineTags().isEmpty()) {
         tags = dataset.getMachineTags()
             .stream()

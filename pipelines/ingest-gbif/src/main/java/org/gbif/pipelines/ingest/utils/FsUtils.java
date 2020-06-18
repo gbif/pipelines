@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,6 +16,7 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -25,6 +25,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -285,16 +288,16 @@ public final class FsUtils {
    * @param filePath properties file path
    */
   @SneakyThrows
-  public static Properties readPropertiesFile(String hdfsSiteConfig, String filePath) {
+  public static PipelinesConfig readConfigFile(String hdfsSiteConfig, String filePath) {
     FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
       try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fPath)))) {
-        Properties props = new Properties();
-        props.load(br);
-        log.info("Loaded properties - {}", props);
-        return props;
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+        mapper.findAndRegisterModules();
+        return mapper.readValue(br, PipelinesConfig.class);
       }
     }
     throw new FileNotFoundException("The properties file doesn't exist - " + filePath);

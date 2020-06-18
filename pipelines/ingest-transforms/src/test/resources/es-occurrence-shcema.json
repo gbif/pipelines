@@ -67,7 +67,7 @@
         "measurementOrFactItems":{"type": "nested", "enabled": false},
         "amplificationItems":{"type": "nested", "enabled": false},
 
-        "australiaSpatialLayers":{"type": "nested"},
+        "locationFeatureLayers":{"type": "nested"},
 
         "verbatim": {"type": "object", "enabled": false}
       }

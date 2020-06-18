@@ -2,11 +2,14 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.KeygenServiceFactory;
+import org.gbif.pipelines.factory.MetadataServiceClientFactory;
+import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -14,15 +17,13 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -30,6 +31,9 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -102,12 +106,11 @@ public class VerbatimToInterpretedPipeline {
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
-    boolean skipRegistryCalls = options.isSkipRegisrtyCalls();
     String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    Properties properties = FsUtils.readPropertiesFile(hdfsSiteConfig, options.getProperties());
+    PipelinesConfig config = FsUtils.readConfigFile(hdfsSiteConfig, options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -122,19 +125,48 @@ public class VerbatimToInterpretedPipeline {
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
+    // Metadata
+    MetadataTransform metadataTransform =
+        MetadataTransform.builder()
+            .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
+            .attempt(attempt)
+            .endpointType(endPointType)
+            .create();
+
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
+
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.create(properties, endPointType, attempt, skipRegistryCalls);
-    BasicTransform basicTransform =  BasicTransform.create(properties, datasetId, tripletValid, occurrenceIdValid, useExtendedRecordId);
+    BasicTransform basicTransform =
+        BasicTransform.builder()
+            .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
+            .isTripletValid(tripletValid)
+            .isOccurrenceIdValid(occurrenceIdValid)
+            .useExtendedRecordId(useExtendedRecordId)
+            .create();
+
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
+
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create(properties);
-    LocationTransform locationTransform = LocationTransform.create(properties);
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+
+    TaxonomyTransform taxonomyTransform =
+        TaxonomyTransform.builder()
+            .kvStoreSupplier(NameUsageMatchStoreFactory.createSupplier(config))
+            .create();
+
+    LocationTransform locationTransform =
+        LocationTransform.builder()
+            .geocodeKvStoreSupplier(GeocodeKvStoreFactory.createSupplier(config))
+            .create();
+
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
+
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
+
     AudubonTransform audubonTransform = AudubonTransform.create();
+
     ImageTransform imageTransform = ImageTransform.create();
+
     // Extra
     UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create(useExtendedRecordId);
 
@@ -152,12 +184,19 @@ public class VerbatimToInterpretedPipeline {
             .apply("Check verbatim transform condition", metadataTransform.checkMetadata(types))
             .apply("Convert into view", View.asSingleton());
 
+    locationTransform.setMetadataView(metadataView);
+    taggedValuesTransform.setMetadataView(metadataView);
+
     PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?
         verbatimTransform.emptyCollection(p) :
         p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
             .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
             .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls));
+            .apply("Set default values",
+                DefaultValuesTransform.builder()
+                    .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
+                    .datasetId(datasetId)
+                    .create());
 
     PCollectionTuple basicCollection =
         uniqueRecords.apply("Check basic transform condition", basicTransform.check(types))
@@ -197,7 +236,7 @@ public class VerbatimToInterpretedPipeline {
 
     filteredUniqueRecords
         .apply("Check tagged values transform condition", taggedValuesTransform.check(types))
-        .apply("Interpret tagged values", taggedValuesTransform.interpret(metadataView))
+        .apply("Interpret tagged values", taggedValuesTransform.interpret())
         .apply("Write tagged values to avro", taggedValuesTransform.write(pathFn));
 
     filteredUniqueRecords
@@ -232,7 +271,7 @@ public class VerbatimToInterpretedPipeline {
 
     filteredUniqueRecords
         .apply("Check location transform condition", locationTransform.check(types))
-        .apply("Interpret location", locationTransform.interpret(metadataView))
+        .apply("Interpret location", locationTransform.interpret())
         .apply("Write location to avro", locationTransform.write(pathFn));
 
     log.info("Running the pipeline");

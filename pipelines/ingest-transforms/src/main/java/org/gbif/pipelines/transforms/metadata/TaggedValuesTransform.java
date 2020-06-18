@@ -16,6 +16,8 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.Builder;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAGGED_VALUES_RECORDS_COUNT;
@@ -31,14 +33,13 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValueRecord> {
 
+  @Setter
   private PCollectionView<MetadataRecord> metadataView;
 
-  private TaggedValuesTransform() {
+  @Builder(buildMethodName = "create")
+  private TaggedValuesTransform(PCollectionView<MetadataRecord> metadataView) {
     super(TaggedValueRecord.class, TAGGED_VALUES, TaggedValueRecord.class.getName(), TAGGED_VALUES_RECORDS_COUNT);
-  }
-
-  public static TaggedValuesTransform create() {
-    return new TaggedValuesTransform();
+    this.metadataView = metadataView;
   }
 
   @Override
@@ -51,8 +52,8 @@ public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValue
     return this;
   }
 
-  public ParDo.SingleOutput<ExtendedRecord, TaggedValueRecord> interpret(PCollectionView<MetadataRecord> metadataView) {
-    this.metadataView = metadataView;
+  @Override
+  public ParDo.SingleOutput<ExtendedRecord, TaggedValueRecord> interpret() {
     return ParDo.of(this).withSideInputs(metadataView);
   }
 

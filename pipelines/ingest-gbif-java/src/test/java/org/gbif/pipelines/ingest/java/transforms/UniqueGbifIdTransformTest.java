@@ -20,7 +20,8 @@ public class UniqueGbifIdTransformTest {
   private static final String KEY = "KEY";
   private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn =
       (er, br) -> Optional.ofNullable(er.getCoreTerms().get(KEY)).ifPresent(x -> br.setGbifId(Long.valueOf(x)));
-  private final BasicTransform basicTransform = BasicTransform.create(gbifIdFn);
+  private final BasicTransform basicTransform =
+      BasicTransform.builder().gbifIdFn(gbifIdFn).useExtendedRecordId(true).create();
 
   @Test
   public void skipFunctionTest() {

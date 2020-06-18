@@ -124,7 +124,7 @@ public class FragmentPersister {
     final Queue<List<OccurrenceRecord>> rows = new LinkedBlockingQueue<>();
     final Consumer<OccurrenceRecord> addRowFn = r -> Optional.ofNullable(rows.peek()).ifPresent(req -> req.add(r));
     final Connection connection = Optional.ofNullable(hbaseConnection)
-        .orElse(HbaseConnectionFactory.getInstance(keygenConfig.getHbaseZk()).getConnection());
+        .orElse(HbaseConnectionFactory.getInstance(keygenConfig.getZkConnectionString()).getConnection());
     final HBaseLockingKeyService keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetKey);
 
     rows.add(new ArrayList<>(batchSize));

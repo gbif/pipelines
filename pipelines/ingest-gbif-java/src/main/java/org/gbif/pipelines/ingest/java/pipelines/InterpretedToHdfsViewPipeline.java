@@ -133,13 +133,13 @@ public class InterpretedToHdfsViewPipeline {
 
     log.info("Creating transformations");
     // Core
-    BasicTransform basicTransform = BasicTransform.create();
-    MetadataTransform metadataTransform = MetadataTransform.create();
+    BasicTransform basicTransform = BasicTransform.builder().create();
+    MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
-    LocationTransform locationTransform = LocationTransform.create();
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    LocationTransform locationTransform = LocationTransform.builder().create();
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
 
     // Extension
     MeasurementOrFactTransform measurementTransform = MeasurementOrFactTransform.create();

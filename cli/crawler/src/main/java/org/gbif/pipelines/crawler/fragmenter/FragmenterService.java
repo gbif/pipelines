@@ -1,7 +1,6 @@
 package org.gbif.pipelines.crawler.fragmenter;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -9,8 +8,9 @@ import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
+import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
-import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -46,7 +46,7 @@ public class FragmenterService extends AbstractIdleService {
     curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.numberThreads);
     PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
-    KeygenConfig keygenConfig = KeygenConfigFactory.create(Paths.get(config.pipelinesConfig));
+    KeygenConfig keygenConfig = readConfig(config.stepConfig.hdfsSiteConfig, config.pipelinesConfig);
 
     FragmenterCallback callback =
         new FragmenterCallback(config, publisher, curator, client, executor, hbaseConnection, keygenConfig);
@@ -65,5 +65,19 @@ public class FragmenterService extends AbstractIdleService {
     } catch (IOException ex) {
       log.warn("Couldn't close some resources during the exit - {}", ex.getMessage());
     }
+  }
+
+  private KeygenConfig readConfig(String hdfsSiteConfig, String pipelinesConfig){
+    PipelinesConfig c = PipelinesConfigFactory.getInstance(hdfsSiteConfig, pipelinesConfig).get();
+
+    String zk = c.getKeygen().getZkConnectionString();
+    zk = zk == null || zk.isEmpty() ? c.getZkConnectionString() : zk;
+
+    return KeygenConfig.builder()
+        .zkConnectionString(zk)
+        .occurrenceTable(c.getKeygen().getOccurrenceTable())
+        .lookupTable(c.getKeygen().getLookupTable())
+        .counterTable(c.getKeygen().getCounterTable())
+        .create();
   }
 }

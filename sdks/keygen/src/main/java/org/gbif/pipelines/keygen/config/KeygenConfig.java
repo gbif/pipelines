@@ -2,20 +2,17 @@ package org.gbif.pipelines.keygen.config;
 
 import java.io.Serializable;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor(staticName = "create")
+@Builder(buildMethodName = "create")
 public class KeygenConfig implements Serializable {
 
-  private static final long serialVersionUID = -8963859065783618024L;
+  private static final long serialVersionUID = -8963859065783618025L;
 
-  private String occTable;
-
+  private String occurrenceTable;
   private String counterTable;
-
   private String lookupTable;
-
-  private String hbaseZk;
+  private String zkConnectionString;
 }

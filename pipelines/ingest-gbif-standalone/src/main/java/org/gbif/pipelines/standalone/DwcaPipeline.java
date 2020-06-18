@@ -2,16 +2,12 @@ package org.gbif.pipelines.standalone;
 
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.pipelines.DwcaToEsIndexPipeline;
-import org.gbif.pipelines.ingest.pipelines.DwcaToInterpretedPipeline;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexAmpPipeline;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToHdfsViewPipeline;
 import org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedAmpPipeline;
 import org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline;
-import org.gbif.pipelines.ingest.pipelines.XmlToEsIndexPipeline;
-import org.gbif.pipelines.ingest.pipelines.XmlToInterpretedPipeline;
 import org.gbif.pipelines.ingest.pipelines.XmlToVerbatimPipeline;
 
 /**
@@ -29,25 +25,9 @@ public class DwcaPipeline {
       case DWCA_TO_VERBATIM:
         DwcaToVerbatimPipeline.run(options);
         break;
-      // From DwCA to GBIF interpreted *.avro files
-      case DWCA_TO_INTERPRETED:
-        DwcaToInterpretedPipeline.run(options);
-        break;
-      // From DwCA to Elasticsearch index
-      case DWCA_TO_ES_INDEX:
-        DwcaToEsIndexPipeline.run(options);
-        break;
       // From XML to ExtendedRecord *.avro file
       case XML_TO_VERBATIM:
         XmlToVerbatimPipeline.run(options);
-        break;
-      // From XML to GBIF interpreted *.avro files
-      case XML_TO_INTERPRETED:
-        XmlToInterpretedPipeline.run(options);
-        break;
-      // From XML to Elasticsearch index
-      case XML_TO_ES_INDEX:
-        XmlToEsIndexPipeline.run(options);
         break;
       // From GBIF interpreted *.avro files to Elasticsearch index
       case INTERPRETED_TO_ES_INDEX:

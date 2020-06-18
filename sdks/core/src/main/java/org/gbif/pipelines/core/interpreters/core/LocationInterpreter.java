@@ -96,10 +96,11 @@ public class LocationInterpreter {
         ParsedLocation parsedLocation = parsedResult.getResult();
 
         Optional.ofNullable(parsedLocation.getCountry())
-            .ifPresent(country -> {
-              lr.setCountry(country.getTitle());
-              lr.setCountryCode(country.getIso2LetterCode());
-            });
+            .ifPresent(
+                country -> {
+                  lr.setCountry(country.getTitle());
+                  lr.setCountryCode(country.getIso2LetterCode());
+                });
 
         LatLng latLng = parsedLocation.getLatLng();
         if (Objects.nonNull(latLng)) {
@@ -113,13 +114,16 @@ public class LocationInterpreter {
         // set the issues to the interpretation
         addIssue(lr, parsedResult.getIssues());
 
-        //Has geo-spatial issues
+        // Has geo-spatial issues
         lr.setHasGeospatialIssue(hasGeospatialIssues(lr));
 
-        interpretPublishingCountry(er, mdr).ifPresent(lr::setPublishingCountry);
+        if (mdr != null) {
+          interpretPublishingCountry(er, mdr).ifPresent(lr::setPublishingCountry);
+        }
 
         // Interpretation that required multiple sources
-        // Determines if the record has been repatriated, i.e.: country != publishing Organization Country.
+        // Determines if the record has been repatriated, i.e.: country != publishing Organization
+        // Country.
         if (Objects.nonNull(lr.getCountryCode()) && Objects.nonNull(lr.getPublishingCountry())) {
           lr.setRepatriated(!lr.getCountryCode().equals(lr.getPublishingCountry()));
         }

@@ -2,32 +2,36 @@ package org.gbif.pipelines.parsers.config.model;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * Pipeline Options to create Zookeeper shared locks using a ExponentialBackoffRetry strategy to connect.
+ * Pipeline Options to create Zookeeper shared locks using a ExponentialBackoffRetry strategy to
+ * connect.
  */
-@Data(staticConstructor = "create")
+@Data
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LockConfig implements Serializable {
 
   private static final long serialVersionUID = 7222736128801212446L;
 
   /** List of Zookeeper servers to connect to */
-  private final String zkConnectionString;
+  private String zkConnectionString;
 
   /** Zookeeper shared path or space */
-  private final String namespace;
+  private String namespace;
 
   /** Base locking path path to use for locking */
-  private final String lockingPath;
+  private String lockingPath;
 
   /** Shared-lock name */
-  private final String lockName;
+  private String lockName;
 
   /** Initial amount of time to wait between retries */
-  private final int sleepTimeMs;
+  private int sleepTimeMs = 100;
 
   /** Max number of times to retry */
-  private final int maxRetries;
-
+  private int maxRetries = 5;
 }

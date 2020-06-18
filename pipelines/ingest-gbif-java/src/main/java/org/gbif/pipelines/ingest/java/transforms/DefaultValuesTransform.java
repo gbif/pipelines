@@ -2,33 +2,38 @@ package org.gbif.pipelines.ingest.java.transforms;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.ws.client.metadata.MetadataServiceClient;
+import org.gbif.pipelines.transforms.SerializableSupplier;
+
+import lombok.Builder;
 
 /**
- * Java transformations to use verbatim default term values defined as MachineTags in an MetadataRecord.
- * transforms form {@link ExtendedRecord} to {@link ExtendedRecord}.
+ * Java transformations to use verbatim default term values defined as MachineTags in an
+ * MetadataRecord. transforms form {@link ExtendedRecord} to {@link ExtendedRecord}.
  */
 public class DefaultValuesTransform {
 
   private final org.gbif.pipelines.transforms.metadata.DefaultValuesTransform transform;
 
-  private DefaultValuesTransform(String propertiesPath, String datasetId, boolean skipRegistryCalls) {
-    this.transform = org.gbif.pipelines.transforms.metadata.DefaultValuesTransform.create(propertiesPath, datasetId, skipRegistryCalls);
+  @Builder(buildMethodName = "create")
+  private DefaultValuesTransform(
+      String datasetId, SerializableSupplier<MetadataServiceClient> clientSupplier) {
+    this.transform =
+        org.gbif.pipelines.transforms.metadata.DefaultValuesTransform.builder()
+            .clientSupplier(clientSupplier)
+            .datasetId(datasetId)
+            .create();
   }
 
-  private DefaultValuesTransform(Properties properties, String datasetId, boolean skipRegistryCalls) {
-    this.transform = org.gbif.pipelines.transforms.metadata.DefaultValuesTransform.create(properties, datasetId, skipRegistryCalls);
+  public void setup() {
+    transform.setup();
   }
 
-  public static DefaultValuesTransform create(String propertiesPath, String datasetId, boolean skipRegistryCalls) {
-    return new DefaultValuesTransform(propertiesPath, datasetId, skipRegistryCalls);
-  }
-
-  public static DefaultValuesTransform create(Properties properties, String datasetId, boolean skipRegistryCalls) {
-    return new DefaultValuesTransform(properties, datasetId, skipRegistryCalls);
+  public void tearDown() {
+    transform.tearDown();
   }
 
   public void replaceDefaultValues(Map<String, ExtendedRecord> source) {
@@ -37,5 +42,4 @@ public class DefaultValuesTransform {
       source.forEach((key, value) -> source.put(key, transform.replaceDefaultValues(value, tags)));
     }
   }
-
 }
