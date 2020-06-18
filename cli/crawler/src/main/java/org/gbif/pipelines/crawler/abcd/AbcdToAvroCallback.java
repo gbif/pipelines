@@ -1,8 +1,16 @@
 package org.gbif.pipelines.crawler.abcd;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.client.HttpClient;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -14,11 +22,15 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.xml.XmlToAvroCallback;
 import org.gbif.pipelines.crawler.xml.XmlToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.utils.file.CompressionUtil;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.HiddenFileFilter;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.client.HttpClient;
+
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Call back which is called when the {@link PipelinesXmlMessage} is received.
@@ -63,6 +75,15 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
 
   @Override
   public Runnable createRunnable(PipelinesAbcdMessage message) {
+
+    String subdir = config.archiveRepositorySubdir.stream()
+        .findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("archiveRepositorySubdir is empty"));
+
+    uncompress(
+        Paths.get(config.archiveRepository, subdir, message.getDatasetUuid().toString() + ".abcda"),
+        Paths.get(config.archiveRepository, subdir, message.getDatasetUuid().toString()));
+
     return callback.createRunnable(
         message.getDatasetUuid(),
         message.getAttempt().toString(),
@@ -95,5 +116,25 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
   @Override
   public boolean isMessageCorrect(PipelinesAbcdMessage message) {
     return message.isModified();
+  }
+
+  @SneakyThrows
+  private File[] uncompress(Path abcdaLocation, Path destination) {
+    if (!Files.exists(abcdaLocation)) {
+      throw new FileNotFoundException(
+          "abcdaLocation does not exist: " + abcdaLocation.toAbsolutePath());
+    }
+
+    if (Files.exists(destination)) {
+      // clean up any existing folder
+      log.debug("Deleting existing archive folder [{}]", destination.toAbsolutePath());
+      org.gbif.utils.file.FileUtils.deleteDirectoryRecursively(destination.toFile());
+    }
+    FileUtils.forceMkdir(destination.toFile());
+    // try to decompress archive
+
+    CompressionUtil.decompressFile(destination.toFile(), abcdaLocation.toFile(), false);
+
+    return destination.toFile().listFiles((FileFilter) HiddenFileFilter.VISIBLE);
   }
 }
