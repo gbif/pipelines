@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -11,7 +12,7 @@ import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.hbase.client.Connection;
@@ -45,7 +46,7 @@ public class FragmenterService extends AbstractIdleService {
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.numberThreads);
-    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryService client = c.registry.newRegistryClientFactory().newInstance(PipelinesHistoryClient.class);
     KeygenConfig keygenConfig = readConfig(config.stepConfig.hdfsSiteConfig, config.pipelinesConfig);
 
     FragmenterCallback callback =

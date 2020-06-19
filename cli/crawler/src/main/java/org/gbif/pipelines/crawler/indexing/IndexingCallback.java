@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -27,7 +28,6 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.indexing.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToEsIndexExtendedPipeline;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.HttpResponse;
@@ -55,12 +55,12 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
   private final DatasetService datasetService;
   private final CuratorFramework curator;
   private final HttpClient httpClient;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryService client;
   private final ExecutorService executor;
 
   public IndexingCallback(IndexingConfiguration config, MessagePublisher publisher,
-      DatasetService datasetService, CuratorFramework curator, HttpClient httpClient,
-      PipelinesHistoryWsClient client, ExecutorService executor) {
+                          DatasetService datasetService, CuratorFramework curator, HttpClient httpClient,
+                          PipelinesHistoryService client, ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.datasetService = datasetService;

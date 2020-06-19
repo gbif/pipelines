@@ -1,15 +1,9 @@
 package org.gbif.pipelines.common.configs;
 
-import java.util.Properties;
-
-import org.gbif.cli.ConfigUtils;
 import org.gbif.cli.PropertyName;
-import org.gbif.registry.ws.client.guice.RegistryWsClientModule;
-import org.gbif.ws.client.guice.SingleUserAuthModule;
+import org.gbif.ws.client.ClientFactory;
 
 import com.beust.jcommander.Parameter;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import javax.validation.constraints.NotNull;
 import lombok.ToString;
 
@@ -34,18 +28,14 @@ public class RegistryConfiguration {
   public String password;
 
   /**
-   * Convenience method to setup a guice injector with a writable registry client module using the configuration
+   * Convenience method to setup a ClientFactory with a writable registry client module using the configuration
    * of this instance.
    *
-   * @return guice injector with RegistryWsClientModule bound
+   * @return guice injector with ClientFactory bound
    */
-  public Injector newRegistryInjector() {
-    // setup writable registry client
-    Properties properties = ConfigUtils.toProperties(this);
-    RegistryWsClientModule regModule = new RegistryWsClientModule(properties);
-    SingleUserAuthModule authModule = new SingleUserAuthModule(user, password);
+  public ClientFactory newRegistryClientFactory() {
 
-    return Guice.createInjector(regModule, authModule);
+    return new ClientFactory(user, password, wsUrl);
   }
 
 }

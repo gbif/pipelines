@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.gbif.api.model.crawler.OccurrenceValidationReport;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
@@ -18,7 +19,6 @@ import org.gbif.converters.DwcaToAvroConverter;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.avro.file.CodecFactory;
 import org.apache.curator.framework.CuratorFramework;
@@ -37,10 +37,10 @@ public class DwcaToAvroCallback extends AbstractMessageCallback<PipelinesDwcaMes
   private final DwcaToAvroConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryService client;
 
   public DwcaToAvroCallback(DwcaToAvroConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient client) {
+      PipelinesHistoryService client) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;

@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
@@ -21,7 +22,6 @@ import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.xml.XmlToAvroCallback;
 import org.gbif.pipelines.crawler.xml.XmlToAvroConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.gbif.utils.file.CompressionUtil;
 
 import org.apache.commons.io.FileUtils;
@@ -42,7 +42,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
   private final CuratorFramework curator;
   private final XmlToAvroConfiguration config;
   private final MessagePublisher publisher;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryService client;
   private final XmlToAvroCallback callback;
 
   public AbcdToAvroCallback(
@@ -50,7 +50,7 @@ public class AbcdToAvroCallback extends AbstractMessageCallback<PipelinesAbcdMes
       XmlToAvroConfiguration config,
       ExecutorService executor,
       MessagePublisher publisher,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryService client,
       HttpClient httpClient) {
     this.curator = curator;
     this.config = config;

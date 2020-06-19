@@ -6,11 +6,13 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.HttpClients;
+
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,7 +46,7 @@ public class XmlToAvroService extends AbstractIdleService {
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.xmlReaderParallelism);
-    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryService client = c.registry.newRegistryClientFactory().newInstance(PipelinesHistoryClient.class);
 
     HttpClient httpClient =
         HttpClients.custom()

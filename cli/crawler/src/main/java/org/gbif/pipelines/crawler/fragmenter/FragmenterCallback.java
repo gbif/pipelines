@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
@@ -21,7 +22,6 @@ import org.gbif.pipelines.fragmenter.strategy.DwcaStrategy;
 import org.gbif.pipelines.fragmenter.strategy.Strategy;
 import org.gbif.pipelines.fragmenter.strategy.XmlStrategy;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.hadoop.fs.FileSystem;
@@ -45,14 +45,14 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
   private final FragmenterConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryService client;
   private final ExecutorService executor;
   private final Connection hbaseConnection;
   private final KeygenConfig keygenConfig;
 
   public FragmenterCallback(FragmenterConfiguration config, MessagePublisher publisher, CuratorFramework curator,
-      PipelinesHistoryWsClient client, ExecutorService executor, Connection hbaseConnection,
-      KeygenConfig keygenConfig) {
+                            PipelinesHistoryService client, ExecutorService executor, Connection hbaseConnection,
+                            KeygenConfig keygenConfig) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;

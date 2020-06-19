@@ -1,10 +1,11 @@
 package org.gbif.pipelines.crawler.dwca;
 
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 import org.apache.curator.framework.CuratorFramework;
 
@@ -34,7 +35,7 @@ public class DwcaToAvroService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryService client = c.registry.newRegistryClientFactory().newInstance(PipelinesHistoryClient.class);
 
     listener.listen(c.queueName, c.poolSize, new DwcaToAvroCallback(this.config, publisher, curator, client));
   }

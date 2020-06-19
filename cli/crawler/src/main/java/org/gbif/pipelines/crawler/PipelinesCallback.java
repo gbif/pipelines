@@ -10,11 +10,14 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.gbif.api.model.pipelines.PipelineExecution;
+import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
@@ -29,7 +32,6 @@ import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.gbif.utils.file.properties.PropertiesUtil;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -74,7 +76,7 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   @NonNull
   private final CuratorFramework curator;
   @NonNull
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryService client;
   @NonNull
   private final BaseConfiguration config;
   @NonNull
@@ -206,12 +208,20 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
 
   }
 
+  protected long getOrCreatePipepilinesProcess(UUID datasetUuid, Integer attempt) {
+    PipelineProcessParameters pipelineProcessParameters = new PipelineProcessParameters(datasetUuid, attempt);
+    return Optional.ofNullable(client.getPipelineProcess(datasetUuid, attempt))
+      .map(PipelineProcess::getKey)
+      .orElseGet( () -> client.createPipelineProcess(pipelineProcessParameters));
+  }
+
   private Optional<TrackingInfo> trackPipelineStep() {
     try {
       // create pipeline process. If it already exists it returns the existing one (the db query does an upsert).
       UUID datasetUuid = message.getDatasetUuid();
       Integer attempt = message.getAttempt();
-      long processKey = client.createOrGetPipelineProcess(datasetUuid, attempt);
+
+      long processKey = getOrCreatePipepilinesProcess(datasetUuid, attempt);
 
       Long executionId = message.getExecutionId();
       if (executionId == null) {

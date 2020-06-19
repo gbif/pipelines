@@ -3,11 +3,12 @@ package org.gbif.pipelines.crawler.hdfs;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 import org.apache.curator.framework.CuratorFramework;
 
@@ -39,7 +40,7 @@ public class HdfsViewService extends AbstractIdleService {
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
     executor = config.standaloneNumberThreads == null ? null : Executors.newFixedThreadPool(config.standaloneNumberThreads);
-    PipelinesHistoryWsClient historyWsClient = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+    PipelinesHistoryService historyWsClient = c.registry.newRegistryClientFactory().newInstance(PipelinesHistoryClient.class);
 
     HdfsViewCallback callback = new HdfsViewCallback(config, publisher, curator, historyWsClient, executor);
     listener.listen(c.queueName, c.poolSize, callback);

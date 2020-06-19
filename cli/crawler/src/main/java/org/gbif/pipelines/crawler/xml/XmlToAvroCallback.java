@@ -11,6 +11,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
@@ -22,7 +23,6 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.crawler.PipelinesCallback;
 import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -48,7 +48,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
   private final XmlToAvroConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryService client;
   private final ExecutorService executor;
   private final HttpClient httpClient;
 
@@ -56,7 +56,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
       XmlToAvroConfiguration config,
       MessagePublisher publisher,
       CuratorFramework curator,
-      PipelinesHistoryWsClient client,
+      PipelinesHistoryService client,
       ExecutorService executor,
       HttpClient httpClient) {
     this.config = config;

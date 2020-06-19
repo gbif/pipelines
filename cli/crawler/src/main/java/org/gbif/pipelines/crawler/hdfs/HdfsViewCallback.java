@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesHdfsViewBuiltMessage;
@@ -17,7 +18,6 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.hdfs.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.crawler.interpret.InterpreterConfiguration;
 import org.gbif.pipelines.ingest.java.pipelines.InterpretedToHdfsViewPipeline;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
 
@@ -38,11 +38,11 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private final HdfsViewConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryService client;
   private final ExecutorService executor;
 
   public HdfsViewCallback(HdfsViewConfiguration config, MessagePublisher publisher,
-      CuratorFramework curator, PipelinesHistoryWsClient client, ExecutorService executor) {
+                          CuratorFramework curator, PipelinesHistoryService client, ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;

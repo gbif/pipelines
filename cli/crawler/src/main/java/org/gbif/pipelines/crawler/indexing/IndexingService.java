@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.common.messaging.DefaultMessagePublisher;
 import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
+import org.gbif.registry.ws.client.DatasetClient;
+import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.http.client.config.RequestConfig;
@@ -44,7 +46,7 @@ public class IndexingService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    DatasetService datasetService = c.registry.newRegistryInjector().getInstance(DatasetService.class);
+    DatasetService datasetService = c.registry.newRegistryClientFactory().newInstance(DatasetClient.class);
     executor = config.standaloneNumberThreads == null ? null : Executors.newFixedThreadPool(config.standaloneNumberThreads);
     httpClient = HttpClients.custom()
         .setDefaultRequestConfig(RequestConfig.custom()
@@ -52,8 +54,8 @@ public class IndexingService extends AbstractIdleService {
             .setSocketTimeout(60_000)
             .build())
         .build();
-    
-    PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
+
+    PipelinesHistoryService client = c.registry.newRegistryClientFactory().newInstance(PipelinesHistoryClient.class);
 
     IndexingCallback callback = new IndexingCallback(config, publisher, datasetService, curator, httpClient, client, executor);
     listener.listen(c.queueName, c.poolSize, callback);

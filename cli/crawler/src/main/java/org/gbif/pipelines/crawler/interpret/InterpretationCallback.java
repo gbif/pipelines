@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
@@ -20,7 +21,6 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 import org.gbif.pipelines.crawler.interpret.ProcessRunnerBuilder.ProcessRunnerBuilderBuilder;
 import org.gbif.pipelines.ingest.java.pipelines.VerbatimToInterpretedPipeline;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
 
@@ -38,11 +38,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
   private final InterpreterConfiguration config;
   private final MessagePublisher publisher;
   private final CuratorFramework curator;
-  private final PipelinesHistoryWsClient client;
+  private final PipelinesHistoryService client;
   private final ExecutorService executor;
 
   public InterpretationCallback(InterpreterConfiguration config, MessagePublisher publisher,
-      CuratorFramework curator, PipelinesHistoryWsClient client, ExecutorService executor) {
+      CuratorFramework curator, PipelinesHistoryService client, ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
     this.curator = curator;
