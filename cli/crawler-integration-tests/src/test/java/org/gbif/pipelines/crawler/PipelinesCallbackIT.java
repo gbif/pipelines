@@ -13,12 +13,12 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
 import org.gbif.crawler.constants.CrawlerNodePaths;
 import org.gbif.crawler.constants.PipelinesNodePaths.Fn;
 import org.gbif.pipelines.common.configs.BaseConfiguration;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -48,7 +48,7 @@ public class PipelinesCallbackIT {
   private static TestingServer server;
 
   @Mock
-  private PipelinesHistoryWsClient historyClient;
+  private PipelinesHistoryService historyClient;
 
   @Mock
   private MessagePublisher mockPublisher;

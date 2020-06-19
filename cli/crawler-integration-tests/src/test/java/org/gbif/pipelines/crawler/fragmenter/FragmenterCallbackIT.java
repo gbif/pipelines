@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 import org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage.ValidationResult;
@@ -20,7 +21,6 @@ import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
 import org.gbif.pipelines.fragmenter.common.HbaseServer;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -50,7 +50,7 @@ public class FragmenterCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient client;
+  private static PipelinesHistoryService client;
 
   @ClassRule
   public static final HbaseServer HBASE_SERVER = new HbaseServer();
@@ -68,7 +68,7 @@ public class FragmenterCallbackIT {
 
     publisher = MessagePublisherStub.create();
 
-    client = Mockito.mock(PipelinesHistoryWsClient.class);
+    client = Mockito.mock(PipelinesHistoryService.class);
   }
 
   @AfterClass

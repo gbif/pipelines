@@ -5,13 +5,13 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
 import org.gbif.api.model.crawler.FinishReason;
+import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.pipelines.common.utils.HdfsUtils;
 import org.gbif.pipelines.common.utils.ZookeeperUtils;
 import org.gbif.pipelines.crawler.MessagePublisherStub;
-import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -46,7 +46,7 @@ public class XmlToAvroCallbackIT {
   private static CuratorFramework curator;
   private static TestingServer server;
   private static MessagePublisherStub publisher;
-  private static PipelinesHistoryWsClient historyClient;
+  private static PipelinesHistoryService historyClient;
   private static ExecutorService executor;
 
   @BeforeClass
@@ -63,7 +63,7 @@ public class XmlToAvroCallbackIT {
     executor = Executors.newSingleThreadExecutor();
 
     publisher = MessagePublisherStub.create();
-    historyClient = Mockito.mock(PipelinesHistoryWsClient.class);
+    historyClient = Mockito.mock(PipelinesHistoryService.class);
   }
 
   @AfterClass
