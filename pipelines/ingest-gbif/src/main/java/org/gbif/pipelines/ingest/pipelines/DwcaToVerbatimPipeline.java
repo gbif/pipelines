@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.nio.file.Paths;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.DwcaIO;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
@@ -29,11 +30,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline some.properties
+ * java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline
+ * java -cp target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ *  --pipelineStep=DWCA_TO_VERBATIM \
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
@@ -53,12 +55,13 @@ public class DwcaToVerbatimPipeline {
 
   public static void run(BasePipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", StepType.DWCA_TO_VERBATIM.name());
 
     log.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
-    String targetPath = FsUtils.buildPath(options, Conversion.FILE_NAME);
+    String targetPath = FsUtils.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
     String tmpPath = FsUtils.getTempDir(options);
 
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();
@@ -75,7 +78,7 @@ public class DwcaToVerbatimPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

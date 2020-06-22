@@ -1,10 +1,12 @@
 package org.gbif.pipelines.core.converters;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -17,12 +19,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceExtensionConverter {
 
-  public static ExtendedRecord convert(Map<String, String> coreMap, Map<String, String> extMap) {
+  public static Optional<ExtendedRecord> convert(Map<String, String> coreMap, Map<String, String> extMap) {
     String id = extMap.get(DwcTerm.occurrenceID.qualifiedName());
-    ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(id).build();
-    extendedRecord.getCoreTerms().putAll(coreMap);
-    extendedRecord.getCoreTerms().putAll(extMap);
-    return extendedRecord;
+    if(!Strings.isNullOrEmpty(id)) {
+      ExtendedRecord extendedRecord = ExtendedRecord.newBuilder().setId(id).build();
+      extendedRecord.getCoreTerms().putAll(coreMap);
+      extendedRecord.getCoreTerms().putAll(extMap);
+      return Optional.of(extendedRecord);
+    }
+    return Optional.empty();
   }
 
 }

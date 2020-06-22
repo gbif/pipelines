@@ -2,12 +2,12 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.Set;
 
-import org.gbif.pipelines.common.PipelinesVariables.Lock;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
 import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.parsers.config.LockConfigFactory;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 
 import org.slf4j.MDC;
 
@@ -25,6 +25,9 @@ import lombok.extern.slf4j.Slf4j;
  *      {@link org.gbif.pipelines.io.avro.BasicRecord},
  *      {@link org.gbif.pipelines.io.avro.TemporalRecord},
  *      {@link org.gbif.pipelines.io.avro.MultimediaRecord},
+ *      {@link org.gbif.pipelines.io.avro.ImageRecord},
+ *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
+ *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *      avro files
@@ -38,19 +41,23 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline some.properties
+ * java target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline
- * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
- * --attempt=1
- * --runner=SparkRunner
- * --targetPath=hdfs://ha-nn/output/
- * --esAlias=pipeline
- * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200
- * --hdfsSiteConfig=/config/hdfs-site.xml
- * --coreSiteConfig=/config/core-site.xml
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar \
+ *  --pipelineStep=INTERPRETED_TO_ES_INDEX \
+ *  --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ *  --attempt=1 \
+ *  --runner=SparkRunner \
+ *  --inputPath=/path \
+ *  --targetPath=/path \
+ *  --esIndexName=test2_java \
+ *  --esAlias=occurrence2_java \
+ *  --indexNumberShards=3 \
+ * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
+ * --properties=/home/nvolik/Projects/GBIF/gbif-configuration/cli/dev/config/pipelines.properties \
+ * --esDocumentId=id
  *
  * }</pre>
  */
@@ -64,8 +71,9 @@ public class InterpretedToEsIndexExtendedPipeline {
   }
 
   public static void run(EsIndexingPipelineOptions options) {
-    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     run(options, () -> InterpretedToEsIndexPipeline.run(options));
 
@@ -81,6 +89,12 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     pipeline.run();
 
-    EsIndexUtils.updateAlias(options, indices, LockConfigFactory.create(options.getProperties(), Lock.ES_LOCK_PREFIX));
+    PipelinesConfig config = FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties());
+
+    String zk = config.getIndexLock().getZkConnectionString();
+    zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
+    config.getIndexLock().setZkConnectionString(zk);
+
+    EsIndexUtils.updateAlias(options, indices, config.getIndexLock());
   }
 }

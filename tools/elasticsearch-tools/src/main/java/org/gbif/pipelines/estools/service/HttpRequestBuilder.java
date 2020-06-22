@@ -6,8 +6,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
-import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.common.SettingsType;
+import org.gbif.pipelines.estools.model.IndexParams;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.nio.entity.NStringEntity;
@@ -71,9 +71,9 @@ class HttpRequestBuilder {
 
   /** Adds a {@link SettingsType} to the body. */
   HttpRequestBuilder withSettingsType(@NonNull SettingsType settingsType) {
-    this.settings =
-        (settingsType == SettingsType.INDEXING) ? JsonHandler.convertToJsonNode(Indexing.DEFAULT_INDEXING_SETTINGS) :
-            JsonHandler.convertToJsonNode(Searching.DEFAULT_SEARCH_SETTINGS);
+    this.settings = (settingsType == SettingsType.INDEXING)
+        ? JsonHandler.convertToJsonNode(Indexing.getDefaultIndexingSettings())
+        : JsonHandler.convertToJsonNode(Searching.getDefaultSearchSettings());
     return this;
   }
 

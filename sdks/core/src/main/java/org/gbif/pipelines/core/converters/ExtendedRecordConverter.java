@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ExtendedRecordConverter {
 
-  public static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
+  private static final String RECORD_ID_ERROR = "RECORD_ID_ERROR";
 
   //Function that removes all the empty elements of a record
   private static final Function<Record, Map<String, String>> REMOVE_EMPTY_CONTENT =
@@ -58,5 +58,9 @@ public class ExtendedRecordConverter {
 
     // id format following the convention of DwC (http://rs.tdwg.org/dwc/terms/#occurrenceID)
     return String.join(":", "urn:catalog", institutionCode, collectionCode, catalogNumber);
+  }
+
+  public static String getRecordIdError() {
+    return RECORD_ID_ERROR;
   }
 }

@@ -4,9 +4,12 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.gbif.api.vocabulary.Country;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
+import org.gbif.pipelines.parsers.parsers.location.parser.LocationParser;
+import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
 import org.gbif.pipelines.parsers.utils.ExtendedRecordBuilder;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
@@ -26,15 +29,17 @@ public class LocationParserTest {
   private static final Double LATITUDE_CANADA = 60.4;
   private static final Double LONGITUDE_CANADA = -131.3;
 
-  private static final KeyValueTestStore TEST_STORE = new KeyValueTestStore();
+  private static final KeyValueStore<LatLng, GeocodeResponse> GEOCODE_KV_STORE;
 
   static {
-    TEST_STORE.put(new LatLng(60.4d, -131.3d), toGeocodeResponse(Country.CANADA));
-    TEST_STORE.put(new LatLng(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
-    TEST_STORE.put(new LatLng(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
-    TEST_STORE.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
-    TEST_STORE.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
-    TEST_STORE.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    KeyValueTestStore testStore = new KeyValueTestStore();
+    testStore.put(new LatLng(60.4d, -131.3d), toGeocodeResponse(Country.CANADA));
+    testStore.put(new LatLng(30.2d, 100.2344349d), toGeocodeResponse(Country.CHINA));
+    testStore.put(new LatLng(30.2d, 100.234435d), toGeocodeResponse(Country.CHINA));
+    testStore.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
+    testStore.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
+    testStore.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    GEOCODE_KV_STORE = GeocodeKvStore.create(testStore);
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
@@ -43,8 +48,8 @@ public class LocationParserTest {
     return new GeocodeResponse(Collections.singletonList(location));
   }
 
-  private KeyValueTestStore getkvStore() {
-    return TEST_STORE;
+  private KeyValueStore<LatLng, GeocodeResponse> getGeocodeKvStore() {
+    return GEOCODE_KV_STORE;
   }
 
   @Test
@@ -55,7 +60,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("Spain").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -69,7 +74,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).countryCode("ES").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -83,7 +88,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("Spain").countryCode("ES").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertEquals(Country.SPAIN, result.getResult().getCountry());
@@ -97,7 +102,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).country("foo").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -113,7 +118,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).countryCode("foo").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -133,7 +138,7 @@ public class LocationParserTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -162,7 +167,7 @@ public class LocationParserTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -187,7 +192,7 @@ public class LocationParserTest {
         ExtendedRecordBuilder.create().id(TEST_ID).verbatimCoords("30.2, 100.2344349").build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertFalse(result.isSuccessful());
@@ -218,7 +223,7 @@ public class LocationParserTest {
             .build();
 
     // When
-    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getkvStore());
+    ParsedField<ParsedLocation> result = LocationParser.parse(extendedRecord, getGeocodeKvStore());
 
     // Should
     Assert.assertTrue(result.isSuccessful());

@@ -6,9 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
@@ -23,7 +21,7 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.Image;
 import org.gbif.pipelines.io.avro.ImageRecord;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.legacy.CoordinateParseUtils;
+import org.gbif.pipelines.parsers.parsers.location.parser.CoordinateParseUtils;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
 
@@ -43,7 +41,6 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_URI_INVALID;
 public class ImageInterpreter {
 
   private static final LicenseUriParser LICENSE_URI_PARSER = LicenseUriParser.getInstance();
-  private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final TargetHandler<Image> HANDLER =
       ExtensionInterpretation.extension(Extension.IMAGE)
@@ -157,23 +154,10 @@ public class ImageInterpreter {
 
   /** Returns ENUM instead of url string */
   private static void parseAndSetLicense(Image i, String v) {
-    URI uri = Optional.ofNullable(v).map(x -> {
-      try {
-        return URI.create(x);
-      } catch (IllegalArgumentException ex) {
-        return null;
-      }
-    }).orElse(null);
-    License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
-    if (license == License.UNSPECIFIED && !Strings.isNullOrEmpty(v)) {
-      license = LICENSE_PARSER.parseUriThenTitle(uri, v);
-    }
-    String result = license.name();
-    if (license == License.UNSUPPORTED) {
+    if (Objects.nonNull(v)) {
       ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(v);
-      result = parsed.isSuccessful() ? parsed.getPayload().toString() : v;
+      i.setLicense(parsed.isSuccessful() ? parsed.getPayload().toString() : v);
     }
-    i.setLicense(result);
   }
 
   /**

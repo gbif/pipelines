@@ -654,6 +654,12 @@
     "name" : "v_taxonremarks",
     "type" : [ "string", "null" ]
   }, {
+    "name" : "v_identifiedbyid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "v_recordedbyid",
+    "type" : [ "string", "null" ]
+  }, {
     "name" : "identifiercount",
     "type" : [ "int", "null" ]
   }, {
@@ -679,6 +685,18 @@
     }, "null" ]
   }, {
     "name" : "installationkey",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "projectid",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "programmeacronym",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "collectionkey",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "institutionkey",
     "type" : [ "string", "null" ]
   }, {
     "name" : "abstract",
@@ -895,7 +913,7 @@
     "type" : [ "int", "null" ]
   }, {
     "name" : "organismquantity",
-    "type" : [ "string", "null" ]
+    "type" : [ "double", "null" ]
   }, {
     "name" : "organismquantitytype",
     "type" : [ "string", "null" ]
@@ -1006,7 +1024,7 @@
     "type" : [ "string", "null" ]
   }, {
     "name" : "samplesizevalue",
-    "type" : [ "string", "null" ]
+    "type" : [ "double", "null" ]
   }, {
     "name" : "samplesizeunit",
     "type" : [ "string", "null" ]
@@ -1329,6 +1347,12 @@
       "items" : [ "string", "null" ]
     }, "null" ]
   }, {
+    "name" : "mediatype",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
     "name" : "hascoordinate",
     "type" : [ "boolean", "null" ]
   }, {
@@ -1389,7 +1413,16 @@
     "name" : "repatriated",
     "type" : [ "boolean", "null" ]
   }, {
-    "name" : "mediatype",
+    "name" : "relativeorganismquantity",
+    "type" : [ "double", "null" ]
+  }, {
+    "name" : "recordedbyid",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
+    "name" : "identifiedbyid",
     "type" : [ {
       "type" : "array",
       "items" : [ "string", "null" ]

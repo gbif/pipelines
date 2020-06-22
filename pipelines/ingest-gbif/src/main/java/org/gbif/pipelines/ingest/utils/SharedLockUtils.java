@@ -1,21 +1,22 @@
 package org.gbif.pipelines.ingest.utils;
 
-import lombok.Cleanup;
-import lombok.SneakyThrows;
-import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
-import org.gbif.pipelines.parsers.config.LockConfig;
+import java.util.function.Function;
+
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.parsers.config.model.LockConfig;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.wrangler.lock.Mutex;
 import org.gbif.wrangler.lock.zookeeper.ZookeeperSharedReadWriteMutex;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.function.Function;
 
 /**
  * Utility class to create instances of ReadWrite locks using Curator Framework, Zookeeper Servers and GBIF Wrangler.
@@ -37,17 +38,18 @@ public class SharedLockUtils {
 
   @SneakyThrows
   public static void doInBarrier(LockConfig config, Mutex.Action action) {
-    @Cleanup CuratorFramework curator = curator(config);
-    curator.start();
-    String lockPath  =  config.getLockingPath() + config.getLockName();
-    DistributedBarrier barrier = new DistributedBarrier(curator, lockPath);
-    log.info("Acquiring barrier {}", lockPath);
-    barrier.waitOnBarrier();
-    log.info("Setting barrier {}", lockPath);
-    barrier.setBarrier();
-    action.execute();
-    log.info("Removing barrier {}", lockPath);
-    barrier.removeBarrier();
+    try (CuratorFramework curator = curator(config)) {
+      curator.start();
+      String lockPath = config.getLockingPath() + config.getLockName();
+      DistributedBarrier barrier = new DistributedBarrier(curator, lockPath);
+      log.info("Acquiring barrier {}", lockPath);
+      barrier.waitOnBarrier();
+      log.info("Setting barrier {}", lockPath);
+      barrier.setBarrier();
+      action.execute();
+      log.info("Removing barrier {}", lockPath);
+      barrier.removeBarrier();
+    }
   }
 
   /**
@@ -85,5 +87,16 @@ public class SharedLockUtils {
    */
   public static void doInReadLock(LockConfig config, Mutex.Action action) {
     doInCurator(config, action, sharedReadWriteMutex -> sharedReadWriteMutex.createReadMutex(config.getLockName()));
+  }
+
+  /** A write lock is acquired to avoid concurrent modifications while this operation is running */
+  public static void doHdfsPrefixLock(InterpretationPipelineOptions options, Mutex.Action action) {
+    PipelinesConfig config = FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties());
+
+    String zk = config.getHdfsLock().getZkConnectionString();
+    zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
+    config.getHdfsLock().setZkConnectionString(zk);
+
+    SharedLockUtils.doInBarrier(config.getHdfsLock(), action);
   }
 }

@@ -18,7 +18,7 @@ import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.estools.service.EsService;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
-import org.gbif.pipelines.parsers.config.LockConfig;
+import org.gbif.pipelines.parsers.config.model.LockConfig;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -86,6 +86,7 @@ public class EsIndexUtils {
     settings.put(Field.INDEX_NUMBER_REPLICAS,
         independentIndex ? Indexing.NUMBER_REPLICAS : options.getIndexNumberReplicas().toString());
     settings.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
+    settings.put(Field.INDEX_MAX_RESULT_WINDOW, options.getIndexMaxResultWindow().toString());
 
     return IndexParams.builder()
         .indexName(options.getEsIndexName())

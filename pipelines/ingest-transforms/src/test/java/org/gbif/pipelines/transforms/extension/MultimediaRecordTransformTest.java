@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
 import org.gbif.pipelines.io.avro.Multimedia;
@@ -92,7 +91,7 @@ public class MultimediaRecordTransformTest {
             .setFormat("image/jpeg")
             .setTitle(TITLE)
             .setDescription(DESCRIPTION)
-            .setLicense(License.CC0_1_0.name())
+            .setLicense("http://creativecommons.org/publicdomain/zero/1.0/legalcode")
             .setCreator(CREATOR)
             .setCreated(CREATED)
             .setSource(SOURCE)

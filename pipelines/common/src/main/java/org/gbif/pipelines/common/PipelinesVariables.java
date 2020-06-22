@@ -1,5 +1,7 @@
 package org.gbif.pipelines.common;
 
+import java.io.Serializable;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -18,6 +20,7 @@ public class PipelinesVariables {
     public static final String VERBATIM_TO_INTERPRETED = "verbatim-to-interpreted";
     public static final String INTERPRETED_TO_INDEX = "interpreted-to-index";
     public static final String INTERPRETED_TO_HDFS = "interpreted-to-hdfs";
+    public static final String FRAGMENTER = "fragmenter";
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Conversion {
@@ -32,12 +35,20 @@ public class PipelinesVariables {
       public static final String DIRECTORY_NAME = "interpreted";
       public static final String FILE_NAME = "interpret-";
 
-      public enum RecordType {
+      public interface InterpretationType extends Serializable {
+
+        String name();
+
+        String all();
+      }
+
+      public enum RecordType implements InterpretationType {
         ALL,
         // Raw
         VERBATIM,
         // Core types
         METADATA,
+        TAGGED_VALUES,
         BASIC,
         TEMPORAL,
         LOCATION,
@@ -49,7 +60,13 @@ public class PipelinesVariables {
         MEASUREMENT_OR_FACT,
         AMPLIFICATION,
         // Specific
-        AUSTRALIA_SPATIAL
+        LOCATION_FEATURE,
+        OCCURRENCE_HDFS_RECORD;
+
+        @Override
+        public String all() {
+          return ALL.name();
+        }
       }
 
     }
@@ -59,6 +76,13 @@ public class PipelinesVariables {
 
       public static final String INDEX_TYPE = "record";
       public static final String GBIF_ID = "gbifId";
+    }
+
+
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class HdfsView {
+
+      public static final String VIEW_OCCURRENCE = "view_occurrence";
     }
 
   }
@@ -74,34 +98,34 @@ public class PipelinesVariables {
     public static final String DUPLICATE_IDS_COUNT = "duplicatedIdsCount";
     public static final String IDENTICAL_OBJECTS_COUNT = "identicalObjectsCount";
 
+    public static final String UNIQUE_GBIF_IDS_COUNT = "uniqueGbifIdsCount";
+    public static final String DUPLICATE_GBIF_IDS_COUNT = "duplicatedGbifIdsCount";
+    public static final String IDENTICAL_GBIF_OBJECTS_COUNT = "identicalGbifObjectsCount";
+
+    public static final String FILTER_ER_BASED_ON_GBIF_ID = "filterErBasedOnGbifIdCount";
+
     public static final String OCCURRENCE_EXT_COUNT = "occurrenceExtCount";
     public static final String HASH_ID_COUNT = "hashIdCount";
-    public static final String MISSED_GBIF_ID_COUNT = "missedGbifIdCount";
+    public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
     // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
+    public static final String TAGGED_VALUES_RECORDS_COUNT = "taggedValuesRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";
     public static final String TEMPORAL_RECORDS_COUNT = "temporalRecordsCount";
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";
     public static final String TAXON_RECORDS_COUNT = "taxonRecordsCount";
+    public static final String VERBATIM_RECORDS_COUNT = "verbatimRecordsCount";
     // Extension types
     public static final String MULTIMEDIA_RECORDS_COUNT = "multimediaRecordsCount";
     public static final String IMAGE_RECORDS_COUNT = "imageRecordsCount";
     public static final String AUDUBON_RECORDS_COUNT = "audubonRecordsCount";
     public static final String MEASUREMENT_OR_FACT_RECORDS_COUNT = "measurementOrFactRecordsCount";
     public static final String AMPLIFICATION_RECORDS_COUNT = "amplificationRecordsCount";
+
+    public static final String HDFS_VIEW_RECORDS_COUNT = "hdfsViewRecordsCount";
+    public static final String FRAGMENTER_COUNT = "fragmenterRecordsCount";
     // Specific
-    public static final String AUSTRALIA_SPATIAL_RECORDS_COUNT = "australiaSpatialRecordsCount";
+    public static final String LOCATION_FEATURE_RECORDS_COUNT = "locationFeatureRecordsCount";
   }
-
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class Lock {
-
-    //Elasticsearch lock prefix
-    public static final String ES_LOCK_PREFIX = "es.";
-
-    //HDFS view lock prefix
-    public static final String HDFS_LOCK_PREFIX = "hdfs.";
-  }
-
 
 }

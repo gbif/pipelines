@@ -28,6 +28,9 @@ import org.gbif.pipelines.parsers.parsers.taxonomy.TaxonRecordConverter;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.species.NameUsageMatch;
 
+import org.elasticsearch.common.Strings;
+
+import com.google.common.annotations.VisibleForTesting;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,70 +65,86 @@ public class TaxonomyInterpreter {
   public static BiConsumer<ExtendedRecord, TaxonRecord> taxonomyInterpreter(
       KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
     return (er, tr) -> {
-      if (kvStore != null) {
-
-        ModelUtils.checkNullOrEmpty(er);
-
-        SpeciesMatchRequest matchRequest = SpeciesMatchRequest.builder()
-            .withKingdom(extractValue(er, DwcTerm.kingdom))
-            .withPhylum(extractValue(er, DwcTerm.phylum))
-            .withClazz(extractValue(er, DwcTerm.class_))
-            .withOrder(extractValue(er, DwcTerm.order))
-            .withFamily(extractValue(er, DwcTerm.family))
-            .withGenus(extractValue(er, DwcTerm.genus))
-            .withScientificName(extractValue(er, DwcTerm.scientificName))
-            .withRank(extractValue(er, DwcTerm.taxonRank))
-            .withVerbatimRank(extractValue(er, DwcTerm.verbatimTaxonRank))
-            .withSpecificEpithet(extractValue(er, DwcTerm.specificEpithet))
-            .withInfraspecificEpithet(extractValue(er, DwcTerm.infraspecificEpithet))
-            .withScientificNameAuthorship(extractValue(er, DwcTerm.scientificNameAuthorship))
-            .withGenericName(extractValue(er, GbifTerm.genericName))
-            .build();
-
-        NameUsageMatch usageMatch = null;
-        try {
-          usageMatch = kvStore.get(matchRequest);
-        } catch (Exception ex) {
-          log.error(ex.getMessage(), ex);
-        }
-
-        if (usageMatch == null || isEmpty(usageMatch)) {
-          // "NO_MATCHING_RESULTS". This
-          // happens when we get an empty response from the WS
-          addIssue(tr, TAXON_MATCH_NONE);
-          tr.setUsage(INCERTAE_SEDIS);
-          tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
-        } else {
-
-          MatchType matchType = usageMatch.getDiagnostics().getMatchType();
-
-          if (MatchType.NONE == matchType) {
-            addIssue(tr, TAXON_MATCH_NONE);
-          } else if (MatchType.FUZZY == matchType) {
-            addIssue(tr, TAXON_MATCH_FUZZY);
-          } else if (MatchType.HIGHERRANK == matchType) {
-            addIssue(tr, TAXON_MATCH_HIGHERRANK);
-          }
-
-          // parse name into pieces - we don't get them from the nub lookup
-          try {
-            if (Objects.nonNull(usageMatch.getUsage())) {
-              org.gbif.nameparser.api.ParsedName pn = NAME_PARSER.parse(usageMatch.getUsage().getName(),
-                  org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank().name()));
-              tr.setUsageParsedName(toParsedNameAvro(pn));
-            }
-          } catch (UnparsableNameException e) {
-            if (e.getType().isParsable()) {
-              log.warn("Fail to parse backbone {} name for occurrence {}: {}", e.getType(), er.getId(), e.getName());
-            }
-          }
-          // convert taxon record
-          TaxonRecordConverter.convert(usageMatch, tr);
-        }
-
-        tr.setId(er.getId());
+      if (kvStore == null) {
+        return;
       }
+
+      ModelUtils.checkNullOrEmpty(er);
+
+      SpeciesMatchRequest matchRequest = SpeciesMatchRequest.builder()
+          .withKingdom(extractValue(er, DwcTerm.kingdom))
+          .withPhylum(extractValue(er, DwcTerm.phylum))
+          .withClazz(extractValue(er, DwcTerm.class_))
+          .withOrder(extractValue(er, DwcTerm.order))
+          .withFamily(extractValue(er, DwcTerm.family))
+          .withGenus(extractValue(er, DwcTerm.genus))
+          .withScientificName(extractValue(er, DwcTerm.scientificName))
+          .withRank(extractValue(er, DwcTerm.taxonRank))
+          .withVerbatimRank(extractValue(er, DwcTerm.verbatimTaxonRank))
+          .withSpecificEpithet(extractValue(er, DwcTerm.specificEpithet))
+          .withInfraspecificEpithet(extractValue(er, DwcTerm.infraspecificEpithet))
+          .withScientificNameAuthorship(extractValue(er, DwcTerm.scientificNameAuthorship))
+          .withGenericName(extractValue(er, GbifTerm.genericName))
+          .build();
+
+      NameUsageMatch usageMatch = null;
+      try {
+        usageMatch = kvStore.get(matchRequest);
+      } catch (Exception ex) {
+        log.error(ex.getMessage(), ex);
+      }
+
+      if (usageMatch == null || isEmpty(usageMatch) || checkFuzzy(usageMatch, matchRequest)) {
+        // "NO_MATCHING_RESULTS". This
+        // happens when we get an empty response from the WS
+        addIssue(tr, TAXON_MATCH_NONE);
+        tr.setUsage(INCERTAE_SEDIS);
+        tr.setClassification(Collections.singletonList(INCERTAE_SEDIS));
+      } else {
+
+        MatchType matchType = usageMatch.getDiagnostics().getMatchType();
+
+        if (MatchType.NONE == matchType) {
+          addIssue(tr, TAXON_MATCH_NONE);
+        } else if (MatchType.FUZZY == matchType) {
+          addIssue(tr, TAXON_MATCH_FUZZY);
+        } else if (MatchType.HIGHERRANK == matchType) {
+          addIssue(tr, TAXON_MATCH_HIGHERRANK);
+        }
+
+        // parse name into pieces - we don't get them from the nub lookup
+        try {
+          if (Objects.nonNull(usageMatch.getUsage())) {
+            org.gbif.nameparser.api.ParsedName pn = NAME_PARSER.parse(usageMatch.getUsage().getName(),
+                org.gbif.nameparser.api.Rank.valueOf(usageMatch.getUsage().getRank().name()));
+            tr.setUsageParsedName(toParsedNameAvro(pn));
+          }
+        } catch (UnparsableNameException e) {
+          if (e.getType().isParsable()) {
+            log.warn("Fail to parse backbone {} name for occurrence {}: {}", e.getType(), er.getId(), e.getName());
+          }
+        }
+        // convert taxon record
+        TaxonRecordConverter.convert(usageMatch, tr);
+      }
+
+      tr.setId(er.getId());
     };
+  }
+
+  /**
+   * To be able to return NONE, if response is FUZZY and higher taxa is null or empty
+   * Fix for https://github.com/gbif/pipelines/issues/254
+   */
+  @VisibleForTesting
+  protected static boolean checkFuzzy(NameUsageMatch usageMatch, SpeciesMatchRequest matchRequest) {
+    boolean isFuzzy = MatchType.FUZZY == usageMatch.getDiagnostics().getMatchType();
+    boolean isEmptyTaxa = Strings.isNullOrEmpty(matchRequest.getKingdom())
+        && Strings.isNullOrEmpty(matchRequest.getPhylum())
+        && Strings.isNullOrEmpty(matchRequest.getClazz())
+        && Strings.isNullOrEmpty(matchRequest.getOrder())
+        && Strings.isNullOrEmpty(matchRequest.getFamily());
+    return isFuzzy && isEmptyTaxa;
   }
 
   /**

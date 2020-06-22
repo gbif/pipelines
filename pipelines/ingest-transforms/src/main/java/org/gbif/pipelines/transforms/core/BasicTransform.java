@@ -1,29 +1,28 @@
 package org.gbif.pipelines.transforms.core;
 
-import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
-import org.gbif.pipelines.keygen.common.HbaseConnectionFactory;
-import org.gbif.pipelines.keygen.config.KeygenConfig;
-import org.gbif.pipelines.keygen.config.KeygenConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.apache.hadoop.hbase.client.Connection;
 
-import lombok.SneakyThrows;
+import lombok.Builder;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.BASIC;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.GBIF_ID_INVALID;
+import static org.gbif.pipelines.core.interpreters.core.BasicInterpreter.interpretCopyGbifId;
 
 /**
  * Beam level transformations for the DWC Occurrence, reads an avro, writs an avro, maps from value to keyValue and
@@ -33,35 +32,28 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
 
-  private final Counter counter = Metrics.counter(BasicTransform.class, BASIC_RECORDS_COUNT);
-
-  private final KeygenConfig keygenConfig;
-  private final String datasetId;
   private final boolean isTripletValid;
   private final boolean isOccurrenceIdValid;
   private final boolean useExtendedRecordId;
-
-  private Connection connection;
+  private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn;
+  private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
   private HBaseLockingKeyService keygenService;
 
-  private BasicTransform(KeygenConfig keygenConfig, String datasetId, boolean isTripletValid,
-      boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
-    super(BasicRecord.class, BASIC);
-    this.keygenConfig = keygenConfig;
-    this.datasetId = datasetId;
+  @Builder(buildMethodName = "create")
+  private BasicTransform(
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
+      boolean useExtendedRecordId,
+      BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
+      SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
+      HBaseLockingKeyService keygenService) {
+    super(BasicRecord.class, BASIC, BasicTransform.class.getName(), BASIC_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
     this.useExtendedRecordId = useExtendedRecordId;
-  }
-
-  public static BasicTransform create() {
-    return new BasicTransform(null, null, false, false, false);
-  }
-
-  public static BasicTransform create(String propertiesPath, String datasetId, boolean isTripletValid,
-      boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
-    KeygenConfig config = KeygenConfigFactory.create(Paths.get(propertiesPath));
-    return new BasicTransform(config, datasetId, isTripletValid, isOccurrenceIdValid, useExtendedRecordId);
+    this.gbifIdFn = gbifIdFn;
+    this.keygenServiceSupplier = keygenServiceSupplier;
+    this.keygenService = keygenService;
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
@@ -70,25 +62,38 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via((BasicRecord br) -> KV.of(br.getId(), br));
   }
 
-  @SneakyThrows
+  /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getGbifId()} */
+  public MapElements<BasicRecord, KV<String, BasicRecord>> toGbifIdKv() {
+    return MapElements.into(new TypeDescriptor<KV<String, BasicRecord>>() {})
+        .via((BasicRecord br) -> {
+          String key = Optional.ofNullable(br.getGbifId()).map(Object::toString).orElse(GBIF_ID_INVALID);
+          return KV.of(key, br);
+        });
+  }
+
+  public BasicTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    if (keygenConfig != null) {
-      connection = HbaseConnectionFactory.create(keygenConfig.getHbaseZk());
-      keygenService = new HBaseLockingKeyService(keygenConfig, connection, datasetId);
+    if (keygenService == null && keygenServiceSupplier != null) {
+      keygenService = keygenServiceSupplier.get();
     }
   }
 
-  @SneakyThrows
+  /** Beam @Teardown closes initialized resources */
   @Teardown
-  public void teardown() {
-    if (connection != null) {
-      connection.close();
+  public void tearDown() {
+    if (keygenService != null) {
+      keygenService.close();
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<BasicRecord> out) {
+  @Override
+  public Optional<BasicRecord> convert(ExtendedRecord source) {
 
     BasicRecord br = BasicRecord.newBuilder()
         .setId(source.getId())
@@ -96,10 +101,14 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    Interpretation.from(source)
+    if (useExtendedRecordId && source.getCoreTerms().isEmpty()) {
+      interpretCopyGbifId().accept(source, br);
+    }
+
+    return Interpretation.from(source)
         .to(br)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, useExtendedRecordId))
+        .via(BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, useExtendedRecordId, gbifIdFn))
         .via(BasicInterpreter::interpretBasisOfRecord)
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)
@@ -107,11 +116,15 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretLifeStage)
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
-        .via(BasicInterpreter::interpretReferences);
-
-    out.output(br);
-
-    counter.inc();
+        .via(BasicInterpreter::interpretReferences)
+        .via(BasicInterpreter::interpretOrganismQuantity)
+        .via(BasicInterpreter::interpretOrganismQuantityType)
+        .via(BasicInterpreter::interpretSampleSizeUnit)
+        .via(BasicInterpreter::interpretSampleSizeValue)
+        .via(BasicInterpreter::interpretRelativeOrganismQuantity)
+        .via(BasicInterpreter::interpretLicense)
+        .via(BasicInterpreter::interpretIdentifiedByIds)
+        .via(BasicInterpreter::interpretRecordedByIds)
+        .get();
   }
-
 }

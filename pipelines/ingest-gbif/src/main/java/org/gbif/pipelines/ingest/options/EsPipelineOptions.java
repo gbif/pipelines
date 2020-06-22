@@ -4,17 +4,19 @@ import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
+
 /** Main pipeline options necessary for Elasticsearch index properties */
 public interface EsPipelineOptions extends PipelineOptions {
 
   @Description("Target ES Max Batch Size bytes")
-  @Default.Long(10_485_760L) // 10mb
+  @Default.Long(8_388_608L) // 8mb
   Long getEsMaxBatchSizeBytes();
 
   void setEsMaxBatchSizeBytes(Long batchSize);
 
   @Description("Es max batch size")
-  @Default.Long(10_000L)
+  @Default.Long(1_500L)
   long getEsMaxBatchSize();
 
   void setEsMaxBatchSize(long esBatchSize);
@@ -60,15 +62,28 @@ public interface EsPipelineOptions extends PipelineOptions {
   void setIndexNumberReplicas(Integer indexNumberReplicas);
 
   @Description("ES empty delete index query timeout in seconds")
-  @Default.Integer(3)
+  @Default.Integer(5)
   Integer getSearchQueryTimeoutSec();
 
   void setSearchQueryTimeoutSec(Integer searchQueryTimeoutSec);
 
   @Description("ES empty index query attempts")
-  @Default.Integer(60)
+  @Default.Integer(200)
   Integer getSearchQueryAttempts();
 
   void setSearchQueryAttempts(Integer searchQueryAttempts);
+
+  @Description("ES index max result window")
+  @Default.Integer(200000)
+  Integer getIndexMaxResultWindow();
+
+  void setIndexMaxResultWindow(Integer indexMaxResultWindow);
+
+  @Description("ES document id")
+  @Default.String(GBIF_ID)
+  String getEsDocumentId();
+
+  void setEsDocumentId(String esDocumentId);
+
 
 }

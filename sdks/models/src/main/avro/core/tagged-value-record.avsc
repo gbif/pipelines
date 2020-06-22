@@ -1,0 +1,13 @@
+/**
+ * Represents the interpreted fields of terms related to temporal.
+ */
+{
+  "name": "TaggedValueRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "type": "record",
+  "doc": "Tagged Value of terms to be included while building interpreted data",
+  "fields": [
+    {"name": "id","type":"string", "doc":"Pipelines identifier"},
+    {"name": "taggedValues", "doc": "Tagged values terms", "default": {}, "type": {"type": "map", "values": "string"}}
+  ]
+}

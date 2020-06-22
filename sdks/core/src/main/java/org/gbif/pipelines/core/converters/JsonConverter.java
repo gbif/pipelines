@@ -3,6 +3,7 @@ package org.gbif.pipelines.core.converters;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -10,19 +11,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecordBase;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.POJONode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.primitives.Primitives;
 import lombok.Builder;
@@ -47,7 +45,7 @@ import static org.apache.avro.Schema.Type.UNION;
  *  .converter(LocationRecord.class, getLocationRecordConverter())
  *  .converter(TemporalRecord.class, getTemporalRecordConverter())
  *  .converter(TaxonRecord.class, getTaxonomyRecordConverter())
- *  .converter(AustraliaSpatialRecord.class, getAustraliaSpatialRecordConverter())
+ *  .converter(LocationFeatureRecord.class, getLocationFeatureRecordConverter())
  *  .build()
  *  .toString()
  *
@@ -60,27 +58,11 @@ public class JsonConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private static final Map<Character, Character> CHAR_MAP = Collections.singletonMap('\u001E', ',');
-
-  // Utility predicates to check if a node is a complex element
-  private static final Predicate<String> IS_OBJECT = value -> value.startsWith("{\"") && value.endsWith("}");
-  private static final Predicate<String> IS_ARRAY_ONE = value -> value.startsWith("[") && value.endsWith("]");
-  private static final Predicate<String> IS_ARRAY_TWO = value -> value.startsWith("[{") && value.endsWith("}]");
-  private static final Predicate<String> IS_VALID_JSON =
-      value -> {
-        try (JsonParser parser = MAPPER.getFactory().createParser(value)) {
-          while (parser.nextToken() != null) {
-            // NOP
-          }
-        } catch (Exception ex) {
-          log.warn("JSON is invalid - {}", value);
-          return false;
-        }
-        return true;
-      };
-
-  private static final Predicate<String> IS_COMPLEX_OBJECT =
-      IS_OBJECT.or(IS_ARRAY_ONE).or(IS_ARRAY_TWO).and(IS_VALID_JSON);
+  private static final Map<Character, Character> CHAR_MAP = new HashMap<>();
+  static {
+    CHAR_MAP.put('\u001E', ',');
+    CHAR_MAP.put('\u001f', ' ');
+  }
 
   private final ObjectNode mainNode = MAPPER.createObjectNode();
 
@@ -121,7 +103,7 @@ public class JsonConverter {
         addCommonFields((SpecificRecordBase) value, element);
         arrayNode.add(element);
       } else if (value instanceof String || value.getClass().isPrimitive() || Primitives.isWrapperType(
-          (value.getClass())) || UUID.class.isAssignableFrom(value.getClass())) {
+          value.getClass()) || UUID.class.isAssignableFrom(value.getClass())) {
         arrayNode.add(value.toString());
       }
     });
@@ -171,7 +153,7 @@ public class JsonConverter {
                     }
                     break;
                   default:
-                    addJsonFieldNoCheck(node, f.name(), r.toString());
+                    addJsonRawFieldNoCheck(node, f.name(), r.toString());
                     break;
                 }
               });
@@ -205,12 +187,6 @@ public class JsonConverter {
   /** Adds text field without any skip checks */
   void addJsonTextFieldNoCheck(String key, String value) {
     mainNode.set(sanitizeValue(key), getEscapedTextNode(value));
-  }
-
-  /** Converts - "key":"value" and check some incorrect symbols for json */
-  void addJsonFieldNoCheck(ObjectNode node, String key, String value) {
-    // Can be a json  or a string
-    node.set(sanitizeValue(key), IS_COMPLEX_OBJECT.test(value) ? new POJONode(value) : getEscapedTextNode(value));
   }
 
   /** Converts - "key":"value" and check some incorrect symbols for json */

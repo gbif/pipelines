@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 
 import org.gbif.pipelines.estools.client.EsClient;
 import org.gbif.pipelines.estools.model.DeleteByQueryTask;
@@ -142,8 +143,26 @@ public class EsService {
     }
 
     HttpEntity body = HttpRequestBuilder.newInstance().withIndexAliasAction(aliases, idxToAdd, idxToRemove).build();
-    String endpoint = buildEndpoint("_aliases");
-    esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
+    String aliasEndpoint = buildEndpoint("_aliases");
+
+    if (idxToRemove.size() == 1) {
+      String indexName = idxToRemove.iterator().next();
+      String idxStatEndpoint = buildEndpoint(indexName, "_stats");
+      long sleepTime = 300L;
+      long attempts = 60_000L / sleepTime; // timeout 1 min
+      while (attempts > 0L) {
+        Response response = esClient.performGetRequest(idxStatEndpoint);
+        long queryCurrent = JsonHandler.readTree(response.getEntity())
+            .get("indices").get(indexName).get("primaries").get("search").get("query_current")
+            .asLong();
+        if (queryCurrent == 0) {
+          break;
+        }
+        attempts--;
+        TimeUnit.MILLISECONDS.sleep(sleepTime);
+      }
+    }
+    esClient.performPostRequest(aliasEndpoint, Collections.emptyMap(), body);
   }
 
   /**
@@ -286,7 +305,7 @@ public class EsService {
     return esClient.performPostRequest(endpoint, Collections.emptyMap(), body);
   }
 
-  static String buildEndpoint(Object... strings) {
+  public static String buildEndpoint(Object... strings) {
     StringJoiner joiner = new StringJoiner("/");
     Arrays.stream(strings).forEach(x -> joiner.add(x.toString()));
     return "/" + joiner.toString();

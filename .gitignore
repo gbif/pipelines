@@ -2,6 +2,7 @@
 *.iml
 *.log
 *.log.*
+*.crc
 target
 output
 java-generated
@@ -11,3 +12,4 @@ logs
 log
 temp
 tmp
+minicluster

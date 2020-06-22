@@ -44,6 +44,7 @@ public class EsTestUtils {
 
   public static EsIndexingPipelineOptions createPipelineOptions(EsServer server, String datasetKey, String idxName,
       String alias, int attempt) {
+    String propertiesPath = Thread.currentThread().getContextClassLoader().getResource("lock.yaml").getPath();
     String[] args = {
         "--esIndexName=" + idxName,
         "--datasetId=" + datasetKey,
@@ -52,7 +53,7 @@ public class EsTestUtils {
         "--indexRefreshInterval=1ms",
         "--esHosts=" + server.getServerAddress(),
         "--esSchemaPath=dataset-mapping.json",
-        "--properties=lock.properties"
+        "--properties=" + propertiesPath
     };
     return PipelineOptionsFactory.fromArgs(args).as(EsIndexingPipelineOptions.class);
   }
@@ -79,7 +80,7 @@ public class EsTestUtils {
     try {
       return READER.readTree(response.getEntity().getContent()).get("hits").get("total").asLong();
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 

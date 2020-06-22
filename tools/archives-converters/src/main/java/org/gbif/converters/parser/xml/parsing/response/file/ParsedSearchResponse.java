@@ -29,6 +29,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -53,13 +54,20 @@ public class ParsedSearchResponse {
 
   public ParsedSearchResponse() throws TransformerException, ParserConfigurationException {
     records = new ArrayList<>();
-    transformer = TransformerFactory.newInstance().newTransformer();
+
+    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+    transformerFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    transformer = transformerFactory.newTransformer();
+
     transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
     transformer.setOutputProperty(OutputKeys.METHOD, "xml");
     transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
     transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
     schemaDetector = new ResponseSchemaDetector();
-    docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+
+    DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
+    documentFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+    docBuilder = documentFactory.newDocumentBuilder();
   }
 
   public void addRecordAsXml(Node rawRecord) {

@@ -48,6 +48,11 @@
       "publishingCountry": {"type": "keyword", "copy_to": "all"},
       "datasetPublishingCountry": {"type": "keyword", "copy_to": "all"},
       "publishingOrganizationKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "projectId": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
+      "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+      "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},
@@ -57,22 +62,44 @@
       "typeStatus": {"type": "keyword", "copy_to": "all"},
       "typifiedName": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "references": {"type":"text", "copy_to": "all"},
-      "recordedBy": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
-      "recordNumber": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
-      "organismId": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "recordedByIds": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "keyword" },
+          "value": { "type": "keyword", "copy_to": "all"  }
+        }
+      },
+      "identifiedByIds": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "keyword" },
+          "value": { "type": "keyword", "copy_to": "all"  }
+        }
+      },
+      "recordedBy": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "identifiedBy": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "recordNumber": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "organismId": {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "samplingProtocol":  {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "eventId":  {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "parentEventId":  {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-      "institutionCode":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
-      "collectionCode":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
-      "catalogNumber":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
-      "occurrenceId":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "institutionCode":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "collectionCode":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "catalogNumber":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "locality":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "occurrenceId":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+
+      "organismQuantity": {"type":  "double"},
+      "organismQuantityType": {"type":  "keyword", "copy_to": "all"},
+      "sampleSizeUnit": {"type":  "keyword", "copy_to": "all"},
+      "sampleSizeValue": {"type":  "double"},
+      "relativeOrganismQuantity": {"type":  "double"},
 
       "continent": {"type":"keyword", "copy_to": "all"},
-      "waterBody": {"type":"keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "waterBody": {"type":"keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "countryCode": {"type":"keyword", "copy_to": "all"},
       "country": {"type":"text", "copy_to": "all"},
-      "stateProvince": {"type":"keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "simple", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "stateProvince": {"type":"keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "minimumElevationInMeters": {"type":"double"},
       "maximumElevationInMeters": {"type":"double"},
       "elevation": {"type":"double"},
@@ -93,7 +120,7 @@
       "year": {"type": "short"},
       "month": {"type": "short"},
       "day": {"type": "short"},
-      "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
+      "eventDate": {"type": "date_range", "format": "yyyy-MM-dd'T'HH:mm:ss.SSSZ||yyyy-MM-dd'T'HH:mm:ssZ||yyyy-MM-dd'T'HH:mmZ||yyyy-MM-dd'T'HH:mm:ss.SSS||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm||yyyy-MM-dd||yyyy-MM||yyyy"},
       "startDayOfYear": {"type": "short"},
       "endDayOfYear": {"type": "short"},
       "modified": {"type": "date"},
@@ -115,11 +142,14 @@
           "diagnostics.status": { "type": "keyword" },
           "usageParsedName.state": { "type": "keyword" },
           "usageParsedName.type": { "type": "keyword" },
-          "usageParsedName.notho": { "type": "keyword" }
+          "usageParsedName.notho": { "type": "keyword" },
+          "verbatimScientificName": { "type": "keyword", "normalizer": "lowercase_normalizer", "boost": 100, "copy_to": "all"  },
+          "taxonID": { "type": "keyword" }
         }
       },
 
       "mediaTypes": {"type":  "keyword", "copy_to": "all"},
+      "mediaLicenses": {"type":  "keyword", "copy_to": "all"},
       "multimediaItems": {"type": "nested", "enabled": false,
         "properties": {
           "license": { "type": "keyword" }
@@ -129,7 +159,7 @@
       "measurementOrFactItems": {"type": "nested", "enabled": false},
       "amplificationItems": {"type": "nested", "enabled": false},
 
-      "australiaSpatialLayers":{"type": "nested"},
+      "locationFeatureLayers":{"type": "nested"},
 
       "verbatim": {"type": "object", "enabled": false}
     }

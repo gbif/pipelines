@@ -1,16 +1,16 @@
 package org.gbif.pipelines.parsers.parsers.temporal;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.time.Year;
-import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.Temporal;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+
+import org.gbif.pipelines.parsers.parsers.temporal.utils.TemporalUtils;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -80,19 +80,20 @@ public class ParsedTemporal {
     return Optional.ofNullable(day);
   }
 
-  public void setFromDate(Year year, Month month, Integer day, LocalTime time) {
+  public void setFromDate(Year year, Month month, Integer day, LocalTime time, ZoneOffset offset) {
     try {
-      if (year != null && month != null && day != null && time != null) {
-        this.fromDate = LocalDateTime.of(LocalDate.of(year.getValue(), month, day), time);
-      } else if (year != null && month != null && day != null) {
-        this.fromDate = LocalDate.of(year.getValue(), month, day);
-      } else if (year != null && month != null) {
-        this.fromDate = YearMonth.of(year.getValue(), month);
-      } else if (year != null) {
-        this.fromDate = Year.of(year.getValue());
-      }
+      TemporalUtils.getTemporal(year, month, day, time, offset).ifPresent(x -> this.fromDate = x);
     } catch (RuntimeException ex) {
       issues.add(ParsedTemporalIssue.DATE_INVALID);
     }
+  }
+
+  public Optional<Integer> getStartDayOfYear() {
+    return Optional.ofNullable(fromDate).flatMap(TemporalUtils::getStartDayOfYear);
+  }
+
+  public Optional<Integer> getEndDayOfYear() {
+    Temporal temporal = Optional.ofNullable(toDate).orElse(fromDate);
+    return Optional.ofNullable(temporal).flatMap(TemporalUtils::getEndDayOfYear);
   }
 }

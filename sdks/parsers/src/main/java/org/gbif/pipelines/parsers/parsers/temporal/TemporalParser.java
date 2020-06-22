@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
 import java.time.MonthDay;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
@@ -44,7 +47,7 @@ public class TemporalParser {
   private static final BiFunction<ChronoAccumulator, Set<ParsedTemporalIssue>, Temporal> TEMPORAL_FUNC =
       (ca, deq) -> ChronoAccumulatorConverter.toTemporal(ca, deq).orElse(null);
 
-  private static final Predicate<Temporal> HAS_DAY_FN = t -> t instanceof LocalDate || t instanceof LocalDateTime;
+  private static final Predicate<Temporal> HAS_DAY_FN = t -> t instanceof LocalDate || t instanceof LocalDateTime || t instanceof OffsetDateTime;
   private static final Predicate<Temporal> HAS_MONTH_FN = t -> HAS_DAY_FN.test(t) || t instanceof YearMonth;
   private static final Predicate<Temporal> HAS_YEAR_FN = t -> HAS_MONTH_FN.test(t) || t instanceof Year;
 
@@ -173,14 +176,22 @@ public class TemporalParser {
     Integer dayNotNull = fromDay == null ? day : fromDay;
     Integer resultDay = isDayMatch ? dayNotNull : day;
 
-    boolean hasTime = fromTemporal instanceof LocalDateTime;
+    // To support US format
+    if (isYearMatch && !isMonthMatch && !isDayMatch && month.getValue() == fromDay && fromMonth.getValue() == day) {
+      isMonthMatch = true;
+      isDayMatch =  true;
+    }
+
+    boolean hasTime = fromTemporal instanceof LocalDateTime || fromTemporal instanceof OffsetDateTime;
     LocalTime resultTime = hasTime ? LocalTime.from(fromTemporal) : null;
+
+    ZoneOffset resultOffset = fromTemporal instanceof OffsetDateTime ? OffsetTime.from(fromTemporal).getOffset() : null;
 
     if (!isYearMatch || !isMonthMatch || !isDayMatch) {
       yearMonthDayParsed.setFromDate(fromTemporal);
       yearMonthDayParsed.setIssues(Collections.singleton(DATE_MISMATCH));
     } else {
-      yearMonthDayParsed.setFromDate(resultYear, resultMonth, resultDay, resultTime);
+      yearMonthDayParsed.setFromDate(resultYear, resultMonth, resultDay, resultTime, resultOffset);
     }
 
     yearMonthDayParsed.setYear(resultYear);
@@ -192,6 +203,9 @@ public class TemporalParser {
 
   /** Merge from date from/to event and date from year-month-day */
   private static ParsedTemporal mergeYmd(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+    // To support US format
+    swapForUsFormat(yearMonthDayParsed, eventDateParsed);
+
     Temporal fromTemporal = eventDateParsed.getFromDate();
     Temporal toTemporal = eventDateParsed.getToDate();
 
@@ -228,6 +242,60 @@ public class TemporalParser {
     return yearMonthDayParsed;
   }
 
+  /** Swap date and month if format is US */
+  private static void swapForUsFormat(ParsedTemporal yearMonthDayParsed, ParsedTemporal eventDateParsed) {
+    Temporal fromDate = eventDateParsed.getFromDate();
+    Temporal toDate = eventDateParsed.getToDate();
+
+    boolean containsDateMonthFrom = fromDate instanceof LocalDateTime
+        || fromDate instanceof LocalDate
+        || fromDate instanceof OffsetDateTime;
+
+    boolean containsDateMonthTo = toDate instanceof LocalDateTime
+        || toDate instanceof LocalDate
+        || toDate instanceof OffsetDateTime;
+
+    boolean containsDateMonthSimple = yearMonthDayParsed.getYearOpt().isPresent()
+        && yearMonthDayParsed.getMonthOpt().isPresent()
+        && yearMonthDayParsed.getDayOpt().isPresent();
+
+    if (containsDateMonthFrom && containsDateMonthTo && containsDateMonthSimple) {
+      if (!Month.from(fromDate).equals(yearMonthDayParsed.getMonth())
+          && MonthDay.from(fromDate).getDayOfMonth() != yearMonthDayParsed.getDay()
+          && Month.from(fromDate).getValue() == yearMonthDayParsed.getDay()
+          && MonthDay.from(fromDate).getDayOfMonth() == yearMonthDayParsed.getMonth().getValue()) {
+
+        Temporal fromTemporal = fromDate;
+        Temporal toTemporal = toDate;
+        if (fromDate instanceof OffsetDateTime && toDate instanceof OffsetDateTime) {
+          OffsetDateTime ldtf = (OffsetDateTime) fromDate;
+          OffsetDateTime ldtt = (OffsetDateTime) toDate;
+          fromTemporal = OffsetDateTime.of(
+              LocalDateTime.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue(), ldtf.getHour(), ldtf.getMinute(), ldtf.getSecond()),
+              ldtf.getOffset()
+          );
+          toTemporal = OffsetDateTime.of(
+              LocalDateTime.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue(), ldtt.getHour(), ldtt.getMinute(), ldtt.getSecond()),
+              ldtt.getOffset()
+          );
+        } else if (fromDate instanceof LocalDateTime && toDate instanceof LocalDateTime) {
+          LocalDateTime ldtf = (LocalDateTime) fromDate;
+          LocalDateTime ldtt = (LocalDateTime) toDate;
+          fromTemporal = LocalDateTime.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue(), ldtf.getHour(), ldtf.getMinute(), ldtf.getSecond());
+          toTemporal = LocalDateTime.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue(), ldtt.getHour(), ldtt.getMinute(), ldtt.getSecond());
+        } else if (fromDate instanceof LocalDate && toDate instanceof LocalDate) {
+          LocalDate ldtf = (LocalDate) fromDate;
+          LocalDate ldtt = (LocalDate) toDate;
+          fromTemporal = LocalDate.of(ldtf.getYear(), ldtf.getDayOfMonth(), ldtf.getMonth().getValue());
+          toTemporal = LocalDate.of(ldtt.getYear(), ldtt.getDayOfMonth(), ldtt.getMonth().getValue());
+        }
+        eventDateParsed.setFromDate(fromTemporal);
+        eventDateParsed.setToDate(toTemporal);
+      }
+    }
+
+  }
+
   /** Compare dates, FROM cannot be greater than TO */
   private static boolean isValidRange(Temporal from, Temporal to) {
     if (from == null || to == null) {
@@ -240,7 +308,7 @@ public class TemporalParser {
       unit = ChronoUnit.MONTHS;
     } else if (from instanceof LocalDate) {
       unit = ChronoUnit.DAYS;
-    } else if (from instanceof LocalDateTime) {
+    } else if (from instanceof LocalDateTime || from instanceof OffsetDateTime) {
       unit = ChronoUnit.SECONDS;
     }
     return from.until(to, unit) >= 0;

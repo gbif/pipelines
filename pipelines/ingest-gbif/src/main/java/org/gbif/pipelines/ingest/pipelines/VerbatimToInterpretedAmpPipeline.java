@@ -4,10 +4,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.function.UnaryOperator;
 
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.factory.BlastServiceClientFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AmplificationTransform;
 
@@ -35,11 +38,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.VerbatimToInterpretedAmpPipeline
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ * --pipelineStep=VERBATIM_TO_INTERPRETED_AMP \
  * --properties=/some/path/to/output/ws.properties
  * --datasetId=0057a720-17c9-4658-971e-9578f3577cf5
  * --attempt=1
@@ -64,24 +68,29 @@ public class VerbatimToInterpretedAmpPipeline {
     Integer attempt = options.getAttempt();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    String wsPropertiesPath = options.getProperties();
+    PipelinesConfig config = FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties());
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
 
-    MDC.put("datasetId", datasetId);
+    MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
+    MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, id);
-    UnaryOperator<String> pathVerbatimFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
+    UnaryOperator<String> pathVerbatimFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);
 
     log.info("Creating transformations");
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
-    AmplificationTransform amplificationTransform = AmplificationTransform.create(wsPropertiesPath);
+
+    AmplificationTransform amplificationTransform =
+        AmplificationTransform.builder()
+            .clientSupplier(BlastServiceClientFactory.createSupplier(config.getAmplification()))
+            .create();
 
     log.info("Adding pipeline transforms");
     p.apply("Read Verbatim", verbatimTransform.read(pathVerbatimFn))

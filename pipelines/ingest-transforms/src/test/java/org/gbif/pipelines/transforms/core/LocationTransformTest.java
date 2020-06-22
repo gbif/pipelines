@@ -11,10 +11,13 @@ import java.util.stream.Collectors;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 import org.gbif.rest.client.geocode.Location;
 
@@ -49,35 +52,40 @@ public class LocationTransformTest {
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
 
-    private static GeocodeResponse toGeocodeResponse(Country country) {
-        Location location = new Location();
-        location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-        return new GeocodeResponse(Collections.singletonList(location));
-    }
+  private static GeocodeResponse toGeocodeResponse(Country country) {
+    Location location = new Location();
+    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
+    return new GeocodeResponse(Collections.singletonList(location));
+  }
 
   @Test
-  public void emptyErTest() {
-    // Expected
-    LocationRecord expected = LocationRecord.newBuilder().setId("777").setCreated(0L).build();
+  public void emptyLrTest() {
 
     // State
-    KeyValueTestStore<LatLng, GeocodeResponse> kvStore = new KeyValueTestStore<>();
+    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
+        () -> GeocodeKvStore.create(new KeyValueTestStoreStub<>());
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
 
     MetadataRecord mdr = MetadataRecord.newBuilder().setId("777").build();
 
     PCollectionView<MetadataRecord> metadataView =
-        p.apply("Create test metadata",Create.of(mdr))
+        p.apply("Create test metadata", Create.of(mdr))
             .apply("Convert into view", View.asSingleton());
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(er)).apply(LocationTransform.create(kvStore).interpret(metadataView))
+        p.apply(Create.of(er))
+            .apply(
+                LocationTransform.builder()
+                    .geocodeKvStoreSupplier(geocodeKvStore)
+                    .metadataView(metadataView)
+                    .create()
+                    .interpret())
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should
-    PAssert.that(recordCollection).containsInAnyOrder(expected);
+    PAssert.that(recordCollection).empty();
     p.run();
   }
 
@@ -85,9 +93,11 @@ public class LocationTransformTest {
   public void transformationTest() {
 
     // State
-    KeyValueTestStore<LatLng, GeocodeResponse> kvStore = new KeyValueTestStore<>();
+    KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK));
     kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN));
+    SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
+        () -> GeocodeKvStore.create(kvStore);
 
     final String[] denmark = {
         "0",
@@ -135,24 +145,30 @@ public class LocationTransformTest {
         "44.5",
         "105.0",
         "5.0",
-         "true"
+        "true"
     };
 
     final MetadataRecord mdr = MetadataRecord.newBuilder()
-                                .setId("0")
-                                .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode())
-                                .setDatasetKey(UUID.randomUUID().toString())
-                                .build();
+        .setId("0")
+        .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode())
+        .setDatasetKey(UUID.randomUUID().toString())
+        .build();
     final List<ExtendedRecord> records = createExtendedRecordList(mdr, denmark, japan);
     final List<LocationRecord> locations = createLocationList(mdr, denmark, japan);
 
     PCollectionView<MetadataRecord> metadataView =
-            p.apply("Create test metadata",Create.of(mdr))
+        p.apply("Create test metadata", Create.of(mdr))
             .apply("Convert into view", View.asSingleton());
 
     // When
     PCollection<LocationRecord> recordCollection =
-        p.apply(Create.of(records)).apply(LocationTransform.create(kvStore).interpret(metadataView))
+        p.apply(Create.of(records))
+            .apply(
+                LocationTransform.builder()
+                    .geocodeKvStoreSupplier(geocodeKvStore)
+                    .metadataView(metadataView)
+                    .create()
+                    .interpret())
             .apply("Cleaning Date created", ParDo.of(new RemoveDateCreated()));
 
     // Should

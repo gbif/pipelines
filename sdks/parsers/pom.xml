@@ -3,7 +3,7 @@
   <parent>
     <artifactId>sdks</artifactId>
     <groupId>org.gbif.pipelines</groupId>
-    <version>2.2.4-SNAPSHOT</version>
+    <version>2.5.2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -47,6 +47,10 @@
     <dependency>
       <groupId>org.gbif.kvs</groupId>
       <artifactId>kvs-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.data</groupId>
+      <artifactId>data-repo-api</artifactId>
     </dependency>
 
     <!-- Geotools -->
@@ -101,6 +105,12 @@
       <artifactId>okio</artifactId>
     </dependency>
 
+    <!-- Fault tolerance - Used for API service calls-->
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-retry</artifactId>
+    </dependency>
+
     <!-- Json -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -119,6 +129,16 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- ES -->
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>elasticsearch-rest-high-level-client</artifactId>
     </dependency>
 
     <!-- Test -->

@@ -1,6 +1,5 @@
 package org.gbif.converters.converter;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
@@ -8,13 +7,11 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.AvroFSInput;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -27,34 +24,13 @@ public class FsUtils {
   private static final long FILE_LIMIT_SIZE = 3L * 1_024L; //3Kb
 
   /**
-   * Helper method to get file system based on provided configuration.
-   */
-  @SneakyThrows
-  public static FileSystem getFileSystem(String path, String hdfsSiteConfig) {
-    Configuration config = new Configuration();
-
-    // check if the hdfs-site.xml is provided
-    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-      File hdfsSite = new File(hdfsSiteConfig);
-      if (hdfsSite.exists() && hdfsSite.isFile()) {
-        log.info("using hdfs-site.xml");
-        config.addResource(hdfsSite.toURI().toURL());
-      } else {
-        log.warn("hdfs-site.xml does not exist");
-      }
-    }
-
-    return FileSystem.get(URI.create(path), config);
-  }
-
-  /**
    * Helper method to create a parent directory in the provided path
    *
    * @return filesystem
    */
   @SneakyThrows
   public static FileSystem createParentDirectories(Path path, String hdfsSite) {
-    FileSystem fs = getFileSystem(path.toString(), hdfsSite);
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSite).getFs(path.toString());
     fs.mkdirs(path.getParent());
     return fs;
   }
@@ -91,7 +67,7 @@ public class FsUtils {
   }
 
   public static long fileSize(URI file, String hdfsSiteConfig) throws IOException {
-    FileSystem fs = getFileSystem(file.toString(), hdfsSiteConfig);
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig).getFs(file.toString());
     return fs.getFileStatus(new Path(file)).getLen();
   }
 

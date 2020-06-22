@@ -1,0 +1,14 @@
+/**
+ * Additional structure for Australia spatial service, represents https://sampling.ala.org.au/sampling-service/fields
+ */
+{
+  "name": "LocationFeatureRecord",
+  "namespace": "org.gbif.pipelines.io.avro",
+  "type": "record",
+  "doc": "https://sampling.ala.org.au/sampling-service/fields",
+  "fields": [
+    {"name": "id", "type": "string", "doc":"Pipelines identifier"},
+    {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+    {"name": "items", "doc": "Dynamic values", "default": {}, "type": {"type": "map", "values": "string"}}
+  ]
+}

@@ -84,7 +84,7 @@ public class HBaseLockingKeyService implements Serializable {
     this.lookupTableStore =
         new HBaseStore<>(cfg.getLookupTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection, NUMBER_OF_BUCKETS);
     this.counterTableStore = new HBaseStore<>(cfg.getCounterTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
-    this.occurrenceTableStore = new HBaseStore<>(cfg.getOccTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
+    this.occurrenceTableStore = new HBaseStore<>(cfg.getOccurrenceTable(), Columns.OCCURRENCE_COLUMN_FAMILY, connection);
     this.datasetId = datasetId;
   }
 
@@ -417,6 +417,13 @@ public class HBaseLockingKeyService implements Serializable {
 
   public void deleteKeyByUniques(Set<String> uniqueStrings) {
     deleteKeyByUniques(uniqueStrings, datasetId);
+  }
+
+  @SneakyThrows
+  public void close() {
+    if (connection != null) {
+      connection.close();
+    }
   }
 
   private static void failWithConflictingLookup(Map<String, Long> conflictingKeys) {

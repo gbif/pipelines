@@ -1,32 +1,26 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.kvs.conf.CachedHBaseKVStoreConfiguration;
-import org.gbif.kvs.hbase.HBaseKVStoreConfiguration;
-import org.gbif.kvs.species.NameUsageMatchKVStoreFactory;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.TaxonomyInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.parsers.config.KvConfig;
-import org.gbif.pipelines.parsers.config.KvConfigFactory;
+import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.species.NameUsageMatch;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAXON_RECORDS_COUNT;
@@ -44,31 +38,16 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
 
-  private final Counter counter = Metrics.counter(TaxonomyTransform.class, TAXON_RECORDS_COUNT);
-
-  private final KvConfig kvConfig;
+  private SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier;
   private KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore;
 
-  private TaxonomyTransform(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore, KvConfig kvConfig) {
-    super(TaxonRecord.class, TAXONOMY);
+  @Builder(buildMethodName = "create")
+  private TaxonomyTransform(
+      SerializableSupplier<KeyValueStore<SpeciesMatchRequest, NameUsageMatch>> kvStoreSupplier,
+      KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
+    super(TaxonRecord.class, TAXONOMY, TaxonomyTransform.class.getName(), TAXON_RECORDS_COUNT);
+    this.kvStoreSupplier = kvStoreSupplier;
     this.kvStore = kvStore;
-    this.kvConfig = kvConfig;
-  }
-
-  public static TaxonomyTransform create() {
-    return new TaxonomyTransform(null, null);
-  }
-
-  public static TaxonomyTransform create(KvConfig kvConfig) {
-    return new TaxonomyTransform(null, kvConfig);
-  }
-
-  public static TaxonomyTransform create(KeyValueStore<SpeciesMatchRequest, NameUsageMatch> kvStore) {
-    return new TaxonomyTransform(kvStore, null);
-  }
-
-  public static TaxonomyTransform create(String properties) {
-    return new TaxonomyTransform(null, KvConfigFactory.create(KvConfigFactory.TAXONOMY_PREFIX, Paths.get(properties)));
   }
 
   /** Maps {@link TaxonRecord} to key value, where key is {@link TaxonRecord#getId} */
@@ -77,62 +56,44 @@ public class TaxonomyTransform extends Transform<ExtendedRecord, TaxonRecord> {
         .via((TaxonRecord tr) -> KV.of(tr.getId(), tr));
   }
 
+  public TaxonomyTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  /** Beam @Setup initializes resources */
   @Setup
-  public void setup() throws IOException {
-    if (kvConfig != null) {
-
-      ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-          .withBaseApiUrl(kvConfig.getBasePath()) //GBIF base API url
-          .withFileCacheMaxSizeMb(kvConfig.getCacheSizeMb()) //Max file cache size
-          .withTimeOut(kvConfig.getTimeout()) //Geocode service connection time-out
-          .build();
-
-      if (kvConfig.getZookeeperUrl() != null && !kvConfig.isRestOnly()) {
-
-        CachedHBaseKVStoreConfiguration matchConfig = CachedHBaseKVStoreConfiguration.builder()
-            .withValueColumnQualifier("j") //stores JSON data
-            .withHBaseKVStoreConfiguration(HBaseKVStoreConfiguration.builder()
-                .withTableName(kvConfig.getTableName()) //Geocode KV HBase table
-                .withColumnFamily("v") //Column in which qualifiers are stored
-                .withNumOfKeyBuckets(kvConfig.getNumOfKeyBuckets()) //Buckets for salted key generations
-                .withHBaseZk(kvConfig.getZookeeperUrl()) //HBase Zookeeper ensemble
-                .build())
-            .withCacheCapacity(15_000L)
-            .build();
-
-        kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(matchConfig, clientConfiguration);
-      } else {
-        kvStore = NameUsageMatchKVStoreFactory.nameUsageMatchKVStore(clientConfiguration);
-      }
-
+  public void setup() {
+    if (kvStore == null && kvStoreSupplier != null) {
+      log.info("Initialize NameUsageMatchKvStore");
+      kvStore = kvStoreSupplier.get();
     }
   }
 
+  /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
     if (Objects.nonNull(kvStore)) {
       try {
+        log.info("Close NameUsageMatchKvStore");
         kvStore.close();
       } catch (IOException ex) {
-        log.error("Error closing KVStore", ex);
+        log.error("Error closing KV Store", ex);
       }
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<TaxonRecord> out) {
-
+  @Override
+  public Optional<TaxonRecord> convert(ExtendedRecord source) {
     TaxonRecord tr = TaxonRecord.newBuilder().setCreated(Instant.now().toEpochMilli()).build();
 
     Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(TaxonomyInterpreter.taxonomyInterpreter(kvStore));
+
     // the id is null when there is an error in the interpretation. In these
     // cases we do not write the taxonRecord because it is totally empty.
-    Optional.ofNullable(tr.getId()).ifPresent(id -> out.output(tr));
-
-    counter.inc();
+    return tr.getId() == null ? Optional.empty() : Optional.of(tr);
   }
-
 }

@@ -49,11 +49,10 @@ public class DelimiterUtils {
     // check length, the length must be greater than seven to avoid case as "1999/2", where it looks
     // as year and month
     boolean canSplit =
-        rawPeriod.lastIndexOf(CHAR_PERIOD) == rawPeriod.indexOf(CHAR_PERIOD)
-            && rawPeriod.length() > 7;
-    String[] splitted = canSplit ? RGX_PERIOD.split(rawPeriod) : new String[] {rawPeriod, ""};
+        rawPeriod.lastIndexOf(CHAR_PERIOD) == rawPeriod.indexOf(CHAR_PERIOD) && rawPeriod.length() > 7;
+    String[] splitted = canSplit ? RGX_PERIOD.split(rawPeriod) : new String[]{rawPeriod, ""};
     // Returns an array of the same length each time
-    return splitted.length < 2 ? new String[] {splitted[0], ""} : splitted;
+    return splitted.length < 2 ? new String[]{splitted[0], ""} : splitted;
   }
 
   /**
@@ -62,7 +61,7 @@ public class DelimiterUtils {
    *
    * @param rawDateTime raw string date and time
    * @return an array with two elements, where fist is the date and second the time, example:
-   *     {"10-10-2010", "10:10:10"}
+   * {"10-10-2010", "10:10:10"}
    */
   public static String[] splitDateTime(String rawDateTime) {
     // Does value have time inside
@@ -80,7 +79,7 @@ public class DelimiterUtils {
 
     // Calculate the beginning index of date, the date can be absent, in this case, substring from 0
     // to 0 returns empty string
-    int dateIdx = shift < 0 ? 0 : shift;
+    int dateIdx = Math.max(shift, 0);
     boolean hasTime = timeDelimiterIdx > 0;
     String date = hasTime ? rawDateTime.substring(0, dateIdx) : rawDateTime;
 
@@ -88,7 +87,7 @@ public class DelimiterUtils {
     int timeIdx = shift + 1;
     String time = hasTime ? rawDateTime.substring(timeIdx) : "";
 
-    return new String[] {date, time};
+    return new String[]{date, time};
   }
 
   /**
@@ -109,11 +108,20 @@ public class DelimiterUtils {
    * @return an array with two elements, where fist is the date and second the time
    */
   public static String[] splitTime(String rawTime) {
+    return RGX_TIME.split(rawTime);
+  }
+
+  /**
+   * Split raw time into an array with raw elements, example: "10:10:10+02:00" to {"10:10:10", "+02:00"}
+   *
+   * @param rawTime raw string time
+   * @return an array with two elements, where fist is the time and zone
+   */
+  public static String[] splitTimeAndZone(String rawTime) {
     String minus = RGX_MINUS.matcher(rawTime).replaceAll(MINUS);
     String plus = RGX_PLUS.matcher(minus).replaceAll(PLUS);
     String z = RGX_Z.matcher(plus).replaceAll(Z);
 
-    String[] timeZoneArray = RGX_ESCAPE.split(z.trim());
-    return RGX_TIME.split(timeZoneArray[0]);
+    return RGX_ESCAPE.split(z.trim());
   }
 }

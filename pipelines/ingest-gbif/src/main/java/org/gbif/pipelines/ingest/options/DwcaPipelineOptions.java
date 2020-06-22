@@ -9,12 +9,9 @@ public interface DwcaPipelineOptions extends EsIndexingPipelineOptions, Interpre
 
   enum PipelineStep {
     DWCA_TO_VERBATIM, // only reads a Dwca and converts it to an avro file
-    DWCA_TO_INTERPRETED, // reads a Dwca and interprets it
-    DWCA_TO_ES_INDEX, // reads a Dwca, interprets it and indexes it to ES
     XML_TO_VERBATIM, // only reads XML files and converts it to an avro file
-    XML_TO_INTERPRETED, // reads XML files and interprets it
-    XML_TO_ES_INDEX, // reads XML files, interprets it and indexes it to ES
     INTERPRETED_TO_ES_INDEX, // reads interpreted avro files and indexes them to ES
+    INTERPRETED_TO_HDFS, // reads interpreted avro files and converts into avro for feature HDFS view table
     VERBATIM_TO_INTERPRETED, // reads ExtendedRecord avro file and interprets it
     VERBATIM_TO_INTERPRETED_AMP, // reads ExtendedRecord avro file and interprets amplification extension
     INTERPRETED_TO_ES_INDEX_AMP, // reads interpreted amplification extension and update ES index

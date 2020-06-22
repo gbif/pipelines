@@ -8,10 +8,9 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.ImageInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
@@ -30,10 +29,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
 
-  private final Counter counter = Metrics.counter(ImageTransform.class, IMAGE_RECORDS_COUNT);
-
   private ImageTransform() {
-    super(ImageRecord.class, IMAGE);
+    super(ImageRecord.class, IMAGE, ImageTransform.class.getName(), IMAGE_RECORDS_COUNT);
   }
 
   public static ImageTransform create() {
@@ -46,17 +43,20 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
         .via((ImageRecord ir) -> KV.of(ir.getId(), ir));
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<ImageRecord> out) {
-    Interpretation.from(source)
+  public ImageTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
+  @Override
+  public Optional<ImageRecord> convert(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> ImageRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(Extension.IMAGE.getRowType()))
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(ImageInterpreter::interpret)
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
 
 }

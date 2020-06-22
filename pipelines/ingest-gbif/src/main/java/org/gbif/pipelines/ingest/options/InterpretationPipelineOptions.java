@@ -59,6 +59,7 @@ public interface InterpretationPipelineOptions
   void setCoreSiteConfig(String path);
 
   @Description("Type of the endpoint being crawled")
+  @Default.String("DWC_ARCHIVE")
   String getEndPointType();
 
   void setEndPointType(String id);
@@ -80,6 +81,11 @@ public interface InterpretationPipelineOptions
   boolean isUseExtendedRecordId();
 
   void setUseExtendedRecordId(boolean useExtendedRecordId);
+
+  @Description("Number of file shards")
+  Integer getNumberOfShards();
+
+  void setNumberOfShards(Integer numberOfShards);
 
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {

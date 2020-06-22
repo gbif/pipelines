@@ -7,9 +7,9 @@ import java.util.function.Function;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
-import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.MetricQueryResults;
 import org.apache.beam.sdk.metrics.MetricResult;
+import org.apache.beam.sdk.metrics.MetricResults;
 import org.apache.beam.sdk.metrics.MetricsFilter;
 import org.apache.hadoop.fs.FileSystem;
 
@@ -18,20 +18,20 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Class to work with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string format
+ * Class to work with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml string format
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MetricsHandler {
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml string
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml string
    * format
    * SparkRunner doesn't support committed
    */
-  public static String getCountersInfo(PipelineResult pr) {
+  public static String getCountersInfo(MetricResults results) {
 
-    MetricQueryResults queryResults = pr.metrics().queryMetrics(MetricsFilter.builder().build());
+    MetricQueryResults queryResults = results.queryMetrics(MetricsFilter.builder().build());
 
     Function<MetricResult<Long>, String> convert =
         mr -> mr.getName().getName() + "Attempted: " + mr.getAttempted() + "\n";
@@ -48,17 +48,18 @@ public class MetricsHandler {
   }
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml file and
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml file and
    * save it
    */
-  public static void saveCountersToFile(String hdfsSiteConfig, String path, PipelineResult result) {
+  public static void saveCountersToFile(String hdfsSiteConfig, String path, MetricResults results) {
 
     if (path != null && !path.isEmpty()) {
       log.info("Trying to write pipeline's metadata to a file - {}", path);
 
-      String countersInfo = getCountersInfo(result);
+      String countersInfo = getCountersInfo(results);
 
-      try (FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path)) {
+      FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+      try {
         FsUtils.createFile(fs, path, countersInfo);
         log.info("Metadata was written to a file - {}", path);
       } catch (IOException ex) {
@@ -69,24 +70,30 @@ public class MetricsHandler {
   }
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml file and
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml file and
    * save it
    */
-  public static void saveCountersToFile(InterpretationPipelineOptions options, PipelineResult result){
-    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile(options.getHdfsSiteConfig(), metadataPath, result);
-    });
+  public static void saveCountersToInputPathFile(BasePipelineOptions options, MetricResults results) {
+    saveCountersToFile(options, results, true);
   }
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link PipelineResult} and converts to a yaml file and
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml file and
    * save it
    */
-  public static void saveCountersToFile(BasePipelineOptions options, PipelineResult result){
+  public static void saveCountersToTargetPathFile(BasePipelineOptions options, MetricResults results) {
+    saveCountersToFile(options, results, false);
+  }
+
+  /**
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml file and
+   * save it
+   */
+  private static void saveCountersToFile(BasePipelineOptions options, MetricResults results, boolean isInput) {
     Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildPath(options, metadataName);
-      MetricsHandler.saveCountersToFile("", metadataPath, result);
+      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildDatasetAttemptPath(options, metadataName, isInput);
+      String hdfsSiteConfig = options instanceof InterpretationPipelineOptions ? ((InterpretationPipelineOptions) options).getHdfsSiteConfig() : "";
+      MetricsHandler.saveCountersToFile(hdfsSiteConfig, metadataPath, results);
     });
   }
 

@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.function.UnaryOperator;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
@@ -42,11 +43,12 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexAmpPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexAmpPipeline
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ * --pipelineStep=INTERPRETED_TO_ES_INDEX_AMP \
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
@@ -69,17 +71,18 @@ public class InterpretedToEsIndexAmpPipeline {
 
   public static void run(EsIndexingPipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding step 2: Reading avros and converting into a json object");
     PCollection<String> jsonCollection =
-        p.apply("Read Amplification", AmplificationTransform.create().read(pathFn))
+        p.apply("Read Amplification", AmplificationTransform.builder().create().read(pathFn))
             .apply("Merging into json", ParDo.of(new DoFn<AmplificationRecord, String>() {
 
               private final Counter counter = Metrics.counter(GbifJsonConverter.class, AVRO_TO_JSON_COUNT);

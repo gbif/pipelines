@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.util.EnumMap;
@@ -23,6 +24,7 @@ import static java.time.temporal.ChronoField.DAY_OF_MONTH;
 import static java.time.temporal.ChronoField.HOUR_OF_DAY;
 import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.OFFSET_SECONDS;
 import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 
@@ -115,7 +117,14 @@ public class ChronoAccumulatorConverter {
     if (!intSecond.isPresent()) {
       return Optional.of(localDateTime);
     }
-    return Optional.of(localDateTime.withSecond(intSecond.get()));
+    localDateTime = localDateTime.withSecond(intSecond.get());
+
+    // Check time zone
+    Optional<String> zone = accumulator.getChronoFileValue(OFFSET_SECONDS);
+    if (!zone.isPresent()) {
+      return Optional.of(localDateTime);
+    }
+    return Optional.of(localDateTime.atOffset(ZoneOffset.of(zone.get())));
   }
 
   /**
@@ -125,12 +134,12 @@ public class ChronoAccumulatorConverter {
    * @return Year value if present
    */
   public static Optional<Year> getYear(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
-    Optional<Year> year = convert(accumulator, YEAR, issues).map(Year::of);
-    if (year.isPresent() && (year.get().isBefore(OLD_YEAR) || year.get().isAfter(Year.now()))) {
+    Optional<Integer> integer = convert(accumulator, YEAR, issues);
+    if (integer.isPresent() && (integer.get() < OLD_YEAR.getValue() || integer.get() > Year.now().getValue())) {
       issues.add(DATE_UNLIKELY);
       return Optional.empty();
     }
-    return year;
+    return integer.map(Year::of);
   }
 
   /**
@@ -140,7 +149,12 @@ public class ChronoAccumulatorConverter {
    * @return Month value if present
    */
   public static Optional<Month> getMonth(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
-    return convert(accumulator, MONTH_OF_YEAR, issues).map(Month::of);
+    Optional<Integer> integer = convert(accumulator, MONTH_OF_YEAR, issues);
+    if (integer.isPresent() && (integer.get() < 1 || integer.get() > 12)) {
+      issues.add(DATE_INVALID);
+      return Optional.empty();
+    }
+    return integer.map(Month::of);
   }
 
   /**
@@ -150,7 +164,12 @@ public class ChronoAccumulatorConverter {
    * @return Integer day value if present
    */
   public static Optional<Integer> getDay(ChronoAccumulator accumulator, Set<ParsedTemporalIssue> issues) {
-    return convert(accumulator, DAY_OF_MONTH, issues);
+    Optional<Integer> integer = convert(accumulator, DAY_OF_MONTH, issues);
+    if (integer.isPresent() && (integer.get() < 1 || integer.get() > 31)) {
+      issues.add(DATE_INVALID);
+      return Optional.empty();
+    }
+    return integer;
   }
 
   /**

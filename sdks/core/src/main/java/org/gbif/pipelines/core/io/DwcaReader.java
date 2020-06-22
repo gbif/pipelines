@@ -60,7 +60,7 @@ public class DwcaReader implements Closeable {
     }
     StarRecord next = starRecordsIt.next();
     recordsReturned++;
-    if (recordsReturned % 1000 == 0) {
+    if (recordsReturned % 10_000 == 0) {
       log.info("Read [{}] records", recordsReturned);
     }
     current = ExtendedRecordConverter.from(next);

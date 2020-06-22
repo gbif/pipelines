@@ -1,5 +1,6 @@
 package org.gbif.pipelines.ingest.pipelines;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.XmlIO;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
@@ -27,11 +28,12 @@ import lombok.extern.slf4j.Slf4j;
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.XmlToVerbatimPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.ingest.pipelines.XmlToVerbatimPipeline
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ * --pipelineStep=XML_TO_VERBATIM \
  * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
  * --attempt=1
  * --runner=SparkRunner
@@ -51,11 +53,12 @@ public class XmlToVerbatimPipeline {
 
   public static void run(BasePipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", StepType.XML_TO_VERBATIM.name());
 
     log.info("Adding step 1: Options");
-    String targetPath = FsUtils.buildPath(options, Conversion.FILE_NAME);
+    String targetPath = FsUtils.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
 
     log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);
@@ -67,7 +70,7 @@ public class XmlToVerbatimPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

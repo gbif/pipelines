@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-final class JsonHandler {
+public final class JsonHandler {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final ObjectReader READER = MAPPER.readerFor(Map.class);
@@ -53,47 +53,47 @@ final class JsonHandler {
       IS_OBJECT.or(IS_ARRAY_ONE).or(IS_ARRAY_TWO).and(IS_VALID_JSON);
 
   /** Creates a {@link ObjectNode}. */
-  static ObjectNode createObjectNode() {
+  public static ObjectNode createObjectNode() {
     return MAPPER.createObjectNode();
   }
 
   /** Creates a {@link ArrayNode}. */
-  static ArrayNode createArrayNode() {
+  public static ArrayNode createArrayNode() {
     return MAPPER.createArrayNode();
   }
 
   /** Writes a {@link InputStream} to String . */
   @SneakyThrows
-  static String toString(InputStream inputStream) {
+  public static String toString(InputStream inputStream) {
     return READER.readTree(inputStream).toString();
   }
 
   /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link Map}. */
   @SneakyThrows
-  static Map<String, String> readValue(@NonNull HttpEntity entity) {
+  public static Map<String, String> readValue(@NonNull HttpEntity entity) {
     return READER.readValue(entity.getContent());
   }
 
   /** Reads a {@link HttpEntity} with JSON content and returns it as a {@link JsonNode}. */
   @SneakyThrows
-  static JsonNode readTree(@NonNull HttpEntity entity) {
+  public static JsonNode readTree(@NonNull HttpEntity entity) {
     return READER.readTree(entity.getContent());
   }
 
   /** Reads a {@link InputStream} with JSON content and returns it as a {@link JsonNode}. */
   @SneakyThrows
-  static JsonNode readTree(InputStream inputStream) {
+  public static JsonNode readTree(InputStream inputStream) {
     return READER.readTree(inputStream);
   }
 
   /** Reads a {@link String} with JSON content and returns it as a {@link JsonNode}. */
   @SneakyThrows
-  static JsonNode readTree(String jsonString) {
+  public static JsonNode readTree(String jsonString) {
     return READER.readTree(jsonString);
   }
 
   /** Converts a {@link Map} into a {@link JsonNode}. */
-  static JsonNode convertToJsonNode(Map<String, String> map) {
+  public static JsonNode convertToJsonNode(Map<String, String> map) {
     ObjectNode objectNode = MAPPER.createObjectNode();
 
     map.entrySet().stream()

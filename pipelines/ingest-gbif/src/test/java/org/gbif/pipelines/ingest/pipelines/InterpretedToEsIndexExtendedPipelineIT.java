@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -62,7 +61,7 @@ public class InterpretedToEsIndexExtendedPipelineIT {
    * 4. Reindex in the same index with new attempt and deleting some records.
    */
   @Test
-  public void reindexingDatasetInSameDefaultIndexTest() throws IOException {
+  public void reindexingDatasetInSameDefaultIndexTest() {
 
     // State
     EsIndexingPipelineOptions options =

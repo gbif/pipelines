@@ -2,6 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import java.util.function.UnaryOperator;
 
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
 import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -15,13 +16,12 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.FilterMissedGbifIdTransform;
 import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.MetadataTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
@@ -29,6 +29,8 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -41,7 +43,6 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TupleTag;
 import org.slf4j.MDC;
 
 import lombok.AccessLevel;
@@ -49,7 +50,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBIF_ID;
 
 /**
  * Pipeline sequence:
@@ -73,19 +73,23 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing.GBI
  * <p>How to run:
  *
  * <pre>{@code
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline some.properties
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar some.properties
  *
  * or pass all parameters:
  *
- * java -cp target/ingest-gbif-BUILD_VERSION-shaded.jar org.gbif.pipelines.base.pipelines.InterpretedToEsIndexPipeline
- * --datasetId=9f747cff-839f-4485-83a1-f10317a92a82
- * --attempt=1
- * --runner=SparkRunner
- * --targetPath=hdfs://ha-nn/output/
- * --esIndexName=pipeline
- * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200
- * --hdfsSiteConfig=/config/hdfs-site.xml
- * --coreSiteConfig=/config/core-site.xml
+ * java -jar target/ingest-gbif-standalone-BUILD_VERSION-shaded.jar
+ *  --pipelineStep=INTERPRETED_TO_ES_INDEX \
+ *  --datasetId=4725681f-06af-4b1e-8fff-e31e266e0a8f \
+ *  --attempt=1 \
+ *  --runner=SparkRunner \
+ *  --inputPath=/path \
+ *  --targetPath=/path \
+ *  --esIndexName=test2_java \
+ *  --esAlias=occurrence2_java \
+ *  --indexNumberShards=3 \
+ * --esHosts=http://ADDRESS:9200,http://ADDRESS:9200,http://ADDRESS:9200 \
+ * --properties=/home/nvolik/Projects/GBIF/gbif-configuration/cli/dev/config/pipelines.properties \
+ * --esDocumentId=id
  *
  * }</pre>
  */
@@ -100,34 +104,27 @@ public class InterpretedToEsIndexPipeline {
 
   public static void run(EsIndexingPipelineOptions options) {
 
-    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
+
+    String esDocumentId = options.getEsDocumentId();
 
     log.info("Adding step 1: Options");
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpret(options, t, "*" + AVRO_EXTENSION);
-
-    // Core
-    final TupleTag<ExtendedRecord> erTag = new TupleTag<ExtendedRecord>() {};
-    final TupleTag<BasicRecord> brTag = new TupleTag<BasicRecord>() {};
-    final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
-    final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
-    final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
-    // Extension
-    final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
-    final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
-    final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
-    final TupleTag<MeasurementOrFactRecord> mfrTag = new TupleTag<MeasurementOrFactRecord>() {};
+    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     Pipeline p = Pipeline.create(options);
 
     log.info("Adding step 2: Creating transformations");
     // Core
-    BasicTransform basicTransform = BasicTransform.create();
-    MetadataTransform metadataTransform = MetadataTransform.create();
+    BasicTransform basicTransform = BasicTransform.builder().create();
+    MetadataTransform metadataTransform = MetadataTransform.builder().create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
-    TaxonomyTransform taxonomyTransform = TaxonomyTransform.create();
-    LocationTransform locationTransform = LocationTransform.create();
+    TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
+    LocationTransform locationTransform = LocationTransform.builder().create();
+    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
+
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
     MultimediaTransform multimediaTransform = MultimediaTransform.create();
@@ -142,6 +139,10 @@ public class InterpretedToEsIndexPipeline {
     PCollection<KV<String, ExtendedRecord>> verbatimCollection =
         p.apply("Read Verbatim", verbatimTransform.read(pathFn))
             .apply("Map Verbatim to KV", verbatimTransform.toKv());
+
+    PCollection<KV<String, TaggedValueRecord>> taggedValuesCollection =
+        p.apply("Interpret TaggedValueRecords/MachinesTags interpretation", taggedValuesTransform.read(pathFn))
+            .apply("Map TaggedValueRecord to KV", taggedValuesTransform.toKv());
 
     PCollection<KV<String, BasicRecord>> basicCollection =
         p.apply("Read Basic", basicTransform.read(pathFn))
@@ -177,27 +178,38 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-        GbifJsonTransform.create(erTag, brTag, trTag, lrTag, txrTag, mrTag, irTag, arTag, mfrTag, metadataView)
+        GbifJsonTransform.create(
+                verbatimTransform.getTag(),
+                basicTransform.getTag(),
+                temporalTransform.getTag(),
+                locationTransform.getTag(),
+                taxonomyTransform.getTag(),
+                multimediaTransform.getTag(),
+                imageTransform.getTag(),
+                audubonTransform.getTag(),
+                measurementOrFactTransform.getTag(),
+                taggedValuesTransform.getTag(),
+                metadataView)
             .converter();
 
     PCollection<String> jsonCollection =
         KeyedPCollectionTuple
             // Core
-            .of(brTag, basicCollection)
-            .and(trTag, temporalCollection)
-            .and(lrTag, locationCollection)
-            .and(txrTag, taxonCollection)
+            .of(basicTransform.getTag(), basicCollection)
+            .and(temporalTransform.getTag(), temporalCollection)
+            .and(locationTransform.getTag(), locationCollection)
+            .and(taxonomyTransform.getTag(), taxonCollection)
+            .and(taggedValuesTransform.getTag(), taggedValuesCollection)
             // Extension
-            .and(mrTag, multimediaCollection)
-            .and(irTag, imageCollection)
-            .and(arTag, audubonCollection)
-            .and(mfrTag, measurementCollection)
+            .and(multimediaTransform.getTag(), multimediaCollection)
+            .and(imageTransform.getTag(), imageCollection)
+            .and(audubonTransform.getTag(), audubonCollection)
+            .and(measurementOrFactTransform.getTag(), measurementCollection)
             // Raw
-            .and(erTag, verbatimCollection)
+            .and(verbatimTransform.getTag(), verbatimCollection)
             // Apply
             .apply("Grouping objects", CoGroupByKey.create())
-            .apply("Merging to json", gbifJsonDoFn)
-            .apply("Filter records without gbifId", FilterMissedGbifIdTransform.create());
+            .apply("Merging to json", gbifJsonDoFn);
 
     log.info("Adding step 4: Elasticsearch indexing");
     ElasticsearchIO.ConnectionConfiguration esConfig =
@@ -209,13 +221,13 @@ public class InterpretedToEsIndexPipeline {
             .withConnectionConfiguration(esConfig)
             .withMaxBatchSizeBytes(options.getEsMaxBatchSizeBytes())
             .withMaxBatchSize(options.getEsMaxBatchSize())
-            .withIdFn(input -> input.get(GBIF_ID).asText()));
+            .withIdFn(input -> input.get(esDocumentId).asText()));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
-    MetricsHandler.saveCountersToFile(options, result);
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     log.info("Pipeline has been finished");
   }

@@ -29,7 +29,8 @@ class ParserRawTime {
       return accumulator;
     }
     // Split by some zone char
-    String[] timeArray = DelimiterUtils.splitTime(rawTime);
+    String[] timeZoneArray = DelimiterUtils.splitTimeAndZone(rawTime);
+    String[] timeArray = DelimiterUtils.splitTime(timeZoneArray[0]);
 
     // Parse time only
     if (timeArray.length > 1) {
@@ -39,6 +40,12 @@ class ParserRawTime {
         accumulator.setChronoField(SECOND_OF_MINUTE, timeArray[2]);
       }
     }
+
+    // Commented to support API v1, see issue -> https://github.com/gbif/gbif-api/issues/3
+    // Can be uncommented for API v2
+    //if (timeZoneArray.length == 2 && timeZoneArray[1].length() > 1) {
+    //  accumulator.setChronoField(OFFSET_SECONDS, timeZoneArray[1]);
+    //}
 
     return accumulator;
   }

@@ -1,6 +1,5 @@
 package org.gbif.pipelines.transforms.extension;
 
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -8,16 +7,16 @@ import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.extension.AmplificationInterpreter;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.parsers.config.WsConfig;
-import org.gbif.pipelines.parsers.config.WsConfigFactory;
 import org.gbif.pipelines.parsers.ws.client.blast.BlastServiceClient;
+import org.gbif.pipelines.transforms.SerializableConsumer;
+import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.metrics.Counter;
-import org.apache.beam.sdk.metrics.Metrics;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
+
+import lombok.Builder;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AMPLIFICATION_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.AMPLIFICATION;
@@ -29,31 +28,18 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  * ParDo runs sequence of interpretations for {@link AmplificationRecord} using {@link ExtendedRecord} as a source
  * and {@link AmplificationInterpreter} as interpretation steps
  *
- * @see <a href="http://rs.gbif.org/extension/ggbn/amplification.xml</a>
+ * @see <a href="http://rs.gbif.org/extension/ggbn/amplification.xml">http://rs.gbif.org/extension/ggbn/amplification.xml</a>
  */
 public class AmplificationTransform extends Transform<ExtendedRecord, AmplificationRecord> {
 
-  private final Counter counter = Metrics.counter(AmplificationTransform.class, AMPLIFICATION_RECORDS_COUNT);
-
-  private final WsConfig wsConfig;
+  private SerializableSupplier<BlastServiceClient> clientSupplier;
   private BlastServiceClient client;
 
-  public AmplificationTransform(WsConfig wsConfig) {
-    super(AmplificationRecord.class, AMPLIFICATION);
-    this.wsConfig = wsConfig;
-  }
-
-  public static AmplificationTransform create() {
-    return new AmplificationTransform(null);
-  }
-
-  public static AmplificationTransform create(WsConfig wsConfig) {
-    return new AmplificationTransform(wsConfig);
-  }
-
-  public static AmplificationTransform create(String properties) {
-    WsConfig config = WsConfigFactory.create(WsConfigFactory.BLAST_PREFIX, Paths.get(properties));
-    return new AmplificationTransform(config);
+  @Builder(buildMethodName = "create")
+  private AmplificationTransform(SerializableSupplier<BlastServiceClient> clientSupplier, BlastServiceClient client) {
+    super(AmplificationRecord.class, AMPLIFICATION, AmplificationTransform.class.getName(), AMPLIFICATION_RECORDS_COUNT);
+    this.clientSupplier = clientSupplier;
+    this.client = client;
   }
 
   /** Maps {@link AmplificationRecord} to key value, where key is {@link AmplificationRecord#getId} */
@@ -62,23 +48,27 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
         .via((AmplificationRecord ar) -> KV.of(ar.getId(), ar));
   }
 
+  public AmplificationTransform counterFn(SerializableConsumer<String> counterFn) {
+    setCounterFn(counterFn);
+    return this;
+  }
+
   @Setup
   public void setup() {
-    if (wsConfig != null) {
-      client = BlastServiceClient.create(wsConfig);
+    if (client == null && clientSupplier != null) {
+      client = clientSupplier.get();
     }
   }
 
-  @ProcessElement
-  public void processElement(@Element ExtendedRecord source, OutputReceiver<AmplificationRecord> out) {
-    Interpretation.from(source)
+  @Override
+  public Optional<AmplificationRecord> convert(ExtendedRecord source) {
+    return Interpretation.from(source)
         .to(er -> AmplificationRecord.newBuilder().setId(er.getId()).setCreated(Instant.now().toEpochMilli()).build())
         .when(er -> Optional.ofNullable(er.getExtensions().get(AmplificationInterpreter.EXTENSION_ROW_TYPE))
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(AmplificationInterpreter.interpret(client))
-        .consume(out::output);
-
-    counter.inc();
+        .get();
   }
+
 }

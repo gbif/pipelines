@@ -1,6 +1,7 @@
 package org.gbif.pipelines.core.interpreters.core;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -10,9 +11,12 @@ import java.util.function.Function;
 
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
+import org.gbif.common.parsers.LicenseParser;
+import org.gbif.common.parsers.NumberParser;
 import org.gbif.common.parsers.UrlParser;
 import org.gbif.common.parsers.core.Parsable;
 import org.gbif.common.parsers.core.ParseResult;
@@ -26,6 +30,9 @@ import org.gbif.pipelines.keygen.api.KeyLookupResult;
 import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
+import org.gbif.pipelines.parsers.parsers.identifier.AgentIdentifierParser;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -37,6 +44,7 @@ import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractOptValue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 
 /**
@@ -52,52 +60,67 @@ public class BasicInterpreter {
   private static final Parsable<String> TYPE_NAME_PARSER = org.gbif.common.parsers.TypifiedNameParser.getInstance();
 
   /** Copies GBIF id from ExtendedRecord id or generates/gets existing GBIF id */
-  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
-      boolean isTripletValid, boolean isOccurrenceIdValid, boolean useExtendedRecordId) {
-    return useExtendedRecordId ? interpretCopyGbifId() : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(
+      HBaseLockingKeyService keygenService,
+      boolean isTripletValid,
+      boolean isOccurrenceIdValid,
+      boolean useExtendedRecordId,
+      BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn
+  ) {
+    gbifIdFn = gbifIdFn == null ? interpretCopyGbifId() : gbifIdFn;
+    return useExtendedRecordId ? gbifIdFn : interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid);
   }
 
   /** Generates or gets existing GBIF id */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretGbifId(HBaseLockingKeyService keygenService,
       boolean isTripletValid, boolean isOccurrenceIdValid) {
     return (er, br) -> {
-      if (keygenService != null) {
+      if (keygenService == null) {
+        return;
+      }
 
-        Set<String> uniqueStrings = new HashSet<>(2);
+      Set<String> uniqueStrings = new HashSet<>(2);
 
-        // Adds occurrenceId
-        if (isOccurrenceIdValid) {
-          String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
-          if (!Strings.isNullOrEmpty(occurrenceId)) {
-            uniqueStrings.add(occurrenceId);
-          }
+      // Adds occurrenceId
+      if (isOccurrenceIdValid) {
+        String occurrenceId = extractValue(er, DwcTerm.occurrenceID);
+        if (!Strings.isNullOrEmpty(occurrenceId)) {
+          uniqueStrings.add(occurrenceId);
         }
+      }
 
-        // Adds triplet
-        if (isTripletValid) {
-          String ic = extractValue(er, DwcTerm.institutionCode);
-          String cc = extractValue(er, DwcTerm.collectionCode);
-          String cn = extractValue(er, DwcTerm.catalogNumber);
-          OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
-        }
+      // Adds triplet
+      if (isTripletValid) {
+        String ic = extractValue(er, DwcTerm.institutionCode);
+        String cc = extractValue(er, DwcTerm.collectionCode);
+        String cn = extractValue(er, DwcTerm.catalogNumber);
+        OccurrenceKeyBuilder.buildKey(ic, cc, cn).ifPresent(uniqueStrings::add);
+      }
 
-        if (!uniqueStrings.isEmpty()) {
+      if (!uniqueStrings.isEmpty()) {
+        try {
           KeyLookupResult key = Optional.ofNullable(keygenService.findKey(uniqueStrings))
               .orElse(keygenService.generateKey(uniqueStrings));
 
           br.setGbifId(key.getKey());
-        } else {
+        } catch (IllegalStateException ex) {
+          log.warn(ex.getMessage());
           addIssue(br, GBIF_ID_INVALID);
         }
+      } else {
+        addIssue(br, GBIF_ID_INVALID);
       }
     };
   }
 
   /** Copies GBIF id from ExtendedRecord id */
   public static BiConsumer<ExtendedRecord, BasicRecord> interpretCopyGbifId() {
-    return (er, br) -> br.setGbifId(Long.parseLong(er.getId()));
+    return (er, br) -> {
+      if (StringUtils.isNumeric(er.getId())) {
+        br.setGbifId(Long.parseLong(er.getId()));
+      }
+    };
   }
-
 
   /** {@link DwcTerm#individualCount} interpretation. */
   public static void interpretIndividualCount(ExtendedRecord er, BasicRecord br) {
@@ -111,7 +134,7 @@ public class BasicInterpreter {
           }
         };
 
-    SimpleTypeParser.parseInt(er, DwcTerm.individualCount, fn);
+    SimpleTypeParser.parsePositiveInt(er, DwcTerm.individualCount, fn);
   }
 
   /** {@link DwcTerm#typeStatus} interpretation. */
@@ -187,6 +210,12 @@ public class BasicInterpreter {
         };
 
     VocabularyParser.basisOfRecordParser().map(er, fn);
+
+    if (br.getBasisOfRecord() == null || br.getBasisOfRecord().isEmpty()) {
+      br.setBasisOfRecord(BasisOfRecord.UNKNOWN.name());
+      addIssue(br, BASIS_OF_RECORD_INVALID);
+    }
+
   }
 
   /** {@link DcTerm#references} interpretation. */
@@ -204,7 +233,7 @@ public class BasicInterpreter {
 
   /** {@link GbifTerm#typifiedName} interpretation. */
   public static void interpretTypifiedName(ExtendedRecord er, BasicRecord br) {
-    Optional<String> typifiedName = Optional.ofNullable(er.getCoreTerms().get(GbifTerm.typifiedName.qualifiedName()));
+    Optional<String> typifiedName = extractOptValue(er, GbifTerm.typifiedName);
     if (typifiedName.isPresent()) {
       br.setTypifiedName(typifiedName.get());
     } else {
@@ -217,5 +246,95 @@ public class BasicInterpreter {
             }
           });
     }
+  }
+
+  /** {@link DwcTerm#sampleSizeValue} interpretation. */
+  public static void interpretSampleSizeValue(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, DwcTerm.sampleSizeValue)
+        .map(String::trim)
+        .map(NumberParser::parseDouble)
+        .filter(x -> !x.isInfinite() && !x.isNaN())
+        .ifPresent(br::setSampleSizeValue);
+  }
+
+  /** {@link DwcTerm#sampleSizeUnit} interpretation. */
+  public static void interpretSampleSizeUnit(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, DwcTerm.sampleSizeUnit)
+        .map(String::trim)
+        .ifPresent(br::setSampleSizeUnit);
+  }
+
+  /** {@link DwcTerm#organismQuantity} interpretation. */
+  public static void interpretOrganismQuantity(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, DwcTerm.organismQuantity)
+        .map(String::trim)
+        .map(NumberParser::parseDouble)
+        .filter(x -> !x.isInfinite() && !x.isNaN())
+        .ifPresent(br::setOrganismQuantity);
+  }
+
+  /** {@link DwcTerm#organismQuantityType} interpretation. */
+  public static void interpretOrganismQuantityType(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, DwcTerm.organismQuantityType)
+        .map(String::trim)
+        .ifPresent(br::setOrganismQuantityType);
+  }
+
+  /** If the organism and sample have the same measure type, we can calculate relative organism quantity */
+  public static void interpretRelativeOrganismQuantity(BasicRecord br) {
+    if (!Strings.isNullOrEmpty(br.getOrganismQuantityType())
+        && !Strings.isNullOrEmpty(br.getSampleSizeUnit())
+        && br.getOrganismQuantityType().equalsIgnoreCase(br.getSampleSizeUnit())) {
+      Double organismQuantity = br.getOrganismQuantity();
+      Double sampleSizeValue = br.getSampleSizeValue();
+      if (organismQuantity != null && sampleSizeValue != null) {
+        double result = organismQuantity / sampleSizeValue;
+        if (!Double.isNaN(result) && !Double.isInfinite(result)) {
+          br.setRelativeOrganismQuantity(organismQuantity / sampleSizeValue);
+        }
+      }
+    }
+  }
+
+  /** {@link DcTerm#license} interpretation. */
+  public static void interpretLicense(ExtendedRecord er, BasicRecord br) {
+    String license = extractOptValue(er, DcTerm.license)
+        .map(BasicInterpreter::getLicense)
+        .map(License::name)
+        .orElse(License.UNSPECIFIED.name());
+
+    br.setLicense(license);
+  }
+
+  /** {@link GbifTerm#identifiedByID}. */
+  public static void interpretIdentifiedByIds(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, GbifTerm.identifiedByID)
+        .filter(x -> !x.isEmpty())
+        .map(AgentIdentifierParser::parse)
+        .map(ArrayList::new)
+        .ifPresent(br::setIdentifiedByIds);
+  }
+
+  /** {@link GbifTerm#recordedByID} interpretation. */
+  public static void interpretRecordedByIds(ExtendedRecord er, BasicRecord br) {
+    extractOptValue(er, GbifTerm.recordedByID)
+        .filter(x -> !x.isEmpty())
+        .map(AgentIdentifierParser::parse)
+        .map(ArrayList::new)
+        .ifPresent(br::setRecordedByIds);
+  }
+
+  /** Returns ENUM instead of url string */
+  private static License getLicense(String url) {
+    URI uri = Optional.ofNullable(url).map(x -> {
+      try {
+        return URI.create(x);
+      } catch (IllegalArgumentException ex) {
+        return null;
+      }
+    }).orElse(null);
+    License license = LicenseParser.getInstance().parseUriThenTitle(uri, null);
+    //UNSPECIFIED must be mapped to null
+    return License.UNSPECIFIED == license ? null : license;
   }
 }

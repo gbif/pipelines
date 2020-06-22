@@ -8,9 +8,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.common.parsers.LicenseParser;
 import org.gbif.common.parsers.LicenseUriParser;
 import org.gbif.common.parsers.MediaParser;
 import org.gbif.common.parsers.UrlParser;
@@ -45,7 +43,6 @@ public class MultimediaInterpreter {
 
   private static final MediaParser MEDIA_PARSER = MediaParser.getInstance();
   private static final LicenseUriParser LICENSE_URI_PARSER = LicenseUriParser.getInstance();
-  private static final LicenseParser LICENSE_PARSER = LicenseParser.getInstance();
 
   private static final TargetHandler<Multimedia> HANDLER =
       ExtensionInterpretation.extension(Extension.MULTIMEDIA)
@@ -54,6 +51,7 @@ public class MultimediaInterpreter {
           .mapOne(DcTerm.identifier, MultimediaInterpreter::parseAndSetIdentifier)
           .mapOne(DcTerm.created, MultimediaInterpreter::parseAndSetCreated)
           .map(DcTerm.license, MultimediaInterpreter::parseAndSetLicense)
+          .map(DcTerm.rights, MultimediaInterpreter::parseAndSetLicense)
           .map(DcTerm.format, MultimediaInterpreter::parseAndSetFormatAndType)
           .map(DcTerm.title, Multimedia::setTitle)
           .map(DcTerm.description, Multimedia::setDescription)
@@ -182,23 +180,10 @@ public class MultimediaInterpreter {
 
   /** Returns ENUM instead of url string */
   private static void parseAndSetLicense(Multimedia m, String v) {
-    URI uri = Optional.ofNullable(v).map(x -> {
-      try {
-        return URI.create(x);
-      } catch (IllegalArgumentException ex) {
-        return null;
-      }
-    }).orElse(null);
-    License license = LICENSE_PARSER.parseUriThenTitle(uri, null);
-    if (license == License.UNSPECIFIED && !Strings.isNullOrEmpty(v)) {
-      license = LICENSE_PARSER.parseUriThenTitle(uri, v);
-    }
-    String result = license.name();
-    if (license == License.UNSUPPORTED) {
+    if (Objects.nonNull(v) && Objects.isNull(m.getLicense())) {
       ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(v);
-      result = parsed.isSuccessful() ? parsed.getPayload().toString() : v;
+      m.setLicense(parsed.isSuccessful() ? parsed.getPayload().toString() : v);
     }
-    m.setLicense(result);
   }
 
   /**

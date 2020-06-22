@@ -98,7 +98,11 @@ public class MeasurementOrFactInterpreter {
    */
   private static void parseAndSetValue(MeasurementOrFact mf, String v) {
     mf.setValue(v);
-    Consumer<Optional<Double>> fn = result -> result.ifPresent(mf::setValueParsed);
+    Consumer<Optional<Double>> fn = result -> result.ifPresent(x -> {
+      if (!x.isInfinite() && !x.isNaN()) {
+        mf.setValueParsed(x);
+      }
+    });
     SimpleTypeParser.parseDouble(v, fn);
   }
 }
