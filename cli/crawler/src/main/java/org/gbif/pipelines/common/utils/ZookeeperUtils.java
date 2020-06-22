@@ -60,9 +60,9 @@ public class ZookeeperUtils {
           log.info("Delete zookeeper node, crawlId - {}", crawlId);
           curator.delete().deletingChildrenIfNeeded().forPath(path);
 
-          String crawlerZkPath = CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), PROCESS_STATE_OCCURRENCE);
-
-          if (checkExists(curator, crawlerZkPath)) {
+          String crawlerDatasetZkPath = CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), null);
+          if (checkExists(curator, crawlerDatasetZkPath)) {
+            String crawlerZkPath = CrawlerNodePaths.getCrawlInfoPath(UUID.fromString(crawlId), PROCESS_STATE_OCCURRENCE);
             log.info("Set crawler {} status to FINISHED", crawlerZkPath);
             ZookeeperUtils.updateMonitoring(curator, crawlerZkPath, "FINISHED");
           }
