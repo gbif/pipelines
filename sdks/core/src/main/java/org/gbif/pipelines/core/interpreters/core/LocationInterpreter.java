@@ -59,7 +59,7 @@ public class LocationInterpreter {
 
   private static final double COORDINATE_PRECISION_LOWER_BOUND = 0d;
   // 45 close to 5000 km
-  private static final double COORDINATE_PRECISION_UPPER_BOUND = 45d;
+  private static final double COORDINATE_PRECISION_UPPER_BOUND = 1d;
 
   //List of Geospatial Issues
   private static final Set<String> SPATIAL_ISSUES =
