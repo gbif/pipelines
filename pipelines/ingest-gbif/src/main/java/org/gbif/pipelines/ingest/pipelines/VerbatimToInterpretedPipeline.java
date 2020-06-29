@@ -34,6 +34,7 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -111,6 +112,7 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     PipelinesConfig config = FsUtils.readConfigFile(hdfsSiteConfig, options.getProperties());
+    String vocabulariesPath = options.getVocabulariesPath();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -139,6 +141,10 @@ public class VerbatimToInterpretedPipeline {
     BasicTransform basicTransform =
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
+            .lifeStageLookupSupplier(
+                () ->
+                    VocabularyLookup.load(
+                        FsUtils.readVocabularyFile(hdfsSiteConfig, vocabulariesPath, "LifeStage")))
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occurrenceIdValid)
             .useExtendedRecordId(useExtendedRecordId)

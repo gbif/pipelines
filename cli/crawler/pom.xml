@@ -42,6 +42,7 @@
               <excludes>
                 <exclude>hidden/com/fasterxml/jackson/**</exclude>
                 <exclude>retrofit2/**</exclude>
+                <exclude>vocab/**</exclude>
               </excludes>
             </filter>
           </filters>

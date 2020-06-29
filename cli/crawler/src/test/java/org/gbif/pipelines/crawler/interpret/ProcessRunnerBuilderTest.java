@@ -39,7 +39,7 @@ public class ProcessRunnerBuilderTest {
             + "-cp java.jar org.gbif.Test --pipelineStep=VERBATIM_TO_INTERPRETED --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 "
             + "--interpretationTypes=ALL --runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --tripletValid=true --occurrenceIdValid=true";
+            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --vocabulariesPath=vocabs --tripletValid=true --occurrenceIdValid=true";
 
     InterpreterConfiguration config = new InterpreterConfiguration();
     config.standaloneJarPath = "java.jar";
@@ -54,6 +54,7 @@ public class ProcessRunnerBuilderTest {
     config.stepConfig.coreSiteConfig = "core.xml";
     config.stepConfig.hdfsSiteConfig = "hdfs.xml";
     config.stepConfig.repositoryPath = "tmp";
+    config.vocabulariesPath = "vocabs";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
@@ -83,7 +84,8 @@ public class ProcessRunnerBuilderTest {
             + "--driver-memory 4G java.jar --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL "
             + "--runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro "
             + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --tripletValid=true --occurrenceIdValid=true --useExtendedRecordId=true";
+            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --vocabulariesPath=vocabs --tripletValid=true --occurrenceIdValid=true "
+            + "--useExtendedRecordId=true";
 
     InterpreterConfiguration config = new InterpreterConfiguration();
     config.distributedJarPath = "java.jar";
@@ -103,6 +105,7 @@ public class ProcessRunnerBuilderTest {
     config.stepConfig.repositoryPath = "tmp";
     config.stepConfig.coreSiteConfig = "core.xml";
     config.stepConfig.hdfsSiteConfig = "hdfs.xml";
+    config.vocabulariesPath = "vocabs";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;
@@ -141,7 +144,8 @@ public class ProcessRunnerBuilderTest {
             + "--deploy-mode cluster --executor-memory 1G --executor-cores 1 --num-executors 1 --driver-memory 4G java.jar "
             + "--datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 --interpretationTypes=ALL --runner=SparkRunner "
             + "--targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro --avroCompressionType=SNAPPY "
-            + "--avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml --properties=/path/ws.config --endPointType=DWC_ARCHIVE";
+            + "--avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml --properties=/path/ws.config --endPointType=DWC_ARCHIVE "
+            + "--vocabulariesPath=vocabs";
 
     InterpreterConfiguration config = new InterpreterConfiguration();
     config.distributedJarPath = "java.jar";
@@ -166,6 +170,7 @@ public class ProcessRunnerBuilderTest {
     config.stepConfig.hdfsSiteConfig = "hdfs.xml";
     config.stepConfig.coreSiteConfig = "core.xml";
     config.stepConfig.repositoryPath = "tmp";
+    config.vocabulariesPath = "vocabs";
 
     UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
     int attempt = 1;

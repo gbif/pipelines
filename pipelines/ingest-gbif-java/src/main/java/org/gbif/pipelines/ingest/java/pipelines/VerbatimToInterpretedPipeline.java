@@ -56,6 +56,7 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
@@ -150,6 +151,7 @@ public class VerbatimToInterpretedPipeline {
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     PipelinesConfig config = PipelinesConfigFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+    String vocabulariesPath = options.getVocabulariesPath();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -176,6 +178,10 @@ public class VerbatimToInterpretedPipeline {
     BasicTransform basicTransform =
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
+            .lifeStageLookupSupplier(
+                () ->
+                    VocabularyLookup.load(
+                        FsUtils.readVocabularyFile(hdfsSiteConfig, vocabulariesPath, "LifeStage")))
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occIdValid)
             .useExtendedRecordId(useErdId)

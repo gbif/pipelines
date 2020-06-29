@@ -87,6 +87,11 @@ public interface InterpretationPipelineOptions
 
   void setNumberOfShards(Integer numberOfShards);
 
+  @Description("Path to the directory that contains the vocabularies")
+  String getVocabulariesPath();
+
+  void setVocabulariesPath(String path);
+
   /** A {@link DefaultValueFactory} which locates a default directory. */
   class TempDirectoryFactory implements DefaultValueFactory<String> {
 

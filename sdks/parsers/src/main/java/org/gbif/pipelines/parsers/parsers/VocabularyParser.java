@@ -61,6 +61,7 @@ public class VocabularyParser<T extends Enum<T>> {
   }
 
   /** @return a life stage parser. */
+  @Deprecated
   public static VocabularyParser<LifeStage> lifeStageParser() {
     return new VocabularyParser<>(LST_PARSER, DwcTerm.lifeStage);
   }

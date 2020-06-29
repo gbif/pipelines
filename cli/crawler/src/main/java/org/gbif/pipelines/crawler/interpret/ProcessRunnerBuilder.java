@@ -124,7 +124,8 @@ final class ProcessRunnerBuilder {
         .add("--hdfsSiteConfig=" + Objects.requireNonNull(config.stepConfig.hdfsSiteConfig))
         .add("--coreSiteConfig=" + Objects.requireNonNull(config.stepConfig.coreSiteConfig))
         .add("--properties=" + Objects.requireNonNull(config.pipelinesConfig))
-        .add("--endPointType=" + Objects.requireNonNull(message.getEndpointType()));
+        .add("--endPointType=" + Objects.requireNonNull(message.getEndpointType()))
+        .add("--vocabulariesPath=" + Objects.requireNonNull(config.vocabulariesPath));;
 
     Optional.ofNullable(message.getValidationResult())
         .ifPresent(vr -> command

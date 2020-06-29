@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -300,7 +301,28 @@ public final class FsUtils {
         return mapper.readValue(br, PipelinesConfig.class);
       }
     }
+
     throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
+  }
+
+  /**
+   * Read a file from HDFS/Local FS
+   *
+   * @param hdfsSiteConfig HDFS config file
+   * @param vocabulariesDir dir where the vocabulary files are
+   * @param vocabularyName name of the vocabulary
+   * @return {@link InputStream}
+   */
+  @SneakyThrows
+  public static InputStream readVocabularyFile(String hdfsSiteConfig, String vocabulariesDir, String vocabularyName) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, vocabulariesDir);
+    Path fPath = buildPath(vocabulariesDir, vocabularyName + ".json");
+    if (fs.exists(fPath)) {
+      log.info("Reading vocabularies path - {}", fPath);
+      return fs.open(fPath);
+    }
+
+    throw new FileNotFoundException("The vocabularies file doesn't exist - " + fPath);
   }
 
   /**

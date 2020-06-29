@@ -12,6 +12,7 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
+import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
@@ -37,7 +38,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private final boolean useExtendedRecordId;
   private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn;
   private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
+  private final SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier;
   private HBaseLockingKeyService keygenService;
+  private VocabularyLookup lifeStageLookup;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(
@@ -46,7 +49,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       boolean useExtendedRecordId,
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
-      HBaseLockingKeyService keygenService) {
+      HBaseLockingKeyService keygenService,
+      SerializableSupplier<VocabularyLookup> lifeStageLookupSupplier,
+      VocabularyLookup lifeStageLookup) {
     super(BasicRecord.class, BASIC, BasicTransform.class.getName(), BASIC_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
@@ -54,6 +59,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
     this.keygenService = keygenService;
+    this.lifeStageLookupSupplier = lifeStageLookupSupplier;
+    this.lifeStageLookup = lifeStageLookup;
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
@@ -82,6 +89,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     if (keygenService == null && keygenServiceSupplier != null) {
       keygenService = keygenServiceSupplier.get();
     }
+    if (lifeStageLookupSupplier != null) {
+      lifeStageLookup = lifeStageLookupSupplier.get();
+    }
   }
 
   /** Beam @Teardown closes initialized resources */
@@ -89,6 +99,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   public void tearDown() {
     if (keygenService != null) {
       keygenService.close();
+    }
+    if (lifeStageLookup != null) {
+      lifeStageLookup.close();
     }
   }
 
@@ -113,7 +126,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)
         .via(BasicInterpreter::interpretEstablishmentMeans)
-        .via(BasicInterpreter::interpretLifeStage)
+        .via(BasicInterpreter.interpretLifeStage(lifeStageLookup))
         .via(BasicInterpreter::interpretTypeStatus)
         .via(BasicInterpreter::interpretIndividualCount)
         .via(BasicInterpreter::interpretReferences)
