@@ -123,8 +123,7 @@ public class AvroReader {
   @SneakyThrows
   private static List<Path> parseWildcardPath(FileSystem fs, String path) {
     if (path.contains("*")) {
-      File parentFile = new File(path).getParentFile();
-      Path pp = new Path(parentFile.getPath().replace("hdfs:/ha-nn", "hdfs://ha-nn"));
+      Path pp = new Path(path).getParent();
       RemoteIterator<LocatedFileStatus> files = fs.listFiles(pp, false);
       List<Path> paths = new ArrayList<>();
       while (files.hasNext()) {
