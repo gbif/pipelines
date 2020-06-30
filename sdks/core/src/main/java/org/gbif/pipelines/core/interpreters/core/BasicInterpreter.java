@@ -162,7 +162,9 @@ public class BasicInterpreter {
       }
 
       String value = extractValue(er, DwcTerm.lifeStage);
-      vocabularyLookup.lookup(value).map(Concept::getName).ifPresent(br::setLifeStage);
+      if (!Strings.isNullOrEmpty(value)) {
+        vocabularyLookup.lookup(value).map(Concept::getName).ifPresent(br::setLifeStage);
+      }
     };
   }
 

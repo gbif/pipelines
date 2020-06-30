@@ -306,11 +306,11 @@ public final class FsUtils {
   }
 
   /**
-   * Read a file from HDFS/Local FS
+   * Reads a vocabulary file from HDFS/Local FS
    *
    * @param hdfsSiteConfig HDFS config file
    * @param vocabulariesDir dir where the vocabulary files are
-   * @param vocabularyName name of the vocabulary
+   * @param vocabularyName name of the vocabulary. It has to be the same as the one used in the file name.
    * @return {@link InputStream}
    */
   @SneakyThrows
@@ -322,7 +322,7 @@ public final class FsUtils {
       return fs.open(fPath);
     }
 
-    throw new FileNotFoundException("The vocabularies file doesn't exist - " + fPath);
+    throw new FileNotFoundException("The vocabulary file doesn't exist - " + fPath);
   }
 
   /**
