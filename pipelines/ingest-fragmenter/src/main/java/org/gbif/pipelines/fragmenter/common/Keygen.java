@@ -65,9 +65,6 @@ public class Keygen {
   }
 
   public static String getSaltedKey(Long key) {
-    if (Objects.equals(key, ERROR_KEY)) {
-      return ERROR_KEY.toString();
-    }
     long salt = key % 100;
     String result = salt + ":" + key;
     return salt >= 10 ? result : "0" + result;
