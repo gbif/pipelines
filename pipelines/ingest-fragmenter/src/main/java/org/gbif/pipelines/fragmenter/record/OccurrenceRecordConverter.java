@@ -18,11 +18,14 @@ public class OccurrenceRecordConverter {
   public static Map<String, String> convert(HBaseLockingKeyService keygenService, UniquenessValidator validator,
       boolean useTriplet, boolean useOccurrenceId, List<OccurrenceRecord> recordUnitList) {
 
-    Function<OccurrenceRecord, String> keyFn = ru -> {
-      Long key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, ru);
-      key = validator.isUnique(key.toString()) ? key : Keygen.getErrorKey();
-      return Keygen.getSaltedKey(key);
-    };
+    Function<OccurrenceRecord, String> keyFn =
+        ru -> {
+          Long key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, ru);
+          if (Keygen.getErrorKey().equals(key) || !validator.isUnique(key.toString())) {
+            return Keygen.getErrorKey().toString();
+          }
+          return Keygen.getSaltedKey(key);
+        };
 
     Function<OccurrenceRecord, String> valueFn = OccurrenceRecord::toStringRecord;
 
