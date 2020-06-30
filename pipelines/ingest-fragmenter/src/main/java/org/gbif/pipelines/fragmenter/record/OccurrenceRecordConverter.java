@@ -11,7 +11,9 @@ import org.gbif.pipelines.keygen.HBaseLockingKeyService;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OccurrenceRecordConverter {
 
@@ -20,7 +22,12 @@ public class OccurrenceRecordConverter {
 
     Function<OccurrenceRecord, String> keyFn =
         ru -> {
-          Long key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, ru);
+          Long key = Keygen.getErrorKey();
+          try {
+            key = Keygen.getKey(keygenService, useTriplet, useOccurrenceId, ru);
+          } catch (RuntimeException ex) {
+            log.error(ex.getMessage(), ex);
+          }
           if (Keygen.getErrorKey().equals(key) || !validator.isUnique(key.toString())) {
             return Keygen.getErrorKey().toString();
           }
