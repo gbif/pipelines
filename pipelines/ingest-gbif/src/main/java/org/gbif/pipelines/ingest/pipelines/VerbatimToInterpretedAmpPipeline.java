@@ -68,7 +68,8 @@ public class VerbatimToInterpretedAmpPipeline {
     Integer attempt = options.getAttempt();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    PipelinesConfig config = FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties());
+    PipelinesConfig config =
+        FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties(), PipelinesConfig.class);
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
 

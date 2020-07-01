@@ -16,7 +16,6 @@ import org.gbif.pipelines.common.PipelinesVariables.Pipeline.HdfsView;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -288,7 +287,7 @@ public final class FsUtils {
    * @param filePath properties file path
    */
   @SneakyThrows
-  public static PipelinesConfig readConfigFile(String hdfsSiteConfig, String filePath) {
+  public static <T> T readConfigFile(String hdfsSiteConfig, String filePath, Class<T> clazz) {
     FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
@@ -297,7 +296,7 @@ public final class FsUtils {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
         mapper.findAndRegisterModules();
-        return mapper.readValue(br, PipelinesConfig.class);
+        return mapper.readValue(br, clazz);
       }
     }
     throw new FileNotFoundException("The properties file doesn't exist - " + filePath);

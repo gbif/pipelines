@@ -91,7 +91,8 @@ public class SharedLockUtils {
 
   /** A write lock is acquired to avoid concurrent modifications while this operation is running */
   public static void doHdfsPrefixLock(InterpretationPipelineOptions options, Mutex.Action action) {
-    PipelinesConfig config = FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties());
+    PipelinesConfig config =
+        FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties(), PipelinesConfig.class);
 
     String zk = config.getHdfsLock().getZkConnectionString();
     zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;

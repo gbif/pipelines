@@ -26,7 +26,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
-import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
+import org.gbif.pipelines.ingest.java.utils.ConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -149,7 +149,9 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    PipelinesConfig config = PipelinesConfigFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+    PipelinesConfig config =
+        ConfigFactory.getInstance(hdfsSiteConfig, options.getProperties(), PipelinesConfig.class)
+            .get();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 

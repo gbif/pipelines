@@ -13,14 +13,14 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class PipelinesConfigFactoryTest {
+public class ConfigFactoryTest {
 
   private final String inpPath = getClass().getResource("/pipelines.yaml").getFile();
 
   @Test
   public void test() {
 
-    PipelinesConfig config = PipelinesConfigFactory.read(Paths.get(inpPath));
+    PipelinesConfig config = ConfigFactory.read(Paths.get(inpPath), PipelinesConfig.class);
 
     WsConfig gbifApi = config.getGbifApi();
     assertEquals("http://test.test", gbifApi.getWsUrl());
