@@ -5,8 +5,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.function.Function;
 
-import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -14,7 +12,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class PipelinesConfigFactory {
+public class ConfigFactory {
 
   private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
 
@@ -23,7 +21,7 @@ public class PipelinesConfigFactory {
     MAPPER.findAndRegisterModules();
   }
 
-  public static PipelinesConfig read(Path path) {
+  public static <T> T read(Path path, Class<T> clazz) {
     Function<Path, InputStream> absolute =
         p -> {
           try {
@@ -41,7 +39,7 @@ public class PipelinesConfigFactory {
 
     try (InputStream in = function.apply(path)) {
       // read properties from input stream
-      return MAPPER.readValue(in, PipelinesConfig.class);
+      return MAPPER.readValue(in, clazz);
     } catch (Exception ex) {
       String msg = "Properties with absolute path could not be read from " + path;
       throw new IllegalArgumentException(msg, ex);

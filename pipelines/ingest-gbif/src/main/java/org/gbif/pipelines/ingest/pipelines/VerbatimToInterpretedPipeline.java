@@ -104,14 +104,11 @@ public class VerbatimToInterpretedPipeline {
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    boolean tripletValid = options.isTripletValid();
-    boolean occurrenceIdValid = options.isOccurrenceIdValid();
-    boolean useExtendedRecordId = options.isUseExtendedRecordId();
-    String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    PipelinesConfig config = FsUtils.readConfigFile(hdfsSiteConfig, options.getProperties());
+    PipelinesConfig config =
+        FsUtils.readConfigFile(hdfsSiteConfig, options.getProperties(), PipelinesConfig.class);
     String vocabulariesPath = options.getVocabulariesPath();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
@@ -132,7 +129,7 @@ public class VerbatimToInterpretedPipeline {
         MetadataTransform.builder()
             .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
             .attempt(attempt)
-            .endpointType(endPointType)
+            .endpointType(options.getEndPointType())
             .create();
 
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
@@ -145,9 +142,9 @@ public class VerbatimToInterpretedPipeline {
                 () ->
                     VocabularyLookup.load(
                         FsUtils.readVocabularyFile(hdfsSiteConfig, vocabulariesPath, "LifeStage")))
-            .isTripletValid(tripletValid)
-            .isOccurrenceIdValid(occurrenceIdValid)
-            .useExtendedRecordId(useExtendedRecordId)
+            .isTripletValid(options.isTripletValid())
+            .isOccurrenceIdValid(options.isOccurrenceIdValid())
+            .useExtendedRecordId(options.isUseExtendedRecordId())
             .create();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
@@ -174,7 +171,7 @@ public class VerbatimToInterpretedPipeline {
     ImageTransform imageTransform = ImageTransform.create();
 
     // Extra
-    UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create(useExtendedRecordId);
+    UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create(options.isUseExtendedRecordId());
 
     log.info("Creating beam pipeline");
     // Create and write metadata
