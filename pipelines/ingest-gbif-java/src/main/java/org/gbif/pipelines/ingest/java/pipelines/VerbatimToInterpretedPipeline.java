@@ -302,6 +302,7 @@ public class VerbatimToInterpretedPipeline {
         }
       };
 
+      log.info("Starting interpretation...");
       // Run async writing for BasicRecords
       Stream<CompletableFuture<Void>> streamBr;
       Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
