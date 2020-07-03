@@ -25,7 +25,18 @@ public class FileSystemFactory {
   @SneakyThrows
   private FileSystemFactory(String hdfsSiteConfig, String hdfsPrefix) {
     if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-      hdfsFs = FileSystem.get(URI.create(hdfsPrefix), getHdfsConfiguration(hdfsSiteConfig));
+
+      Configuration configuration = getHdfsConfiguration(hdfsSiteConfig);
+      String hdfsPrefixToUse = configuration.get("fs.default.name");
+      if (hdfsPrefixToUse == null){
+        hdfsPrefixToUse = configuration.get("fs.defaultFS");
+      }
+
+      if (hdfsPrefixToUse == null){
+        hdfsFs = FileSystem.get(URI.create(hdfsPrefix), getHdfsConfiguration(hdfsSiteConfig));
+      } else {
+        hdfsFs = FileSystem.get(URI.create(hdfsPrefixToUse), getHdfsConfiguration(hdfsSiteConfig));
+      }
     } else {
       hdfsFs = null;
     }
@@ -88,13 +99,14 @@ public class FileSystemFactory {
     if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
       File hdfsSite = new File(hdfsSiteConfig);
       if (hdfsSite.exists() && hdfsSite.isFile()) {
-        log.info("using hdfs-site.xml");
+        log.info("Using hdfs-site.xml found at {}", hdfsSiteConfig);
         config.addResource(hdfsSite.toURI().toURL());
       } else {
         log.warn("hdfs-site.xml does not exist");
       }
+    } else {
+      log.info("hdfs-site.xml not provided");
     }
     return config;
   }
-
 }
