@@ -165,7 +165,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     int sparkExecutorNumbers = computeSparkExecutorNumbers(recordsNumber);
 
     builder.sparkParallelism(computeSparkParallelism(datasetId, attempt))
-        .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers))
+        .sparkExecutorMemory(computeSparkExecutorMemory(sparkExecutorNumbers, recordsNumber))
         .sparkExecutorNumbers(sparkExecutorNumbers);
 
     // Assembles a terminal java process and runs it
@@ -187,6 +187,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     String directoryName = Interpretation.DIRECTORY_NAME;
     String basicPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, directoryName, basic);
     int count = HdfsUtils.getFileCount(basicPath, config.stepConfig.hdfsSiteConfig);
+    count *= 4;
     if (count < config.sparkParallelismMin) {
       return config.sparkParallelismMin;
     }
@@ -200,8 +201,10 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
    * Computes the memory for executor in Gb, where min is config.sparkExecutorMemoryGbMin and
    * max is config.sparkExecutorMemoryGbMax
    */
-  private String computeSparkExecutorMemory(int sparkExecutorNumbers) {
-    int size = sparkExecutorNumbers * 2;
+  private String computeSparkExecutorMemory(int sparkExecutorNumbers, long recordsNumber) {
+    int size =
+        (int) Math.ceil((double) recordsNumber / (sparkExecutorNumbers * config.sparkRecordsPerThread) * 1.6);
+
     if (size < config.sparkExecutorMemoryGbMin) {
       return config.sparkExecutorMemoryGbMin + "G";
     }
