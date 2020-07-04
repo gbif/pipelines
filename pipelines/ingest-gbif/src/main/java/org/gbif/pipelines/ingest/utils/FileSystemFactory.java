@@ -26,21 +26,21 @@ public class FileSystemFactory {
   private FileSystemFactory(String hdfsSiteConfig, String hdfsPrefix) {
     if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
 
+      String hdfsPrefixToUse = hdfsPrefix;
       Configuration configuration = getHdfsConfiguration(hdfsSiteConfig);
-      String hdfsPrefixToUse = configuration.get("fs.default.name");
-      if (hdfsPrefixToUse == null){
-        hdfsPrefixToUse = configuration.get("fs.defaultFS");
+      if (Strings.isNullOrEmpty(hdfsPrefixToUse)) {
+        hdfsPrefixToUse = configuration.get("fs.default.name");
+        if (hdfsPrefixToUse == null) {
+          hdfsPrefixToUse = configuration.get("fs.defaultFS");
+        }
       }
 
-      if (hdfsPrefixToUse == null){
-        hdfsFs = FileSystem.get(URI.create(hdfsPrefix), getHdfsConfiguration(hdfsSiteConfig));
-      } else {
-        hdfsFs = FileSystem.get(URI.create(hdfsPrefixToUse), getHdfsConfiguration(hdfsSiteConfig));
-      }
+      hdfsFs = FileSystem.get(URI.create(hdfsPrefixToUse), configuration);
+
     } else {
       hdfsFs = null;
     }
-    localFs = FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
+    localFs = FileSystem.get(getHdfsConfiguration(null));
   }
 
   public static FileSystemFactory getInstance(String hdfsSiteConfig, String hdfsPrefix) {
