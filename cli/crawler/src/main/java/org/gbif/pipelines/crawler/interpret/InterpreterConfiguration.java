@@ -120,9 +120,6 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Parameter(names = "--delete-after-days")
   public long deleteAfterDays = 7L;
 
-  @Parameter(names = "--vocabularies-path")
-  public String vocabulariesPath;
-
   @Override
   public String getHdfsSiteConfig() {
     return stepConfig.hdfsSiteConfig;

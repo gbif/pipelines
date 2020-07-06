@@ -34,4 +34,6 @@ public class PipelinesConfig implements Serializable {
   private LockConfig indexLock;
 
   private LockConfig hdfsLock;
+
+  private VocabularyConfig vocabularyConfig;
 }

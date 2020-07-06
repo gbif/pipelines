@@ -305,26 +305,6 @@ public final class FsUtils {
   }
 
   /**
-   * Reads a vocabulary file from HDFS/Local FS
-   *
-   * @param hdfsSiteConfig HDFS config file
-   * @param vocabulariesDir dir where the vocabulary files are
-   * @param vocabularyName name of the vocabulary. It has to be the same as the one used in the file name.
-   * @return {@link InputStream}
-   */
-  @SneakyThrows
-  public static InputStream readVocabularyFile(String hdfsSiteConfig, String vocabulariesDir, String vocabularyName) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, vocabulariesDir);
-    Path fPath = buildPath(vocabulariesDir, vocabularyName + ".json");
-    if (fs.exists(fPath)) {
-      log.info("Reading vocabularies path - {}", fPath);
-      return fs.open(fPath);
-    }
-
-    throw new FileNotFoundException("The vocabulary file doesn't exist - " + fPath);
-  }
-
-  /**
    * Deletes directories if a dataset with the same attempt was interpreted before
    */
   public static void deleteInterpretIfExist(String hdfsSiteConfig, String basePath, String datasetId, Integer attempt,

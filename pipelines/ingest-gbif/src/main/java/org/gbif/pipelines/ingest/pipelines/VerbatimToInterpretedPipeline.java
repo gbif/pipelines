@@ -12,6 +12,8 @@ import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FileVocabularyFactory;
+import org.gbif.pipelines.ingest.utils.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -34,7 +36,6 @@ import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
-import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -109,7 +110,6 @@ public class VerbatimToInterpretedPipeline {
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     PipelinesConfig config =
         FsUtils.readConfigFile(hdfsSiteConfig, options.getProperties(), PipelinesConfig.class);
-    String vocabulariesPath = options.getVocabulariesPath();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -139,9 +139,8 @@ public class VerbatimToInterpretedPipeline {
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
             .lifeStageLookupSupplier(
-                () ->
-                    VocabularyLookup.load(
-                        FsUtils.readVocabularyFile(hdfsSiteConfig, vocabulariesPath, "LifeStage")))
+                FileVocabularyFactory.getInstanceSupplier(
+                    config, hdfsSiteConfig, VocabularyBackedTerm.LIFE_STAGE))
             .isTripletValid(options.isTripletValid())
             .isOccurrenceIdValid(options.isOccurrenceIdValid())
             .useExtendedRecordId(options.isUseExtendedRecordId())

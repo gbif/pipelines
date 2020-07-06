@@ -29,6 +29,8 @@ import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
 import org.gbif.pipelines.ingest.java.utils.ConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FileVocabularyFactory;
+import org.gbif.pipelines.ingest.utils.FileVocabularyFactory.VocabularyBackedTerm;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.AudubonRecord;
@@ -56,7 +58,6 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
-import org.gbif.vocabulary.lookup.VocabularyLookup;
 
 import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
@@ -153,7 +154,6 @@ public class VerbatimToInterpretedPipeline {
     PipelinesConfig config =
         ConfigFactory.getInstance(hdfsSiteConfig, options.getProperties(), PipelinesConfig.class)
             .get();
-    String vocabulariesPath = options.getVocabulariesPath();
 
     FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
 
@@ -181,9 +181,8 @@ public class VerbatimToInterpretedPipeline {
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.getInstanceSupplier(config, datasetId))
             .lifeStageLookupSupplier(
-                () ->
-                    VocabularyLookup.load(
-                        FsUtils.readVocabularyFile(hdfsSiteConfig, vocabulariesPath, "LifeStage")))
+                FileVocabularyFactory.getInstanceSupplier(
+                    config, hdfsSiteConfig, VocabularyBackedTerm.LIFE_STAGE))
             .isTripletValid(tripletValid)
             .isOccurrenceIdValid(occIdValid)
             .useExtendedRecordId(useErdId)
