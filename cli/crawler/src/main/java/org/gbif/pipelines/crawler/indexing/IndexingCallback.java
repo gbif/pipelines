@@ -185,8 +185,10 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     // Chooses a runner type by calculating number of files
     String basic = RecordType.BASIC.name().toLowerCase();
     String directoryName = Interpretation.DIRECTORY_NAME;
-    String basicPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, directoryName, basic);
-    int count = HdfsUtils.getFileCount(basicPath, config.stepConfig.hdfsSiteConfig);
+    String basicPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, directoryName, basic);
+    int count =
+        HdfsUtils.getFileCount(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, basicPath);
     count *= 4;
     if (count < config.sparkParallelismMin) {
       return config.sparkParallelismMin;
@@ -312,7 +314,11 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
-        HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
+        HdfsUtils.getValueByKey(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(

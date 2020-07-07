@@ -85,7 +85,7 @@ public class InterpretedMessageHandler {
     // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     String verbatimPath = String.join("/", config.repositoryPath, datasetId, attempt, verbatim);
-    long fileSizeByte = HdfsUtils.getFileSizeByte(verbatimPath, config.hdfsSiteConfig);
+    long fileSizeByte = HdfsUtils.getFileSizeByte(config.hdfsSiteConfig, config.coreSiteConfig, verbatimPath);
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
@@ -109,7 +109,12 @@ public class InterpretedMessageHandler {
     String metaPath = String.join("/", config.repositoryPath, datasetId, attempt, metaFileName);
 
     Long messageNumber = message.getNumberOfRecords();
-    String fileNumber = HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
+    String fileNumber =
+        HdfsUtils.getValueByKey(
+            config.hdfsSiteConfig,
+            config.coreSiteConfig,
+            metaPath,
+            Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException( "Please check archive-to-avro metadata yaml file or message records number, recordsNumber can't be null or empty!");

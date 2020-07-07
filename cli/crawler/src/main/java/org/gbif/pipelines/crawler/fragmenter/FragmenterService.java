@@ -46,7 +46,7 @@ public class FragmenterService extends AbstractIdleService {
     curator = c.zooKeeper.getCuratorFramework();
     executor = Executors.newFixedThreadPool(config.numberThreads);
     PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
-    KeygenConfig keygenConfig = readConfig(config.stepConfig.hdfsSiteConfig, config.pipelinesConfig);
+    KeygenConfig keygenConfig = readConfig(c.hdfsSiteConfig, c.coreSiteConfig, config.pipelinesConfig);
 
     FragmenterCallback callback =
         new FragmenterCallback(config, publisher, curator, client, executor, hbaseConnection, keygenConfig);
@@ -67,9 +67,9 @@ public class FragmenterService extends AbstractIdleService {
     }
   }
 
-  private KeygenConfig readConfig(String hdfsSiteConfig, String pipelinesConfig){
+  private KeygenConfig readConfig(String hdfsSiteConfig, String coreSiteConfig, String pipelinesConfig){
     PipelinesConfig c =
-        ConfigFactory.getInstance(hdfsSiteConfig, pipelinesConfig, PipelinesConfig.class)
+        ConfigFactory.getInstance(hdfsSiteConfig, coreSiteConfig, pipelinesConfig, PipelinesConfig.class)
             .get();
 
     String zk = c.getKeygen().getZkConnectionString();

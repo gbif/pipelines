@@ -245,7 +245,8 @@ public class PipelinesCallback<I extends PipelineBasedMessage, O extends Pipelin
   private void updateTrackingStatus(TrackingInfo ti, PipelineStep.Status status) {
     String path =
         HdfsUtils.buildOutputPathAsString(config.getRepositoryPath(), ti.datasetId, ti.attempt, config.getMetaFileName());
-    List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), path);
+    List<MetricInfo> metricInfos =
+        HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path);
     PipelineStepParameters psp = new PipelineStepParameters(status, metricInfos);
     try {
       Runnable r = () -> client.updatePipelineStepStatusAndMetrics(ti.processKey, ti.executionId, ti.stepKey, psp);

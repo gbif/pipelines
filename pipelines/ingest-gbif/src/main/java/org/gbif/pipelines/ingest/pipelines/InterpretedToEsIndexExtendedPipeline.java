@@ -90,7 +90,11 @@ public class InterpretedToEsIndexExtendedPipeline {
     pipeline.run();
 
     PipelinesConfig config =
-        FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties(), PipelinesConfig.class);
+        FsUtils.readConfigFile(
+            options.getHdfsSiteConfig(),
+            options.getCoreSiteConfig(),
+            options.getProperties(),
+            PipelinesConfig.class);
 
     String zk = config.getIndexLock().getZkConnectionString();
     zk = zk == null || zk.isEmpty() ? config.getZkConnectionString() : zk;
