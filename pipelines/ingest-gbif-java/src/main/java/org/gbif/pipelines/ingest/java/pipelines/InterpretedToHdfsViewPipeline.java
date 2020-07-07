@@ -336,7 +336,7 @@ public class InterpretedToHdfsViewPipeline {
     String id = options.getDatasetId() + '_' + options.getAttempt();
     String targetTempPath = FsUtils.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
     Path path = new Path(targetTempPath);
-    FileSystem verbatimFs = createParentDirectories(path, options.getHdfsSiteConfig());
+    FileSystem verbatimFs = createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
     return SyncDataFileWriterBuilder.builder()
         .schema(OccurrenceHdfsRecord.getClassSchema())
         .codec(options.getAvroCompressionType())

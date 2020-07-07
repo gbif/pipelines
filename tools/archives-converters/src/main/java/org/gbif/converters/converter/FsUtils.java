@@ -29,8 +29,8 @@ public class FsUtils {
    * @return filesystem
    */
   @SneakyThrows
-  public static FileSystem createParentDirectories(Path path, String hdfsSite) {
-    FileSystem fs = FileSystemFactory.getInstance(hdfsSite).getFs(path.toString());
+  public static FileSystem createParentDirectories(String hdfsSiteConfig, String coreSiteConfig, Path path) {
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(path.toString());
     fs.mkdirs(path.getParent());
     return fs;
   }
@@ -66,8 +66,8 @@ public class FsUtils {
     }
   }
 
-  public static long fileSize(URI file, String hdfsSiteConfig) throws IOException {
-    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig).getFs(file.toString());
+  public static long fileSize(String hdfsSiteConfig, String coreSiteConfig, URI file) throws IOException {
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(file.toString());
     return fs.getFileStatus(new Path(file)).getLen();
   }
 

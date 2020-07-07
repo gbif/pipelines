@@ -236,7 +236,7 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     String fileNumber =
         HdfsUtils.getValueByKey(
             config.stepConfig.hdfsSiteConfig,
-            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
             metaPath,
             Metrics.ARCHIVE_TO_ER_COUNT);
 
@@ -265,6 +265,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     String attempt = Integer.toString(message.getAttempt());
     String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, Interpretation.DIRECTORY_NAME);
 
-    return HdfsUtils.exists(config.stepConfig.hdfsSiteConfig, config.stepConfig.hdfsSiteConfig, path);
+    return HdfsUtils.exists(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
   }
 }

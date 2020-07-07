@@ -24,7 +24,7 @@ public class AvroReaderTest {
 
   private final Path verbatimPath1 = new Path("target/verbatim1.avro");
   private final Path verbatimPath2 = new Path("target/verbatim2.avro");
-  private final FileSystem verbatimFs = createParentDirectories(verbatimPath1, null);
+  private final FileSystem verbatimFs = createParentDirectories(null, null, verbatimPath1);
 
   @Test
   public void regularExtendedRecordsTest() throws IOException {

@@ -104,6 +104,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
           .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
           .syncInterval(config.avroConfig.syncInterval)
           .hdfsSiteConfig(config.stepConfig.hdfsSiteConfig)
+          .coreSiteConfig(config.stepConfig.coreSiteConfig)
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)

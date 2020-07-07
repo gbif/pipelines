@@ -16,6 +16,8 @@ public class FileSystemFactory {
 
   private static volatile FileSystemFactory instance;
 
+  private static final String DEFAULT_FS = "file:///";
+
   private final FileSystem localFs;
   private final FileSystem hdfsFs;
 
@@ -28,14 +30,21 @@ public class FileSystemFactory {
     if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
 
       String hdfsPrefixToUse = getHdfsPrefix(hdfsSiteConfig);
-      if (hdfsPrefixToUse == null && !Strings.isNullOrEmpty(coreSiteConfig)) {
-        hdfsPrefixToUse = getHdfsPrefix(coreSiteConfig);
+      String corePrefixToUse = getHdfsPrefix(coreSiteConfig);
+
+      String prefixToUse = null;
+      if (!DEFAULT_FS.equals(hdfsPrefixToUse)) {
+        prefixToUse = hdfsPrefixToUse;
+      } else if (!DEFAULT_FS.equals(corePrefixToUse)) {
+        prefixToUse = corePrefixToUse;
+      } else {
+        prefixToUse = hdfsPrefixToUse;
       }
 
-      if (hdfsPrefixToUse != null) {
-        this.hdfsPrefix = hdfsPrefixToUse;
+      if (prefixToUse != null) {
+        this.hdfsPrefix = prefixToUse;
         Configuration config = getHdfsConfiguration(hdfsSiteConfig);
-        this.hdfsFs = FileSystem.get(URI.create(hdfsPrefixToUse), config);
+        this.hdfsFs = FileSystem.get(URI.create(prefixToUse), config);
       } else {
         throw new RuntimeException("XML config is provided, but fs name is not found");
       }
@@ -59,8 +68,16 @@ public class FileSystemFactory {
     return instance;
   }
 
+  public static FileSystemFactory getInstance(String hdfsSiteConfig) {
+    return getInstance(hdfsSiteConfig, null);
+  }
+
   public static FileSystemFactory create(String hdfsSiteConfig, String coreSiteConfig) {
     return new FileSystemFactory(hdfsSiteConfig, coreSiteConfig);
+  }
+
+  public static FileSystemFactory create(String hdfsSiteConfig) {
+    return create(hdfsSiteConfig, null);
   }
 
   public FileSystem getFs(String path) {
