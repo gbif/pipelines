@@ -122,7 +122,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, path.toString());
+    HdfsUtils.deleteDirectory(null, null, path.toString());
     curator.delete().deletingChildrenIfNeeded().forPath(getPipelinesInfoPath(crawlId, DWCA_LABEL));
   }
 
@@ -168,7 +168,7 @@ public class DwcaToAvroCallbackIT {
     assertEquals(1, publisher.getMessages().size());
 
     // Clean
-    HdfsUtils.deleteDirectory(null, path.toString());
+    HdfsUtils.deleteDirectory(null, null, path.toString());
   }
 
   @Test

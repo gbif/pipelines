@@ -4,6 +4,8 @@ public interface BaseConfiguration {
 
   String getHdfsSiteConfig();
 
+  String getCoreSiteConfig();
+
   String getRepositoryPath();
 
   String getMetaFileName();

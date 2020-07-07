@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class ConverterToVerbatim {
 
   private String hdfsSiteConfig;
+  private String coreSiteConfig;
   private int syncInterval = 2 * 1024 * 1024;
   private CodecFactory codecFactory = CodecFactory.snappyCodec();
 
@@ -27,6 +28,11 @@ public abstract class ConverterToVerbatim {
 
   public ConverterToVerbatim hdfsSiteConfig(String hdfsSiteConfig) {
     this.hdfsSiteConfig = hdfsSiteConfig;
+    return this;
+  }
+
+  public ConverterToVerbatim coreSiteConfig(String coreSiteConfig) {
+    this.coreSiteConfig = coreSiteConfig;
     return this;
   }
 
@@ -82,7 +88,7 @@ public abstract class ConverterToVerbatim {
     // same connection. So, when using multiple consumers, one consumer would close the connection
     // that is being used
     // by another consumer.
-    FileSystem fs = FsUtils.createParentDirectories(outputPath, hdfsSiteConfig);
+    FileSystem fs = FsUtils.createParentDirectories(hdfsSiteConfig, coreSiteConfig, outputPath);
     try (BufferedOutputStream outputStream = new BufferedOutputStream(fs.create(outputPath));
         SyncDataFileWriter<ExtendedRecord> dataFileWriter =
             SyncDataFileWriterBuilder.builder()

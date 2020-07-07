@@ -162,20 +162,17 @@ public final class FsUtils {
     Runtime.getRuntime().addShutdownHook(new Thread(runnable));
   }
 
-  /**
-   * Helper method to get file system based on provided configuration.
-   */
+  /** Helper method to get file system based on provided configuration. */
   @SneakyThrows
-  public static FileSystem getFileSystem(String hdfsSiteConfig, String path) {
-    return FileSystemFactory.getInstance(hdfsSiteConfig).getFs(path);
+  public static FileSystem getFileSystem(
+      String hdfsSiteConfig, String coreSiteConfig, String path) {
+    return FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(path);
   }
 
-  /**
-   * Helper method to get file system based on provided configuration.
-   */
+  /** Helper method to get file system based on provided configuration. */
   @SneakyThrows
-  public static FileSystem getLocalFileSystem(String hdfsSiteConfig) {
-    return FileSystemFactory.getInstance(hdfsSiteConfig).getLocalFs();
+  public static FileSystem getLocalFileSystem(String hdfsSiteConfig, String coreSiteConfig) {
+    return FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getLocalFs();
   }
 
   /**
@@ -189,15 +186,17 @@ public final class FsUtils {
 
   /**
    * Deletes all directories and subdirectories(recursively) by file prefix name.
-   * <p>
-   * Example: all directories with '.temp-' prefix in directory '89aad0bb-654f-483c-8711-2c00551033ae/3'
+   *
+   * <p>Example: all directories with '.temp-' prefix in directory
+   * '89aad0bb-654f-483c-8711-2c00551033ae/3'
    *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param directoryPath to a directory
    * @param filePrefix file name prefix
    */
-  public static void deleteDirectoryByPrefix(String hdfsSiteConfig, String directoryPath, String filePrefix) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, directoryPath);
+  public static void deleteDirectoryByPrefix(
+      String hdfsSiteConfig, String coreSiteConfig, String directoryPath, String filePrefix) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
     try {
       deleteDirectoryByPrefix(fs, new Path(directoryPath), filePrefix);
     } catch (IOException e) {
@@ -212,8 +211,9 @@ public final class FsUtils {
    * @param globFilter filter used to filter files and paths
    * @param targetPath target directory
    */
-  public static void moveDirectory(String hdfsSiteConfig, String targetPath, String globFilter) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, targetPath);
+  public static void moveDirectory(
+      String hdfsSiteConfig, String coreSiteConfig, String targetPath, String globFilter) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, targetPath);
     try {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
@@ -232,8 +232,9 @@ public final class FsUtils {
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param globFilter filter used to filter files and paths
    */
-  public static void deleteByPattern(String hdfsSiteConfig, String directoryPath, String globFilter) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, directoryPath);
+  public static void deleteByPattern(
+      String hdfsSiteConfig, String coreSiteConfig, String directoryPath, String globFilter) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
     try {
       FileStatus[] status = fs.globStatus(new Path(globFilter));
       Path[] paths = FileUtil.stat2Paths(status);
@@ -268,8 +269,9 @@ public final class FsUtils {
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param directoryPath path to some directory
    */
-  public static boolean deleteIfExist(String hdfsSiteConfig, String directoryPath) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, directoryPath);
+  public static boolean deleteIfExist(
+      String hdfsSiteConfig, String coreSiteConfig, String directoryPath) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
 
     Path path = new Path(directoryPath);
     try {
@@ -287,8 +289,9 @@ public final class FsUtils {
    * @param filePath properties file path
    */
   @SneakyThrows
-  public static <T> T readConfigFile(String hdfsSiteConfig, String filePath, Class<T> clazz) {
-    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig);
+  public static <T> T readConfigFile(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath, Class<T> clazz) {
+    FileSystem fs = FsUtils.getLocalFileSystem(hdfsSiteConfig, coreSiteConfig);
     Path fPath = new Path(filePath);
     if (fs.exists(fPath)) {
       log.info("Reading properties path - {}", filePath);
@@ -302,10 +305,13 @@ public final class FsUtils {
     throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
   }
 
-  /**
-   * Deletes directories if a dataset with the same attempt was interpreted before
-   */
-  public static void deleteInterpretIfExist(String hdfsSiteConfig, String basePath, String datasetId, Integer attempt,
+  /** Deletes directories if a dataset with the same attempt was interpreted before */
+  public static void deleteInterpretIfExist(
+      String hdfsSiteConfig,
+      String coreSiteConfig,
+      String basePath,
+      String datasetId,
+      Integer attempt,
       Set<String> steps) {
     if (steps != null && !steps.isEmpty()) {
 
@@ -313,12 +319,14 @@ public final class FsUtils {
 
       if (steps.contains(ALL.name())) {
         log.info("Delete interpretation directory - {}", path);
-        boolean isDeleted = deleteIfExist(hdfsSiteConfig, path);
+        boolean isDeleted = deleteIfExist(hdfsSiteConfig, coreSiteConfig, path);
         log.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
       } else {
         for (String step : steps) {
           log.info("Delete {}/{} directory", path, step.toLowerCase());
-          boolean isDeleted = deleteIfExist(hdfsSiteConfig, String.join("/", path, step.toLowerCase()));
+          boolean isDeleted =
+              deleteIfExist(
+                  hdfsSiteConfig, coreSiteConfig, String.join("/", path, step.toLowerCase()));
           log.info("Delete interpretation directory - {}, deleted - {}", path, isDeleted);
         }
       }
@@ -336,12 +344,11 @@ public final class FsUtils {
     String deletePath =
         FsUtils.buildPath(targetPath, HdfsView.VIEW_OCCURRENCE + "_" + options.getDatasetId() + "_*").toString();
     log.info("Deleting avro files {}", deletePath);
-    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), targetPath, deletePath);
+    FsUtils.deleteByPattern(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), targetPath, deletePath);
     String filter = buildFilePathHdfsViewUsingInputPath(options, "*.avro");
 
     log.info("Moving files with pattern {} to {}", filter, targetPath);
-    FsUtils.moveDirectory(options.getHdfsSiteConfig(), targetPath, filter);
+    FsUtils.moveDirectory(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), targetPath, filter);
     log.info("Files moved to {} directory", targetPath);
   }
-
 }

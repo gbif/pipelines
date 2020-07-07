@@ -68,10 +68,11 @@ public class VerbatimToInterpretedAmpPipeline {
     Integer attempt = options.getAttempt();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
+    String coreSiteConfig = options.getCoreSiteConfig();
     PipelinesConfig config =
-        FsUtils.readConfigFile(options.getHdfsSiteConfig(), options.getProperties(), PipelinesConfig.class);
+        FsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, options.getInterpretationTypes());
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -104,7 +105,7 @@ public class VerbatimToInterpretedAmpPipeline {
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
   }

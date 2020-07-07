@@ -104,7 +104,7 @@ public class VerbatimMessageHandler {
     // Strategy 2: Chooses a runner type by calculating verbatim.avro file size
     String verbatim = Conversion.FILE_NAME + Pipeline.AVRO_EXTENSION;
     String verbatimPath = String.join("/", config.repositoryPath, datasetId, attempt, verbatim);
-    long fileSizeByte = HdfsUtils.getFileSizeByte(verbatimPath, config.hdfsSiteConfig);
+    long fileSizeByte = HdfsUtils.getFileSizeByte(config.hdfsSiteConfig, config.coreSiteConfig, verbatimPath);
     if (fileSizeByte > 0) {
       long switchFileSizeByte = config.switchFileSizeMb * 1024L * 1024L;
       runner = fileSizeByte > switchFileSizeByte ? StepRunner.DISTRIBUTED : StepRunner.STANDALONE;
@@ -130,7 +130,9 @@ public class VerbatimMessageHandler {
     Long messageNumber =
         message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords() : null;
-    String fileNumber = HdfsUtils.getValueByKey(config.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+    String fileNumber =
+        HdfsUtils.getValueByKey(
+            config.hdfsSiteConfig, config.coreSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(
@@ -156,7 +158,7 @@ public class VerbatimMessageHandler {
     String datasetId = message.getDatasetUuid().toString();
     String path = String.join("/", config.repositoryPath, datasetId);
     log.info("Parsing HDFS directory - {}", path);
-    return HdfsUtils.getSubDirList(config.hdfsSiteConfig, path)
+    return HdfsUtils.getSubDirList(config.hdfsSiteConfig, config.coreSiteConfig, path)
         .stream()
         .map(y -> y.getPath().getName())
         .filter(x -> x.chars().allMatch(Character::isDigit))

@@ -16,15 +16,17 @@ public class ConfigFactory<T> {
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private ConfigFactory(String hdfsSiteConfig, String propertiesPath, Class<T> clazz) {
-    this.config = FsUtils.readConfigFile(hdfsSiteConfig, propertiesPath, clazz);
+  private ConfigFactory(
+      String hdfsSiteConfig, String coreCiteConfig, String propertiesPath, Class<T> clazz) {
+    this.config = FsUtils.readConfigFile(hdfsSiteConfig, coreCiteConfig, propertiesPath, clazz);
   }
 
-  public static <T> ConfigFactory<T> getInstance(String hdfsSiteConfig, String propertiesPath, Class<T> clazz) {
+  public static <T> ConfigFactory<T> getInstance(
+      String hdfsSiteConfig, String coreCiteConfig, String propertiesPath, Class<T> clazz) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new ConfigFactory(hdfsSiteConfig, propertiesPath, clazz);
+          instance = new ConfigFactory(hdfsSiteConfig, coreCiteConfig, propertiesPath, clazz);
         }
       }
     }
