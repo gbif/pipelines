@@ -1,6 +1,5 @@
 package org.gbif.pipelines.ingest.java.io;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,7 +21,8 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,17 +30,19 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 
 /** Avro format reader, reads {@link Record} based objects using sting or {@link List<Path>} path */
 @Slf4j
-@AllArgsConstructor(staticName = "create")
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AvroReader {
 
   /**
    * Read {@link Record#getId()} unique records
    *
    * @param clazz instance of {@link Record}
-   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read
+   *     multiple files
    */
-  public static <T extends Record> Map<String, T> readUniqueRecords(String hdfsSiteConfig, Class<T> clazz, String path) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+  public static <T extends Record> Map<String, T> readUniqueRecords(
+      String hdfsSiteConfig, String coreSiteConfig, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
     List<Path> paths = parseWildcardPath(fs, path);
     return readUniqueRecords(fs, clazz, paths);
   }
@@ -49,10 +51,12 @@ public class AvroReader {
    * Read {@link Record#getId()} distinct records
    *
    * @param clazz instance of {@link Record}
-   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read
+   *     multiple files
    */
-  public static <T extends Record> Map<String, T> readRecords(String hdfsSiteConfig, Class<T> clazz, String path) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+  public static <T extends Record> Map<String, T> readRecords(
+      String hdfsSiteConfig, String coreSiteConfig, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
     List<Path> paths = parseWildcardPath(fs, path);
     return readRecords(fs, clazz, paths);
   }
@@ -123,8 +127,7 @@ public class AvroReader {
   @SneakyThrows
   private static List<Path> parseWildcardPath(FileSystem fs, String path) {
     if (path.contains("*")) {
-      File parentFile = new File(path).getParentFile();
-      Path pp = new Path(parentFile.getPath().replace("hdfs:/ha-nn", "hdfs://ha-nn"));
+      Path pp = new Path(path).getParent();
       RemoteIterator<LocatedFileStatus> files = fs.listFiles(pp, false);
       List<Path> paths = new ArrayList<>();
       while (files.hasNext()) {

@@ -70,6 +70,11 @@ public class FragmenterConfiguration implements BaseConfiguration {
   }
 
   @Override
+  public String getCoreSiteConfig() {
+    return stepConfig.coreSiteConfig;
+  }
+
+  @Override
   public String getRepositoryPath() {
     return stepConfig.repositoryPath;
   }

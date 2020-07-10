@@ -105,6 +105,7 @@ public class InterpretedToHdfsViewPipeline {
   public static void run(InterpretationPipelineOptions options) {
 
     String hdfsSiteConfig = options.getHdfsSiteConfig();
+    String coreSiteConfig = options.getCoreSiteConfig();
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
     Integer numberOfShards = options.getNumberOfShards();
@@ -116,7 +117,7 @@ public class InterpretedToHdfsViewPipeline {
     MDC.put("step", StepType.HDFS_VIEW.name());
 
     //Deletes the target path if it exists
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, options.getInputPath(), datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, options.getInputPath(), datasetId, attempt, types);
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> interpretPathFn = t -> FsUtils.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);

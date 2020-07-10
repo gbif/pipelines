@@ -48,17 +48,18 @@ public class MetricsHandler {
   }
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml file and
-   * save it
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to
+   * a yaml file and save it
    */
-  public static void saveCountersToFile(String hdfsSiteConfig, String path, MetricResults results) {
+  public static void saveCountersToFile(
+      String hdfsSiteConfig, String coreSiteConfig, String path, MetricResults results) {
 
     if (path != null && !path.isEmpty()) {
       log.info("Trying to write pipeline's metadata to a file - {}", path);
 
       String countersInfo = getCountersInfo(results);
 
-      FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+      FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
       try {
         FsUtils.createFile(fs, path, countersInfo);
         log.info("Metadata was written to a file - {}", path);
@@ -66,7 +67,6 @@ public class MetricsHandler {
         log.warn("Write pipelines metadata file", ex);
       }
     }
-
   }
 
   /**
@@ -86,15 +86,27 @@ public class MetricsHandler {
   }
 
   /**
-   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to a yaml file and
-   * save it
+   * Method works with Apache Beam metrics, gets metrics from {@link MetricResults} and converts to
+   * a yaml file and save it
    */
-  private static void saveCountersToFile(BasePipelineOptions options, MetricResults results, boolean isInput) {
-    Optional.ofNullable(options.getMetaFileName()).ifPresent(metadataName -> {
-      String metadataPath = metadataName.isEmpty() ? "" : FsUtils.buildDatasetAttemptPath(options, metadataName, isInput);
-      String hdfsSiteConfig = options instanceof InterpretationPipelineOptions ? ((InterpretationPipelineOptions) options).getHdfsSiteConfig() : "";
-      MetricsHandler.saveCountersToFile(hdfsSiteConfig, metadataPath, results);
-    });
+  private static void saveCountersToFile(
+      BasePipelineOptions options, MetricResults results, boolean isInput) {
+    Optional.ofNullable(options.getMetaFileName())
+        .ifPresent(
+            metadataName -> {
+              String metadataPath = "";
+              if (!metadataName.isEmpty()) {
+                metadataPath = FsUtils.buildDatasetAttemptPath(options, metadataName, isInput);
+              }
+              String hdfsSiteConfig = "";
+              String coreSiteConfig = "";
+              if (options instanceof InterpretationPipelineOptions) {
+                InterpretationPipelineOptions o = (InterpretationPipelineOptions) options;
+                hdfsSiteConfig = o.getHdfsSiteConfig();
+                coreSiteConfig = o.getCoreSiteConfig();
+              }
+              MetricsHandler.saveCountersToFile(
+                  hdfsSiteConfig, coreSiteConfig, metadataPath, results);
+            });
   }
-
 }

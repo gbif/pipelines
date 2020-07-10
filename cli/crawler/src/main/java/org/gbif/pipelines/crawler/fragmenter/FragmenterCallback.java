@@ -145,7 +145,8 @@ public class FragmenterCallback extends AbstractMessageCallback<PipelinesInterpr
     try {
       org.apache.hadoop.fs.Path path =
           buildOutputPath(config.stepConfig.repositoryPath, datasetId, attempt, config.metaFileName);
-      FileSystem fs = FileSystemFactory.getInstance(config.getHdfsSiteConfig()).getFs(path.toString());
+      FileSystem fs =
+          FileSystemFactory.getInstance(config.getHdfsSiteConfig(), config.getCoreSiteConfig()).getFs(path.toString());
       String info = Metrics.FRAGMENTER_COUNT + ": " + numberOfRecords + "\n";
       FsUtils.createFile(fs, path, info);
     } catch (IOException ex) {

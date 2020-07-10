@@ -33,6 +33,7 @@
     {"name": "repatriated","type":["null","boolean"],"default":null, "doc":"https://gbif.github.io/gbif-api/apidocs/org/gbif/api/model/occurrence/search/OccurrenceSearchParameter.html#REPATRIATED"},
     {"name": "hasGeospatialIssue","type":["null","boolean"],"default":null, "doc":"https://gbif.github.io/gbif-api/apidocs/org/gbif/api/model/occurrence/search/OccurrenceSearchParameter.html#HAS_GEOSPATIAL_ISSUE"},
     {"name": "locality","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/locality"},
+     {"name": "georeferencedDate", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/dateIdentified"},
     {"name": "issues", "type": "IssueRecord", "default":{}}
   ]
 }

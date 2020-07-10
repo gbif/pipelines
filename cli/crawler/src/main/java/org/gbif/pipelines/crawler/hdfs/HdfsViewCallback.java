@@ -209,7 +209,11 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
-        HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
+        HdfsUtils.getValueByKey(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(
@@ -230,8 +234,10 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private int computeNumberOfShards(PipelinesInterpretedMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String dirPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
-    long sizeByte = HdfsUtils.getFileSizeByte(dirPath, config.stepConfig.hdfsSiteConfig);
+    String dirPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
+    long sizeByte =
+        HdfsUtils.getFileSizeByte(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, dirPath);
     if (sizeByte == -1d) {
       throw new IllegalArgumentException("Please check interpretation source directory! - " + dirPath);
     }

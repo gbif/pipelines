@@ -26,7 +26,7 @@ import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
 import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
 import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
 import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
-import org.gbif.pipelines.ingest.java.utils.PipelinesConfigFactory;
+import org.gbif.pipelines.ingest.java.utils.ConfigFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -149,9 +149,12 @@ public class VerbatimToInterpretedPipeline {
     String targetPath = options.getTargetPath();
     String endPointType = options.getEndPointType();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    PipelinesConfig config = PipelinesConfigFactory.getInstance(hdfsSiteConfig, options.getProperties()).get();
+    String coreSiteConfig = options.getCoreSiteConfig();
+    PipelinesConfig config =
+        ConfigFactory.getInstance(hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class)
+            .get();
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -265,7 +268,8 @@ public class VerbatimToInterpretedPipeline {
       metadataWriter.append(mdr);
 
       // Read DWCA and replace default values
-      Map<String, ExtendedRecord> erMap = AvroReader.readUniqueRecords(hdfsSiteConfig, ExtendedRecord.class, options.getInputPath());
+      Map<String, ExtendedRecord> erMap =
+          AvroReader.readUniqueRecords(hdfsSiteConfig, coreSiteConfig, ExtendedRecord.class, options.getInputPath());
       Map<String, ExtendedRecord> erExtMap = occExtensionTransform.transform(erMap);
       defaultValuesTransform.replaceDefaultValues(erExtMap);
 
@@ -300,6 +304,7 @@ public class VerbatimToInterpretedPipeline {
         }
       };
 
+      log.info("Starting interpretation...");
       // Run async writing for BasicRecords
       Stream<CompletableFuture<Void>> streamBr;
       Collection<BasicRecord> brCollection = gbifIdTransform.getBrMap().values();
@@ -340,7 +345,7 @@ public class VerbatimToInterpretedPipeline {
     UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
     Path path = new Path(pathFn.apply(baseName));
-    FileSystem fs = createParentDirectories(path, options.getHdfsSiteConfig());
+    FileSystem fs = createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);
     return SyncDataFileWriterBuilder.builder()
         .schema(schema)
         .codec(options.getAvroCompressionType())

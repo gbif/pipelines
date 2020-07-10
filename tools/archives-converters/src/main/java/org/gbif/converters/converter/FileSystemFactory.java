@@ -11,59 +11,77 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@SuppressWarnings("all")
 public class FileSystemFactory {
 
-  private static final String HDFS_PREFIX = "hdfs://ha-nn";
-
   private static volatile FileSystemFactory instance;
+
+  private static final String DEFAULT_FS = "file:///";
 
   private final FileSystem localFs;
   private final FileSystem hdfsFs;
 
+  private final String hdfsPrefix;
+
   private static final Object MUTEX = new Object();
 
   @SneakyThrows
-  private FileSystemFactory(String hdfsSiteConfig, String hdfsPrefix) {
+  private FileSystemFactory(String hdfsSiteConfig, String coreSiteConfig) {
     if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-      hdfsFs = FileSystem.get(URI.create(hdfsPrefix), getHdfsConfiguration(hdfsSiteConfig));
+
+      String hdfsPrefixToUse = getHdfsPrefix(hdfsSiteConfig);
+      String corePrefixToUse = getHdfsPrefix(coreSiteConfig);
+
+      String prefixToUse = null;
+      if (!DEFAULT_FS.equals(hdfsPrefixToUse)) {
+        prefixToUse = hdfsPrefixToUse;
+      } else if (!DEFAULT_FS.equals(corePrefixToUse)) {
+        prefixToUse = corePrefixToUse;
+      } else {
+        prefixToUse = hdfsPrefixToUse;
+      }
+
+      if (prefixToUse != null) {
+        this.hdfsPrefix = prefixToUse;
+        Configuration config = getHdfsConfiguration(hdfsSiteConfig);
+        this.hdfsFs = FileSystem.get(URI.create(prefixToUse), config);
+      } else {
+        throw new RuntimeException("XML config is provided, but fs name is not found");
+      }
+
     } else {
-      hdfsFs = null;
+      this.hdfsPrefix = null;
+      this.hdfsFs = null;
     }
-    localFs = FileSystem.get(getHdfsConfiguration(hdfsSiteConfig));
+
+    this.localFs = FileSystem.get(getHdfsConfiguration(null));
   }
 
-  public static FileSystemFactory getInstance(String hdfsSiteConfig, String hdfsPrefix) {
+  public static FileSystemFactory getInstance(String hdfsSiteConfig, String coreSiteConfig) {
     if (instance == null) {
       synchronized (MUTEX) {
         if (instance == null) {
-          instance = new FileSystemFactory(hdfsSiteConfig, hdfsPrefix);
+          instance = new FileSystemFactory(hdfsSiteConfig, coreSiteConfig);
         }
       }
     }
     return instance;
   }
 
-  /** Use predefined HDFS_PREFIX = "hdfs://ha-nn" */
   public static FileSystemFactory getInstance(String hdfsSiteConfig) {
-    return getInstance(hdfsSiteConfig, HDFS_PREFIX);
+    return getInstance(hdfsSiteConfig, null);
   }
 
-  public static FileSystemFactory create(String hdfsSiteConfig, String hdfsPrefix){
-    return new FileSystemFactory(hdfsSiteConfig, hdfsPrefix);
+  public static FileSystemFactory create(String hdfsSiteConfig, String coreSiteConfig) {
+    return new FileSystemFactory(hdfsSiteConfig, coreSiteConfig);
   }
 
-  /** Use predefined HDFS_PREFIX = "hdfs://ha-nn" */
-  public static FileSystemFactory create(String hdfsSiteConfig){
-    return new FileSystemFactory(hdfsSiteConfig, HDFS_PREFIX);
+  public static FileSystemFactory create(String hdfsSiteConfig) {
+    return create(hdfsSiteConfig, null);
   }
 
-  public FileSystem getFs(String path, String hdfsPrefix) {
-    return path != null && path.startsWith(hdfsPrefix) ? hdfsFs : localFs;
-  }
-
-  /** Use predefined HDFS_PREFIX = "hdfs://ha-nn" */
   public FileSystem getFs(String path) {
-    return getFs(path, HDFS_PREFIX);
+    return path != null && hdfsPrefix != null && path.startsWith(hdfsPrefix) ? hdfsFs : localFs;
   }
 
   public FileSystem getLocalFs() {
@@ -77,24 +95,37 @@ public class FileSystemFactory {
   /**
    * Creates an instances of a {@link Configuration} using a xml HDFS configuration file.
    *
-   * @param hdfsSiteConfig path to the hdfs-site.xml or HDFS config file
+   * @param pathToConfig coreSiteConfig path to the hdfs-site.xml or core-site.xml
    * @return a {@link Configuration} based on the provided config file
    */
   @SneakyThrows
-  private static Configuration getHdfsConfiguration(String hdfsSiteConfig) {
+  private static Configuration getHdfsConfiguration(String pathToConfig) {
     Configuration config = new Configuration();
 
     // check if the hdfs-site.xml is provided
-    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-      File hdfsSite = new File(hdfsSiteConfig);
-      if (hdfsSite.exists() && hdfsSite.isFile()) {
-        log.info("using hdfs-site.xml");
-        config.addResource(hdfsSite.toURI().toURL());
+    if (!Strings.isNullOrEmpty(pathToConfig)) {
+      File file = new File(pathToConfig);
+      if (file.exists() && file.isFile()) {
+        log.info("Using XML config found at {}", pathToConfig);
+        config.addResource(file.toURI().toURL());
       } else {
-        log.warn("hdfs-site.xml does not exist");
+        log.warn("XML config does not exist - {}", pathToConfig);
       }
+    } else {
+      log.info("XML config not provided");
     }
     return config;
   }
 
+  private static String getHdfsPrefix(String pathToConfig) {
+    String hdfsPrefixToUse = null;
+    if (!Strings.isNullOrEmpty(pathToConfig)) {
+      Configuration hdfsSite = getHdfsConfiguration(pathToConfig);
+      hdfsPrefixToUse = hdfsSite.get("fs.default.name");
+      if (hdfsPrefixToUse == null) {
+        hdfsPrefixToUse = hdfsSite.get("fs.defaultFS");
+      }
+    }
+    return hdfsPrefixToUse;
+  }
 }

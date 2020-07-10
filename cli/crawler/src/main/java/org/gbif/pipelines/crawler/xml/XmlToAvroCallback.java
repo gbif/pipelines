@@ -1,14 +1,13 @@
 package org.gbif.pipelines.crawler.xml;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.file.CodecFactory;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.common.messaging.AbstractMessageCallback;
@@ -24,13 +23,16 @@ import org.gbif.pipelines.crawler.StepHandler;
 import org.gbif.pipelines.crawler.dwca.DwcaToAvroConfiguration;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
+import org.apache.avro.file.CodecFactory;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.pipelines.common.utils.HdfsUtils.buildOutputPath;
 import static org.gbif.pipelines.common.utils.PathUtil.buildXmlInputPath;
@@ -102,6 +104,7 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
           .codecFactory(CodecFactory.fromString(config.avroConfig.compressionType))
           .syncInterval(config.avroConfig.syncInterval)
           .hdfsSiteConfig(config.stepConfig.hdfsSiteConfig)
+          .coreSiteConfig(config.stepConfig.coreSiteConfig)
           .inputPath(inputPath)
           .outputPath(outputPath)
           .metaPath(metaPath)
@@ -165,7 +168,12 @@ public class XmlToAvroCallback extends AbstractMessageCallback<PipelinesXmlMessa
     log.info("Getting records number from the file - {}", metaPath);
     String fileNumber;
     try {
-      fileNumber = HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+      fileNumber =
+          HdfsUtils.getValueByKey(
+              config.stepConfig.hdfsSiteConfig,
+              config.stepConfig.coreSiteConfig,
+              metaPath,
+              Metrics.ARCHIVE_TO_ER_COUNT);
     } catch (IOException e) {
       throw new IllegalArgumentException(e.getMessage(), e);
     }

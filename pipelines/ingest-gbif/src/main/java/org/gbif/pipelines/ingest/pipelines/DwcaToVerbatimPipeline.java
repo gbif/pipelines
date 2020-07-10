@@ -5,7 +5,7 @@ import java.nio.file.Paths;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.DwcaIO;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
+import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
@@ -49,11 +49,11 @@ import lombok.extern.slf4j.Slf4j;
 public class DwcaToVerbatimPipeline {
 
   public static void main(String[] args) {
-    BasePipelineOptions options = PipelinesOptionsFactory.create(BasePipelineOptions.class, args);
+    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(args);
     run(options);
   }
 
-  public static void run(BasePipelineOptions options) {
+  public static void run(InterpretationPipelineOptions options) {
 
     MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());

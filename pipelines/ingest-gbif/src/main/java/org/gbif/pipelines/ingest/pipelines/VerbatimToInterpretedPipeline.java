@@ -103,16 +103,14 @@ public class VerbatimToInterpretedPipeline {
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
-    boolean tripletValid = options.isTripletValid();
-    boolean occurrenceIdValid = options.isOccurrenceIdValid();
-    boolean useExtendedRecordId = options.isUseExtendedRecordId();
-    String endPointType = options.getEndPointType();
     Set<String> types = options.getInterpretationTypes();
     String targetPath = options.getTargetPath();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
-    PipelinesConfig config = FsUtils.readConfigFile(hdfsSiteConfig, options.getProperties());
+    String coreSiteConfig = options.getCoreSiteConfig();
+    PipelinesConfig config =
+        FsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, options.getProperties(), PipelinesConfig.class);
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
     MDC.put("datasetKey", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -130,7 +128,7 @@ public class VerbatimToInterpretedPipeline {
         MetadataTransform.builder()
             .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
             .attempt(attempt)
-            .endpointType(endPointType)
+            .endpointType(options.getEndPointType())
             .create();
 
     TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
@@ -139,9 +137,9 @@ public class VerbatimToInterpretedPipeline {
     BasicTransform basicTransform =
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
-            .isTripletValid(tripletValid)
-            .isOccurrenceIdValid(occurrenceIdValid)
-            .useExtendedRecordId(useExtendedRecordId)
+            .isTripletValid(options.isTripletValid())
+            .isOccurrenceIdValid(options.isOccurrenceIdValid())
+            .useExtendedRecordId(options.isUseExtendedRecordId())
             .create();
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
@@ -168,7 +166,7 @@ public class VerbatimToInterpretedPipeline {
     ImageTransform imageTransform = ImageTransform.create();
 
     // Extra
-    UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create(useExtendedRecordId);
+    UniqueGbifIdTransform gbifIdTransform = UniqueGbifIdTransform.create(options.isUseExtendedRecordId());
 
     log.info("Creating beam pipeline");
     // Create and write metadata
@@ -282,7 +280,7 @@ public class VerbatimToInterpretedPipeline {
 
     log.info("Deleting beam temporal folders");
     String tempPath = String.join("/", targetPath, datasetId, attempt.toString());
-    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, tempPath, ".temp-beam");
+    FsUtils.deleteDirectoryByPrefix(hdfsSiteConfig, coreSiteConfig, tempPath, ".temp-beam");
 
     log.info("Pipeline has been finished");
   }
