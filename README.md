@@ -110,6 +110,7 @@ Please read [Apache Maven how-to](https://maven.apache.org/run.html).
 
 # Codestyle and tools recommendations
 
+- The project follows gitflow workflow
 - Use [Intellij IDEA Community](https://www.jetbrains.com/idea/download/) (or better)
 - Use [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format) (Please, do not reformat old codebase, only new)
 - The project uses [Project Lombok](https://projectlombok.org/), please install [Lombok plugin for Intellij IDEA](https://plugins.jetbrains.com/plugin/6317-lombok-plugin).
