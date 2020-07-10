@@ -116,3 +116,27 @@ Please read [Apache Maven how-to](https://maven.apache.org/run.html).
 - Because the project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during the build process from IDEA.  To avoid these issues please install the [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and build the project using the [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ and select `Javac with error-prone` in the `Use compiler` box.
 - Add a custom parameter to avoid a debugging problem.  To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ → _Additional command line parameters_ and add `-Xep:ParameterName:OFF`
 - Tests: please follow the conventions of the Maven surefire plugin for [unit tests](https://maven.apache.org/surefire/maven-surefire-plugin/examples/inclusion-exclusion.html) and the ones of the Maven failsafe plugin for [integration tests](https://maven.apache.org/surefire/maven-failsafe-plugin/examples/inclusion-exclusion.html). To run the integration tests just run the verify phase, e.g.: `mvn clean verify`
+- When you write unit tests, please try to make it easy to read, it may look wordy, but it will help when you face an issue. Unit test code structure example:
+    ```java
+      @Test
+      public void allValuesNullTest() {
+        // State
+        String eventDate = null;
+        String year = null;
+        String month = null;
+        String day = null;
+    
+        // When
+        ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+    
+        // Should
+        assertFalse(result.getFromOpt().isPresent());
+        assertFalse(result.getToOpt().isPresent());
+        assertFalse(result.getYearOpt().isPresent());
+        assertFalse(result.getMonthOpt().isPresent());
+        assertFalse(result.getDayOpt().isPresent());
+        assertFalse(result.getStartDayOfYear().isPresent());
+        assertFalse(result.getEndDayOfYear().isPresent());
+        assertTrue(result.getIssues().isEmpty());
+      }
+    ```
