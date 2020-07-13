@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<archive metadata="eml.xml" xmlns="http://rs.tdwg.org/dwc/text/">
+      <core encoding="UTF-8" linesTerminatedBy="
+" fieldsTerminatedBy="," fieldsEnclosedBy="&quot;" ignoreHeaderLines="1" rowType="http://rs.tdwg.org/dwc/terms/Occurrence">
+        <files>
+          <location>occurrence.csv</location>
+        </files>
+        <id index="0"/>
+        <field index="0" term="id"/>
+        <field index="1" term="http://rs.tdwg.org/dwc/terms/scientificName"/>
+        <field index="2" term="http://rs.tdwg.org/dwc/terms/decimalLatitude"/>
+        <field index="3" term="http://rs.tdwg.org/dwc/terms/decimalLongitude"/>
+        <field index="4" term="http://rs.tdwg.org/dwc/terms/eventDate"/>
+        <field index="5" term="deviceId"/>
+      </core>
+    </archive>

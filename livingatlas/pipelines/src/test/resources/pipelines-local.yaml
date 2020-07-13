@@ -1,0 +1,7 @@
+# Here we can override some config from la-pipelines.yml instead of modifing it.
+# For instance:
+
+general:
+  targetPath: /some-other-moint-point/pipelines-data
+
+root-test2: 2

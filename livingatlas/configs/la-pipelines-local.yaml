@@ -1,0 +1,9 @@
+# Here we can override some config from la-pipelines.yml instead of modifying it.
+# This is useful during upgrades via debian packaging so we can maintain 
+# la-pipelines.yml without modifications and updated as a configuration reference
+# while doing local modifications here (manually or via ansible).
+#
+# For instance:
+
+# general:
+#  targetPath: /some-other-moint-point/pipelines-data
