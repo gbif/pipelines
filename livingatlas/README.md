@@ -1,8 +1,6 @@
 # Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines) [![Coverage Status](https://coveralls.io/repos/github/AtlasOfLivingAustralia/la-pipelines/badge.svg?branch=master)](https://coveralls.io/github/AtlasOfLivingAustralia/la-pipelines?branch=master)
 
-The aim of this project is to add functionality required by the Living Atlases to gbif/pipelines to  
-facilitate the replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store)
- for data ingress. 
+The aim of this module is to add functionality required by the Living Atlases to facilitate the replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store) for data ingress. 
 
 ## Architecture
 
@@ -50,7 +48,7 @@ A simple **drop wizard wrapper around the [ala-name-matching](https://github.com
  
 ## Getting started
 
-In the absence of ansible scripts, here are some instructions for setting up a local development environment for pipelines.
+In the absence of ansible scripts, below are some instructions for setting up a local development environment for pipelines.
 These steps will load a dataset into a SOLR index.
 
 ### Software requirements:
@@ -64,12 +62,19 @@ These steps will load a dataset into a SOLR index.
 ### Prerequisite services
 
 1. Run ala-namematching-service on port 9179 using the dock-compose file like so:
+
 `docker-compose -f ala-nameservice.yml up -d`
+
 You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
+
 1. Run solr on port 8983 using the dock-compose file like so:   
+
 `docker-compose -f solr8.yml up -d`
-and then setup the collection using the following script:
+
+and then setup the collection using the following script (in the `solr` subdirectory):
+
 `./update-solr-config.sh`
+
 You can test it by checking this url: http://localhost:8983
       
 ### Setting up la-pipelines
