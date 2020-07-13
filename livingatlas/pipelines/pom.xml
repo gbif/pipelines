@@ -4,8 +4,9 @@
 
   <parent>
     <groupId>au.org.ala</groupId>
-    <artifactId>ala-parent-pom</artifactId>
-    <version>12</version>
+    <artifactId>la-pipelines</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>au.org.ala</groupId>
@@ -13,7 +14,7 @@
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
 
-  <name>Living Atlas Pipelines</name>
+  <name>Living Atlas Pipelines - extensions</name>
   <description>GBIF standalone pipelines for interpreting and indexing biodiversity data</description>
 
     <repositories>
@@ -22,7 +23,7 @@
             <url>https://repository.gbif.org/content/groups/gbif</url>
         </repository>
         <repository>
-            <id>cloudera-release</id>
+            <id>cloudera-release-artifactory</id>
             <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
         </repository>
         <repository>
@@ -144,6 +145,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.5</version>
       </plugin>
     </plugins>
   </build>
@@ -162,7 +164,7 @@
 
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.46</gbif-parsers.version>
-    <gbif-pipelines.version>2.5.3-SNAPSHOT</gbif-pipelines.version>
+    <gbif-pipelines.version>2.5.4-SNAPSHOT</gbif-pipelines.version>
     <dwca-io.version>2.8</dwca-io.version>
     <gbif-api.version>0.98</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
@@ -286,11 +288,6 @@
           <artifactId>kotlin-stdlib</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>au.org.ala</groupId>
-      <artifactId>models</artifactId>
-      <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.beam</groupId>

@@ -19,7 +19,7 @@
     <module>pipelines</module>
     <module>examples</module>
     <module>cli</module>
-    <module>ala</module>
+    <module>livingatlas</module>
   </modules>
 
   <name>Pipelines :: Parent</name>

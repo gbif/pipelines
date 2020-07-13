@@ -18,7 +18,6 @@
   <description>
   </description>
   <modules>
-    <module>models</module>
     <module>pipelines</module>
     <module>migration</module>
   </modules>

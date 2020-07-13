@@ -129,5 +129,41 @@
       {"name" : "usageParsedName", "type" : ["null", "ParsedName"], "default" : null},
       {"name": "issues", "type": "IssueRecord", "default":{}}
     ]
-  }
+  },
+{
+  "name":"ALATaxonRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"An ALA Name Match",
+  "fields":[
+    {"name": "id","type":"string"},
+    {"name": "scientificName", "type": ["null", "string"], "default" : null },
+    {"name": "scientificNameAuthorship", "type": ["null", "string"], "default" : null },
+    {"name": "taxonConceptID", "type": ["null", "string"], "default" : null },
+    {"name": "rank", "type": ["null", "string"], "default" : null },
+    {"name": "rankID", "type": ["null", "int"], "default" : null },
+    {"name": "lft", "type": ["null", "int"], "default" : null },
+    {"name": "rgt", "type": ["null", "int"], "default" : null },
+    {"name": "matchType", "type": ["null", "string"], "default" : null },
+    {"name": "kingdom", "type": ["null", "string"], "default" : null },
+    {"name": "kingdomID", "type": ["null", "string"], "default" : null },
+    {"name": "phylum", "type": ["null", "string"], "default" : null },
+    {"name": "phylumID", "type": ["null", "string"], "default" : null },
+    {"name": "classs", "type": ["null", "string"], "default" : null },
+    {"name": "classID", "type": ["null", "string"], "default" : null },
+    {"name": "order", "type": ["null", "string"], "default" : null },
+    {"name": "orderID", "type": ["null", "string"], "default" : null },
+    {"name": "family", "type": ["null", "string"], "default" : null },
+    {"name": "familyID", "type": ["null", "string"], "default" : null },
+    {"name": "genus", "type": ["null", "string"], "default" : null },
+    {"name": "genusID", "type": ["null", "string"], "default" : null },
+    {"name": "species", "type": ["null", "string"], "default" : null },
+    {"name": "speciesID", "type": ["null", "string"], "default" : null },
+    {"name": "vernacularName", "type": ["null", "string"], "default" : null },
+    {"name": "speciesGroup", "type": {"type": "array", "items": "string"}, "default" : [] },
+    {"name": "speciesSubgroup", "type": {"type": "array", "items": "string"}, "default" : [] },
+    {"name" : "diagnostics", "type" : ["null", "Diagnostic"], "default" : null},
+    {"name": "issues", "type": "IssueRecord", "default":{}}
+  ]
+}
 ]
