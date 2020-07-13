@@ -1,0 +1,86 @@
+general:
+  targetPath: /data/pipelines-data
+  attempt: 1
+  hdfsSiteConfig: ""
+  coreSiteConfig: ""
+
+dwca-avro:
+  runner: SparkRunner
+  metaFileName: dwca-metrics.yml
+  inputPath: /data/biocache-load/{datasetId}/{datasetId}.zip
+  tempLocation: /data/biocache-load/{datasetId}/tmp/
+
+interpret:
+  appName: Interpretation for {datasetId}
+  interpretationTypes: ALL
+  inputPath: /data/pipelines-data/{datasetId}/1/verbatim.avro
+  metaFileName: interpretation-metrics.yml
+  useExtendedRecordId: true
+  runner: SparkRunner
+  # TODO improve/move this
+  properties: ../scripts/pipelines.yaml
+  ## For spark-cluster:
+  #  name: interpret {datasetId}
+  #  appName: Interpretation for {datasetId}
+  ## For spark-embedded:
+  #  appName: Interpretation for {datasetId}
+
+uuid:
+  appName: UUID minting for {datasetId}
+  runner: SparkRunner
+  inputPath: /data/pipelines-data
+  metaFileName: uuid-metrics.yml
+  properties: ../scripts/pipelines.yaml
+  ## For spark-cluster:
+  # interpretationTypes: ALL
+  # useExtendedRecordId: true
+
+export-latlng:
+  inputPath: /data/pipelines-data
+  runner: SparkRunner
+  appName: Lat Long export for {datasetId}
+
+sample:
+  inputPath: /data/pipelines-data
+  appName: Sample for {datasetId}
+  metaFileName: indexing-metrics.yml
+  runner: SparkRunner
+  # TODO improve/move this
+  properties: ../scripts/pipelines.yaml
+
+sample-avro:
+  inputPath: /data/pipelines-data
+  runner: SparkRunner
+  metaFileName: indexing-metrics.yml
+  # TODO improve/move this
+  properties: ../scripts/pipelines.yaml
+  ## For spark-cluster:
+  # appName: Add Sampling for {datasetId}
+  # useExtendedRecordId: true
+  ## For spark-embedded:
+  # appName: SamplingToAvro indexing for {datasetId}
+
+dataset-count-dump:
+  inputPath: /data/pipelines-data
+  targetPath: /tmp/dataset-counts.csv
+
+migrate-uuids:
+  inputPath: /data/pipelines-data/occ_uuid.csv
+  targetPath: /data/pipelines-data
+  hdfsSiteConfig: ""
+  # FIXME: MigrateUUIDPipeline should use this also?
+
+index:
+  inputPath: /data/pipelines-data
+  metaFileName: indexing-metrics.yml
+  properties: ../scripts/pipelines.yaml
+  solrCollection: biocache
+  includeSampling: true
+  runner: SparkRunner
+  zkHost: localhost:9983
+  ## For spark-cluster:
+  # appName: SOLR indexing for {datasetId}
+  # runner: SparkRunner
+  ## For spark-embedded:
+  # appName: SOLR indexing for {datasetId}
+  # runner: SparkRunner

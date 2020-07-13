@@ -1,0 +1,24 @@
+# Deployment specific configuration for AWS spark quoll cluster.
+# This file should be copied over `la-pipelines-local.yaml` when deployed
+# so that it is used by the scripts.
+#
+# Long term, this configuration should be moved out of the project and should be generated
+# by ansible scripts or as part of the debian package installation.
+#
+general:
+    attempt: 1
+    hdfsSiteConfig: /efs-mount-point/hdfs-site.xml
+    coreSiteConfig: /efs-mount-point/hdfs-site.xml
+    inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
+    targetPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
+interpret:
+    inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data/{datasetId}/1/verbatim.avro
+export-latlng:
+    inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
+uuid:
+    inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
+sample-avro:
+    inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
+index:
+    inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
+    zkHost: aws-zoo-quoll-1.ala:2181,aws-zoo-quoll-2.ala:2181,aws-zoo-quoll-3.ala:2181,aws-zoo-quoll-4.ala:2181,aws-zoo-quoll-5.ala:2181

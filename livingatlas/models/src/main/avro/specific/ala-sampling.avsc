@@ -1,0 +1,10 @@
+{
+  "name":"ALASampling",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"ALA Sampling",
+  "fields":[
+    {"name": "latlng","type":"string"},
+    {"name": "items", "doc": "Dynamic values", "default": {}, "type": {"type": "map", "values": "string"}}
+  ]
+}

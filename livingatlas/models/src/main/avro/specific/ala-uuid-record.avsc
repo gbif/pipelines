@@ -1,0 +1,11 @@
+{
+  "name":"ALAUUIDRecord",
+  "namespace":"org.gbif.pipelines.io.avro",
+  "type":"record",
+  "doc":"ALA UUID mapping",
+  "fields":[
+    {"name": "id", "type": ["null", "string"]},
+    {"name": "uuid", "type": ["null", "string"], "default" : null },
+    {"name": "uniqueKey", "type": ["null", "string"], "default" : null }
+  ]
+}

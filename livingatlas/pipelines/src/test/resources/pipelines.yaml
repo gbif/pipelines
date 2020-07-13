@@ -1,0 +1,122 @@
+alaNameMatch:
+  wsUrl: http://localhost:9179
+  timeoutSec: 70
+
+collectory:
+  wsUrl: https://collections.ala.org.au
+  timeoutSec: 70
+
+geocodeConfig:
+  country:
+    path: "/data/pipelines-shp/political"
+    field: ISO_A2
+    source: "http://www.naturalearthdata.com"
+  eez:
+    path: "/data/pipelines-shp/eez"
+    field: ISO2
+    source: "http://www.naturalearthdata.com"
+  stateProvince:
+    path: "/data/pipelines-shp/cw_state_poly"
+    field: FEATURE
+    source: "http://vliz.be/vmdcdata/marbound/"
+
+general:
+  targetPath: /data/pipelines-data
+  attempt: 1
+  hdfsSiteConfig: ""
+  coreSiteConfig: ""
+
+dwca-avro:
+  runner: SparkRunner
+  metaFileName: dwca-metrics.yml
+  inputPath: /data/biocache-load/{datasetId}
+
+#--inputPath: $dwca_dir
+
+#java -Xmx2g -XX:+UseG1GC  -Dspark.master=local[*]
+# java -Xmx8g -XX:+UseG1GC  -Dspark.master=local[*] # spark-embedded
+interpret: # (java)
+  default:
+    interpretationTypes: ALL
+    inputPath: /data/pipelines-data/{datasetId}/1/verbatim.avro
+    metaFileName: interpretation-metrics.yml
+    useExtendedRecordId: true
+    skipRegisrtyCalls: true
+    #  properties: pipelines.properties
+  spark-cluster:
+    name: interpret {datasetId}
+    appName: Interpretation for {datasetId}
+    runner: SparkRunner
+    #--properties=/efs-mount-point/pipelines.properties
+    # num-executors: 24
+    # executor-cores: 8
+    # executor-memory: 7G
+    # driver-memory: 1G
+#--conf spark.default.parallelism=192
+#--conf spark.yarn.submit.waitAppCompletion=false
+    master: spark://172.30.1.102:7077
+    driver-java-options: -Dlog4j.configuration=file:/efs-mount-point/log4j.properties
+  spark-embedded:
+    runner: SparkRunner
+
+export-latlng:
+  inputPath: /data/pipelines-data
+  runner: SparkRunner
+  appName: Lat Long export for {datasetId}
+
+sample:
+  default:
+  cluster:
+    # TODO
+  avro-cluster:
+    # TODO
+# java -Xmx8g -Xmx8g -XX:+UseG1GC
+  embedded:
+    appName: SamplingToAvro indexing for {datasetId}
+    runner: SparkRunner
+    inputPath: /data/pipelines-data
+    metaFileName: indexing-metrics.yml
+#--properties=pipelines.properties
+
+#java -Xmx8g -Xmx8g -XX:+UseG1GC -
+migrate-uuids:
+  default:
+    runner: SparkRunner
+    metaFileName: uuid-metrics.yml
+    targetPath: /data/pipelines-data
+    inputPath: /data/pipelines-data/occ_uuid.csv
+  #java -Xmx24g -Xmx24g -XX:+UseG1GC
+  test:
+    runner: DirectRunner
+
+# java -Xmx8g -Xmx8g -XX:+UseG1GC
+uuid:
+  embedded:
+    appName: UUID minting for {datasetId}
+    runner: SparkRunner
+    inputPath: /data/pipelines-data
+    metaFileName: uuid-metrics.yml
+#--properties=pipelines.properties
+
+#java -Xmx8g -XX:+UseG1GC -
+index:
+  default:
+    inputPath: /data/pipelines-data
+    metaFileName: indexing-metrics.yml
+  java:
+    #--properties=pipelines.properties \
+    includeSampling: true
+    zkHost: localhost:9983
+    solrCollection: biocache
+  spark-cluster:
+    # TODO
+  # java -Xmx8g -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    appName: SOLR indexing for {datasetId}
+    runner: SparkRunner
+#    properties: pipelines.properties
+    zkHost: localhost:9983
+    solrCollection: biocache
+    includeSampling: true
+
+root-test: 1
