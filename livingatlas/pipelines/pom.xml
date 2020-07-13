@@ -9,6 +9,7 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
+
   <groupId>au.org.ala</groupId>
   <artifactId>pipelines</artifactId>
   <packaging>jar</packaging>
@@ -17,7 +18,12 @@
   <name>Living Atlas Pipelines - extensions</name>
   <description>GBIF standalone pipelines for interpreting and indexing biodiversity data</description>
 
+    <!-- TODO: Only those that are not in parents should be here -->
     <repositories>
+        <repository>
+            <id>ALA</id>
+            <url>https://nexus.ala.org.au/content/repositories/releases</url>
+        </repository>
         <repository>
             <id>gbif-all</id>
             <url>https://repository.gbif.org/content/groups/gbif</url>
@@ -37,6 +43,7 @@
     </repositories>
 
   <build>
+    <!-- TODO: Only those that are not in parents should be here -->
     <plugins>
       <!-- Shade the project into an uber jar to send to Spark -->
       <plugin>
@@ -150,6 +157,10 @@
     </plugins>
   </build>
 
+  <!-- TODO:
+       Only properties overwriting parents, or for artifacts deliberately scoped to this module should be here.
+       Most of these should be removed
+  -->
   <properties>
     <!-- Common variables -->
     <jdkLevel>1.8</jdkLevel>
@@ -194,7 +205,7 @@
     <!-- Logging -->
     <slf4j.version>1.7.5</slf4j.version>
     <logback.version>1.2.3</logback.version>
-    <log4j.version>2.13.2</log4j.version>
+    <!--log4j.version>2.13.2</log4j.version-->
     <logstash-gelf.version>1.11.2</logstash-gelf.version>
 
     <elasticsearch.version>6.5.4</elasticsearch.version>
@@ -263,6 +274,9 @@
     <tag>HEAD</tag>
   </scm>
 
+  <!-- TODO:
+       Remove versions for everything provided by parent poms.
+  -->
   <dependencies>
 
     <!-- ALA specific -->
@@ -624,7 +638,8 @@
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
-    <dependency>
+    <!-- TODO: Align these with the parent project logging structure -->
+    <!--dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <version>${log4j.version}</version>
@@ -644,7 +659,7 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>${slf4j.version}</version>
-    </dependency>
+    </dependency-->
 
     <!-- ES -->
     <dependency>

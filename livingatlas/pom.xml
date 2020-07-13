@@ -5,9 +5,10 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>au.org.ala</groupId>
-    <artifactId>ala-parent-pom</artifactId>
-    <version>12</version>
+    <groupId>org.gbif.pipelines</groupId>
+    <artifactId>pipelines-parent</artifactId>
+    <version>2.5.4-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>au.org.ala</groupId>
