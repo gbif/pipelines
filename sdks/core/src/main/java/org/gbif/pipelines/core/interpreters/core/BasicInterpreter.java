@@ -13,6 +13,7 @@ import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.LifeStage;
+import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.LicenseParser;
@@ -23,6 +24,7 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -322,6 +324,16 @@ public class BasicInterpreter {
         .map(AgentIdentifierParser::parse)
         .map(ArrayList::new)
         .ifPresent(br::setRecordedByIds);
+  }
+
+  /** {@link DwcTerm#occurrenceStatus} interpretation. */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretOccurrenceStatus(
+      KeyValueStore<String, OccurrenceStatus> occStatusKvStore) {
+    return (er, br) -> {
+      if (occStatusKvStore != null) {
+        throw new UnsupportedOperationException("I am empty!");
+      }
+    };
   }
 
   /** Returns ENUM instead of url string */

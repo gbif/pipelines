@@ -91,11 +91,11 @@ public class OccurrenceHdfsRecordConverter {
       } else if (temporalAccessor instanceof LocalDateTime) {
         return Date.from(((LocalDateTime)temporalAccessor).toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof LocalDate) {
-        return Date.from((((LocalDate)temporalAccessor).atStartOfDay()).toInstant(ZoneOffset.UTC));
+        return Date.from(((LocalDate)temporalAccessor).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof YearMonth) {
-        return Date.from((((YearMonth)temporalAccessor).atDay(1)).atStartOfDay().toInstant(ZoneOffset.UTC));
+        return Date.from(((YearMonth)temporalAccessor).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof Year) {
-        return Date.from((((Year)temporalAccessor).atDay(1)).atStartOfDay().toInstant(ZoneOffset.UTC));
+        return Date.from(((Year)temporalAccessor).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else {
         return null;
       }
