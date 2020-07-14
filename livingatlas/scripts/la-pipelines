@@ -40,6 +40,12 @@ License MPL v 1.1
 EOF
 )"
 
+# Enable logging
+if ($debug) ; then verbosity=6; else verbosity=5; fi
+source ./logging_lib.sh $verbosity $no_colors
+
+log.info "Starting $CMD"
+
 # Detect if we are in production or not
 if [[ $PWD == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
 
@@ -50,8 +56,10 @@ if [[ $PROD = true ]] ; then CONFIG_DIR=/data/la-pipelines/config ; else CONFIG_
 if [[ $PROD = false  && -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml,$CONFIG_DIR/la-pipelines-local.yaml; fi
 if [[ $PROD = true && -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml,$CONFIG_DIR/configs/la-pipelines-local.yaml; fi
 
-if [[ $PROD = false && -z $no_colors ]]; then logConfig=../pipelines/src/main/resources/log4j-colorized.properties; fi
-if [[ $PROD = true && -z $no_colors ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
+if [[ $PROD = false && $no_colors = false ]]; then logConfig=../pipelines/src/main/resources/log4j-colorized.properties; fi
+if [[ $PROD = false && $no_colors = true ]]; then logConfig=../pipelines/src/main/resources/log4j.properties; fi
+if [[ $PROD = true && $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
+if [[ $PROD = true && $no_colors = true ]]; then logConfig=$CONFIG_DIR/log4j.properties; fi
 
 if [[ -n $dr && $dr != all && $dr != dr* ]]; then >&2 echo "ERROR: Wrong dataResource '$dr'. It should start with 'dr', like 'dr893'"; exit 1 ; fi
 
@@ -63,10 +71,10 @@ else
     ARGS=
 fi
 
-if ( $debug ) ; then echo Config: $config ; fi
-if ( $debug ) ; then echo Extra arguments: $ARGS; fi
-if ( $debug ) ; then echo logConfig: $logConfig; fi
-if ( $debug ) ; then echo Logs without colors: $no_colors ; fi
+log.info Config: $config
+log.info Extra arguments: $ARGS
+log.debug Logs without colors: $no_colors
+log.debug log4j config: $logConfig
 
 if ($do_all || $dwca_avro) ; then
     echo ./dwca-avro.sh $dr
