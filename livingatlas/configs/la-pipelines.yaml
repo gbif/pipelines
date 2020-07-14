@@ -4,33 +4,6 @@ general:
   hdfsSiteConfig: ""
   coreSiteConfig: ""
 
-java:
-  PIPELINES_JAR: "$PWD/../pipelines/target/pipelines-1.0-SNAPSHOT-shaded.jar"
-  ## cluster:
-  # PIPELINES_JAR: "/efs-mount-point/pipelines.jar"
-
-spark:
-  SPARK_TMP: "/data/spark-tmp"
-  no-clustered:
-    SPARK_MASTER: ""
-    # TODO: It's a string in set-env
-    USE_CLUSTER: false
-  clustered:
-    SPARK_MASTER: "spark://aws-spark-quoll-1.ala:7077"
-    USE_CLUSTER: true
-  local-hdfs:
-    PIPELINES_CONF: "$FS_PATH/pipelines.yaml"
-    #HDFS_CONF: /efs-mount-point/hdfs-site.xml
-    HDFS_CONF: "$PWD/hdfs-site.xml"
-    #FS_PATH: hdfs://aws-spark-quoll-1.ala:9000
-    FS_PATH: "hdfs://localhost:8020"
-    #SOLR_ZK_HOST: "localhost:9983"
-    SOLR_ZK_HOST: "localhost:9983"
-    SOLR_COLLECTION: "biocache"
-    SPARK_MASTER: "spark://aws-spark-quoll-1.ala:7077"
-    DATA_DIR: "pipelines-data"
-    USE_CLUSTER: false
-
 dwca-avro:
   runner: SparkRunner
   metaFileName: dwca-metrics.yml
