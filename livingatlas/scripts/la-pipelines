@@ -1,0 +1,105 @@
+#!/bin/bash
+CMD=$(basename $0)
+
+set -e # Stop on any fail
+
+eval "$(docopts -V - -h - : "$@" <<EOF
+
+LA-Pipelines data ingress utility.
+
+Pipeline ingress steps:
+
+    ┌───── do-all ──────────────────────────────────┐
+    │                                               │
+dwca-avro --> interpret --> uuid -->                │
+     export-latlng --> sample --> sample-avro --> index
+
+Usage:
+  $CMD [options] dwca-avro (<dr>|all)
+  $CMD [options] interpret (<dr>|all)
+  $CMD [options] uuid (<dr>|all)
+  $CMD [options] export-latlng (<dr>|all)
+  $CMD [options] sample (<dr>|all)
+  $CMD [options] sample-avro (<dr>|all)
+  $CMD [options] index (<dr>|all)
+  $CMD [options] do-all (<dr>|all)
+  $CMD -h | --help
+  $CMD -v | --version
+
+Options:
+  --config=<files>     Comma separated list of alternative la-pipeline yaml configurations (the last file has the highest precedence)
+  --extra-args=<args>  Additional "arg1=values,arg2=value" to pass to pipeline options (highest precedence than yml values)
+  --no-colors          No corolorize logs output
+  -h --help            Show this help
+  -v --version         Show version
+  --debug              Debug $CMD
+----
+$CMD 0.1.1
+Copyright (C) 2020 ALA Development Team
+License MPL v 1.1
+EOF
+)"
+
+# Detect if we are in production or not
+if [[ $PWD == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
+
+# TODO: externalize this CONFIG_DIR in some way, ask other locations
+if [[ $PROD = true ]] ; then CONFIG_DIR=/data/la-pipelines/config ; else CONFIG_DIR=../configs; fi
+
+# Set default config locations for Production and Development
+if [[ $PROD = false  && -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml,$CONFIG_DIR/la-pipelines-local.yaml; fi
+if [[ $PROD = true && -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml,$CONFIG_DIR/configs/la-pipelines-local.yaml; fi
+
+if [[ $PROD = false && -z $no_colors ]]; then logConfig=../pipelines/src/main/resources/log4j-colorized.properties; fi
+if [[ $PROD = true && -z $no_colors ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
+
+if [[ -n $dr && $dr != all && $dr != dr* ]]; then >&2 echo "ERROR: Wrong dataResource '$dr'. It should start with 'dr', like 'dr893'"; exit 1 ; fi
+
+if [[ -n $extra_args ]] ; then
+    # Convert arg1=val1,arg2=val2 into --arg1=val1 --arg2=val2
+    ARGS=${extra_args//,/ \-\-}
+    ARGS=--${ARGS}
+else
+    ARGS=
+fi
+
+if ( $debug ) ; then echo Config: $config ; fi
+if ( $debug ) ; then echo Extra arguments: $ARGS; fi
+if ( $debug ) ; then echo logConfig: $logConfig; fi
+if ( $debug ) ; then echo Logs without colors: $no_colors ; fi
+
+if ($do_all || $dwca_avro) ; then
+    echo ./dwca-avro.sh $dr
+fi
+
+if ($interpret || $do_all); then
+    echo ./interpret-spark-embedded.sh $dr
+fi
+
+if ($uuid || $do_all); then
+    echo ./uuid-spark-embedded.sh $dr
+fi
+
+if ($export_latlng || $do_all); then
+    echo ./export-latlng.sh $dr
+fi
+
+if ($sample || $do_all); then
+    echo ./sample.sh $dr
+fi
+
+if ($sample_avro || $do_all); then
+    echo ./sample-avro-embedded.sh $dr
+fi
+
+if ($index || $do_all); then
+    if ($java); then
+        echo ./index-java $dr
+    fi
+    if ($spark); then
+        echo ./index-spark-cluster $dr
+    fi
+    if ($sparkemb); then
+        echo ./index-spark-embedded $dr
+    fi
+fi
