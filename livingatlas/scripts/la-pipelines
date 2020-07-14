@@ -1,6 +1,21 @@
 #!/bin/bash
 CMD=$(basename $0)
 
+FIND_DOCOPTS=$(which docopts)
+FIND_YQ=$(which yq)
+
+if [[ -z $FIND_DOCOPTS ]]
+then
+    echo "ERROR: Please install docopts https://github.com/docopt/docopts an copy it in your PATH"
+    exit 1
+fi
+
+if [[ -z $FIND_YQ ]]
+then
+    echo "ERROR: Please install yq, see https://github.com/mikefarah/yq"
+    exit 1
+fi
+
 set -e # Stop on any fail
 
 eval "$(docopts -V - -h - : "$@" <<EOF
@@ -56,8 +71,8 @@ if [[ $PROD = true ]] ; then CONFIG_DIR=/data/la-pipelines/config ; else CONFIG_
 if [[ $PROD = false  && -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml,$CONFIG_DIR/la-pipelines-local.yaml; fi
 if [[ $PROD = true && -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml,$CONFIG_DIR/configs/la-pipelines-local.yaml; fi
 
-if [[ $PROD = false && $no_colors = false ]]; then logConfig=../pipelines/src/main/resources/log4j-colorized.properties; fi
-if [[ $PROD = false && $no_colors = true ]]; then logConfig=../pipelines/src/main/resources/log4j.properties; fi
+if [[ $PROD = false && $no_colors = false ]]; then logConfig=$PWD/../pipelines/src/main/resources/log4j-colorized.properties; fi
+if [[ $PROD = false && $no_colors = true ]]; then logConfig=$PWD/../pipelines/src/main/resources/log4j.properties; fi
 if [[ $PROD = true && $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
 if [[ $PROD = true && $no_colors = true ]]; then logConfig=$CONFIG_DIR/log4j.properties; fi
 
@@ -76,8 +91,56 @@ log.info Extra arguments: $ARGS
 log.debug Logs without colors: $no_colors
 log.debug log4j config: $logConfig
 
+# TODO verify that confis exists
+configList=${config//,/ }
+log.debug Config list: $configList
+
+for f in $configList $logConfig
+do
+    if [[ ! -f $f ]] ; then log.error File $f doesn\'t exits ; exit 1; fi
+done
+
+function getConf() {
+    val=
+    for i in $configList
+    do
+        valTmp=$(yq r $i $1)
+        if [[ -n $valTmp ]] ; then val=$valTmp; fi
+    done
+    echo $val
+}
+
+log.debug Target $(getConf general.targetPath)
+
+PIPELINES_JAR=$(eval echo $(getConf java.PIPELINES_JAR))
+SPARK_TMP=$(getConf spark.SPARK_TMP)
+log.debug Using $PIPELINES_JAR
+log.debug Using $SPARK_TMP
+
+#if ( $debug) ; then EXTRA_JVM_ARGS="-Dlog4j.debug"; fi
+EXTRA_JVM_ARGS="$EXTRA_JVM_ARGS -Dlog4j.configuration=file://$logConfig"
+log.debug EXTRA_JVM_ARGS: $EXTRA_JVM_ARGS
+
 if ($do_all || $dwca_avro) ; then
-    echo ./dwca-avro.sh $dr
+    log.info "Ingest DwCA - Converts DwCA to verbatim.arvo file."
+    dwca_dir="/data/biocache-load/$dr/$dr.zip"
+
+    if [[ ! -f  $dwca_dir ]]
+    then
+        dwca_dir="/data/biocache-load/$dr.zip"
+    fi
+
+    if [[ ! -f  $dwca_dir ]]
+    then
+        dwca_dir="/data/biocache-load/$dr.zip"
+        echo "$dwca_dir does not exists on your filesystem."
+        exit 1
+    fi
+
+    java $EXTRA_JVM_ARGS -Dspark.local.dir=$SPARK_TMP \
+         -cp $PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
+         --datasetId=$dr \
+         --config=$config $ARGS
 fi
 
 if ($interpret || $do_all); then
@@ -101,13 +164,7 @@ if ($sample_avro || $do_all); then
 fi
 
 if ($index || $do_all); then
-    if ($java); then
-        echo ./index-java $dr
-    fi
-    if ($spark); then
-        echo ./index-spark-cluster $dr
-    fi
-    if ($sparkemb); then
-        echo ./index-spark-embedded $dr
-    fi
+    echo ./index-java $dr
+    echo ./index-spark-cluster $dr
+    echo ./index-spark-embedded $dr
 fi

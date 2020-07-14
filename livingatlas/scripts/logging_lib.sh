@@ -29,7 +29,6 @@ then
   colrst='\033[0m'    # Text Reset
 fi
 
-
 ### verbosity levels
 silent_lvl=0
 crt_lvl=1
@@ -43,15 +42,15 @@ dbg_lvl=6
 function log.silent ()  { verb_lvl=$silent_lvl elog "$@" ;}
 function log.notify ()  { verb_lvl=$ntf_lvl elog "$@" ;}
 function log.ok ()      { verb_lvl=$ntf_lvl elog "SUCCESS - $@" ;}
-function log.warn ()    { verb_lvl=$wrn_lvl elog "${colylw}WARNING${colrst} - $@" ;}
-function log.info ()    { verb_lvl=$inf_lvl elog "${colgrn}INFO${colrst} ---- $@" ;}
-function log.debug ()   { verb_lvl=$dbg_lvl elog "${colgre}DEBUG${colrst} --- $@" ;}
-function log.error ()   { verb_lvl=$err_lvl elog "${colred}ERROR${colrst} --- $@" ;}
-function log.crit ()    { verb_lvl=$crt_lvl elog "${colpur}FATAL${colrst} --- $@" ;}
+function log.warn ()    { verb_lvl=$wrn_lvl elog "[${colylw}WARN${colrst}] - $@" ;}
+function log.info ()    { verb_lvl=$inf_lvl elog "[${colgrn}INFO${colrst}] ---- $@" ;}
+function log.debug ()   { verb_lvl=$dbg_lvl elog "[${colgre}DEBUG${colrst}] --- $@" ;}
+function log.error ()   { verb_lvl=$err_lvl elog "[${colred}ERROR${colrst}] --- $@" ;}
+function log.crit ()    { verb_lvl=$crt_lvl elog "[${colpur}FATAL${colrst}] --- $@" ;}
 
 function elog() {
     if [ $verbosity -ge $verb_lvl ]; then
-        datestring=`date +"%Y-%m-%d %H:%M:%S"`
+        datestring=`date +"%y/%m/%d ${colgre}%H:%M:%S${colrst}"`
         echo -e "$datestring - $@"
     fi
 }
