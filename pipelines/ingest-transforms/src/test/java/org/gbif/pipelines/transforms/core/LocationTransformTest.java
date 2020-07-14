@@ -1,8 +1,8 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -53,9 +53,57 @@ public class LocationTransformTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
-    Location location = new Location();
-    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-    return new GeocodeResponse(Collections.singletonList(location));
+    List<Location> locations = new ArrayList();
+
+    Location political = new Location();
+    political.setIsoCountryCode2Digit(country.getIso2LetterCode());
+    locations.add(political);
+
+    Location gadm0 = new Location();
+    Location gadm1 = new Location();
+    Location gadm2 = new Location();
+    if (country.equals(Country.DENMARK)) {
+      gadm0.setId("DNK");
+      gadm0.setType("GADM0");
+      gadm0.setSource("http://gadm.org/");
+      gadm0.setName("Denmark");
+      gadm0.setIsoCountryCode2Digit("DK");
+
+      gadm1.setId("DNK.2_1");
+      gadm1.setType("GADM1");
+      gadm1.setSource("http://gadm.org/");
+      gadm1.setName("Midtjylland");
+      gadm1.setIsoCountryCode2Digit("DK");
+
+      gadm2.setId("DNK.2.14_1");
+      gadm2.setType("GADM2");
+      gadm2.setSource("http://gadm.org/");
+      gadm2.setName("Silkeborg");
+      gadm2.setIsoCountryCode2Digit("DK");
+    } else {
+      gadm0.setId("JPN");
+      gadm0.setType("GADM0");
+      gadm0.setSource("http://gadm.org/");
+      gadm0.setName("Japan");
+      gadm0.setIsoCountryCode2Digit("JP");
+
+      gadm1.setId("JPN.26_1");
+      gadm1.setType("GADM1");
+      gadm1.setSource("http://gadm.org/");
+      gadm1.setName("Nagano");
+      gadm1.setIsoCountryCode2Digit("JP");
+
+      gadm2.setId("JPN.26.40_1");
+      gadm2.setType("GADM2");
+      gadm2.setSource("http://gadm.org/");
+      gadm2.setName("Nagawa");
+      gadm2.setIsoCountryCode2Digit("JP");
+    }
+    locations.add(gadm0);
+    locations.add(gadm1);
+    locations.add(gadm2);
+
+    return new GeocodeResponse(locations);
   }
 
   @Test
@@ -100,52 +148,60 @@ public class LocationTransformTest {
         () -> GeocodeKvStore.create(kvStore);
 
     final String[] denmark = {
-        "0",
+        "0", // 0
         Country.DENMARK.getTitle(),
         Country.DENMARK.getIso2LetterCode(),
         "EUROPE",
         "100.0",
-        "110.0",
+        "110.0", // 5
         "111.0",
         "200.0",
         "Ocean",
         "220.0",
-        "222.0",
+        "222.0", // 10
         "30.0",
         "0.00001",
         "56.26",
         "9.51",
-        "Copenhagen",
+        "Copenhagen", // 15
         "GEODETIC_DATUM_ASSUMED_WGS84",
         "155.5",
         "44.5",
         "105.0",
-        "5.0",
-        "false"
+        "5.0", // 20
+        "false",
+        "DNK",
+        "DNK.2_1",
+        "DNK.2.14_1",
+        null // 25
     };
     final String[] japan = {
-        "1",
+        "1", // 0
         Country.JAPAN.getTitle(),
         Country.JAPAN.getIso2LetterCode(),
         "ASIA",
         "100.0",
-        "110.0",
+        "110.0", // 5
         "111.0",
         "200.0",
         "Ocean",
         "220.0",
-        "222.0",
+        "222.0", // 10
         "30.0",
         "0.00001",
         "36.21",
         "138.25",
-        "Tokyo",
+        "Tokyo", // 15
         "GEODETIC_DATUM_ASSUMED_WGS84",
         "155.5",
         "44.5",
         "105.0",
-        "5.0",
-        "true"
+        "5.0", // 20
+        "true",
+        "JPN",
+        "JPN.26_1",
+        "JPN.26.40_1",
+        null, // 25
     };
 
     final MetadataRecord mdr = MetadataRecord.newBuilder()
@@ -232,6 +288,10 @@ public class LocationTransformTest {
                       .setElevation(Double.valueOf(x[19]))
                       .setElevationAccuracy(Double.valueOf(x[20]))
                       .setRepatriated(Boolean.parseBoolean(x[21]))
+                      .setGadmLevel0Gid(x[22])
+                      .setGadmLevel1Gid(x[23])
+                      .setGadmLevel2Gid(x[24])
+                      .setGadmLevel3Gid(x[25])
                       .setHasCoordinate(true)
                       .setHasGeospatialIssue(false)
                       .setPublishingCountry(mdr.getDatasetPublishingCountry())

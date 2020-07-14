@@ -12,6 +12,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
@@ -98,6 +99,22 @@ public class LocationParser {
         .issues(issues)
         .build();
   }
+
+  public static Optional<GadmFeatures> parseGadm(LocationRecord lr, KeyValueStore<LatLng, GeocodeResponse> kvStore) {
+    Objects.requireNonNull(lr, "LocationRecord is required");
+    Objects.requireNonNull(kvStore, "GeocodeService kvStore is required");
+
+    // Take parsed values
+    LatLng location = new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude());
+
+    // Use these to retrieve the GADM areas.
+    Optional<GadmFeatures> match =
+        LocationMatcher.create(location, null, kvStore)
+            .applyGadm();
+
+    return match;
+  }
+
 
   private static ParsedField<Country> parseCountry(ExtendedRecord er, VocabularyParser<Country> parser, String issue) {
     Optional<ParseResult<Country>> parseResultOpt = parser.map(er, parseRes -> parseRes);

@@ -116,6 +116,10 @@
       "scoordinates": {"type": "geo_shape"},
       "decimalLatitude": {"type":"double"},
       "decimalLongitude": {"type":"double"},
+      "gadmLevel1Gid": {"type": "text"},
+      "gadmLevel2Gid": {"type": "text"},
+      "gadmLevel3Gid": {"type": "text"},
+      "gadmLevel4Gid": {"type": "text"},
 
       "year": {"type": "short"},
       "month": {"type": "short"},
