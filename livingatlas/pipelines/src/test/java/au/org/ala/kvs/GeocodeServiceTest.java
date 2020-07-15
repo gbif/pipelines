@@ -31,7 +31,7 @@ public class GeocodeServiceTest {
 
         Optional<Location> country = locations.stream().filter(l -> l.getType().equals(GeocodeShpIntersectService.POLITICAL_LOCATION_TYPE)).findFirst();
         assertTrue(country.isPresent());
-        assertEquals(country.get().getCountryName(), "AU");
+        assertEquals("AU", country.get().getCountryName());
     }
 
     /**
@@ -42,7 +42,7 @@ public class GeocodeServiceTest {
         KeyValueStore<LatLng,GeocodeResponse> geoService = GeocodeKvStoreFactory.createCountrySupplier(TestUtils.getConfig()).get();
         GeocodeResponse resp = geoService.get(LatLng.builder().withLongitude(151.329751).withLatitude(-36.407357).build());
         assertFalse(resp.getLocations().isEmpty());
-        assertEquals(resp.getLocations().iterator().next().getCountryName(), "AU");
+        assertEquals("AU", resp.getLocations().iterator().next().getCountryName());
     }
 
     /**

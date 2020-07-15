@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import java.util.Properties;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Unit tests for Attribution KV store
@@ -27,29 +27,27 @@ public class AttributionKVStoreTest {
         ALACollectoryMetadata m = kvs.get("dr893");
         ConnectionParameters connParams = m.getConnectionParameters();
 
-        assert m.getName() != null;
-        assert connParams != null;
-        assert connParams.getUrl() != null;
-        assert connParams.getTermsForUniqueKey() != null;
-        assert connParams.getTermsForUniqueKey().size() > 0;
-        assert m.getDefaultDarwinCoreValues() != null;
-        assert m.getDefaultDarwinCoreValues().size() > 0;
-        assert m.getProvenance() != null;
-        assert m.getTaxonomyCoverageHints() != null;
-        assert m.getTaxonomyCoverageHints().size() == 0;
+        assertNotNull(m.getName());
+        assertNotNull(connParams);
+        assertNotNull(connParams.getUrl());
+        assertNotNull(connParams.getTermsForUniqueKey());
+        assertFalse(connParams.getTermsForUniqueKey().isEmpty());
+        assertNotNull(m.getDefaultDarwinCoreValues());
+        assertFalse(m.getDefaultDarwinCoreValues().isEmpty());
+        assertNotNull(m.getProvenance());
+        assertNotNull(m.getTaxonomyCoverageHints());
+        assertTrue(m.getTaxonomyCoverageHints().size() == 0);
 
         kvs.close();
     }
 
     @Test
     public void testAttributionConnectionIssues() throws Exception {
-
-        ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.auXXXX").build();
         KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
         try {
             ALACollectoryMetadata m = kvs.get("dr893XXXXXX");
             fail("Exception not thrown");
-        } catch(RuntimeException e){
+        } catch (RuntimeException e){
             //expected
         }
         kvs.close();
@@ -58,12 +56,11 @@ public class AttributionKVStoreTest {
     @Test
     public void testAttributionLookupFail() throws Exception {
 
-        ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
         KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
         try {
             ALACollectoryMetadata m = kvs.get("dr893XXXXXXX");
             fail("Exception not thrown");
-        } catch(RuntimeException e){
+        } catch (RuntimeException e){
             //expected
         }
     }
@@ -71,12 +68,11 @@ public class AttributionKVStoreTest {
     @Test
     public void testCollectionLookup() throws Exception {
 
-        ClientConfiguration cc = ClientConfiguration.builder().withBaseApiUrl("https://collections.ala.org.au").build();
         KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.create(TestUtils.getConfig());
         ALACollectionLookup lookup = ALACollectionLookup.builder().institutionCode("CSIRO").collectionCode("ANIC").build();
         ALACollectionMatch m = kvs.get(lookup);
-        assert m.getCollectionUid() != null;
-        assert m.getCollectionUid().equals("co13");
+        assertNotNull(m.getCollectionUid());
+        assertEquals("co13", m.getCollectionUid());
     }
 
     @Test
@@ -85,8 +81,8 @@ public class AttributionKVStoreTest {
         KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.create(TestUtils.getConfig());
         ALACollectionLookup lookup = ALACollectionLookup.builder().institutionCode("CSIROCXXX").collectionCode("ANIC").build();
         ALACollectionMatch m = kvs.get(lookup);
-        assert m.getCollectionUid() == null;
-        assert m.equals(ALACollectionMatch.EMPTY);
+        assertNull(m.getCollectionUid());
+        assertEquals(ALACollectionMatch.EMPTY, m);
         kvs.close();
     }
 }

@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class UUIDPipelineTest {
@@ -60,17 +61,17 @@ public class UUIDPipelineTest {
 
         //validation function
         Map<String, String> keysAfterFirstRun = AvroUtils.readKeysForPath("/tmp/la-pipelines-test/uuid-management/dr893/1/identifiers/ala_uuid/interpret-*");
-        assert keysAfterFirstRun.size() == 5;
+        assertEquals(5, keysAfterFirstRun.size());
 
         // Step 2: Check UUIDs where preserved
         loadTestDataset("dr893", absolutePath + "/uuid-management/dr893");
         Map<String, String> keysAfterSecondRun = AvroUtils.readKeysForPath("/tmp/la-pipelines-test/uuid-management/dr893/1/identifiers/ala_uuid/interpret-*");
 
         //validate
-        assert keysAfterFirstRun.size() == keysAfterSecondRun.size();
+        assertTrue(keysAfterFirstRun.size() == keysAfterSecondRun.size());
         for (Map.Entry<String, String> key  : keysAfterFirstRun.entrySet()){
-            assert keysAfterSecondRun.containsKey(key.getKey());
-            assert keysAfterSecondRun.get(key.getKey()).equals(key.getValue());
+            assertTrue(keysAfterSecondRun.containsKey(key.getKey()));
+            assertEquals(keysAfterSecondRun.get(key.getKey()), key.getValue());
         }
 
         // Step 3: Check UUIDs where preserved for the removed records
@@ -78,18 +79,18 @@ public class UUIDPipelineTest {
         Map<String, String> keysAfterThirdRun = AvroUtils.readKeysForPath("/tmp/la-pipelines-test/uuid-management/dr893/1/identifiers/ala_uuid/interpret-*");
         //validate
         for (Map.Entry<String, String> key  : keysAfterThirdRun.entrySet()){
-            assert keysAfterFirstRun.containsKey(key.getKey());
-            assert keysAfterFirstRun.get(key.getKey()).equals(key.getValue());
+            assertTrue(keysAfterFirstRun.containsKey(key.getKey()));
+            assertEquals(keysAfterFirstRun.get(key.getKey()),key.getValue());
         }
 
         // Step 4: Check UUIDs where preserved for the re-added records
         loadTestDataset("dr893", absolutePath + "/uuid-management/dr893-readded");
         Map<String, String> keysAfterFourthRun = AvroUtils.readKeysForPath("/tmp/la-pipelines-test/uuid-management/dr893/1/identifiers/ala_uuid/interpret-*");
-        assert keysAfterFourthRun.size() == 6;
+        assertEquals(6, keysAfterFourthRun.size());
         //validate
         for (Map.Entry<String, String> key  : keysAfterFirstRun.entrySet()){
-            assert keysAfterFourthRun.containsKey(key.getKey());
-            assert keysAfterFourthRun.get(key.getKey()).equals(key.getValue());
+            assertTrue(keysAfterFourthRun.containsKey(key.getKey()));
+            assertEquals(keysAfterFourthRun.get(key.getKey()), key.getValue());
         }
     }
 

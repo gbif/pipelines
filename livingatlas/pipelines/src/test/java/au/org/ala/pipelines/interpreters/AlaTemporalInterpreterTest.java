@@ -1,6 +1,5 @@
 package au.org.ala.pipelines.interpreters;
 
-import au.org.ala.pipelines.interpreters.ALATemporalInterpreter;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
@@ -16,7 +15,6 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 public class AlaTemporalInterpreterTest {
 
@@ -30,8 +28,10 @@ public class AlaTemporalInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
     ALATemporalInterpreter.interpretTemporal(er, tr);
-    assertArrayEquals(tr.getIssues().getIssueList().toArray(),
-        new String[]{ALAOccurrenceIssue.MISSING_COLLECTION_DATE.name()});
+    assertArrayEquals(
+            new String[]{ALAOccurrenceIssue.MISSING_COLLECTION_DATE.name()},
+            tr.getIssues().getIssueList().toArray()
+    );
 
     map.put(DwcTerm.year.qualifiedName(), "2000");
     map.put(DwcTerm.month.qualifiedName(), "01"); //keep the space at the end
@@ -41,10 +41,14 @@ public class AlaTemporalInterpreterTest {
     tr = TemporalRecord.newBuilder().setId("1").build();
 
     ALATemporalInterpreter.interpretTemporal(er, tr);
-    assertArrayEquals(tr.getIssues().getIssueList().toArray(),
-        new String[]{ALAOccurrenceIssue.FIRST_OF_MONTH.name(),
-            ALAOccurrenceIssue.FIRST_OF_YEAR.name(), ALAOccurrenceIssue.FIRST_OF_CENTURY.name()});
-
+    assertArrayEquals(
+            new String[]{
+                    ALAOccurrenceIssue.FIRST_OF_MONTH.name(),
+                    ALAOccurrenceIssue.FIRST_OF_YEAR.name(),
+                    ALAOccurrenceIssue.FIRST_OF_CENTURY.name()
+            },
+            tr.getIssues().getIssueList().toArray()
+        );
   }
 
   @Test
@@ -62,10 +66,13 @@ public class AlaTemporalInterpreterTest {
 
     ALATemporalInterpreter.interpretTemporal(er, tr);
 
-    assertArrayEquals(tr.getIssues().getIssueList().toArray(),
-        new String[]{ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name(),
-            ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name()});
-
+    assertArrayEquals(
+            new String[]{
+                    ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name(),
+                    ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name()
+            },
+            tr.getIssues().getIssueList().toArray()
+        );
   }
 
   @Test
@@ -83,10 +90,13 @@ public class AlaTemporalInterpreterTest {
 
     ALATemporalInterpreter.interpretTemporal(er, tr);
 
-    assertArrayEquals(tr.getIssues().getIssueList().toArray(),
-        new String[]{ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name(),
-            ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name()});
-
+    assertArrayEquals(
+            new String[]{
+                    ALAOccurrenceIssue.ID_PRE_OCCURRENCE.name(),
+                    ALAOccurrenceIssue.GEOREFERENCE_POST_OCCURRENCE.name()
+            },
+            tr.getIssues().getIssueList().toArray()
+    );
   }
 
   @Test
@@ -99,10 +109,11 @@ public class AlaTemporalInterpreterTest {
 
     ALATemporalInterpreter.interpretTemporal(er, tr);
 
-    assertArrayEquals(tr.getIssues().getIssueList().toArray(),
-        new String[]{OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()});
+    assertArrayEquals(
+            new String[]{OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()},
+            tr.getIssues().getIssueList().toArray()
+        );
   }
-
 
   private OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(String y, String m,
       String d, String date) {
@@ -112,9 +123,6 @@ public class AlaTemporalInterpreterTest {
     map.put(DwcTerm.day.qualifiedName(), d);
     map.put(DwcTerm.eventDate.qualifiedName(), date);
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
-
     return TemporalInterpreter.interpretRecordedDate(er);
   }
-
-
 }

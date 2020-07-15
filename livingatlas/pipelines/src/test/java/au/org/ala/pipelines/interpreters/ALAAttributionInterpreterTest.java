@@ -8,13 +8,13 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALAAttributionRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.BiConsumer;
+
+import static org.junit.Assert.*;
 
 public class ALAAttributionInterpreterTest {
 
@@ -31,8 +31,8 @@ public class ALAAttributionInterpreterTest {
         ALAAttributionRecord aar = ALAAttributionRecord.newBuilder().setId("1").build();
 
         fcn.accept(ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build(), aar);
-        assert aar.getCollectionUid() != null;
-        assert aar.getCollectionUid().equals("co13");
+        assertNotNull(aar.getCollectionUid());
+        assertEquals("co13", aar.getCollectionUid());
     }
 
     @Test
@@ -48,6 +48,6 @@ public class ALAAttributionInterpreterTest {
         ALAAttributionRecord aar = ALAAttributionRecord.newBuilder().setId("1").build();
 
         fcn.accept(ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build(), aar);
-        assert aar.getCollectionUid() == null;
+        assertNull(aar.getCollectionUid());
     }
 }

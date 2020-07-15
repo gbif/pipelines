@@ -16,6 +16,9 @@ import org.junit.Test;
 import java.io.File;
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * Complete pipeline tests that use the java variant of the pipeline where possible.
  * Currently this is for Interpretation and SOLR indexing only.
@@ -47,11 +50,11 @@ public class CompleteIngestJavaPipelineTest {
         SolrUtils.reloadSolrIndex();
 
         //validate SOLR index
-        assert SolrUtils.getRecordCount("*:*") == 5;
+        assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("*:*"));
 
         //1. includes UUIDs
         String documentId = (String) SolrUtils.getRecords("*:*").get(0).get("id");
-        assert documentId != null;
+        assertNotNull(documentId);
         UUID uuid = null;
         try{
             uuid = UUID.fromString(documentId);
@@ -60,11 +63,11 @@ public class CompleteIngestJavaPipelineTest {
             //handle the case where string is not valid UUID
         }
 
-        assert uuid != null;
+        assertNotNull(uuid);
 
         //2. includes samples
-        assert SolrUtils.getRecordCount("cl620:*") == 5;
-        assert SolrUtils.getRecordCount("cl927:*") == 5;
+        assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("cl620:*"));
+        assertEquals(Long.valueOf(5), SolrUtils.getRecordCount("cl927:*"));
     }
 
     public void loadTestDataset(String datasetID, String inputPath) throws Exception {

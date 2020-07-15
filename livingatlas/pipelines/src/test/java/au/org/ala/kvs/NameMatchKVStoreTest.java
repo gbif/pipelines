@@ -8,6 +8,8 @@ import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.cache.KeyValueCache;
 import org.junit.Test;
 
+import static org.junit.Assert.assertNotNull;
+
 public class NameMatchKVStoreTest {
 
     /**
@@ -19,11 +21,11 @@ public class NameMatchKVStoreTest {
         KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvs = ALANameMatchKVStoreFactory.create(TestUtils.getConfig());
         ALASpeciesMatchRequest req = ALASpeciesMatchRequest.builder().scientificName("Macropus rufus").build();
         ALANameUsageMatch match = kvs.get(req);
-        assert match.getTaxonConceptID() != null;
+        assertNotNull(match.getTaxonConceptID());
 
         ALASpeciesMatchRequest req2 = ALASpeciesMatchRequest.builder().scientificName("Osphranter rufus").build();
         ALANameUsageMatch match2 = kvs.get(req2);
-        assert match2.getTaxonConceptID() != null;
+        assertNotNull(match2.getTaxonConceptID());
 
         kvs.close();
     }

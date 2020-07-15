@@ -17,20 +17,11 @@
   <name>Living Atlas Pipelines - extensions</name>
   <description>GBIF standalone pipelines for interpreting and indexing biodiversity data</description>
 
-  <!-- TODO: Only those that are not in parents should be here -->
   <repositories>
       <repository>
           <id>ALA</id>
           <url>https://nexus.ala.org.au/content/repositories/releases</url>
       </repository>
-<!--      <repository>-->
-<!--          <id>gbif-all</id>-->
-<!--          <url>https://repository.gbif.org/content/groups/gbif</url>-->
-<!--      </repository>-->
-<!--      <repository>-->
-<!--          <id>cloudera-release-artifactory</id>-->
-<!--          <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>-->
-<!--      </repository>-->
       <repository>
           <id>osgeo</id>
           <url>https://repo.osgeo.org/repository/release/</url>
@@ -181,6 +172,13 @@
           <execution>
             <id>stop</id>
             <phase>verify</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop-onfail</id>
+            <phase>post-integration-test</phase>
             <goals>
               <goal>stop</goal>
             </goals>

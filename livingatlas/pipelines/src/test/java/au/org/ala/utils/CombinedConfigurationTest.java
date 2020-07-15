@@ -88,8 +88,6 @@ public class CombinedConfigurationTest {
     assertThat(embedConf.get("attempt"), equalTo(1));
     assertThat(embedConf.get("missingVar"), equalTo(null));
     assertThat(embedConf.get("missing.dot.var"), equalTo(null));
-//    assertThat(embedConf.get("geocode.api.url"), equalTo("http://127.0.0.1:4444/geocode/%"));
-//    assertThat(embedConf.get("geocode.api.url"), not("http://just-testing-matchers"));
   }
 
   @Test

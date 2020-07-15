@@ -14,11 +14,7 @@ public class StateProvinceVocabTest {
     @Test
     public void testStateProvince() throws IOException {
         ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
-        alaConfig.setLocationInfoConfig(new LocationInfoConfig(
-                "/data/pipelines-data/resources/countryCentrePoints.txt",
-                "/data/pipelines-data/resources/stateProvinceCentrePoints.txt",
-                "/data/pipelines-data/resources/stateProvinces.txt"));
-
+        alaConfig.setLocationInfoConfig(new LocationInfoConfig(null,null,null));
         assertEquals(Optional.of("Australian Capital Territory"), StateProvince.getInstance(
                 alaConfig.getLocationInfoConfig().getStateProvinceNamesFile()).matchTerm("ACT"));
     }

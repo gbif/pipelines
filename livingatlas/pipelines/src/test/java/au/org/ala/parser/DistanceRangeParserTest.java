@@ -26,22 +26,22 @@ public class DistanceRangeParserTest {
     assertEquals(Double.valueOf("100"),Double.valueOf(value));
 
     value = DistanceRangeParser.parse("100ft,");
-    assertEquals(30.48f,value,0.001);
+    assertEquals(30.48f, value,0.001);
 
     value = DistanceRangeParser.parse("100km,");
-    assertEquals(100000f,value,0);
+    assertEquals(100000f, value,0);
 
     value = DistanceRangeParser.parse(" 1km-20km,");
-    assertEquals(20000f,value,0);
+    assertEquals(20000f, value,0);
 
     value = DistanceRangeParser.parse(" 1km-20ft,");
-    assertEquals(6.096f,value,0.003);
+    assertEquals(6.096f, value,0.003);
 
     value = DistanceRangeParser.parse(" >15,");
-    assertEquals(15f,value,0);
+    assertEquals(15f, value,0);
 
     value = DistanceRangeParser.parse(" >15km,");
-    assertEquals(15000f,value,0);
+    assertEquals(15000f, value,0);
   }
 
   @Rule
