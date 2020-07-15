@@ -21,6 +21,15 @@ fi
 
 set -e # Stop on any failure
 
+# Detect if we are in production or not
+if [[ $PWD == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
+
+if [[ $PROD = false ]]; then
+    VER=$(grep -oPm1 "(?<=<version>)[^<]+" "../pom.xml")
+else
+    VER=$(dpkg-query --show -f '${Version}' la-pipelines)
+fi
+
 WHEREL="[local|embedded|cluster]"
 WHERE="[embedded|cluster]"
 
@@ -36,14 +45,14 @@ dwca-avro --> interpret --> uuid -->                │
      export-latlng --> sample --> sample-avro --> index
 
 Usage:
-  $CMD [options] dwca-avro (<dr>...|all)
-  $CMD [options] interpret (<dr>|all)... $WHEREL
-  $CMD [options] uuid (<dr>|all)... $WHERE
-  $CMD [options] export-latlng (<dr>|all)... $WHERE
-  $CMD [options] sample (<dr>|all)...
-  $CMD [options] sample-avro (<dr>|all)... $WHERE
-  $CMD [options] index (<dr>|all)... $WHEREL
-  $CMD [options] do-all (<dr>|all)... $WHEREL
+  $CMD [options] dwca-avro     (<dr>...|all)
+  $CMD [options] interpret     (<dr>...|all) $WHEREL
+  $CMD [options] uuid          (<dr>...|all) $WHERE
+  $CMD [options] export-latlng (<dr>...|all) $WHERE
+  $CMD [options] sample        (<dr>...|all)
+  $CMD [options] sample-avro   (<dr>...|all) $WHERE
+  $CMD [options] index         (<dr>...|all) $WHEREL
+  $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
   $CMD -v | --version
 
@@ -55,7 +64,7 @@ Options:
   -v --version         Show version
   --debug              Debug $CMD
 ----
-$CMD 0.1.1
+$CMD $VER
 Copyright (C) 2020 ALA Development Team
 License MPL v 1.1
 EOF
@@ -67,8 +76,7 @@ source ./logging_lib.sh $verbosity $no_colors $dr
 
 log.info "Starting $CMD"
 
-# Detect if we are in production or not
-if [[ $PWD == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
+
 
 # TODO: externalize this CONFIG_DIR in some way, ask other locations
 if [[ $PROD = true ]] ; then CONFIG_DIR=/data/la-pipelines/config ; else CONFIG_DIR=../configs; fi
@@ -84,7 +92,6 @@ if [[ $PROD = false && $no_colors = false ]]; then logConfig=$PWD/../pipelines/s
 if [[ $PROD = false && $no_colors = true ]]; then logConfig=$PWD/../pipelines/src/main/resources/log4j.properties; fi
 if [[ $PROD = true && $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
 if [[ $PROD = true && $no_colors = true ]]; then logConfig=$CONFIG_DIR/log4j.properties; fi
-
 
 for dr in "${dr[@]}"; do
     if [[ -n $dr && $dr != all && $dr != dr* ]]; then >&2 log.error "Wrong dataResource '$dr'. It should start with 'dr', like 'dr893'"; exit 1 ; fi
@@ -108,7 +115,7 @@ log.info Extra arguments: $ARGS
 log.debug Logs without colors: $no_colors
 log.debug log4j config: $logConfig
 
-# TODO verify that confis exists
+# Convert config to a list of files space separated
 configList=${config//,/ }
 log.debug Config list: $configList
 
