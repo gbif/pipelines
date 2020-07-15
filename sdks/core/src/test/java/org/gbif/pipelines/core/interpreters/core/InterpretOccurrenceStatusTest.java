@@ -25,7 +25,7 @@ public class InterpretOccurrenceStatusTest {
       OccurrenceStatusKvStoreStub.create();
 
   @Test
-  public void when_countIsNullAndStatusIsNull_expect_present() {
+  public void When_CountIsNullAndStatusIsNull_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), null);
@@ -43,7 +43,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsNullAndStatusIsPresent_expect_present() {
+  public void When_CountIsNullAndStatusIsPresent_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), null);
@@ -61,7 +61,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsNullAndStatusIsAbsent_expect_absent() {
+  public void When_CountIsNullAndStatusIsAbsent_Expect_Absent() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), null);
@@ -79,7 +79,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsNullAndStatusIsRubbish_expect_present() {
+  public void When_CountIsNullAndStatusIsRubbish_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), null);
@@ -97,7 +97,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsGreaterThanZeroAndStatusIsNull_expect_present() {
+  public void When_CountIsGreaterThanZeroAndStatusIsNull_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "1");
@@ -115,7 +115,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsGreaterThanZeroAndStatusIsPresent_expect_present() {
+  public void When_CountIsGreaterThanZeroAndStatusIsPresent_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "1");
@@ -133,7 +133,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsGreaterThanZeroAndStatusIsAbsent_expect_absent() {
+  public void When_CountIsGreaterThanZeroAndStatusIsAbsent_Expect_Absent() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "1");
@@ -152,7 +152,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsGreaterThanZeroAndStatusIsRubbish_expect_present() {
+  public void When_CountIsGreaterThanZeroAndStatusIsRubbish_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "1");
@@ -171,7 +171,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsZeroAndStatusIsNull_expect_absent() {
+  public void When_CountIsZeroAndStatusIsNull_Expect_Absent() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
@@ -189,7 +189,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsZeroAndStatusIsPresent_expect_present() {
+  public void When_CountIsZeroAndStatusIsPresent_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
@@ -208,7 +208,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsZeroAndStatusIsAbsent_expect_absent() {
+  public void When_CountIsZeroAndStatusIsAbsent_Expect_Absent() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
@@ -226,7 +226,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsZeroAndStatusIsRubbish_expect_absent() {
+  public void When_CountIsZeroAndStatusIsRubbish_Expect_Absent() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
@@ -245,7 +245,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsRubbishAndStatusIsNull_expect_present() {
+  public void When_CountIsRubbishAndStatusIsNull_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "blabla");
@@ -263,7 +263,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsRubbishAndStatusIsPresent_expect_present() {
+  public void When_CountIsRubbishAndStatusIsPresent_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "blabla");
@@ -281,7 +281,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsRubbishAndStatusIsAbsent_expect_absent() {
+  public void When_CountIsRubbishAndStatusIsAbsent_Expect_Absent() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "blabla");
@@ -299,7 +299,7 @@ public class InterpretOccurrenceStatusTest {
   }
 
   @Test
-  public void when_countIsRubbishAndStatusIsRubbish_expect_present() {
+  public void When_CountIsRubbishAndStatusIsRubbish_Expect_Present() {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "blabla");
