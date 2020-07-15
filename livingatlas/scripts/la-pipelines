@@ -36,14 +36,14 @@ dwca-avro --> interpret --> uuid -->                │
      export-latlng --> sample --> sample-avro --> index
 
 Usage:
-  $CMD [options] dwca-avro (<dr>|all)
-  $CMD [options] interpret (<dr>|all) $WHEREL
-  $CMD [options] uuid (<dr>|all) $WHERE
-  $CMD [options] export-latlng (<dr>|all) $WHERE
-  $CMD [options] sample (<dr>|all)
-  $CMD [options] sample-avro (<dr>|all) $WHERE
-  $CMD [options] index (<dr>|all) $WHEREL
-  $CMD [options] do-all (<dr>|all) $WHEREL
+  $CMD [options] dwca-avro (<dr>...|all)
+  $CMD [options] interpret (<dr>|all)... $WHEREL
+  $CMD [options] uuid (<dr>|all)... $WHERE
+  $CMD [options] export-latlng (<dr>|all)... $WHERE
+  $CMD [options] sample (<dr>|all)...
+  $CMD [options] sample-avro (<dr>|all)... $WHERE
+  $CMD [options] index (<dr>|all)... $WHEREL
+  $CMD [options] do-all (<dr>|all)... $WHEREL
   $CMD -h | --help
   $CMD -v | --version
 
@@ -85,7 +85,10 @@ if [[ $PROD = false && $no_colors = true ]]; then logConfig=$PWD/../pipelines/sr
 if [[ $PROD = true && $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
 if [[ $PROD = true && $no_colors = true ]]; then logConfig=$CONFIG_DIR/log4j.properties; fi
 
-if [[ -n $dr && $dr != all && $dr != dr* ]]; then >&2 log.error "Wrong dataResource '$dr'. It should start with 'dr', like 'dr893'"; exit 1 ; fi
+
+for dr in "${dr[@]}"; do
+    if [[ -n $dr && $dr != all && $dr != dr* ]]; then >&2 log.error "Wrong dataResource '$dr'. It should start with 'dr', like 'dr893'"; exit 1 ; fi
+done
 
 if [[ -n $extra_args ]] ; then
     # Convert arg1=val1,arg2=val2 into --arg1=val1 --arg2=val2
@@ -114,6 +117,7 @@ do
     if [[ ! -f $f ]] ; then log.error File $f doesn\'t exits ; exit 1; fi
 done
 
+# Gets a config value from yaml configList files
 function getConf() {
     val=
     for i in $configList
@@ -379,7 +383,9 @@ function index () {
 
 if ($do_all || $dwca_avro) ; then
     if [[ $dr != "all" ]] ; then
-        dwca-avro $dr
+        for dr in "${dr[@]}"; do
+            dwca-avro $dr
+        done
     else
         rootDir=/data/biocache-load
         # !!!!!! need to run this command on one vm then run the script !!!!
@@ -416,7 +422,9 @@ fi
 
 if ($interpret || $do_all); then
     if [[ $dr != "all" ]] ; then
-        interpret $dr $TYPE
+        for dr in "${dr[@]}"; do
+            interpret $dr $TYPE
+        done
     else
         while IFS=, read -r datasetID recordCount
         do
@@ -436,7 +444,9 @@ fi
 
 if ($uuid || $do_all); then
     if [[ $dr != "all" ]] ; then
-        uuid $dr $TYPE
+        for dr in "${dr[@]}"; do
+            uuid $dr $TYPE
+        done
     else
         while IFS=, read -r datasetID recordCount
         do
@@ -456,7 +466,9 @@ fi
 
 if ($export_latlng || $do_all); then
   if [[ $dr != "all" ]] ; then
-      export-latlng $dr $TYPE
+      for dr in "${dr[@]}"; do
+          export-latlng $dr $TYPE
+      done
   else
       while IFS=, read -r datasetID recordCount
       do
@@ -487,7 +499,9 @@ fi
 
 if ($sample_avro || $do_all); then
     if [[ $dr != "all" ]] ; then
-        sample-avro $dr $TYPE
+        for dr in "${dr[@]}"; do
+            sample-avro $dr $TYPE
+        done
     else
         while IFS=, read -r datasetID recordCount
         do
@@ -507,7 +521,9 @@ fi
 
 if ($index || $do_all); then
     if [[ $dr != "all" ]] ; then
-        index $dr $TYPE
+        for dr in "${dr[@]}"; do
+            index $dr $TYPE
+        done
     else
         while IFS=, read -r datasetID recordCount
         do
