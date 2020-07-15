@@ -56,34 +56,17 @@ These steps will load a dataset into a SOLR index.
 * Java 8 - this is mandatory (see [GBIF pipelines documentation](https://github.com/gbif/pipelines#about-the-project))
 * Maven needs to run with OpenSDK 1.8 
 'nano ~/.mavenrc' add 'export JAVA_HOME=[JDK1.8 PATH]'
-* Docker Desktop
-* lombok plugin for intelliJ needs to be installed for slf4 annotation  
+* [Docker Desktop](https://www.docker.com/products/docker-desktop)
+* [lombok plugin for intelliJ](https://projectlombok.org/setup/intellij) needs to be installed for slf4 annotation  
 
-### Prerequisite services
-
-1. Run ala-namematching-service on port 9179 using the dock-compose file like so:
-
-`docker-compose -f ala-nameservice.yml up -d`
-
-You can test it by checking this url: http://localhost:9179/api/search?q=Acacia
-
-1. Run solr on port 8983 using the dock-compose file like so:   
-
-`docker-compose -f solr8.yml up -d`
-
-and then setup the collection using the following script (in the `solr` subdirectory):
-
-`./update-solr-config.sh`
-
-You can test it by checking this url: http://localhost:8983
-      
 ### Setting up la-pipelines
   
 1. Download shape files from [here](https://pipelines-shp.s3-ap-southeast-2.amazonaws.com/pipelines-shapefiles.zip) and expand into `/data/pipelines-shp` directory
 1. Download SDS shape files from [here](https://biocache.ala.org.au/archives/layers/sds-layers.tgz) and expand into `/data/pipelines-shp` directory
 1. Download a test darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip)
 1. Create the following directory `/data/pipelines-data`
-1. Build with maven `mvn clean install`
+1. Build with maven `mvn clean install` - note: this will start and stop ala-namematching-service 
+(running on port 9179) and SOLR 8 (running on port 8983).
 
 ### Running la-pipelines
 
@@ -102,18 +85,30 @@ You can test it by checking this url: http://localhost:8983
 
 ## Integration Tests
 
-Integration testing is supported using docker containers for running the required services.
-To start the required containers, run the following:
+Integration tests are supported using docker containers for running the required services.
+To start the required containers, install Docker Desktop](https://www.docker.com/products/docker-desktop) and run the following:
 
 ```
-docker-compose -f ala-nameservice.yml up -d
-docker-compose -f solr8.yml up -d
+mvn docker:start
+```
+
+and shutdown like so:
+
+```
+mvn docker:stop
+```
+
+Alternatively, they can be ran separately like so
+
+```
+docker-compose -f src/main/docker/ala-nameservice.yml up -d
+docker-compose -f src/main/docker/solr8.yml up -d
 ```
 
 To shutdown, run the following:
 ```
-docker-compose -f ala-nameservice.yml kill
-docker-compose -f solr8.yml kill
+docker-compose -f src/main/docker/ala-nameservice.yml kill
+docker-compose -f src/main/docker/solr8.yml kill
 ```
 
 ## Code style and tools

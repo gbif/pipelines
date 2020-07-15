@@ -39,6 +39,11 @@
             <id>boundless</id>
             <url>https://repo.osgeo.org/repository/release/</url>
         </repository>
+<!--        <repository>-->
+<!--          <id>boundless</id>-->
+<!--          <url>https://repo1.maven.org/maven2/</url>-->
+<!--        </repository>-->
+
     </repositories>
 
   <build>
@@ -152,6 +157,58 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>0.8.5</version>
+      </plugin>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.33.0</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <id>start</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>stop</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <images>
+            <image>
+              <alias>ala-nameservice</alias>
+              <name>djtfmartin/ala-namematching-service:v20200214-4</name>
+              <external>
+                <type>compose</type>
+                <composeFile>ala-nameservice.yml</composeFile>
+              </external>
+              <run>
+                <wait>
+                  <http>
+                    <url>http://localhost:9179/api/search?q=Acacia</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                  <time>20000</time>
+                </wait>
+              </run>
+            </image>
+            <image>
+              <alias>solr8</alias>
+              <name>djtfmartin/biocache-pipelines-solr8:v3</name>
+              <external>
+                <type>compose</type>
+                <composeFile>solr8.yml</composeFile>
+              </external>
+            </image>
+          </images>
+        </configuration>
       </plugin>
     </plugins>
   </build>
