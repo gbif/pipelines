@@ -138,10 +138,27 @@ log.debug Using $SPARK_TMP
 EXTRA_JVM_ARGS="$EXTRA_JVM_ARGS -Dlog4j.configuration=file://$logConfig -Dlog4j.configurationFile=file://$logConfig"
 log.debug EXTRA_JVM_ARGS: $EXTRA_JVM_ARGS
 
+function logStepStart() {
+    name=$1
+    dr=$2
+    log.info $(date)
+    log.info "${colpur}$name${colrst} of $dr"
+}
+
+function logStepEnd() {
+    name=$1
+    dr=$2
+    type=$3
+    duration=$4
+    log.info $(date)
+    log.info "${colpur}$name${colrst} of $dr in [$type] took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+}
+
 function dwca-avro () {
     dr=$1
-    log.info "Ingest DwCA - Converts DwCA to verbatim.arvo file."
-    dwca_dir="/data/biocache-load/$1/$dr.zip"
+    logStepStart "Ingest DwCA - Converts DwCA to verbatim.arvo file" $dr
+
+    dwca_dir="/data/biocache-load/$dr/$dr.zip"
 
     if [[ ! -f  $dwca_dir ]]
     then
@@ -155,10 +172,13 @@ function dwca-avro () {
         exit 1
     fi
 
+    SECONDS=0
+
     java $EXTRA_JVM_ARGS -Dspark.local.dir=$SPARK_TMP \
          -cp $PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
          --datasetId=$dr \
          --config=$config $ARGS
+    logStepEnd dwca-avro $dr local $SECONDS
 }
 
 function interpret () {
@@ -166,9 +186,8 @@ function interpret () {
     ltype=$2
     CLASS=au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
 
-    log.info "interpret verbatim.arvo file."
-    log.info $(date)
     SECONDS=0
+    logStepStart "Interpret verbatim.arvo file" $dr
 
     if [[ $ltype = "local" ]] ; then
         java $EXTRA_JVM_ARGS -Xmx1g -XX:+UseG1GC  -Dspark.master=local[*]  -cp $PIPELINES_JAR $CLASS \
@@ -201,9 +220,7 @@ function interpret () {
             --config=$config
     fi
 
-    log.info $(date)
-    duration=$SECONDS
-    log.info "Interpretation of $dr in [$ltype] took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    logStepEnd Interpretation $dr $ltype $SECONDS
 }
 
 function uuid () {
@@ -211,8 +228,7 @@ function uuid () {
     ltype=$2
     CLASS=au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
 
-    log.info "UUID pipeline - Preserve or add UUIDs."
-    log.info $(date)
+    logStepStart "UUID pipeline - Preserve or add UUIDs." $dr
     SECONDS=0
 
     if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
@@ -237,9 +253,7 @@ function uuid () {
             --config=$config
     fi
 
-    log.info $(date)
-    duration=$SECONDS
-    log.info "Adding uuids to $1 in [$ltype] took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    logStepEnd "Adding uuids" $dr $ltype $SECONDS
 }
 
 function export-latlng () {
@@ -247,8 +261,7 @@ function export-latlng () {
     ltype=$2
     CLASS=au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 
-    log.info "Export lat long."
-    log.info $(date)
+    logStepStart "Export lat long" $dr
     SECONDS=0
 
     if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
@@ -273,24 +286,20 @@ function export-latlng () {
             --config=$config
     fi
 
-    log.info $(date)
-    duration=$SECONDS
-    log.info "Export latlng of $dr in [$ltype] took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    logStepEnd "Export latlng" $dr $ltype $SECONDS
 }
 
 function sample () {
     dr=$1
 
-    log.info $(date)
+    logStepStart "Sample" $dr
     SECONDS=0
 
     java $EXTRA_JVM_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR au.org.ala.sampling.LayerCrawler \
          --datasetId=$dr \
          --config=$config
 
-    log.info $(date)
-    duration=$SECONDS
-    log.info "[SAMPLING] Sampling $1 took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    logStepEnd "Sampling" $dr local $SECONDS
 }
 
 function sample-avro () {
@@ -298,7 +307,7 @@ function sample-avro () {
     ltype=$2
     CLASS=au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 
-    log.info $(date)
+    logStepStart "Sample-avro" $dr
     SECONDS=0
 
     if [[ $ltype = "spark-embedded"  || $ltype = "local" ]] ; then
@@ -324,9 +333,7 @@ function sample-avro () {
             --config=$config
     fi
 
-    log.info $(date)
-    duration=$SECONDS
-    log.info "[SAMPLE-AVRO] [$ltype] Adding sampling to $1 took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    logStepEnd "Sample-avro" $dr $ltype $SECONDS
 }
 
 function index () {
@@ -334,7 +341,7 @@ function index () {
     ltype=$2
     CLASS=au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 
-    log.info $(date)
+    logStepStart "Indexing" $dr
     SECONDS=0
 
     if [[ $ltype = "local" ]] ; then
@@ -357,17 +364,16 @@ function index () {
             --executor-cores 8 \
             --executor-memory 7G \
             --driver-memory 4G \
-            --class au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline  \
+            --class $CLASS  \
             --master $SPARK_MASTER \
+            # TODO set here an optional colorized log4j properties
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config
     fi
 
-    log.info $(date)
-    duration=$SECONDS
-    log.info "[INDEX][$ltype] Indexing of $1 took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    logStepEnd "Indexing" $dr $ltype $SECONDS
 }
 
 
@@ -378,7 +384,8 @@ if ($do_all || $dwca_avro) ; then
         rootDir=/data/biocache-load
         # !!!!!! need to run this command on one vm then run the script !!!!
         # rm -rf $rootDir/dr*.lockdir
-        log.info "#### DWCA-AVRO #####"
+
+        logStepStart "dwca-avro" all
         SECONDS=0
         tempDirs=()
         drDwcaList=($(ls -S $rootDir/dr*/dr*.zip))
@@ -396,8 +403,8 @@ if ($do_all || $dwca_avro) ; then
                 log.info "[DWCA-AVRO] Skipping dwca avro conversion for $datasetID....."
             fi
         done
-        duration=$SECONDS
-        log.info "#### DWCA-AVRO - DWCA load of all took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+
+        logStepEnd "dwca-avro" all local $SECONDS
     fi
 fi
 

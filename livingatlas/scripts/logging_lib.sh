@@ -43,11 +43,11 @@ dbg_lvl=6
 function log.silent ()  { verb_lvl=$silent_lvl elog "$@" ;}
 function log.notify ()  { verb_lvl=$ntf_lvl elog "$@" ;}
 function log.ok ()      { verb_lvl=$ntf_lvl elog "SUCCESS - $@" ;}
-function log.warn ()    { verb_lvl=$wrn_lvl elog "[$dr] ${colylw}WARN${colrst}  $@" ;}
-function log.info ()    { verb_lvl=$inf_lvl elog "[$dr] ${colgrn}INFO${colrst}  $@" ;}
-function log.debug ()   { verb_lvl=$dbg_lvl elog "[$dr] ${colgre}DEBUG${colrst} $@" ;}
-function log.error ()   { verb_lvl=$err_lvl elog "[$dr] ${colred}ERROR${colrst} $@" ;}
-function log.crit ()    { verb_lvl=$crt_lvl elog "[$dr] ${colpur}FATAL${colrst} $@" ;}
+function log.warn ()    { verb_lvl=$wrn_lvl elog "[$dr] [${colylw}WARN${colrst}] $@" ;}
+function log.info ()    { verb_lvl=$inf_lvl elog "[$dr] [${colgrn}INFO${colrst}] $@" ;}
+function log.debug ()   { verb_lvl=$dbg_lvl elog "[$dr] [${colgre}DEBUG${colrst}] $@" ;}
+function log.error ()   { verb_lvl=$err_lvl elog "[$dr] [${colred}ERROR${colrst}] $@" ;}
+function log.crit ()    { verb_lvl=$crt_lvl elog "[$dr] [${colpur}FATAL${colrst}] $@" ;}
 
 function elog() {
     if [ $verbosity -ge $verb_lvl ]; then
