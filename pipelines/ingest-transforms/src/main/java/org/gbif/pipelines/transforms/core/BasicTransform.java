@@ -122,7 +122,6 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .to(br)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(BasicInterpreter.interpretGbifId(keygenService, isTripletValid, isOccurrenceIdValid, useExtendedRecordId, gbifIdFn))
-        .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .via(BasicInterpreter::interpretBasisOfRecord)
         .via(BasicInterpreter::interpretTypifiedName)
         .via(BasicInterpreter::interpretSex)
@@ -139,6 +138,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretLicense)
         .via(BasicInterpreter::interpretIdentifiedByIds)
         .via(BasicInterpreter::interpretRecordedByIds)
+        .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .get();
   }
 }

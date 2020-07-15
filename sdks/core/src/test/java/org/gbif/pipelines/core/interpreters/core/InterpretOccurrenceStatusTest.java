@@ -34,6 +34,8 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
@@ -51,6 +53,8 @@ public class InterpretOccurrenceStatusTest {
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    BasicInterpreter.interpretIndividualCount(er, br);
 
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
@@ -70,6 +74,8 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
@@ -88,11 +94,14 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE, br);
   }
 
@@ -106,11 +115,14 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
   }
 
@@ -123,6 +135,8 @@ public class InterpretOccurrenceStatusTest {
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    BasicInterpreter.interpretIndividualCount(er, br);
 
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
@@ -142,11 +156,14 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 2);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS, br);
   }
@@ -161,11 +178,14 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 2);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE, br);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
   }
@@ -180,11 +200,14 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
   }
 
@@ -198,11 +221,14 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 2);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS, br);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
   }
@@ -217,6 +243,8 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
@@ -230,16 +258,19 @@ public class InterpretOccurrenceStatusTest {
     // State
     Map<String, String> coreTerms = new HashMap<>(2);
     coreTerms.put(DwcTerm.individualCount.qualifiedName(), "0");
-    coreTerms.put(DwcTerm.occurrenceStatus.qualifiedName(), OccurrenceStatus.ABSENT.name());
+    coreTerms.put(DwcTerm.occurrenceStatus.qualifiedName(), "blabla");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
+
+    BasicInterpreter.interpretIndividualCount(er, br);
 
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
+    assertIssueSize(br, 2);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE, br);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
   }
@@ -254,12 +285,15 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
-    assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_UNPARSABLE, br);
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID, br);
   }
 
   @Test
@@ -272,12 +306,15 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
-    assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_UNPARSABLE, br);
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID, br);
   }
 
   @Test
@@ -290,12 +327,15 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.ABSENT.name(), br.getOccurrenceStatus());
-    assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_UNPARSABLE, br);
+    assertIssueSize(br, 1);
+    assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID, br);
   }
 
   @Test
@@ -308,12 +348,15 @@ public class InterpretOccurrenceStatusTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreTerms).build();
     BasicRecord br = BasicRecord.newBuilder().setId(ID).build();
 
+    BasicInterpreter.interpretIndividualCount(er, br);
+
     // When
     BasicInterpreter.interpretOccurrenceStatus(OCCURRENCE_STATUS_VOCABULARY_STUB).accept(er, br);
 
     // Should
     assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
-    assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_UNPARSABLE, br);
+    assertIssueSize(br, 2);
+    assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_INVALID, br);
     assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE, br);
   }
 
@@ -337,11 +380,15 @@ public class InterpretOccurrenceStatusTest {
     public void close() {}
   }
 
+  private void assertIssueSize(BasicRecord br, int expectedSize){
+    assertEquals(expectedSize, br.getIssues().getIssueList().size());
+  }
+
   private void assertIssueEmpty(BasicRecord br) {
     assertTrue(br.getIssues().getIssueList().isEmpty());
   }
 
-  private void assertIssue(OccurrenceIssue issue, BasicRecord br) {
-    assertTrue(br.getIssues().getIssueList().contains(issue.name()));
+  private void assertIssue(OccurrenceIssue expectedIssue, BasicRecord br) {
+    assertTrue(br.getIssues().getIssueList().contains(expectedIssue.name()));
   }
 }
