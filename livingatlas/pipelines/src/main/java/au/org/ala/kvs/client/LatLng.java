@@ -12,7 +12,6 @@ import java.io.Serializable;
 @JsonDeserialize(builder = LatLng.LatLngBuilder.class)
 @Value
 @Builder
-@ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LatLng implements Serializable {
 
@@ -22,7 +21,6 @@ public class LatLng implements Serializable {
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class LatLngBuilder {
-
   }
 
   @Override

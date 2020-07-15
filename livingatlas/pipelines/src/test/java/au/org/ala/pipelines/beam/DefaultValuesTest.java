@@ -1,6 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import org.codehaus.plexus.util.FileUtils;
+import org.apache.commons.io.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -22,14 +22,15 @@ public class DefaultValuesTest {
     public void testDwCaPipeline() throws Exception {
 
         //clear up previous test runs
-        FileUtils.forceDelete("/tmp/la-pipelines-test/default-values");
+        FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/default-values"));
 
         String absolutePath = new File("src/test/resources").getAbsolutePath();
 
+        // Load test DwC archive
         DwcaPipelineOptions dwcaOptions = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, new String[]{
                 "--datasetId=dr893",
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--metaFileName=dwca-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/default-values",
                 "--inputPath=" + absolutePath + "/default-values/dr893"
@@ -40,13 +41,15 @@ public class DefaultValuesTest {
         InterpretationPipelineOptions testOptions1 = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=dr893",
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/default-values",
                 "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
                 "--properties=src/test/resources/pipelines.yaml",
                 "--useExtendedRecordId=true"
         });
+
+        //validate that the raw values for basisOfRecord and occurrenceStatus are current null
         Function<ExtendedRecord, Boolean> notPopulated = (Function<ExtendedRecord, Boolean> & Serializable) er ->
                 er.getCoreTerms().get(DwcTerm.basisOfRecord.namespace() + DwcTerm.basisOfRecord.name()) == null
                     && er.getCoreTerms().get(DwcTerm.occurrenceStatus.namespace() + DwcTerm.basisOfRecord.name()) == null;
@@ -56,7 +59,7 @@ public class DefaultValuesTest {
         InterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=dr893",
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--interpretationTypes=ALL",
                 "--metaFileName=interpretation-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/default-values",
@@ -70,7 +73,7 @@ public class DefaultValuesTest {
         InterpretationPipelineOptions checkPopulatedOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=dr893",
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--targetPath=/tmp/la-pipelines-test/default-values",
                 "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/interpreted/verbatim/interpret-*",
                 "--properties=src/test/resources/pipelines.yaml"

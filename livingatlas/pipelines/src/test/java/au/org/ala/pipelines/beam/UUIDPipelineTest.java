@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.util.AvroUtils;
-import org.codehaus.plexus.util.FileUtils;
+import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -19,7 +19,7 @@ public class UUIDPipelineTest {
     @Before
     public void setup() throws Exception {
         //clear up previous test runs
-        FileUtils.forceDelete("/tmp/la-pipelines-test/uuid-management");
+        FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/uuid-management"));
     }
 
     @Test
@@ -51,7 +51,7 @@ public class UUIDPipelineTest {
     public void testUuidsPipeline() throws Exception {
 
         //clear up previous test runs
-        FileUtils.forceDelete("/tmp/la-pipelines-test/uuid-management");
+        FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/uuid-management"));
 
         String absolutePath = new File("src/test/resources").getAbsolutePath();
 
@@ -99,7 +99,7 @@ public class UUIDPipelineTest {
                 "--datasetId=" + datasetID,
                 "--attempt=1",
                 "--pipelineStep=DWCA_TO_VERBATIM",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--metaFileName=dwca-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/uuid-management",
                 "--inputPath=" + inputPath
@@ -109,7 +109,7 @@ public class UUIDPipelineTest {
         InterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--interpretationTypes=ALL",
                 "--metaFileName=interpretation-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/uuid-management",
@@ -122,7 +122,7 @@ public class UUIDPipelineTest {
         InterpretationPipelineOptions uuidOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/uuid-management",
                 "--inputPath=/tmp/la-pipelines-test/uuid-management/" + datasetID + "/1/verbatim.avro",

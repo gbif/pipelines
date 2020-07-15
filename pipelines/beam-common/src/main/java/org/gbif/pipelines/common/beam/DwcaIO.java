@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.logging.log4j.util.Strings;
 import org.gbif.pipelines.core.io.DwcaReader;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
@@ -98,7 +99,10 @@ public class DwcaIO {
     @Override
     public void populateDisplayData(DisplayData.Builder builder) {
       super.populateDisplayData(builder);
-      builder.add(DisplayData.item("DwC-A Path", path));
+      //path is null in the case of uncompressed archives
+      if (Strings.isNotEmpty(path)) {
+        builder.add(DisplayData.item("DwC-A Path", path));
+      }
     }
   }
 

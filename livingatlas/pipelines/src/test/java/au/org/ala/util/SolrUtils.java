@@ -6,6 +6,7 @@ import okhttp3.internal.Util;
 import okio.BufferedSink;
 import okio.Okio;
 import okio.Source;
+import org.apache.commons.io.FileUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
@@ -16,7 +17,6 @@ import org.apache.solr.client.solrj.response.ConfigSetAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
-import org.codehaus.plexus.util.FileUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,7 +61,7 @@ public class SolrUtils {
     public static void createSolrConfigSet() throws Exception {
         //create a zip of
 
-        FileUtils.forceDelete("/tmp/configset.zip");
+        FileUtils.forceDelete(new File("/tmp/configset.zip"));
 
         Map<String, String> env = new HashMap<>();
         env.put("create", "true");

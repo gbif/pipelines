@@ -35,7 +35,7 @@ import static org.apache.spark.sql.functions.col;
 public class MigrateUUIDPipeline implements Serializable {
 
     @Parameter
-    private List<String> parameters = new ArrayList<>();
+    private List<String> parameters = new ArrayList<String>();
 
     @Parameter(names = "--inputPath", description = "The input path to a CSV export from occ_uuid in cassandra e.g /data/occ_uuid.csv or hdfs://localhost:8020/occ_uuid.csv")
     private String inputPath;

@@ -1,7 +1,7 @@
 package au.org.ala.pipelines.beam;
 
 import au.org.ala.util.AvroUtils;
-import org.codehaus.plexus.util.FileUtils;
+import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.junit.Test;
@@ -16,7 +16,7 @@ public class MigrationPipelineTest {
     @Test
     public void testMigration() throws Exception {
 
-        FileUtils.forceDelete(new File("/tmp/la-pipelines-test/uuid-migration"));
+        FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/uuid-migration"));
 
         String absolutePath = new File("src/test/resources").getAbsolutePath();
         InterpretationPipelineOptions options = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{

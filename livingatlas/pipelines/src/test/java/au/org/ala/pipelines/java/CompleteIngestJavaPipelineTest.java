@@ -6,7 +6,7 @@ import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
 import au.org.ala.util.SolrUtils;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
-import org.codehaus.plexus.util.FileUtils;
+import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -19,6 +19,8 @@ import java.util.UUID;
 /**
  * Complete pipeline tests that use the java variant of the pipeline where possible.
  * Currently this is for Interpretation and SOLR indexing only.
+ *
+ * This needs to be ran with -Xmx128m
  */
 public class CompleteIngestJavaPipelineTest {
 
@@ -31,7 +33,7 @@ public class CompleteIngestJavaPipelineTest {
     public void testIngestPipeline() throws Exception {
 
         //clear up previous test runs
-        FileUtils.forceDelete("/tmp/la-pipelines-test/complete-pipeline");
+        FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/complete-pipeline"));
 
         //clear SOLR index
         SolrUtils.setupIndex();
@@ -69,8 +71,9 @@ public class CompleteIngestJavaPipelineTest {
 
         DwcaPipelineOptions dwcaOptions = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
+                "--appName=DWCA",
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--metaFileName=dwca-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--inputPath=" + inputPath
@@ -80,7 +83,7 @@ public class CompleteIngestJavaPipelineTest {
         InterpretationPipelineOptions interpretationOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--interpretationTypes=ALL",
                 "--metaFileName=interpretation-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
@@ -93,7 +96,7 @@ public class CompleteIngestJavaPipelineTest {
         InterpretationPipelineOptions uuidOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
@@ -106,7 +109,7 @@ public class CompleteIngestJavaPipelineTest {
         InterpretationPipelineOptions latLngOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--properties=src/test/resources/pipelines.yaml"
@@ -123,7 +126,7 @@ public class CompleteIngestJavaPipelineTest {
         ALASolrPipelineOptions solrOptions = PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
                 "--attempt=1",
-                "--runner=SparkRunner",
+                "--runner=DirectRunner",
                 "--metaFileName=uuid-metrics.yml",
                 "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
                 "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",

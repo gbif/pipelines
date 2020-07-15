@@ -23,12 +23,4 @@ public class AvroUtils {
         }
         return uniqueKeyToUuid;
     }
-
-    public static void dumpKeysForPath(String path){
-        Map<String, ALAUUIDRecord> records = AvroReader.readRecords(null, null, ALAUUIDRecord.class, path);
-        Map<String, String> uniqueKeyToUuid = new HashMap<String, String>();
-        for (Map.Entry<String, ALAUUIDRecord> record: records.entrySet()){
-            System.out.println(record.getValue().getUniqueKey() + " -> " + record.getValue().getUuid());
-        }
-    }
 }
