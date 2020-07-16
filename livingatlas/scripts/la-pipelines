@@ -30,8 +30,8 @@ else
     VER=$(dpkg-query --show -f '${Version}' la-pipelines)
 fi
 
-WHEREL="[local|embedded|cluster]"
-WHERE="[embedded|cluster]"
+WHEREL="[--local|--embedded|--cluster]"
+WHERE="[--embedded|--cluster]"
 
 eval "$(docopts -V - -h - : "$@" <<EOF
 
@@ -47,10 +47,10 @@ dwca-avro --> interpret --> uuid -->                │
 Usage:
   $CMD [options] dwca-avro     (<dr>...|all)
   $CMD [options] interpret     (<dr>...|all) $WHEREL
-  $CMD [options] uuid          (<dr>...|all) $WHERE
-  $CMD [options] export-latlng (<dr>...|all) $WHERE
+  $CMD [options] uuid          (<dr>...|all)         $WHERE
+  $CMD [options] export-latlng (<dr>...|all)         $WHERE
   $CMD [options] sample        (<dr>...|all)
-  $CMD [options] sample-avro   (<dr>...|all) $WHERE
+  $CMD [options] sample-avro   (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all) $WHEREL
   $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
@@ -75,8 +75,6 @@ if ($debug) ; then verbosity=6; else verbosity=5; fi
 source ./logging_lib.sh $verbosity $no_colors $dr
 
 log.info "Starting $CMD"
-
-
 
 # TODO: externalize this CONFIG_DIR in some way, ask other locations
 if [[ $PROD = true ]] ; then CONFIG_DIR=/data/la-pipelines/config ; else CONFIG_DIR=../configs; fi
@@ -135,6 +133,12 @@ function getConf() {
     echo $val
 }
 
+function toArg() {
+  PREFIX=$1
+  KEY=$2
+  echo --$KEY $(getConf $PREFIX.$KEY)
+}
+
 #log.debug Target $(getConf general.targetPath)
 #PIPELINES_JAR=$(eval echo $(getConf java.PIPELINES_JAR))
 #SPARK_TMP=$(getConf spark.SPARK_TMP)
@@ -143,11 +147,11 @@ log.debug Using $PIPELINES_JAR
 log.debug Using $SPARK_TMP
 
 # Uncomment this to debug log4j
-# if ( $debug) ; then EXTRA_JVM_ARGS="-Dlog4j.debug"; fi
+# if ( $debug) ; then EXTRA_JVM_CLI_ARGS="-Dlog4j.debug"; fi
 
 # Set log4j configuration for v1 and v2
-EXTRA_JVM_ARGS="$EXTRA_JVM_ARGS -Dlog4j.configuration=file://$logConfig -Dlog4j.configurationFile=file://$logConfig"
-log.debug EXTRA_JVM_ARGS: $EXTRA_JVM_ARGS
+EXTRA_JVM_CLI_ARGS="$EXTRA_JVM_CLI_ARGS -Dlog4j.configuration=file://$logConfig -Dlog4j.configurationFile=file://$logConfig"
+log.debug EXTRA_JVM_CLI_ARGS: $EXTRA_JVM_CLI_ARGS
 
 function logStepStart() {
     name=$1
@@ -167,6 +171,8 @@ function logStepEnd() {
 
 function dwca-avro () {
     dr=$1
+
+    SECONDS=0
     logStepStart "Ingest DwCA - Converts DwCA to verbatim.arvo file" $dr
 
     dwca_dir="/data/biocache-load/$dr/$dr.zip"
@@ -183,12 +189,11 @@ function dwca-avro () {
         exit 1
     fi
 
-    SECONDS=0
-
-    java $EXTRA_JVM_ARGS -Dspark.local.dir=$SPARK_TMP \
+    java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
          -cp $PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
          --datasetId=$dr \
          --config=$config $ARGS
+
     logStepEnd dwca-avro $dr local $SECONDS
 }
 
@@ -201,7 +206,9 @@ function interpret () {
     logStepStart "Interpret verbatim.arvo file" $dr
 
     if [[ $ltype = "local" ]] ; then
-        java $EXTRA_JVM_ARGS -Xmx1g -XX:+UseG1GC  -Dspark.master=local[*]  -cp $PIPELINES_JAR $CLASS \
+        java $EXTRA_JVM_CLI_ARGS \
+             $(getConf interpret-sh-args.local.jvm) \
+             -cp $PIPELINES_JAR $CLASS \
              --datasetId=$dr \
              --config=$config
     fi
@@ -209,26 +216,29 @@ function interpret () {
     if [[ $ltype = "spark-embedded" ]] ; then
         log.info $(date)
         SECONDS=0
-        java $EXTRA_JVM_ARGS -Xmx8g -XX:+UseG1GC -Dspark.master=local[*] -cp $PIPELINES_JAR $CLASS \
+        java $EXTRA_JVM_CLI_ARGS \
+             $(getConf interpret-sh-args.spark-embedded.jvm) \
+             -cp $PIPELINES_JAR $CLASS \
              --datasetId=$dr \
              --config=$config
     fi
 
+    PRE=interpret-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
         /data/spark/bin/spark-submit \
             --name "interpret $dr" \
-            --conf spark.default.parallelism=144 \
-            --num-executors 16 \
-            --executor-cores 8 \
-            --executor-memory 7G \
-            --driver-memory 1G \
+            $(toArg $PRE conf) \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            # TODO set here an optional colorized log4j properties
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config
+            # TODO set here an optional colorized log4j properties
     fi
 
     logStepEnd Interpretation $dr $ltype $SECONDS
@@ -243,7 +253,7 @@ function uuid () {
     SECONDS=0
 
     if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        java $EXTRA_JVM_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC  -cp $PIPELINES_JAR $CLASS \
+        java $EXTRA_JVM_CLI_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC  -cp $PIPELINES_JAR $CLASS \
              --datasetId=$dr\
              --config=$config
     fi
@@ -257,11 +267,11 @@ function uuid () {
             --driver-memory 1G \
             --class $CLASS \
             --master $SPARK_MASTER \
-            # TODO set here an optional colorized log4j properties
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config
+            # TODO set here an optional colorized log4j properties
     fi
 
     logStepEnd "Adding uuids" $dr $ltype $SECONDS
@@ -276,7 +286,7 @@ function export-latlng () {
     SECONDS=0
 
     if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        java $EXTRA_JVM_ARGS -cp $PIPELINES_JAR $CLASS \
+        java $EXTRA_JVM_CLI_ARGS -cp $PIPELINES_JAR $CLASS \
              --datasetId=$dr \
              --config=$config
     fi
@@ -290,11 +300,11 @@ function export-latlng () {
             --driver-memory 4G \
             --class $CLASS \
             --master $SPARK_MASTER \
-            # TODO set here an optional colorized log4j properties
             --driver-java -options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config
+            # TODO set here an optional colorized log4j properties
     fi
 
     logStepEnd "Export latlng" $dr $ltype $SECONDS
@@ -306,7 +316,7 @@ function sample () {
     logStepStart "Sample" $dr
     SECONDS=0
 
-    java $EXTRA_JVM_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR au.org.ala.sampling.LayerCrawler \
+    java $EXTRA_JVM_CLI_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR au.org.ala.sampling.LayerCrawler \
          --datasetId=$dr \
          --config=$config
 
@@ -322,7 +332,7 @@ function sample-avro () {
     SECONDS=0
 
     if [[ $ltype = "spark-embedded"  || $ltype = "local" ]] ; then
-        java $EXTRA_JVM_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC  -cp $PIPELINES_JAR $CLASS \
+        java $EXTRA_JVM_CLI_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC  -cp $PIPELINES_JAR $CLASS \
              --datasetId=$dr \
              --config=$config
     fi
@@ -337,11 +347,11 @@ function sample-avro () {
             --driver-memory 1G \
             --class $CLASS \
             --master $SPARK_MASTER \
-            # TODO set here an optional colorized log4j properties
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config
+            # TODO set here an optional colorized log4j properties
     fi
 
     logStepEnd "Sample-avro" $dr $ltype $SECONDS
@@ -356,13 +366,13 @@ function index () {
     SECONDS=0
 
     if [[ $ltype = "local" ]] ; then
-        java $EXTRA_JVM_ARGS -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR $CLASS \
+        java $EXTRA_JVM_CLI_ARGS -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR $CLASS \
              --datasetId=$dr \
              --config=$config
     fi
 
     if [[ $ltype = "spark-embedded" ]] ; then
-        java $EXTRA_JVM_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR $CLASS \
+        java $EXTRA_JVM_CLI_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR $CLASS \
              --datasetId=$dr \
              --config=$config
     fi
@@ -377,16 +387,21 @@ function index () {
             --driver-memory 4G \
             --class $CLASS  \
             --master $SPARK_MASTER \
-            # TODO set here an optional colorized log4j properties
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config
+            # TODO set here an optional colorized log4j properties
     fi
 
     logStepEnd "Indexing" $dr $ltype $SECONDS
 }
 
+if [[ $dr = "all" ]] ; then
+    log.info Dump dataset size for all
+    java $EXTRA_JVM_CLI_ARGS -cp $PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
+         --config=$config
+fi # This should create /tmp/dataset-counts.csv
 
 if ($do_all || $dwca_avro) ; then
     if [[ $dr != "all" ]] ; then
@@ -419,12 +434,6 @@ if ($do_all || $dwca_avro) ; then
 
         logStepEnd "dwca-avro" all local $SECONDS
     fi
-fi
-
-if [[ $dr = "all" ]] ; then
-    log.info Dump dataset size for all
-    java $EXTRA_JVM_ARGS -cp $PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
-         --config=$config
 fi
 
 if ($interpret || $do_all); then
