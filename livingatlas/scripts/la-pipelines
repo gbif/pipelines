@@ -61,9 +61,9 @@ Options:
   --extra-args=<args>  Additional "arg1=values,arg2=value" to pass to pipeline options (highest precedence than yml values).
   --no-colors          No corolorize logs output.
   --dry-run            Print the commands without actually running them.
+  --debug              Debug $CMD.
   -h --help            Show this help.
   -v --version         Show version.
-  --debug              Debug $CMD.
 ----
 $CMD $VER
 Copyright (C) 2020 ALA Development Team
