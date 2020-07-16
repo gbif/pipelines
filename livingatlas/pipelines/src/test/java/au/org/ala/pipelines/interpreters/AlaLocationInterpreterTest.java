@@ -1,8 +1,17 @@
 package au.org.ala.pipelines.interpreters;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
@@ -13,28 +22,28 @@ import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.rest.client.geocode.Location;
-
-import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.rest.client.geocode.GeocodeResponse;
+import org.gbif.rest.client.geocode.Location;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.Serializable;
-import java.util.*;
-
-import static org.junit.Assert.*;
-
 
 public class AlaLocationInterpreterTest {
 
   private static final String ID = "777";
   private ALAPipelinesConfig alaConfig;
 
+  /** Only works for country */
+  private static GeocodeResponse createCountryResponse(Country country) {
+    Location location = new Location();
+    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
+    location.setType("Political");
+    return new GeocodeResponse(Collections.singletonList(location));
+  }
+
   @Before
-  public void set(){
+  public void set() {
     alaConfig = new ALAPipelinesConfig();
-    alaConfig.setLocationInfoConfig(new LocationInfoConfig(null,null, null));
+    alaConfig.setLocationInfoConfig(new LocationInfoConfig(null, null, null));
   }
 
   @Test
@@ -62,14 +71,14 @@ public class AlaLocationInterpreterTest {
     LocationInterpreter.interpretStateProvince(er, lr);
     LocationInterpreter.interpretMinimumDepthInMeters(er, lr);
     LocationInterpreter.interpretMaximumDepthInMeters(er, lr);
-    //Have to run
+    // Have to run
     LocationInterpreter.interpretDepth(er, lr);
 
     LocationInterpreter.interpretContinent(er, lr);
     LocationInterpreter.interpretWaterBody(er, lr);
     LocationInterpreter.interpretMinimumElevationInMeters(er, lr);
     LocationInterpreter.interpretMaximumElevationInMeters(er, lr);
-    //Elevation and depth is calculated by min/max depth, elev?
+    // Elevation and depth is calculated by min/max depth, elev?
     LocationInterpreter.interpretElevation(er, lr);
 
     LocationInterpreter.interpretMinimumDistanceAboveSurfaceInMeters(er, lr);
@@ -79,27 +88,27 @@ public class AlaLocationInterpreterTest {
 
     LocationInterpreter.interpretElevation(er, lr);
 
-    //should
-    assertEquals("Act", lr.getStateProvince());
-    assertEquals(Double.valueOf(10d), lr.getMinimumDepthInMeters());
-    assertEquals(Double.valueOf(200d), lr.getMaximumDepthInMeters());
-    //Auto calculated
-    assertEquals("Average of Min/Max depth", Double.valueOf(105d), lr.getDepth());
-    assertEquals( "ASIA", lr.getContinent());
-    assertEquals( "Murray", lr.getWaterBody());
-    assertEquals( Double.valueOf(2000d), lr.getMaximumElevationInMeters());
-    assertEquals( Double.valueOf(0d), lr.getMinimumElevationInMeters());
+    // should
+    assertEquals(lr.getStateProvince(), "Act");
+    assertEquals(lr.getMinimumDepthInMeters(), Double.valueOf(10d));
+    assertEquals(lr.getMaximumDepthInMeters(), Double.valueOf(200d));
+    // Auto calculated
+    assertEquals("Average of Min/Max depth", lr.getDepth(), Double.valueOf(105d));
+    assertEquals(lr.getContinent(), "ASIA");
+    assertEquals(lr.getWaterBody(), "Murray");
+    assertEquals(lr.getMaximumElevationInMeters(), Double.valueOf(2000d));
+    assertEquals(lr.getMinimumElevationInMeters(), Double.valueOf(0d));
 
-    assertEquals(Double.valueOf(1000d), lr.getElevation());
-    assertEquals(Double.valueOf(14d), lr.getMinimumDistanceAboveSurfaceInMeters());
-    assertEquals( Double.valueOf(200d), lr.getMaximumDistanceAboveSurfaceInMeters());
-    assertEquals(Double.valueOf(0.5d), lr.getCoordinatePrecision());
-    assertEquals(Double.valueOf(1d), lr.getCoordinateUncertaintyInMeters());
+    assertEquals(lr.getElevation(), Double.valueOf(1000d));
+    assertEquals(lr.getMinimumDistanceAboveSurfaceInMeters(), Double.valueOf(14d));
+    assertEquals(lr.getMaximumDistanceAboveSurfaceInMeters(), Double.valueOf(200d));
+    assertEquals(lr.getCoordinatePrecision(), Double.valueOf(0.5d));
+    assertEquals(lr.getCoordinateUncertaintyInMeters(), Double.valueOf(1d));
 
     ALALocationInterpreter.interpretGeoreferencedDate(er, lr);
     ALALocationInterpreter.interpretGeoreferenceTerms(er, lr);
     assertEquals("1979-01-01T00:00", lr.getGeoreferencedDate());
-    assertEquals(4, lr.getIssues().getIssueList().size());
+    assertEquals(lr.getIssues().getIssueList().size(), 4);
   }
 
   @Test
@@ -111,7 +120,7 @@ public class AlaLocationInterpreterTest {
 
     coreMap.put(DwcTerm.coordinatePrecision.qualifiedName(), "100");
     LocationInterpreter.interpretCoordinatePrecision(er, lr);
-    assertEquals( "COORDINATE_PRECISION_INVALID", lr.getIssues().getIssueList().get(0));
+    assertEquals(lr.getIssues().getIssueList().get(0), "COORDINATE_PRECISION_INVALID");
 
     coreMap.put(DwcTerm.minimumElevationInMeters.qualifiedName(), " we 0 test 1000 inch");
     LocationInterpreter.interpretMinimumElevationInMeters(er, lr);
@@ -121,12 +130,13 @@ public class AlaLocationInterpreterTest {
     LocationInterpreter.interpretElevation(er, lr);
 
     assertArrayEquals(
-        new String[]{
-                "COORDINATE_PRECISION_INVALID",
-                OccurrenceIssue.ELEVATION_MIN_MAX_SWAPPED.name(),
-                "ELEVATION_NOT_METRIC",
-                "ELEVATION_NON_NUMERIC"},
-            lr.getIssues().getIssueList().toArray());
+        lr.getIssues().getIssueList().toArray(),
+        new String[] {
+          "COORDINATE_PRECISION_INVALID",
+          OccurrenceIssue.ELEVATION_MIN_MAX_SWAPPED.name(),
+          "ELEVATION_NOT_METRIC",
+          "ELEVATION_NON_NUMERIC"
+        });
   }
 
   @Test
@@ -138,9 +148,10 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName(), "2err0 inch");
     LocationInterpreter.interpretMaximumDistanceAboveSurfaceInMeters(er, lr);
 
-    assertEquals( Double.valueOf(0.51d), lr.getMaximumDistanceAboveSurfaceInMeters());
+    assertEquals(lr.getMaximumDistanceAboveSurfaceInMeters(), Double.valueOf(0.51d));
   }
 
+  /** Tests on: Missing geodetic datum precision mismatch Centre of state */
   @Test
   public void assertionMissingGeodeticTest() {
     Location state = new Location();
@@ -148,8 +159,8 @@ public class AlaLocationInterpreterTest {
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(-31.25d, 146.921099d),
-        new GeocodeResponse(Collections.singletonList(state)));
+    kvStore.put(
+        new LatLng(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -157,29 +168,33 @@ public class AlaLocationInterpreterTest {
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
     coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-31.25d");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.921099d");
+    coreMap.put(DwcTerm.coordinatePrecision.qualifiedName(), "0.001");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
+    ALALocationInterpreter.interpretCoordinatePrecision(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
 
-    assertEquals("New South Wales", lr.getStateProvince());
-
+    assertEquals(lr.getStateProvince(), "New South Wales");
     assertArrayEquals(
-        new String[]{
-                OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
-                ALAOccurrenceIssue.MISSING_GEODETICDATUM.name(),
-                ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()
-        }, lr.getIssues().getIssueList().toArray());
+        lr.getIssues().getIssueList().toArray(),
+        new String[] {
+          OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
+          ALAOccurrenceIssue.MISSING_GEODETICDATUM.name(),
+          ALAOccurrenceIssue.COORDINATE_PRECISION_MISMATCH.name(),
+          ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()
+        });
   }
 
+  /** Tests on: centre of state state name matching */
   @Test
   public void coordinatesCentreOfStateProvinceTest() {
     Location state = new Location();
-    state.setName("New South Wales");
+    state.setName("NSW");
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(-31.25d, 146.921099d),
-        new GeocodeResponse(Collections.singletonList(state)));
+    kvStore.put(
+        new LatLng(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -188,14 +203,19 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-31.25d");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.921099d");
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
+    coreMap.put(DwcTerm.stateProvince.qualifiedName(), "Test");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
-
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
+    // Should convert NSW to New South Wales
     assertEquals("New South Wales", lr.getStateProvince());
 
-    assertArrayEquals(new String[]{ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()},
-            lr.getIssues().getIssueList().toArray());
+    assertArrayEquals(
+        lr.getIssues().getIssueList().toArray(),
+        new String[] {
+          ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name(),
+          ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()
+        });
   }
 
   @Test
@@ -205,8 +225,8 @@ public class AlaLocationInterpreterTest {
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(-31.25d, 146.921099d),
-        new GeocodeResponse(Collections.singletonList(state)));
+    kvStore.put(
+        new LatLng(-31.25d, 146.921099d), new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
@@ -217,15 +237,17 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "TEST");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er,lr);
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
 
-    assertEquals("New South Wales", lr.getStateProvince());
+    assertEquals(lr.getStateProvince(), "New South Wales");
 
-    assertArrayEquals(new String[]{
-                OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
-                OccurrenceIssue.GEODETIC_DATUM_INVALID.name(),
-                ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(),
-        },lr.getIssues().getIssueList().toArray());
+    assertArrayEquals(
+        lr.getIssues().getIssueList().toArray(),
+        new String[] {
+          OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
+          OccurrenceIssue.GEODETIC_DATUM_INVALID.name(),
+          ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name(),
+        });
   }
 
   @Test
@@ -236,16 +258,14 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(
-            new LatLng(-37.47d, 144.785153d),
-            new GeocodeResponse(Collections.singletonList(state))
-    );
+        new LatLng(-37.47d, 144.785153d), new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
-    //swapped lat/lng
-    //note: GBIF will truncate coordinates to 6 decimal places...
+    // swapped lat/lng
+    // note: GBIF will truncate coordinates to 6 decimal places...
     coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "144.7851531");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-37.47");
 
@@ -253,16 +273,17 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.stateProvince.qualifiedName(), "New South Wales");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
     assertEquals("Victoria", lr.getStateProvince());
 
     assertArrayEquals(
-        new String[]{
-                OccurrenceIssue.COORDINATE_ROUNDED.name(),
-                OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE.name(),
-                ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name()
-        }, 
-        lr.getIssues().getIssueList().toArray()
-    );
+        lr.getIssues().getIssueList().toArray(),
+        new String[] {
+          OccurrenceIssue.COORDINATE_ROUNDED.name(),
+          OccurrenceIssue.PRESUMED_SWAPPED_COORDINATE.name(),
+          ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name(),
+          ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()
+        });
   }
 
   @Test
@@ -272,7 +293,8 @@ public class AlaLocationInterpreterTest {
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(-31.2532183d, 146.921099d),
+    kvStore.put(
+        new LatLng(-31.2532183d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
@@ -282,8 +304,9 @@ public class AlaLocationInterpreterTest {
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
 
-    assertArrayEquals(new String[]{ALAOccurrenceIssue.LOCATION_NOT_SUPPLIED.name()},
-            lr.getIssues().getIssueList().toArray());
+    assertArrayEquals(
+        lr.getIssues().getIssueList().toArray(),
+        new String[] {ALAOccurrenceIssue.LOCATION_NOT_SUPPLIED.name()});
   }
 
   @Test
@@ -293,7 +316,8 @@ public class AlaLocationInterpreterTest {
     state.setType("State");
 
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
-    kvStore.put(new LatLng(-31.2532183d, 146.921099d),
+    kvStore.put(
+        new LatLng(-31.2532183d, 146.921099d),
         new GeocodeResponse(Collections.singletonList(state)));
 
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
@@ -308,12 +332,12 @@ public class AlaLocationInterpreterTest {
     assertNull(lr.getStateProvince());
 
     assertArrayEquals(
-            new String[]{
-                    OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
-                    ALAOccurrenceIssue.MISSING_GEODETICDATUM.name(),
-                    OccurrenceIssue.ZERO_COORDINATE.name()
-            },
-            lr.getIssues().getIssueList().toArray());
+        lr.getIssues().getIssueList().toArray(),
+        new String[] {
+          OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
+          ALAOccurrenceIssue.MISSING_GEODETICDATUM.name(),
+          OccurrenceIssue.ZERO_COORDINATE.name()
+        });
   }
 
   @Test
@@ -321,41 +345,70 @@ public class AlaLocationInterpreterTest {
 
     KeyValueTestStoreStub store = new KeyValueTestStoreStub();
     store.put(new LatLng(15.958333d, -85.908333d), createCountryResponse(Country.HONDURAS));
-    store.put(new LatLng(-2.752778d, -58.653057d), createCountryResponse(Country.BRAZIL));
+    store.put(new LatLng(-14.235004d, -51.92528d), createCountryResponse(Country.BRAZIL));
 
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
 
     Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-2.752778d");
-    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-58.653057d");
+    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-14.235004d");
+    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "-51.92528d");
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
 
     ExtendedRecord source = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
 
-    Optional<LocationRecord> lrResult = Interpretation.from(source)
-        .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
-        .via(LocationInterpreter.interpretCountryAndCoordinates(store, mdr))
-        .get();
+    Optional<LocationRecord> lrResult =
+        Interpretation.from(source)
+            .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
+            .via(LocationInterpreter.interpretCountryAndCoordinates(store, mdr))
+            .via(ALALocationInterpreter.verifyLocationInfo(alaConfig))
+            .get();
 
-    //country matches
+    // country matches
     LocationRecord lr = lrResult.get();
-    assertEquals(1, lr.getIssues().getIssueList().size()); //country derived from coordinates
     assertEquals(Country.BRAZIL.getIso2LetterCode(), lr.getCountryCode());
     assertEquals(Country.BRAZIL.getTitle(), lr.getCountry());
+    assertArrayEquals(
+        lr.getIssues().getIssueList().toArray(),
+        new String[] {
+          OccurrenceIssue.COUNTRY_DERIVED_FROM_COORDINATES.name(),
+          ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name()
+        });
   }
 
-  /**
-   * Only works for country
-   */
-  private static GeocodeResponse createCountryResponse(Country country) {
-    Location location = new Location();
-    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-    location.setType("Political");
-    return new GeocodeResponse(Collections.singletonList(location));
+  @Test
+  public void coordinateUncertaintyInMetersTest() {
+    Map<String, String> coreMap = new HashMap<>();
+    coreMap.put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), "1km");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
+    LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
+
+    ALALocationInterpreter.interpretCoordinateUncertaintyInMeters(er, lr);
+    assertEquals(Double.valueOf(1000), lr.getCoordinateUncertaintyInMeters());
+
+    coreMap.put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), "1ft");
+    ALALocationInterpreter.interpretCoordinateUncertaintyInMeters(er, lr);
+    assertEquals(Double.valueOf(0.3048), lr.getCoordinateUncertaintyInMeters());
+
+    coreMap.put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), null);
+    coreMap.put(DwcTerm.coordinatePrecision.qualifiedName(), "6000km");
+    ALALocationInterpreter.interpretCoordinateUncertaintyInMeters(er, lr);
+    assertNull(lr.getCoordinateUncertaintyInMeters());
+    assertArrayEquals(
+        new String[] {"COORDINATE_UNCERTAINTY_METERS_INVALID", "UNCERTAINTY_IN_PRECISION"},
+        lr.getIssues().getIssueList().toArray());
+
+    // GBIF parse ft
+    coreMap.put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), "2ft");
+    LocationInterpreter.interpretCoordinateUncertaintyInMeters(er, lr);
+    assertEquals(Double.valueOf(0.61), lr.getCoordinateUncertaintyInMeters());
+
+    // GBIF cannot parse KM
+    coreMap.put(DwcTerm.coordinateUncertaintyInMeters.qualifiedName(), "2km");
+    LocationInterpreter.interpretCoordinateUncertaintyInMeters(er, lr);
+    assertEquals(Double.valueOf(2), lr.getCoordinateUncertaintyInMeters());
   }
 
-
-  private static class KeyValueTestStoreStub<K, V> implements KeyValueStore<K, V>, Serializable {
+  private class KeyValueTestStoreStub<K, V> implements KeyValueStore<K, V>, Serializable {
 
     private final Map<K, V> map = new HashMap<>();
 

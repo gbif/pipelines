@@ -24,8 +24,8 @@ ALA SOLR XML
 
   </solrcloud>
 
-  <shardHandlerFactory name="shardHandlerFactory"
-    class="HttpShardHandlerFactory">
+  <shardHandlerFactory class="HttpShardHandlerFactory"
+    name="shardHandlerFactory">
     <int name="socketTimeout">${socketTimeout:600000}</int>
     <int name="connTimeout">${connTimeout:60000}</int>
   </shardHandlerFactory>

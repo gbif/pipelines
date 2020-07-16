@@ -5,9 +5,7 @@ import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
-/**
- * Main pipeline options necessary for SOLR index for Living atlases
- */
+/** Main pipeline options necessary for SOLR index for Living atlases */
 public interface ALASolrPipelineOptions extends PipelineOptions, InterpretationPipelineOptions {
 
   @Description("SOLR collection to index into")

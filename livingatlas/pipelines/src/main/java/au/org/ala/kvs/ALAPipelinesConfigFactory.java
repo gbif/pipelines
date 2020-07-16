@@ -8,36 +8,36 @@ import lombok.SneakyThrows;
 
 public class ALAPipelinesConfigFactory {
 
-    private static volatile ALAPipelinesConfigFactory instance;
+  private static final Object MUTEX = new Object();
+  private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
+  private static volatile ALAPipelinesConfigFactory instance;
 
-    private final ALAPipelinesConfig config;
+  static {
+    MAPPER.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+    MAPPER.findAndRegisterModules();
+  }
 
-    private static final Object MUTEX = new Object();
+  private final ALAPipelinesConfig config;
 
-    private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
+  @SneakyThrows
+  private ALAPipelinesConfigFactory(
+      String hdfsSiteConfig, String coreSiteConfig, String propertiesPath) {
+    this.config = ALAFsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, propertiesPath);
+  }
 
-    static {
-        MAPPER.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
-        MAPPER.findAndRegisterModules();
-    }
-
-    @SneakyThrows
-    private ALAPipelinesConfigFactory(String hdfsSiteConfig, String coreSiteConfig, String propertiesPath) {
-        this.config = ALAFsUtils.readConfigFile(hdfsSiteConfig, coreSiteConfig, propertiesPath);
-    }
-
-    public static ALAPipelinesConfigFactory getInstance(String hdfsSiteConfig,String coreSiteConfig, String propertiesPath) {
+  public static ALAPipelinesConfigFactory getInstance(
+      String hdfsSiteConfig, String coreSiteConfig, String propertiesPath) {
+    if (instance == null) {
+      synchronized (MUTEX) {
         if (instance == null) {
-            synchronized (MUTEX) {
-                if (instance == null) {
-                    instance = new ALAPipelinesConfigFactory(hdfsSiteConfig, coreSiteConfig, propertiesPath);
-                }
-            }
+          instance = new ALAPipelinesConfigFactory(hdfsSiteConfig, coreSiteConfig, propertiesPath);
         }
-        return instance;
+      }
     }
+    return instance;
+  }
 
-    public ALAPipelinesConfig get() {
-        return config;
-    }
+  public ALAPipelinesConfig get() {
+    return config;
+  }
 }

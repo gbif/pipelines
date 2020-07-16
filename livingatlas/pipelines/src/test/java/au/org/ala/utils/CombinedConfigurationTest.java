@@ -1,15 +1,16 @@
 package au.org.ala.utils;
 
-import org.jetbrains.annotations.NotNull;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.instanceOf;
 
 import java.io.FileNotFoundException;
 import java.util.LinkedHashMap;
 import java.util.concurrent.Callable;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import org.jetbrains.annotations.NotNull;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class CombinedConfigurationTest {
   private static CombinedYamlConfiguration testConf;

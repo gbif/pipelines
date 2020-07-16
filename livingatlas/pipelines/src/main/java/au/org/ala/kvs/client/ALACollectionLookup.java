@@ -7,9 +7,7 @@ import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 
-/**
- * An ALA Collection Lookup request object.
- */
+/** An ALA Collection Lookup request object. */
 @JsonDeserialize(builder = ALACollectionLookup.ALACollectionLookupBuilder.class)
 @Value
 @Builder
@@ -22,7 +20,5 @@ public class ALACollectionLookup {
 
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class ALACollectionLookupBuilder {
-
-  }
+  public static class ALACollectionLookupBuilder {}
 }

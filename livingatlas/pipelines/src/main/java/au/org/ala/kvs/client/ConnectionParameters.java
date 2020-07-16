@@ -3,16 +3,12 @@ package au.org.ala.kvs.client;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 
-import java.util.List;
-
-/**
- * DTO for ALA collectory connection parameters.
- */
+/** DTO for ALA collectory connection parameters. */
 @JsonDeserialize(builder = ConnectionParameters.ConnectionParametersBuilder.class)
 @Value
 @Builder
@@ -26,7 +22,5 @@ public class ConnectionParameters {
 
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class ConnectionParametersBuilder {
-
-  }
+  public static class ConnectionParametersBuilder {}
 }

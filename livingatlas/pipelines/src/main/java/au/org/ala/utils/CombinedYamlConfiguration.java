@@ -1,9 +1,5 @@
 package au.org.ala.utils;
 
-import one.util.streamex.EntryStream;
-import org.jetbrains.annotations.NotNull;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,6 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import one.util.streamex.EntryStream;
+import org.jetbrains.annotations.NotNull;
+import org.yaml.snakeyaml.Yaml;
 
 public class CombinedYamlConfiguration {
 

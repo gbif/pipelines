@@ -1,20 +1,30 @@
 package au.org.ala.pipelines.beam;
 
-import java.io.FileNotFoundException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Properties;
-import java.util.Set;
-import java.util.function.UnaryOperator;
-
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.cache.ALANameMatchKVStoreFactory;
 import au.org.ala.kvs.cache.GeocodeKvStoreFactory;
+import au.org.ala.pipelines.transforms.ALAAttributionTransform;
 import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
+import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
+import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import java.io.FileNotFoundException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Set;
+import java.util.function.UnaryOperator;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.PipelineResult;
+import org.apache.beam.sdk.transforms.Create;
+import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
@@ -23,30 +33,18 @@ import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
-import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.TemporalTransform;
+import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-
-import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.PipelineResult;
-import org.apache.beam.sdk.transforms.Create;
-import org.apache.beam.sdk.transforms.View;
-import org.apache.beam.sdk.values.PCollection;
-import org.apache.beam.sdk.values.PCollectionView;
 import org.slf4j.MDC;
-
-import au.org.ala.pipelines.transforms.ALAAttributionTransform;
-import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
-import au.org.ala.pipelines.transforms.LocationTransform;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * ALA interpretation pipeline sequence:
@@ -91,7 +89,8 @@ public class ALAVerbatimToInterpretedPipeline {
 
   public static void main(String[] args) throws FileNotFoundException {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
-    InterpretationPipelineOptions options = PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    InterpretationPipelineOptions options =
+        PipelinesOptionsFactory.createInterpretation(combinedArgs);
     run(options);
   }
 
@@ -113,12 +112,13 @@ public class ALAVerbatimToInterpretedPipeline {
     log.info("hdfsSiteConfig = " + hdfsSiteConfig);
     log.info("coreSiteConfig = " + coreSiteConfig);
 
-    FsUtils.deleteInterpretIfExist(hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
+    FsUtils.deleteInterpretIfExist(
+        hdfsSiteConfig, coreSiteConfig, targetPath, datasetId, attempt, types);
 
-    ALAPipelinesConfig config = ALAPipelinesConfigFactory.getInstance(
-            options.getHdfsSiteConfig(),
-            options.getCoreSiteConfig(),
-            options.getProperties()).get();
+    ALAPipelinesConfig config =
+        ALAPipelinesConfigFactory.getInstance(
+                options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
+            .get();
 
     MDC.put("datasetId", datasetId);
     MDC.put("attempt", attempt.toString());
@@ -133,8 +133,14 @@ public class ALAVerbatimToInterpretedPipeline {
     Pipeline p = Pipeline.create(options);
 
     // Core
-    MetadataTransform metadataTransform = MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
-    BasicTransform basicTransform =  BasicTransform.builder().isTripletValid(tripletValid).isOccurrenceIdValid(occurrenceIdValid).useExtendedRecordId(useExtendedRecordId).create();
+    MetadataTransform metadataTransform =
+        MetadataTransform.builder().endpointType(endPointType).attempt(attempt).create();
+    BasicTransform basicTransform =
+        BasicTransform.builder()
+            .isTripletValid(tripletValid)
+            .isOccurrenceIdValid(occurrenceIdValid)
+            .useExtendedRecordId(useExtendedRecordId)
+            .create();
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
 
@@ -145,27 +151,29 @@ public class ALAVerbatimToInterpretedPipeline {
     ImageTransform imageTransform = ImageTransform.create();
 
     // ALA specific - Attribution
-    ALAAttributionTransform alaAttributionTransform = ALAAttributionTransform.builder()
+    ALAAttributionTransform alaAttributionTransform =
+        ALAAttributionTransform.builder()
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .collectionKvStoreSupplier(ALACollectionKVStoreFactory.getInstanceSupplier(config))
             .create();
 
     // ALA specific - Taxonomy
     ALATaxonomyTransform alaTaxonomyTransform =
-            ALATaxonomyTransform.builder()
-              .kvStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
-              .create();
+        ALATaxonomyTransform.builder()
+            .kvStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
+            .create();
 
     // ALA specific - Location
     LocationTransform locationTransform =
-            LocationTransform.builder()
-                  .alaConfig(config)
-                  .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
-                  .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
-                  .create();
+        LocationTransform.builder()
+            .alaConfig(config)
+            .countryKvStoreSupplier(GeocodeKvStoreFactory.createCountrySupplier(config))
+            .stateProvinceKvStoreSupplier(GeocodeKvStoreFactory.createStateProvinceSupplier(config))
+            .create();
 
     // ALA specific - Default values
-    ALADefaultValuesTransform alaDefaultValuesTransform = ALADefaultValuesTransform.builder()
+    ALADefaultValuesTransform alaDefaultValuesTransform =
+        ALADefaultValuesTransform.builder()
             .datasetId(datasetId)
             .dataResourceKvStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
@@ -187,12 +195,13 @@ public class ALAVerbatimToInterpretedPipeline {
     locationTransform.setMetadataView(metadataView);
 
     // Interpret and write all record types
-    PCollection<ExtendedRecord> uniqueRecords = metadataTransform.metadataOnly(types) ?
-        verbatimTransform.emptyCollection(p) :
-        p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
-            .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
-            .apply("Filter duplicates", UniqueIdTransform.create())
-            .apply("Set default values", alaDefaultValuesTransform);
+    PCollection<ExtendedRecord> uniqueRecords =
+        metadataTransform.metadataOnly(types)
+            ? verbatimTransform.emptyCollection(p)
+            : p.apply("Read ExtendedRecords", verbatimTransform.read(options.getInputPath()))
+                .apply("Read occurrences from extension", OccurrenceExtensionTransform.create())
+                .apply("Filter duplicates", UniqueIdTransform.create())
+                .apply("Set default values", alaDefaultValuesTransform);
 
     uniqueRecords
         .apply("Check verbatim transform condition", verbatimTransform.check(types))
@@ -230,7 +239,8 @@ public class ALAVerbatimToInterpretedPipeline {
 
     uniqueRecords
         .apply("Check collection attribution", alaAttributionTransform.check(types))
-        .apply("Interpret ALA collection attribution", alaAttributionTransform.interpret(metadataView))
+        .apply(
+            "Interpret ALA collection attribution", alaAttributionTransform.interpret(metadataView))
         .apply("Write attribution to avro", alaAttributionTransform.write(pathFn));
 
     uniqueRecords

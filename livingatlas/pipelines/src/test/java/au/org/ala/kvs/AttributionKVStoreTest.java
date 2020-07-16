@@ -1,5 +1,12 @@
 package au.org.ala.kvs;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.cache.ALACollectionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectionLookup;
@@ -8,81 +15,81 @@ import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.kvs.client.ConnectionParameters;
 import au.org.ala.util.TestUtils;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.junit.Test;
 
-import java.util.Properties;
-
-import static org.junit.Assert.*;
-
-/**
- * Unit tests for Attribution KV store
- */
+/** Unit tests for Attribution KV store */
 public class AttributionKVStoreTest {
 
-    @Test
-    public void testAttributionLookup() throws Exception {
+  @Test
+  public void testAttributionLookup() throws Exception {
 
-        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
-        ALACollectoryMetadata m = kvs.get("dr893");
-        ConnectionParameters connParams = m.getConnectionParameters();
+    KeyValueStore<String, ALACollectoryMetadata> kvs =
+        ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
+    ALACollectoryMetadata m = kvs.get("dr893");
+    ConnectionParameters connParams = m.getConnectionParameters();
 
-        assertNotNull(m.getName());
-        assertNotNull(connParams);
-        assertNotNull(connParams.getUrl());
-        assertNotNull(connParams.getTermsForUniqueKey());
-        assertFalse(connParams.getTermsForUniqueKey().isEmpty());
-        assertNotNull(m.getDefaultDarwinCoreValues());
-        assertFalse(m.getDefaultDarwinCoreValues().isEmpty());
-        assertNotNull(m.getProvenance());
-        assertNotNull(m.getTaxonomyCoverageHints());
-        assertTrue(m.getTaxonomyCoverageHints().size() == 0);
+    assertNotNull(m.getName());
+    assertNotNull(connParams);
+    assertNotNull(connParams.getUrl());
+    assertNotNull(connParams.getTermsForUniqueKey());
+    assertFalse(connParams.getTermsForUniqueKey().isEmpty());
+    assertNotNull(m.getDefaultDarwinCoreValues());
+    assertFalse(m.getDefaultDarwinCoreValues().isEmpty());
+    assertNotNull(m.getProvenance());
+    assertNotNull(m.getTaxonomyCoverageHints());
+    assertTrue(m.getTaxonomyCoverageHints().size() == 0);
 
-        kvs.close();
+    kvs.close();
+  }
+
+  @Test
+  public void testAttributionConnectionIssues() throws Exception {
+    KeyValueStore<String, ALACollectoryMetadata> kvs =
+        ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
+    try {
+      ALACollectoryMetadata m = kvs.get("dr893XXXXXX");
+      fail("Exception not thrown");
+    } catch (RuntimeException e) {
+      // expected
     }
+    kvs.close();
+  }
 
-    @Test
-    public void testAttributionConnectionIssues() throws Exception {
-        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
-        try {
-            ALACollectoryMetadata m = kvs.get("dr893XXXXXX");
-            fail("Exception not thrown");
-        } catch (RuntimeException e){
-            //expected
-        }
-        kvs.close();
+  @Test
+  public void testAttributionLookupFail() throws Exception {
+
+    KeyValueStore<String, ALACollectoryMetadata> kvs =
+        ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
+    try {
+      ALACollectoryMetadata m = kvs.get("dr893XXXXXXX");
+      fail("Exception not thrown");
+    } catch (RuntimeException e) {
+      // expected
     }
+  }
 
-    @Test
-    public void testAttributionLookupFail() throws Exception {
+  @Test
+  public void testCollectionLookup() throws Exception {
 
-        KeyValueStore<String, ALACollectoryMetadata> kvs = ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
-        try {
-            ALACollectoryMetadata m = kvs.get("dr893XXXXXXX");
-            fail("Exception not thrown");
-        } catch (RuntimeException e){
-            //expected
-        }
-    }
+    KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
+        ALACollectionKVStoreFactory.create(TestUtils.getConfig());
+    ALACollectionLookup lookup =
+        ALACollectionLookup.builder().institutionCode("CSIRO").collectionCode("ANIC").build();
+    ALACollectionMatch m = kvs.get(lookup);
+    assertNotNull(m.getCollectionUid());
+    assertEquals("co13", m.getCollectionUid());
+  }
 
-    @Test
-    public void testCollectionLookup() throws Exception {
+  @Test
+  public void testCollectionLookupFail() throws Exception {
 
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.create(TestUtils.getConfig());
-        ALACollectionLookup lookup = ALACollectionLookup.builder().institutionCode("CSIRO").collectionCode("ANIC").build();
-        ALACollectionMatch m = kvs.get(lookup);
-        assertNotNull(m.getCollectionUid());
-        assertEquals("co13", m.getCollectionUid());
-    }
-
-    @Test
-    public void testCollectionLookupFail() throws Exception {
-
-        KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs = ALACollectionKVStoreFactory.create(TestUtils.getConfig());
-        ALACollectionLookup lookup = ALACollectionLookup.builder().institutionCode("CSIROCXXX").collectionCode("ANIC").build();
-        ALACollectionMatch m = kvs.get(lookup);
-        assertNull(m.getCollectionUid());
-        assertEquals(ALACollectionMatch.EMPTY, m);
-        kvs.close();
-    }
+    KeyValueStore<ALACollectionLookup, ALACollectionMatch> kvs =
+        ALACollectionKVStoreFactory.create(TestUtils.getConfig());
+    ALACollectionLookup lookup =
+        ALACollectionLookup.builder().institutionCode("CSIROCXXX").collectionCode("ANIC").build();
+    ALACollectionMatch m = kvs.get(lookup);
+    assertNull(m.getCollectionUid());
+    assertEquals(ALACollectionMatch.EMPTY, m);
+    kvs.close();
+  }
 }

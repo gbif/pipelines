@@ -1,27 +1,26 @@
 package au.org.ala.kvs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.gbif.pipelines.parsers.config.model.*;
-
 import java.io.Serializable;
+import lombok.Data;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
+import org.gbif.pipelines.parsers.config.model.WsConfig;
 
-/**
- * Living Atlas configuration extensions
- */
+/** Living Atlas configuration extensions */
 @Data
-@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ALAPipelinesConfig implements Serializable {
 
-    PipelinesConfig gbifConfig;
+  PipelinesConfig gbifConfig;
+  GeocodeShpConfig geocodeConfig;
+  LocationInfoConfig locationInfoConfig;
+  // ALA specific
+  private WsConfig collectory;
+  private WsConfig alaNameMatch;
+  private WsConfig lists;
 
-    //ALA specific
-    private WsConfig collectory;
-    private WsConfig alaNameMatch;
-    private WsConfig lists;
-
-    GeocodeShpConfig geocodeConfig;
-    LocationInfoConfig locationInfoConfig;
+  public ALAPipelinesConfig() {
+    geocodeConfig = new GeocodeShpConfig();
+    locationInfoConfig = new LocationInfoConfig();
+  }
 }

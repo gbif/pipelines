@@ -2,16 +2,16 @@ package au.org.ala.kvs.client;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @JsonDeserialize(builder = ALANameUsageMatch.ALANameUsageMatchBuilder.class)
 @Value
 @Builder
 public class ALANameUsageMatch {
 
+  public static final ALANameUsageMatch FAIL = ALANameUsageMatch.builder().success(false).build();
   private boolean success;
   private String scientificName;
   private String scientificNameAuthorship;
@@ -40,9 +40,5 @@ public class ALANameUsageMatch {
   private List<String> speciesSubgroup;
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class ALANameUsageMatchBuilder {
-
-  }
-
-  public static final ALANameUsageMatch FAIL = ALANameUsageMatch.builder().success(false).build();
+  public static class ALANameUsageMatchBuilder {}
 }

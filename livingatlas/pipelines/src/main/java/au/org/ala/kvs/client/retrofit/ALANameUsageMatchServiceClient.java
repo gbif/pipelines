@@ -1,13 +1,10 @@
 package au.org.ala.kvs.client.retrofit;
 
+import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
+
 import au.org.ala.kvs.client.ALANameMatchService;
 import au.org.ala.kvs.client.ALANameUsageMatch;
 import au.org.ala.kvs.client.ALASpeciesMatchRequest;
-import okhttp3.OkHttpClient;
-import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.retrofit.RetrofitClientFactory;
-import org.gbif.rest.client.species.NameMatchService;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,12 +12,14 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Stream;
-
-import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
+import okhttp3.OkHttpClient;
+import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.retrofit.RetrofitClientFactory;
+import org.gbif.rest.client.species.NameMatchService;
 
 public class ALANameUsageMatchServiceClient implements ALANameMatchService {
 
-  //Wrapped service
+  // Wrapped service
   private final ALANameUsageMatchRetrofitService alaNameUsageMatchService;
 
   private final OkHttpClient okHttpClient;
@@ -32,9 +31,11 @@ public class ALANameUsageMatchServiceClient implements ALANameMatchService {
    */
   public ALANameUsageMatchServiceClient(ClientConfiguration clientConfiguration) {
     okHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
-    alaNameUsageMatchService = RetrofitClientFactory.createRetrofitClient(okHttpClient,
-        clientConfiguration.getBaseApiUrl(),
-        ALANameUsageMatchRetrofitService.class);
+    alaNameUsageMatchService =
+        RetrofitClientFactory.createRetrofitClient(
+            okHttpClient,
+            clientConfiguration.getBaseApiUrl(),
+            ALANameUsageMatchRetrofitService.class);
   }
 
   /**
@@ -51,9 +52,10 @@ public class ALANameUsageMatchServiceClient implements ALANameMatchService {
     if (Objects.nonNull(okHttpClient) && Objects.nonNull(okHttpClient.cache())) {
       File cacheDirectory = okHttpClient.cache().directory();
       if (cacheDirectory.exists()) {
-        try (Stream<File> files = Files.walk(cacheDirectory.toPath())
-            .sorted(Comparator.reverseOrder())
-            .map(Path::toFile)) {
+        try (Stream<File> files =
+            Files.walk(cacheDirectory.toPath())
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)) {
           files.forEach(File::delete);
         }
       }

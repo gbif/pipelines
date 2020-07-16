@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -15,17 +17,18 @@
   <version>1.0-SNAPSHOT</version>
 
   <name>Living Atlas Pipelines</name>
-  <description>GBIF standalone pipelines for interpreting and indexing biodiversity data</description>
+  <description>GBIF standalone pipelines for interpreting and indexing biodiversity data
+  </description>
 
   <repositories>
-      <repository>
-          <id>ALA</id>
-          <url>https://nexus.ala.org.au/content/repositories/releases</url>
-      </repository>
-      <repository>
-          <id>osgeo</id>
-          <url>https://repo.osgeo.org/repository/release/</url>
-      </repository>
+    <repository>
+      <id>ALA</id>
+      <url>https://nexus.ala.org.au/content/repositories/releases</url>
+    </repository>
+    <repository>
+      <id>osgeo</id>
+      <url>https://repo.osgeo.org/repository/release/</url>
+    </repository>
   </repositories>
 
   <build>
@@ -76,12 +79,15 @@
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>shaded</shadedClassifierName>
               <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline</mainClass>
                 </transformer>
                 <!-- append default configs -->
-                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                   <resource>reference.conf</resource>
                 </transformer>
               </transformers>
@@ -218,7 +224,8 @@
   <scm>
     <connection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</connection>
     <url>https://github.com/AtlasOfLivingAustralia/la-pipelines</url>
-    <developerConnection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git</developerConnection>
+    <developerConnection>scm:git:git@github.com:AtlasOfLivingAustralia/la-pipelines.git
+    </developerConnection>
     <tag>HEAD</tag>
   </scm>
 
@@ -333,10 +340,10 @@
       <artifactId>beam-common</artifactId>
       <version>${gbif-pipelines.version}</version>
       <exclusions>
-          <exclusion>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-          </exclusion>
+        <exclusion>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-stdlib</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -769,9 +776,9 @@
 
     <!-- Test -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit4.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.6.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
