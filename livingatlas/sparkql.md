@@ -2,7 +2,6 @@
 
 These are some examples for how to use Spark QL on local development machines or on the cluster.
 
-
 ## Load a dataframe from avro
 
 Start spark shell with the following command. `spark-shell` 

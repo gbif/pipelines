@@ -8,15 +8,15 @@ collectory:
 
 geocodeConfig:
   country:
-    path: "/data/pipelines-shp/political"
+    path: "/tmp/pipelines-shp/political"
     field: ISO_A2
     source: "http://www.naturalearthdata.com"
   eez:
-    path: "/data/pipelines-shp/eez"
+    path: "/tmp/pipelines-shp/eez"
     field: ISO2
     source: "http://www.naturalearthdata.com"
   stateProvince:
-    path: "/data/pipelines-shp/cw_state_poly"
+    path: "/tmp/pipelines-shp/cw_state_poly"
     field: FEATURE
     source: "http://vliz.be/vmdcdata/marbound/"
 
@@ -41,21 +41,11 @@ interpret: # (java)
     inputPath: /data/pipelines-data/{datasetId}/1/verbatim.avro
     metaFileName: interpretation-metrics.yml
     useExtendedRecordId: true
-    skipRegisrtyCalls: true
     #  properties: pipelines.properties
   spark-cluster:
     name: interpret {datasetId}
     appName: Interpretation for {datasetId}
     runner: SparkRunner
-    #--properties=/efs-mount-point/pipelines.properties
-    # num-executors: 24
-    # executor-cores: 8
-    # executor-memory: 7G
-    # driver-memory: 1G
-#--conf spark.default.parallelism=192
-#--conf spark.yarn.submit.waitAppCompletion=false
-    master: spark://172.30.1.102:7077
-    driver-java-options: -Dlog4j.configuration=file:/efs-mount-point/log4j.properties
   spark-embedded:
     runner: SparkRunner
 
@@ -67,16 +57,12 @@ export-latlng:
 sample:
   default:
   cluster:
-    # TODO
   avro-cluster:
-    # TODO
-# java -Xmx8g -Xmx8g -XX:+UseG1GC
   embedded:
     appName: SamplingToAvro indexing for {datasetId}
     runner: SparkRunner
     inputPath: /data/pipelines-data
     metaFileName: indexing-metrics.yml
-#--properties=pipelines.properties
 
 #java -Xmx8g -Xmx8g -XX:+UseG1GC -
 migrate-uuids:
