@@ -16,7 +16,7 @@ import java.util.function.Function;
 /**
  * End to end default values test.
  */
-public class DefaultValuesTest {
+public class DefaultValuesTestIT {
 
     @Test
     public void testDwCaPipeline() throws Exception {

@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 /**
  * Unit tests for Attribution KV store
  */
-public class AttributionKVStoreTest {
+public class AttributionKVStoreTestIT {
 
     @Test
     public void testAttributionLookup() throws Exception {

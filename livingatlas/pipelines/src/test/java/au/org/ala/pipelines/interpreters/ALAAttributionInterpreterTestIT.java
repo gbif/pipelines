@@ -16,7 +16,7 @@ import java.util.function.BiConsumer;
 
 import static org.junit.Assert.*;
 
-public class ALAAttributionInterpreterTest {
+public class ALAAttributionInterpreterTestIT {
 
     @Test
     public void testCollectionLookup() throws Exception {

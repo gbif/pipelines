@@ -1,8 +1,11 @@
-package au.org.ala.pipelines.beam;
+package au.org.ala.pipelines.java;
 
+import au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline;
+import au.org.ala.pipelines.beam.ALASamplingToAvroPipeline;
+import au.org.ala.pipelines.beam.ALAUUIDMintingPipeline;
+import au.org.ala.util.SolrUtils;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
-import au.org.ala.util.SolrUtils;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -17,10 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Complete pipeline tests that start with DwCAs and finish with the SOLR index.
- * Includes all current steps in processing.
+ * Complete pipeline tests that use the java variant of the pipeline where possible.
+ * Currently this is for Interpretation and SOLR indexing only.
+ *
+ * This needs to be ran with -Xmx128m
  */
-public class CompleteIngestPipelineTest {
+public class CompleteIngestJavaPipelineTestIT {
 
     /**
      * Tests for SOLR index creation.
@@ -69,6 +74,7 @@ public class CompleteIngestPipelineTest {
 
         DwcaPipelineOptions dwcaOptions = PipelinesOptionsFactory.create(DwcaPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
+                "--appName=DWCA",
                 "--attempt=1",
                 "--runner=DirectRunner",
                 "--metaFileName=dwca-metrics.yml",
@@ -88,7 +94,7 @@ public class CompleteIngestPipelineTest {
                 "--properties=src/test/resources/pipelines.yaml",
                 "--useExtendedRecordId=true"
         });
-        ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
+        au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
 
         InterpretationPipelineOptions uuidOptions = PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, new String[]{
                 "--datasetId=" + datasetID,
@@ -133,6 +139,6 @@ public class CompleteIngestPipelineTest {
                 "--includeSampling=true"
         });
 
-        ALAInterpretedToSolrIndexPipeline.run(solrOptions);
+        au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline.run(solrOptions);
     }
 }

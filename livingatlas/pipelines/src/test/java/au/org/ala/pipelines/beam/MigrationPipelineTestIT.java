@@ -11,7 +11,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-public class MigrationPipelineTest {
+public class MigrationPipelineTestIT {
 
     @Test
     public void testMigration() throws Exception {

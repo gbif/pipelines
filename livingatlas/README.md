@@ -65,11 +65,11 @@ These steps will load a dataset into a SOLR index.
 1. Download SDS shape files from [here](https://biocache.ala.org.au/archives/layers/sds-layers.tgz) and expand into `/data/pipelines-shp` directory
 1. Download a test darwin core archive (e.g. https://archives.ala.org.au/archives/gbif/dr893/dr893.zip)
 1. Create the following directory `/data/pipelines-data`
-1. Build with maven `mvn clean install` - note: this will start and stop ala-namematching-service 
-(running on port 9179) and SOLR 8 (running on port 8983).
+1. Build with maven `mvn clean package`
 
 ### Running la-pipelines
 
+1. Start required docker containers using `mvn docker:start`
 1. `cd scripts`
 1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
 1. To interpret, run `./interpret-spark-embedded.sh dr893`
@@ -85,8 +85,17 @@ These steps will load a dataset into a SOLR index.
 
 ## Integration Tests
 
-Integration tests are supported using docker containers for running the required services.
-To start the required containers, install Docker Desktop](https://www.docker.com/products/docker-desktop) and run the following:
+Tests follow the GBIF/failsafe/surefire convention. 
+All integration tests have a suffix of "IT". 
+All junit tests are ran with `mvn package` and integration tests are ran with `mvn verify`.
+
+`mvn verify` will start the docker containers in the `pre-integration-test` phase, 
+and shut them down in the `post-integration-test` 
+phase.
+
+
+To start the required containers for local development purposes, 
+install Docker Desktop](https://www.docker.com/products/docker-desktop) and run the following:
 
 ```
 mvn docker:start
@@ -115,7 +124,9 @@ docker-compose -f src/main/docker/solr8.yml kill
 
 For code style and tool see the [recommendations](https://github.com/gbif/pipelines#codestyle-and-tools-recommendations) on the GBIF pipelines project. In particular, note the project uses Project Lombok, please install Lombok plugin for Intellij IDEA.
 
-`avro-tools` is recommended to aid to development for quick views of AVRO outputs. This can be install on Macs with `brew`
-`
+`avro-tools` is recommended to aid to development for quick views of AVRO outputs. 
+This can be installed on Macs with [Homebrew](https://brew.sh/) like so:
+
+```
 brew install avro-tools
-`
+```

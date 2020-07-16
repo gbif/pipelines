@@ -16,7 +16,7 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
-public class GeocodeServiceTest {
+public class GeocodeServiceTestIT {
 
     /**
      * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a HashMap.

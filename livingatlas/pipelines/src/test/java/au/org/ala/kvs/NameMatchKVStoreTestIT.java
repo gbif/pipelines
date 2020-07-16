@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
-public class NameMatchKVStoreTest {
+public class NameMatchKVStoreTestIT {
 
     /**
      * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a HashMap.
