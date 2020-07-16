@@ -22,6 +22,9 @@ This list of transforms will need to be added to backfill some of the ingress re
 * *Spatial layers* - will make use of existing services in https://spatial.ala.org.au/ws/ to retrieve sampled environmental and contextual values for geospatial points
 * *Species lists* - will make use of existing services in https://lists.ala.org.au to retrieve species lists.
 
+For information on how the architecture between biocache-store and pipelines differ, [see this page](architectures.md).
+
+
 In addition pipelines for following will need to be developed:
 
 * Duplicate detection
@@ -95,7 +98,7 @@ phase.
 
 
 To start the required containers for local development purposes, 
-install Docker Desktop](https://www.docker.com/products/docker-desktop) and run the following:
+install [Docker Desktop](https://www.docker.com/products/docker-desktop) and run the following:
 
 ```
 mvn docker:start
