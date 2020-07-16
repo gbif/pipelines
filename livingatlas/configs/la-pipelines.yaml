@@ -47,10 +47,28 @@ uuid:
   # interpretationTypes: ALL
   # useExtendedRecordId: true
 
+uuid-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
 export-latlng:
   inputPath: /data/pipelines-data
   runner: SparkRunner
   appName: Lat Long export for {datasetId}
+
+export-latlng-sh-args:
+  spark-embedded:
+    jvm:
+  spark-cluster:
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
 
 sample:
   inputPath: /data/pipelines-data
@@ -59,6 +77,10 @@ sample:
   runner: SparkRunner
   # TODO improve/move this
   properties: ../scripts/pipelines.yaml
+
+sample-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
 
 sample-avro:
   inputPath: /data/pipelines-data
@@ -71,6 +93,16 @@ sample-avro:
   # useExtendedRecordId: true
   ## For spark-embedded:
   # appName: SamplingToAvro indexing for {datasetId}
+
+sample-avro-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
 
 dataset-count-dump:
   inputPath: /data/pipelines-data
@@ -96,3 +128,15 @@ index:
   ## For spark-embedded:
   # appName: SOLR indexing for {datasetId}
   # runner: SparkRunner
+
+index-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 4G

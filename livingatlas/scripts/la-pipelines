@@ -57,12 +57,13 @@ Usage:
   $CMD -v | --version
 
 Options:
-  --config=<files>     Comma separated list of alternative la-pipeline yaml configurations (the last file has the highest precedence)
-  --extra-args=<args>  Additional "arg1=values,arg2=value" to pass to pipeline options (highest precedence than yml values)
-  --no-colors          No corolorize logs output
-  -h --help            Show this help
-  -v --version         Show version
-  --debug              Debug $CMD
+  --config=<files>     Comma separated list of alternative la-pipeline yaml configurations (the last file has the highest precedence).
+  --extra-args=<args>  Additional "arg1=values,arg2=value" to pass to pipeline options (highest precedence than yml values).
+  --no-colors          No corolorize logs output.
+  --dry-run            Print the commands without actually running them.
+  -h --help            Show this help.
+  -v --version         Show version.
+  --debug              Debug $CMD.
 ----
 $CMD $VER
 Copyright (C) 2020 ALA Development Team
@@ -83,6 +84,7 @@ if ($local); then unset EXTRA_CONFIG ; fi
 if ($embedded); then EXTRA_CONFIG=,$CONFIG_DIR/la-pipelines-spark-embedded.yaml ; fi
 if ($cluster); then EXTRA_CONFIG=,$CONFIG_DIR/la-pipelines-spark-cluster.yaml ; fi
 
+if ($dry_run); then _D=echo; else _D=; fi
 # Set default config locations for Production and Development
 if [[ -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml$EXTRA_CONFIG,$CONFIG_DIR/la-pipelines-local.yaml; fi
 
@@ -189,10 +191,10 @@ function dwca-avro () {
         exit 1
     fi
 
-    java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
-         -cp $PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
-         --datasetId=$dr \
-         --config=$config $ARGS
+    $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
+        -cp $PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
+        --datasetId=$dr \
+        --config=$config $ARGS
 
     logStepEnd dwca-avro $dr local $SECONDS
 }
@@ -205,27 +207,29 @@ function interpret () {
     SECONDS=0
     logStepStart "Interpret verbatim.arvo file" $dr
 
+    PRE=interpret-sh-args.local
     if [[ $ltype = "local" ]] ; then
-        java $EXTRA_JVM_CLI_ARGS \
-             $(getConf interpret-sh-args.local.jvm) \
-             -cp $PIPELINES_JAR $CLASS \
-             --datasetId=$dr \
-             --config=$config
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm) \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config
     fi
 
+    PRE=interpret-sh-args.spark-embedded
     if [[ $ltype = "spark-embedded" ]] ; then
         log.info $(date)
         SECONDS=0
-        java $EXTRA_JVM_CLI_ARGS \
-             $(getConf interpret-sh-args.spark-embedded.jvm) \
-             -cp $PIPELINES_JAR $CLASS \
-             --datasetId=$dr \
-             --config=$config
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm) \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config
     fi
 
     PRE=interpret-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        /data/spark/bin/spark-submit \
+        $_D /data/spark/bin/spark-submit \
             --name "interpret $dr" \
             $(toArg $PRE conf) \
             $(toArg $PRE num-executors) \
@@ -252,19 +256,24 @@ function uuid () {
     logStepStart "UUID pipeline - Preserve or add UUIDs." $dr
     SECONDS=0
 
+    PRE=uuid-sh-args.spark-embedded
     if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        java $EXTRA_JVM_CLI_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC  -cp $PIPELINES_JAR $CLASS \
-             --datasetId=$dr\
-             --config=$config
+        # TODO: we can put this in a function? Same code that interpret
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr\
+            --config=$config
     fi
 
+    PRE=uuid-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        /data/spark/bin/spark-submit \
+        $_D /data/spark/bin/spark-submit \
             --name "uuid-minting $dr" \
-            --num-executors 24 \
-            --executor-cores 8 \
-            --executor-memory 7G \
-            --driver-memory 1G \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
@@ -285,19 +294,23 @@ function export-latlng () {
     logStepStart "Export lat long" $dr
     SECONDS=0
 
+    PRE=export-latlng-sh-args.spark-embedded
     if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
-        java $EXTRA_JVM_CLI_ARGS -cp $PIPELINES_JAR $CLASS \
-             --datasetId=$dr \
-             --config=$config
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config
     fi
 
+    PRE=export-latlng-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        /data/spark/bin/spark-submit \
+        $_D /data/spark/bin/spark-submit \
             --name "Export $dr" \
-            --num-executors 8 \
-            --executor-cores 8 \
-            --executor-memory 16G \
-            --driver-memory 4G \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
             --driver-java -options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
@@ -316,9 +329,12 @@ function sample () {
     logStepStart "Sample" $dr
     SECONDS=0
 
-    java $EXTRA_JVM_CLI_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR au.org.ala.sampling.LayerCrawler \
-         --datasetId=$dr \
-         --config=$config
+    PRE=sample-sh-args.local
+    $_D java $EXTRA_JVM_CLI_ARGS \
+        $(getConf $PRE.jvm)  \
+        -cp $PIPELINES_JAR au.org.ala.sampling.LayerCrawler \
+        --datasetId=$dr \
+        --config=$config
 
     logStepEnd "Sampling" $dr local $SECONDS
 }
@@ -331,20 +347,24 @@ function sample-avro () {
     logStepStart "Sample-avro" $dr
     SECONDS=0
 
-    if [[ $ltype = "spark-embedded"  || $ltype = "local" ]] ; then
-        java $EXTRA_JVM_CLI_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC  -cp $PIPELINES_JAR $CLASS \
-             --datasetId=$dr \
-             --config=$config
+    PRE=sample-avro-sh-args.spark-embedded
+    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config
     fi
 
+    PRE=sample-avro-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        /data/spark/bin/spark-submit \
+        $_D /data/spark/bin/spark-submit \
             --name "add-sampling $dr" \
-            --conf spark.default.parallelism=192 \
-            --num-executors 24 \
-            --executor-cores 8 \
-            --executor-memory 7G \
-            --driver-memory 1G \
+            $(toArg $PRE conf) \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
@@ -365,26 +385,33 @@ function index () {
     logStepStart "Indexing" $dr
     SECONDS=0
 
+    PRE=index-sh-args.local
     if [[ $ltype = "local" ]] ; then
-        java $EXTRA_JVM_CLI_ARGS -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR $CLASS \
-             --datasetId=$dr \
-             --config=$config
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config
     fi
 
+    PRE=index-sh-args.spark-embedded
     if [[ $ltype = "spark-embedded" ]] ; then
-        java $EXTRA_JVM_CLI_ARGS -Xmx8g -Xmx8g -XX:+UseG1GC -cp $PIPELINES_JAR $CLASS \
-             --datasetId=$dr \
-             --config=$config
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr \
+            --config=$config
     fi
 
+    PRE=index-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
-        /data/spark/bin/spark-submit \
+        $_D /data/spark/bin/spark-submit \
             --name "SOLR indexing for $dr" \
-            --conf spark.default.parallelism=192 \
-            --num-executors 24 \
-            --executor-cores 8 \
-            --executor-memory 7G \
-            --driver-memory 4G \
+            $(toArg $PRE conf) \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
             --class $CLASS  \
             --master $SPARK_MASTER \
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
