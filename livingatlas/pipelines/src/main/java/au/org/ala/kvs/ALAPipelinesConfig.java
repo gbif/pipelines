@@ -20,7 +20,11 @@ public class ALAPipelinesConfig implements Serializable {
   private WsConfig lists;
 
   public ALAPipelinesConfig() {
+    gbifConfig = new PipelinesConfig();
     geocodeConfig = new GeocodeShpConfig();
     locationInfoConfig = new LocationInfoConfig();
+    collectory = new WsConfig();
+    alaNameMatch = new WsConfig();
+    lists = new WsConfig();
   }
 }
