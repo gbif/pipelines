@@ -20,6 +20,7 @@ import org.apache.solr.common.util.NamedList;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -61,7 +62,11 @@ public class SolrUtils {
     public static void createSolrConfigSet() throws Exception {
         //create a zip of
 
-        FileUtils.forceDelete(new File("/tmp/configset.zip"));
+        try {
+            FileUtils.forceDelete(new File("/tmp/configset.zip"));
+        } catch (FileNotFoundException e) {
+            // File isn't present on the first run of the test.
+        }
 
         Map<String, String> env = new HashMap<>();
         env.put("create", "true");
