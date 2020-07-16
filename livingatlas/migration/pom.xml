@@ -61,7 +61,7 @@
                                 <!-- Transient from core: conflicts with Beam on Spark -->
                                 <relocation>
                                     <pattern>com.fasterxml.jackson</pattern>
-                                    <shadedPattern>jjjj213.com.fasterxml.jackson</shadedPattern>
+                                    <shadedPattern>j213.com.fasterxml.jackson</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>okhttp3</pattern>
