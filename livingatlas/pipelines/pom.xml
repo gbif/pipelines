@@ -66,6 +66,7 @@
       <!--
         This configuration is required to override the version in the GBIF mother POM
         which causes OOM issues due to its use of forking.
+        See https://github.com/gbif/pipelines/issues/327
       -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
