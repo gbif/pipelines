@@ -79,15 +79,15 @@
     <amqp-client.version>4.8.0</amqp-client.version>
     <curator.version>4.0.1</curator.version>
 
-    <gbif-cli.version>0.13</gbif-cli.version>
+    <gbif-cli.version>0.14</gbif-cli.version>
     <gbif-common-ws.version>0.48</gbif-common-ws.version>
     <gbif-httputils.version>0.12</gbif-httputils.version>
-    <gbif-postal-service.version>0.44</gbif-postal-service.version>
+    <gbif-postal-service.version>0.46-SNAPSHOT</gbif-postal-service.version>
     <gbif-registry.version>2.153</gbif-registry.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-crawler.version>0.113</gbif-crawler.version>
 
-    <guice.version>4.0</guice.version>
+    <guice.version>4.2.3</guice.version>
     <!-- Match the GBIF http-client! -->
     <httpclient.version>4.5.6</httpclient.version>
     <!-- Match the GBIF http-client! -->
@@ -102,8 +102,6 @@
     <commons-lang.version>2.6</commons-lang.version>
     <commons-io.version>2.5</commons-io.version>
     <commons-configuration.version>1.10</commons-configuration.version>
-    <jackson-datatype-guava.version>1.9.2</jackson-datatype-guava.version>
-    <jackson-old.version>1.9.12</jackson-old.version>
   </properties>
 
   <dependencies>
@@ -236,9 +234,8 @@
 
     <!-- Jackson -->
     <dependency>
-      <groupId>com.fasterxml.jackson</groupId>
-      <artifactId>jackson-datatype-guava</artifactId>
-      <version>${jackson-datatype-guava.version}</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -249,19 +246,8 @@
       <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-      <version>${jackson-old.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>${jackson-old.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-jaxrs</artifactId>
-      <version>${jackson-old.version}</version>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-avro</artifactId>
     </dependency>
 
     <!-- Hadoop -->
