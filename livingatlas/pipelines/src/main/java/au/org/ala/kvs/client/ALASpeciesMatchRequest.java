@@ -7,9 +7,8 @@ import lombok.ToString;
 import lombok.Value;
 import org.gbif.kvs.species.SpeciesMatchRequest;
 
-
 /**
- * This is a copy of org.gbif.kvs.species.SpeciesMatchRequest with taxonConceptID, taxonID added <p>
+ * This is a copy of org.gbif.kvs.species.SpeciesMatchRequest with taxonConceptID, taxonID added
  * TODO remove, consolidate with GBIF API
  */
 @JsonDeserialize(builder = ALASpeciesMatchRequest.ALASpeciesMatchRequestBuilder.class)
@@ -35,8 +34,5 @@ public class ALASpeciesMatchRequest {
   private final String taxonID;
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class ALASpeciesMatchRequestBuilder {
-
-  }
-
+  public static class ALASpeciesMatchRequestBuilder {}
 }

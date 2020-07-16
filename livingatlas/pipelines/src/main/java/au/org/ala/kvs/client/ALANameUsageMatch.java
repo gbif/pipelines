@@ -40,9 +40,7 @@ public class ALANameUsageMatch {
   private List<String> speciesSubgroup;
 
   @JsonPOJOBuilder(withPrefix = "")
-  public static class ALANameUsageMatchBuilder {
-
-  }
+  public static class ALANameUsageMatchBuilder {}
 
   public static final ALANameUsageMatch FAIL = ALANameUsageMatch.builder().success(false).build();
 }

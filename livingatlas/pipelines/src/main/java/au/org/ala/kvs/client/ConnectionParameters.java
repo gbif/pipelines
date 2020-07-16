@@ -26,7 +26,5 @@ public class ConnectionParameters {
 
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class ConnectionParametersBuilder {
-
-  }
+  public static class ConnectionParametersBuilder {}
 }

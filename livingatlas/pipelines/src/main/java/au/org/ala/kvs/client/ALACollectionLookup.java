@@ -22,7 +22,5 @@ public class ALACollectionLookup {
 
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class ALACollectionLookupBuilder {
-
-  }
+  public static class ALACollectionLookupBuilder {}
 }

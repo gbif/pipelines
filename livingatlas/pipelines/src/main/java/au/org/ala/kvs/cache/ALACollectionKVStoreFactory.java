@@ -37,11 +37,6 @@ public class ALACollectionKVStoreFactory {
         return instance.kvStore;
     }
 
-    /**
-     *
-     * @return
-     * @throws IOException
-     */
     public static KeyValueStore<ALACollectionLookup, ALACollectionMatch> create(ALAPipelinesConfig config) {
 
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()

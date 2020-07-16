@@ -27,9 +27,7 @@ public class ALACollectionMatch {
 
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class ALACollectionMatchBuilder {
-
-  }
+  public static class ALACollectionMatchBuilder {}
 
   public static final ALACollectionMatch EMPTY = ALACollectionMatch.builder().build();
 }

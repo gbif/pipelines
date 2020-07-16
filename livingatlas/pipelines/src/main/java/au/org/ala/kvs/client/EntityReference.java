@@ -8,7 +8,7 @@ import lombok.ToString;
 import lombok.Value;
 
 /**
- * Reuseable entity reference DTO for use with collectory webservices
+ * Re-usable entity reference DTO for use with collectory webservices
  */
 @JsonDeserialize(builder = EntityReference.EntityReferenceBuilder.class)
 @Value
@@ -23,7 +23,5 @@ public class EntityReference {
 
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class EntityReferenceBuilder {
-
-  }
+  public static class EntityReferenceBuilder {}
 }

@@ -27,6 +27,8 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSI
 /**
  * Exports a unique set of coordinates for a data resource.
  * This tool is dependent on globstars being supported on the host OS.
+ *
+ * This currently only works for non-HDFS.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -42,7 +44,7 @@ public class ExportAllLatLongCSVPipeline {
         FileUtils.forceMkdir(new File("/data/pipelines-sampling/latlng/"));
 
         log.info("Adding step 1: Options");
-        UnaryOperator<String> pathFn = t -> "/data/pipelines-data/**/1/interpreted/" + t + "/interpret-*" + AVRO_EXTENSION;
+        UnaryOperator<String> pathFn = t -> options.getInputPath() + "/**/1/interpreted/" + t + "/interpret-*" + AVRO_EXTENSION;
 
         Pipeline p = Pipeline.create(options);
 

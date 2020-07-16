@@ -35,9 +35,7 @@ public class ALACollectoryMetadata {
 
   @JsonPOJOBuilder(withPrefix = "")
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class ALACollectoryMetadataBuilder {
-
-  }
+  public static class ALACollectoryMetadataBuilder {}
 
   public static final ALACollectoryMetadata EMPTY = ALACollectoryMetadata.builder().build();
 }
