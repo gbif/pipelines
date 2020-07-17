@@ -57,26 +57,11 @@ public class IndexingConfiguration implements BaseConfiguration {
   @Parameter(names = "--spark-driver-memory")
   public String sparkDriverMemory;
 
-  @Parameter(names = "--standalone-stack-size")
-  public String standaloneStackSize;
-
-  @Parameter(names = "--standalone-heap-size")
-  public String standaloneHeapSize;
-
   @Parameter(names = "--distributed-jar-path")
   public String distributedJarPath;
 
-  @Parameter(names = "--standalone-jar-path")
-  public String standaloneJarPath;
-
-  @Parameter(names = "--standalone-main-class")
-  public String standaloneMainClass;
-
   @Parameter(names = "--standalone-number-threads")
   public Integer standaloneNumberThreads;
-
-  @Parameter(names = "--standalone-use-java")
-  public boolean standaloneUseJava = false;
 
   @Parameter(names = "--distributed-main-class")
   public String distributedMainClass;
@@ -125,25 +110,17 @@ public class IndexingConfiguration implements BaseConfiguration {
   @NotNull
   public Integer indexIndepRecord;
 
-  @Parameter(names = "--index-def-static-prefix-name")
+  @Parameter(names = "--index-default-prefix-name")
   @NotNull
-  public String indexDefStaticPrefixName;
+  public String indexDefaultPrefixName;
 
-  @Parameter(names = "--index-def-static-date-duration-dd")
+  @Parameter(names = "--index-default-size")
   @NotNull
-  public Integer indexDefStaticDateDurationDd;
+  public Integer indexDefaultSize;
 
-  @Parameter(names = "--index-def-dynamic-prefix-name")
+  @Parameter(names = "--index-default-new-if-size")
   @NotNull
-  public String indexDefDynamicPrefixName;
-
-  @Parameter(names = "--index-def-size")
-  @NotNull
-  public Integer indexDefSize;
-
-  @Parameter(names = "--index-def-new-if-size")
-  @NotNull
-  public Integer indexDefNewIfSize;
+  public Integer indexDefaultNewIfSize;
 
   @Parameter(names = "--es-index-cat-url")
   @NotNull

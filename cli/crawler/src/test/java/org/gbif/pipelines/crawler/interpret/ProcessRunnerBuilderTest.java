@@ -32,48 +32,6 @@ public class ProcessRunnerBuilderTest {
   }
 
   @Test
-  public void testDirectRunnerCommand() {
-    // State
-    String expected =
-        "java -XX:+UseG1GC -Xms1G -Xmx1G -Dlog4j.configuration=file:/home/crap/config/log4j-interpretation-pipeline.properties "
-            + "-cp java.jar org.gbif.Test --pipelineStep=VERBATIM_TO_INTERPRETED --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d --attempt=1 "
-            + "--interpretationTypes=ALL --runner=SparkRunner --targetPath=tmp --metaFileName=verbatim-to-interpreted.yml --inputPath=verbatim.avro "
-            + "--avroCompressionType=SNAPPY --avroSyncInterval=1 --hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml "
-            + "--properties=/path/ws.config --endPointType=DWC_ARCHIVE --tripletValid=true --occurrenceIdValid=true";
-
-    InterpreterConfiguration config = new InterpreterConfiguration();
-    config.standaloneJarPath = "java.jar";
-    config.standaloneMainClass = "org.gbif.Test";
-    config.pipelinesConfig = "/path/ws.config";
-    config.standaloneHeapSize = "1G";
-    config.standaloneStackSize = "1G";
-    config.driverJavaOptions = "-Dlog4j.configuration=file:/home/crap/config/log4j-interpretation-pipeline.properties";
-    config.processRunner = StepRunner.STANDALONE.name();
-    config.avroConfig.syncInterval = 1;
-    config.avroConfig.compressionType = "SNAPPY";
-    config.stepConfig.coreSiteConfig = "core.xml";
-    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
-    config.stepConfig.repositoryPath = "tmp";
-
-    UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
-    int attempt = 1;
-    Set<String> types = Collections.singleton(RecordType.ALL.name());
-    Set<String> steps = Collections.singleton(StepType.VERBATIM_TO_INTERPRETED.name());
-    PipelinesVerbatimMessage message =
-        new PipelinesVerbatimMessage(datasetId, attempt, types, steps, null, EndpointType.DWC_ARCHIVE, null,
-            new ValidationResult(true, true, null, 100L), null, EXECUTION_ID);
-
-    // When
-    ProcessBuilder builder =
-        ProcessRunnerBuilder.builder().config(config).message(message).inputPath("verbatim.avro").build().get();
-
-    String result = builder.command().get(2);
-
-    // Should
-    assertEquals(expected, result);
-  }
-
-  @Test
   public void testSparkRunnerCommand() {
     // When
     String expected =

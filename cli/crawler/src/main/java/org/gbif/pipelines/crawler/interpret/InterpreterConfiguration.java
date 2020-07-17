@@ -68,29 +68,14 @@ public class InterpreterConfiguration implements BaseConfiguration {
   @Parameter(names = "--spark-driver-memory")
   public String sparkDriverMemory;
 
-  @Parameter(names = "--standalone-stack-size")
-  public String standaloneStackSize;
-
-  @Parameter(names = "--standalone-heap-size")
-  public String standaloneHeapSize;
-
   @Parameter(names = "--distributed-jar-path")
   public String distributedJarPath;
-
-  @Parameter(names = "--standalone-jar-path")
-  public String standaloneJarPath;
-
-  @Parameter(names = "--standalone-main-class")
-  public String standaloneMainClass;
 
   @Parameter(names = "--distributed-main-class")
   public String distributedMainClass;
 
   @Parameter(names = "--standalone-number-threads")
   public Integer standaloneNumberThreads;
-
-  @Parameter(names = "--standalone-use-java")
-  public boolean standaloneUseJava = false;
 
   @Parameter(names = "--process-error-directory")
   public String processErrorDirectory;
