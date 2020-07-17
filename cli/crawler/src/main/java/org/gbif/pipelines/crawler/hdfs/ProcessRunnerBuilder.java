@@ -38,9 +38,6 @@ final class ProcessRunnerBuilder {
   private int numberOfShards;
 
   ProcessBuilder get() {
-    if (StepRunner.STANDALONE.name().equals(config.processRunner)) {
-      return buildDirect();
-    }
     if (StepRunner.DISTRIBUTED.name().equals(config.processRunner)) {
       return buildSpark();
     }
@@ -49,26 +46,6 @@ final class ProcessRunnerBuilder {
 
   public String[] buildOptions() {
     return buildCommonOptions(new StringJoiner(DELIMITER)).split(DELIMITER);
-  }
-
-  /**
-   * Builds ProcessBuilder to process direct command
-   */
-  private ProcessBuilder buildDirect() {
-    StringJoiner joiner = new StringJoiner(DELIMITER).add("java")
-        .add("-XX:+UseG1GC")
-        .add("-Xms" + Objects.requireNonNull(config.standaloneStackSize))
-        .add("-Xmx" + Objects.requireNonNull(config.standaloneHeapSize))
-        .add(Objects.requireNonNull(config.driverJavaOptions))
-        .add("-cp")
-        .add(Objects.requireNonNull(config.standaloneJarPath))
-        .add(Objects.requireNonNull(config.standaloneMainClass))
-        .add("--pipelineStep=" + INTERPRETED_TO_HDFS.name());
-
-    Optional.ofNullable(sparkEventLogDir)
-        .ifPresent(dir -> joiner.add("--conf spark.eventLog.enabled=true").add("--conf spark.eventLog.dir=" + dir));
-
-    return buildCommon(joiner);
   }
 
   /**

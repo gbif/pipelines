@@ -30,54 +30,6 @@ public class ProcessRunnerBuilderTest {
   }
 
   @Test
-  public void testDirectRunnerCommand() {
-    // State
-    String expected =
-        "sudo -u user java -XX:+UseG1GC -Xms1G -Xmx1G -Dlog4j.configuration=file:/home/crap/config/log4j-pipelines.properties "
-            + "-cp java.jar org.gbif.Test --pipelineStep=INTERPRETED_TO_ES_INDEX --datasetId=de7ffb5e-c07b-42dc-8a88-f67a4465fe3d "
-            + "--attempt=1 --runner=SparkRunner --inputPath=tmp --targetPath=tmp --metaFileName=interpreted-to-index.yml "
-            + "--hdfsSiteConfig=hdfs.xml --coreSiteConfig=core.xml --esHosts=http://host.com:9300 --properties=/path/ws.config "
-            + "--esIndexName=occurrence";
-
-    IndexingConfiguration config = new IndexingConfiguration();
-    config.standaloneJarPath = "java.jar";
-    config.standaloneMainClass = "org.gbif.Test";
-    config.standaloneHeapSize = "1G";
-    config.standaloneStackSize = "1G";
-    config.driverJavaOptions = "-Dlog4j.configuration=file:/home/crap/config/log4j-pipelines.properties";
-    config.processRunner = StepRunner.STANDALONE.name();
-    config.esHosts = new String[]{"http://host.com:9300"};
-    config.pipelinesConfig = "/path/ws.config";
-    config.yarnQueue = "pipelines";
-    config.otherUser = "user";
-    config.stepConfig.hdfsSiteConfig = "hdfs.xml";
-    config.stepConfig.coreSiteConfig = "core.xml";
-    config.stepConfig.repositoryPath = "tmp";
-    UUID datasetId = UUID.fromString("de7ffb5e-c07b-42dc-8a88-f67a4465fe3d");
-    int attempt = 1;
-    Set<String> steps = Collections.singleton(RecordType.ALL.name());
-    ValidationResult vr = new ValidationResult();
-    PipelinesInterpretedMessage message =
-        new PipelinesInterpretedMessage(datasetId, attempt, steps, 100L, false, null, EndpointType.DWC_ARCHIVE, vr);
-
-    String indexName = "occurrence";
-
-    // When
-    ProcessBuilder builder =
-        ProcessRunnerBuilder.builder()
-            .config(config)
-            .message(message)
-            .esIndexName(indexName)
-            .build()
-            .get();
-
-    String result = builder.command().get(2);
-
-    // Should
-    assertEquals(expected, result);
-  }
-
-  @Test
   public void testSparkRunnerCommand() {
     // When
     String expected = "spark2-submit --conf spark.default.parallelism=1 --conf spark.executor.memoryOverhead=1 "

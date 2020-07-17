@@ -2,18 +2,13 @@ package org.gbif.pipelines.crawler.indexing;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import org.gbif.api.model.pipelines.StepRunner;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.common.messaging.AbstractMessageCallback;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
@@ -52,18 +47,20 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
 
   private final IndexingConfiguration config;
   private final MessagePublisher publisher;
-  private final DatasetService datasetService;
   private final CuratorFramework curator;
   private final HttpClient httpClient;
   private final PipelinesHistoryWsClient client;
   private final ExecutorService executor;
 
-  public IndexingCallback(IndexingConfiguration config, MessagePublisher publisher,
-      DatasetService datasetService, CuratorFramework curator, HttpClient httpClient,
-      PipelinesHistoryWsClient client, ExecutorService executor) {
+  public IndexingCallback(
+      IndexingConfiguration config,
+      MessagePublisher publisher,
+      CuratorFramework curator,
+      HttpClient httpClient,
+      PipelinesHistoryWsClient client,
+      ExecutorService executor) {
     this.config = config;
     this.publisher = publisher;
-    this.datasetService = datasetService;
     this.curator = curator;
     this.httpClient = httpClient;
     this.client = client;
@@ -143,19 +140,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     );
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) throws IOException, InterruptedException {
-    if (config.standaloneUseJava) {
-      InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
-    } else {
-      // Assembles a terminal java process and runs it
-      int exitValue = builder.build().get().start().waitFor();
-
-      if (exitValue != 0) {
-        throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
-      } else {
-        log.info("Process has been finished with exit value - {}", exitValue);
-      }
-    }
+  private void runLocal(ProcessRunnerBuilderBuilder builder) {
+    InterpretedToEsIndexExtendedPipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder,
@@ -257,23 +243,10 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       return idxName;
     }
 
-    // Default static index name for datasets where last changed date more than config.indexDefStaticDateDurationDd
-    Date lastChangedDate = getLastChangedDate(datasetId);
-
-    long diffInMillies = Math.abs(new Date().getTime() - lastChangedDate.getTime());
-    long diff = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-
-    if (diff >= config.indexDefStaticDateDurationDd) {
-      String esPr = prefix == null ? config.indexDefStaticPrefixName : config.indexDefStaticPrefixName + "_" + prefix;
-      idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
-      log.info("ES Index name - {}, lastChangedDate - {}, diff days - {}", idxName, lastChangedDate, diff);
-      return idxName;
-    }
-
-    // Default dynamic index name for all other datasets
-    String esPr = prefix == null ? config.indexDefDynamicPrefixName : config.indexDefDynamicPrefixName + "_" + prefix;
+    // Default index name for all other datasets
+    String esPr = prefix == null ? config.indexDefaultPrefixName : config.indexDefaultPrefixName + "_" + prefix;
     idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
-    log.info("ES Index name - {}, lastChangedDate - {}, diff days - {}", idxName, lastChangedDate, diff);
+    log.info("ES Index name - {}", idxName);
     return idxName;
   }
 
@@ -283,23 +256,14 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
    * 2) in case of independent index -> recordsNumber / config.indexRecordsPerShard
    */
   private int computeNumberOfShards(String indexName, long recordsNumber) {
-    if (indexName.startsWith(config.indexDefDynamicPrefixName)
-        || indexName.startsWith(config.indexDefStaticPrefixName)) {
-      return (int) Math.ceil((double) config.indexDefSize / (double) config.indexRecordsPerShard);
+    if (indexName.startsWith(config.indexDefaultPrefixName)) {
+      return (int) Math.ceil((double) config.indexDefaultSize / (double) config.indexRecordsPerShard);
     }
 
     double shards = (double) recordsNumber / (double) config.indexRecordsPerShard;
     shards = Math.max(shards, 1d);
     boolean isCeil = (shards - Math.floor(shards)) > 0.25d;
     return isCeil ? (int) Math.ceil(shards) : (int) Math.floor(shards);
-  }
-
-  /**
-   * Uses Registry to ask the last changed date for a dataset
-   */
-  private Date getLastChangedDate(String datasetId) {
-    Dataset dataset = datasetService.get(UUID.fromString(datasetId));
-    return dataset.getModified();
   }
 
   /**
@@ -348,7 +312,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     }
     List<EsCatIndex> indices =
         MAPPER.readValue(response.getEntity().getContent(), new TypeReference<List<EsCatIndex>>() {});
-    if (!indices.isEmpty() && indices.get(0).getCount() <= config.indexDefNewIfSize) {
+    if (!indices.isEmpty() && indices.get(0).getCount() <= config.indexDefaultNewIfSize) {
       return Optional.of(indices.get(0).getName());
     }
     return Optional.empty();

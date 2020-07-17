@@ -139,19 +139,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     );
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) throws IOException, InterruptedException {
-    if (config.standaloneUseJava) {
-      VerbatimToInterpretedPipeline.run(builder.build().buildOptions(), executor);
-    } else {
-      // Assembles a terminal java process and runs it
-      int exitValue = builder.build().get().start().waitFor();
-
-      if (exitValue != 0) {
-        throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
-      } else {
-        log.info("Process has been finished with exit value - {}", exitValue);
-      }
-    }
+  private void runLocal(ProcessRunnerBuilderBuilder builder) {
+    VerbatimToInterpretedPipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
