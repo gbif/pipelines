@@ -1,8 +1,12 @@
-sudo: false
+sudo: true
 language: java
+services:
+  - docker
 jdk:
   - openjdk8
 branches:
   only:
   - master
+  - ala-dev
+  - gbif-dev
 script: "mvn verify"
