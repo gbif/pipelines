@@ -87,6 +87,8 @@
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
     <gbif-crawler.version>0.113</gbif-crawler.version>
 
+    <guava.version>23.0</guava.version>
+
     <guice.version>4.2.3</guice.version>
     <!-- Match the GBIF http-client! -->
     <httpclient.version>4.5.6</httpclient.version>
@@ -315,6 +317,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.inject</groupId>
