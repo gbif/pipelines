@@ -355,8 +355,10 @@ public class FragmenterCallbackIT {
             String.valueOf(attempt),
             config.metaFileName
         );
-    FileSystem fs = FileSystemFactory.getInstance(config.getHdfsSiteConfig()).getFs(path.toString());
-    List<MetricInfo> metricInfos = HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), path.toString());
+    FileSystem fs =
+        FileSystemFactory.getInstance(config.getHdfsSiteConfig(), config.getCoreSiteConfig()).getFs(path.toString());
+    List<MetricInfo> metricInfos =
+        HdfsUtils.readMetricsFromMetaFile(config.getHdfsSiteConfig(), config.getCoreSiteConfig(), path.toString());
     assertTrue(fs.exists(path));
     assertEquals(1, metricInfos.size());
     assertEquals(String.valueOf(expSize), metricInfos.get(0).getValue());

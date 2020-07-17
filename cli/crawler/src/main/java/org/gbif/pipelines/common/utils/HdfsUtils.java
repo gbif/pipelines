@@ -37,12 +37,13 @@ public class HdfsUtils {
   /**
    * Returns the file size in bytes
    *
-   * @param filePath path to some file
    * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param coreSiteConfig path to core-site.xml config file
+   * @param filePath path to some file
    */
-  public static long getFileSizeByte(String filePath, String hdfsSiteConfig) throws IOException {
+  public static long getFileSizeByte(String hdfsSiteConfig, String coreSiteConfig, String filePath) throws IOException {
     URI fileUri = URI.create(filePath);
-    FileSystem fs = getFileSystem(hdfsSiteConfig, filePath);
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path path = new Path(fileUri);
 
     return fs.exists(path) ? fs.getContentSummary(path).getLength() : -1;
@@ -51,12 +52,14 @@ public class HdfsUtils {
   /**
    * Returns number of files in the directory
    *
-   * @param directoryPath path to some directory
    * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param coreSiteConfig path to core-site.xml config file
+   * @param directoryPath path to some directory
    */
-  public static int getFileCount(String directoryPath, String hdfsSiteConfig) throws IOException {
+  public static int getFileCount(String hdfsSiteConfig, String coreSiteConfig, String directoryPath)
+      throws IOException {
     URI fileUri = URI.create(directoryPath);
-    FileSystem fs = getFileSystem(hdfsSiteConfig, directoryPath);
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, directoryPath);
 
     int count = 0;
     RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(new Path(fileUri), false);
@@ -73,10 +76,12 @@ public class HdfsUtils {
    * Checks directory
    *
    * @param hdfsSiteConfig path to hdfs-site.xml config file
+   * @param coreSiteConfig path to core-site.xml config file
    * @param filePath to directory
    */
-  public static boolean exists(String hdfsSiteConfig, String filePath) throws IOException {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, filePath);
+  public static boolean exists(String hdfsSiteConfig, String coreSiteConfig, String filePath)
+      throws IOException {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fsPath = new Path(filePath);
     return fs.exists(fsPath);
   }
@@ -87,8 +92,9 @@ public class HdfsUtils {
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param filePath to directory
    */
-  public static List<FileStatus> getSubDirList(String hdfsSiteConfig, String filePath) throws IOException {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, filePath);
+  public static List<FileStatus> getSubDirList(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath) throws IOException {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fsPath = new Path(filePath);
     if (fs.exists(fsPath)) {
       FileStatus[] statuses = fs.listStatus(fsPath);
@@ -108,8 +114,10 @@ public class HdfsUtils {
    * @param filePath to a yaml file
    * @param key to value in yaml
    */
-  public static String getValueByKey(String hdfsSiteConfig, String filePath, String key) throws IOException {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, filePath);
+  public static String getValueByKey(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath, String key)
+      throws IOException {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fsPath = new Path(filePath);
     if (fs.exists(fsPath)) {
       try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(fsPath)))) {
@@ -130,8 +138,9 @@ public class HdfsUtils {
    * @param hdfsSiteConfig path to hdfs-site.xml config file
    * @param filePath to a yaml file
    */
-  public static List<PipelineStep.MetricInfo> readMetricsFromMetaFile(String hdfsSiteConfig, String filePath) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, filePath);
+  public static List<PipelineStep.MetricInfo> readMetricsFromMetaFile(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fsPath = new Path(filePath);
     try {
       if (fs.exists(fsPath)) {
@@ -166,11 +175,10 @@ public class HdfsUtils {
     return joiner.toString();
   }
 
-  /**
-   * Delete HDFS directory
-   */
-  public static boolean deleteDirectory(String hdfsSiteConfig, String filePath) {
-    FileSystem fs = getFileSystem(hdfsSiteConfig, filePath);
+  /** Delete HDFS directory */
+  public static boolean deleteDirectory(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath) {
+    FileSystem fs = getFileSystem(hdfsSiteConfig, coreSiteConfig, filePath);
     Path fsPath = new Path(filePath);
     try {
       if (fs.exists(fsPath)) {
@@ -183,18 +191,18 @@ public class HdfsUtils {
     return true;
   }
 
-  /**
-   * Delete HDFS sub-directories where modification date is older than deleteAfterDays value
-   */
-  public static void deleteSubFolders(String hdfsSiteConfig, String filePath, long deleteAfterDays) throws IOException {
+  /** Delete HDFS sub-directories where modification date is older than deleteAfterDays value */
+  public static void deleteSubFolders(
+      String hdfsSiteConfig, String coreSiteConfig, String filePath, long deleteAfterDays)
+      throws IOException {
     LocalDateTime date = LocalDateTime.now().minusDays(deleteAfterDays);
-    getSubDirList(hdfsSiteConfig, filePath).stream()
+    getSubDirList(hdfsSiteConfig, coreSiteConfig, filePath).stream()
         .filter(x -> LocalDateTime.ofEpochSecond(x.getModificationTime(), 0, ZoneOffset.UTC).isBefore(date))
         .map(y -> y.getPath().getName())
-        .forEach(z -> deleteDirectory(hdfsSiteConfig, z));
+        .forEach(z -> deleteDirectory(hdfsSiteConfig, coreSiteConfig, z));
   }
 
-  private static FileSystem getFileSystem(String hdfsSiteConfig, String filePath) {
-    return FileSystemFactory.getInstance(hdfsSiteConfig).getFs(filePath);
+  private static FileSystem getFileSystem(String hdfsSiteConfig, String coreSiteConfig, String filePath) {
+    return FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(filePath);
   }
 }

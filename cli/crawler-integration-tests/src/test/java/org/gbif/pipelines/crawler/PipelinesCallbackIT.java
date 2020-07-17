@@ -549,6 +549,11 @@ public class PipelinesCallbackIT {
     }
 
     @Override
+    public String getCoreSiteConfig() {
+      return "";
+    }
+
+    @Override
     public String getRepositoryPath() {
       return "";
     }

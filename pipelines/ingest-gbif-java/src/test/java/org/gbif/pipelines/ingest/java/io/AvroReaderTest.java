@@ -24,7 +24,7 @@ public class AvroReaderTest {
 
   private final Path verbatimPath1 = new Path("target/verbatim1.avro");
   private final Path verbatimPath2 = new Path("target/verbatim2.avro");
-  private final FileSystem verbatimFs = createParentDirectories(verbatimPath1, null);
+  private final FileSystem verbatimFs = createParentDirectories(null, null, verbatimPath1);
 
   @Test
   public void regularExtendedRecordsTest() throws IOException {
@@ -37,7 +37,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readRecords("", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -61,7 +61,8 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readRecords("", ExtendedRecord.class, new Path("target/verbatim*.avro").toString());
+        AvroReader.readRecords(
+            "", "", ExtendedRecord.class, new Path("target/verbatim*.avro").toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree, expectedFour, expectedFive, expectedSix);
@@ -82,7 +83,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readUniqueRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result, expectedOne, expectedTwo, expectedThree);
@@ -102,7 +103,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readUniqueRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result, expectedOne, expectedThree);
@@ -123,7 +124,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readUniqueRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result, expectedThree);
@@ -150,7 +151,8 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", ExtendedRecord.class, new Path("target/verbatim*.avro").toString());
+        AvroReader.readUniqueRecords(
+            "", "", ExtendedRecord.class, new Path("target/verbatim*.avro").toString());
 
     // Should
     assertMap(result, expectedThree);
@@ -174,7 +176,7 @@ public class AvroReaderTest {
 
     // When
     Map<String, ExtendedRecord> result =
-        AvroReader.readUniqueRecords("", ExtendedRecord.class, verbatimPath1.toString());
+        AvroReader.readUniqueRecords("", "", ExtendedRecord.class, verbatimPath1.toString());
 
     // Should
     assertMap(result);

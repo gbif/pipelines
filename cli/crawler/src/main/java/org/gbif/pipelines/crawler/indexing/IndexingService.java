@@ -44,7 +44,6 @@ public class IndexingService extends AbstractIdleService {
     listener = new MessageListener(c.messaging.getConnectionParameters(), 1);
     publisher = new DefaultMessagePublisher(c.messaging.getConnectionParameters());
     curator = c.zooKeeper.getCuratorFramework();
-    DatasetService datasetService = c.registry.newRegistryInjector().getInstance(DatasetService.class);
     executor = config.standaloneNumberThreads == null ? null : Executors.newFixedThreadPool(config.standaloneNumberThreads);
     httpClient = HttpClients.custom()
         .setDefaultRequestConfig(RequestConfig.custom()
@@ -55,7 +54,7 @@ public class IndexingService extends AbstractIdleService {
     
     PipelinesHistoryWsClient client = c.registry.newRegistryInjector().getInstance(PipelinesHistoryWsClient.class);
 
-    IndexingCallback callback = new IndexingCallback(config, publisher, datasetService, curator, httpClient, client, executor);
+    IndexingCallback callback = new IndexingCallback(config, publisher, curator, httpClient, client, executor);
     listener.listen(c.queueName, c.poolSize, callback);
   }
 

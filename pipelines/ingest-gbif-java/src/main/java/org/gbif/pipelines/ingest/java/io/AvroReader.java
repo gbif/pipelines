@@ -37,10 +37,12 @@ public class AvroReader {
    * Read {@link Record#getId()} unique records
    *
    * @param clazz instance of {@link Record}
-   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read
+   *     multiple files
    */
-  public static <T extends Record> Map<String, T> readUniqueRecords(String hdfsSiteConfig, Class<T> clazz, String path) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+  public static <T extends Record> Map<String, T> readUniqueRecords(
+      String hdfsSiteConfig, String coreSiteConfig, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
     List<Path> paths = parseWildcardPath(fs, path);
     return readUniqueRecords(fs, clazz, paths);
   }
@@ -49,10 +51,12 @@ public class AvroReader {
    * Read {@link Record#getId()} distinct records
    *
    * @param clazz instance of {@link Record}
-   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read multiple files
+   * @param path sting path, a wildcard can be used in the file name, like /a/b/c*.avro to read
+   *     multiple files
    */
-  public static <T extends Record> Map<String, T> readRecords(String hdfsSiteConfig, Class<T> clazz, String path) {
-    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, path);
+  public static <T extends Record> Map<String, T> readRecords(
+      String hdfsSiteConfig, String coreSiteConfig, Class<T> clazz, String path) {
+    FileSystem fs = FsUtils.getFileSystem(hdfsSiteConfig, coreSiteConfig, path);
     List<Path> paths = parseWildcardPath(fs, path);
     return readRecords(fs, clazz, paths);
   }

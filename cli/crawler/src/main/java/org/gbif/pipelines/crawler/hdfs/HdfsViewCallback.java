@@ -115,19 +115,8 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
     return config.processRunner.equals(message.getRunner());
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) throws IOException, InterruptedException {
-    if (config.standaloneUseJava) {
-      InterpretedToHdfsViewPipeline.run(builder.build().buildOptions(), executor);
-    } else {
-      // Assembles a terminal java process and runs it
-      int exitValue = builder.build().get().start().waitFor();
-
-      if (exitValue != 0) {
-        throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
-      } else {
-        log.info("Process has been finished with exit value - {}", exitValue);
-      }
-    }
+  private void runLocal(ProcessRunnerBuilderBuilder builder) {
+    InterpretedToHdfsViewPipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(PipelinesInterpretedMessage message, ProcessRunnerBuilderBuilder builder)
@@ -209,7 +198,11 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
 
     Long messageNumber = message.getNumberOfRecords();
     String fileNumber =
-        HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.BASIC_RECORDS_COUNT + "Attempted");
+        HdfsUtils.getValueByKey(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.BASIC_RECORDS_COUNT + "Attempted");
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(
@@ -230,8 +223,10 @@ public class HdfsViewCallback extends AbstractMessageCallback<PipelinesInterpret
   private int computeNumberOfShards(PipelinesInterpretedMessage message) throws IOException {
     String datasetId = message.getDatasetUuid().toString();
     String attempt = Integer.toString(message.getAttempt());
-    String dirPath = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
-    long sizeByte = HdfsUtils.getFileSizeByte(dirPath, config.stepConfig.hdfsSiteConfig);
+    String dirPath =
+        String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, DIRECTORY_NAME);
+    long sizeByte =
+        HdfsUtils.getFileSizeByte(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, dirPath);
     if (sizeByte == -1d) {
       throw new IllegalArgumentException("Please check interpretation source directory! - " + dirPath);
     }

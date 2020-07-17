@@ -106,7 +106,11 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
 
         log.info("Deleting old attempts directories");
         String pathToDelete = String.join("/", config.stepConfig.repositoryPath, datasetId);
-        HdfsUtils.deleteSubFolders(config.stepConfig.hdfsSiteConfig, pathToDelete, config.deleteAfterDays);
+        HdfsUtils.deleteSubFolders(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            pathToDelete,
+            config.deleteAfterDays);
 
       } catch (Exception ex) {
         log.error(ex.getMessage(), ex);
@@ -135,19 +139,8 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     );
   }
 
-  private void runLocal(ProcessRunnerBuilderBuilder builder) throws IOException, InterruptedException {
-    if (config.standaloneUseJava) {
-      VerbatimToInterpretedPipeline.run(builder.build().buildOptions(), executor);
-    } else {
-      // Assembles a terminal java process and runs it
-      int exitValue = builder.build().get().start().waitFor();
-
-      if (exitValue != 0) {
-        throw new IllegalStateException("Process has been finished with exit value - " + exitValue);
-      } else {
-        log.info("Process has been finished with exit value - {}", exitValue);
-      }
-    }
+  private void runLocal(ProcessRunnerBuilderBuilder builder) {
+    VerbatimToInterpretedPipeline.run(builder.build().buildOptions(), executor);
   }
 
   private void runDistributed(PipelinesVerbatimMessage message, ProcessRunnerBuilderBuilder builder)
@@ -229,7 +222,12 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     Long messageNumber =
         message.getValidationResult() != null && message.getValidationResult().getNumberOfRecords() != null
             ? message.getValidationResult().getNumberOfRecords() : null;
-    String fileNumber = HdfsUtils.getValueByKey(config.stepConfig.hdfsSiteConfig, metaPath, Metrics.ARCHIVE_TO_ER_COUNT);
+    String fileNumber =
+        HdfsUtils.getValueByKey(
+            config.stepConfig.hdfsSiteConfig,
+            config.stepConfig.coreSiteConfig,
+            metaPath,
+            Metrics.ARCHIVE_TO_ER_COUNT);
 
     if (messageNumber == null && (fileNumber == null || fileNumber.isEmpty())) {
       throw new IllegalArgumentException(
@@ -256,6 +254,6 @@ public class InterpretationCallback extends AbstractMessageCallback<PipelinesVer
     String attempt = Integer.toString(message.getAttempt());
     String path = String.join("/", config.stepConfig.repositoryPath, datasetId, attempt, Interpretation.DIRECTORY_NAME);
 
-    return HdfsUtils.exists(config.stepConfig.hdfsSiteConfig, path);
+    return HdfsUtils.exists(config.stepConfig.hdfsSiteConfig, config.stepConfig.coreSiteConfig, path);
   }
 }
