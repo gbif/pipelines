@@ -330,42 +330,4 @@ public class ALALocationInterpreter {
     }
   }
 
-  /**
-   * Have to be called after interpretation of state or country Copied from GBIF, change
-   * COORDINATE_PRECISION_UPPER_BOUND = 1;
-   *
-   * @param er
-   * @param lr
-   */
-  public static void interpretCoordinatePrecision(ExtendedRecord er, LocationRecord lr) {
-    LocationInterpreter.interpretCoordinatePrecision(er, lr);
-    if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null) {
-      if (!checkPrecision(er, lr)) {
-        addIssue(lr, ALAOccurrenceIssue.COORDINATE_PRECISION_MISMATCH.name());
-      }
-    }
-  }
-
-  /**
-   * Todo Trailing 0
-   *
-   * @param er
-   * @param lr
-   * @return
-   */
-  private static boolean checkPrecision(ExtendedRecord er, LocationRecord lr) {
-    int precisionDecimal = lengthOfDecimal(lr.getCoordinatePrecision());
-    int latDecimal = lengthOfDecimal(lr.getDecimalLatitude());
-    int lngDecimal = lengthOfDecimal(lr.getDecimalLongitude());
-
-    if (latDecimal != precisionDecimal || lngDecimal != precisionDecimal) return false;
-    else return true;
-  }
-
-  private static int lengthOfDecimal(double d) {
-    String text = Double.toString(Math.abs(d));
-    int integerPlaces = text.indexOf('.');
-    if (integerPlaces == -1) return 0;
-    else return text.length() - integerPlaces - 1;
-  }
 }

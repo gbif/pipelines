@@ -171,7 +171,6 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.coordinatePrecision.qualifiedName(), "0.001");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.interpretCoordinatePrecision(er, lr);
     ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
 
     assertEquals(lr.getStateProvince(), "New South Wales");
@@ -180,7 +179,6 @@ public class AlaLocationInterpreterTest {
         new String[] {
           OccurrenceIssue.GEODETIC_DATUM_ASSUMED_WGS84.name(),
           ALAOccurrenceIssue.MISSING_GEODETICDATUM.name(),
-          ALAOccurrenceIssue.COORDINATE_PRECISION_MISMATCH.name(),
           ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name()
         });
   }

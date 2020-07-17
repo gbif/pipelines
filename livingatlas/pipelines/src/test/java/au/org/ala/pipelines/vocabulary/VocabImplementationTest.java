@@ -30,6 +30,7 @@ public class VocabImplementationTest {
             .matchTerm("tasmania"));
   }
 
+  /** Missing external resources files   */
   @Test
   public void testNoneExistsExternalResource() throws IOException {
     ALAPipelinesConfig alaConfig = new ALAPipelinesConfig();
