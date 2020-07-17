@@ -2,10 +2,9 @@ package au.org.ala.kvs.client;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-
-import java.util.List;
 
 @JsonDeserialize(builder = ALANameUsageMatch.ALANameUsageMatchBuilder.class)
 @Value

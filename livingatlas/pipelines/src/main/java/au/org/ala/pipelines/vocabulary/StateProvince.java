@@ -10,7 +10,7 @@ public class StateProvince {
 
   public static Vocab getInstance(String stateVocabFile) throws FileNotFoundException {
     if (stateProvinceVocab == null) {
-        stateProvinceVocab = Vocab.loadVocabFromFile(stateVocabFile, "/stateProvinces.txt");
+      stateProvinceVocab = Vocab.loadVocabFromFile(stateVocabFile, "/stateProvinces.txt");
     }
     return stateProvinceVocab;
   }

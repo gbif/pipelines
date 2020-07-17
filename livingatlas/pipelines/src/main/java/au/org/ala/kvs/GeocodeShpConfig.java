@@ -4,9 +4,7 @@ import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-/**
- * Store configuration of SHP files including fields for ALA Country/State interpretation
- */
+/** Store configuration of SHP files including fields for ALA Country/State interpretation */
 @AllArgsConstructor
 @Data
 public class GeocodeShpConfig implements Serializable {

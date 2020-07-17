@@ -1,14 +1,24 @@
 package au.org.ala.pipelines.transforms;
 
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
+import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
+
 import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.pipelines.interpreters.ALALocationInterpreter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
-
+import lombok.Builder;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
-import au.org.ala.pipelines.interpreters.ALALocationInterpreter;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.LocationInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -17,19 +27,6 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.rest.client.geocode.GeocodeResponse;
-
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.transforms.ParDo.SingleOutput;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptor;
-
-import lombok.Builder;
-import lombok.Setter;
-
-import static org.gbif.pipelines.common.PipelinesVariables.Metrics.LOCATION_RECORDS_COUNT;
-import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION;
 
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
@@ -40,17 +37,20 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private KeyValueStore<LatLng, GeocodeResponse> countryKvStore;
   private KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore;
 
-  @Setter
-  private PCollectionView<MetadataRecord> metadataView;
+  @Setter private PCollectionView<MetadataRecord> metadataView;
 
   @Builder(buildMethodName = "create")
   private LocationTransform(
-          ALAPipelinesConfig alaConfig,
-          SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier,
-          SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier,
-          PCollectionView<MetadataRecord> metadataView) {
+      ALAPipelinesConfig alaConfig,
+      SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier,
+      SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier,
+      PCollectionView<MetadataRecord> metadataView) {
 
-    super(LocationRecord.class, LOCATION, org.gbif.pipelines.transforms.core.LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
+    super(
+        LocationRecord.class,
+        LOCATION,
+        org.gbif.pipelines.transforms.core.LocationTransform.class.getName(),
+        LOCATION_RECORDS_COUNT);
     this.alaConfig = alaConfig;
     this.countryKvStoreSupplier = countryKvStoreSupplier;
     this.stateProvinceKvStoreSupplier = stateProvinceKvStoreSupplier;
@@ -60,7 +60,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   /** Maps {@link LocationRecord} to key value, where key is {@link LocationRecord#getId} */
   public MapElements<LocationRecord, KV<String, LocationRecord>> toKv() {
     return MapElements.into(new TypeDescriptor<KV<String, LocationRecord>>() {})
-            .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
+        .via((LocationRecord lr) -> KV.of(lr.getId(), lr));
   }
 
   @Override
@@ -111,12 +111,14 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
 
   public Optional<LocationRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
 
-    LocationRecord lr = LocationRecord.newBuilder()
+    LocationRecord lr =
+        LocationRecord.newBuilder()
             .setId(source.getId())
             .setCreated(Instant.now().toEpochMilli())
             .build();
 
-    Optional<LocationRecord> result = Interpretation.from(source)
+    Optional<LocationRecord> result =
+        Interpretation.from(source)
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
             .via(LocationInterpreter.interpretCountryAndCoordinates(countryKvStore, mdr))

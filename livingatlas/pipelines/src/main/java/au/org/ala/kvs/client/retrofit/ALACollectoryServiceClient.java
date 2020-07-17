@@ -1,10 +1,8 @@
 package au.org.ala.kvs.client.retrofit;
 
-import au.org.ala.kvs.client.*;
-import okhttp3.OkHttpClient;
-import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.retrofit.RetrofitClientFactory;
+import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
 
+import au.org.ala.kvs.client.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,12 +10,11 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Stream;
+import okhttp3.OkHttpClient;
+import org.gbif.rest.client.configuration.ClientConfiguration;
+import org.gbif.rest.client.retrofit.RetrofitClientFactory;
 
-import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
-
-/**
- * Collectory service client implementation.
- */
+/** Collectory service client implementation. */
 public class ALACollectoryServiceClient implements ALACollectoryService {
 
   private final ALACollectoryRetrofitService alaCollectoryService;
@@ -31,9 +28,9 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
    */
   public ALACollectoryServiceClient(ClientConfiguration clientConfiguration) {
     okHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
-    alaCollectoryService = RetrofitClientFactory.createRetrofitClient(okHttpClient,
-        clientConfiguration.getBaseApiUrl(),
-        ALACollectoryRetrofitService.class);
+    alaCollectoryService =
+        RetrofitClientFactory.createRetrofitClient(
+            okHttpClient, clientConfiguration.getBaseApiUrl(), ALACollectoryRetrofitService.class);
   }
 
   /**
@@ -56,9 +53,10 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
     if (Objects.nonNull(okHttpClient) && Objects.nonNull(okHttpClient.cache())) {
       File cacheDirectory = okHttpClient.cache().directory();
       if (cacheDirectory.exists()) {
-        try (Stream<File> files = Files.walk(cacheDirectory.toPath())
-            .sorted(Comparator.reverseOrder())
-            .map(Path::toFile)) {
+        try (Stream<File> files =
+            Files.walk(cacheDirectory.toPath())
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)) {
           files.forEach(File::delete);
         }
       }

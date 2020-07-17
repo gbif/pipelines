@@ -3,15 +3,12 @@ package au.org.ala.kvs.client;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 
-import java.util.List;
-
-/**
- * An ALA Collection Match response object.
- */
+/** An ALA Collection Match response object. */
 @JsonDeserialize(builder = ALACollectionMatch.ALACollectionMatchBuilder.class)
 @Value
 @Builder

@@ -1,11 +1,6 @@
 package au.org.ala.pipelines.beam;
 
-import org.apache.beam.sdk.io.hdfs.HadoopFileSystemOptions;
 import org.apache.beam.sdk.options.*;
-import org.apache.hadoop.conf.Configuration;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface AllDatasetsPipelinesOptions extends PipelineOptions {
 
@@ -16,12 +11,14 @@ public interface AllDatasetsPipelinesOptions extends PipelineOptions {
 
   @Description("Target path where the outputs of the pipeline will be written to. Required.")
   @Validation.Required
-  @Default.InstanceFactory(org.gbif.pipelines.ingest.options.BasePipelineOptions.DefaultDirectoryFactory.class)
+  @Default.InstanceFactory(
+      org.gbif.pipelines.ingest.options.BasePipelineOptions.DefaultDirectoryFactory.class)
   String getTargetPath();
 
   void setTargetPath(String var1);
 
-  @Description("Target metadata file name where the outputs of the pipeline metrics results will be written to.")
+  @Description(
+      "Target metadata file name where the outputs of the pipeline metrics results will be written to.")
   String getMetaFileName();
 
   void setMetaFileName(String var1);

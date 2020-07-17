@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
-import org.gbif.kvs.species.SpeciesMatchRequest;
 
 /**
  * This is a copy of org.gbif.kvs.species.SpeciesMatchRequest with taxonConceptID, taxonID added

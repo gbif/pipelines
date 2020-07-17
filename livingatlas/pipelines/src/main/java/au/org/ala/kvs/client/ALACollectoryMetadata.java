@@ -3,12 +3,11 @@ package au.org.ala.kvs.client;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * An ALA Collectory Data Resource response object. This maps on to a data resource response e.g.
