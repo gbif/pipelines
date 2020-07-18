@@ -9,4 +9,4 @@ branches:
   - master
   - ala-dev
   - gbif-dev
-script: "mvn verify"
+script: "mvn verify  -U"
