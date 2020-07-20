@@ -1,10 +1,13 @@
 package org.gbif.pipelines.factory;
 
 import org.gbif.api.vocabulary.OccurrenceStatus;
+import org.gbif.common.parsers.OccurrenceStatusParser;
+import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.transforms.SerializableSupplier;
 
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 /** Factory to get singleton instance of {@link KeyValueStore} */
@@ -16,7 +19,8 @@ public class OccurrenceStatusKvStoreFactory {
 
   @SneakyThrows
   private OccurrenceStatusKvStoreFactory(PipelinesConfig config) {
-    keyValueStore = null;
+    // TODO: Use real KV store
+    keyValueStore = DummyOccurrenceStatusKvStore.create();
   }
 
   /* TODO Comment */
@@ -39,5 +43,23 @@ public class OccurrenceStatusKvStoreFactory {
   public static SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> getInstanceSupplier(
       PipelinesConfig config) {
     return () -> OccurrenceStatusKvStoreFactory.getInstance(config);
+  }
+
+  // Dummy version of OccurrenceStatusKvStore for testing only
+  @NoArgsConstructor(staticName = "create")
+  public static class DummyOccurrenceStatusKvStore implements KeyValueStore<String, OccurrenceStatus> {
+
+    private final OccurrenceStatusParser parser = OccurrenceStatusParser.getInstance();
+
+    @Override
+    public OccurrenceStatus get(String s) {
+      ParseResult<OccurrenceStatus> parse = parser.parse(s);
+      return parse.isSuccessful() ? parse.getPayload() : null;
+    }
+
+    @Override
+    public void close() {
+      // NOP
+    }
   }
 }
