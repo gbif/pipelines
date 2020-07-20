@@ -37,12 +37,24 @@ eval "$(docopts -V - -h - : "$@" <<EOF
 
 LA-Pipelines data ingress utility.
 
+The $CMD can be executed to run all the ingress steps or only a few of them:
+
 Pipeline ingress steps:
 
     ┌───── do-all ──────────────────────────────────┐
     │                                               │
 dwca-avro --> interpret --> uuid -->                │
      export-latlng --> sample --> sample-avro --> index
+
+-  'dwca-avro' reads a Dwc-A and converts it to an Avro file;
+-  'interpret' reads a Dwc-A, interprets it and write the interpreted data and the issues in Avro files;
+-  'uuid' minting on new records and rematching existing UUIDs to records that have been previously loaded;
+-  'export-latlng' exports a unique set of coordinates for a dataset into CSV;
+-  'sample' crawl the LA layers. Requires an input csv containing lat, lng (no header) and output directory.
+-  'sample-avro' adds a sampling AVRO extension to the stored interpretation
+-  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
+
+All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
 Usage:
   $CMD [options] dwca-avro     (<dr>...|all)
@@ -325,6 +337,7 @@ function export-latlng () {
 
 function sample () {
     dr=$1
+    CLASS=au.org.ala.sampling.LayerCrawler
 
     logStepStart "Sample" $dr
     SECONDS=0
@@ -332,7 +345,7 @@ function sample () {
     PRE=sample-sh-args.local
     $_D java $EXTRA_JVM_CLI_ARGS \
         $(getConf $PRE.jvm)  \
-        -cp $PIPELINES_JAR au.org.ala.sampling.LayerCrawler \
+        -cp $PIPELINES_JAR $CLASS \
         --datasetId=$dr \
         --config=$config
 
