@@ -87,6 +87,25 @@ EOF
 if ($debug) ; then verbosity=6; else verbosity=5; fi
 source ./logging_lib.sh $verbosity $no_colors $dr
 
+STEP=Initial
+
+trap ctrlc_catch SIGINT
+ctrlc_catch() {
+    log.warn "$CMD canceled in $STEP step"
+    # Cancel error catch
+    trap - EXIT
+}
+
+# Error trap based in
+# https://medium.com/@dirk.avery/the-bash-trap-trap-ce6083f36700
+trap 'error_catch $? $LINENO' EXIT
+error_catch() {
+    log.error "Unexpected error during $STEP step"
+    if [ "$1" != "0" ]; then
+        log.error "Error $1 occurred on $2"
+    fi
+}
+
 log.info "Starting $CMD"
 
 # TODO: externalize this CONFIG_DIR in some way, ask other locations
@@ -170,6 +189,7 @@ log.debug EXTRA_JVM_CLI_ARGS: $EXTRA_JVM_CLI_ARGS
 function logStepStart() {
     name=$1
     dr=$2
+    STEP="$1 $2"
     log.info $(date)
     log.info "${colpur}$name${colrst} of $dr"
 }
@@ -583,7 +603,7 @@ if ($index || $do_all); then
     else
         while IFS=, read -r datasetID recordCount
         do
-            log.inf "Dataset = $datasetID and count = $recordCount"
+            log.info "Dataset = $datasetID and count = $recordCount"
             if [ "$recordCount" -gt "50000" ]; then
                 if [ "$USE_CLUSTER" == "TRUE" ]; then
                     index $datasetID spark-cluster
@@ -596,3 +616,6 @@ if ($index || $do_all); then
         done < /tmp/dataset-counts.csv
     fi
 fi
+
+# All ended correctly, so untrap EXIT catch
+trap - EXIT
