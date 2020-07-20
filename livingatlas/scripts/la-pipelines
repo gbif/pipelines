@@ -191,7 +191,7 @@ function logStepStart() {
     dr=$2
     STEP="$1 $2"
     log.info $(date)
-    log.info "${colpur}$name${colrst} of $dr"
+    log.info "START ${colpur}$name${colrst} of $dr"
 }
 
 function logStepEnd() {
@@ -200,14 +200,14 @@ function logStepEnd() {
     type=$3
     duration=$4
     log.info $(date)
-    log.info "${colpur}$name${colrst} of $dr in [$type] took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
+    log.info "END ${colpur}$name${colrst} of $dr in [$type], took $(($duration / 60)) minutes and $(($duration % 60)) seconds."
 }
 
 function dwca-avro () {
     dr=$1
 
     SECONDS=0
-    logStepStart "Ingest DwCA - Converts DwCA to verbatim.arvo file" $dr
+    logStepStart "DWCA-AVRO conversion" $dr
 
     dwca_dir="/data/biocache-load/$dr/$dr.zip"
 
@@ -228,7 +228,7 @@ function dwca-avro () {
         --datasetId=$dr \
         --config=$config $ARGS
 
-    logStepEnd dwca-avro $dr local $SECONDS
+    logStepEnd "DWCA-AVRO conversion" $dr local $SECONDS
 }
 
 function interpret () {
@@ -237,7 +237,7 @@ function interpret () {
     CLASS=au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
 
     SECONDS=0
-    logStepStart "Interpret verbatim.arvo file" $dr
+    logStepStart "Interpretation" $dr
 
     PRE=interpret-sh-args.local
     if [[ $ltype = "local" ]] ; then
@@ -277,7 +277,7 @@ function interpret () {
             # TODO set here an optional colorized log4j properties
     fi
 
-    logStepEnd Interpretation $dr $ltype $SECONDS
+    logStepEnd "Interpretation" $dr $ltype $SECONDS
 }
 
 function uuid () {
@@ -285,7 +285,7 @@ function uuid () {
     ltype=$2
     CLASS=au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
 
-    logStepStart "UUID pipeline - Preserve or add UUIDs." $dr
+    logStepStart "UUID pipeline" $dr
     SECONDS=0
 
     PRE=uuid-sh-args.spark-embedded
@@ -315,7 +315,7 @@ function uuid () {
             # TODO set here an optional colorized log4j properties
     fi
 
-    logStepEnd "Adding uuids" $dr $ltype $SECONDS
+    logStepEnd "UUID" $dr $ltype $SECONDS
 }
 
 function export-latlng () {
@@ -323,7 +323,7 @@ function export-latlng () {
     ltype=$2
     CLASS=au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 
-    logStepStart "Export lat long" $dr
+    logStepStart "Export latlng" $dr
     SECONDS=0
 
     PRE=export-latlng-sh-args.spark-embedded
@@ -359,7 +359,7 @@ function sample () {
     dr=$1
     CLASS=au.org.ala.sampling.LayerCrawler
 
-    logStepStart "Sample" $dr
+    logStepStart "Sampling" $dr
     SECONDS=0
 
     PRE=sample-sh-args.local
@@ -473,7 +473,7 @@ if ($do_all || $dwca_avro) ; then
         # !!!!!! need to run this command on one vm then run the script !!!!
         # rm -rf $rootDir/dr*.lockdir
 
-        logStepStart "dwca-avro" all
+        logStepStart "DWCA-AVRO conversion" all
         SECONDS=0
         tempDirs=()
         drDwcaList=($(ls -S $rootDir/dr*/dr*.zip))
@@ -492,7 +492,7 @@ if ($do_all || $dwca_avro) ; then
             fi
         done
 
-        logStepEnd "dwca-avro" all local $SECONDS
+        logStepEnd "DWCA-AVRO conversion" all local $SECONDS
     fi
 fi
 
