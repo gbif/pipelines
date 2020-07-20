@@ -90,7 +90,7 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=interpretation-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=target/test-classes/pipelines.yaml",
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -105,7 +105,7 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=uuid-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=target/test-classes/pipelines.yaml",
               "--useExtendedRecordId=true"
             });
     ALAUUIDMintingPipeline.run(uuidOptions);
@@ -120,7 +120,7 @@ public class CompleteIngestPipelineTestIT {
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--properties=src/test/resources/pipelines.yaml"
+              "--properties=target/test-classes/pipelines.yaml"
             });
     ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
 
@@ -141,7 +141,7 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=uuid-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=target/test-classes/pipelines.yaml",
               "--zkHost=localhost:9983",
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true"

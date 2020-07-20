@@ -28,7 +28,7 @@ public class MigrationPipelineTestIT {
               "--metaFileName=/tmp/la-pipelines-test/uuid-migration/migration-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/uuid-migration",
               "--inputPath=" + absolutePath + "/uuid-migration/occ_uuid.csv",
-              "--properties=src/test/resources/pipelines.yaml"
+              "--properties=target/test-classes/pipelines.yaml"
             });
     MigrateUUIDPipeline.run(options);
 
