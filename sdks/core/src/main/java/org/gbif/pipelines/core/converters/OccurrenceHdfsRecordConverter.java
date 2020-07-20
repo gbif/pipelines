@@ -315,6 +315,8 @@ public class OccurrenceHdfsRecordConverter {
               hr.setSpecies(rankedName.getName());
               hr.setSpecieskey(rankedName.getKey());
               break;
+            default:
+              break;
           }
         });
       }
@@ -378,6 +380,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizeunit(br.getSampleSizeUnit());
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
+      hr.setOccurrencestatus(br.getOccurrenceStatus());
 
       Optional.ofNullable(br.getRecordedByIds())
           .ifPresent(
