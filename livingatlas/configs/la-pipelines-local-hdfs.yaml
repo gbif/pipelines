@@ -1,0 +1,21 @@
+# Deployment specific configuration for locql machine using a locally installed HDFS.
+# This file should be copied over `la-pipelines-local.yaml` when deployed
+# so that it is used by the scripts.
+#
+general:
+    attempt: 1
+    hdfsSiteConfig: hdfs-site.xml
+    coreSiteConfig: hdfs-site.xml
+    inputPath: hdfs://localhost:8020/pipelines-data
+    targetPath: hdfs://localhost:8020/pipelines-data
+interpret:
+    inputPath: hdfs://localhost:8020/pipelines-data/{datasetId}/1/verbatim.avro
+export-latlng:
+    inputPath: hdfs://localhost:8020/pipelines-data
+uuid:
+    inputPath: hdfs://localhost:8020/pipelines-data
+sample-avro:
+    inputPath: hdfs://localhost:8020/pipelines-data
+index:
+    inputPath: hdfs://localhost:8020/pipelines-data
+    zkHost: localhost:9983

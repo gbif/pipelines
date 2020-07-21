@@ -232,6 +232,9 @@
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
 
+    <!-- GBIF parent currently using 2.4.0 -->
+    <spark.embedded.version>2.4.5</spark.embedded.version>
+
     <!-- Plugins -->
     <io.fabric8.version>0.33.0</io.fabric8.version>
     <org.jetbrains.annotations>13.0</org.jetbrains.annotations>
@@ -469,6 +472,11 @@
     </dependency>
 
     <!-- Hadoop -->
+    <!-- Note: the scope of these dependencies differs to the scope used by
+    GBIF pipelines. GBIF pipelines is using "provided" due to the Cloudera environments
+    they deploy into. This library needs this jars in the built shaded jar to run
+    pipelines in embedded and clustered mode
+    -->
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-common</artifactId>
@@ -491,17 +499,18 @@
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>${hadoop.version}</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
@@ -512,7 +521,13 @@
           <artifactId>netty</artifactId>
         </exclusion>
       </exclusions>
-      <scope>provided</scope>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapreduce-client-core</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>compile</scope>
     </dependency>
 
     <!-- Utils -->
