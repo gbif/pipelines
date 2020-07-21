@@ -15,8 +15,9 @@ public class DistanceRangeParser {
   static String singleNumber = "(-?[0-9]{1,})";
   static String decimalNumber = "(-?[0-9]{1,}[.]{1}[0-9]{1,})";
   static String range =
-      "(-?[0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})-([0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})";
-  static String greaterOrLessThan = "(\\>|\\<)(-?[0-9.]{1,})([km|m|metres|meters|ft|feet]{0,})";
+      "(-?[0-9.]{1,})([km|kilometres|kilometers|m|metres|meters|ft|feet|f]{0,})-([0-9.]{1,})([km|kilometres|kilometers|m|metres|meters|ft|feet|f]{0,})";
+  static String greaterOrLessThan =
+      "(\\>|\\<)(-?[0-9.]{1,})([km|kilometres|kilometers|m|metres|meters|ft|feet|f]{0,})";
   static String singleNumberMetres = "(-?[0-9]{1,})(m|metres|meters)";
   static String singleNumberKilometres = "(-?[0-9]{1,})(km|kilometres|kilometers)";
   static String singleNumberFeet = "(-?[0-9]{1,})(ft|feet|f)";
@@ -76,11 +77,17 @@ public class DistanceRangeParser {
   private static double convertUOM(double value, String uom) {
     switch (uom.toLowerCase()) {
       case "m":
+      case "meters":
+      case "metres":
       case "":
         return value;
       case "ft":
+      case "feet":
+      case "f":
         return value * 0.3048d;
       case "km":
+      case "kilometers":
+      case "kilometres":
         return value * 1000d;
       default:
         log.error("{} is not recognised UOM", uom);

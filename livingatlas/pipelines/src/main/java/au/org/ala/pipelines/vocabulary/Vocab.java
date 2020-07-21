@@ -7,34 +7,29 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 
+/** A trait for a vocabulary. A vocabulary consists of a set of Terms, each with string variants. */
 @Slf4j
 public class Vocab {
 
-  private Vocab() {}
-
   private Set<String> canonicals = new HashSet<String>();
-
   // variant -> canonical
   private HashMap<String, String> variants = new HashMap<String, String>();
-
   // stemmed variant -> canonical
   private HashMap<String, String> stemmedVariants = new HashMap<String, String>();
 
-  public static Vocab loadVocabFromFile(String externalFilePath, String classpathFile)
-      throws FileNotFoundException {
-    if (Strings.isNotEmpty(externalFilePath)) {
-      File file = new File(externalFilePath);
-      if (!file.exists()) {
-        throw new RuntimeException("Unable to load vocab file:" + externalFilePath);
-      }
-      return loadVocabFromStream(new FileInputStream(file));
-    } else {
-      return loadVocabFromStream(Vocab.class.getResourceAsStream(classpathFile));
-    }
+  private Vocab() {}
+
+  public static Vocab loadVocabFromFile(String vocabfile) throws FileNotFoundException {
+    InputStream is;
+    File externalFile = new File(vocabfile);
+    is = new FileInputStream(externalFile);
+    return Vocab.loadVocabFromStream(is);
   }
 
   public static Vocab loadVocabFromStream(InputStream is) {

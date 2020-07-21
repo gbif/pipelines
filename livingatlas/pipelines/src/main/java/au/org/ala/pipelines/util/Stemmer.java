@@ -48,9 +48,9 @@ import java.io.*;
  */
 public class Stemmer {
 
+  private static final int INC = 50;
   private char[] b;
   private int i, /* offset into b */ i_end, /* offset to end of stemmed word */ j, k;
-  private static final int INC = 50;
 
   /* unit of size whereby b is increased */
   public Stemmer() {

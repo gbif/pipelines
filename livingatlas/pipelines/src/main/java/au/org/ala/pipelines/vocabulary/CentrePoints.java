@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.gbif.kvs.geocode.LatLng;
 
 /**
@@ -21,26 +20,22 @@ import org.gbif.kvs.geocode.LatLng;
  * Wales -31.2532183 146.921099 -28.1561921 153.903718 -37.5052772 140.9992122 Rounded decimal of
  * predefined state centres based on precision of the given coordinates
  *
+ * <p>The first two is the coordinate of central point. The rest four are BBox
+ *
  * @author Bai187
  */
 @Slf4j
 public class CentrePoints {
 
+  private static CentrePoints cp;
   private Map<String, LatLng> statesCentre = new HashMap();
   private Map<String, BBox> statesBBox = new HashMap();
 
-  private static CentrePoints cp;
-
   private CentrePoints() {}
 
-  public static CentrePoints getInstance(String filePath, String classpathFile)
-      throws FileNotFoundException {
-    if (Strings.isNotEmpty(filePath)) {
-      InputStream is = new FileInputStream(new File(filePath));
-      return getInstance(is);
-    } else {
-      return getInstance(CentrePoints.class.getResourceAsStream(classpathFile));
-    }
+  public static CentrePoints getInstance(String filePath) throws FileNotFoundException {
+    InputStream is = new FileInputStream(new File(filePath));
+    return getInstance(is);
   }
 
   public static CentrePoints getInstance(InputStream is) {
@@ -63,7 +58,6 @@ public class CentrePoints {
               cp.statesCentre.put(state, centre);
               cp.statesBBox.put(state, bbox);
             });
-
     return cp;
   }
 
