@@ -80,27 +80,10 @@ public class AlaLocationInterpreterTest {
 
     LocationInterpreter.interpretElevation(er, lr);
 
-    // should
-    assertEquals(lr.getStateProvince(), "Act");
-    assertEquals(lr.getMinimumDepthInMeters(), Double.valueOf(10d));
-    assertEquals(lr.getMaximumDepthInMeters(), Double.valueOf(200d));
-    // Auto calculated
-    assertEquals("Average of Min/Max depth", lr.getDepth(), Double.valueOf(105d));
-    assertEquals(lr.getContinent(), "ASIA");
-    assertEquals(lr.getWaterBody(), "Murray");
-    assertEquals(lr.getMaximumElevationInMeters(), Double.valueOf(2000d));
-    assertEquals(lr.getMinimumElevationInMeters(), Double.valueOf(0d));
-
-    assertEquals(lr.getElevation(), Double.valueOf(1000d));
-    assertEquals(lr.getMinimumDistanceAboveSurfaceInMeters(), Double.valueOf(14d));
-    assertEquals(lr.getMaximumDistanceAboveSurfaceInMeters(), Double.valueOf(200d));
-    assertEquals(lr.getCoordinatePrecision(), Double.valueOf(0.5d));
-    assertEquals(lr.getCoordinateUncertaintyInMeters(), Double.valueOf(1d));
-
     ALALocationInterpreter.interpretGeoreferencedDate(er, lr);
     ALALocationInterpreter.interpretGeoreferenceTerms(er, lr);
     assertEquals("1979-01-01T00:00", lr.getGeoreferencedDate());
-    assertEquals(lr.getIssues().getIssueList().size(), 4);
+    assertEquals(4, lr.getIssues().getIssueList().size(), 1);
   }
 
   @Test
@@ -113,7 +96,7 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.coordinatePrecision.qualifiedName(), "100");
     LocationInterpreter.interpretCoordinatePrecision(er, lr);
 
-    assertEquals(lr.getIssues().getIssueList().get(0), "COORDINATE_PRECISION_INVALID");
+    assertEquals("COORDINATE_PRECISION_INVALID", lr.getIssues().getIssueList().get(0));
 
     coreMap.put(DwcTerm.minimumElevationInMeters.qualifiedName(), " we 0 test 1000 inch");
     LocationInterpreter.interpretMinimumElevationInMeters(er, lr);
@@ -124,7 +107,6 @@ public class AlaLocationInterpreterTest {
     ALALocationInterpreter.interpretCoordinateUncertaintyInMeters(er, lr);
 
     assertArrayEquals(
-        lr.getIssues().getIssueList().toArray(),
         new String[] {
           "COORDINATE_PRECISION_INVALID",
           OccurrenceIssue.ELEVATION_MIN_MAX_SWAPPED.name(),
@@ -132,7 +114,8 @@ public class AlaLocationInterpreterTest {
           "ELEVATION_NON_NUMERIC",
           OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID.name(),
           ALAOccurrenceIssue.UNCERTAINTY_IN_PRECISION.name()
-        });
+        },
+        lr.getIssues().getIssueList().toArray());
   }
 
   @Test
@@ -144,7 +127,7 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.maximumDistanceAboveSurfaceInMeters.qualifiedName(), "2err0 inch");
     LocationInterpreter.interpretMaximumDistanceAboveSurfaceInMeters(er, lr);
 
-    assertEquals(lr.getMaximumDistanceAboveSurfaceInMeters(), Double.valueOf(0.51d));
+    assertEquals(Double.valueOf(0.51d), lr.getMaximumDistanceAboveSurfaceInMeters());
   }
 
   /** Tests on: Missing geodetic datum precision mismatch Centre of state */
