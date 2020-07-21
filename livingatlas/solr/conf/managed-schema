@@ -367,6 +367,7 @@
   <field name="kingdomID"  type="string" docValues="true" indexed="true"/>
   <field name="rankID"     type="tint"   docValues="true" indexed="true"/>
   <field name="matchType"  type="string" docValues="true" indexed="true"/>
+  <field name="nameType"  type="string" docValues="true" indexed="true"/>
 
   <!-- ALA legacy attribution fields -->
   <field name="dataResourceUid" type="string" docValues="true" indexed="true" />
