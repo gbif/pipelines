@@ -15,12 +15,7 @@
  */
 package org.gbif.converters.parser.xml;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -46,7 +41,6 @@ import org.apache.commons.digester.NodeCreateRule;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.sun.org.apache.xerces.internal.impl.io.MalformedByteSequenceException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import lombok.extern.slf4j.Slf4j;
@@ -131,7 +125,7 @@ public class OccurrenceParser {
     } catch (SAXException e) {
       log.debug("SAX exception when parsing gzipFile [{}] using encoding [{}] - trying another charset",
           gzipFile.getAbsolutePath(), charset, e);
-    } catch (MalformedByteSequenceException e) {
+    } catch (CharConversionException e) {
       log.debug("Malformed utf-8 byte when parsing with encoding [{}] - trying another charset", charset);
     } catch (IOException ex) {
       log.warn("Error reading input files", ex);

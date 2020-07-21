@@ -215,6 +215,9 @@
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
+    <!-- ALA libraries -->
+    <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
+
     <!-- Tools-->
     <geotools.version>20.5</geotools.version>
     <commons-configuration.version>1.6</commons-configuration.version>
@@ -244,6 +247,12 @@
   </scm>
 
   <dependencies>
+    <!-- ALA libraries -->
+    <dependency>
+      <groupId>au.org.ala.names</groupId>
+      <artifactId>ala-namematching-client</artifactId>
+      <version>${ala-namematching-service.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>

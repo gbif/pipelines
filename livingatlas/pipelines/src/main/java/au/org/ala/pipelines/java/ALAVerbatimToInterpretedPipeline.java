@@ -201,9 +201,12 @@ public class ALAVerbatimToInterpretedPipeline {
     alaAttributionTransform.setup();
 
     // ALA specific - Taxonomy
+    // ALA specific - Taxonomy
     ALATaxonomyTransform alaTaxonomyTransform =
         ALATaxonomyTransform.builder()
-            .kvStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
+            .datasetId(datasetId)
+            .nameMatchStoreSupplier(ALANameMatchKVStoreFactory.getInstanceSupplier(config))
+            .dataResourceStoreSupplier(ALAAttributionKVStoreFactory.getInstanceSupplier(config))
             .create();
     alaTaxonomyTransform.setup();
 

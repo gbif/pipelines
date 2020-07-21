@@ -33,6 +33,14 @@
     ]
   },
   {
+    "name" : "ALAMatchType",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "enum",
+    "symbols" : [
+      "exactMatch", "canoncialMatch", "phraseMatch", "fuzzyMatch", "vernacularMatch", "higherMatch", "taxonIdMatch", "noMatch"
+    ]
+  },
+  {
     "name" : "Nomenclature",
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "record",
@@ -145,6 +153,7 @@
     {"name": "lft", "type": ["null", "int"], "default" : null },
     {"name": "rgt", "type": ["null", "int"], "default" : null },
     {"name": "matchType", "type": ["null", "string"], "default" : null },
+    {"name": "nameType", "type": ["null", "string"], "default" : null },
     {"name": "kingdom", "type": ["null", "string"], "default" : null },
     {"name": "kingdomID", "type": ["null", "string"], "default" : null },
     {"name": "phylum", "type": ["null", "string"], "default" : null },
