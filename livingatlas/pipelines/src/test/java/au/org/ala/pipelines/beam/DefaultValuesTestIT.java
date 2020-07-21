@@ -48,7 +48,7 @@ public class DefaultValuesTestIT {
               "--metaFileName=uuid-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=target/test-classes/pipelines.yaml",
               "--useExtendedRecordId=true"
             });
 
@@ -77,7 +77,7 @@ public class DefaultValuesTestIT {
               "--metaFileName=interpretation-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=target/test-classes/pipelines.yaml",
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -92,7 +92,7 @@ public class DefaultValuesTestIT {
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/interpreted/verbatim/interpret-*",
-              "--properties=src/test/resources/pipelines.yaml"
+              "--properties=target/test-classes/pipelines.yaml"
             });
 
     // check default values are populated

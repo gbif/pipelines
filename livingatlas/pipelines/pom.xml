@@ -25,6 +25,13 @@
   </repositories>
 
   <build>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
+
     <plugins>
       <!-- Download supporting shapefiles -->
       <plugin>
@@ -197,7 +204,7 @@
               <run>
                 <wait>
                   <http>
-                    <url>http://localhost:9179/api/search?q=Acacia</url>
+                    <url>http://localhost:${alanm.port}/api/search?q=Acacia</url>
                     <method>GET</method>
                     <status>200</status>
                   </http>
@@ -214,6 +221,10 @@
   <properties>
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
+
+    <!-- Default port for ALA Name Matcher Docker container -->
+    <alanm.port>9179</alanm.port>
+    <!-- TODO: Port to replace 9180, and the SOLR container -->
 
     <!-- Tools-->
     <geotools.version>20.5</geotools.version>

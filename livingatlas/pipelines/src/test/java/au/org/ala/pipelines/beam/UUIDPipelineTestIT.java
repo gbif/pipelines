@@ -129,7 +129,7 @@ public class UUIDPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/uuid-management/"
                   + datasetID
                   + "/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=target/test-classes/pipelines.yaml",
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -146,7 +146,7 @@ public class UUIDPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/uuid-management/"
                   + datasetID
                   + "/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=target/test-classes/pipelines.yaml",
               "--useExtendedRecordId=true"
             });
     ALAUUIDMintingPipeline.run(uuidOptions);

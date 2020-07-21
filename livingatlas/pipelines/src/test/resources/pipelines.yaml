@@ -1,5 +1,5 @@
 alaNameMatch:
-  wsUrl: http://localhost:9179
+  wsUrl: http://localhost:${alanm.port}
   timeoutSec: 70
 
 collectory:
