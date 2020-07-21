@@ -1,5 +1,6 @@
 package au.org.ala.util;
 
+import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,7 +38,25 @@ public class SolrUtils {
 
   public static final String BIOCACHE_TEST_SOLR_COLLECTION = "biocache_test";
   public static final String BIOCACHE_CONFIG_SET = "biocache_test";
-  public static final String BIOCACHE_ZK_HOST = "localhost:9983";
+
+  public static String getZkHost() throws Exception {
+    return loadConfProperty("zkHost");
+  }
+
+  public static String getHttpHost() throws Exception {
+    return loadConfProperty("solrAdminHost");
+  }
+
+  private static String loadConfProperty(String propertyName) throws Exception {
+
+    // the config location is override in the pom file for maven test runs
+    CombinedYamlConfiguration testConf =
+        new CombinedYamlConfiguration(
+            new String[] {"--config=" + TestUtils.getPipelinesConfigFile()});
+
+    Map<String, String> testConfMap = (Map<String, String>) testConf.get("test");
+    return testConfMap.get(propertyName);
+  }
 
   public static void setupIndex() throws Exception {
     try {
@@ -50,17 +69,8 @@ public class SolrUtils {
     createSolrIndex();
   }
 
-  public static void main(String[] args) throws Exception {
-
-    deleteSolrIndex();
-    deleteSolrConfigSetIfExists(BIOCACHE_CONFIG_SET);
-    createSolrConfigSet();
-    createSolrIndex();
-  }
-
   public static void createSolrConfigSet() throws Exception {
     // create a zip of
-
     try {
       FileUtils.forceDelete(new File("/tmp/configset.zip"));
     } catch (FileNotFoundException e) {
@@ -103,7 +113,9 @@ public class SolrUtils {
     Request request =
         new Request.Builder()
             .url(
-                "http://localhost:8983/solr/admin/configs?action=UPLOAD&name="
+                "http://"
+                    + getHttpHost()
+                    + "/solr/admin/configs?action=UPLOAD&name="
                     + BIOCACHE_CONFIG_SET)
             .post(requestBody)
             .build();
@@ -116,7 +128,7 @@ public class SolrUtils {
 
   public static void deleteSolrConfigSetIfExists(String configset) throws Exception {
 
-    final SolrClient cloudSolrClient = new CloudSolrClient(BIOCACHE_ZK_HOST);
+    final SolrClient cloudSolrClient = new CloudSolrClient(getZkHost());
     final ConfigSetAdminRequest.List adminRequest = new ConfigSetAdminRequest.List();
 
     ConfigSetAdminResponse.List adminResponse = adminRequest.process(cloudSolrClient);
@@ -134,7 +146,7 @@ public class SolrUtils {
 
   public static void createSolrIndex() throws Exception {
 
-    final SolrClient cloudSolrClient = new CloudSolrClient(BIOCACHE_ZK_HOST);
+    final SolrClient cloudSolrClient = new CloudSolrClient(getZkHost());
     final CollectionAdminRequest.Create adminRequest = new CollectionAdminRequest.Create();
     adminRequest
         .setConfigName(BIOCACHE_CONFIG_SET)
@@ -148,7 +160,7 @@ public class SolrUtils {
 
   public static void deleteSolrIndex() throws Exception {
 
-    final SolrClient cloudSolrClient = new CloudSolrClient(BIOCACHE_ZK_HOST);
+    final SolrClient cloudSolrClient = new CloudSolrClient(getZkHost());
 
     final CollectionAdminRequest.List listRequest = new CollectionAdminRequest.List();
     CollectionAdminResponse response = listRequest.process(cloudSolrClient);
@@ -166,7 +178,7 @@ public class SolrUtils {
   }
 
   public static void reloadSolrIndex() throws Exception {
-    final SolrClient cloudSolrClient = new CloudSolrClient(BIOCACHE_ZK_HOST);
+    final SolrClient cloudSolrClient = new CloudSolrClient(getZkHost());
     final CollectionAdminRequest.Reload adminRequest = new CollectionAdminRequest.Reload();
     adminRequest.setCollectionName(BIOCACHE_TEST_SOLR_COLLECTION);
     adminRequest.process(cloudSolrClient);
@@ -174,8 +186,7 @@ public class SolrUtils {
   }
 
   public static Long getRecordCount(String queryUrl) throws Exception {
-
-    CloudSolrClient solr = new CloudSolrClient(BIOCACHE_ZK_HOST);
+    CloudSolrClient solr = new CloudSolrClient(getZkHost());
     solr.setDefaultCollection(BIOCACHE_TEST_SOLR_COLLECTION);
 
     SolrQuery params = new SolrQuery();
@@ -190,8 +201,7 @@ public class SolrUtils {
   }
 
   public static SolrDocumentList getRecords(String queryUrl) throws Exception {
-
-    CloudSolrClient solr = new CloudSolrClient(BIOCACHE_ZK_HOST);
+    CloudSolrClient solr = new CloudSolrClient(getZkHost());
     solr.setDefaultCollection(BIOCACHE_TEST_SOLR_COLLECTION);
 
     SolrQuery params = new SolrQuery();

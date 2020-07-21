@@ -3,6 +3,7 @@ package au.org.ala.pipelines.beam;
 import static org.junit.Assert.assertEquals;
 
 import au.org.ala.util.AvroUtils;
+import au.org.ala.util.TestUtils;
 import java.io.File;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
@@ -28,7 +29,7 @@ public class MigrationPipelineTestIT {
               "--metaFileName=/tmp/la-pipelines-test/uuid-migration/migration-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/uuid-migration",
               "--inputPath=" + absolutePath + "/uuid-migration/occ_uuid.csv",
-              "--properties=target/test-classes/pipelines.yaml"
+              "--properties=" + TestUtils.getPipelinesConfigFile()
             });
     MigrateUUIDPipeline.run(options);
 

@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.util.TestUtils;
 import java.io.File;
 import java.io.Serializable;
 import java.util.function.Function;
@@ -48,7 +49,7 @@ public class DefaultValuesTestIT {
               "--metaFileName=uuid-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
-              "--properties=target/test-classes/pipelines.yaml",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
 
@@ -77,7 +78,7 @@ public class DefaultValuesTestIT {
               "--metaFileName=interpretation-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/verbatim.avro",
-              "--properties=target/test-classes/pipelines.yaml",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -92,7 +93,7 @@ public class DefaultValuesTestIT {
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/default-values",
               "--inputPath=/tmp/la-pipelines-test/default-values/dr893/1/interpreted/verbatim/interpret-*",
-              "--properties=target/test-classes/pipelines.yaml"
+              "--properties=" + TestUtils.getPipelinesConfigFile()
             });
 
     // check default values are populated
