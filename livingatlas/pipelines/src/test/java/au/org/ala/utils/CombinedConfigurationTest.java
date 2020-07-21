@@ -21,7 +21,7 @@ public class CombinedConfigurationTest {
               "--someArg=1",
               "--runner=other",
               "--datasetId=dr893",
-              "--config=src/test/resources/pipelines.yaml,src/test/resources/pipelines-local.yaml"
+              "--config=target/test-classes/pipelines.yaml,src/test/resources/pipelines-local.yaml"
             });
   }
 
@@ -37,7 +37,7 @@ public class CombinedConfigurationTest {
   @Test
   public void getUnknownValueReturnsEmptyList() throws FileNotFoundException {
     assertThat(
-        new CombinedYamlConfiguration(new String[] {"--config=src/test/resources/pipelines.yaml"})
+        new CombinedYamlConfiguration(new String[] {"--config=target/test-classes/pipelines.yaml"})
             .subSet("general2")
             .size(),
         equalTo(0));

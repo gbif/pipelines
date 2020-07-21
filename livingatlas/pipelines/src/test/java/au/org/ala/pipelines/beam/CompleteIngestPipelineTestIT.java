@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
+import au.org.ala.util.TestUtils;
 import java.io.File;
 import java.util.UUID;
 import org.apache.commons.io.FileUtils;
@@ -90,7 +91,7 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=interpretation-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -105,7 +106,7 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=uuid-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
     ALAUUIDMintingPipeline.run(uuidOptions);
@@ -120,7 +121,7 @@ public class CompleteIngestPipelineTestIT {
               "--runner=DirectRunner",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline",
-              "--properties=src/test/resources/pipelines.yaml"
+              "--properties=" + TestUtils.getPipelinesConfigFile()
             });
     ALAInterpretedToLatLongCSVPipeline.run(latLngOptions);
 
@@ -141,8 +142,8 @@ public class CompleteIngestPipelineTestIT {
               "--metaFileName=uuid-metrics.yml",
               "--targetPath=/tmp/la-pipelines-test/complete-pipeline",
               "--inputPath=/tmp/la-pipelines-test/complete-pipeline/dr893/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
-              "--zkHost=localhost:9983",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
+              "--zkHost=" + SolrUtils.getZkHost(),
               "--solrCollection=" + SolrUtils.BIOCACHE_TEST_SOLR_COLLECTION,
               "--includeSampling=true"
             });

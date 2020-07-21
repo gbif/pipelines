@@ -25,6 +25,13 @@
   </repositories>
 
   <build>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
+
     <plugins>
       <!-- Download supporting shapefiles -->
       <plugin>
@@ -68,6 +75,9 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <systemPropertyVariables>
+            <pipelinesTestYamlConfigFile>target/test-classes/pipelines-maven.yaml</pipelinesTestYamlConfigFile>
+          </systemPropertyVariables>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
@@ -82,6 +92,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <pipelinesTestYamlConfigFile>target/test-classes/pipelines-maven.yaml</pipelinesTestYamlConfigFile>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
       <!-- Shade the project into an uber jar to send to Spark -->
       <plugin>
@@ -182,22 +197,32 @@
             <image>
               <alias>solr8</alias>
               <name>djtfmartin/biocache-pipelines-solr8:v3</name>
-              <external>
-                <type>compose</type>
-                <composeFile>solr8.yml</composeFile>
-              </external>
+              <run>
+                <ports>
+                  <port>${solr8.zk.port}:${solr8.zk.port}</port>
+                  <port>${solr8.http.port}:${solr8.http.port}</port>
+                </ports>
+                <env>
+                  <ZK_HOST>localhost:${solr8.zk.port}</ZK_HOST>
+                  <SOLR_PORT>${solr8.http.port}</SOLR_PORT>
+                  <SOLR_HOST>localhost</SOLR_HOST>
+                </env>
+                <entrypoint>
+                  <shell>solr start -c -f  -p ${solr8.http.port}</shell>
+                </entrypoint>
+              </run>
             </image>
             <image>
               <alias>ala-nameservice</alias>
               <name>djtfmartin/ala-namematching-service:v20200214-4</name>
-              <external>
-                <type>compose</type>
-                <composeFile>ala-nameservice.yml</composeFile>
-              </external>
               <run>
+                <ports>
+                  <port>${alanm.admin.port}:9180</port>
+                  <port>${alanm.port}:9179</port>
+                </ports>
                 <wait>
                   <http>
-                    <url>http://localhost:9179/api/search?q=Acacia</url>
+                    <url>http://${alanm.host}:${alanm.port}/api/search?q=Acacia</url>
                     <method>GET</method>
                     <status>200</status>
                   </http>
@@ -214,6 +239,16 @@
   <properties>
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
+
+    <!-- Default port for ALA Name Matcher Docker container -->
+    <alanm.port>9279</alanm.port>
+    <alanm.admin.port>9280</alanm.admin.port>
+    <alanm.host>localhost</alanm.host>
+    <solr8.zk.port>9973</solr8.zk.port>
+    <solr8.http.port>8973</solr8.http.port>
+    <solr8.zk.host>localhost</solr8.zk.host>
+    <solr8.http.host>localhost</solr8.http.host>
+    <collectory.url>https://collections.ala.org.au</collectory.url>
 
     <!-- Tools-->
     <geotools.version>20.5</geotools.version>
