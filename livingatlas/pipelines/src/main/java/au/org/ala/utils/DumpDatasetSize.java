@@ -11,11 +11,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.yaml.snakeyaml.Yaml;
 
 @Parameters(separators = "=")
+@Slf4j
 public class DumpDatasetSize {
 
   @Parameter(names = "--inputPath", description = "Comma-separated list of group names to be run")
@@ -29,15 +31,13 @@ public class DumpDatasetSize {
       description = "The absolute path to a hdfs-site.xml with default.FS configuration")
   private String hdfsSiteConfig;
 
-  private boolean compareToSolr;
-
   public static void main(String[] args) throws Exception {
 
     String[] combinedArgs =
         new CombinedYamlConfiguration(args).toArgs("general", "dataset-count-dump");
 
     DumpDatasetSize m = new DumpDatasetSize();
-    JCommander jCommander = JCommander.newBuilder().addObject(m).build();
+    JCommander jCommander = JCommander.newBuilder().acceptUnknownOptions(true).addObject(m).build();
     jCommander.parse(combinedArgs);
 
     if (m.inputPath == null || m.targetPath == null) {
@@ -79,15 +79,11 @@ public class DumpDatasetSize {
     List<Map.Entry<String, Long>> list = new ArrayList<>(counts.entrySet());
     list.sort(reverseOrder(Map.Entry.comparingByValue()));
 
-    // retrieve SOLR counts
-
-    if (compareToSolr) {
-      FileWriter fw = new FileWriter(targetPath);
-      for (Map.Entry<String, Long> entry : list) {
-        fw.write(entry.getKey() + "," + entry.getValue() + "\n");
-      }
-      fw.flush();
-      fw.close();
+    FileWriter fw = new FileWriter(targetPath);
+    for (Map.Entry<String, Long> entry : list) {
+      fw.write(entry.getKey() + "," + entry.getValue() + "\n");
     }
+    fw.flush();
+    fw.close();
   }
 }
