@@ -91,11 +91,11 @@ public class OccurrenceHdfsRecordConverter {
       } else if (temporalAccessor instanceof LocalDateTime) {
         return Date.from(((LocalDateTime)temporalAccessor).toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof LocalDate) {
-        return Date.from((((LocalDate)temporalAccessor).atStartOfDay()).toInstant(ZoneOffset.UTC));
+        return Date.from(((LocalDate)temporalAccessor).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof YearMonth) {
-        return Date.from((((YearMonth)temporalAccessor).atDay(1)).atStartOfDay().toInstant(ZoneOffset.UTC));
+        return Date.from(((YearMonth)temporalAccessor).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof Year) {
-        return Date.from((((Year)temporalAccessor).atDay(1)).atStartOfDay().toInstant(ZoneOffset.UTC));
+        return Date.from(((Year)temporalAccessor).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else {
         return null;
       }
@@ -315,6 +315,8 @@ public class OccurrenceHdfsRecordConverter {
               hr.setSpecies(rankedName.getName());
               hr.setSpecieskey(rankedName.getKey());
               break;
+            default:
+              break;
           }
         });
       }
@@ -378,6 +380,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizeunit(br.getSampleSizeUnit());
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
+      hr.setOccurrencestatus(br.getOccurrenceStatus());
 
       Optional.ofNullable(br.getRecordedByIds())
           .ifPresent(

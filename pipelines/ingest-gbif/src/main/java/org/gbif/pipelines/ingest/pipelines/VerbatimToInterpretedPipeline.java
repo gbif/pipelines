@@ -10,6 +10,7 @@ import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
+import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -137,6 +138,7 @@ public class VerbatimToInterpretedPipeline {
     BasicTransform basicTransform =
         BasicTransform.builder()
             .keygenServiceSupplier(KeygenServiceFactory.createSupplier(config, datasetId))
+            .occStatusKvStoreSupplier(OccurrenceStatusKvStoreFactory.createSupplier(config))
             .isTripletValid(options.isTripletValid())
             .isOccurrenceIdValid(options.isOccurrenceIdValid())
             .useExtendedRecordId(options.isUseExtendedRecordId())

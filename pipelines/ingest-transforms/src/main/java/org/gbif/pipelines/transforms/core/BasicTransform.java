@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
+import org.gbif.api.vocabulary.OccurrenceStatus;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.core.BasicInterpreter;
 import org.gbif.pipelines.io.avro.BasicRecord;
@@ -36,8 +38,12 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   private final boolean isOccurrenceIdValid;
   private final boolean useExtendedRecordId;
   private final BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn;
+
   private final SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier;
   private HBaseLockingKeyService keygenService;
+
+  private final SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier;
+  private KeyValueStore<String, OccurrenceStatus> occStatusKvStore;
 
   @Builder(buildMethodName = "create")
   private BasicTransform(
@@ -46,7 +52,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
       boolean useExtendedRecordId,
       BiConsumer<ExtendedRecord, BasicRecord> gbifIdFn,
       SerializableSupplier<HBaseLockingKeyService> keygenServiceSupplier,
-      HBaseLockingKeyService keygenService) {
+      HBaseLockingKeyService keygenService,
+      SerializableSupplier<KeyValueStore<String, OccurrenceStatus>> occStatusKvStoreSupplier,
+      KeyValueStore<String, OccurrenceStatus> occStatusKvStore) {
     super(BasicRecord.class, BASIC, BasicTransform.class.getName(), BASIC_RECORDS_COUNT);
     this.isTripletValid = isTripletValid;
     this.isOccurrenceIdValid = isOccurrenceIdValid;
@@ -54,6 +62,8 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
     this.gbifIdFn = gbifIdFn;
     this.keygenServiceSupplier = keygenServiceSupplier;
     this.keygenService = keygenService;
+    this.occStatusKvStoreSupplier = occStatusKvStoreSupplier;
+    this.occStatusKvStore = occStatusKvStore;
   }
 
   /** Maps {@link BasicRecord} to key value, where key is {@link BasicRecord#getId} */
@@ -81,6 +91,9 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
   public void setup() {
     if (keygenService == null && keygenServiceSupplier != null) {
       keygenService = keygenServiceSupplier.get();
+    }
+    if (occStatusKvStore == null && occStatusKvStoreSupplier != null) {
+      occStatusKvStore = occStatusKvStoreSupplier.get();
     }
   }
 
@@ -125,6 +138,7 @@ public class BasicTransform extends Transform<ExtendedRecord, BasicRecord> {
         .via(BasicInterpreter::interpretLicense)
         .via(BasicInterpreter::interpretIdentifiedByIds)
         .via(BasicInterpreter::interpretRecordedByIds)
+        .via(BasicInterpreter.interpretOccurrenceStatus(occStatusKvStore))
         .get();
   }
 }

@@ -33,11 +33,16 @@ public class SimpleTypeParser {
   /** Parses a positive integer value and consumes its response (if any). */
   public static void parsePositiveInt(ExtendedRecord er, DwcTerm term, Consumer<Optional<Integer>> consumer) {
     Optional.ofNullable(extractNullAwareValue(er, term))
-        .ifPresent(termValue -> {
-          boolean matches = INT_POSITIVE_PATTERN.matcher(termValue).matches();
-          Optional<Integer> v = matches ? Optional.ofNullable(NumberParser.parseInteger(termValue)) : Optional.empty();
-          consumer.accept(v);
-        });
+        .ifPresent(termValue -> consumer.accept(parsePositiveIntOpt(termValue)));
+  }
+
+  /** Parses a positive integer value and consumes its response (if any). */
+  public static Optional<Integer> parsePositiveIntOpt(String value) {
+    if (value == null) {
+      return Optional.empty();
+    }
+    boolean matches = INT_POSITIVE_PATTERN.matcher(value).matches();
+    return matches ? Optional.ofNullable(NumberParser.parseInteger(value)) : Optional.empty();
   }
 
   /** Parses a double value and consumes its response (if any). */
