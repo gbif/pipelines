@@ -28,8 +28,8 @@ import org.gbif.kvs.geocode.LatLng;
 public class CentrePoints {
 
   private static CentrePoints cp;
-  private Map<String, LatLng> statesCentre = new HashMap();
-  private Map<String, BBox> statesBBox = new HashMap();
+  private Map<String, LatLng> centres = new HashMap();
+  private Map<String, BBox> BBox = new HashMap();
 
   private CentrePoints() {}
 
@@ -47,7 +47,7 @@ public class CentrePoints {
         .forEach(
             l -> {
               String[] ss = l.split("\t");
-              String state = ss[0].toLowerCase();
+              String name = ss[0].toLowerCase();
               LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
               BBox bbox =
                   new BBox(
@@ -55,8 +55,8 @@ public class CentrePoints {
                       Double.parseDouble(ss[4]),
                       Double.parseDouble(ss[5]),
                       Double.parseDouble(ss[6]));
-              cp.statesCentre.put(state, centre);
-              cp.statesBBox.put(state, bbox);
+              cp.centres.put(name, centre);
+              cp.BBox.put(name, bbox);
             });
     return cp;
   }
@@ -68,7 +68,7 @@ public class CentrePoints {
   public boolean coordinatesMatchCentre(
       String location, double decimalLatitude, double decimalLongitude) {
 
-    LatLng supposedCentre = statesCentre.get(location.toLowerCase());
+    LatLng supposedCentre = centres.get(location.toLowerCase());
     if (supposedCentre != null) {
       int latDecPlaces = noOfDecimalPlace(decimalLatitude);
       int longDecPlaces = noOfDecimalPlace(decimalLongitude);
@@ -91,7 +91,7 @@ public class CentrePoints {
 
   /** @return size of centres */
   public int size() {
-    return statesCentre.size();
+    return centres.size();
   }
 
   private double round(double number, int decimalPlaces) {
