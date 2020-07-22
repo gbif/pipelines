@@ -1,9 +1,9 @@
 alaNameMatch:
-  wsUrl: http://localhost:9179
+  wsUrl: http://${alanm.host}:${alanm.port}
   timeoutSec: 70
 
 collectory:
-  wsUrl: https://collections.ala.org.au
+  wsUrl: ${collectory.url}
   timeoutSec: 70
 
 geocodeConfig:
@@ -81,18 +81,18 @@ index:
     metaFileName: indexing-metrics.yml
   java:
     includeSampling: true
-    zkHost: localhost:9983
+    zkHost: ${solr8.zk.host}:${solr8.zk.port}
     solrCollection: biocache
   spark-cluster:
   spark-embedded:
     appName: SOLR indexing for {datasetId}
     runner: SparkRunner
-    zkHost: localhost:9983
+    zkHost: ${solr8.zk.host}:${solr8.zk.port}
     solrCollection: biocache
     includeSampling: true
 
 test:
-  zkHost: localhost:9983
-  solrAdminHost: localhost:8983
+  zkHost: ${solr8.zk.host}:${solr8.zk.port}
+  solrAdminHost: ${solr8.http.host}:${solr8.http.port}
 
 root-test: 1

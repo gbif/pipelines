@@ -1,20 +1,32 @@
+### pipelines options: should match each GBIF PipelineOptions class options, that is, not extra options should be added
+### on each yml category
+
+# Common PipelineOptions
 general:
+  # Target path where the outputs of the pipeline will be written to
   targetPath: /data/pipelines-data
+  # Attempt of the dataset used to name the target file in file system
   attempt: 1
+  # The absolute path to a hdfs-site.xml with default.FS configuration
   hdfsSiteConfig: ""
+  # Path to core-site-config.xml
   coreSiteConfig: ""
 
+# class: au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
 dwca-avro:
   runner: SparkRunner
   metaFileName: dwca-metrics.yml
+  # Path of the input file
   inputPath: /data/biocache-load/{datasetId}/{datasetId}.zip
   tempLocation: /data/biocache-load/{datasetId}/tmp/
 
+# class: au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
 interpret:
   appName: Interpretation for {datasetId}
   interpretationTypes: ALL
   inputPath: /data/pipelines-data/{datasetId}/1/verbatim.avro
   metaFileName: interpretation-metrics.yml
+  # Skips GBIF id generation and copies ids from ExtendedRecord ids
   useExtendedRecordId: true
   runner: SparkRunner
   # TODO improve/move this
@@ -25,6 +37,7 @@ interpret:
   ## For spark-embedded:
   #  appName: Interpretation for {datasetId}
 
+# class: au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
 uuid:
   appName: UUID minting for {datasetId}
   runner: SparkRunner
@@ -35,11 +48,13 @@ uuid:
   # interpretationTypes: ALL
   # useExtendedRecordId: true
 
+# class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 export-latlng:
   inputPath: /data/pipelines-data
   runner: SparkRunner
   appName: Lat Long export for {datasetId}
 
+# class: au.org.ala.sampling.LayerCrawler
 sample:
   inputPath: /data/pipelines-data
   appName: Sample for {datasetId}
@@ -48,6 +63,7 @@ sample:
   # TODO improve/move this
   properties: ../scripts/pipelines.yaml
 
+# class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
   inputPath: /data/pipelines-data
   runner: SparkRunner
@@ -60,16 +76,7 @@ sample-avro:
   ## For spark-embedded:
   # appName: SamplingToAvro indexing for {datasetId}
 
-dataset-count-dump:
-  inputPath: /data/pipelines-data
-  targetPath: /tmp/dataset-counts.csv
-
-migrate-uuids:
-  inputPath: /data/pipelines-data/occ_uuid.csv
-  targetPath: /data/pipelines-data
-  hdfsSiteConfig: ""
-  # FIXME: MigrateUUIDPipeline should use this also?
-
+# class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: /data/pipelines-data
   metaFileName: indexing-metrics.yml
@@ -84,3 +91,72 @@ index:
   ## For spark-embedded:
   # appName: SOLR indexing for {datasetId}
   # runner: SparkRunner
+
+# class: au.org.ala.utils.DumpDatasetSize
+dataset-count-dump:
+  inputPath: /data/pipelines-data
+  targetPath: /tmp/dataset-counts.csv
+
+migrate-uuids:
+  inputPath: /data/pipelines-data/occ_uuid.csv
+  targetPath: /data/pipelines-data
+  hdfsSiteConfig: ""
+  # FIXME: MigrateUUIDPipeline should use this also?
+
+### la-pipelines cli additional arguments, like JVM or spark command line arguments
+
+interpret-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+uuid-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+export-latlng-sh-args:
+  spark-embedded:
+    jvm:
+  spark-cluster:
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
+
+sample-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+
+sample-avro-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+index-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 4G

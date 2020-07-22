@@ -33,28 +33,4 @@ public class NameMatchKVStoreTestIT {
 
     kvs.close();
   }
-
-  //    /**
-  //     * Tests the Get operation on {@link KeyValueCache} that wraps a simple KV store backed by a
-  // HashMap.
-  //     */
-  //    @Test
-  //    public void getCacheFailTest() throws Exception {
-  //
-  //        ClientConfiguration cc = ClientConfiguration.builder()
-  //                .withBaseApiUrl("http://localhostXXXXXX:9179") //GBIF base API url
-  //                .withTimeOut(10000l) //Geocode service connection time-out
-  //                .build();
-  //        KeyValueStore<ALASpeciesMatchRequest, ALANameUsageMatch> kvs =
-  // ALANameMatchKVStoreFactory.create(TestUtils.getConfig());
-  //
-  //        try {
-  //            ALASpeciesMatchRequest req =
-  // ALASpeciesMatchRequest.builder().scientificName("Macropus rufus").build();
-  //            ALANameUsageMatch match = kvs.get(req);
-  //            fail("Exception should be thrown");
-  //        } catch (RuntimeException e){
-  //            //expected
-  //        }
-  //    }
 }

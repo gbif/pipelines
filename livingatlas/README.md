@@ -72,7 +72,11 @@ These steps will load a dataset into a SOLR index.
 
 ### Running la-pipelines
 
-1. Start required docker containers using `mvn docker:start`
+1. Start required docker containers using
+```
+docker-compose -f pipelines/src/main/docker/ala-nameservice.yml up -d
+docker-compose -f pipelines/src/main/docker/solr8.yml up -d
+```
 1. `cd scripts`
 1. To convert DwCA to AVRO, run `./dwca-avro.sh dr893`
 1. To interpret, run `./interpret-spark-embedded.sh dr893`
@@ -101,27 +105,21 @@ To start the required containers for local development purposes,
 install [Docker Desktop](https://www.docker.com/products/docker-desktop) and run the following:
 
 ```
-mvn docker:start
-```
-
-and shutdown like so:
-
-```
-mvn docker:stop
-```
-
-Alternatively, they can be ran separately like so
-
-```
-docker-compose -f src/main/docker/ala-nameservice.yml up -d
-docker-compose -f src/main/docker/solr8.yml up -d
+docker-compose -f pipelines/src/main/docker/ala-nameservice.yml up -d
+docker-compose -f pipelines/src/main/docker/solr8.yml up -d
 ```
 
 To shutdown, run the following:
 ```
-docker-compose -f src/main/docker/ala-nameservice.yml kill
-docker-compose -f src/main/docker/solr8.yml kill
+docker-compose -f pipelines/src/main/docker/ala-nameservice.yml kill
+docker-compose -f pipelines/src/main/docker/solr8.yml kill
 ```
+
+Note: The docker containers that are ran as part of the maven build run on different 
+ports to those specified in the docker compose files `pipelines/src/main/docker`. 
+This was a deliberate choice allow developers to run integration tests in IDEs while developing pipelines,
+and then run maven builds on the same machine without port clashes.
+
 
 ## Code style and tools
 
