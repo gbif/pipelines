@@ -2,7 +2,7 @@
 
 The GBIF Pipelines development community welcomes contributions from anyone! Thank you.
 
-If you have questions please open [an issue](https://github.com/gbif/pipelines/issues/new) or contact the developers at informatics@gbif.org.
+If you have questions please open [an issue](https://github.com/gbif/pipelines/issues/new) or join the [mailing list](https://lists.gbif.org/mailman/listinfo/pipelines).
 
 There are different ways you can contribute that help this project:
 - Log [issues](https://github.com/gbif/pipelines/issues) and help document a bug or specify new functionality
@@ -20,7 +20,7 @@ Below is a tutorial for contributing code to Pipelines, covering our tools and t
 To contribute code, you need
 
 - a GitHub account
-- a Linux, MacOS, or Microsoft Windows development environment with Java JDK 8 installed
+- a Linux, MacOS, or Microsoft Windows development environment with Java JDK 8 installed 
 - Maven (version 3.6+)
 
 ### Connect with the Pipeline community and share your intent
@@ -35,12 +35,14 @@ To contribute code, you need
 
 This project uses [Apache Maven](https://maven.apache.org/run.html) to build. The following should be enough to checkout and build the project.
 
+
 ```
 git clone git@github.com:gbif/pipelines.git
 cd pipelines
-mvn clean package
+build.sh
 ```
-To skip integration tests, run `mvn clean package -DskipITs`.
+
+Using maven commands, the project can be built with `mvn clean package` (optionally with `-DskipTests` to skip tests) and integration tests run with `mvn verify`.
 
 We use [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format) for code styling.
 
@@ -89,6 +91,7 @@ If you are working on a new feature and not part of the core team please ask for
 8. Ensure that the code is spotless (`mvn spotless:check` and fixup styling issues using `mvn spotless:apply`)
 9. Verify that the PR only changes the code necessary to address the issue (other fixes should be in separate PRs)
 10. Prefer to create a pull request and have it reviewed for larger submissions. Committers are free to push *smaller* changes directly.
+11. Committers are requested to delete branches once merged.
 
 ### Test code style
 
