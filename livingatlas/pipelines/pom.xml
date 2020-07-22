@@ -22,6 +22,10 @@
           <id>ALA</id>
           <url>https://nexus.ala.org.au/content/repositories/releases</url>
       </repository>
+    <repository>
+      <id>ALA-snapshots</id>
+      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
+    </repository>
   </repositories>
 
   <build>
@@ -240,6 +244,9 @@
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
+    <!-- ALA libraries -->
+    <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
+
     <!-- Default port for ALA Name Matcher Docker container -->
     <alanm.port>9279</alanm.port>
     <alanm.admin.port>9280</alanm.admin.port>
@@ -284,6 +291,12 @@
   </scm>
 
   <dependencies>
+    <!-- ALA libraries -->
+    <dependency>
+      <groupId>au.org.ala.names</groupId>
+      <artifactId>ala-namematching-client</artifactId>
+      <version>${ala-namematching-service.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
