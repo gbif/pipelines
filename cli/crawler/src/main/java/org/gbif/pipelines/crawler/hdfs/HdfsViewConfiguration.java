@@ -31,18 +31,6 @@ public class HdfsViewConfiguration implements BaseConfiguration {
   @Parameter(names = "--distributed-main-class")
   public String distributedMainClass;
 
-  @Parameter(names = "--standalone-stack-size")
-  public String standaloneStackSize;
-
-  @Parameter(names = "--standalone-heap-size")
-  public String standaloneHeapSize;
-
-  @Parameter(names = "--standalone-jar-path")
-  public String standaloneJarPath;
-
-  @Parameter(names = "--standalone-main-class")
-  public String standaloneMainClass;
-
   @Parameter(names = "--spark-parallelism-min")
   public int sparkParallelismMin;
 
@@ -75,9 +63,6 @@ public class HdfsViewConfiguration implements BaseConfiguration {
 
   @Parameter(names = "--standalone-number-threads")
   public Integer standaloneNumberThreads;
-
-  @Parameter(names = "--standalone-use-java")
-  public boolean standaloneUseJava = false;
 
   @Parameter(names = "--deploy-mode")
   public String deployMode;
