@@ -202,10 +202,10 @@ public class OccurrenceHdfsRecordConverter {
       hr.setLevel1gid(lr.getGadmLevel1Gid());
       hr.setLevel2gid(lr.getGadmLevel2Gid());
       hr.setLevel3gid(lr.getGadmLevel3Gid());
-      hr.setLevel0name(lr.getGadmLevel0Gid());
-      hr.setLevel1name(lr.getGadmLevel1Gid());
-      hr.setLevel2name(lr.getGadmLevel2Gid());
-      hr.setLevel3name(lr.getGadmLevel3Gid());
+      hr.setLevel0name(lr.getGadmLevel0Name());
+      hr.setLevel1name(lr.getGadmLevel1Name());
+      hr.setLevel2name(lr.getGadmLevel2Name());
+      hr.setLevel3name(lr.getGadmLevel3Name());
 
       setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);

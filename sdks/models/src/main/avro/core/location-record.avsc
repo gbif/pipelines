@@ -34,10 +34,14 @@
     {"name": "hasGeospatialIssue","type":["null","boolean"],"default":null, "doc":"https://gbif.github.io/gbif-api/apidocs/org/gbif/api/model/occurrence/search/OccurrenceSearchParameter.html#HAS_GEOSPATIAL_ISSUE"},
     {"name": "locality","type":["null","string"],"default":null, "doc":"http://rs.tdwg.org/dwc/terms/locality"},
     {"name": "georeferencedDate", "type": ["null", "string"], "logicalType":"timestamp-millis", "default" : null, "doc": "http://rs.tdwg.org/dwc/terms/dateIdentified"},
-    {"name": "gadmLevel0Gid", "type": ["null", "string"], "default" : null, "doc":"http://gadm.geovocab.org/ontology.html#Country"},
-    {"name": "gadmLevel1Gid", "type": ["null", "string"], "default" : null, "doc":"http://gadm.geovocab.org/ontology.html#Level1"},
-    {"name": "gadmLevel2Gid", "type": ["null", "string"], "default" : null, "doc":"http://gadm.geovocab.org/ontology.html#Level2"},
-    {"name": "gadmLevel3Gid", "type": ["null", "string"], "default" : null, "doc":"http://gadm.geovocab.org/ontology.html#Level3"},
+    {"name": "gadmLevel0Gid", "type": ["null", "string"], "default" : null, "doc":"http://gadm.org/terms/level0Gid"},
+    {"name": "gadmLevel1Gid", "type": ["null", "string"], "default" : null, "doc":"http://gadm.org/terms/level1Gid"},
+    {"name": "gadmLevel2Gid", "type": ["null", "string"], "default" : null, "doc":"http://gadm.org/terms/level2Gid"},
+    {"name": "gadmLevel3Gid", "type": ["null", "string"], "default" : null, "doc":"http://gadm.org/terms/level3Gid"},
+    {"name": "gadmLevel0Name", "type": ["null", "string"], "default" : null, "doc":"http://gadm.org/terms/level0Name"},
+    {"name": "gadmLevel1Name", "type": ["null", "string"], "default" : null, "doc":"http://gadm.org/terms/level1Name"},
+    {"name": "gadmLevel2Name", "type": ["null", "string"], "default" : null, "doc":"http://gadm.org/terms/level2Name"},
+    {"name": "gadmLevel3Name", "type": ["null", "string"], "default" : null, "doc":"http://gadm.org/terms/level3Name"},
     {"name": "issues", "type": "IssueRecord", "default":{}}
   ]
 }

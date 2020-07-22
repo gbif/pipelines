@@ -142,10 +142,14 @@ public class LocationInterpreter {
       if (geocodeKvStore != null && lr.getHasCoordinate()) {
         Optional<GadmFeatures> gadmResult = LocationParser.parseGadm(lr, geocodeKvStore);
         gadmResult.ifPresent(gf -> {
-          lr.setGadmLevel0Gid(gf.getLevel0());
-          lr.setGadmLevel1Gid(gf.getLevel1());
-          lr.setGadmLevel2Gid(gf.getLevel2());
-          lr.setGadmLevel3Gid(gf.getLevel3());
+          lr.setGadmLevel0Gid(gf.getLevel0Gid());
+          lr.setGadmLevel1Gid(gf.getLevel1Gid());
+          lr.setGadmLevel2Gid(gf.getLevel2Gid());
+          lr.setGadmLevel3Gid(gf.getLevel3Gid());
+          lr.setGadmLevel0Name(gf.getLevel0Name());
+          lr.setGadmLevel1Name(gf.getLevel1Name());
+          lr.setGadmLevel2Name(gf.getLevel2Name());
+          lr.setGadmLevel3Name(gf.getLevel3Name());
         });
       }
     };

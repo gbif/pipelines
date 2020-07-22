@@ -173,7 +173,11 @@ public class LocationTransformTest {
         "DNK",
         "DNK.2_1",
         "DNK.2.14_1",
-        null // 25
+        null, // 25
+        "Denmark",
+        "Midtjylland",
+        "Silkeborg",
+        null
     };
     final String[] japan = {
         "1", // 0
@@ -202,6 +206,10 @@ public class LocationTransformTest {
         "JPN.26_1",
         "JPN.26.40_1",
         null, // 25
+        "Japan",
+        "Nagano",
+        "Nagawa",
+        null
     };
 
     final MetadataRecord mdr = MetadataRecord.newBuilder()
@@ -292,6 +300,10 @@ public class LocationTransformTest {
                       .setGadmLevel1Gid(x[23])
                       .setGadmLevel2Gid(x[24])
                       .setGadmLevel3Gid(x[25])
+                      .setGadmLevel0Name(x[26])
+                      .setGadmLevel1Name(x[27])
+                      .setGadmLevel2Name(x[28])
+                      .setGadmLevel3Name(x[29])
                       .setHasCoordinate(true)
                       .setHasGeospatialIssue(false)
                       .setPublishingCountry(mdr.getDatasetPublishingCountry())
