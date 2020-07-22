@@ -228,9 +228,8 @@ public class InterpretOccurrenceStatusTest {
 
     // Should
     assertEquals(OccurrenceStatus.PRESENT.name(), br.getOccurrenceStatus());
-    assertIssueSize(br, 2);
+    assertIssueSize(br, 1);
     assertIssue(OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS, br);
-    assertIssue(OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT, br);
   }
 
   @Test
