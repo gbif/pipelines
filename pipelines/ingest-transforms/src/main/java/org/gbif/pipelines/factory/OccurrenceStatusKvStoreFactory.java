@@ -10,7 +10,7 @@ import org.gbif.pipelines.transforms.SerializableSupplier;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
-/** Factory to get singleton instance of {@link KeyValueStore} */
+/** Factory to get singleton instance of occurrence status {@link KeyValueStore} */
 public class OccurrenceStatusKvStoreFactory {
 
   private final KeyValueStore<String, OccurrenceStatus> keyValueStore;
@@ -19,11 +19,10 @@ public class OccurrenceStatusKvStoreFactory {
 
   @SneakyThrows
   private OccurrenceStatusKvStoreFactory(PipelinesConfig config) {
-    // TODO: Use real KV store
-    keyValueStore = DummyOccurrenceStatusKvStore.create();
+    // This versions will be replaced by vocabulary server in the future
+    keyValueStore = OccurrenceStatusParserKvStore.create();
   }
 
-  /* TODO Comment */
   public static KeyValueStore<String, OccurrenceStatus> getInstance(PipelinesConfig config) {
     if (instance == null) {
       synchronized (MUTEX) {
@@ -45,9 +44,9 @@ public class OccurrenceStatusKvStoreFactory {
     return () -> OccurrenceStatusKvStoreFactory.getInstance(config);
   }
 
-  // Dummy version of OccurrenceStatusKvStore for testing only
+  // This versions will be replaced by vocabulary server in the future
   @NoArgsConstructor(staticName = "create")
-  public static class DummyOccurrenceStatusKvStore implements KeyValueStore<String, OccurrenceStatus> {
+  public static class OccurrenceStatusParserKvStore implements KeyValueStore<String, OccurrenceStatus> {
 
     private final OccurrenceStatusParser parser = OccurrenceStatusParser.getInstance();
 
