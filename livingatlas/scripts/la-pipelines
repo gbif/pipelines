@@ -71,7 +71,7 @@ Usage:
 Options:
   --config=<files>     Comma separated list of alternative la-pipeline yaml configurations (the last file has the highest precedence).
   --extra-args=<args>  Additional "arg1=values,arg2=value" to pass to pipeline options (highest precedence than yml values).
-  --no-colors          No corolorize logs output.
+  --no-colors          No colorize logs output.
   --dry-run            Print the commands without actually running them.
   --debug              Debug $CMD.
   -h --help            Show this help.
