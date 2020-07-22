@@ -398,7 +398,6 @@ public class BasicInterpreter {
         } else if (isOccAbsent) {
           br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
           addIssue(br, INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS);
-          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
         } else if (isOccRubbish) {
           br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
           addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
