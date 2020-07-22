@@ -88,6 +88,7 @@
       "catalogNumber":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "locality":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "occurrenceId":  {"type": "keyword", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
+      "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
 
       "organismQuantity": {"type":  "double"},
       "organismQuantityType": {"type":  "keyword", "copy_to": "all"},

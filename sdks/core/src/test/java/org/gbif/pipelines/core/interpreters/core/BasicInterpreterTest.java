@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,14 +10,18 @@ import java.util.stream.Stream;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import lombok.AllArgsConstructor;
 
 public class BasicInterpreterTest {
 
