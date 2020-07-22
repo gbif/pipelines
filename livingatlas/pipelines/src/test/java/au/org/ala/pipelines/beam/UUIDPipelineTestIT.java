@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import au.org.ala.util.AvroUtils;
+import au.org.ala.util.TestUtils;
 import java.io.File;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
@@ -129,7 +130,7 @@ public class UUIDPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/uuid-management/"
                   + datasetID
                   + "/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
@@ -146,7 +147,7 @@ public class UUIDPipelineTestIT {
               "--inputPath=/tmp/la-pipelines-test/uuid-management/"
                   + datasetID
                   + "/1/verbatim.avro",
-              "--properties=src/test/resources/pipelines.yaml",
+              "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
     ALAUUIDMintingPipeline.run(uuidOptions);
