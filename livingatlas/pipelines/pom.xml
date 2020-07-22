@@ -228,6 +228,7 @@
     <jackson-module-scala_2.11.version>2.11.1</jackson-module-scala_2.11.version>
     <jcommander.version>1.78</jcommander.version>
     <layers-store.version>2.0.3</layers-store.version>
+    <junit.version>5.6.2</junit.version>
 
     <!-- GBIF parent currently using 2.4.0 -->
     <spark.embedded.version>2.4.5</spark.embedded.version>
@@ -761,7 +762,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <version>5.6.2</version>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
