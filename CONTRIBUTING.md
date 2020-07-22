@@ -63,7 +63,7 @@ We follow a [GitFlow](https://www.atlassian.com/git/tutorials/comparing-workflow
 This can be summarized as:
 1. `master` represents what is running in production, or is in the process of being released for a new deployment
 2. `gbif-dev` represents the latest state of development, and is what is run by the [continuous build tools](https://builds.gbif.org/)
-   4. Generally feature branches are made from here
+   1. Generally feature branches are made from here
 3. `ala-dev` represents a large feature branch to bring in the `livingatlas` module and pipelines for the ALA work
 
 If you are working on a new feature and not part of the core team please ask for guidance on where to start (most likely `gbif-dev`).
@@ -73,47 +73,47 @@ If you are working on a new feature and not part of the core team please ask for
 1. Checkout the branch you need (or fork the project and then checkout the branch)
 2. Create a feature branch following a naming convention of `<issue_number>_my_new_feature`
 3. Add unit tests for your change (please see testing style below)
-3. Arrange your commits
+4. Arrange your commits
     1. Consider merging commits. We favour fewer commits, but recognize this is not always desirable for large features (please squash small commits addressing typos etc. into one)
-4. Use descriptive commit messages that make it easy to identify changes and provide a clear history.
+5. Use descriptive commit messages that make it easy to identify changes and provide a clear history.
     1. Please reference the issue you are working on unless it is a trivial change
     2. Examples of good commit messages:
-          1. `#123 Enable occurrenceStatus interpretation to avro`
-          1. `Fixup: Addressing typos in JDoc`
-    2. Examples of bad commit messages:
-          1. ` `
-          1. `Various fixes`
-          1. `#123`
-5. Check your code compiles, and all project unit tests pass (please be kind to reviewers)
-6. Explore the `errorprone` warnings raised at compilation time. Please address issues you see as best you can.
-7. Ensure that the code is spotless (`mvn spotless:check` and fixup styling issues using `mvn spotless:apply`)
-8. Verify that the PR only changes the code necessary to address the issue (other fixes should be in separate PRs)
-6. Prefer to create a pull request and have it reviewed for larger submissions. Committers are free to push *smaller* changes directly.
+        1. `#123 Enable occurrenceStatus interpretation to Avro`
+        2. `Fixup: Addressing typos in JDoc`
+    3. Examples of bad commit messages:
+        1. ` `
+        2. `Various fixes`
+        3. `#123`
+6. Check your code compiles, and all project unit tests pass (please be kind to reviewers)
+7. Explore the `errorprone` warnings raised at compilation time. Please address issues you see as best you can.
+8. Ensure that the code is spotless (`mvn spotless:check` and fixup styling issues using `mvn spotless:apply`)
+9. Verify that the PR only changes the code necessary to address the issue (other fixes should be in separate PRs)
+10. Prefer to create a pull request and have it reviewed for larger submissions. Committers are free to push *smaller* changes directly.
 
 ### Test code style
 
 The following illustrates the preferred style for unit tests.
 
-    ```
-      @Test
-      public void allValuesNullTest() {
-        // State
-        String eventDate = null;
-        String year = null;
-        String month = null;
-        String day = null;
-    
-        // When
-        ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
-    
-        // Should
-        assertFalse(result.getFromOpt().isPresent());
-        assertFalse(result.getToOpt().isPresent());
-        assertFalse(result.getYearOpt().isPresent());
-        assertFalse(result.getMonthOpt().isPresent());
-        assertFalse(result.getDayOpt().isPresent());
-        assertFalse(result.getStartDayOfYear().isPresent());
-        assertFalse(result.getEndDayOfYear().isPresent());
-        assertTrue(result.getIssues().isEmpty());
-      }
-    ```
+```java
+@Test
+public void allValuesNullTest() {
+  // State
+  String eventDate = null;
+  String year = null;
+  String month = null;
+  String day = null;
+
+  // When
+  ParsedTemporal result = TemporalParser.parse(year, month, day, eventDate);
+
+  // Should
+  assertFalse(result.getFromOpt().isPresent());
+  assertFalse(result.getToOpt().isPresent());
+  assertFalse(result.getYearOpt().isPresent());
+  assertFalse(result.getMonthOpt().isPresent());
+  assertFalse(result.getDayOpt().isPresent());
+  assertFalse(result.getStartDayOfYear().isPresent());
+  assertFalse(result.getEndDayOfYear().isPresent());
+  assertTrue(result.getIssues().isEmpty());
+}
+```
