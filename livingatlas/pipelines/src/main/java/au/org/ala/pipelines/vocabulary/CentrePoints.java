@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.gbif.kvs.geocode.LatLng;
 
 /**
@@ -21,26 +20,22 @@ import org.gbif.kvs.geocode.LatLng;
  * Wales -31.2532183 146.921099 -28.1561921 153.903718 -37.5052772 140.9992122 Rounded decimal of
  * predefined state centres based on precision of the given coordinates
  *
+ * <p>The first two is the coordinate of central point. The rest four are BBox
+ *
  * @author Bai187
  */
 @Slf4j
 public class CentrePoints {
 
-  private Map<String, LatLng> statesCentre = new HashMap();
-  private Map<String, BBox> statesBBox = new HashMap();
-
   private static CentrePoints cp;
+  private Map<String, LatLng> centres = new HashMap();
+  private Map<String, BBox> BBox = new HashMap();
 
   private CentrePoints() {}
 
-  public static CentrePoints getInstance(String filePath, String classpathFile)
-      throws FileNotFoundException {
-    if (Strings.isNotEmpty(filePath)) {
-      InputStream is = new FileInputStream(new File(filePath));
-      return getInstance(is);
-    } else {
-      return getInstance(CentrePoints.class.getResourceAsStream(classpathFile));
-    }
+  public static CentrePoints getInstance(String filePath) throws FileNotFoundException {
+    InputStream is = new FileInputStream(new File(filePath));
+    return getInstance(is);
   }
 
   public static CentrePoints getInstance(InputStream is) {
@@ -52,7 +47,7 @@ public class CentrePoints {
         .forEach(
             l -> {
               String[] ss = l.split("\t");
-              String state = ss[0].toLowerCase();
+              String name = ss[0].toLowerCase();
               LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
               BBox bbox =
                   new BBox(
@@ -60,10 +55,9 @@ public class CentrePoints {
                       Double.parseDouble(ss[4]),
                       Double.parseDouble(ss[5]),
                       Double.parseDouble(ss[6]));
-              cp.statesCentre.put(state, centre);
-              cp.statesBBox.put(state, bbox);
+              cp.centres.put(name, centre);
+              cp.BBox.put(name, bbox);
             });
-
     return cp;
   }
 
@@ -74,7 +68,7 @@ public class CentrePoints {
   public boolean coordinatesMatchCentre(
       String location, double decimalLatitude, double decimalLongitude) {
 
-    LatLng supposedCentre = statesCentre.get(location.toLowerCase());
+    LatLng supposedCentre = centres.get(location.toLowerCase());
     if (supposedCentre != null) {
       int latDecPlaces = noOfDecimalPlace(decimalLatitude);
       int longDecPlaces = noOfDecimalPlace(decimalLongitude);
@@ -97,7 +91,7 @@ public class CentrePoints {
 
   /** @return size of centres */
   public int size() {
-    return statesCentre.size();
+    return centres.size();
   }
 
   private double round(double number, int decimalPlaces) {

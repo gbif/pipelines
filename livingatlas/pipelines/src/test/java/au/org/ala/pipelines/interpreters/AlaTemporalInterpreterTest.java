@@ -27,8 +27,8 @@ public class AlaTemporalInterpreterTest {
     TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
     ALATemporalInterpreter.interpretTemporal(er, tr);
     assertArrayEquals(
-        new String[] {ALAOccurrenceIssue.MISSING_COLLECTION_DATE.name()},
-        tr.getIssues().getIssueList().toArray());
+        tr.getIssues().getIssueList().toArray(),
+        new String[] {ALAOccurrenceIssue.MISSING_COLLECTION_DATE.name()});
 
     map.put(DwcTerm.year.qualifiedName(), "2000");
     map.put(DwcTerm.month.qualifiedName(), "01"); // keep the space at the end

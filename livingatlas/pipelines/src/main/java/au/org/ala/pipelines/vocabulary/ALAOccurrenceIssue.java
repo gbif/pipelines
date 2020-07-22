@@ -20,7 +20,6 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
   UNCERTAINTY_IN_PRECISION(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   UNCERTAINTY_NOT_SPECIFIED(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
   COORDINATE_PRECISION_INVALID(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
-  COORDINATE_PRECISION_MISMATCH(InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_TERMS),
 
   STATE_COORDINATE_MISMATCH(
       InterpretationRemarkSeverity.WARNING, TermsGroup.COORDINATES_COUNTRY_TERMS),

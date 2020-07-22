@@ -1,8 +1,10 @@
 package au.org.ala.pipelines.interpreters;
 
-import static org.gbif.pipelines.parsers.utils.ModelUtils.*;
+import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.pipelines.parser.CoordinatesParser;
@@ -58,26 +60,14 @@ public class ALALocationInterpreter {
 
         // do the lookup by coordinates
         GeocodeResponse gr = stateProvinceLookupService.get(latlng);
-
         if (gr != null) {
           Collection<Location> locations = gr.getLocations();
           Optional<Location> stateProvince = locations.stream().findFirst();
 
           if (stateProvince.isPresent()) {
-
             // use the retrieve value, this takes precidence over the stateProvince DwCTerm
-            // which follows the GBIF implementation of setting DwCTerm country values
+            // which follows the GBIF implementation of setting DwCTerm country value
             lr.setStateProvince(stateProvince.get().getName());
-
-            // If the stateProvince that is retrieved using the coordinates differs from the
-            // supplied stateProvince
-            // raise an issue
-            String suppliedStateProvince = extractNullAwareValue(er, DwcTerm.stateProvince);
-            if (suppliedStateProvince != null
-                && !suppliedStateProvince.equalsIgnoreCase(lr.getStateProvince())) {
-              addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
-            }
-
           } else {
             if (log.isDebugEnabled()) {
               log.debug(
@@ -102,7 +92,7 @@ public class ALALocationInterpreter {
   }
 
   /**
-   * Verify location info,
+   * Verify country and state info,
    *
    * @param alaConfig
    * @return
@@ -152,6 +142,31 @@ public class ALALocationInterpreter {
 
         if (!Strings.isNullOrEmpty(lr.getStateProvince())) {
           try {
+            // Formalize state name
+            Optional<String> formalStateName =
+                StateProvince.getInstance(
+                        alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
+                    .matchTerm(lr.getStateProvince());
+            if (formalStateName.isPresent()) {
+              lr.setStateProvince(formalStateName.get());
+            }
+
+            String suppliedStateProvince = extractNullAwareValue(er, DwcTerm.stateProvince);
+            if (!Strings.isNullOrEmpty(suppliedStateProvince)) {
+              // If the stateProvince that is retrieved using the coordinates differs from the
+              // supplied stateProvince
+              // raise an issue
+              Optional<String> formalSuppliedName =
+                  StateProvince.getInstance(
+                          alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
+                      .matchTerm(suppliedStateProvince);
+              if (formalSuppliedName.isPresent()) {
+                suppliedStateProvince = formalSuppliedName.get();
+              }
+              if (!suppliedStateProvince.equalsIgnoreCase(lr.getStateProvince()))
+                addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
+            }
+
             if (StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
                 .coordinatesMatchCentre(
                     lr.getStateProvince(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
@@ -165,7 +180,6 @@ public class ALALocationInterpreter {
                     lr.getStateProvince());
               }
             }
-
           } catch (IOException fnfe) {
             String error = "FATAL：" + fnfe.getMessage();
             error =
@@ -186,13 +200,13 @@ public class ALALocationInterpreter {
                     + "\t"
                     + String.format(
                         "%-32s%-48s",
-                        "locationInfoConfig.stateProvinceNamesFile", "Country name matching file.");
+                        "locationInfoConfig.stateProvinceNamesFile", "State name matching file.");
             error +=
                 joptsimple.internal.Strings.LINE_SEPARATOR
                     + "\t"
                     + String.format(
                         "%-32s%-48s",
-                        "locationInfoConfig.stateProvinceCentrePointsFile", "Contry centres file");
+                        "locationInfoConfig.stateProvinceCentrePointsFile", "state centres file");
             error +=
                 joptsimple.internal.Strings.LINE_SEPARATOR
                     + joptsimple.internal.Strings.repeat('*', 128);
@@ -270,6 +284,8 @@ public class ALALocationInterpreter {
     String uncertaintyValue = extractNullAwareValue(er, DwcTerm.coordinateUncertaintyInMeters);
     String precisionValue = extractNullAwareValue(er, DwcTerm.coordinatePrecision);
 
+    double uncertaintyInMeters = -1;
+
     // If uncertainty NOT supplied
     if (Strings.isNullOrEmpty(uncertaintyValue)) {
       addIssue(lr, OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID.name());
@@ -280,7 +296,7 @@ public class ALALocationInterpreter {
           // convert possible uom to meters
           double possiblePrecision = DistanceRangeParser.parse(precisionValue);
           if (possiblePrecision > 1) {
-            lr.setCoordinateUncertaintyInMeters(possiblePrecision);
+            uncertaintyInMeters = possiblePrecision;
             addIssue(lr, ALAOccurrenceIssue.UNCERTAINTY_IN_PRECISION.name());
           }
         } catch (Exception e) {
@@ -293,13 +309,21 @@ public class ALALocationInterpreter {
     } else {
       // Uncertainty available
       try {
-        lr.setCoordinateUncertaintyInMeters(DistanceRangeParser.parse(uncertaintyValue));
+        uncertaintyInMeters = DistanceRangeParser.parse(uncertaintyValue);
       } catch (Exception e) {
         if (log.isDebugEnabled()) {
           log.debug("Unable to parse coordinateUncertaintyInMeters: " + uncertaintyValue);
         }
         addIssue(lr, OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID.name());
       }
+    }
+
+    // 5000 km seems safe
+    if (uncertaintyInMeters > 0d && uncertaintyInMeters < 5_000_000d) {
+      lr.setCoordinateUncertaintyInMeters(uncertaintyInMeters);
+    } else {
+      lr.setCoordinateUncertaintyInMeters(null); // Safely remove value
+      addIssue(lr, COORDINATE_UNCERTAINTY_METERS_INVALID);
     }
   }
 }
