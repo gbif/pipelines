@@ -22,6 +22,10 @@
           <id>ALA</id>
           <url>https://nexus.ala.org.au/content/repositories/releases</url>
       </repository>
+    <repository>
+      <id>ALA-snapshots</id>
+      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
+    </repository>
   </repositories>
 
   <build>
