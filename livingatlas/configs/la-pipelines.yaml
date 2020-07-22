@@ -96,8 +96,6 @@ index:
 dataset-count-dump:
   inputPath: /data/pipelines-data
   targetPath: /tmp/dataset-counts.csv
-  # The absolute path to a hdfs-site.xml with default.FS configuration
-  hdfsSiteConfig: ""
 
 migrate-uuids:
   inputPath: /data/pipelines-data/occ_uuid.csv
