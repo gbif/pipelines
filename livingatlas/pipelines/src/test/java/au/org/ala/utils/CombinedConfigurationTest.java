@@ -21,6 +21,7 @@ public class CombinedConfigurationTest {
               "--someArg=1",
               "--runner=other",
               "--datasetId=dr893",
+              "--fsPath=/data",
               "--config=target/test-classes/pipelines.yaml,src/test/resources/pipelines-local.yaml"
             });
   }
@@ -45,7 +46,7 @@ public class CombinedConfigurationTest {
 
   @Test
   public void weCanJoinSeveralConfigsAndConvertToArgs() {
-    String[] args = testConf.toArgs("general", "interpret.default", "interpret.spark-embedded");
+    String[] args = testConf.toArgs("general", "interpret");
     // it should be --args=value arrays
     assertThat(args.length, greaterThan(0));
     LinkedHashMap<String, Object> argsInMap = argsToMap(args);
@@ -71,17 +72,25 @@ public class CombinedConfigurationTest {
 
   @Test
   public void weCanJoinSeveralConfigsAndConvertToArgsWithParams() {
-    String[] args = testConf.toArgs("general", "interpret.default", "interpret.spark-cluster");
+    String[] args = testConf.toArgs("general", "interpret");
     LinkedHashMap<String, Object> argsInMap = argsToMap(args);
     assertThat(argsInMap.get("name"), equalTo("interpret dr893"));
     assertThat(argsInMap.get("appName"), equalTo("Interpretation for dr893"));
     assertThat(argsInMap.get("inputPath"), equalTo("/data/pipelines-data/dr893/1/verbatim.avro"));
+    assertThat(argsInMap.get("fsPath"), is(nullValue()));
+  }
+
+  @Test
+  public void weSubstituteYamlValuesWithArgs() {
+    String[] args = testConf.toArgs("general", "export-latlng");
+    LinkedHashMap<String, Object> argsInMap = argsToMap(args);
+    assertThat(argsInMap.get("appName"), equalTo("Lat Long export for dr893"));
+    assertThat(argsInMap.get("inputPath"), equalTo("/data/pipelines-data"));
   }
 
   @Test
   public void weCanJoinSeveralConfigs() {
-    LinkedHashMap<String, Object> embedConf =
-        testConf.subSet("general", "services", "interpret.default", "interpret.spark-embedded");
+    LinkedHashMap<String, Object> embedConf = testConf.subSet("general", "interpret");
     assertThat(embedConf.get("interpretationTypes"), equalTo("ALL"));
     assertThat(embedConf.get("runner"), equalTo("other")); // as main args has preference
     assertThat(embedConf.get("attempt"), equalTo(1));
@@ -100,9 +109,9 @@ public class CombinedConfigurationTest {
 
   @Test
   public void dotVars() {
-    assertThat(testConf.get("index.spark-embedded").getClass(), equalTo(LinkedHashMap.class));
-    assertThat(testConf.get("index.spark-embedded.includeSampling"), equalTo(true));
-    assertThat(testConf.get("index.spark-embedded.solrCollection"), equalTo("biocache"));
+    assertThat(testConf.get("index").getClass(), equalTo(LinkedHashMap.class));
+    assertThat(testConf.get("index.includeSampling"), equalTo(true));
+    assertThat(testConf.get("index.solrCollection"), equalTo("biocache"));
   }
 
   @Test

@@ -1,96 +1,197 @@
-alaNameMatch:
-  wsUrl: http://localhost:9179
-  timeoutSec: 70
+### run options:
 
-collectory:
-  wsUrl: https://collections.ala.org.au
-  timeoutSec: 70
+run:
+  # where to run: local, spark-embedded or spark-cluster
+  platform: local
+  local:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    sparkMaster: ""
+  spark-embedded:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    sparkMaster: ""
+  spark-cluster:
+    jar: /efs-mount-point/pipelines.jar
+    sparkTmp: /data/spark-tmp
+    sparkMaster: spark://aws-spark-quoll-1.ala:7077
 
-geocodeConfig:
-  country:
-    path: "/tmp/pipelines-shp/political"
-    field: ISO_A2
-    source: "http://www.naturalearthdata.com"
-  eez:
-    path: "/tmp/pipelines-shp/eez"
-    field: ISO2
-    source: "http://www.naturalearthdata.com"
-  stateProvince:
-    path: "/tmp/pipelines-shp/cw_state_poly"
-    field: FEATURE
-    source: "http://vliz.be/vmdcdata/marbound/"
+# where filesystem to use: local or hdfs
+fs:
+  platform: local
+  local:
+    fsPath: /data
+  hdfs:
+    fsPath: hdfs://localhost:8020
+  # fsPath: hdfs://aws-spark-quoll-1.ala:9000/
 
+### pipelines options: should match each GBIF PipelineOptions class options, that is, not extra options should be added
+### on each yml category
+
+# As PipelineOptions does not admits extra arguments, we use this comma separated list of --args to remove it after
+# use it. In the case of fsPath be substitute '{fsPath}/pipelines-data' with fs.hdfs.fsPath if hdfs is selected in
+# fs.platform or '/data' if 'local' is selected.
+pipelineExcludeArgs: fsPath
+
+# Common PipelineOptions
 general:
-  targetPath: /data/pipelines-data
+  # Target path where the outputs of the pipeline will be written to
+  targetPath: '{fsPath}/pipelines-data'
+  # Attempt of the dataset used to name the target file in file system
   attempt: 1
+  # The absolute path to a hdfs-site.xml with default.FS configuration
   hdfsSiteConfig: ""
+  # Path to core-site-config.xml
   coreSiteConfig: ""
 
+# class: au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
 dwca-avro:
   runner: SparkRunner
   metaFileName: dwca-metrics.yml
-  inputPath: /data/biocache-load/{datasetId}
+  # Path of the input file
+  inputPath: /data/biocache-load/{datasetId}/{datasetId}.zip
+  tempLocation: /data/biocache-load/{datasetId}/tmp/
 
+# class: au.org.ala.pipelines.beam.ALAVerbatimToInterpretedPipeline
 interpret:
-  default:
-    interpretationTypes: ALL
-    inputPath: /data/pipelines-data/{datasetId}/1/verbatim.avro
-    metaFileName: interpretation-metrics.yml
-    useExtendedRecordId: true
-  spark-cluster:
-    name: interpret {datasetId}
-    appName: Interpretation for {datasetId}
-    runner: SparkRunner
-  spark-embedded:
-    runner: SparkRunner
+  appName: Interpretation for {datasetId}
+  interpretationTypes: ALL
+  inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim.avro'
+  metaFileName: interpretation-metrics.yml
+  # Skips GBIF id generation and copies ids from ExtendedRecord ids
+  useExtendedRecordId: true
+  runner: SparkRunner
+  # TODO improve/move this
+  properties: ../scripts/pipelines.yaml
+  ## For spark-cluster:
+  name: interpret {datasetId}
+  #  appName: Interpretation for {datasetId}
+  ## For spark-embedded:
+  #  appName: Interpretation for {datasetId}
 
+# class: au.org.ala.pipelines.beam.ALAUUIDMintingPipeline
+uuid:
+  appName: UUID minting for {datasetId}
+  runner: SparkRunner
+  inputPath: '{fsPath}/pipelines-data'
+  metaFileName: uuid-metrics.yml
+  properties: ../scripts/pipelines.yaml
+  ## For spark-cluster:
+  # interpretationTypes: ALL
+  # useExtendedRecordId: true
+
+# class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 export-latlng:
-  inputPath: /data/pipelines-data
+  inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
   appName: Lat Long export for {datasetId}
 
+# class: au.org.ala.sampling.LayerCrawler
 sample:
-  default:
-  cluster:
-  avro-cluster:
-  embedded:
-    appName: SamplingToAvro indexing for {datasetId}
-    runner: SparkRunner
-    inputPath: /data/pipelines-data
-    metaFileName: indexing-metrics.yml
+  inputPath: '{fsPath}/pipelines-data'
+  appName: Sample for {datasetId}
+  metaFileName: indexing-metrics.yml
+  runner: SparkRunner
+  # TODO improve/move this
+  properties: ../scripts/pipelines.yaml
+
+# class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
+sample-avro:
+  inputPath: '{fsPath}/pipelines-data'
+  runner: SparkRunner
+  metaFileName: indexing-metrics.yml
+  # TODO improve/move this
+  properties: ../scripts/pipelines.yaml
+  ## For spark-cluster:
+  # appName: Add Sampling for {datasetId}
+  # useExtendedRecordId: true
+  ## For spark-embedded:
+  # appName: SamplingToAvro indexing for {datasetId}
+
+# class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
+index:
+  inputPath: '{fsPath}/pipelines-data'
+  metaFileName: indexing-metrics.yml
+  properties: ../scripts/pipelines.yaml
+  solrCollection: biocache
+  includeSampling: true
+  runner: SparkRunner
+  zkHost: localhost:9983
+  ## For spark-cluster:
+  # appName: SOLR indexing for {datasetId}
+  # runner: SparkRunner
+  ## For spark-embedded:
+  # appName: SOLR indexing for {datasetId}
+  # runner: SparkRunner
+
+# class: au.org.ala.utils.DumpDatasetSize
+dataset-count-dump:
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: /tmp/dataset-counts.csv
 
 migrate-uuids:
-  default:
-    runner: SparkRunner
-    metaFileName: uuid-metrics.yml
-    targetPath: /data/pipelines-data
-    inputPath: /data/pipelines-data/occ_uuid.csv
-  test:
-    runner: DirectRunner
+  inputPath: '{fsPath}/pipelines-data/occ_uuid.csv'
+  targetPath: '{fsPath}/pipelines-data'
+  hdfsSiteConfig: ""
+  # FIXME: MigrateUUIDPipeline should use this also?
 
-uuid:
-  embedded:
-    appName: UUID minting for {datasetId}
-    runner: SparkRunner
-    inputPath: /data/pipelines-data
-    metaFileName: uuid-metrics.yml
+### la-pipelines cli additional arguments, like JVM or spark command line arguments
 
-index:
-  default:
-    inputPath: /data/pipelines-data
-    metaFileName: indexing-metrics.yml
-  java:
-    includeSampling: true
-    zkHost: localhost:9983
-    solrCollection: biocache
-  spark-cluster:
+interpret-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
   spark-embedded:
-    appName: SOLR indexing for {datasetId}
-    runner: SparkRunner
-    zkHost: localhost:9983
-    solrCollection: biocache
-    includeSampling: true
+    jvm: -Xmx8g -XX:+UseG1GC -Dspark.master=local[*]
+  spark-cluster:
+    conf: spark.default.parallelism=144
+    num-executors: 16
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
 
+uuid-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+export-latlng-sh-args:
+  spark-embedded:
+    jvm:
+  spark-cluster:
+    num-executors: 8
+    executor-cores: 8
+    executor-memory: 16G
+    driver-memory: 4G
+
+sample-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+
+sample-avro-sh-args:
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 1G
+
+index-sh-args:
+  local:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-embedded:
+    jvm: -Xmx8g -XX:+UseG1GC
+  spark-cluster:
+    conf: spark.default.parallelism=192
+    num-executors: 24
+    executor-cores: 8
+    executor-memory: 7G
+    driver-memory: 4G
 test:
   zkHost: localhost:9983
   solrAdminHost: localhost:8983
