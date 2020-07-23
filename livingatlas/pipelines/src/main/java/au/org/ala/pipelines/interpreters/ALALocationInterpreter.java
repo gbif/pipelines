@@ -6,7 +6,7 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
-Fiimport au.org.ala.pipelines.parser.CoordinatesParser;
+import au.org.ala.pipelines.parser.CoordinatesParser;
 import au.org.ala.pipelines.parser.DistanceRangeParser;
 import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
