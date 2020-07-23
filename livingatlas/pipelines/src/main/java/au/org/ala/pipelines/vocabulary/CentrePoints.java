@@ -84,7 +84,9 @@ public class CentrePoints {
       }
       return approximatedLat == decimalLatitude && approximatedLong == decimalLongitude;
     } else {
-      log.error("{} is not found in records", location);
+      if (log.isWarnEnabled()) {
+        log.warn("{} is not found in records", location);
+      }
       return false;
     }
   }

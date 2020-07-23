@@ -23,6 +23,7 @@ public class UUIDPipelineTestIT {
     FileUtils.deleteQuietly(new File("/tmp/la-pipelines-test/uuid-management"));
   }
 
+  /** Test the generation of UUIDs for datasets that are use non-DwC terms for unique key terms */
   @Test
   public void testNonDwC() throws Exception {
     // dr1864 - has deviceId

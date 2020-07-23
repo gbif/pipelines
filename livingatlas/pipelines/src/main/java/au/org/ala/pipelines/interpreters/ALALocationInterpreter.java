@@ -6,14 +6,11 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
-import au.org.ala.kvs.ALAPipelinesConfig;
-import au.org.ala.pipelines.parser.CoordinatesParser;
+Fiimport au.org.ala.pipelines.parser.CoordinatesParser;
 import au.org.ala.pipelines.parser.DistanceRangeParser;
 import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
@@ -94,124 +91,54 @@ public class ALALocationInterpreter {
   /**
    * Verify country and state info,
    *
-   * @param alaConfig
    * @return
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> verifyLocationInfo(
-      ALAPipelinesConfig alaConfig) {
+      CentrePoints countryCentrePoints,
+      CentrePoints stateProvinceCentrePoints,
+      Vocab stateProvinceVocab) {
 
     return (er, lr) -> {
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
         if (!Strings.isNullOrEmpty(lr.getCountry())) {
-          try {
-            if (CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
-                .coordinatesMatchCentre(
-                    lr.getCountry(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
-              addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
-            }
-
-          } catch (FileNotFoundException fnfe) {
-            String error = "FATAL：" + fnfe.getMessage();
-
-            error =
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + joptsimple.internal.Strings.repeat('*', 128)
-                    + joptsimple.internal.Strings.LINE_SEPARATOR
-                    + error
-                    + joptsimple.internal.Strings.LINE_SEPARATOR;
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + "The following properties are mandatory in the pipelines.yaml for location interpretation:";
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + "Those properties need to be defined in a property file given by -- properties argument.";
-            error += joptsimple.internal.Strings.LINE_SEPARATOR;
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + "\t"
-                    + String.format(
-                        "%-32s%-48s",
-                        "locationInfoConfig.countryCentrePointsFile", "Contry centres file");
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + joptsimple.internal.Strings.repeat('*', 128);
-            log.error(error);
-            throw new RuntimeException(error);
+          if (countryCentrePoints.coordinatesMatchCentre(
+              lr.getCountry(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
+            addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
           }
         }
 
         if (!Strings.isNullOrEmpty(lr.getStateProvince())) {
-          try {
-            // Formalize state name
-            Optional<String> formalStateName =
-                StateProvince.getInstance(
-                        alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
-                    .matchTerm(lr.getStateProvince());
-            if (formalStateName.isPresent()) {
-              lr.setStateProvince(formalStateName.get());
-            }
+          // Formalize state name
+          Optional<String> formalStateName = stateProvinceVocab.matchTerm(lr.getStateProvince());
+          if (formalStateName.isPresent()) {
+            lr.setStateProvince(formalStateName.get());
+          }
 
-            String suppliedStateProvince = extractNullAwareValue(er, DwcTerm.stateProvince);
-            if (!Strings.isNullOrEmpty(suppliedStateProvince)) {
-              // If the stateProvince that is retrieved using the coordinates differs from the
-              // supplied stateProvince
-              // raise an issue
-              Optional<String> formalSuppliedName =
-                  StateProvince.getInstance(
-                          alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
-                      .matchTerm(suppliedStateProvince);
-              if (formalSuppliedName.isPresent()) {
-                suppliedStateProvince = formalSuppliedName.get();
-              }
-              if (!suppliedStateProvince.equalsIgnoreCase(lr.getStateProvince()))
-                addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
+          String suppliedStateProvince = extractNullAwareValue(er, DwcTerm.stateProvince);
+          if (!Strings.isNullOrEmpty(suppliedStateProvince)) {
+            // If the stateProvince that is retrieved using the coordinates differs from the
+            // supplied stateProvince
+            // raise an issue
+            Optional<String> formalSuppliedName =
+                stateProvinceVocab.matchTerm(suppliedStateProvince);
+            if (formalSuppliedName.isPresent()) {
+              suppliedStateProvince = formalSuppliedName.get();
             }
+            if (!suppliedStateProvince.equalsIgnoreCase(lr.getStateProvince()))
+              addIssue(lr, ALAOccurrenceIssue.STATE_COORDINATE_MISMATCH.name());
+          }
 
-            if (StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
-                .coordinatesMatchCentre(
-                    lr.getStateProvince(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
-              addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
-            } else {
-              if (log.isTraceEnabled()) {
-                log.trace(
-                    "{},{} is not the centre of {}!",
-                    lr.getDecimalLatitude(),
-                    lr.getDecimalLongitude(),
-                    lr.getStateProvince());
-              }
+          if (stateProvinceCentrePoints.coordinatesMatchCentre(
+              lr.getStateProvince(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
+            addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_STATEPROVINCE.name());
+          } else {
+            if (log.isTraceEnabled()) {
+              log.trace(
+                  "{},{} is not the centre of {}!",
+                  lr.getDecimalLatitude(),
+                  lr.getDecimalLongitude(),
+                  lr.getStateProvince());
             }
-          } catch (IOException fnfe) {
-            String error = "FATAL：" + fnfe.getMessage();
-            error =
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + joptsimple.internal.Strings.repeat('*', 128)
-                    + joptsimple.internal.Strings.LINE_SEPARATOR
-                    + error
-                    + joptsimple.internal.Strings.LINE_SEPARATOR;
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + "The following properties are mandatory in the pipelines.yaml for location interpretation:";
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + "Those properties need to be defined in a property file given by -- properties argument.";
-            error += joptsimple.internal.Strings.LINE_SEPARATOR;
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + "\t"
-                    + String.format(
-                        "%-32s%-48s",
-                        "locationInfoConfig.stateProvinceNamesFile", "State name matching file.");
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + "\t"
-                    + String.format(
-                        "%-32s%-48s",
-                        "locationInfoConfig.stateProvinceCentrePointsFile", "state centres file");
-            error +=
-                joptsimple.internal.Strings.LINE_SEPARATOR
-                    + joptsimple.internal.Strings.repeat('*', 128);
-            log.error(error);
-            throw new RuntimeException(error);
           }
         }
       }

@@ -5,6 +5,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.pipelines.interpreters.ALALocationInterpreter;
+import au.org.ala.pipelines.vocabulary.*;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Optional;
@@ -36,6 +37,10 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier;
   private KeyValueStore<LatLng, GeocodeResponse> countryKvStore;
   private KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore;
+
+  private CentrePoints countryCentrePoints;
+  private CentrePoints stateProvinceCentrePoints;
+  private Vocab stateProvinceVocab;
 
   @Setter private PCollectionView<MetadataRecord> metadataView;
 
@@ -78,6 +83,17 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
     if (stateProvinceKvStore == null && stateProvinceKvStoreSupplier != null) {
       log.info("Initialize geocodeKvStore");
       stateProvinceKvStore = stateProvinceKvStoreSupplier.get();
+    }
+
+    try {
+      countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
+      stateProvinceCentrePoints =
+          StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
+      stateProvinceVocab =
+          StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      throw new RuntimeException(e.getMessage());
     }
   }
 
@@ -137,7 +153,9 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .via(ALALocationInterpreter::interpretCoordinateUncertaintyInMeters)
             .via(ALALocationInterpreter::interpretGeoreferencedDate)
             .via(ALALocationInterpreter::interpretGeoreferenceTerms)
-            .via(ALALocationInterpreter.verifyLocationInfo(alaConfig))
+            .via(
+                ALALocationInterpreter.verifyLocationInfo(
+                    countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab))
             .get();
 
     result.ifPresent(r -> this.incCounter());

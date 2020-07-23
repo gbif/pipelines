@@ -72,7 +72,8 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
- *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.ALATaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.ALAAttributionRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
  * </pre>
@@ -92,7 +93,6 @@ import org.slf4j.MDC;
  * --inputPath=/path/verbatim.avro \
  * --properties=/path/pipelines.properties \
  * --useExtendedRecordId=true
- * --skipRegisrtyCalls=true
  *
  * }</pre>
  */
@@ -103,6 +103,8 @@ public class ALAVerbatimToInterpretedPipeline {
   public static void main(String[] args) throws FileNotFoundException {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
     run(combinedArgs);
+    // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
+    System.exit(0);
   }
 
   public static void run(String[] args) {
@@ -360,6 +362,7 @@ public class ALAVerbatimToInterpretedPipeline {
       locationTransform.tearDown();
     }
 
+    log.info("Saving metrics...");
     MetricsHandler.saveCountersToTargetPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - " + LocalDateTime.now());
   }
