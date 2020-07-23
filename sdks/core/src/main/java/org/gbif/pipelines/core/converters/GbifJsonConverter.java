@@ -353,6 +353,17 @@ public class GbifJsonConverter {
         //geo_shape
         jc.addJsonTextFieldNoCheck("scoordinates",
             "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude() + ")");
+
+        ObjectNode gadm = JsonConverter.createObjectNode();
+        gadm.put("gadmLevel0Gid", lr.getGadmLevel0Gid());
+        gadm.put("gadmLevel1Gid", lr.getGadmLevel1Gid());
+        gadm.put("gadmLevel2Gid", lr.getGadmLevel2Gid());
+        gadm.put("gadmLevel3Gid", lr.getGadmLevel3Gid());
+        gadm.put("gadmLevel0Name", lr.getGadmLevel0Name());
+        gadm.put("gadmLevel1Name", lr.getGadmLevel1Name());
+        gadm.put("gadmLevel2Name", lr.getGadmLevel2Name());
+        gadm.put("gadmLevel3Name", lr.getGadmLevel3Name());
+        jc.addJsonObject("gadm", gadm);
       }
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);

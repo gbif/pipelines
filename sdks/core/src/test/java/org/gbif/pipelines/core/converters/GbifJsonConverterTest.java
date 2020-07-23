@@ -85,7 +85,9 @@ public class GbifJsonConverterTest {
             + "\"country\":\"Country\","
             + "\"countryCode\":\"Code 1'2\\\"\","
             + "\"locality\":\"[68]\","
+            + "\"gadm\":{" // gadm
             + "\"gadmLevel2Gid\":\"XAA.1.2_1\","
+            + "}," // end gadm
             + "\"gbifClassification\":{" // gbifClassification
             + "\"usage\":{\"key\":10,\"name\":\"synonym\",\"rank\":\"SPECIES\"},"
             + "\"classification\":[" // gbifClassification.classification

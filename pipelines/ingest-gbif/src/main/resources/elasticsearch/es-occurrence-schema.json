@@ -117,14 +117,20 @@
       "scoordinates": {"type": "geo_shape"},
       "decimalLatitude": {"type":"double"},
       "decimalLongitude": {"type":"double"},
-      "gadmLevel0Gid": {"type": "text"},
-      "gadmLevel1Gid": {"type": "text"},
-      "gadmLevel2Gid": {"type": "text"},
-      "gadmLevel3Gid": {"type": "text"},
-      "gadmLevel0Name": {"type": "text"},
-      "gadmLevel1Name": {"type": "text"},
-      "gadmLevel2Name": {"type": "text"},
-      "gadmLevel3Name": {"type": "text"},
+
+      "gadm": {
+        "type": "object",
+        "properties": {
+          "gadmLevel0Gid": {"type": "keyword"},
+          "gadmLevel1Gid": {"type": "keyword"},
+          "gadmLevel2Gid": {"type": "keyword"},
+          "gadmLevel3Gid": {"type": "keyword"},
+          "gadmLevel0Name": {"type": "text"},
+          "gadmLevel1Name": {"type": "text"},
+          "gadmLevel2Name": {"type": "text"},
+          "gadmLevel3Name": {"type": "text"}
+        }
+      },
 
       "year": {"type": "short"},
       "month": {"type": "short"},
