@@ -59,7 +59,8 @@ public class GbifJsonConverterTest {
             + "\"identifiedBy\":\"D2 R2\","
             + "\"all\":[" // all
             + "\"Jeremia garde ,à elfutsone\",\"{\\\"something\\\":1}{\\\"something\\\":1}\","
-            + "\"D2 R2\",\"something:{something}"
+            + "\"D2 R2\","
+            + "\"something:{something}"
             + "\"]," // end all
             + "\"verbatim\":{" // verbatim
             + "\"core\":{" // verbatim.core
@@ -81,13 +82,14 @@ public class GbifJsonConverterTest {
             + "\"decimalLatitude\":1.0,"
             + "\"decimalLongitude\":2.0,"
             + "\"scoordinates\":\"POINT (2.0 1.0)\","
+            + "\"gadm\":{" // gadm
+            + "\"gadmLevel2Gid\":\"XAA.1.2_1\","
+            + "\"gadmLevel2Name\":\"Muni Cipality\""
+            + "}," // end gadm
             + "\"continent\":\"something{something}\","
             + "\"country\":\"Country\","
             + "\"countryCode\":\"Code 1'2\\\"\","
             + "\"locality\":\"[68]\","
-            + "\"gadm\":{" // gadm
-            + "\"gadmLevel2Gid\":\"XAA.1.2_1\","
-            + "}," // end gadm
             + "\"gbifClassification\":{" // gbifClassification
             + "\"usage\":{\"key\":10,\"name\":\"synonym\",\"rank\":\"SPECIES\"},"
             + "\"classification\":[" // gbifClassification.classification
@@ -233,6 +235,7 @@ public class GbifJsonConverterTest {
             .setContinent("something{something}")
             .setLocality("[68]")
             .setGadmLevel2Gid("XAA.1.2_1")
+            .setGadmLevel2Name("Muni Cipality")
             .build();
     lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
@@ -273,33 +276,93 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"all\":[\"Cr1\",\"{\\\"something\\\":1}{\\\"something\\\":1}\",\"http://www.gbif.org/tmp.jpg\","
-            + "\"something:{something}\",\"2010\",\"Desc1\",\"Lic1\",\"Tt1\",\"1\",\"Pub1\",\"-131.3\",\"Sp1\",\"not a date\","
-            + "\"60.4\",\"jpeg\",\"Rh1\",\"Cont1\",\"Aud1\"],\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/remark\":\"{\\\"something\\\":1}{\\\"something\\\":1}\","
-            + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\"},\"extensions\":{\"http://rs.tdwg.org/ac/terms/Multimedia\":"
-            + "[{\"http://purl.org/dc/terms/license\":\"Lic1\",\"http://www.w3.org/2003/01/geo/wgs84_pos#latitude\":\"60.4\","
-            + "\"http://purl.org/dc/terms/identifier\":\"http://www.gbif.org/tmp.jpg\",\"http://rs.tdwg.org/dwc/terms/datasetID\":\"1\","
-            + "\"http://purl.org/dc/terms/description\":\"Desc1\",\"http://purl.org/dc/terms/publisher\":\"Pub1\","
-            + "\"http://purl.org/dc/terms/audience\":\"Aud1\",\"http://purl.org/dc/terms/spatial\":\"Sp1\",\"http://purl.org/dc/terms/format\":\"jpeg\","
-            + "\"http://purl.org/dc/terms/rightsHolder\":\"Rh1\",\"http://purl.org/dc/terms/creator\":\"Cr1\",\"http://purl.org/dc/terms/created\":\"2010\","
-            + "\"http://purl.org/dc/terms/references\":\"http://www.gbif.org/tmp.jpg\",\"http://purl.org/dc/terms/contributor\":\"Cont1\","
-            + "\"http://purl.org/dc/terms/title\":\"Tt1\",\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},"
-            + "{\"http://purl.org/dc/terms/created\":\"not a date\"}],\"http://rs.gbif.org/terms/1.0/Image\":[{\"http://purl.org/dc/terms/license\":\"Lic1\","
-            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#latitude\":\"60.4\",\"http://purl.org/dc/terms/identifier\":\"http://www.gbif.org/tmp.jpg\","
-            + "\"http://rs.tdwg.org/dwc/terms/datasetID\":\"1\",\"http://purl.org/dc/terms/description\":\"Desc1\",\"http://purl.org/dc/terms/publisher\":\"Pub1\","
-            + "\"http://purl.org/dc/terms/audience\":\"Aud1\",\"http://purl.org/dc/terms/spatial\":\"Sp1\",\"http://purl.org/dc/terms/format\":\"jpeg\","
-            + "\"http://purl.org/dc/terms/rightsHolder\":\"Rh1\",\"http://purl.org/dc/terms/creator\":\"Cr1\",\"http://purl.org/dc/terms/created\":\"2010\","
-            + "\"http://purl.org/dc/terms/references\":\"http://www.gbif.org/tmp.jpg\",\"http://purl.org/dc/terms/contributor\":\"Cont1\","
-            + "\"http://purl.org/dc/terms/title\":\"Tt1\",\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},{\"http://purl.org/dc/terms/created\":\"not a date\"}]}},"
-            + "\"eventDateSingle\":\"01-01-2011\",\"year\":2011,\"month\":1,\"day\":1,\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},"
-            + "\"startDayOfYear\":1,\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],\"coordinates\":{\"lon\":2.0,\"lat\":1.0},"
-            + "\"decimalLatitude\":1.0,\"decimalLongitude\":2.0,\"scoordinates\":\"POINT (2.0 1.0)\",\"continent\":\"something{something}\",\"country\":\"Country\",\"countryCode\":"
-            + "\"Code 1'2\\\"\",\"gbifClassification\":{\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},\"classification\":"
-            + "[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}],"
-            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\",\"classificationPath\":\"_1\","
-            + "\"taxonKey\":[1,2]},\"locationFeatureLayers\":[{\"key\":\"data\",\"value\":\"value\"}],\"measurementOrFactItems\":[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
-            + "{\\\"something\\\":1}\",\"value\":1.1,\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}},{\"id\":\"124\",\"type\":null,\"value\":null,"
-            + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2012\"}}],\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
+        "{"
+            + "\"id\":\"777\","
+            + "\"all\":[" // all
+            + "\"Cr1\",\"{\\\"something\\\":1}{\\\"something\\\":1}\","
+            + "\"http://www.gbif.org/tmp.jpg\",\"something:{something}\",\"2010\",\"Desc1\","
+            + "\"Lic1\",\"Tt1\",\"1\",\"Pub1\",\"-131.3\",\"Sp1\",\"not a date\",\"60.4\","
+            + "\"jpeg\",\"Rh1\",\"Cont1\",\"Aud1\""
+            + "]," // end all
+            + "\"verbatim\":{" // verbatim
+            + "\"core\":{" // verbatim.core
+            + "\"http://rs.tdwg.org/dwc/terms/remark\":"
+            + "\"{\\\"something\\\":1}{\\\"something\\\":1}\","
+            + "\"http://rs.tdwg.org/dwc/terms/locality\":\"something:{something}\""
+            + "}," // end verbatim.core
+            + "\"extensions\":{" // verbatim.extensions
+            + "\"http://rs.tdwg.org/ac/terms/Multimedia\":[" // verbatim.extensions.Multimedia
+            + "{\"http://purl.org/dc/terms/license\":\"Lic1\","
+            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#latitude\":\"60.4\","
+            + "\"http://purl.org/dc/terms/identifier\":\"http://www.gbif.org/tmp.jpg\","
+            + "\"http://rs.tdwg.org/dwc/terms/datasetID\":\"1\","
+            + "\"http://purl.org/dc/terms/description\":\"Desc1\","
+            + "\"http://purl.org/dc/terms/publisher\":\"Pub1\","
+            + "\"http://purl.org/dc/terms/audience\":\"Aud1\","
+            + "\"http://purl.org/dc/terms/spatial\":\"Sp1\","
+            + "\"http://purl.org/dc/terms/format\":\"jpeg\","
+            + "\"http://purl.org/dc/terms/rightsHolder\":\"Rh1\","
+            + "\"http://purl.org/dc/terms/creator\":\"Cr1\","
+            + "\"http://purl.org/dc/terms/created\":\"2010\","
+            + "\"http://purl.org/dc/terms/references\":\"http://www.gbif.org/tmp.jpg\","
+            + "\"http://purl.org/dc/terms/contributor\":\"Cont1\","
+            + "\"http://purl.org/dc/terms/title\":\"Tt1\","
+            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},"
+            + "{\"http://purl.org/dc/terms/created\":\"not a date\"}]," // end v.e.M
+            + "\"http://rs.gbif.org/terms/1.0/Image\":[" // verbatim.multimedia.Image
+            + "{\"http://purl.org/dc/terms/license\":\"Lic1\","
+            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#latitude\":\"60.4\","
+            + "\"http://purl.org/dc/terms/identifier\":\"http://www.gbif.org/tmp.jpg\","
+            + "\"http://rs.tdwg.org/dwc/terms/datasetID\":\"1\","
+            + "\"http://purl.org/dc/terms/description\":\"Desc1\","
+            + "\"http://purl.org/dc/terms/publisher\":\"Pub1\","
+            + "\"http://purl.org/dc/terms/audience\":\"Aud1\","
+            + "\"http://purl.org/dc/terms/spatial\":\"Sp1\","
+            + "\"http://purl.org/dc/terms/format\":\"jpeg\","
+            + "\"http://purl.org/dc/terms/rightsHolder\":\"Rh1\","
+            + "\"http://purl.org/dc/terms/creator\":\"Cr1\","
+            + "\"http://purl.org/dc/terms/created\":\"2010\","
+            + "\"http://purl.org/dc/terms/references\":\"http://www.gbif.org/tmp.jpg\","
+            + "\"http://purl.org/dc/terms/contributor\":\"Cont1\","
+            + "\"http://purl.org/dc/terms/title\":\"Tt1\","
+            + "\"http://www.w3.org/2003/01/geo/wgs84_pos#longitude\":\"-131.3\"},"
+            + "{\"http://purl.org/dc/terms/created\":\"not a date\"}]}}," // end v.m.I, v.e, v
+            + "\"eventDateSingle\":\"01-01-2011\","
+            + "\"year\":2011,"
+            + "\"month\":1,"
+            + "\"day\":1,"
+            + "\"eventDate\":{\"gte\":\"01-01-2011\",\"lte\":\"01-01-2018\"},"
+            + "\"startDayOfYear\":1,"
+            + "\"issues\":[\"BASIS_OF_RECORD_INVALID\",\"ZERO_COORDINATE\"],"
+            + "\"coordinates\":{\"lon\":2.0,\"lat\":1.0},"
+            + "\"decimalLatitude\":1.0,"
+            + "\"decimalLongitude\":2.0,"
+            + "\"scoordinates\":\"POINT (2.0 1.0)\","
+            + "\"gadm\":{},"
+            + "\"continent\":\"something{something}\","
+            + "\"country\":\"Country\","
+            + "\"countryCode\":"
+            + "\"Code 1'2\\\"\","
+            + "\"gbifClassification\":{" // gbifClassification
+            + "\"usage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
+            + "\"classification\":[" // classification
+            + "{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
+            + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}]," // end classification
+            + "\"chemoformKey\":1,"
+            + "\"chemoform\":\"Name\","
+            + "\"aberrationKey\":2,"
+            + "\"aberration\":\"Name2\","
+            + "\"classificationPath\":\"_1\","
+            + "\"taxonKey\":[1,2]}," // end gbifClassification
+            + "\"locationFeatureLayers\":[{\"key\":\"data\",\"value\":\"value\"}],"
+            + "\"measurementOrFactItems\":[{\"id\":\"123\",\"type\":\"{\\\"something\\\":1}"
+            + "{\\\"something\\\":1}\","
+            + "\"value\":1.1,"
+            + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2011\"}},{\"id\":\"124\","
+            + "\"type\":null,"
+            + "\"value\":null,"
+            + "\"determinedDate\":{\"gte\": \"2010\", \"lte\": \"2012\"}}],"
+            + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
             + "\"MODIFIED_DATE_INVALID\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\","
             + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"PRESUMED_NEGATED_LONGITUDE\",\"IDENTIFIED_DATE_INVALID\","
             + "\"TYPE_STATUS_INVALID\",\"TAXON_MATCH_FUZZY\",\"CONTINENT_INVALID\",\"MODIFIED_DATE_UNLIKELY\",\"COORDINATE_ROUNDED\","
@@ -425,7 +488,12 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"all\":[],\"verbatim\":{\"core\":{},\"extensions\":{}},\"issues\":[],"
+        "{"
+            + "\"id\":\"777\","
+            + "\"all\":[],"
+            + "\"verbatim\":{\"core\":{},"
+            + "\"extensions\":{}},"
+            + "\"issues\":[],"
             + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\",\"MODIFIED_DATE_INVALID\","
             + "\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\",\"COUNTRY_INVALID\","
             + "\"ELEVATION_NOT_METRIC\",\"PRESUMED_NEGATED_LONGITUDE\",\"IDENTIFIED_DATE_INVALID\","
@@ -460,15 +528,33 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"all\":[\"T1\",\"Name\"],"
-            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/taxonID\":\"T1\",\"http://rs.tdwg.org/dwc/terms/scientificName\":\"Name\"},\"extensions\":{}},"
-            + "\"gbifClassification\":{\"taxonID\":\"T1\",\"verbatimScientificName\":\"Name\","
-            + "\"usage\":{\"key\":1,\"name\":\"n\",\"rank\":\"ABERRATION\"},"
-            + "\"classification\":[{\"key\":1,\"name\":\"Name\",\"rank\":\"CHEMOFORM\"},"
-            + "{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"}]"
-            + ",\"acceptedUsage\":{\"key\":2,\"name\":\"Name2\",\"rank\":\"ABERRATION\"},"
-            + "\"chemoformKey\":1,\"chemoform\":\"Name\",\"aberrationKey\":2,\"aberration\":\"Name2\","
-            + "\"classificationPath\":\"_1\",\"taxonKey\":[1,2]},"
+        "{"
+            + "\"id\":\"777\","
+            + "\"all\":[\"T1\",\"Name\"],"
+            + "\"verbatim\":{\"core\":{\"http://rs.tdwg.org/dwc/terms/taxonID\":\"T1\","
+            + "\"http://rs.tdwg.org/dwc/terms/scientificName\":\"Name\"},"
+            + "\"extensions\":{}},"
+            + "\"gbifClassification\":{\"taxonID\":\"T1\","
+            + "\"verbatimScientificName\":\"Name\","
+            + "\"usage\":{\"key\":1,"
+            + "\"name\":\"n\","
+            + "\"rank\":\"ABERRATION\"},"
+            + "\"classification\":[{\"key\":1,"
+            + "\"name\":\"Name\","
+            + "\"rank\":\"CHEMOFORM\"},"
+            + "{\"key\":2,"
+            + "\"name\":\"Name2\","
+            + "\"rank\":\"ABERRATION\"}]"
+            + ","
+            + "\"acceptedUsage\":{\"key\":2,"
+            + "\"name\":\"Name2\","
+            + "\"rank\":\"ABERRATION\"},"
+            + "\"chemoformKey\":1,"
+            + "\"chemoform\":\"Name\","
+            + "\"aberrationKey\":2,"
+            + "\"aberration\":\"Name2\","
+            + "\"classificationPath\":\"_1\","
+            + "\"taxonKey\":[1,2]},"
             + "\"created\":\"1970-01-01T00:00\"}";
 
     // State
@@ -506,7 +592,12 @@ public class GbifJsonConverterTest {
   public void extendedRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"all\":[],\"verbatim\":{\"core\":{},\"extensions\":{}}}";
+    String expected =
+      "{"
+            + "\"id\":\"777\","
+            + "\"all\":[],"
+            + "\"verbatim\":{\"core\":{},"
+            + "\"extensions\":{}}}";
 
     // State
     ExtendedRecord record = ExtendedRecord.newBuilder().setId("777").build();
@@ -557,8 +648,12 @@ public class GbifJsonConverterTest {
   public void locationFeaturesRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"locationFeatureLayers\":[{\"key\":\"{awdawd}\","
-        + "\"value\":\"\\\"{\\\"wad\\\":\\\"adw\\\"}\\\"\"}],\"created\":\"1970-01-01T00:00\"}";
+    String expected =
+      "{"
+            + "\"id\":\"777\","
+            + "\"locationFeatureLayers\":[{\"key\":\"{awdawd}\","
+            + "\"value\":\"\\\"{\\\"wad\\\":\\\"adw\\\"}\\\"\"}],"
+            + "\"created\":\"1970-01-01T00:00\"}";
 
     // State
     LocationFeatureRecord record = LocationFeatureRecord.newBuilder()
@@ -579,7 +674,9 @@ public class GbifJsonConverterTest {
   public void measurementOrFactRecordSkipIssuesWithIdTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"measurementOrFactItems\":[],\"created\":\"1970-01-01T00:00\"}";
+    String expected = "{\"id\":\"777\","
+            + "\"measurementOrFactItems\":[],"
+            + "\"created\":\"1970-01-01T00:00\"}";
 
     // State
     MeasurementOrFactRecord record = MeasurementOrFactRecord.newBuilder().setId("777").setCreated(0L).build();
@@ -596,7 +693,9 @@ public class GbifJsonConverterTest {
   public void amplificationRecordSkipIssuesWithIdEmptyTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"amplificationItems\":[],\"created\":\"1970-01-01T00:00\"}";
+    String expected = "{\"id\":\"777\","
+            + "\"amplificationItems\":[],"
+            + "\"created\":\"1970-01-01T00:00\"}";
 
     // State
     AmplificationRecord record = AmplificationRecord.newBuilder().setId("777").setCreated(0L).build();
@@ -630,7 +729,10 @@ public class GbifJsonConverterTest {
   public void multimediaRecordSkipIssuesWithIdEmptyTest() {
 
     // Expected
-    String expected = "{\"id\":\"777\",\"multimediaItems\":[{}],\"mediaTypes\":[],\"mediaLicenses\":[]}";
+    String expected = "{\"id\":\"777\","
+            + "\"multimediaItems\":[{}],"
+            + "\"mediaTypes\":[],"
+            + "\"mediaLicenses\":[]}";
 
     // State
     MultimediaRecord record = MultimediaRecord.newBuilder()
@@ -651,9 +753,23 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"amplificationItems\":[{\"name\":\"n\",\"identity\":3,\"appliedScientificName\":"
-            + "\"sn\",\"matchType\":\"mt\",\"bitScore\":1,\"expectValue\":2,\"querySequence\":\"qs\",\"subjectSequence\":"
-            + "\"ss\",\"qstart\":5,\"qend\":4,\"sstart\":8,\"send\":6,\"distanceToBestMatch\":\"dm\",\"sequenceLength\":7}]}";
+        "{\"id\":\"777\","
+            + "\"amplificationItems\":[{\"name\":\"n\","
+            + "\"identity\":3,"
+            + "\"appliedScientificName\":"
+            + "\"sn\","
+            + "\"matchType\":\"mt\","
+            + "\"bitScore\":1,"
+            + "\"expectValue\":2,"
+            + "\"querySequence\":\"qs\","
+            + "\"subjectSequence\":"
+            + "\"ss\","
+            + "\"qstart\":5,"
+            + "\"qend\":4,"
+            + "\"sstart\":8,"
+            + "\"send\":6,"
+            + "\"distanceToBestMatch\":\"dm\","
+            + "\"sequenceLength\":7}]}";
 
     // State
     AmplificationRecord record = AmplificationRecord.newBuilder()
@@ -696,9 +812,15 @@ public class GbifJsonConverterTest {
 
     // Expected
     String expected =
-        "{\"id\":\"777\",\"multimediaItems\":[{\"type\":\"StillImage\",\"format\":\"image/jpeg\",\"license\":\"somelicense\"},"
-            + "{\"type\":\"MovingImage\",\"format\":\"video/mp4\",\"license\":\"somelicense\"}],"
-            + "\"mediaTypes\":[\"StillImage\",\"MovingImage\"],\"mediaLicenses\":[\"somelicense\"]}";
+        "{\"id\":\"777\","
+            + "\"multimediaItems\":[{\"type\":\"StillImage\","
+            + "\"format\":\"image/jpeg\","
+            + "\"license\":\"somelicense\"},"
+            + "{\"type\":\"MovingImage\","
+            + "\"format\":\"video/mp4\","
+            + "\"license\":\"somelicense\"}],"
+            + "\"mediaTypes\":[\"StillImage\",\"MovingImage\"],"
+            + "\"mediaLicenses\":[\"somelicense\"]}";
 
     // State
     Multimedia stillImage = new Multimedia();
@@ -729,9 +851,18 @@ public class GbifJsonConverterTest {
   public void emptyAvroWithIdTest() {
     // Expected
     String expected =
-        "{\"datasetKey\":\"key\",\"crawlId\":1,\"license\":\"l\",\"datasetPublishingCountry\":\"PC\",\"issues\":[],"
-            + "\"gbifClassification\":{},\"measurementOrFactItems\":[],\"id\":\"777\",\"all\":[],"
-            + "\"verbatim\":{\"core\":{},\"extensions\":{}},\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
+        "{\"datasetKey\":\"key\","
+            + "\"crawlId\":1,"
+            + "\"license\":\"l\","
+            + "\"datasetPublishingCountry\":\"PC\","
+            + "\"issues\":[],"
+            + "\"gbifClassification\":{},"
+            + "\"measurementOrFactItems\":[],"
+            + "\"id\":\"777\","
+            + "\"all\":[],"
+            + "\"verbatim\":{\"core\":{},"
+            + "\"extensions\":{}},"
+            + "\"notIssues\":[\"COORDINATE_PRECISION_UNCERTAINTY_MISMATCH\","
             + "\"MODIFIED_DATE_INVALID\",\"COORDINATE_INVALID\",\"COORDINATE_PRECISION_INVALID\",\"ELEVATION_NON_NUMERIC\","
             + "\"COUNTRY_INVALID\",\"ELEVATION_NOT_METRIC\",\"PRESUMED_NEGATED_LONGITUDE\",\"IDENTIFIED_DATE_INVALID\","
             + "\"BASIS_OF_RECORD_INVALID\",\"TYPE_STATUS_INVALID\",\"TAXON_MATCH_FUZZY\",\"CONTINENT_INVALID\","

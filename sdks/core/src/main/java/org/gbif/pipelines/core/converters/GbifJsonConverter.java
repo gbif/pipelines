@@ -91,6 +91,14 @@ public class GbifJsonConverter {
       JsonConverter.builder()
           .skipKey("decimalLatitude")
           .skipKey("decimalLongitude")
+          .skipKey("gadmLevel0Gid")
+          .skipKey("gadmLevel1Gid")
+          .skipKey("gadmLevel2Gid")
+          .skipKey("gadmLevel3Gid")
+          .skipKey("gadmLevel0Name")
+          .skipKey("gadmLevel1Name")
+          .skipKey("gadmLevel2Name")
+          .skipKey("gadmLevel3Name")
           .skipKey("machineTags")
           .skipKey(CREATED_FIELD)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
@@ -355,14 +363,14 @@ public class GbifJsonConverter {
             "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude() + ")");
 
         ObjectNode gadm = JsonConverter.createObjectNode();
-        gadm.put("gadmLevel0Gid", lr.getGadmLevel0Gid());
-        gadm.put("gadmLevel1Gid", lr.getGadmLevel1Gid());
-        gadm.put("gadmLevel2Gid", lr.getGadmLevel2Gid());
-        gadm.put("gadmLevel3Gid", lr.getGadmLevel3Gid());
-        gadm.put("gadmLevel0Name", lr.getGadmLevel0Name());
-        gadm.put("gadmLevel1Name", lr.getGadmLevel1Name());
-        gadm.put("gadmLevel2Name", lr.getGadmLevel2Name());
-        gadm.put("gadmLevel3Name", lr.getGadmLevel3Name());
+        Optional.ofNullable(lr.getGadmLevel0Gid()).ifPresent(g -> gadm.put("gadmLevel0Gid", g));
+        Optional.ofNullable(lr.getGadmLevel1Gid()).ifPresent(g -> gadm.put("gadmLevel1Gid", g));
+        Optional.ofNullable(lr.getGadmLevel2Gid()).ifPresent(g -> gadm.put("gadmLevel2Gid", g));
+        Optional.ofNullable(lr.getGadmLevel3Gid()).ifPresent(g -> gadm.put("gadmLevel3Gid", g));
+        Optional.ofNullable(lr.getGadmLevel0Name()).ifPresent(g -> gadm.put("gadmLevel0Name", g));
+        Optional.ofNullable(lr.getGadmLevel1Name()).ifPresent(g -> gadm.put("gadmLevel1Name", g));
+        Optional.ofNullable(lr.getGadmLevel2Name()).ifPresent(g -> gadm.put("gadmLevel2Name", g));
+        Optional.ofNullable(lr.getGadmLevel3Name()).ifPresent(g -> gadm.put("gadmLevel3Name", g));
         jc.addJsonObject("gadm", gadm);
       }
       // Fields as a common view - "key": "value"
