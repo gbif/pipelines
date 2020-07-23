@@ -134,7 +134,7 @@ public class ALALocationInterpreter {
           } else {
             if (log.isTraceEnabled()) {
               log.trace(
-                  "{},{} is not the centre of {}!",
+                  "{},{} is not at the centre of {}!",
                   lr.getDecimalLatitude(),
                   lr.getDecimalLongitude(),
                   lr.getStateProvince());
