@@ -1,7 +1,13 @@
 package org.gbif.pipelines.transforms.metadata;
 
-import java.util.Optional;
-
+import lombok.Builder;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.beam.sdk.transforms.MapElements;
+import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
+import org.apache.beam.sdk.values.TypeDescriptor;
 import org.gbif.pipelines.core.Interpretation;
 import org.gbif.pipelines.core.interpreters.metadata.TaggedValuesInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -10,15 +16,7 @@ import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 
-import org.apache.beam.sdk.transforms.MapElements;
-import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.values.KV;
-import org.apache.beam.sdk.values.PCollectionView;
-import org.apache.beam.sdk.values.TypeDescriptor;
-
-import lombok.Builder;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Optional;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TAGGED_VALUES_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TAGGED_VALUES;
@@ -70,14 +68,11 @@ public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValue
   }
 
   public Optional<TaggedValueRecord> processElement(ExtendedRecord source, MetadataRecord mdr) {
-    Optional<TaggedValueRecord> result = Interpretation.from(source)
-      .to(id -> TaggedValueRecord.newBuilder().setId(source.getId()).build())
-      .via(TaggedValuesInterpreter.interpret(mdr))
-      .get();
-
-    result.ifPresent(r -> this.incCounter());
-
-    return result;
+    return Interpretation.from(source)
+        .to(id -> TaggedValueRecord.newBuilder().setId(source.getId()).build())
+        .via(TaggedValuesInterpreter.interpret(mdr))
+        .via(r -> this.incCounter())
+        .getOfNullable();
   }
 
 }

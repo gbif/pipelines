@@ -58,7 +58,7 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(TemporalInterpreter::interpretTemporal)
-        .get();
+        .getOfNullable();
   }
 
 

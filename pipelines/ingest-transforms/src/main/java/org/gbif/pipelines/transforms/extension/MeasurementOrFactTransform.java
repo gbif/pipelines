@@ -59,7 +59,7 @@ public class MeasurementOrFactTransform extends Transform<ExtendedRecord, Measur
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(MeasurementOrFactInterpreter::interpret)
-        .get();
+        .getOfNullable();
   }
 
 }

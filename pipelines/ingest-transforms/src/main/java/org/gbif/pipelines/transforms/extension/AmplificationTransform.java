@@ -32,14 +32,13 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class AmplificationTransform extends Transform<ExtendedRecord, AmplificationRecord> {
 
-  private SerializableSupplier<BlastServiceClient> clientSupplier;
+  private final SerializableSupplier<BlastServiceClient> clientSupplier;
   private BlastServiceClient client;
 
   @Builder(buildMethodName = "create")
-  private AmplificationTransform(SerializableSupplier<BlastServiceClient> clientSupplier, BlastServiceClient client) {
+  private AmplificationTransform(SerializableSupplier<BlastServiceClient> clientSupplier) {
     super(AmplificationRecord.class, AMPLIFICATION, AmplificationTransform.class.getName(), AMPLIFICATION_RECORDS_COUNT);
     this.clientSupplier = clientSupplier;
-    this.client = client;
   }
 
   /** Maps {@link AmplificationRecord} to key value, where key is {@link AmplificationRecord#getId} */
@@ -68,7 +67,7 @@ public class AmplificationTransform extends Transform<ExtendedRecord, Amplificat
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(AmplificationInterpreter.interpret(client))
-        .get();
+        .getOfNullable();
   }
 
 }

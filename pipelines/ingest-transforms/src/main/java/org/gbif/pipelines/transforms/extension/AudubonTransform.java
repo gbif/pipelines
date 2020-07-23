@@ -56,7 +56,7 @@ public class AudubonTransform extends Transform<ExtendedRecord, AudubonRecord> {
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(AudubonInterpreter::interpret)
-        .get();
+        .getOfNullable();
   }
 
 }
