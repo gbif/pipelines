@@ -2,8 +2,6 @@
 
 CMD=$(basename $0)
 
-source ./set-env.sh
-
 FIND_DOCOPTS=$(which docopts)
 FIND_YQ=$(which yq)
 
@@ -78,8 +76,7 @@ Options:
   -v --version         Show version.
 ----
 $CMD $VER
-Copyright (C) 2020 ALA Development Team
-License MPL v 1.1
+License Apache-2.0
 EOF
 )"
 
@@ -108,21 +105,16 @@ error_catch() {
 
 log.info "Starting $CMD"
 
-# TODO: externalize this CONFIG_DIR in some way, ask other locations
 if [[ $PROD = true ]] ; then CONFIG_DIR=/data/la-pipelines/config ; else CONFIG_DIR=../configs; fi
-
-if ($local); then unset EXTRA_CONFIG ; fi
-if ($embedded); then EXTRA_CONFIG=,$CONFIG_DIR/la-pipelines-spark-embedded.yaml ; fi
-if ($cluster); then EXTRA_CONFIG=,$CONFIG_DIR/la-pipelines-spark-cluster.yaml ; fi
 
 if ($dry_run); then _D=echo; else _D=; fi
 # Set default config locations for Production and Development
-if [[ -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml$EXTRA_CONFIG,$CONFIG_DIR/la-pipelines-local.yaml; fi
+if [[ -z $config ]]; then config=$CONFIG_DIR/la-pipelines.yaml,$CONFIG_DIR/la-pipelines-local.yaml; fi
 
 if [[ $PROD = false && $no_colors = false ]]; then logConfig=$PWD/../pipelines/src/main/resources/log4j-colorized.properties; fi
-if [[ $PROD = false && $no_colors = true ]]; then logConfig=$PWD/../pipelines/src/main/resources/log4j.properties; fi
-if [[ $PROD = true && $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
-if [[ $PROD = true && $no_colors = true ]]; then logConfig=$CONFIG_DIR/log4j.properties; fi
+if [[ $PROD = false && $no_colors = true ]];  then logConfig=$PWD/../pipelines/src/main/resources/log4j.properties; fi
+if [[ $PROD = true &&  $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
+if [[ $PROD = true &&  $no_colors = true ]];  then logConfig=$CONFIG_DIR/log4j.properties; fi
 
 for dr in "${dr[@]}"; do
     if [[ -n $dr && $dr != all && $dr != dr* ]]; then >&2 log.error "Wrong dataResource '$dr'. It should start with 'dr', like 'dr893'"; exit 1 ; fi
@@ -136,11 +128,6 @@ else
     ARGS=
 fi
 
-TYPE=local # by default
-if ($local) ; then TYPE=local; fi
-if ($embedded) ; then TYPE=spark-embedded; fi
-if ($cluster) ; then TYPE=spark-cluster; fi
-
 log.info Config: $config
 log.info Extra arguments: $ARGS
 log.debug Logs without colors: $no_colors
@@ -153,6 +140,13 @@ log.debug Config list: $configList
 for f in $configList $logConfig
 do
     if [[ ! -f $f ]] ; then log.error File $f doesn\'t exits ; exit 1; fi
+done
+
+# Validate yaml of configs
+for f in $configList
+do
+    YML_V=$(yq v $f; echo $?)
+    if [[ $YML_V != 0 ]] ; then log.error Config $f is not valid ; exit 1; fi
 done
 
 # Gets a config value from yaml configList files
@@ -172,12 +166,54 @@ function toArg() {
   echo --$KEY $(getConf $PREFIX.$KEY)
 }
 
-#log.debug Target $(getConf general.targetPath)
-#PIPELINES_JAR=$(eval echo $(getConf java.PIPELINES_JAR))
-#SPARK_TMP=$(getConf spark.SPARK_TMP)
+## Process run options
 
-log.debug Using $PIPELINES_JAR
-log.debug Using $SPARK_TMP
+# Where to run, --local/etc options has precedence over yaml run.platform
+if ($local || $dwca_avro || $sample)  ; then TYPE=local;
+elif ($embedded) ; then TYPE=spark-embedded;
+elif ($cluster) ; then TYPE=spark-cluster;
+else TYPE=$(getConf run.platform);
+fi
+
+if [[ $TYPE = "spark-cluster" ]]; then USE_CLUSTER=true; else USE_CLUSTER=false; fi
+
+log.info "Running in: $TYPE"
+log.debug "Is cluster: $USE_CLUSTER"
+
+if [[ $PROD = true ]]; then PIPELINES_JAR=/usr/share/la-pipelines/la-pipelines.jar
+else
+    PIPELINES_JAR=../pipelines/target/pipelines-$VER-shaded.jar
+fi
+
+# dwca-avro, sample and dump-datasize uses local_jar
+LOCAL_PIPELINES_JAR=$PIPELINES_JAR
+
+if [[ $USE_CLUSTER = true ]]; then PIPELINES_JAR=$(getConf run.spark-cluster.jar); fi
+
+for JAR in $LOCAL_PIPELINES_JAR; do
+    if [[ ! -f $JAR ]]
+    then
+        log.error "Cannot find $JAR."
+        exit 1
+    fi
+done
+
+FS_PATH=$(getConf fs.$(getConf fs.platform).fsPath)
+if [[ ! -d $FS_PATH ]]
+then
+    log.error "Cannot find $FS_PATH."
+    exit 1
+fi
+
+SPARK_TMP=$(getConf run.$TYPE.sparkTmp);
+
+log.debug Target $(getConf general.targetPath)
+log.debug Jar: $PIPELINES_JAR
+log.debug Spart tmp: $SPARK_TMP
+
+FS_PATH_ARG="--fsPath=$FS_PATH"
+
+ARGS="$ARGS $FS_PATH_ARG"
 
 # Uncomment this to debug log4j
 # if ( $debug) ; then EXTRA_JVM_CLI_ARGS="-Dlog4j.debug"; fi
@@ -224,7 +260,7 @@ function dwca-avro () {
     fi
 
     $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
-        -cp $PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
+        -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
         --datasetId=$dr \
         --config=$config $ARGS
 
@@ -245,7 +281,7 @@ function interpret () {
             $(getConf $PRE.jvm) \
             -cp $PIPELINES_JAR $CLASS \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
     fi
 
     PRE=interpret-sh-args.spark-embedded
@@ -256,7 +292,7 @@ function interpret () {
             $(getConf $PRE.jvm) \
             -cp $PIPELINES_JAR $CLASS \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
     fi
 
     PRE=interpret-sh-args.spark-cluster
@@ -273,7 +309,7 @@ function interpret () {
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
             # TODO set here an optional colorized log4j properties
     fi
 
@@ -295,7 +331,7 @@ function uuid () {
             $(getConf $PRE.jvm)  \
             -cp $PIPELINES_JAR $CLASS \
             --datasetId=$dr\
-            --config=$config
+            --config=$config $ARGS
     fi
 
     PRE=uuid-sh-args.spark-cluster
@@ -311,7 +347,7 @@ function uuid () {
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
             # TODO set here an optional colorized log4j properties
     fi
 
@@ -332,7 +368,7 @@ function export-latlng () {
             $(getConf $PRE.jvm)  \
             -cp $PIPELINES_JAR $CLASS \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
     fi
 
     PRE=export-latlng-sh-args.spark-cluster
@@ -348,7 +384,7 @@ function export-latlng () {
             --driver-java -options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
             # TODO set here an optional colorized log4j properties
     fi
 
@@ -365,9 +401,9 @@ function sample () {
     PRE=sample-sh-args.local
     $_D java $EXTRA_JVM_CLI_ARGS \
         $(getConf $PRE.jvm)  \
-        -cp $PIPELINES_JAR $CLASS \
+        -cp $LOCAL_PIPELINES_JAR $CLASS \
         --datasetId=$dr \
-        --config=$config
+        --config=$config $ARGS
 
     logStepEnd "Sampling" $dr local $SECONDS
 }
@@ -386,7 +422,7 @@ function sample-avro () {
             $(getConf $PRE.jvm)  \
             -cp $PIPELINES_JAR $CLASS \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
     fi
 
     PRE=sample-avro-sh-args.spark-cluster
@@ -403,7 +439,7 @@ function sample-avro () {
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
             # TODO set here an optional colorized log4j properties
     fi
 
@@ -424,7 +460,7 @@ function index () {
             $(getConf $PRE.jvm)  \
             -cp $PIPELINES_JAR $CLASS \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
     fi
 
     PRE=index-sh-args.spark-embedded
@@ -433,7 +469,7 @@ function index () {
             $(getConf $PRE.jvm)  \
             -cp $PIPELINES_JAR $CLASS \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
     fi
 
     PRE=index-sh-args.spark-cluster
@@ -450,7 +486,7 @@ function index () {
             --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
-            --config=$config
+            --config=$config $ARGS
             # TODO set here an optional colorized log4j properties
     fi
 
@@ -459,8 +495,8 @@ function index () {
 
 if [[ $dr = "all" ]] ; then
     log.info Dump dataset size for all
-    java $EXTRA_JVM_CLI_ARGS -cp $PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
-         --config=$config
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
+         --config=$config $ARGS
 fi # This should create /tmp/dataset-counts.csv
 
 if ($do_all || $dwca_avro) ; then
@@ -506,7 +542,7 @@ if ($interpret || $do_all); then
         do
             log.info "Dataset = $datasetID and count = $recordCount"
             if [ "$recordCount" -gt "50000" ]; then
-                if [ "$USE_CLUSTER" == "TRUE" ]; then
+                if [ $USE_CLUSTER = true ]; then
                     interpret $datasetID spark-cluster
                 else
                     interpret $datasetID spark-embedded
@@ -528,7 +564,7 @@ if ($uuid || $do_all); then
         do
             log.info "Dataset = $datasetID and count = $recordCount"
             if [ "$recordCount" -gt "50000" ]; then
-                if [ "$USE_CLUSTER" == "TRUE" ]; then
+                if [ $USE_CLUSTER = true ]; then
                     uuid $datasetID spark-cluster
                 else
                     uuid $datasetID spark-embedded
@@ -550,7 +586,7 @@ if ($export_latlng || $do_all); then
       do
           log.info "Dataset = $datasetID and count = $recordCount"
           if [ "$recordCount" -gt "50000" ]; then
-              if [ "$USE_CLUSTER" == "TRUE" ]; then
+              if [ $USE_CLUSTER = true ]; then
                   export-latlng $datasetID spark-cluster
               else
                   export-latlng $datasetID spark-embedded
@@ -583,7 +619,7 @@ if ($sample_avro || $do_all); then
         do
             log.info "Dataset = $datasetID and count = $recordCount"
             if [ "$recordCount" -gt "50000" ]; then
-                if [ "$USE_CLUSTER" == "TRUE" ]; then
+                if [ $USE_CLUSTER = true ]; then
                     sample-avro $datasetID spark-cluster
                 else
                     sample-avro $datasetID spark-embedded
@@ -605,7 +641,7 @@ if ($index || $do_all); then
         do
             log.info "Dataset = $datasetID and count = $recordCount"
             if [ "$recordCount" -gt "50000" ]; then
-                if [ "$USE_CLUSTER" == "TRUE" ]; then
+                if [ $USE_CLUSTER = true ]; then
                     index $datasetID spark-cluster
                 else
                     index $datasetID spark-embedded

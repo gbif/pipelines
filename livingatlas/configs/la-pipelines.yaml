@@ -1,10 +1,42 @@
+### run options:
+
+run:
+  # where to run: local, spark-embedded or spark-cluster
+  platform: local
+  local:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    sparkMaster: ""
+  spark-embedded:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    sparkMaster: ""
+  spark-cluster:
+    jar: /efs-mount-point/pipelines.jar
+    sparkTmp: /data/spark-tmp
+    sparkMaster: spark://aws-spark-quoll-1.ala:7077
+
+# where filesystem to use: local or hdfs
+fs:
+  platform: local
+  local:
+    fsPath: /data
+  hdfs:
+    fsPath: hdfs://localhost:8020
+  # fsPath: hdfs://aws-spark-quoll-1.ala:9000/
+
 ### pipelines options: should match each GBIF PipelineOptions class options, that is, not extra options should be added
 ### on each yml category
+
+# As PipelineOptions does not admits extra arguments, we use this comma separated list of --args to remove it after
+# use it. In the case of fsPath be substitute '{fsPath}/pipelines-data' with fs.hdfs.fsPath if hdfs is selected in
+# fs.platform or '/data' if 'local' is selected.
+pipelineExcludeArgs: fsPath
 
 # Common PipelineOptions
 general:
   # Target path where the outputs of the pipeline will be written to
-  targetPath: /data/pipelines-data
+  targetPath: '{fsPath}/pipelines-data'
   # Attempt of the dataset used to name the target file in file system
   attempt: 1
   # The absolute path to a hdfs-site.xml with default.FS configuration
@@ -24,7 +56,7 @@ dwca-avro:
 interpret:
   appName: Interpretation for {datasetId}
   interpretationTypes: ALL
-  inputPath: /data/pipelines-data/{datasetId}/1/verbatim.avro
+  inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim.avro'
   metaFileName: interpretation-metrics.yml
   # Skips GBIF id generation and copies ids from ExtendedRecord ids
   useExtendedRecordId: true
@@ -41,7 +73,7 @@ interpret:
 uuid:
   appName: UUID minting for {datasetId}
   runner: SparkRunner
-  inputPath: /data/pipelines-data
+  inputPath: '{fsPath}/pipelines-data'
   metaFileName: uuid-metrics.yml
   properties: ../scripts/pipelines.yaml
   ## For spark-cluster:
@@ -50,13 +82,13 @@ uuid:
 
 # class: au.org.ala.pipelines.beam.ALAInterpretedToLatLongCSVPipeline
 export-latlng:
-  inputPath: /data/pipelines-data
+  inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
   appName: Lat Long export for {datasetId}
 
 # class: au.org.ala.sampling.LayerCrawler
 sample:
-  inputPath: /data/pipelines-data
+  inputPath: '{fsPath}/pipelines-data'
   appName: Sample for {datasetId}
   metaFileName: indexing-metrics.yml
   runner: SparkRunner
@@ -65,7 +97,7 @@ sample:
 
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
-  inputPath: /data/pipelines-data
+  inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
   metaFileName: indexing-metrics.yml
   # TODO improve/move this
@@ -78,7 +110,7 @@ sample-avro:
 
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
-  inputPath: /data/pipelines-data
+  inputPath: '{fsPath}/pipelines-data'
   metaFileName: indexing-metrics.yml
   properties: ../scripts/pipelines.yaml
   solrCollection: biocache
@@ -94,12 +126,12 @@ index:
 
 # class: au.org.ala.utils.DumpDatasetSize
 dataset-count-dump:
-  inputPath: /data/pipelines-data
+  inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-counts.csv
 
 migrate-uuids:
-  inputPath: /data/pipelines-data/occ_uuid.csv
-  targetPath: /data/pipelines-data
+  inputPath: '{fsPath}/pipelines-data/occ_uuid.csv'
+  targetPath: '{fsPath}/pipelines-data'
   hdfsSiteConfig: ""
   # FIXME: MigrateUUIDPipeline should use this also?
 
