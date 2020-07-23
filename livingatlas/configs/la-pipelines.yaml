@@ -16,7 +16,7 @@ run:
     sparkTmp: /data/spark-tmp
     sparkMaster: spark://aws-spark-quoll-1.ala:7077
 
-# where filesystem to use: local or hdfs
+# which filesystem to use: local or hdfs
 fs:
   platform: local
   local:
