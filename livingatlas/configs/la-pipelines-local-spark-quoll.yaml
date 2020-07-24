@@ -17,6 +17,8 @@ export-latlng:
     inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
 uuid:
     inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
+sample:
+    inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
 sample-avro:
     inputPath: hdfs://aws-spark-quoll-1.ala:9000/pipelines-data
 index:
