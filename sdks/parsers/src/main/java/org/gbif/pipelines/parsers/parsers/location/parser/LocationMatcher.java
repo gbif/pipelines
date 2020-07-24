@@ -123,11 +123,8 @@ public class LocationMatcher {
   private Optional<List<Country>> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = null;
-      try {
-        geocodeResponse = geocodeKvStore.get(latLng);
-      } catch (NoSuchElementException | NullPointerException ex) {
-        log.error(ex.getMessage(), ex);
-      }
+      geocodeResponse = geocodeKvStore.get(latLng);
+
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         return Optional.of(
             geocodeResponse.getLocations().stream()
@@ -145,11 +142,7 @@ public class LocationMatcher {
   private Optional<GadmFeatures> getGadmFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = null;
-      try {
-        geocodeResponse = geocodeKvStore.get(latLng);
-      } catch (NoSuchElementException | NullPointerException ex) {
-        log.error(ex.getMessage(), ex);
-      }
+      geocodeResponse = geocodeKvStore.get(latLng);
 
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         GadmFeatures gf = new GadmFeatures();

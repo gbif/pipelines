@@ -54,7 +54,7 @@ public class LocationTransformTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
-    List<Location> locations = new ArrayList();
+    List<Location> locations = new ArrayList<>();
 
     if (country != null) {
       Location political = new Location();

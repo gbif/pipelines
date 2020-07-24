@@ -1,10 +1,12 @@
 package org.gbif.pipelines.parsers.parsers.location.parser;
 
 import lombok.Getter;
+import lombok.ToString;
 import org.gbif.rest.client.geocode.Location;
 
 /** Models a set of GADM features at different levels. */
 @Getter
+@ToString
 public class GadmFeatures {
 
   private String level0Gid;
@@ -44,22 +46,7 @@ public class GadmFeatures {
           }
           return;
         default:
-          return;
       }
     }
-  }
-
-  @Override
-  public String toString() {
-    return "GadmFeatures{" +
-      "level0Gid='" + level0Gid + '\'' +
-      ", level1Gid='" + level1Gid + '\'' +
-      ", level2Gid='" + level2Gid + '\'' +
-      ", level3Gid='" + level3Gid + '\'' +
-      ", level0Name='" + level0Name + '\'' +
-      ", level1Name='" + level1Name + '\'' +
-      ", level2Name='" + level2Name + '\'' +
-      ", level3Name='" + level3Name + '\'' +
-      '}';
   }
 }

@@ -137,7 +137,7 @@ public class LocationInterpreter {
    * to populate GADM administrative area GIDs.
    */
   public static BiConsumer<ExtendedRecord, LocationRecord> interpretGadm(
-    KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore, MetadataRecord mdr) {
+    KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
     return (er, lr) -> {
       if (geocodeKvStore != null && lr.getHasCoordinate()) {
         Optional<GadmFeatures> gadmResult = LocationParser.parseGadm(lr, geocodeKvStore);

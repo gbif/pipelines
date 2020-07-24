@@ -15,7 +15,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
@@ -108,11 +107,7 @@ public class LocationParser {
     LatLng location = new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude());
 
     // Use these to retrieve the GADM areas.
-    Optional<GadmFeatures> match =
-        LocationMatcher.create(location, null, kvStore)
-            .applyGadm();
-
-    return match;
+    return LocationMatcher.create(location, null, kvStore).applyGadm();
   }
 
 

@@ -23,7 +23,7 @@ public class GeocodeBitmapCache {
   // World map image lookup
   private final BufferedImage img;
   private static final int BORDER = 0x000000;
-  private final static int NOTHING = 0xFFFFFF;
+  private static final int NOTHING = 0xFFFFFF;
   private final int imgWidth;
   private final int imgHeight;
   private final Map<Integer, GeocodeResponse> colourKey = new HashMap<>();
