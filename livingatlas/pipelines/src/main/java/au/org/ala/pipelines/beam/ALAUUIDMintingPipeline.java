@@ -76,6 +76,8 @@ public class ALAUUIDMintingPipeline {
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
+    // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
+    System.exit(0);
   }
 
   public static void run(InterpretationPipelineOptions options) throws Exception {
