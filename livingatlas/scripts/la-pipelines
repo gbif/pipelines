@@ -2,6 +2,9 @@
 
 CMD=$(basename $0)
 
+# Where this is executing (to detect if we are in production)
+SCRIPTPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 FIND_DOCOPTS=$(which docopts)
 FIND_YQ=$(which yq)
 
@@ -13,14 +16,14 @@ fi
 
 if [[ -z $FIND_YQ ]]
 then
-    echo "ERROR: Please install yq, see https://github.com/mikefarah/yq"
+    echo "ERROR: Please install yq debian/ubuntu package (not the snap package), see https://github.com/mikefarah/yq"
     exit 1
 fi
 
 set -e # Stop on any failure
 
 # Detect if we are in production or not
-if [[ $PWD == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
+if [[ $SCRIPTPATH == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
 
 if [[ $PROD = false ]]; then
     VER=$(grep -oPm1 "(?<=<version>)[^<]+" "../pom.xml")
@@ -82,7 +85,8 @@ EOF
 
 # Enable logging
 if ($debug) ; then verbosity=6; else verbosity=5; fi
-source ./logging_lib.sh $verbosity $no_colors $dr
+if [[ $PROD = true ]] ; then LIB_DIR=/usr/share/la-pipelines ; else LIB_DIR=. ; fi
+source $LIB_DIR/logging_lib.sh $verbosity $no_colors $dr
 
 STEP=Initial
 
@@ -104,6 +108,7 @@ error_catch() {
 }
 
 log.info "Starting $CMD"
+log.debug "Production: $PROD"
 
 if [[ $PROD = true ]] ; then CONFIG_DIR=/data/la-pipelines/config ; else CONFIG_DIR=../configs; fi
 
@@ -180,7 +185,7 @@ if [[ $TYPE = "spark-cluster" ]]; then USE_CLUSTER=true; else USE_CLUSTER=false;
 log.info "Running in: $TYPE"
 log.debug "Is cluster: $USE_CLUSTER"
 
-if [[ $PROD = true ]]; then PIPELINES_JAR=/usr/share/la-pipelines/la-pipelines.jar
+if [[ $PROD = true ]]; then PIPELINES_JAR=$LIB_DIR/la-pipelines.jar
 else
     PIPELINES_JAR=../pipelines/target/pipelines-$VER-shaded.jar
 fi
