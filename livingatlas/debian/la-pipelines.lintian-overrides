@@ -1,0 +1,3 @@
+# Override lint package errors here
+# https://lintian.debian.org/manual/section-2.4.html
+la-pipelines: non-standard-toplevel-dir data/
