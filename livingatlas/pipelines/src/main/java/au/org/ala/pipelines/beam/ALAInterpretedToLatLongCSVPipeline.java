@@ -79,7 +79,9 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
     // delete previous runs
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
-    FileSystem fs = FileSystemFactory.getInstance(options.getHdfsSiteConfig()).getFs("/");
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getTargetPath());
     ALAFsUtils.createDirectory(fs, outputPath);
 
     csvCollection

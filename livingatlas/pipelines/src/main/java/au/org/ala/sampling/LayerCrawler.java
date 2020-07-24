@@ -11,7 +11,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -45,9 +44,6 @@ public class LayerCrawler {
   // TODO: make this configurable
   private static final String BASE_URL = "https://sampling.ala.org.au/";
   // TODO: make this configurable
-  private static final String SELECTED_ELS =
-      "el674,el874,el774,el715,el1020,el713,el893,el598,el1006,el996,el814,el881,el1081,el705,el725,el1038,el728,el882,el889,el843,el726,el747,el793,el891,el737,el894,el1011,el720,el887,el708,el899,el681,el718,el766,el788,el810,el890,el830,el673,el898,el663,el668,el730,el669,el1019,el729,el1023,el721,el865,el879,el683,el680,el867,el892,el740,el816,el711,el845,el1003,el1078,el1079,el862,el591,el860,el866,el886,el995,el819,el772,el1013,el1073,el836,el838,el1007,el1040,el586,el704,el878,el1021,el1037,el1077,el670,el827,el1017,el1055,el876,el682,el746,el760,el787,el844,el1010,el2119,el1012,el719,el870,el672,el789,el948,el1036";
-  // TODO: make this configurable
   public static final int BATCH_SIZE = 25000;
   // TODO: make this configurable
   public static final int BATCH_STATUS_SLEEP_TIME = 1000;
@@ -78,7 +74,8 @@ public class LayerCrawler {
     String baseDir = options.getInputPath();
 
     FileSystem fs =
-        FsUtils.getFileSystem(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), "/");
+        FsUtils.getFileSystem(
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getTargetPath());
 
     if (options.getDatasetId() != null) {
 
@@ -156,12 +153,10 @@ public class LayerCrawler {
   public String getRequiredLayers() throws Exception {
 
     log.info("Retrieving layer list from sampling service");
-    List<String> requiredEls = Arrays.asList(SELECTED_ELS.split(","));
     String layers =
         service.getLayers().execute().body().stream()
             .filter(l -> l.getEnabled())
             .map(l -> String.valueOf(l.getId()))
-            //                .filter(s -> s.startsWith("cl") || requiredEls.contains(s))
             .collect(Collectors.joining(","));
 
     log.info("Required layer count {}", layers.split(",").length);
