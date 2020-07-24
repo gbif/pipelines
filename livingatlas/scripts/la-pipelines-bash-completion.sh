@@ -30,9 +30,9 @@ _la-pipelines()
     elif [ $prev = "dr" ] ; then
         # Work in progress drTAB autocopletion
         # move back
-        echo -en "\033[1D"
+        ## echo -en "\033[1D"
         # delete til the end
-        echo -en "\033[K"
+        ## echo -en "\033[K"
         suggestions="$( ( ls -1 /data/biocache-load/ | sed 's/dr//g' ) )  "
         COMPREPLY=( $( compgen -W "$suggestions" -- "$cur" ) )
     fi
