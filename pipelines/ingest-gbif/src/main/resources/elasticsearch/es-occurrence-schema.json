@@ -121,14 +121,14 @@
       "gadm": {
         "type": "object",
         "properties": {
-          "gadmLevel0Gid": {"type": "keyword"},
-          "gadmLevel1Gid": {"type": "keyword"},
-          "gadmLevel2Gid": {"type": "keyword"},
-          "gadmLevel3Gid": {"type": "keyword"},
-          "gadmLevel0Name": {"type": "text"},
-          "gadmLevel1Name": {"type": "text"},
-          "gadmLevel2Name": {"type": "text"},
-          "gadmLevel3Name": {"type": "text"}
+          "level0Gid": {"type": "keyword"},
+          "level1Gid": {"type": "keyword"},
+          "level2Gid": {"type": "keyword"},
+          "level3Gid": {"type": "keyword"},
+          "level0Name": {"type": "keyword", "copy_to": "all"},
+          "level1Name": {"type": "keyword", "copy_to": "all"},
+          "level2Name": {"type": "keyword", "copy_to": "all"},
+          "level3Name": {"type": "keyword", "copy_to": "all"}
         }
       },
 

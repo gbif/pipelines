@@ -83,8 +83,8 @@ public class GbifJsonConverterTest {
             + "\"decimalLongitude\":2.0,"
             + "\"scoordinates\":\"POINT (2.0 1.0)\","
             + "\"gadm\":{" // gadm
-            + "\"gadmLevel2Gid\":\"XAA.1.2_1\","
-            + "\"gadmLevel2Name\":\"Muni Cipality\""
+            + "\"level2Gid\":\"XAA.1.2_1\","
+            + "\"level2Name\":\"Muni Cipality\""
             + "}," // end gadm
             + "\"continent\":\"something{something}\","
             + "\"country\":\"Country\","
