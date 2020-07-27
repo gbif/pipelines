@@ -56,7 +56,7 @@ public class ImageTransform extends Transform<ExtendedRecord, ImageRecord> {
             .filter(l -> !l.isEmpty())
             .isPresent())
         .via(ImageInterpreter::interpret)
-        .get();
+        .getOfNullable();
   }
 
 }

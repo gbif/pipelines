@@ -88,7 +88,8 @@
       "catalogNumber":  {"type": "text", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "locality":  {"type": "text", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
       "occurrenceId":  {"type": "text", "normalizer": "lowercase_normalizer", "fields": {"suggest": {"type": "completion", "analyzer": "standard", "preserve_separators": true, "preserve_position_increments": true, "max_input_length": 50}}, "copy_to": "all"},
-
+      "occurrenceStatus": {"type": "keyword", "copy_to": "all"},
+  
       "organismQuantity": {"type":  "double"},
       "organismQuantityType": {"type":  "keyword", "copy_to": "all"},
       "sampleSizeUnit": {"type":  "keyword", "copy_to": "all"},
@@ -116,6 +117,20 @@
       "scoordinates": {"type": "geo_shape"},
       "decimalLatitude": {"type":"double"},
       "decimalLongitude": {"type":"double"},
+
+      "gadm": {
+        "type": "object",
+        "properties": {
+          "level0Gid": {"type": "keyword"},
+          "level1Gid": {"type": "keyword"},
+          "level2Gid": {"type": "keyword"},
+          "level3Gid": {"type": "keyword"},
+          "level0Name": {"type": "keyword", "copy_to": "all"},
+          "level1Name": {"type": "keyword", "copy_to": "all"},
+          "level2Name": {"type": "keyword", "copy_to": "all"},
+          "level3Name": {"type": "keyword", "copy_to": "all"}
+        }
+      },
 
       "year": {"type": "short"},
       "month": {"type": "short"},

@@ -91,6 +91,14 @@ public class GbifJsonConverter {
       JsonConverter.builder()
           .skipKey("decimalLatitude")
           .skipKey("decimalLongitude")
+          .skipKey("gadmLevel0Gid")
+          .skipKey("gadmLevel1Gid")
+          .skipKey("gadmLevel2Gid")
+          .skipKey("gadmLevel3Gid")
+          .skipKey("gadmLevel0Name")
+          .skipKey("gadmLevel1Name")
+          .skipKey("gadmLevel2Name")
+          .skipKey("gadmLevel3Name")
           .skipKey("machineTags")
           .skipKey(CREATED_FIELD)
           .converter(ExtendedRecord.class, getExtendedRecordConverter())
@@ -353,6 +361,17 @@ public class GbifJsonConverter {
         //geo_shape
         jc.addJsonTextFieldNoCheck("scoordinates",
             "POINT (" + lr.getDecimalLongitude() + " " + lr.getDecimalLatitude() + ")");
+
+        ObjectNode gadm = JsonConverter.createObjectNode();
+        Optional.ofNullable(lr.getGadmLevel0Gid()).ifPresent(g -> gadm.put("level0Gid", g));
+        Optional.ofNullable(lr.getGadmLevel1Gid()).ifPresent(g -> gadm.put("level1Gid", g));
+        Optional.ofNullable(lr.getGadmLevel2Gid()).ifPresent(g -> gadm.put("level2Gid", g));
+        Optional.ofNullable(lr.getGadmLevel3Gid()).ifPresent(g -> gadm.put("level3Gid", g));
+        Optional.ofNullable(lr.getGadmLevel0Name()).ifPresent(g -> gadm.put("level0Name", g));
+        Optional.ofNullable(lr.getGadmLevel1Name()).ifPresent(g -> gadm.put("level1Name", g));
+        Optional.ofNullable(lr.getGadmLevel2Name()).ifPresent(g -> gadm.put("level2Name", g));
+        Optional.ofNullable(lr.getGadmLevel3Name()).ifPresent(g -> gadm.put("level3Name", g));
+        jc.addJsonObject("gadm", gadm);
       }
       // Fields as a common view - "key": "value"
       jc.addCommonFields(record);

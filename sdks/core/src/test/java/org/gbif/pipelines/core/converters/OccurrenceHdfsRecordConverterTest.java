@@ -22,6 +22,7 @@ import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.LifeStage;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.DcTerm;
@@ -84,6 +85,8 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.identifiedBy.simpleName(), "identifiedBy");
     coreTerms.put(GbifTerm.identifiedByID.simpleName(), "13123|21312");
     coreTerms.put(GbifTerm.recordedByID.simpleName(), "53453|5785");
+    coreTerms.put(DwcTerm.occurrenceStatus.simpleName(), OccurrenceStatus.ABSENT.name());
+    coreTerms.put(DwcTerm.individualCount.simpleName(), "0");
 
     ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
         .setId("1")
@@ -104,7 +107,10 @@ public class OccurrenceHdfsRecordConverterTest {
         .setLicense(License.CC0_1_0.name())
         .setIdentifiedByIds(agentIds)
         .setRecordedByIds(agentIds)
-        .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name()).build();
+        .setIndividualCount(0)
+        .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name())
+        .setOccurrenceStatus(OccurrenceStatus.ABSENT.name())
+        .build();
 
     List<RankedName> classification = new ArrayList<>();
     classification.add(RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
@@ -147,7 +153,9 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals("recordedBy", hdfsRecord.getVRecordedby());
     Assert.assertEquals("identifiedBy", hdfsRecord.getIdentifiedby());
     Assert.assertEquals("13123|21312", hdfsRecord.getVIdentifiedbyid());
-    Assert.assertEquals("13123|21312", hdfsRecord.getVIdentifiedbyid());
+    Assert.assertEquals("53453|5785", hdfsRecord.getVRecordedbyid());
+    Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getVOccurrencestatus());
+    Assert.assertEquals("0", hdfsRecord.getVIndividualcount());
 
     // Test fields names with reserved words
     Assert.assertEquals("CLASS", hdfsRecord.getClass$());
@@ -175,6 +183,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(License.CC0_1_0.name(), hdfsRecord.getLicense());
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getRecordedbyid());
     Assert.assertEquals(Collections.singletonList("13123"), hdfsRecord.getIdentifiedbyid());
+    Assert.assertEquals(OccurrenceStatus.ABSENT.name(), hdfsRecord.getOccurrencestatus());
+    Assert.assertEquals(Integer.valueOf(0), hdfsRecord.getIndividualcount());
   }
 
   @Test

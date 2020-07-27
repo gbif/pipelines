@@ -35,17 +35,15 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class LocationFeatureTransform extends Transform<LocationRecord, LocationFeatureRecord> {
 
-  private SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier;
   private KeyValueStore<LatLng, String> kvStore;
 
   @Builder(buildMethodName = "create")
   private LocationFeatureTransform(
-      SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier,
-      KeyValueStore<LatLng, String> kvStore) {
+      SerializableSupplier<KeyValueStore<LatLng, String>> kvStoreSupplier) {
     super(LocationFeatureRecord.class, LOCATION_FEATURE, LocationFeatureTransform.class.getName(),
         LOCATION_FEATURE_RECORDS_COUNT);
     this.kvStoreSupplier = kvStoreSupplier;
-    this.kvStore = kvStore;
   }
 
   /** Maps {@link LocationFeatureRecord} to key value, where key is {@link LocationFeatureRecord#getId} */
@@ -89,7 +87,7 @@ public class LocationFeatureTransform extends Transform<LocationRecord, Location
             .filter(c -> new LatLng(lr.getDecimalLatitude(), lr.getDecimalLongitude()).isValid())
             .isPresent())
         .via(LocationFeatureInterpreter.interpret(kvStore))
-        .get();
+        .getOfNullable();
   }
 
 }

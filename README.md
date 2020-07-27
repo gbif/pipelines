@@ -96,23 +96,14 @@ The project is structured as:
 
 # How to build the project
 
-The project uses [Apache Maven](https://maven.apache.org/) tool for building. Project contains maven wrapper and script for Linux and MacOS systems, you just can run **build.sh** script:
+The project uses [Apache Maven](https://maven.apache.org/) for building. The project contains a Maven wrapper script for Linux and MacOS systems, you just can run the **`build.sh`** script:
 
 ```shell
 ./build.sh
 ```
-or
-```shell
-source build.sh
-```
 
-Please read [Apache Maven how-to](https://maven.apache.org/run.html).
+Please read the [Apache Maven how-to](https://maven.apache.org/run.html).
 
-# Codestyle and tools recommendations
+# Contributions
 
-- Use [Intellij IDEA Community](https://www.jetbrains.com/idea/download/) (or better)
-- Use [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format) (Please, do not reformat old codebase, only new)
-- The project uses [Project Lombok](https://projectlombok.org/), please install [Lombok plugin for Intellij IDEA](https://plugins.jetbrains.com/plugin/6317-lombok-plugin).
-- Because the project uses [Error-prone](https://code.google.com/p/error-prone) you may have issues during the build process from IDEA.  To avoid these issues please install the [Error-prone compiler integration plugin](https://plugins.jetbrains.com/plugin/7349-error-prone-compiler-integration) and build the project using the [`error-prone java compiler`](https://code.google.com/p/error-prone) to catch common Java mistakes at compile-time. To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ and select `Javac with error-prone` in the `Use compiler` box.
-- Add a custom parameter to avoid a debugging problem.  To use the compiler, go to _File_ → _Settings_ → _Compiler_ → _Java Compiler_ → _Additional command line parameters_ and add `-Xep:ParameterName:OFF`
-- Tests: please follow the conventions of the Maven surefire plugin for [unit tests](https://maven.apache.org/surefire/maven-surefire-plugin/examples/inclusion-exclusion.html) and the ones of the Maven failsafe plugin for [integration tests](https://maven.apache.org/surefire/maven-failsafe-plugin/examples/inclusion-exclusion.html). To run the integration tests just run the verify phase, e.g.: `mvn clean verify`
+We welcome contributions! Please see [the guide](./CONTRIBUTING.md) to see how you can best do this.

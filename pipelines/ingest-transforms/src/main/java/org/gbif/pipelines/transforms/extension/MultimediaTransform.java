@@ -59,7 +59,7 @@ public class MultimediaTransform extends Transform<ExtendedRecord, MultimediaRec
             .isPresent() || ModelUtils.extractOptValue(er, DwcTerm.associatedMedia).isPresent())
         .via(MultimediaInterpreter::interpret)
         .via(MultimediaInterpreter::interpretAssociatedMedia)
-        .get();
+        .getOfNullable();
   }
 
 }

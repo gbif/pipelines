@@ -28,8 +28,8 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
+import org.gbif.occurrence.common.TermUtils;
 import org.gbif.occurrence.download.hive.HiveColumns;
-import org.gbif.occurrence.download.hive.Terms;
 import org.gbif.pipelines.core.utils.MediaSerDeserUtils;
 import org.gbif.pipelines.core.utils.TemporalUtils;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
@@ -45,7 +45,6 @@ import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.keygen.common.TermUtils;
 
 import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecordBase;
@@ -91,11 +90,11 @@ public class OccurrenceHdfsRecordConverter {
       } else if (temporalAccessor instanceof LocalDateTime) {
         return Date.from(((LocalDateTime)temporalAccessor).toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof LocalDate) {
-        return Date.from((((LocalDate)temporalAccessor).atStartOfDay()).toInstant(ZoneOffset.UTC));
+        return Date.from(((LocalDate)temporalAccessor).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof YearMonth) {
-        return Date.from((((YearMonth)temporalAccessor).atDay(1)).atStartOfDay().toInstant(ZoneOffset.UTC));
+        return Date.from(((YearMonth)temporalAccessor).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else if (temporalAccessor instanceof Year) {
-        return Date.from((((Year)temporalAccessor).atDay(1)).atStartOfDay().toInstant(ZoneOffset.UTC));
+        return Date.from(((Year)temporalAccessor).atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
       } else {
         return null;
       }
@@ -199,6 +198,14 @@ public class OccurrenceHdfsRecordConverter {
       hr.setRepatriated(lr.getRepatriated());
       hr.setLocality(lr.getLocality());
       hr.setPublishingcountry(lr.getPublishingCountry());
+      hr.setLevel0gid(lr.getGadmLevel0Gid());
+      hr.setLevel1gid(lr.getGadmLevel1Gid());
+      hr.setLevel2gid(lr.getGadmLevel2Gid());
+      hr.setLevel3gid(lr.getGadmLevel3Gid());
+      hr.setLevel0name(lr.getGadmLevel0Name());
+      hr.setLevel1name(lr.getGadmLevel1Name());
+      hr.setLevel2name(lr.getGadmLevel2Name());
+      hr.setLevel3name(lr.getGadmLevel3Name());
 
       setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);
@@ -315,6 +322,8 @@ public class OccurrenceHdfsRecordConverter {
               hr.setSpecies(rankedName.getName());
               hr.setSpecieskey(rankedName.getKey());
               break;
+            default:
+              break;
           }
         });
       }
@@ -378,6 +387,7 @@ public class OccurrenceHdfsRecordConverter {
       hr.setSamplesizeunit(br.getSampleSizeUnit());
       hr.setSamplesizevalue(br.getSampleSizeValue());
       hr.setRelativeorganismquantity(br.getRelativeOrganismQuantity());
+      hr.setOccurrencestatus(br.getOccurrenceStatus());
 
       Optional.ofNullable(br.getRecordedByIds())
           .ifPresent(
@@ -475,7 +485,7 @@ public class OccurrenceHdfsRecordConverter {
       ExtendedRecord er = (ExtendedRecord)sr;
       er.getCoreTerms().forEach((k, v) -> Optional.ofNullable(TERM_FACTORY.findTerm(k)).ifPresent(term -> {
 
-        if (Terms.verbatimTerms().contains(term)) {
+        if (TermUtils.verbatimTerms().contains(term)) {
           Optional.ofNullable(verbatimSchemaField(term)).ifPresent(field -> {
             String verbatimField = "V" + field.name().substring(2, 3).toUpperCase() + field.name().substring(3);
             setHdfsRecordField(hr, field, verbatimField, v);

@@ -34,22 +34,20 @@ import static org.gbif.pipelines.transforms.common.CheckTransforms.checkRecordTy
 @Slf4j
 public class MetadataTransform extends Transform<String, MetadataRecord> {
 
-  private Integer attempt;
-  private String endpointType;
-  private SerializableSupplier<MetadataServiceClient> clientSupplier;
+  private final Integer attempt;
+  private final String endpointType;
+  private final SerializableSupplier<MetadataServiceClient> clientSupplier;
   private MetadataServiceClient client;
 
   @Builder(buildMethodName = "create")
   private MetadataTransform(
       Integer attempt,
       String endpointType,
-      SerializableSupplier<MetadataServiceClient> clientSupplier,
-      MetadataServiceClient client) {
+      SerializableSupplier<MetadataServiceClient> clientSupplier) {
     super(MetadataRecord.class, METADATA, MetadataTransform.class.getName(), METADATA_RECORDS_COUNT);
     this.attempt = attempt;
     this.endpointType = endpointType;
     this.clientSupplier = clientSupplier;
-    this.client = client;
   }
 
   public MetadataTransform counterFn(SerializableConsumer<String> counterFn) {
@@ -82,7 +80,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
         .via(MetadataInterpreter.interpret(client))
         .via(MetadataInterpreter.interpretCrawlId(attempt))
         .via(MetadataInterpreter.interpretEndpointType(endpointType))
-        .get();
+        .getOfNullable();
   }
 
   /**

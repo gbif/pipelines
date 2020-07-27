@@ -13,6 +13,7 @@ import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.EstablishmentMeans;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.LifeStage;
+import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.api.vocabulary.Sex;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.common.parsers.LicenseParser;
@@ -23,6 +24,7 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.keygen.HBaseLockingKeyService;
@@ -31,6 +33,7 @@ import org.gbif.pipelines.keygen.identifier.OccurrenceKeyBuilder;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.identifier.AgentIdentifierParser;
+import org.gbif.pipelines.parsers.utils.ModelUtils;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -40,7 +43,10 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.api.vocabulary.OccurrenceIssue.BASIS_OF_RECORD_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS;
 import static org.gbif.api.vocabulary.OccurrenceIssue.INDIVIDUAL_COUNT_INVALID;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT;
+import static org.gbif.api.vocabulary.OccurrenceIssue.OCCURRENCE_STATUS_UNPARSABLE;
 import static org.gbif.api.vocabulary.OccurrenceIssue.REFERENCES_URI_INVALID;
 import static org.gbif.api.vocabulary.OccurrenceIssue.TYPE_STATUS_INVALID;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
@@ -322,6 +328,83 @@ public class BasicInterpreter {
         .map(AgentIdentifierParser::parse)
         .map(ArrayList::new)
         .ifPresent(br::setRecordedByIds);
+  }
+
+  /** {@link DwcTerm#occurrenceStatus} interpretation. */
+  public static BiConsumer<ExtendedRecord, BasicRecord> interpretOccurrenceStatus(
+      KeyValueStore<String, OccurrenceStatus> occStatusKvStore) {
+    return (er, br) -> {
+      if (occStatusKvStore == null) {
+        return;
+      }
+
+      String rawCount = ModelUtils.extractNullAwareValue(er, DwcTerm.individualCount);
+      Integer parsedCount = SimpleTypeParser.parsePositiveIntOpt(rawCount).orElse(null);
+
+      String rawOccStatus = ModelUtils.extractNullAwareValue(er, DwcTerm.occurrenceStatus);
+      OccurrenceStatus parsedOccStatus =
+          rawOccStatus != null ? occStatusKvStore.get(rawOccStatus) : null;
+
+      boolean isCountNull = rawCount == null;
+      boolean isCountRubbish = rawCount != null && parsedCount == null;
+      boolean isCountZero = parsedCount != null && parsedCount == 0;
+      boolean isCountGreaterZero = parsedCount != null && parsedCount > 0;
+
+      boolean isOccNull = rawOccStatus == null;
+      boolean isOccPresent = parsedOccStatus == OccurrenceStatus.PRESENT;
+      boolean isOccAbsent = parsedOccStatus == OccurrenceStatus.ABSENT;
+      boolean isOccRubbish = parsedOccStatus == null;
+
+      // rawCount === null
+      if (isCountNull) {
+        if (isOccNull || isOccPresent) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+        } else if (isOccAbsent) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+        } else if (isOccRubbish) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
+        }
+      } else if (isCountRubbish) {
+        if (isOccNull || isOccPresent) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+        } else if (isOccAbsent) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+        } else if (isOccRubbish) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
+        }
+        addIssue(br, INDIVIDUAL_COUNT_INVALID);
+      } else if (isCountZero) {
+        if (isOccNull) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
+        } else if (isOccPresent) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS);
+        } else if (isOccAbsent) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+        } else if (isOccRubbish) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
+        }
+      } else if (isCountGreaterZero) {
+        if (isOccNull) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
+        } else if (isOccPresent) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+        } else if (isOccAbsent) {
+          br.setOccurrenceStatus(OccurrenceStatus.ABSENT.name());
+          addIssue(br, INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS);
+        } else if (isOccRubbish) {
+          br.setOccurrenceStatus(OccurrenceStatus.PRESENT.name());
+          addIssue(br, OCCURRENCE_STATUS_UNPARSABLE);
+          addIssue(br, OCCURRENCE_STATUS_INFERRED_FROM_INDIVIDUAL_COUNT);
+        }
+      }
+    };
   }
 
   /** Returns ENUM instead of url string */

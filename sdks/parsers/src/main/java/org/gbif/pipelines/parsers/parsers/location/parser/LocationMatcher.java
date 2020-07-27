@@ -53,6 +53,17 @@ public class LocationMatcher {
     return country != null ? applyWithCountry() : applyWithoutCountry();
   }
 
+  public Optional<GadmFeatures> applyGadm() {
+    // Check parameters
+    Objects.requireNonNull(latLng);
+    if (latLng.getLatitude() == null || latLng.getLongitude() == null) {
+      throw new IllegalArgumentException("Empty coordinates");
+    }
+
+    // Match to GADM administrative regions
+    return getGadmFromCoordinates(latLng);
+  }
+
   private ParsedField<ParsedLocation> applyWithCountry() {
 
     Optional<List<Country>> countriesKv = getCountryFromCoordinates(latLng);
@@ -112,11 +123,8 @@ public class LocationMatcher {
   private Optional<List<Country>> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = null;
-      try {
-        geocodeResponse = geocodeKvStore.get(latLng);
-      } catch (NoSuchElementException | NullPointerException ex) {
-        log.error(ex.getMessage(), ex);
-      }
+      geocodeResponse = geocodeKvStore.get(latLng);
+
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         return Optional.of(
             geocodeResponse.getLocations().stream()
@@ -126,6 +134,20 @@ public class LocationMatcher {
       }
       if (isAntarctica(latLng.getLatitude(), this.country)) {
         return Optional.of(Collections.singletonList(Country.ANTARCTICA));
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<GadmFeatures> getGadmFromCoordinates(LatLng latLng) {
+    if (latLng.isValid()) {
+      GeocodeResponse geocodeResponse = null;
+      geocodeResponse = geocodeKvStore.get(latLng);
+
+      if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
+        GadmFeatures gf = new GadmFeatures();
+        geocodeResponse.getLocations().stream().forEachOrdered(gf::accept);
+        return Optional.of(gf);
       }
     }
     return Optional.empty();

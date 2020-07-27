@@ -27,6 +27,7 @@ import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.parsers.parsers.location.parser.GadmFeatures;
 import org.gbif.pipelines.parsers.parsers.location.parser.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
 import org.gbif.rest.client.geocode.GeocodeResponse;
@@ -127,6 +128,29 @@ public class LocationInterpreter {
         if (Objects.nonNull(lr.getCountryCode()) && Objects.nonNull(lr.getPublishingCountry())) {
           lr.setRepatriated(!lr.getCountryCode().equals(lr.getPublishingCountry()));
         }
+      }
+    };
+  }
+
+  /**
+   * Uses the interpreted DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude} terms
+   * to populate GADM administrative area GIDs.
+   */
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretGadm(
+    KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+    return (er, lr) -> {
+      if (geocodeKvStore != null && lr.getHasCoordinate()) {
+        Optional<GadmFeatures> gadmResult = LocationParser.parseGadm(lr, geocodeKvStore);
+        gadmResult.ifPresent(gf -> {
+          lr.setGadmLevel0Gid(gf.getLevel0Gid());
+          lr.setGadmLevel1Gid(gf.getLevel1Gid());
+          lr.setGadmLevel2Gid(gf.getLevel2Gid());
+          lr.setGadmLevel3Gid(gf.getLevel3Gid());
+          lr.setGadmLevel0Name(gf.getLevel0Name());
+          lr.setGadmLevel1Name(gf.getLevel1Name());
+          lr.setGadmLevel2Name(gf.getLevel2Name());
+          lr.setGadmLevel3Name(gf.getLevel3Name());
+        });
       }
     };
   }
