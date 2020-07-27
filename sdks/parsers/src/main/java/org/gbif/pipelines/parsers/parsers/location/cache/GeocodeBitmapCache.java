@@ -2,8 +2,8 @@ package org.gbif.pipelines.parsers.parsers.location.cache;
 
 import java.awt.image.BufferedImage;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,7 +28,7 @@ public class GeocodeBitmapCache {
   private static final int INTERNATIONAL_WATER = 0xFFFFFF;
   private final int imgWidth;
   private final int imgHeight;
-  private final Map<Integer, GeocodeResponse> colourKey = new HashMap<>();
+  private final Map<Integer, GeocodeResponse> colourKey = new ConcurrentHashMap<>();
 
   @SneakyThrows
   private GeocodeBitmapCache(BufferedImage img, Function<LatLng, GeocodeResponse> loadFn) {
