@@ -7,6 +7,7 @@ import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.names.ws.api.NameSearch;
 import au.org.ala.names.ws.api.NameUsageMatch;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import lombok.AccessLevel;
@@ -30,11 +31,13 @@ public class ALATaxonomyInterpreter {
    */
   public static BiConsumer<ExtendedRecord, ALATaxonRecord> alaTaxonomyInterpreter(
       ALACollectoryMetadata dataResource, KeyValueStore<NameSearch, NameUsageMatch> kvStore) {
+    final Map<String, List<String>> hints = dataResource == null ? null : dataResource.getHintMap();
+    final Map<String, String> defaults = dataResource.getDefaultDarwinCoreValues();
+
     return (er, atr) -> {
       atr.setId(er.getId());
 
       if (kvStore != null) {
-        Map<String, String> defaults = dataResource.getDefaultDarwinCoreValues();
         String genus = extractValue(er, DwcTerm.genus, defaults);
         if (genus == null) genus = extractValue(er, GbifTerm.genericName, defaults);
         NameSearch matchRequest =
@@ -53,6 +56,7 @@ public class ALATaxonomyInterpreter {
                 .scientificNameAuthorship(
                     extractValue(er, DwcTerm.scientificNameAuthorship, defaults))
                 .vernacularName(extractValue(er, DwcTerm.vernacularName, defaults))
+                .hints(hints)
                 .build();
 
         NameUsageMatch usageMatch = kvStore.get(matchRequest);
@@ -111,7 +115,7 @@ public class ALATaxonomyInterpreter {
     };
   }
 
-  private static boolean isEmpty(NameUsageMatch response) {
+  protected static boolean isEmpty(NameUsageMatch response) {
     return response == null || !response.isSuccess();
   }
 
@@ -123,7 +127,7 @@ public class ALATaxonomyInterpreter {
    * @param defaults Any defaults that apply to this value
    * @return The resulting value, or null for not found
    */
-  private static String extractValue(ExtendedRecord er, Term term, Map<String, String> defaults) {
+  protected static String extractValue(ExtendedRecord er, Term term, Map<String, String> defaults) {
     String value = ModelUtils.extractValue(er, term);
     if (value == null && defaults != null && !defaults.isEmpty())
       value = defaults.get(term.simpleName());
