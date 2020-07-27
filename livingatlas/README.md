@@ -1,4 +1,4 @@
-# Living Atlas Pipelines extensions [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/la-pipelines.svg?branch=master)](http://travis-ci.org/AtlasOfLivingAustralia/la-pipelines) [![Coverage Status](https://coveralls.io/repos/github/AtlasOfLivingAustralia/la-pipelines/badge.svg?branch=master)](https://coveralls.io/github/AtlasOfLivingAustralia/la-pipelines?branch=master)
+# Living Atlas Pipelines extensions [![Build Status](https://api.travis-ci.org/gbif/pipelines.svg?branch=ala-dev)](http://travis-ci.org/gbif/pipelines) 
 
 The aim of this module is to add functionality required by the Living Atlases to facilitate the replacement to [biocache-store](https://github.com/AtlasOfLivingAustralia/biocache-store) for data ingress. 
 
