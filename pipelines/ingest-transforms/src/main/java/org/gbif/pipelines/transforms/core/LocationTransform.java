@@ -115,6 +115,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .to(lr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr))
+        .via(LocationInterpreter.interpretGadm(geocodeKvStore))
         .via(LocationInterpreter::interpretContinent)
         .via(LocationInterpreter::interpretWaterBody)
         .via(LocationInterpreter::interpretStateProvince)

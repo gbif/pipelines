@@ -70,13 +70,13 @@
     <!-- GBIF libraries -->
     <gbif-parsers.version>0.50</gbif-parsers.version>
     <dwca-io.version>2.8</dwca-io.version>
-    <gbif-api.version>0.115</gbif-api.version>
+    <gbif-api.version>0.116-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.47</gbif-common.version>
-    <dwc-api.version>1.27</dwc-api.version>
-    <kvs.version>1.6</kvs.version>
+    <dwc-api.version>1.28</dwc-api.version>
+    <kvs.version>1.7</kvs.version>
     <hbase-utils.version>0.12</hbase-utils.version>
     <gbif-wrangler.version>0.3</gbif-wrangler.version>
-    <gbif-occurrence.version>0.124</gbif-occurrence.version>
+    <gbif-occurrence.version>0.140.1-SNAPSHOT</gbif-occurrence.version>
     <data-repo-api.version>1.2</data-repo-api.version>
 
     <!-- Common libraries -->
