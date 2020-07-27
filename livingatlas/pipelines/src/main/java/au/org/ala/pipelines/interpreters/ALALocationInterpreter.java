@@ -147,9 +147,7 @@ public class ALALocationInterpreter {
                 StateProvince.getInstance(
                         alaConfig.getLocationInfoConfig().getStateProvinceNamesFile())
                     .matchTerm(lr.getStateProvince());
-            if (formalStateName.isPresent()) {
-              lr.setStateProvince(formalStateName.get());
-            }
+              formalStateName.ifPresent(lr::setStateProvince);
 
             String suppliedStateProvince = extractNullAwareValue(er, DwcTerm.stateProvince);
             if (!Strings.isNullOrEmpty(suppliedStateProvince)) {

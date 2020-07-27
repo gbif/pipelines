@@ -33,7 +33,7 @@ public class ALADefaultValuesTransform
       TagNamespace.GBIF_DEFAULT_TERM.getNamespace();
   private static final TermFactory TERM_FACTORY = TermFactory.instance();
 
-  private SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
+  private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceKvStoreSupplier;
 
   private final String datasetId;

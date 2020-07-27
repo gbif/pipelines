@@ -83,7 +83,7 @@ public class ALAInterpretedToLatLongCSVPipeline {
     ALAFsUtils.createDirectory(fs, outputPath);
 
     csvCollection
-        .apply(Distinct.<String>create())
+        .apply(Distinct.create())
         .apply(TextIO.write().to(outputPath + "/latlong.csv"));
 
     log.info("Running the pipeline");

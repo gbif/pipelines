@@ -59,7 +59,7 @@ public class LayerCrawler {
 
   SamplingService service;
 
-  private static Retrofit retrofit =
+  private static final Retrofit retrofit =
       new Retrofit.Builder()
           .baseUrl(BASE_URL)
           .addConverterFactory(JacksonConverterFactory.create())
@@ -267,7 +267,7 @@ public class LayerCrawler {
         try (ReadableByteChannel inputChannel =
                 Channels.newChannel(new URL(batchStatus.getDownloadUrl()).openStream());
             WritableByteChannel outputChannel =
-                ALAFsUtils.createByteChannel(fs, outputDirectoryPath + "/" + batchId + ".zip"); ) {
+                ALAFsUtils.createByteChannel(fs, outputDirectoryPath + "/" + batchId + ".zip")) {
           ByteBuffer buffer = ByteBuffer.allocate(512);
           while (inputChannel.read(buffer) != -1) {
             buffer.flip();
@@ -279,7 +279,6 @@ public class LayerCrawler {
 
       } catch (IOException e) {
         log.info("Download for batch {} failed, retrying attempt {} of 5", batchId, i);
-        continue;
       }
     }
     return false;

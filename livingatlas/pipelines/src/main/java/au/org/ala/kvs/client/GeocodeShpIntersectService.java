@@ -50,7 +50,7 @@ public class GeocodeShpIntersectService {
   private void checkResourceFiles(GeocodeShpConfig config) {
     String error = "";
     if (config == null) {
-      error = String.format("FATAL: No SHP file configuration found. Please add to YAML.");
+      error = "FATAL: No SHP file configuration found. Please add to YAML.";
     } else {
       if (config.getCountry() == null
           || !new File(config.getCountry().getPath() + ".dbf").exists()) {

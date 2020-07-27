@@ -12,12 +12,12 @@ import org.elasticsearch.common.Strings;
 @Slf4j
 public class StateProvinceCentrePoints {
 
-  private static String classpathFile = "/stateProvinceCentrePoints.txt";
   private static CentrePoints cp;
 
   public static CentrePoints getInstance(LocationInfoConfig config) throws FileNotFoundException {
     if (cp == null) {
       InputStream is;
+      String classpathFile = "/stateProvinceCentrePoints.txt";
       if (config != null) {
         String externalFilePath = config.getStateProvinceCentrePointsFile();
         if (Strings.isNullOrEmpty(externalFilePath)) {

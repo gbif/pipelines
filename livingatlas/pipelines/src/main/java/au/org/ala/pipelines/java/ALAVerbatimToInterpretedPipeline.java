@@ -107,7 +107,6 @@ public class ALAVerbatimToInterpretedPipeline {
 
   public static void run(String[] args) {
     InterpretationPipelineOptions options =
-        (InterpretationPipelineOptions)
             PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
     run(options);
   }
@@ -262,7 +261,7 @@ public class ALAVerbatimToInterpretedPipeline {
                 ALAAttributionRecord.getClassSchema(),
                 alaAttributionTransform,
                 id,
-                false); ) {
+                false)) {
 
       log.info("Creating metadata record");
       // Create MetadataRecord

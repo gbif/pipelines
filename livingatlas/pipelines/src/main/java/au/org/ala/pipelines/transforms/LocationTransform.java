@@ -31,9 +31,9 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
-  private ALAPipelinesConfig alaConfig;
-  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier;
-  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier;
+  private final ALAPipelinesConfig alaConfig;
+  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier;
   private KeyValueStore<LatLng, GeocodeResponse> countryKvStore;
   private KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore;
 

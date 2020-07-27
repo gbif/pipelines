@@ -33,7 +33,7 @@ import scala.Tuple4;
 @Parameters(separators = "=")
 public class MigrateUUIDPipeline implements Serializable {
 
-  @Parameter private List<String> parameters = new ArrayList<String>();
+  @Parameter private final List<String> parameters = new ArrayList<String>();
 
   @Parameter(
       names = "--inputPath",
