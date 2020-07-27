@@ -25,6 +25,28 @@ fs:
     fsPath: hdfs://localhost:8020
   # fsPath: hdfs://aws-spark-quoll-1.ala:9000/
 
+alaNameMatch:
+  wsUrl: http://localhost:9179
+  timeoutSec: 70
+collectory:
+  wsUrl: https://collections.ala.org.au
+  timeoutSec: 70
+geocodeConfig:
+  country:
+    path: /data/pipelines-shp/political
+    field: ISO_A2
+  eez:
+    path: /data/pipelines-shp/eez
+    field: ISO2
+  stateProvince:
+    path: /data/pipelines-shp/cw_state_poly
+    field: FEATURE
+#locationInfoConfig:
+#    countryNamesFile : /data/pipelines-data/resources/countries.txt
+#    countryCentrePointsFile : /data/pipelines-data/resources/countryCentrePoints.txt
+#    stateProvinceCentrePointsFile : /data/pipelines-data/resources/stateProvinceCentrePoints.txt
+#    stateProvinceNamesFile : /data/pipelines-data/resources/stateProvinces.txt
+
 ### pipelines options: should match each GBIF PipelineOptions class options, that is, not extra options should be added
 ### on each yml category
 
@@ -61,8 +83,6 @@ interpret:
   # Skips GBIF id generation and copies ids from ExtendedRecord ids
   useExtendedRecordId: true
   runner: SparkRunner
-  # TODO improve/move this
-  properties: ../scripts/pipelines.yaml
   ## For spark-cluster:
   name: interpret {datasetId}
   #  appName: Interpretation for {datasetId}
@@ -75,7 +95,6 @@ uuid:
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
   metaFileName: uuid-metrics.yml
-  properties: ../scripts/pipelines.yaml
   ## For spark-cluster:
   # interpretationTypes: ALL
   # useExtendedRecordId: true
@@ -93,15 +112,12 @@ sample:
   metaFileName: indexing-metrics.yml
   runner: SparkRunner
   # TODO improve/move this
-  properties: ../scripts/pipelines.yaml
 
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
   inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
   metaFileName: indexing-metrics.yml
-  # TODO improve/move this
-  properties: ../scripts/pipelines.yaml
   ## For spark-cluster:
   # appName: Add Sampling for {datasetId}
   # useExtendedRecordId: true
@@ -112,7 +128,6 @@ sample-avro:
 index:
   inputPath: '{fsPath}/pipelines-data'
   metaFileName: indexing-metrics.yml
-  properties: ../scripts/pipelines.yaml
   solrCollection: biocache
   includeSampling: true
   runner: SparkRunner
@@ -197,3 +212,5 @@ test:
   solrAdminHost: localhost:8983
 
 root-test: 1
+
+unicode-test: Лорем ипсум долор сит амет, дуо еа прима семпер
