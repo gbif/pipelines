@@ -1,14 +1,15 @@
 package au.org.ala.utils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import lombok.SneakyThrows;
 import one.util.streamex.EntryStream;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
@@ -45,15 +46,22 @@ public class CombinedYamlConfiguration {
         };
 
     // Load each yaml, and combine the values
+    LinkedHashMap<String, Object> merged = new LinkedHashMap<String, Object>();
     for (String path : yamlConfigPaths) {
       InputStream input = new FileInputStream(new File(path));
       Yaml yaml = new Yaml();
       LinkedHashMap<String, Object> loaded = yaml.load(input);
       if (loaded != null) {
         // This means that config is not empty
-        combined = combineMap(combined, loaded);
+        merged = combineMap(merged, loaded);
       }
     }
+
+    // Substitute vars like {datasetId} in the yaml
+    // for this we dump the merged configs to a String, we replace that args, and we reload the yaml
+    Yaml mergedYaml = new Yaml();
+    Yaml mergedWithVars = new Yaml();
+    combined = mergedWithVars.load(substituteVars(mergedYaml.dump(merged), mainArgsAsList));
 
     // Remove pipelineExcludeArgs as they are not used by PipelineOptions
     Object excludeArgs = get("pipelineExcludeArgs");
@@ -163,21 +171,18 @@ public class CombinedYamlConfiguration {
    * @return a list of --args=values
    */
   public String[] toArgs(@NotNull String... keys) {
-    return toArgs(mainArgsAsList, keys);
-  }
-
-  private String[] toArgs(String[][] params, @NotNull String... keys) {
     List<String> argList = new ArrayList<String>();
     for (Entry<String, Object> conf : subSet(keys).entrySet()) {
-      Object value = format(conf.getValue(), params);
       argList.add(
           new StringBuffer()
               .append("--")
               .append(conf.getKey())
               .append("=")
-              .append(value)
+              .append(conf.getValue())
               .toString());
     }
+    // This adds all combined yaml in the arg --properties
+    argList.add(new StringBuffer().append("--properties=").append(toYamlFile()).toString());
     return argList.toArray(new String[0]);
   }
 
@@ -188,17 +193,12 @@ public class CombinedYamlConfiguration {
    * @param params
    * @return
    */
-  private Object format(Object value, String[][] params) {
-    if (value instanceof String) {
-      String formatted = (String) value;
-      for (int i = 0; i < params[0].length; i++) {
-        formatted = formatted.replace("{" + params[0][i] + "}", params[1][i]);
-      }
-      return formatted;
-    } else {
-      // we only format Strings, in other case we return the same object
-      return value;
+  private String substituteVars(String value, String[][] params) {
+    String formatted = (String) value;
+    for (int i = 0; i < params[0].length; i++) {
+      formatted = formatted.replace("{" + params[0][i] + "}", params[1][i]);
     }
+    return formatted;
   }
 
   public Object get(String key) {
@@ -210,5 +210,17 @@ public class CombinedYamlConfiguration {
       return traversed.size() == 1 ? traversed.values().toArray()[0] : traversed;
     }
     return value;
+  }
+
+  @SneakyThrows
+  public String toYamlFile() {
+    Yaml yaml = new Yaml();
+    String combinedStr = yaml.dump(combined);
+
+    Path tempFile = Files.createTempFile(null, ".yaml");
+    Files.write(tempFile, combinedStr.getBytes(), StandardOpenOption.CREATE);
+    tempFile.toFile().deleteOnExit();
+
+    return tempFile.toString();
   }
 }

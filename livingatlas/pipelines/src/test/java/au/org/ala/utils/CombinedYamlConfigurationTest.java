@@ -4,13 +4,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.concurrent.Callable;
 import org.jetbrains.annotations.NotNull;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.yaml.snakeyaml.Yaml;
 
-public class CombinedConfigurationTest {
+public class CombinedYamlConfigurationTest {
   private static CombinedYamlConfiguration testConf;
 
   @BeforeClass
@@ -137,12 +141,21 @@ public class CombinedConfigurationTest {
   }
 
   @Test
-  public void emptyConfigsShouldLoadEmptyArgs() throws FileNotFoundException {
+  public void testYamlDump() throws IOException {
+    String yamlPath = testConf.toYamlFile();
+    String yamlStr = new String(Files.readAllBytes(Paths.get(yamlPath)));
+
+    assertThat(yamlStr.length(), greaterThan(0));
+    assertThat(yamlStr.contains("{fsPath}"), equalTo(false));
+    assertThat(yamlStr.contains("{datasetId}"), equalTo(false));
+
+    Yaml yaml = new Yaml();
+    LinkedHashMap<String, Object> map = yaml.load(yamlStr);
     assertThat(
-        new CombinedYamlConfiguration(
-                new String[] {"--config=src/test/resources/pipelines-empty.yaml"})
-            .toArgs()
-            .length,
-        equalTo(0));
+        (String) ((LinkedHashMap<String, Object>) map.get("alaNameMatch")).get("wsUrl"),
+        equalTo("http://localhost:9179"));
+    assertThat(
+        (String) (map.get("unicode-test")),
+        equalTo("Лорем ипсум долор сит амет, дуо еа прима семпер"));
   }
 }
