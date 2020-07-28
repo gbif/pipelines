@@ -141,16 +141,6 @@ public class CombinedYamlConfigurationTest {
   }
 
   @Test
-  public void emptyConfigsShouldLoadEmptyArgs() throws FileNotFoundException {
-    assertThat(
-        new CombinedYamlConfiguration(
-                new String[] {"--config=src/test/resources/pipelines-empty.yaml"})
-            .toArgs()
-            .length,
-        equalTo(0));
-  }
-
-  @Test
   public void testYamlDump() throws IOException {
     String yamlPath = testConf.toYamlFile();
     String yamlStr = new String(Files.readAllBytes(Paths.get(yamlPath)));
