@@ -157,7 +157,7 @@ public class ALAUUIDMintingPipeline {
                       }
                     }));
 
-    PCollection<KV<String, String>> alaUuids = null;
+    PCollection<KV<String, String>> alaUuids;
 
     log.info("Transform 2: ALAUUIDRecord ur ->  <uniqueKey, uuid> (assume incomplete)");
     FileSystem fs =
@@ -253,10 +253,10 @@ public class ALAUUIDMintingPipeline {
   static class CreateALAUUIDRecordFcn extends DoFn<KV<String, KV<String, String>>, ALAUUIDRecord> {
 
     // TODO this counts are inaccurate when using SparkRunner
-    private Counter orphanedUniqueKeys =
+    private final Counter orphanedUniqueKeys =
         Metrics.counter(CreateALAUUIDRecordFcn.class, "orphanedUniqueKeys");
-    private Counter newUuids = Metrics.counter(CreateALAUUIDRecordFcn.class, "newUuids");
-    private Counter preservedUuids =
+    private final Counter newUuids = Metrics.counter(CreateALAUUIDRecordFcn.class, "newUuids");
+    private final Counter preservedUuids =
         Metrics.counter(CreateALAUUIDRecordFcn.class, "preservedUuids");
 
     @ProcessElement

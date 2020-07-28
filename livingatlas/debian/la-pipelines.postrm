@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#######################################################
+#
+# Add here the commands to be excuted after the package
+# has been removed
+#
+
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+fi
+
+#DEBHELPER#
+
+echo la-pipelines removed.

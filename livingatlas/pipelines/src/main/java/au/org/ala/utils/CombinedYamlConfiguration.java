@@ -54,6 +54,14 @@ public class CombinedYamlConfiguration {
         combined = combineMap(combined, loaded);
       }
     }
+
+    // Remove pipelineExcludeArgs as they are not used by PipelineOptions
+    Object excludeArgs = get("pipelineExcludeArgs");
+    if (excludeArgs != null) {
+      for (String excludeArg : excludeArgs.toString().split(",")) {
+        this.mainArgs.remove(excludeArg.trim());
+      }
+    }
   }
 
   /**

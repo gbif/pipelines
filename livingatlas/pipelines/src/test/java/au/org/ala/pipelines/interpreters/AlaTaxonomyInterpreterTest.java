@@ -6,9 +6,7 @@ import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.names.ws.api.NameSearch;
 import au.org.ala.names.ws.api.NameUsageMatch;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
@@ -28,16 +26,26 @@ public class AlaTaxonomyInterpreterTest {
   public void setUp() throws Exception {
     Map<String, String> defaults = new HashMap<>();
     defaults.put("kingdom", "Plantae");
+    List<Map<String, String>> hints = new ArrayList<>();
+    hints.add(Collections.singletonMap("phylum", "Charophyta"));
+    hints.add(Collections.singletonMap("phylum", "Bryophyta"));
+
     this.dataResource =
         ALACollectoryMetadata.builder()
             .name("Test data resource")
             .uid(DATARESOURCE_UID)
             .defaultDarwinCoreValues(defaults)
+            .taxonomyCoverageHints(hints)
             .build();
+    Map<String, List<String>> hintMap = this.dataResource.getHintMap();
     this.nameMap = new HashMap<>();
     // Simple lookup
     NameSearch search =
-        NameSearch.builder().kingdom("Plantae").scientificName("Acacia dealbata").build();
+        NameSearch.builder()
+            .kingdom("Plantae")
+            .scientificName("Acacia dealbata")
+            .hints(hintMap)
+            .build();
     NameUsageMatch match =
         NameUsageMatch.builder()
             .success(true)
@@ -47,7 +55,7 @@ public class AlaTaxonomyInterpreterTest {
             .family("Fabaceae")
             .matchType("exactMatch")
             .nameType("SCIENTIFIC")
-            .issues(Arrays.asList("noIssue"))
+            .issues(Collections.singletonList("noIssue"))
             .build();
     this.nameMap.put(search, match);
     // Full search
@@ -66,6 +74,7 @@ public class AlaTaxonomyInterpreterTest {
             .rank("subspecies")
             .verbatimTaxonRank("SUBSPECIES")
             .vernacularName("Alpine Wattle")
+            .hints(hintMap)
             .build();
     this.nameMap.put(search, match);
     // Full lookup
@@ -74,6 +83,7 @@ public class AlaTaxonomyInterpreterTest {
             .kingdom("ANIMALIA")
             .family("MACROPODIDAE")
             .scientificName("Macropus rufus")
+            .hints(hintMap)
             .build();
     match =
         NameUsageMatch.builder()
@@ -105,10 +115,10 @@ public class AlaTaxonomyInterpreterTest {
             .species("Osphranter rufus")
             .speciesID(
                 "urn:lsid:biodiversity.org.au:afd.taxon:e6aff6af-ff36-4ad5-95f2-2dfdcca8caff")
-            .issues(Arrays.asList("homonym"))
+            .issues(Collections.singletonList("homonym"))
             .vernacularName("Red Kangaroo")
             .speciesGroup(Arrays.asList("Animals", "Mammals"))
-            .speciesSubgroup(Arrays.asList("Herbivorous Marsupials"))
+            .speciesSubgroup(Collections.singletonList("Herbivorous Marsupials"))
             .build();
     this.nameMap.put(search, match);
     this.lookup =

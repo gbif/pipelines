@@ -32,9 +32,10 @@ import org.gbif.rest.client.geocode.GeocodeResponse;
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
-  private ALAPipelinesConfig alaConfig;
-  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier;
-  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> stateProvinceKvStoreSupplier;
+  private final ALAPipelinesConfig alaConfig;
+  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> countryKvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>>
+      stateProvinceKvStoreSupplier;
   private KeyValueStore<LatLng, GeocodeResponse> countryKvStore;
   private KeyValueStore<LatLng, GeocodeResponse> stateProvinceKvStore;
 
@@ -138,7 +139,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
             .to(lr)
             .when(er -> !er.getCoreTerms().isEmpty())
             .via(LocationInterpreter.interpretCountryAndCoordinates(countryKvStore, mdr))
-            .via(ALALocationInterpreter.interpretStateProvince(stateProvinceKvStore))
+            //            .via(ALALocationInterpreter.interpretStateProvince(stateProvinceKvStore))
             .via(LocationInterpreter::interpretContinent)
             .via(LocationInterpreter::interpretWaterBody)
             .via(LocationInterpreter::interpretMinimumElevationInMeters)

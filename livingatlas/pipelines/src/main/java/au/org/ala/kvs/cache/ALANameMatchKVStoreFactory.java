@@ -1,9 +1,9 @@
 package au.org.ala.kvs.cache;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
+import au.org.ala.names.ws.api.NameMatchService;
 import au.org.ala.names.ws.api.NameSearch;
 import au.org.ala.names.ws.api.NameUsageMatch;
-import au.org.ala.names.ws.client.ALANameMatchService;
 import au.org.ala.names.ws.client.ALANameUsageMatchServiceClient;
 import au.org.ala.ws.ClientConfiguration;
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class ALANameMatchKVStoreFactory {
    * Returns ala name matching key value store.
    *
    * @return A key value store backed by a {@link ALANameUsageMatchServiceClient}
-   * @throws IOException if unasble to build the client
+   * @throws IOException if unable to build the client
    */
   public static KeyValueStore<NameSearch, NameUsageMatch> create(ALAPipelinesConfig config)
       throws IOException {
@@ -71,7 +71,7 @@ public class ALANameMatchKVStoreFactory {
 
   /** Builds a KV Store backed by the rest client. */
   private static KeyValueStore<NameSearch, NameUsageMatch> cache2kBackedKVStore(
-      ALANameMatchService nameMatchService, Command closeHandler, ALAPipelinesConfig config) {
+      NameMatchService nameMatchService, Command closeHandler, ALAPipelinesConfig config) {
 
     KeyValueStore kvs =
         new KeyValueStore<NameSearch, NameUsageMatch>() {

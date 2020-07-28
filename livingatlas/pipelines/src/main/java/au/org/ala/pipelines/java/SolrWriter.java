@@ -16,18 +16,18 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 
-/** A SolrWriter based on {@link org.gbif.pipelines.ingest.java.transforms.ElasticsearchWriter} */
+/** A SolrWriter based on {@link org.gbif.pipelines.ingest.java.io.ElasticsearchWriter} */
 @Slf4j
 @Builder
 public class SolrWriter<T> {
 
-  private String zkHost;
-  private String collection;
-  private boolean useSyncMode;
-  private Function<T, SolrInputDocument> indexRequestFn;
-  private ExecutorService executor;
-  private Collection<T> records;
-  private int solrMaxBatchSize;
+  private final String zkHost;
+  private final String collection;
+  private final boolean useSyncMode;
+  private final Function<T, SolrInputDocument> indexRequestFn;
+  private final ExecutorService executor;
+  private final Collection<T> records;
+  private final int solrMaxBatchSize;
 
   @SneakyThrows
   public void write() {

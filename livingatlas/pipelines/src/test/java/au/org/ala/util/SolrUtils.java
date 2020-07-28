@@ -28,6 +28,7 @@ import org.apache.solr.client.solrj.response.ConfigSetAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.NamedList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Utilities for querying SOLR outputs and for creating configsets and collections in SOLR to
@@ -211,8 +212,7 @@ public class SolrUtils {
     params.setRows(Integer.getInteger("100"));
 
     QueryResponse response = solr.query(params);
-    SolrDocumentList results = response.getResults();
-    return results;
+    return response.getResults();
   }
 
   static RequestBody createRequestBody(final MediaType mediaType, final InputStream inputStream) {
@@ -233,7 +233,7 @@ public class SolrUtils {
       }
 
       @Override
-      public void writeTo(BufferedSink sink) throws IOException {
+      public void writeTo(@NotNull BufferedSink sink) throws IOException {
         Source source = null;
         try {
           source = Okio.source(inputStream);

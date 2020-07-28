@@ -28,8 +28,8 @@ import org.gbif.kvs.geocode.LatLng;
 public class CentrePoints {
 
   private static CentrePoints cp;
-  private Map<String, LatLng> centres = new HashMap();
-  private Map<String, BBox> BBox = new HashMap();
+  private final Map<String, LatLng> centres = new HashMap();
+  private final Map<String, BBox> BBox = new HashMap();
 
   private CentrePoints() {}
 

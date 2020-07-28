@@ -36,11 +36,12 @@ import org.gbif.pipelines.transforms.Transform;
 @Slf4j
 public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonRecord> {
 
-  private String datasetId;
+  private final String datasetId;
   private KeyValueStore<NameSearch, NameUsageMatch> nameMatchStore;
-  private SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> nameMatchStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>>
+      nameMatchStoreSupplier;
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
-  private SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
+  private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceStoreSupplier;
 
   @Builder(buildMethodName = "create")
