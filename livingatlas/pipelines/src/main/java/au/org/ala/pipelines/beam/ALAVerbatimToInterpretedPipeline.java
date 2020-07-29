@@ -58,6 +58,8 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.ImageRecord},
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
+ *      {@link org.gbif.pipelines.io.avro.ALATaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.ALAAttributionRecord},
  *      {@link LocationTransform}
  *    3) Writes data to independent files
  * </pre>
@@ -90,6 +92,8 @@ public class ALAVerbatimToInterpretedPipeline {
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     run(options);
+    // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
+    System.exit(0);
   }
 
   public static void run(InterpretationPipelineOptions options) {

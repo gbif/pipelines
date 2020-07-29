@@ -36,11 +36,12 @@ import org.gbif.pipelines.transforms.Transform;
 @Slf4j
 public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonRecord> {
 
-  private String datasetId;
+  private final String datasetId;
   private KeyValueStore<NameSearch, NameUsageMatch> nameMatchStore;
-  private SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> nameMatchStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>>
+      nameMatchStoreSupplier;
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
-  private SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
+  private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceStoreSupplier;
 
   @Builder(buildMethodName = "create")
@@ -95,10 +96,22 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
-    //    if (Objects.nonNull(kvStore)) {
+    // This section if uncommented cause CacheClosedExceptions
+    // to be thrown by the ALADefaultValuesTransform due to its use
+    // of the dataResourceStore
+
+    //    if (Objects.nonNull(this.dataResourceStore)) {
     //      try {
     //        log.info("Close NameUsageMatchKvStore");
-    //        //kvStore.close();
+    //        this.dataResourceStore.close();
+    //      } catch (IOException ex) {
+    //        log.error("Error closing KV Store", ex);
+    //      }
+    //    }
+    //    if (Objects.nonNull(this.nameMatchStore)) {
+    //      try {
+    //        log.info("Close NameUsageMatchKvStore");
+    //        this.nameMatchStore.close();
     //      } catch (IOException ex) {
     //        log.error("Error closing KV Store", ex);
     //      }

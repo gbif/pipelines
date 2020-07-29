@@ -28,8 +28,8 @@ import org.gbif.kvs.geocode.LatLng;
 public class CentrePoints {
 
   private static CentrePoints cp;
-  private Map<String, LatLng> centres = new HashMap();
-  private Map<String, BBox> BBox = new HashMap();
+  private final Map<String, LatLng> centres = new HashMap();
+  private final Map<String, BBox> BBox = new HashMap();
 
   private CentrePoints() {}
 
@@ -84,7 +84,9 @@ public class CentrePoints {
       }
       return approximatedLat == decimalLatitude && approximatedLong == decimalLongitude;
     } else {
-      log.error("{} is not found in records", location);
+      if (log.isWarnEnabled()) {
+        log.warn("{} is not found in records", location);
+      }
       return false;
     }
   }

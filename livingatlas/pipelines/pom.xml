@@ -9,19 +9,17 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>au.org.ala</groupId>
   <artifactId>pipelines</artifactId>
   <packaging>jar</packaging>
-  <version>2.5.5-SNAPSHOT</version>
 
   <name>Living Atlas Pipelines</name>
   <description>Extensions to GBIF pipelines to support ALA and the Living Atlas community</description>
 
   <repositories>
-      <repository>
-          <id>ALA</id>
-          <url>https://nexus.ala.org.au/content/repositories/releases</url>
-      </repository>
+    <repository>
+      <id>ALA</id>
+      <url>https://nexus.ala.org.au/content/repositories/releases</url>
+    </repository>
     <repository>
       <id>ALA-snapshots</id>
       <url>https://nexus.ala.org.au/content/repositories/snapshots</url>

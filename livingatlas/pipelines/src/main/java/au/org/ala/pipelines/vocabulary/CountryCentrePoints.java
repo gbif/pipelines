@@ -11,7 +11,7 @@ import org.elasticsearch.common.Strings;
 /** Load centres of countries from resources */
 @Slf4j
 public class CountryCentrePoints {
-  private static String classpathFile = "/countryCentrePoints.txt";
+  private static final String classpathFile = "/countryCentrePoints.txt";
   private static CentrePoints cp;
 
   public static CentrePoints getInstance(LocationInfoConfig config) throws FileNotFoundException {

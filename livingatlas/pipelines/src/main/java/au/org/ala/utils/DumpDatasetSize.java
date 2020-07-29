@@ -7,6 +7,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,12 +67,11 @@ public class DumpDatasetSize {
           Yaml yaml = new Yaml();
           // the YAML files created by metrics are UTF-16 encoded
           Map<String, Object> yamlObject =
-              (Map) yaml.load(new InputStreamReader(fs.open(metrics), "UTF-16"));
+              yaml.load(new InputStreamReader(fs.open(metrics), StandardCharsets.UTF_16));
           counts.put(
               datasetID,
               Long.parseLong(yamlObject.getOrDefault("archiveToErCountAttempted", 0L).toString()));
         }
-        ;
       }
     }
 

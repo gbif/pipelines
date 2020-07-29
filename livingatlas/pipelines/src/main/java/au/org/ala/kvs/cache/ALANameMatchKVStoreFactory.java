@@ -43,7 +43,7 @@ public class ALANameMatchKVStoreFactory {
    * Returns ala name matching key value store.
    *
    * @return A key value store backed by a {@link ALANameUsageMatchServiceClient}
-   * @throws IOException if unasble to build the client
+   * @throws IOException if unable to build the client
    */
   public static KeyValueStore<NameSearch, NameUsageMatch> create(ALAPipelinesConfig config)
       throws IOException {

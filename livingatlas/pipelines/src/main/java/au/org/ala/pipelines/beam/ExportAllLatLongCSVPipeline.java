@@ -69,7 +69,7 @@ public class ExportAllLatLongCSVPipeline {
             .apply("Merging to CSV doc", alaCSVrDoFn);
 
     csvCollection
-        .apply(Distinct.<String>create())
+        .apply(Distinct.create())
         .apply(TextIO.write().to("/data/pipelines-sampling/latlng/latlong.csv"));
 
     log.info("Running the pipeline");

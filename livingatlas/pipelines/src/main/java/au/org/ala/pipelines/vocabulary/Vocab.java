@@ -17,11 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Vocab {
 
-  private Set<String> canonicals = new HashSet<String>();
+  private final Set<String> canonicals = new HashSet<String>();
   // variant -> canonical
-  private HashMap<String, String> variants = new HashMap<String, String>();
+  private final HashMap<String, String> variants = new HashMap<String, String>();
   // stemmed variant -> canonical
-  private HashMap<String, String> stemmedVariants = new HashMap<String, String>();
+  private final HashMap<String, String> stemmedVariants = new HashMap<String, String>();
 
   private Vocab() {}
 

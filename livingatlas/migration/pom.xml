@@ -8,26 +8,24 @@
         <version>2.5.5-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
     <modelVersion>4.0.0</modelVersion>
     <artifactId>migration</artifactId>
     <name>Living Atlas Migration tools</name>
     <description>Tools for migration of data from legacy systems to pipelines.</description>
+    <properties>
+        <!-- ALA are using spark 2.4.5, GBIF current reference 2.4.0 -->
+        <spark.version>2.4.5</spark.version>
+        <!-- this library is not in the parent POM, but is in use by gbif/crawler
+         which uses version 1.58
+         -->
+        <jcommander.version>1.78</jcommander.version>
+    </properties>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
             <!-- Shade the project into an uber jar to send to Spark -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.1</version>
                 <configuration>
                     <createDependencyReducedPom>true</createDependencyReducedPom>
                     <filters>
@@ -57,39 +55,6 @@
                                     <resource>reference.conf</resource>
                                 </transformer>
                             </transformers>
-                            <relocations>
-                                <!-- Transient from core: conflicts with Beam on Spark -->
-                                <relocation>
-                                    <pattern>com.fasterxml.jackson</pattern>
-                                    <shadedPattern>j213.com.fasterxml.jackson</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>okhttp3</pattern>
-                                    <shadedPattern>o115.okhttp3</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>okio</pattern>
-                                    <shadedPattern>o113.okio</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>retrofit2</pattern>
-                                    <shadedPattern>r240.retrofit2</shadedPattern>
-                                </relocation>
-                                <!-- Transient from elastic search Beam: conflicts with hive-jdbc-1.1.0-cdh5.12.1-standalone.jar -->
-                                <relocation>
-                                    <pattern>org.apache.http</pattern>
-                                    <shadedPattern>hc45.org.apache.http</shadedPattern>
-                                </relocation>
-                                <!-- Transient from core: conflicts with Hadoop on Spark -->
-                                <relocation>
-                                    <pattern>org.hsqldb</pattern>
-                                    <shadedPattern>h228.org.hsqldb</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.google.common</pattern>
-                                    <shadedPattern>g20.com.google.common</shadedPattern>
-                                </relocation>
-                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
@@ -97,32 +62,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <compilerId>javac-with-errorprone</compilerId>
-                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
-                    <source>${jdkLevel}</source>
-                    <target>${jdkLevel}</target>
-                    <compilerArgs>
-                        <arg>-XepExcludedPaths:.*/src/main/java-generated/.*</arg>
-                        <arg>-XepDisableWarningsInGeneratedCode</arg>
-                        <arg>-Xep:MissingOverride:ERROR</arg>
-                        <arg>-Xep:ParameterName:OFF</arg>
-                    </compilerArgs>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.plexus</groupId>
-                        <artifactId>plexus-compiler-javac-errorprone</artifactId>
-                        <version>${plexus-compiler-javac-errorprone.version}</version>
-                    </dependency>
-                    <!-- Override plexus-compiler-javac-errorprone's dependency on Errorprone with the latest version -->
-                    <dependency>
-                        <groupId>com.google.errorprone</groupId>
-                        <artifactId>error_prone_core</artifactId>
-                        <version>${error_prone_core.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -130,30 +69,29 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.11</artifactId>
-            <version>2.4.5</version>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.11</artifactId>
-            <version>2.4.5</version>
+            <version>${spark.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-avro_2.11</artifactId>
-            <version>2.4.5</version>
+            <version>${spark.version}</version>
             <scope>compile</scope>
         </dependency>
         <!-- Avro -->
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
-            <version>1.8.2</version>
         </dependency>
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
-            <version>1.78</version>
+            <version>${jcommander.version}</version>
         </dependency>
     </dependencies>
 </project>

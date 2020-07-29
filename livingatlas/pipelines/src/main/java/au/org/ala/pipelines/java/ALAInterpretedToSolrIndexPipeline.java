@@ -321,11 +321,6 @@ public class ALAInterpretedToSolrIndexPipeline {
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
     Map<String, LocationRecord> locationMap = locationMapFeature.get();
 
-    Map<String, TaxonRecord> taxonMap = null;
-    if (options.getIncludeGbifTaxonomy()) {
-      taxonMap = taxonMapFeature.get();
-    }
-
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
@@ -377,11 +372,8 @@ public class ALAInterpretedToSolrIndexPipeline {
 
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
 
-          SolrInputDocument doc =
-              ALASolrDocumentTransform.createSolrDocument(
-                  metadata, br, tr, lr, txr, atxr, er, aar, asr, aur);
-
-          return doc;
+          return ALASolrDocumentTransform.createSolrDocument(
+              metadata, br, tr, lr, txr, atxr, er, aar, asr, aur);
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

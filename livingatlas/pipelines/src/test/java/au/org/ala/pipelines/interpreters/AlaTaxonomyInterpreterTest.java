@@ -55,7 +55,7 @@ public class AlaTaxonomyInterpreterTest {
             .family("Fabaceae")
             .matchType("exactMatch")
             .nameType("SCIENTIFIC")
-            .issues(Arrays.asList("noIssue"))
+            .issues(Collections.singletonList("noIssue"))
             .build();
     this.nameMap.put(search, match);
     // Full search
@@ -115,10 +115,10 @@ public class AlaTaxonomyInterpreterTest {
             .species("Osphranter rufus")
             .speciesID(
                 "urn:lsid:biodiversity.org.au:afd.taxon:e6aff6af-ff36-4ad5-95f2-2dfdcca8caff")
-            .issues(Arrays.asList("homonym"))
+            .issues(Collections.singletonList("homonym"))
             .vernacularName("Red Kangaroo")
             .speciesGroup(Arrays.asList("Animals", "Mammals"))
-            .speciesSubgroup(Arrays.asList("Herbivorous Marsupials"))
+            .speciesSubgroup(Collections.singletonList("Herbivorous Marsupials"))
             .build();
     this.nameMap.put(search, match);
     this.lookup =

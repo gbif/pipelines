@@ -6,11 +6,12 @@ import static org.junit.Assert.assertNull;
 
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
-import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
+import au.org.ala.pipelines.vocabulary.*;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
@@ -25,15 +26,30 @@ import org.gbif.rest.client.geocode.Location;
 import org.junit.Before;
 import org.junit.Test;
 
+@Slf4j
 public class AlaLocationInterpreterTest {
 
   private static final String ID = "777";
   private ALAPipelinesConfig alaConfig;
 
+  private CentrePoints countryCentrePoints;
+  private CentrePoints stateProvinceCentrePoints;
+  private Vocab stateProvinceVocab;
+
   @Before
   public void set() {
     alaConfig = new ALAPipelinesConfig();
     alaConfig.setLocationInfoConfig(new LocationInfoConfig(null, null, null));
+    try {
+      countryCentrePoints = CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
+      stateProvinceCentrePoints =
+          StateProvinceCentrePoints.getInstance(alaConfig.getLocationInfoConfig());
+      stateProvinceVocab =
+          StateProvince.getInstance(alaConfig.getLocationInfoConfig().getStateProvinceNamesFile());
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      throw new RuntimeException(e.getMessage());
+    }
   }
 
   @Test
@@ -147,7 +163,9 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "146.921099d");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+        .accept(er, lr);
 
     assertEquals("New South Wales", lr.getStateProvince());
 
@@ -179,7 +197,9 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "WGS84");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+        .accept(er, lr);
 
     assertEquals("New South Wales", lr.getStateProvince());
 
@@ -207,7 +227,9 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "TEST");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+        .accept(er, lr);
 
     assertEquals("New South Wales", lr.getStateProvince());
 
@@ -244,7 +266,9 @@ public class AlaLocationInterpreterTest {
     coreMap.put(DwcTerm.stateProvince.qualifiedName(), "New South Wales");
 
     ALALocationInterpreter.interpretStateProvince(kvStore).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+        .accept(er, lr);
     assertEquals("Victoria", lr.getStateProvince());
 
     assertArrayEquals(
@@ -327,7 +351,9 @@ public class AlaLocationInterpreterTest {
     LocationRecord lr = LocationRecord.newBuilder().setId(ID).build();
 
     LocationInterpreter.interpretCountryAndCoordinates(store, mdr).accept(er, lr);
-    ALALocationInterpreter.verifyLocationInfo(alaConfig).accept(er, lr);
+    ALALocationInterpreter.verifyLocationInfo(
+            countryCentrePoints, stateProvinceCentrePoints, stateProvinceVocab)
+        .accept(er, lr);
 
     assertArrayEquals(
         new String[] {
