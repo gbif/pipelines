@@ -39,7 +39,8 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
 
   private final String datasetId;
   private KeyValueStore<NameSearch, NameUsageMatch> nameMatchStore;
-  private final SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> nameMatchStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>>
+      nameMatchStoreSupplier;
   private KeyValueStore<String, Boolean> kingdomCheckStore;
   private final SerializableSupplier<KeyValueStore<String, Boolean>> kingdomCheckStoreSupplier;
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;

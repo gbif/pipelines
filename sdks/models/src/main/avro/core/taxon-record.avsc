@@ -47,7 +47,7 @@
     "symbols" : [
       "affinitySpecies", "associatedNameExcluded", "conferSpecies", "excludedSpecies", "genericError",
       "hintMismatch", "homonym", "indeterminateSpecies", "matchedToMisappliedName", "misappliedName",
-      "noIssue", "parentChildSynonym", "questionSpecies"
+      "noIssue", "noMatch", "parentChildSynonym", "questionSpecies", "speciesPlural"
      ]
   },
   {
