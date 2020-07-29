@@ -130,7 +130,6 @@ public class ALASolrDocumentTransform implements Serializable {
     skipKeys.add("extensions");
     skipKeys.add("usage");
     skipKeys.add("classification");
-    skipKeys.add("issues");
     skipKeys.add("eventDate");
     skipKeys.add("hasCoordinate");
     skipKeys.add("hasGeospatialIssue");
@@ -177,7 +176,7 @@ public class ALASolrDocumentTransform implements Serializable {
 
       String rank = txr.getAcceptedUsage().getRank().toString();
       doc.setField("gbif_s_rank", txr.getAcceptedUsage().getRank().toString());
-      doc.setField("gbif_s_scientificName", txr.getAcceptedUsage().getName().toString());
+      doc.setField("gbif_s_scientificName", txr.getAcceptedUsage().getName());
     }
 
     // Verbatim (Raw) data
@@ -187,7 +186,7 @@ public class ALASolrDocumentTransform implements Serializable {
       if (key.startsWith("http")) {
         key = key.substring(key.lastIndexOf("/") + 1);
       }
-      doc.setField("raw_" + key, entry.getValue().toString());
+      doc.setField("raw_" + key, entry.getValue());
     }
 
     if (lr.getDecimalLatitude() != null && lr.getDecimalLongitude() != null) {
@@ -445,19 +444,19 @@ public class ALASolrDocumentTransform implements Serializable {
                               t -> {
                                 switch (t) {
                                   case BOOLEAN:
-                                    doc.setField(f.name(), (Boolean) r);
+                                    doc.setField(f.name(), r);
                                     break;
                                   case FLOAT:
-                                    doc.setField(f.name(), (Float) r);
+                                    doc.setField(f.name(), r);
                                     break;
                                   case DOUBLE:
-                                    doc.setField(f.name(), (Double) r);
+                                    doc.setField(f.name(), r);
                                     break;
                                   case INT:
-                                    doc.setField(f.name(), (Integer) r);
+                                    doc.setField(f.name(), r);
                                     break;
                                   case LONG:
-                                    doc.setField(f.name(), (Long) r);
+                                    doc.setField(f.name(), r);
                                     break;
                                   default:
                                     doc.setField(f.name(), r.toString());

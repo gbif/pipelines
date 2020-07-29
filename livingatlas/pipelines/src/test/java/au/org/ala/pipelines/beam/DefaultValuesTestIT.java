@@ -64,7 +64,7 @@ public class DefaultValuesTestIT {
                             .get(
                                 DwcTerm.occurrenceStatus.namespace() + DwcTerm.basisOfRecord.name())
                         == null;
-    AvroCheckPipeline.assertExtendedCountRecords(testOptions1, 5l, notPopulated);
+    AvroCheckPipeline.assertExtendedCountRecords(testOptions1, 5L, notPopulated);
 
     // Run the interpretation pipeline
     InterpretationPipelineOptions interpretationOptions =
@@ -113,6 +113,6 @@ public class DefaultValuesTestIT {
                         .get(DwcTerm.occurrenceStatus.namespace() + DwcTerm.occurrenceStatus.name())
                         .equals("present");
 
-    AvroCheckPipeline.assertExtendedCountRecords(checkPopulatedOptions, 5l, checkPopulatedFcn);
+    AvroCheckPipeline.assertExtendedCountRecords(checkPopulatedOptions, 5L, checkPopulatedFcn);
   }
 }

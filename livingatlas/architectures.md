@@ -1,6 +1,6 @@
 # Comparison of architectures (work in progress)
 
-This is page is intended to document changes in the architecture of biocache to a pipelines based deployment.
+This page documents the architectural differences between a biocache-store deployment and a pipelines based deployment.
 
 ## Current architecture
 ![Existing architecture](https://docs.google.com/drawings/d/e/2PACX-1vQPYIjmbt1e-PNU0ZK6FpYpqxw4xQj4A3tXHjEZIQ3ZGPnwj0cBCdFgEs_SNnccR0rGcnpOFWgqYlLS/pub?w=960&h=720)

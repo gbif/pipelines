@@ -37,13 +37,13 @@ import org.gbif.pipelines.transforms.Transform;
 @Slf4j
 public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonRecord> {
 
-  private String datasetId;
+  private final String datasetId;
   private KeyValueStore<NameSearch, NameUsageMatch> nameMatchStore;
-  private SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> nameMatchStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<NameSearch, NameUsageMatch>> nameMatchStoreSupplier;
   private KeyValueStore<String, Boolean> kingdomCheckStore;
-  private SerializableSupplier<KeyValueStore<String, Boolean>> kingdomCheckStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<String, Boolean>> kingdomCheckStoreSupplier;
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceStore;
-  private SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
+  private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceStoreSupplier;
 
   @Builder(buildMethodName = "create")
@@ -94,7 +94,7 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
       this.nameMatchStore = this.nameMatchStoreSupplier.get();
     }
     if (this.kingdomCheckStore == null && this.kingdomCheckStoreSupplier != null) {
-      log.info("Initialize NameUsageMatchKvStore");
+      log.info("Initialize NameCheckKvStore");
       this.kingdomCheckStore = this.kingdomCheckStoreSupplier.get();
     }
     if (this.dataResourceStore == null && this.dataResourceStoreSupplier != null) {
@@ -105,7 +105,35 @@ public class ALATaxonomyTransform extends Transform<ExtendedRecord, ALATaxonReco
 
   /** Beam @Teardown closes initialized resources */
   @Teardown
-  public void tearDown() {}
+  public void tearDown() {
+    // This section if uncommented cause CacheClosedExceptions
+    // to be thrown by the ALADefaultValuesTransform due to its use
+    // of the dataResourceStore
+
+    //    if (Objects.nonNull(this.dataResourceStore)) {
+    //      try {
+    //        log.info("Close NameUsageMatchKvStore");
+    //        this.dataResourceStore.close();
+    //      } catch (IOException ex) {
+    //        log.error("Error closing KV Store", ex);
+    //      }
+    //    }
+    //    if (Objects.nonNull(this.kingdomMatchStore)) {
+    //      try {
+    //        log.info("Close NameCheckKvStore");
+    //        this.kingdomCheckStore.close();
+    //      } catch (IOException ex) {
+    //        log.error("Error closing KV Store", ex);
+    //      }
+    //    if (Objects.nonNull(this.nameMatchStore)) {
+    //      try {
+    //        log.info("Close NameUsageMatchKvStore");
+    //        this.nameMatchStore.close();
+    //      } catch (IOException ex) {
+    //        log.error("Error closing KV Store", ex);
+    //      }
+    //    }
+  }
 
   @Override
   public Optional<ALATaxonRecord> convert(ExtendedRecord source) {

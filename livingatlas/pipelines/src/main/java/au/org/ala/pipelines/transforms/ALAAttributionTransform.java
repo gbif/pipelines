@@ -35,11 +35,11 @@ import org.gbif.pipelines.transforms.Transform;
 public class ALAAttributionTransform extends Transform<ExtendedRecord, ALAAttributionRecord> {
 
   private KeyValueStore<String, ALACollectoryMetadata> dataResourceKvStore;
-  private SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
+  private final SerializableSupplier<KeyValueStore<String, ALACollectoryMetadata>>
       dataResourceKvStoreSupplier;
 
   private KeyValueStore<ALACollectionLookup, ALACollectionMatch> collectionKvStore;
-  private SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>>
+  private final SerializableSupplier<KeyValueStore<ALACollectionLookup, ALACollectionMatch>>
       collectionKvStoreSupplier;
 
   private PCollectionView<MetadataRecord> metadataView;

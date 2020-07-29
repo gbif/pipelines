@@ -33,7 +33,7 @@ import scala.Tuple4;
 @Parameters(separators = "=")
 public class MigrateUUIDPipeline implements Serializable {
 
-  @Parameter private List<String> parameters = new ArrayList<String>();
+  @Parameter private final List<String> parameters = new ArrayList<String>();
 
   @Parameter(
       names = "--inputPath",
@@ -90,7 +90,7 @@ public class MigrateUUIDPipeline implements Serializable {
                   @Override
                   public boolean call(Row row) throws Exception {
                     return StringUtils.isNotEmpty(row.getString(0))
-                        && row.getString(0).indexOf("|") > 0
+                        && row.getString(0).contains("|")
                         && row.getString(0).startsWith("dr");
                   }
                 })

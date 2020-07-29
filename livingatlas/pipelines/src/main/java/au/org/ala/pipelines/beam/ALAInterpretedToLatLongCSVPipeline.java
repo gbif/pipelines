@@ -43,6 +43,8 @@ public class ALAInterpretedToLatLongCSVPipeline {
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     run(options);
+    // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
+    System.exit(0);
   }
 
   public static void run(InterpretationPipelineOptions options) throws Exception {
@@ -79,12 +81,12 @@ public class ALAInterpretedToLatLongCSVPipeline {
 
     // delete previous runs
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), outputPath);
-    FileSystem fs = FileSystemFactory.getInstance(options.getHdfsSiteConfig()).getFs("/");
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getTargetPath());
     ALAFsUtils.createDirectory(fs, outputPath);
 
-    csvCollection
-        .apply(Distinct.<String>create())
-        .apply(TextIO.write().to(outputPath + "/latlong.csv"));
+    csvCollection.apply(Distinct.create()).apply(TextIO.write().to(outputPath + "/latlong.csv"));
 
     log.info("Running the pipeline");
     PipelineResult result = p.run();
