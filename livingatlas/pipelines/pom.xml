@@ -218,7 +218,7 @@
             </image>
             <image>
               <alias>ala-nameservice</alias>
-              <name>djtfmartin/ala-namematching-service:v20200214-4</name>
+              <name>charvolant/ala-namematching-service:v20200214-5</name>
               <run>
                 <ports>
                   <port>${alanm.admin.port}:9180</port>

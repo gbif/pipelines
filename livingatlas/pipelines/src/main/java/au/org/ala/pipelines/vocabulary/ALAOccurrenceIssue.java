@@ -44,7 +44,56 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
 
   FIRST_OF_MONTH(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
   FIRST_OF_YEAR(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
-  FIRST_OF_CENTURY(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS);
+  FIRST_OF_CENTURY(InterpretationRemarkSeverity.WARNING, TermsGroup.RECORDED_DATE_TERMS),
+
+  // Taxonomy related
+  /** The scientific name has an aff. marker indicating a like-but-not identification */
+  TAXON_AFFINITY_SPECIES(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The taxon, while matched, also has an excluded match */
+  TAXON_EXCLUDED_ASSOCIATED(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The scientific name has a cf. marker, indicating uncertain identification */
+  TAXON_CONFER_SPECIES(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The taxon is excluded (should not be found in this location) */
+  TAXON_EXCLUDED(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** There has been a generic taxon matching error */
+  TAXON_ERROR(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The supplied name and hierarchy is not enough to uniquely determine the name */
+  TAXON_HOMONYM(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /**
+   * The supplied name contains an indertminate species marker and an exact match could not be found
+   */
+  TAXON_INDETERMINATE_SPECIES(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The supplied name has been misapplied to another concept in the past */
+  TAXON_MISAPPLIED_MATCHED(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The supplied name has been misapplied to another concept in the past with no accepted use */
+  TAXON_MISAPPLIED(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The supplied name can be matched either onto the parent species or an autonymic subspecies */
+  TAXON_PARENT_CHILD_SYNONYM(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The supplied name contains a questionable identification marker (?) */
+  TAXON_QUESTION_SPECIES(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /**
+   * The supplied name contains a species plural marker and cannot be accuratey matched onto a
+   * single species
+   */
+  TAXON_SPECIES_PLURAL(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** There is a missing taxon rank */
+  MISSING_TAXONRANK(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /**
+   * Neither a scientific name or verncaulr name has been supplied; matching is based on a
+   * constructed name
+   */
+  NAME_NOT_SUPPLIED(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /**
+   * The supplied kingdom is not a recognised kingdom (and therefore not likely to help with
+   * matching)
+   */
+  UNKNOWN_KINGDOM(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The supplied hints do not match the final name match */
+  TAXON_SCOPE_MISMATCH(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The ocurrence record was matched to a default value supplied by higher-order elements */
+  TAXON_DEFAULT_MATCH(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS),
+  /** The name is either unparsable or some type of placeholder or informal name */
+  INVALID_SCIENTIFIC_NAME(InterpretationRemarkSeverity.WARNING, TermsGroup.TAXONOMY_TERMS);
 
   private final Set<Term> relatedTerms;
   private final InterpretationRemarkSeverity severity;
@@ -145,7 +194,9 @@ public enum ALAOccurrenceIssue implements InterpretationRemark {
             DwcTerm.scientificNameAuthorship,
             GbifTerm.genericName,
             DwcTerm.specificEpithet,
-            DwcTerm.infraspecificEpithet
+            DwcTerm.infraspecificEpithet,
+            DwcTerm.taxonRank,
+            DwcTerm.vernacularName
           };
     }
   }
