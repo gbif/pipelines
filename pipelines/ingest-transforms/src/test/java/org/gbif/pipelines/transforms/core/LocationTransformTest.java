@@ -15,6 +15,7 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
@@ -332,14 +333,19 @@ public class LocationTransformTest {
                       .setElevation(Double.valueOf(x[19]))
                       .setElevationAccuracy(Double.valueOf(x[20]))
                       .setRepatriated(x[21] == null ? null : Boolean.parseBoolean(x[21]))
-                      .setGadmLevel0Gid(x[22])
-                      .setGadmLevel1Gid(x[23])
-                      .setGadmLevel2Gid(x[24])
-                      .setGadmLevel3Gid(x[25])
-                      .setGadmLevel0Name(x[26])
-                      .setGadmLevel1Name(x[27])
-                      .setGadmLevel2Name(x[28])
-                      .setGadmLevel3Name(x[29])
+                      .setGadm(
+                          x[23] == null
+                              ? null
+                              : GadmFeatures.newBuilder()
+                                  .setLevel0Gid(x[22])
+                                  .setLevel1Gid(x[23])
+                                  .setLevel2Gid(x[24])
+                                  .setLevel3Gid(x[25])
+                                  .setLevel0Name(x[26])
+                                  .setLevel1Name(x[27])
+                                  .setLevel2Name(x[28])
+                                  .setLevel3Name(x[29])
+                                  .build())
                       .setHasCoordinate(true)
                       .setHasGeospatialIssue(false)
                       .setPublishingCountry(mdr.getDatasetPublishingCountry())

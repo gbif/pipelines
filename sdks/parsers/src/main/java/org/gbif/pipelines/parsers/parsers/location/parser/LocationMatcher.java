@@ -3,7 +3,6 @@ package org.gbif.pipelines.parsers.parsers.location.parser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -51,17 +50,6 @@ public class LocationMatcher {
 
     // Match country
     return country != null ? applyWithCountry() : applyWithoutCountry();
-  }
-
-  public Optional<GadmFeatures> applyGadm() {
-    // Check parameters
-    Objects.requireNonNull(latLng);
-    if (latLng.getLatitude() == null || latLng.getLongitude() == null) {
-      throw new IllegalArgumentException("Empty coordinates");
-    }
-
-    // Match to GADM administrative regions
-    return getGadmFromCoordinates(latLng);
   }
 
   private ParsedField<ParsedLocation> applyWithCountry() {
@@ -134,20 +122,6 @@ public class LocationMatcher {
       }
       if (isAntarctica(latLng.getLatitude(), this.country)) {
         return Optional.of(Collections.singletonList(Country.ANTARCTICA));
-      }
-    }
-    return Optional.empty();
-  }
-
-  private Optional<GadmFeatures> getGadmFromCoordinates(LatLng latLng) {
-    if (latLng.isValid()) {
-      GeocodeResponse geocodeResponse = null;
-      geocodeResponse = geocodeKvStore.get(latLng);
-
-      if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
-        GadmFeatures gf = new GadmFeatures();
-        geocodeResponse.getLocations().stream().forEachOrdered(gf::accept);
-        return Optional.of(gf);
       }
     }
     return Optional.empty();

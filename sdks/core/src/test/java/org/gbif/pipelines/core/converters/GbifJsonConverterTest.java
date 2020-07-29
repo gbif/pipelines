@@ -1,46 +1,17 @@
 package org.gbif.pipelines.core.converters;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.gbif.api.vocabulary.AgentIdentifierType;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.OccurrenceIssue;
-import org.gbif.api.vocabulary.OccurrenceStatus;
+import org.gbif.api.vocabulary.*;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
-import org.gbif.pipelines.io.avro.AgentIdentifier;
-import org.gbif.pipelines.io.avro.Amplification;
-import org.gbif.pipelines.io.avro.AmplificationRecord;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.BlastResult;
-import org.gbif.pipelines.io.avro.DeterminedDate;
-import org.gbif.pipelines.io.avro.EventDate;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationFeatureRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MachineTag;
-import org.gbif.pipelines.io.avro.MeasurementOrFact;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MediaType;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.Multimedia;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
-import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.*;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.*;
 
 public class GbifJsonConverterTest {
 
@@ -82,14 +53,14 @@ public class GbifJsonConverterTest {
             + "\"decimalLatitude\":1.0,"
             + "\"decimalLongitude\":2.0,"
             + "\"scoordinates\":\"POINT (2.0 1.0)\","
-            + "\"gadm\":{" // gadm
-            + "\"level2Gid\":\"XAA.1.2_1\","
-            + "\"level2Name\":\"Muni Cipality\""
-            + "}," // end gadm
             + "\"continent\":\"something{something}\","
             + "\"country\":\"Country\","
             + "\"countryCode\":\"Code 1'2\\\"\","
             + "\"locality\":\"[68]\","
+            + "\"gadm\":{" // gadm
+            + "\"level2Gid\":\"XAA.1.2_1\","
+            + "\"level2Name\":\"Muni Cipality\""
+            + "}," // end gadm
             + "\"gbifClassification\":{" // gbifClassification
             + "\"usage\":{\"key\":10,\"name\":\"synonym\",\"rank\":\"SPECIES\"},"
             + "\"classification\":[" // gbifClassification.classification
@@ -234,8 +205,11 @@ public class GbifJsonConverterTest {
             .setDecimalLongitude(2d)
             .setContinent("something{something}")
             .setLocality("[68]")
-            .setGadmLevel2Gid("XAA.1.2_1")
-            .setGadmLevel2Name("Muni Cipality")
+            .setGadm(
+                GadmFeatures.newBuilder()
+                    .setLevel2Gid("XAA.1.2_1")
+                    .setLevel2Name("Muni Cipality")
+                    .build())
             .build();
     lr.getIssues().getIssueList().add(OccurrenceIssue.BASIS_OF_RECORD_INVALID.name());
 
@@ -338,7 +312,6 @@ public class GbifJsonConverterTest {
             + "\"decimalLatitude\":1.0,"
             + "\"decimalLongitude\":2.0,"
             + "\"scoordinates\":\"POINT (2.0 1.0)\","
-            + "\"gadm\":{},"
             + "\"continent\":\"something{something}\","
             + "\"country\":\"Country\","
             + "\"countryCode\":"

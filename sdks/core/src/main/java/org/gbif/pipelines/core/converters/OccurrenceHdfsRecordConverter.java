@@ -174,7 +174,7 @@ public class OccurrenceHdfsRecordConverter {
    */
   private static BiConsumer<OccurrenceHdfsRecord,SpecificRecordBase> locationMapper() {
     return (hr, sr) -> {
-      LocationRecord lr = (LocationRecord)sr;
+      LocationRecord lr = (LocationRecord) sr;
       hr.setCountrycode(lr.getCountryCode());
       hr.setContinent(lr.getContinent());
       hr.setDecimallatitude(lr.getDecimalLatitude());
@@ -198,14 +198,18 @@ public class OccurrenceHdfsRecordConverter {
       hr.setRepatriated(lr.getRepatriated());
       hr.setLocality(lr.getLocality());
       hr.setPublishingcountry(lr.getPublishingCountry());
-      hr.setLevel0gid(lr.getGadmLevel0Gid());
-      hr.setLevel1gid(lr.getGadmLevel1Gid());
-      hr.setLevel2gid(lr.getGadmLevel2Gid());
-      hr.setLevel3gid(lr.getGadmLevel3Gid());
-      hr.setLevel0name(lr.getGadmLevel0Name());
-      hr.setLevel1name(lr.getGadmLevel1Name());
-      hr.setLevel2name(lr.getGadmLevel2Name());
-      hr.setLevel3name(lr.getGadmLevel3Name());
+      Optional.ofNullable(lr.getGadm())
+          .ifPresent(
+              g -> {
+                hr.setLevel0gid(g.getLevel0Gid());
+                hr.setLevel1gid(g.getLevel1Gid());
+                hr.setLevel2gid(g.getLevel2Gid());
+                hr.setLevel3gid(g.getLevel3Gid());
+                hr.setLevel0name(g.getLevel0Name());
+                hr.setLevel1name(g.getLevel1Name());
+                hr.setLevel2name(g.getLevel2Name());
+                hr.setLevel3name(g.getLevel3Name());
+              });
 
       setCreatedIfGreater(hr, lr.getCreated());
       addIssues(lr.getIssues(), hr);
