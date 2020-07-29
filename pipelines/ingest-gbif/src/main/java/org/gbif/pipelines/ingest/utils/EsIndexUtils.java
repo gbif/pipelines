@@ -85,7 +85,7 @@ public class EsIndexUtils {
     settings.put(Field.INDEX_NUMBER_SHARDS, options.getIndexNumberShards().toString());
     settings.put(Field.INDEX_NUMBER_REPLICAS,
         independentIndex ? Indexing.NUMBER_REPLICAS : options.getIndexNumberReplicas().toString());
-    settings.put(Field.INDEX_ANALYSIS, Indexing.NORMALIZER);
+    settings.put(Field.INDEX_ANALYSIS, Indexing.ANALYSIS);
     settings.put(Field.INDEX_MAX_RESULT_WINDOW, options.getIndexMaxResultWindow().toString());
 
     return IndexParams.builder()
