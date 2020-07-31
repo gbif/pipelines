@@ -1,14 +1,9 @@
 package org.gbif.pipelines.core.interpreters.core;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
+import com.google.common.base.Strings;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.common.parsers.CountryParser;
@@ -26,25 +21,18 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.SimpleTypeParser;
 import org.gbif.pipelines.parsers.parsers.VocabularyParser;
 import org.gbif.pipelines.parsers.parsers.common.ParsedField;
-import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
+import org.gbif.pipelines.parsers.parsers.location.parser.GadmParser;
 import org.gbif.pipelines.parsers.parsers.location.parser.LocationParser;
 import org.gbif.pipelines.parsers.parsers.location.parser.ParsedLocation;
 import org.gbif.rest.client.geocode.GeocodeResponse;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.gbif.api.model.Constants.EBIRD_DATASET_KEY;
-import static org.gbif.api.vocabulary.OccurrenceIssue.CONTINENT_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_OUT_OF_RANGE;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_PRECISION_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COORDINATE_UNCERTAINTY_METERS_INVALID;
-import static org.gbif.api.vocabulary.OccurrenceIssue.COUNTRY_COORDINATE_MISMATCH;
-import static org.gbif.api.vocabulary.OccurrenceIssue.ZERO_COORDINATE;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.extractNullAwareValue;
 
@@ -127,6 +115,19 @@ public class LocationInterpreter {
         if (Objects.nonNull(lr.getCountryCode()) && Objects.nonNull(lr.getPublishingCountry())) {
           lr.setRepatriated(!lr.getCountryCode().equals(lr.getPublishingCountry()));
         }
+      }
+    };
+  }
+
+  /**
+   * Uses the interpreted DwcTerm#decimalLatitude} and {@link DwcTerm#decimalLongitude} terms to
+   * populate GADM administrative area GIDs.
+   */
+  public static BiConsumer<ExtendedRecord, LocationRecord> interpretGadm(
+      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore) {
+    return (er, lr) -> {
+      if (geocodeKvStore != null && lr.getHasCoordinate()) {
+        GadmParser.parseGadm(lr, geocodeKvStore).ifPresent(lr::setGadm);
       }
     };
   }
