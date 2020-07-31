@@ -104,7 +104,7 @@ public class LocationInterpreterTest {
     return Interpretation.from(source)
         .to(er -> LocationRecord.newBuilder().setId(er.getId()).build())
         .via(LocationInterpreter.interpretCountryAndCoordinates(KEY_VALUE_STORE, mdr))
-        .get().orElse(null);
+        .getOfNullable().orElse(null);
   }
 
   @Test

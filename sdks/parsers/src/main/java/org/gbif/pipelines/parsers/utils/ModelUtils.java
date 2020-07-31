@@ -24,7 +24,7 @@ public class ModelUtils {
   /** Extracts a Term value, if such value has a variation of the word "null" it is transformed to null. */
   public static String extractNullAwareValue(ExtendedRecord er, Term term) {
     String value = extractValue(er, term);
-    return value != null && "null".equalsIgnoreCase(value.trim()) ? null : value;
+    return value != null && ("null".equalsIgnoreCase(value.trim()) || value.isEmpty()) ? null : value;
   }
 
   public static Optional<String> extractOptValue(ExtendedRecord er, Term term) {

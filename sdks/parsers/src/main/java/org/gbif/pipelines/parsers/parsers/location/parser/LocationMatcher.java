@@ -3,7 +3,6 @@ package org.gbif.pipelines.parsers.parsers.location.parser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -112,11 +111,8 @@ public class LocationMatcher {
   private Optional<List<Country>> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
       GeocodeResponse geocodeResponse = null;
-      try {
-        geocodeResponse = geocodeKvStore.get(latLng);
-      } catch (NoSuchElementException | NullPointerException ex) {
-        log.error(ex.getMessage(), ex);
-      }
+      geocodeResponse = geocodeKvStore.get(latLng);
+
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         return Optional.of(
             geocodeResponse.getLocations().stream()

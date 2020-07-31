@@ -17,7 +17,7 @@ import lombok.AllArgsConstructor;
  *   1) Sets source data object {@link Interpretation#from}
  *   2) Sets target data object {@link Interpretation#to}
  *   3) Uses interpretation function {@link Handler#via}
- *   4) Consumes {@link Handler#consume} or get {@link Handler#get} the result
+ *   4) Consumes {@link Handler#consume} or get {@link Handler#getOfNullable} the result
  * </pre>
  *
  * <p>Example:
@@ -108,8 +108,13 @@ public class Interpretation<S> {
     }
 
     /** @return target data object */
-    public Optional<T> get() {
+    public Optional<T> getOfNullable() {
       return Optional.ofNullable(target);
+    }
+
+    /** @return target data object */
+    public Optional<T> get() {
+      return Optional.of(target);
     }
 
     /** @param consumer Consumer for consuming target data object */

@@ -1,10 +1,11 @@
 package org.gbif.pipelines.transforms.core;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,7 @@ import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.geocode.LatLng;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GadmFeatures;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.parsers.parsers.location.GeocodeKvStore;
@@ -53,9 +55,59 @@ public class LocationTransformTest {
   public final transient TestPipeline p = TestPipeline.create();
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
-    Location location = new Location();
-    location.setIsoCountryCode2Digit(country.getIso2LetterCode());
-    return new GeocodeResponse(Collections.singletonList(location));
+    List<Location> locations = new ArrayList<>();
+
+    if (country != null) {
+      Location political = new Location();
+      political.setIsoCountryCode2Digit(country.getIso2LetterCode());
+      locations.add(political);
+
+      Location gadm0 = new Location();
+      Location gadm1 = new Location();
+      Location gadm2 = new Location();
+      if (country.equals(Country.DENMARK)) {
+        gadm0.setId("DNK");
+        gadm0.setType("GADM0");
+        gadm0.setSource("http://gadm.org/");
+        gadm0.setName("Denmark");
+        gadm0.setIsoCountryCode2Digit("DK");
+
+        gadm1.setId("DNK.2_1");
+        gadm1.setType("GADM1");
+        gadm1.setSource("http://gadm.org/");
+        gadm1.setName("Midtjylland");
+        gadm1.setIsoCountryCode2Digit("DK");
+
+        gadm2.setId("DNK.2.14_1");
+        gadm2.setType("GADM2");
+        gadm2.setSource("http://gadm.org/");
+        gadm2.setName("Silkeborg");
+        gadm2.setIsoCountryCode2Digit("DK");
+      } else {
+        gadm0.setId("JPN");
+        gadm0.setType("GADM0");
+        gadm0.setSource("http://gadm.org/");
+        gadm0.setName("Japan");
+        gadm0.setIsoCountryCode2Digit("JP");
+
+        gadm1.setId("JPN.26_1");
+        gadm1.setType("GADM1");
+        gadm1.setSource("http://gadm.org/");
+        gadm1.setName("Nagano");
+        gadm1.setIsoCountryCode2Digit("JP");
+
+        gadm2.setId("JPN.26.40_1");
+        gadm2.setType("GADM2");
+        gadm2.setSource("http://gadm.org/");
+        gadm2.setName("Nagawa");
+        gadm2.setIsoCountryCode2Digit("JP");
+      }
+      locations.add(gadm0);
+      locations.add(gadm1);
+      locations.add(gadm2);
+    }
+
+    return new GeocodeResponse(locations);
   }
 
   @Test
@@ -96,56 +148,105 @@ public class LocationTransformTest {
     KeyValueTestStoreStub<LatLng, GeocodeResponse> kvStore = new KeyValueTestStoreStub<>();
     kvStore.put(new LatLng(56.26d, 9.51d), toGeocodeResponse(Country.DENMARK));
     kvStore.put(new LatLng(36.21d, 138.25d), toGeocodeResponse(Country.JAPAN));
+    kvStore.put(new LatLng(88.21d, -32.01d), toGeocodeResponse(null));
     SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStore =
         () -> GeocodeKvStore.create(kvStore);
 
     final String[] denmark = {
-        "0",
+        "0", // 0
         Country.DENMARK.getTitle(),
         Country.DENMARK.getIso2LetterCode(),
         "EUROPE",
         "100.0",
-        "110.0",
+        "110.0", // 5
         "111.0",
         "200.0",
         "Ocean",
         "220.0",
-        "222.0",
+        "222.0", // 10
         "30.0",
         "0.00001",
         "56.26",
         "9.51",
-        "Copenhagen",
+        "Copenhagen", // 15
         "GEODETIC_DATUM_ASSUMED_WGS84",
         "155.5",
         "44.5",
         "105.0",
-        "5.0",
-        "false"
+        "5.0", // 20
+        "false",
+        "DNK",
+        "DNK.2_1",
+        "DNK.2.14_1",
+        null, // 25
+        "Denmark",
+        "Midtjylland",
+        "Silkeborg",
+        null
     };
     final String[] japan = {
-        "1",
+        "1", // 0
         Country.JAPAN.getTitle(),
         Country.JAPAN.getIso2LetterCode(),
         "ASIA",
         "100.0",
-        "110.0",
+        "110.0", // 5
         "111.0",
         "200.0",
         "Ocean",
         "220.0",
-        "222.0",
+        "222.0", // 10
         "30.0",
         "0.00001",
         "36.21",
         "138.25",
-        "Tokyo",
+        "Tokyo", // 15
         "GEODETIC_DATUM_ASSUMED_WGS84",
         "155.5",
         "44.5",
         "105.0",
+        "5.0", // 20
+        "true",
+        "JPN",
+        "JPN.26_1",
+        "JPN.26.40_1",
+        null, // 25
+        "Japan",
+        "Nagano",
+        "Nagawa",
+        null
+    };
+    final String[] arctic = {
+        "2", // 0
+        null,
+        null,
+        null,
+        "-80.0",
+        "-40.0", // 5
+        "0.0",
         "5.0",
-        "true"
+        "Arctic Ocean",
+        "0.0",
+        "-1.5", // 10
+        "500.0",
+        "0.01",
+        "88.21",
+        "-32.01",
+        null, // 15
+        "GEODETIC_DATUM_ASSUMED_WGS84",
+        "2.5",
+        "2.5",
+        "-60.0",
+        "20.0", // 20
+        null,
+        null,
+        null,
+        null,
+        null, // 25
+        null,
+        null,
+        null,
+        null
     };
 
     final MetadataRecord mdr = MetadataRecord.newBuilder()
@@ -153,8 +254,8 @@ public class LocationTransformTest {
         .setDatasetPublishingCountry(Country.DENMARK.getIso2LetterCode())
         .setDatasetKey(UUID.randomUUID().toString())
         .build();
-    final List<ExtendedRecord> records = createExtendedRecordList(mdr, denmark, japan);
-    final List<LocationRecord> locations = createLocationList(mdr, denmark, japan);
+    final List<ExtendedRecord> records = createExtendedRecordList(mdr, denmark, japan, arctic);
+    final List<LocationRecord> locations = createLocationList(mdr, denmark, japan, arctic);
 
     PCollectionView<MetadataRecord> metadataView =
         p.apply("Create test metadata", Create.of(mdr))
@@ -184,9 +285,9 @@ public class LocationTransformTest {
             x -> {
               ExtendedRecord record = ExtendedRecord.newBuilder().setId(x[0]).build();
               Map<String, String> terms = record.getCoreTerms();
-              terms.put(DwcTerm.country.qualifiedName(), x[1]);
-              terms.put(DwcTerm.countryCode.qualifiedName(), x[2]);
-              terms.put(DwcTerm.continent.qualifiedName(), x[3]);
+              Optional.ofNullable(x[1]).ifPresent(y -> terms.put(DwcTerm.country.qualifiedName(), y));
+              Optional.ofNullable(x[2]).ifPresent(y -> terms.put(DwcTerm.countryCode.qualifiedName(), y));
+              Optional.ofNullable(x[3]).ifPresent(y -> terms.put(DwcTerm.continent.qualifiedName(), y));
               terms.put(DwcTerm.minimumElevationInMeters.qualifiedName(), x[4]);
               terms.put(DwcTerm.maximumElevationInMeters.qualifiedName(), x[5]);
               terms.put(DwcTerm.minimumDepthInMeters.qualifiedName(), x[6]);
@@ -198,7 +299,7 @@ public class LocationTransformTest {
               terms.put(DwcTerm.coordinatePrecision.qualifiedName(), x[12]);
               terms.put(DwcTerm.decimalLatitude.qualifiedName(), x[13]);
               terms.put(DwcTerm.decimalLongitude.qualifiedName(), x[14]);
-              terms.put(DwcTerm.stateProvince.qualifiedName(), x[15]);
+              Optional.ofNullable(x[15]).ifPresent(y -> terms.put(DwcTerm.stateProvince.qualifiedName(), y));
               terms.put(GbifTerm.publishingCountry.qualifiedName(), metadataRecord.getDatasetPublishingCountry());
               return record;
             })
@@ -231,7 +332,20 @@ public class LocationTransformTest {
                       .setDepthAccuracy(Double.valueOf(x[18]))
                       .setElevation(Double.valueOf(x[19]))
                       .setElevationAccuracy(Double.valueOf(x[20]))
-                      .setRepatriated(Boolean.parseBoolean(x[21]))
+                      .setRepatriated(x[21] == null ? null : Boolean.parseBoolean(x[21]))
+                      .setGadm(
+                          x[23] == null
+                              ? null
+                              : GadmFeatures.newBuilder()
+                                  .setLevel0Gid(x[22])
+                                  .setLevel1Gid(x[23])
+                                  .setLevel2Gid(x[24])
+                                  .setLevel3Gid(x[25])
+                                  .setLevel0Name(x[26])
+                                  .setLevel1Name(x[27])
+                                  .setLevel2Name(x[28])
+                                  .setLevel3Name(x[29])
+                                  .build())
                       .setHasCoordinate(true)
                       .setHasGeospatialIssue(false)
                       .setPublishingCountry(mdr.getDatasetPublishingCountry())

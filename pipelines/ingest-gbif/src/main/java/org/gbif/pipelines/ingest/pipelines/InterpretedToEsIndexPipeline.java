@@ -1,37 +1,8 @@
 package org.gbif.pipelines.ingest.pipelines;
 
-import java.util.function.UnaryOperator;
-
-import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
-import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
-import org.gbif.pipelines.transforms.extension.AudubonTransform;
-import org.gbif.pipelines.transforms.extension.ImageTransform;
-import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
-import org.gbif.pipelines.transforms.extension.MultimediaTransform;
-import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.elasticsearch.ElasticsearchIO;
@@ -43,11 +14,24 @@ import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Indexing;
+import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
+import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
+import org.gbif.pipelines.transforms.core.*;
+import org.gbif.pipelines.transforms.extension.AudubonTransform;
+import org.gbif.pipelines.transforms.extension.ImageTransform;
+import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
+import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.metadata.MetadataTransform;
+import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.function.UnaryOperator;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
@@ -178,18 +162,19 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Adding step 3: Converting into a json object");
     SingleOutput<KV<String, CoGbkResult>, String> gbifJsonDoFn =
-        GbifJsonTransform.create(
-                verbatimTransform.getTag(),
-                basicTransform.getTag(),
-                temporalTransform.getTag(),
-                locationTransform.getTag(),
-                taxonomyTransform.getTag(),
-                multimediaTransform.getTag(),
-                imageTransform.getTag(),
-                audubonTransform.getTag(),
-                measurementOrFactTransform.getTag(),
-                taggedValuesTransform.getTag(),
-                metadataView)
+        GbifJsonTransform.builder()
+            .extendedRecordTag(verbatimTransform.getTag())
+            .basicRecordTag(basicTransform.getTag())
+            .temporalRecordTag(temporalTransform.getTag())
+            .locationRecordTag(locationTransform.getTag())
+            .taxonRecordTag(taxonomyTransform.getTag())
+            .multimediaRecordTag(multimediaTransform.getTag())
+            .imageRecordTag(imageTransform.getTag())
+            .audubonRecordTag(audubonTransform.getTag())
+            .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
+            .taggedValueRecordTag(taggedValuesTransform.getTag())
+            .metadataView(metadataView)
+            .build()
             .converter();
 
     PCollection<String> jsonCollection =

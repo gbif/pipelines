@@ -42,7 +42,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
 @Slf4j
 public class LocationTransform extends Transform<ExtendedRecord, LocationRecord> {
 
-  private SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
+  private final SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier;
   private KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore;
 
   @Setter
@@ -51,11 +51,9 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
   @Builder(buildMethodName = "create")
   private LocationTransform(
       SerializableSupplier<KeyValueStore<LatLng, GeocodeResponse>> geocodeKvStoreSupplier,
-      KeyValueStore<LatLng, GeocodeResponse> geocodeKvStore,
       PCollectionView<MetadataRecord> metadataView) {
     super(LocationRecord.class, LOCATION, LocationTransform.class.getName(), LOCATION_RECORDS_COUNT);
     this.geocodeKvStoreSupplier = geocodeKvStoreSupplier;
-    this.geocodeKvStore = geocodeKvStore;
     this.metadataView = metadataView;
   }
 
@@ -113,10 +111,11 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    Optional<LocationRecord> result = Interpretation.from(source)
+    return Interpretation.from(source)
         .to(lr)
         .when(er -> !er.getCoreTerms().isEmpty())
         .via(LocationInterpreter.interpretCountryAndCoordinates(geocodeKvStore, mdr))
+        .via(LocationInterpreter.interpretGadm(geocodeKvStore))
         .via(LocationInterpreter::interpretContinent)
         .via(LocationInterpreter::interpretWaterBody)
         .via(LocationInterpreter::interpretStateProvince)
@@ -131,10 +130,7 @@ public class LocationTransform extends Transform<ExtendedRecord, LocationRecord>
         .via(LocationInterpreter::interpretCoordinatePrecision)
         .via(LocationInterpreter::interpretCoordinateUncertaintyInMeters)
         .via(LocationInterpreter::interpretLocality)
-        .get();
-
-    result.ifPresent(r -> this.incCounter());
-
-    return result;
+        .via(r -> this.incCounter())
+        .getOfNullable();
   }
 }
