@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.parser;
-
+import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.geospatial.MeterRangeParser;
 import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/main/scala/au/org/ala/biocache/parser/DistanceRangeParser.scala
  */
 @Slf4j
-public class DistanceRangeParser {
+public class DistanceRangeParser extends MeterRangeParser{
 
   static String singleNumber = "(-?[0-9]{1,})";
   static String decimalNumber = "(-?[0-9]{1,}[.]{1}[0-9]{1,})";
@@ -21,6 +22,7 @@ public class DistanceRangeParser {
   static String singleNumberMetres = "(-?[0-9]{1,})(m|metres|meters)";
   static String singleNumberKilometres = "(-?[0-9]{1,})(km|kilometres|kilometers)";
   static String singleNumberFeet = "(-?[0-9]{1,})(ft|feet|f)";
+  static String singleNumberInch = "(-?[0-9]{1,})(in|inch|inches)";
 
   /**
    * Handle these formats: 2000 1km-10km 100m-1000m >10km >100m 100-1000 m
@@ -51,24 +53,11 @@ public class DistanceRangeParser {
       return convertUOM(Double.valueOf(numberStr), uom);
     }
 
-    // single number metres
-    Matcher sm_matcher = Pattern.compile(singleNumberMetres).matcher(normalised);
-    if (sm_matcher.find()) {
-      String numberStr = sm_matcher.group(1);
-      return Double.valueOf(numberStr);
-    }
-    // single number feet
-    Matcher sf_matcher = Pattern.compile(singleNumberFeet).matcher(normalised);
-    if (sf_matcher.find()) {
-      String numberStr = sf_matcher.group(1);
-      return convertUOM(Double.valueOf(numberStr), "ft");
-    }
-
-    // single number km
-    Matcher skm_matcher = Pattern.compile(singleNumberKilometres).matcher(normalised);
-    if (skm_matcher.find()) {
-      String numberStr = skm_matcher.group(1);
-      return convertUOM(Double.valueOf(numberStr), "km");
+    if(normalised.matches(singleNumberMetres + "|" + singleNumberFeet +"|" + singleNumberKilometres + "|" + singleNumberInch)){
+      ParseResult<Double> iMeter = MeterRangeParser.parseMeters(normalised);
+      if(iMeter.isSuccessful()){
+        return iMeter.getPayload();
+      }
     }
 
     throw new UnknownFormatConversionException("Uncertainty: " + value + " cannot be parsed!");

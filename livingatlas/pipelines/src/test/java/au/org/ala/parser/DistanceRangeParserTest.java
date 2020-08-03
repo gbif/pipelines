@@ -32,6 +32,9 @@ public class DistanceRangeParserTest {
     value = DistanceRangeParser.parse("100km,");
     assertEquals(100000f, value, 0);
 
+    value = DistanceRangeParser.parse("1000inches,");
+    assertEquals(25.4, value, 0);
+
     value = DistanceRangeParser.parse(" 1km-20km");
     assertEquals(20000f, value, 0);
 
