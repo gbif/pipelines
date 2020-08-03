@@ -3,6 +3,8 @@ package au.org.ala.kvs.client.retrofit;
 import static org.gbif.rest.client.retrofit.SyncCall.syncCall;
 
 import au.org.ala.kvs.client.*;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,6 +15,7 @@ import java.util.stream.Stream;
 import okhttp3.OkHttpClient;
 import org.gbif.rest.client.configuration.ClientConfiguration;
 import org.gbif.rest.client.retrofit.RetrofitClientFactory;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /** Collectory service client implementation. */
 public class ALACollectoryServiceClient implements ALACollectoryService {
@@ -27,10 +30,21 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
    * @param clientConfiguration Rest client configuration
    */
   public ALACollectoryServiceClient(ClientConfiguration clientConfiguration) {
+
     okHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
+
+    // this is for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/113
+    ObjectMapper om = new ObjectMapper();
+    om.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+
     alaCollectoryService =
-        RetrofitClientFactory.createRetrofitClient(
-            okHttpClient, clientConfiguration.getBaseApiUrl(), ALACollectoryRetrofitService.class);
+        (new retrofit2.Retrofit.Builder())
+            .client(okHttpClient)
+            .baseUrl(clientConfiguration.getBaseApiUrl())
+            .addConverterFactory(JacksonConverterFactory.create(om))
+            .validateEagerly(true)
+            .build()
+            .create(ALACollectoryRetrofitService.class);
   }
 
   /**
