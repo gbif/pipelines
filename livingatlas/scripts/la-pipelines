@@ -210,7 +210,9 @@ then
     exit 1
 fi
 
-SPARK_TMP=$(getConf run.$TYPE.sparkTmp);
+SPARK_TMP=$(getConf run.$TYPE.sparkTmp)
+
+SPARK_MASTER=$(getConf run.$TYPE.sparkMaster)
 
 log.debug Target $(getConf general.targetPath)
 log.debug Jar: $PIPELINES_JAR
@@ -386,7 +388,7 @@ function export-latlng () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java -options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -470,6 +472,7 @@ function index () {
 
     PRE=index-sh-args.spark-embedded
     if [[ $ltype = "spark-embedded" ]] ; then
+        CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
         $_D java $EXTRA_JVM_CLI_ARGS \
             $(getConf $PRE.jvm)  \
             -cp $PIPELINES_JAR $CLASS \
@@ -479,6 +482,7 @@ function index () {
 
     PRE=index-sh-args.spark-cluster
     if [[ $ltype = "spark-cluster" ]] ; then
+        CLASS=au.org.ala.pipelines.beam.ALAInterpretedToSolrIndexPipeline
         $_D /data/spark/bin/spark-submit \
             --name "SOLR indexing for $dr" \
             $(toArg $PRE conf) \
