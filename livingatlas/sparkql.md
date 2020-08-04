@@ -1,4 +1,4 @@
-#Spark QL Helper
+# Spark QL Helper
 
 These are some examples for how to use Spark QL on local development machines or on the cluster.
 
