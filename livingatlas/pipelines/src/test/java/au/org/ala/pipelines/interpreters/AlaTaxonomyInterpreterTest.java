@@ -5,12 +5,16 @@ import static org.junit.Assert.*;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.names.ws.api.NameSearch;
 import au.org.ala.names.ws.api.NameUsageMatch;
+import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.io.IOException;
 import java.util.*;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
+import org.gbif.pipelines.io.avro.ALAMatchType;
 import org.gbif.pipelines.io.avro.ALATaxonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.NameType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +25,8 @@ public class AlaTaxonomyInterpreterTest {
   private ALACollectoryMetadata dataResource;
   private Map<NameSearch, NameUsageMatch> nameMap;
   private KeyValueStore<NameSearch, NameUsageMatch> lookup;
+  private Map<String, Boolean> kingdomMap;
+  private KeyValueStore<String, Boolean> kingdomLookup;
 
   @Before
   public void setUp() throws Exception {
@@ -53,6 +59,7 @@ public class AlaTaxonomyInterpreterTest {
             .kingdom("Plantae")
             .scientificName("Acacia dealbata")
             .family("Fabaceae")
+            .rank("SPECIES")
             .matchType("exactMatch")
             .nameType("SCIENTIFIC")
             .issues(Collections.singletonList("noIssue"))
@@ -77,6 +84,21 @@ public class AlaTaxonomyInterpreterTest {
             .hints(hintMap)
             .build();
     this.nameMap.put(search, match);
+    // Plantae search
+    search = NameSearch.builder().kingdom("Plantae").hints(hintMap).build();
+    match =
+        NameUsageMatch.builder()
+            .success(true)
+            .taxonConceptID("https://id.biodiversity.org.au/taxon/apni/51337710")
+            .kingdom("Plantae")
+            .scientificName("Plantae")
+            .rank("KINGDOM")
+            .matchType("exactMatch")
+            .nameType("SCIENTIFIC")
+            .issues(Arrays.asList("noIssue"))
+            .build();
+    this.nameMap.put(search, match);
+
     // Full lookup
     search =
         NameSearch.builder()
@@ -131,6 +153,19 @@ public class AlaTaxonomyInterpreterTest {
             return nameMap.getOrDefault(o, NameUsageMatch.FAIL);
           }
         };
+    this.kingdomMap = new HashMap<>();
+    this.kingdomMap.put("Animalia", true);
+    this.kingdomMap.put("Gronk", false);
+    this.kingdomLookup =
+        new KeyValueStore<String, Boolean>() {
+          @Override
+          public void close() throws IOException {}
+
+          @Override
+          public Boolean get(String o) {
+            return kingdomMap.get(o);
+          }
+        };
   }
 
   @After
@@ -152,7 +187,7 @@ public class AlaTaxonomyInterpreterTest {
     assertEquals("Plantae", atr.getKingdom());
     assertEquals("exactMatch", atr.getMatchType());
     assertEquals("SCIENTIFIC", atr.getNameType());
-    assertTrue(atr.getIssues().getIssueList().contains("noIssue"));
+    assertTrue(atr.getIssues().getIssueList().isEmpty());
   }
 
   // Test with explicit value
@@ -170,7 +205,7 @@ public class AlaTaxonomyInterpreterTest {
     assertEquals("Plantae", atr.getKingdom());
     assertEquals("exactMatch", atr.getMatchType());
     assertEquals("SCIENTIFIC", atr.getNameType());
-    assertTrue(atr.getIssues().getIssueList().contains("noIssue"));
+    assertTrue(atr.getIssues().getIssueList().isEmpty());
   }
 
   @Test
@@ -221,7 +256,7 @@ public class AlaTaxonomyInterpreterTest {
     assertEquals(
         "urn:lsid:biodiversity.org.au:afd.taxon:e6aff6af-ff36-4ad5-95f2-2dfdcca8caff",
         atr.getSpeciesID());
-    assertTrue(atr.getIssues().getIssueList().contains("homonym"));
+    assertTrue(atr.getIssues().getIssueList().contains("TAXON_HOMONYM"));
     assertEquals("Red Kangaroo", atr.getVernacularName());
     assertTrue(atr.getSpeciesGroup().contains("Animals"));
     assertTrue(atr.getSpeciesGroup().contains("Mammals"));
@@ -253,7 +288,7 @@ public class AlaTaxonomyInterpreterTest {
     assertEquals("Plantae", atr.getKingdom());
     assertEquals("exactMatch", atr.getMatchType());
     assertEquals("SCIENTIFIC", atr.getNameType());
-    assertTrue(atr.getIssues().getIssueList().contains("noIssue"));
+    assertTrue(atr.getIssues().getIssueList().isEmpty());
   }
 
   @Test
@@ -265,7 +300,7 @@ public class AlaTaxonomyInterpreterTest {
     ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
     assertNull(atr.getTaxonConceptID());
     assertNull(atr.getMatchType());
-    assertTrue(atr.getIssues().getIssueList().contains("noMatch"));
+    assertFalse(atr.getIssues().getIssueList().contains("noMatch"));
     assertTrue(atr.getIssues().getIssueList().contains("TAXON_MATCH_NONE"));
   }
 
@@ -279,7 +314,141 @@ public class AlaTaxonomyInterpreterTest {
     ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
     assertNull(atr.getTaxonConceptID());
     assertNull(atr.getMatchType());
-    assertTrue(atr.getIssues().getIssueList().contains("noMatch"));
+    assertFalse(atr.getIssues().getIssueList().contains("noMatch"));
     assertTrue(atr.getIssues().getIssueList().contains("TAXON_MATCH_NONE"));
+  }
+
+  @Test
+  public void testSourceCheck1() throws Exception {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
+    ALATaxonomyInterpreter.alaSourceQualityChecks(this.dataResource, this.kingdomLookup)
+        .accept(er, atr);
+    assertEquals(
+        Arrays.asList(ALAOccurrenceIssue.MISSING_TAXONRANK.name()), atr.getIssues().getIssueList());
+  }
+
+  @Test
+  public void testSourceCheck2() throws Exception {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Ospranter rufus");
+    map.put(DwcTerm.taxonRank.qualifiedName(), "species");
+    map.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
+    ALATaxonomyInterpreter.alaSourceQualityChecks(this.dataResource, this.kingdomLookup)
+        .accept(er, atr);
+    assertEquals(Collections.emptyList(), atr.getIssues().getIssueList());
+  }
+
+  @Test
+  public void testSourceCheck3() throws Exception {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Ospranter rufus");
+    map.put(DwcTerm.kingdom.qualifiedName(), "Gronk");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
+    ALATaxonomyInterpreter.alaSourceQualityChecks(this.dataResource, this.kingdomLookup)
+        .accept(er, atr);
+    assertEquals(
+        Arrays.asList(
+            ALAOccurrenceIssue.MISSING_TAXONRANK.name(), ALAOccurrenceIssue.UNKNOWN_KINGDOM.name()),
+        atr.getIssues().getIssueList());
+  }
+
+  @Test
+  public void testSourceCheck4() throws Exception {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.kingdom.qualifiedName(), "Animalia");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
+    ALATaxonomyInterpreter.alaSourceQualityChecks(this.dataResource, this.kingdomLookup)
+        .accept(er, atr);
+    assertEquals(
+        Arrays.asList(
+            ALAOccurrenceIssue.MISSING_TAXONRANK.name(),
+            ALAOccurrenceIssue.NAME_NOT_SUPPLIED.name()),
+        atr.getIssues().getIssueList());
+  }
+
+  @Test
+  public void testResultCheck1() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata");
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
+    assertEquals(Collections.emptyList(), atr.getIssues().getIssueList());
+  }
+
+  @Test
+  public void testResultCheck2() {
+    Map<String, String> map = new HashMap<>();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    ALATaxonRecord atr = ALATaxonRecord.newBuilder().setId("1").build();
+    ALATaxonomyInterpreter.alaTaxonomyInterpreter(this.dataResource, this.lookup).accept(er, atr);
+    ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
+    assertEquals(
+        Arrays.asList(ALAOccurrenceIssue.TAXON_DEFAULT_MATCH.name()),
+        atr.getIssues().getIssueList());
+  }
+
+  @Test
+  public void testResultCheck3() {
+    Map<String, String> map = new HashMap<>();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia dealbata nothingosis");
+    ALATaxonRecord atr =
+        ALATaxonRecord.newBuilder()
+            .setId("1")
+            .setTaxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
+            .setScientificName("Acacia dealbata")
+            .setRank("SPECIES")
+            .setMatchType(ALAMatchType.higherMatch.name())
+            .build();
+    ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
+    assertEquals(
+        Arrays.asList(OccurrenceIssue.TAXON_MATCH_HIGHERRANK.name()),
+        atr.getIssues().getIssueList());
+  }
+
+  @Test
+  public void testResultCheck4() {
+    Map<String, String> map = new HashMap<>();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Akacia dealbati");
+    ALATaxonRecord atr =
+        ALATaxonRecord.newBuilder()
+            .setId("1")
+            .setTaxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
+            .setScientificName("Acacia dealbata")
+            .setRank("SPECIES")
+            .setMatchType(ALAMatchType.fuzzyMatch.name())
+            .build();
+    ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
+    assertEquals(
+        Arrays.asList(OccurrenceIssue.TAXON_MATCH_FUZZY.name()), atr.getIssues().getIssueList());
+  }
+
+  @Test
+  public void testResultCheck5() {
+    Map<String, String> map = new HashMap<>();
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    map.put(DwcTerm.scientificName.qualifiedName(), "Acacia sp. 1");
+    ALATaxonRecord atr =
+        ALATaxonRecord.newBuilder()
+            .setId("1")
+            .setTaxonConceptID("https://id.biodiversity.org.au/taxon/apni/51286863")
+            .setScientificName("Acacia dealbata")
+            .setRank("SPECIES")
+            .setNameType(NameType.PLACEHOLDER.name())
+            .build();
+    ALATaxonomyInterpreter.alaResultQualityChecks(this.dataResource).accept(er, atr);
+    assertEquals(
+        Arrays.asList(ALAOccurrenceIssue.INVALID_SCIENTIFIC_NAME.name()),
+        atr.getIssues().getIssueList());
   }
 }
