@@ -3,6 +3,7 @@ package au.org.ala.pipelines.beam;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.AvroUtils;
 import au.org.ala.util.TestUtils;
 import java.io.File;
@@ -136,9 +137,9 @@ public class UUIDPipelineTestIT {
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
 
-    InterpretationPipelineOptions uuidOptions =
+    UUIDPipelineOptions uuidOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            UUIDPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

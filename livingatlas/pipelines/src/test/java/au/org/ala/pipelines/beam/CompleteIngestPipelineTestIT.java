@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import au.org.ala.pipelines.options.ALASolrPipelineOptions;
+import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.sampling.LayerCrawler;
 import au.org.ala.util.SolrUtils;
 import au.org.ala.util.TestUtils;
@@ -96,9 +97,9 @@ public class CompleteIngestPipelineTestIT {
             });
     ALAVerbatimToInterpretedPipeline.run(interpretationOptions);
 
-    InterpretationPipelineOptions uuidOptions =
+    UUIDPipelineOptions uuidOptions =
         PipelinesOptionsFactory.create(
-            InterpretationPipelineOptions.class,
+            UUIDPipelineOptions.class,
             new String[] {
               "--datasetId=" + datasetID,
               "--attempt=1",

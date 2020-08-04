@@ -5,6 +5,7 @@ import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
 import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.common.ALARecordTypes;
+import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.util.*;
 import lombok.AccessLevel;
@@ -29,7 +30,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
@@ -72,15 +72,15 @@ public class ALAUUIDMintingPipeline {
 
   public static void main(String[] args) throws Exception {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "uuid");
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    UUIDPipelineOptions options =
+        PipelinesOptionsFactory.create(UUIDPipelineOptions.class, combinedArgs);
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
   }
 
-  public static void run(InterpretationPipelineOptions options) throws Exception {
+  public static void run(UUIDPipelineOptions options) throws Exception {
 
     Pipeline p = Pipeline.create(options);
 
@@ -91,13 +91,13 @@ public class ALAUUIDMintingPipeline {
 
     // build the directory path for existing identifiers
     String alaRecordDirectoryPath =
-        options.getTargetPath()
-            + "/"
-            + options.getDatasetId().trim()
-            + "/"
-            + options.getAttempt()
-            + "/identifiers/"
-            + ALARecordTypes.ALA_UUID.name().toLowerCase();
+        String.join(
+            "/",
+            options.getTargetPath(),
+            options.getDatasetId().trim(),
+            options.getAttempt().toString(),
+            "identifiers",
+            ALARecordTypes.ALA_UUID.name().toLowerCase());
     log.info("Output path {}", alaRecordDirectoryPath);
 
     // create key value store for data resource metadata
@@ -112,11 +112,21 @@ public class ALAUUIDMintingPipeline {
     }
 
     // construct unique list of darwin core terms
-    final List<String> uniqueTerms =
-        collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
-    if (uniqueTerms == null || uniqueTerms.isEmpty()) {
-      throw new RuntimeException(
-          "No unique terms specified for dataset: " + options.getDatasetId());
+    List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
+
+    if ((uniqueTerms == null || uniqueTerms.isEmpty())) {
+
+      if (!options.isAllowEmptyUniqueTerms()) {
+        throw new RuntimeException(
+            "No unique terms specified for dataset: " + options.getDatasetId());
+      } else {
+        log.warn(
+            "No unique terms specified for dataset {}. Proceeding as allowEmptyUniqueTerms=true",
+            options.getDatasetId());
+        if (uniqueTerms == null) {
+          uniqueTerms = Collections.emptyList();
+        }
+      }
     }
 
     final List<Term> uniqueDwcTerms = new ArrayList<Term>();
@@ -138,10 +148,14 @@ public class ALAUUIDMintingPipeline {
         p.apply(
                 AvroIO.read(ExtendedRecord.class)
                     .from(
-                        options.getTargetPath()
-                            + "/"
-                            + options.getDatasetId().trim()
-                            + "/1/interpreted/verbatim/*.avro"))
+                        String.join(
+                            "/",
+                            options.getTargetPath(),
+                            options.getDatasetId().trim(),
+                            options.getAttempt().toString(),
+                            "interpreted",
+                            "verbatim",
+                            "*.avro")))
             .apply(
                 ParDo.of(
                     new DoFn<ExtendedRecord, KV<String, String>>() {
@@ -173,7 +187,7 @@ public class ALAUUIDMintingPipeline {
 
       TypeDescriptor<KV<String, String>> td = new TypeDescriptor<KV<String, String>>() {};
       log.warn(
-          "[WARNING] Previous ALAUUIDRecord records where not found. This is expected for new datasets, but is a problem "
+          "Previous ALAUUIDRecord records where not found. This is expected for new datasets, but is a problem "
               + "for previously loaded datasets - will mint new ones......");
       alaUuids = p.apply(Create.empty(td));
     }
@@ -223,6 +237,12 @@ public class ALAUUIDMintingPipeline {
    */
   public static String generateUniqueKey(
       String datasetID, ExtendedRecord source, List<Term> uniqueTerms) throws RuntimeException {
+
+    // if the unique terms list is empty, generate a random UUID
+    if (uniqueTerms.isEmpty()) {
+      return UUID.randomUUID().toString();
+    }
+
     List<String> uniqueValues = new ArrayList<String>();
     boolean allUniqueValuesAreEmpty = true;
     for (Term term : uniqueTerms) {

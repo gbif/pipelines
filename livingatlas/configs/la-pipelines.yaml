@@ -98,6 +98,7 @@ uuid:
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
   metaFileName: uuid-metrics.yml
+
   ## For spark-cluster:
   # interpretationTypes: ALL
   # useExtendedRecordId: true

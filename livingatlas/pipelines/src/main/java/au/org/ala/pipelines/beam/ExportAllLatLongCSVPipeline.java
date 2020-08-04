@@ -2,6 +2,7 @@ package au.org.ala.pipelines.beam;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 
+import au.org.ala.pipelines.options.AllDatasetsPipelinesOptions;
 import au.org.ala.pipelines.transforms.ALACSVDocumentTransform;
 import java.io.File;
 import java.util.function.UnaryOperator;

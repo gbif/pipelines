@@ -11,6 +11,7 @@ import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -324,7 +325,8 @@ public class ALAInterpretedToSolrIndexPipeline {
     Map<String, ALAUUIDRecord> aurMap = alaUuidMapFeature.get();
     Map<String, ALATaxonRecord> alaTaxonMap = alaTaxonMapFeature.get();
     Map<String, ALAAttributionRecord> alaAttributionMap = alaAttributionMapFeature.get();
-    Map<String, LocationFeatureRecord> australiaSpatialMap = australiaSpatialMapFeature.get();
+    Map<String, LocationFeatureRecord> australiaSpatialMap =
+        options.getIncludeSampling() ? australiaSpatialMapFeature.get() : Collections.emptyMap();
 
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();
