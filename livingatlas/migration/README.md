@@ -22,5 +22,5 @@ hdfs dfs -copyFromLocal /data/occ_uuid.csv /migration/occ_uuid.csv
 The pipeline in this module creates a shaded jar that can be copied to the cluster
 and ran using the bash scripts in the [scripts directory](scripts).
 
-After running, the 
+After running this migration pipeline, the `ALAUUIDMintingPipeline` needs to be ran for the UUIDs to be picked up and used with the data.
 
