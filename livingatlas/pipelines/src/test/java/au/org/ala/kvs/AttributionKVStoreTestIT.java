@@ -38,6 +38,20 @@ public class AttributionKVStoreTestIT {
   }
 
   @Test
+  public void testAttributionLookupMultiUrl() throws Exception {
+
+    KeyValueStore<String, ALACollectoryMetadata> kvs =
+        ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
+    ALACollectoryMetadata m = kvs.get("dr807");
+    ConnectionParameters connParams = m.getConnectionParameters();
+
+    assertNotNull(m.getName());
+    assertNotNull(connParams);
+    assertNotNull(connParams.getUrl());
+    kvs.close();
+  }
+
+  @Test
   public void testAttributionConnectionIssues() throws Exception {
     KeyValueStore<String, ALACollectoryMetadata> kvs =
         ALAAttributionKVStoreFactory.create(TestUtils.getConfig());
