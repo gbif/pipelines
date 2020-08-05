@@ -49,7 +49,7 @@ public class GadmParser {
   }
 
   public static void accept(Location l, GadmFeatures gf) {
-    if (l.getType() != null && l.getDistance() == 0) {
+    if (l.getType() != null && l.getDistance() != null && l.getDistance() == 0) {
       switch (l.getType()) {
         case "GADM0":
           if (gf.getLevel0Gid() == null) {

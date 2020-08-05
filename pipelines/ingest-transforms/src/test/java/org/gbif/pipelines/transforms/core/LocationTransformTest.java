@@ -71,36 +71,42 @@ public class LocationTransformTest {
         gadm0.setSource("http://gadm.org/");
         gadm0.setName("Denmark");
         gadm0.setIsoCountryCode2Digit("DK");
+        gadm0.setDistance(0d);
 
         gadm1.setId("DNK.2_1");
         gadm1.setType("GADM1");
         gadm1.setSource("http://gadm.org/");
         gadm1.setName("Midtjylland");
         gadm1.setIsoCountryCode2Digit("DK");
+        gadm1.setDistance(0d);
 
         gadm2.setId("DNK.2.14_1");
         gadm2.setType("GADM2");
         gadm2.setSource("http://gadm.org/");
         gadm2.setName("Silkeborg");
         gadm2.setIsoCountryCode2Digit("DK");
+        gadm2.setDistance(0d);
       } else {
         gadm0.setId("JPN");
         gadm0.setType("GADM0");
         gadm0.setSource("http://gadm.org/");
         gadm0.setName("Japan");
         gadm0.setIsoCountryCode2Digit("JP");
+        gadm0.setDistance(0d);
 
         gadm1.setId("JPN.26_1");
         gadm1.setType("GADM1");
         gadm1.setSource("http://gadm.org/");
         gadm1.setName("Nagano");
         gadm1.setIsoCountryCode2Digit("JP");
+        gadm1.setDistance(0d);
 
         gadm2.setId("JPN.26.40_1");
         gadm2.setType("GADM2");
         gadm2.setSource("http://gadm.org/");
         gadm2.setName("Nagawa");
         gadm2.setIsoCountryCode2Digit("JP");
+        gadm2.setDistance(0d);
       }
       locations.add(gadm0);
       locations.add(gadm1);
