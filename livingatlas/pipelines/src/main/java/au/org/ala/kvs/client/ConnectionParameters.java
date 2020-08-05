@@ -1,6 +1,5 @@
 package au.org.ala.kvs.client;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -19,7 +18,6 @@ public class ConnectionParameters {
 
   String protocol;
 
-  @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
   List<String> url;
 
   List<String> termsForUniqueKey;
