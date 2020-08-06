@@ -1,3 +1,8 @@
 # Override lint package errors here
 # https://lintian.debian.org/manual/section-2.4.html
 la-pipelines: non-standard-toplevel-dir data/
+la-pipelines: script-not-executable usr/share/la-pipelines/logging_lib.sh
+la-pipelines: debian-changelog-line-too-long line *
+la-pipelines: file-in-unusual-dir data/la-pipelines/*
+la-pipelines: spelling-error-in-changelog *
+la-pipelines: jar-contains-source usr/share/la-pipelines/la-pipelines.jar
