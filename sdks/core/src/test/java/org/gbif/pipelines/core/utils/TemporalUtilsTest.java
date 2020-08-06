@@ -1,16 +1,15 @@
 package org.gbif.pipelines.core.utils;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.Optional;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class TemporalUtilsTest {
 
@@ -145,5 +144,4 @@ public class TemporalUtilsTest {
     // Should
     assertFalse(temporal.isPresent());
   }
-
 }

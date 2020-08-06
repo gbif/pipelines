@@ -4,13 +4,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.ImageRecord;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -61,10 +59,7 @@ public class ImageInterpreterTest {
     Map<String, List<Map<String, String>>> ext = new HashMap<>();
     ext.put(Extension.IMAGE.getRowType(), Arrays.asList(ext1, ext2, ext3));
 
-    ExtendedRecord record = ExtendedRecord.newBuilder()
-        .setId("id")
-        .setExtensions(ext)
-        .build();
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("id").setExtensions(ext).build();
 
     String result =
         "{\"id\": \"id\", \"created\": 0, \"imageItems\": [{\"identifier\": \"http://www.gbif.org/tmp.jpg\", \"references\": "
@@ -83,8 +78,7 @@ public class ImageInterpreterTest {
     // When
     ImageInterpreter.interpret(record, ir);
 
-    //Should
+    // Should
     Assert.assertEquals(result, ir.toString());
   }
-
 }

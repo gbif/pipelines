@@ -1,7 +1,6 @@
 package org.gbif.converters.parser.xml.identifier;
 
 import java.util.UUID;
-
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,10 +11,8 @@ import lombok.NonNull;
 @AllArgsConstructor
 public class PublisherProvidedUniqueIdentifier implements UniqueIdentifier {
 
-  @NonNull
-  private final UUID datasetKey;
-  @NonNull
-  private final String publisherProvidedIdentifier;
+  @NonNull private final UUID datasetKey;
+  @NonNull private final String publisherProvidedIdentifier;
 
   @Override
   public UUID getDatasetKey() {
@@ -31,5 +28,4 @@ public class PublisherProvidedUniqueIdentifier implements UniqueIdentifier {
   public String getUnscopedUniqueString() {
     return OccurrenceKeyHelper.buildUnscopedKey(this);
   }
-
 }

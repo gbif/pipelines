@@ -1,11 +1,13 @@
 package org.gbif.pipelines.estools.client;
 
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.HttpDelete;
@@ -19,10 +21,6 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
-
-import com.google.common.base.Preconditions;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Client to communicate with the ES server.
@@ -107,7 +105,8 @@ public class EsClient implements AutoCloseable {
     return performRequest(HttpDelete.METHOD_NAME, endpoint, Collections.emptyMap(), null);
   }
 
-  private Response performRequest(String method, String endpoint, Map<String, String> params, HttpEntity body)
+  private Response performRequest(
+      String method, String endpoint, Map<String, String> params, HttpEntity body)
       throws ResponseException {
     // create request
     Request request = new Request(method, endpoint);

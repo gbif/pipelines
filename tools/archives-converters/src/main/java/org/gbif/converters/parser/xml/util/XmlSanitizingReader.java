@@ -3,7 +3,6 @@ package org.gbif.converters.parser.xml.util;
 import java.io.FilterReader;
 import java.io.IOException;
 import java.io.Reader;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -28,7 +27,6 @@ public class XmlSanitizingReader extends FilterReader {
     int nextChar = nextValidXmlChar();
     log.debug("call to read(), returning [{}]", nextChar);
     return nextChar;
-
   }
 
   /**
@@ -59,7 +57,6 @@ public class XmlSanitizingReader extends FilterReader {
     }
 
     return charsRead;
-
   }
 
   @Override

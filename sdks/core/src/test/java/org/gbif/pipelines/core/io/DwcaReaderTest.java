@@ -1,13 +1,11 @@
 package org.gbif.pipelines.core.io;
 
+import static org.junit.Assert.assertNotNull;
+
 import java.io.File;
 import java.io.IOException;
-
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
 
 public class DwcaReaderTest {
 
@@ -24,7 +22,6 @@ public class DwcaReaderTest {
       assertNotNull(current);
       assertNotNull(current.getId());
     }
-
   }
 
   @Test

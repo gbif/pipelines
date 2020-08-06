@@ -1,5 +1,9 @@
 package org.gbif.pipelines.core.converters;
 
+import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.STRING_TO_DATE;
+import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord;
+import static org.junit.Assert.assertEquals;
+
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -12,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
-
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
@@ -52,13 +55,8 @@ import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.STRING_TO_DATE;
-import static org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord;
-import static org.junit.Assert.assertEquals;
 
 public class OccurrenceHdfsRecordConverterTest {
 
@@ -75,7 +73,8 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.order.simpleName(), "order");
     coreTerms.put(DwcTerm.group.simpleName(), "group");
     coreTerms.put(DcTerm.date.simpleName(), "26/06/2019");
-    coreTerms.put(DwcTerm.basisOfRecord.simpleName(), BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase());
+    coreTerms.put(
+        DwcTerm.basisOfRecord.simpleName(), BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase());
     coreTerms.put(DwcTerm.lifeStage.simpleName(), "adultss");
     coreTerms.put(DwcTerm.sampleSizeUnit.simpleName(), "unit");
     coreTerms.put(DwcTerm.sampleSizeValue.simpleName(), "value");
@@ -88,52 +87,67 @@ public class OccurrenceHdfsRecordConverterTest {
     coreTerms.put(DwcTerm.occurrenceStatus.simpleName(), OccurrenceStatus.ABSENT.name());
     coreTerms.put(DwcTerm.individualCount.simpleName(), "0");
 
-    ExtendedRecord extendedRecord = ExtendedRecord.newBuilder()
-        .setId("1")
-        .setCoreTerms(coreTerms).build();
+    ExtendedRecord extendedRecord =
+        ExtendedRecord.newBuilder().setId("1").setCoreTerms(coreTerms).build();
 
-    MetadataRecord metadataRecord = MetadataRecord.newBuilder()
-        .setId("1")
-        .setLicense(License.CC_BY_4_0.name())
-        .build();
+    MetadataRecord metadataRecord =
+        MetadataRecord.newBuilder().setId("1").setLicense(License.CC_BY_4_0.name()).build();
 
-    List<AgentIdentifier> agentIds = Collections.singletonList(
-        AgentIdentifier.newBuilder().setType(AgentIdentifierType.OTHER.name()).setValue("13123").build()
-    );
+    List<AgentIdentifier> agentIds =
+        Collections.singletonList(
+            AgentIdentifier.newBuilder()
+                .setType(AgentIdentifierType.OTHER.name())
+                .setValue("13123")
+                .build());
 
-    BasicRecord basicRecord = BasicRecord.newBuilder()
-        .setId("1")
-        .setCreated(1L)
-        .setLicense(License.CC0_1_0.name())
-        .setIdentifiedByIds(agentIds)
-        .setRecordedByIds(agentIds)
-        .setIndividualCount(0)
-        .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name())
-        .setOccurrenceStatus(OccurrenceStatus.ABSENT.name())
-        .build();
+    BasicRecord basicRecord =
+        BasicRecord.newBuilder()
+            .setId("1")
+            .setCreated(1L)
+            .setLicense(License.CC0_1_0.name())
+            .setIdentifiedByIds(agentIds)
+            .setRecordedByIds(agentIds)
+            .setIndividualCount(0)
+            .setBasisOfRecord(BasisOfRecord.HUMAN_OBSERVATION.name())
+            .setOccurrenceStatus(OccurrenceStatus.ABSENT.name())
+            .build();
 
     List<RankedName> classification = new ArrayList<>();
     classification.add(RankedName.newBuilder().setName("CLASS").setRank(Rank.CLASS).build());
     classification.add(RankedName.newBuilder().setName("ORDER").setRank(Rank.ORDER).build());
-    TaxonRecord taxonRecord = TaxonRecord.newBuilder()
-        .setCreated(2L) //This value for lastParsed and lastInterpreted since is greater that the Basic record created date
-        .setClassification(classification)
-        .build();
+    TaxonRecord taxonRecord =
+        TaxonRecord.newBuilder()
+            .setCreated(
+                2L) // This value for lastParsed and lastInterpreted since is greater that the Basic
+            // record created date
+            .setClassification(classification)
+            .build();
 
-    TemporalRecord temporalRecord = TemporalRecord.newBuilder()
-        .setId("1")
-        .setDateIdentified("2019-11-12T13:24:56.963591")
-        .setModified("2019-04-15T17:17")
-        .build();
+    TemporalRecord temporalRecord =
+        TemporalRecord.newBuilder()
+            .setId("1")
+            .setDateIdentified("2019-11-12T13:24:56.963591")
+            .setModified("2019-04-15T17:17")
+            .build();
 
-    TaggedValueRecord taggedValueRecord = TaggedValueRecord.newBuilder()
-        .setId("1")
-        .setTaggedValues(Collections.singletonMap(GbifInternalTerm.collectionKey.qualifiedName(), "7ddf754f-d193-4cc9-b351-99906754a03b"))
-        .build();
+    TaggedValueRecord taggedValueRecord =
+        TaggedValueRecord.newBuilder()
+            .setId("1")
+            .setTaggedValues(
+                Collections.singletonMap(
+                    GbifInternalTerm.collectionKey.qualifiedName(),
+                    "7ddf754f-d193-4cc9-b351-99906754a03b"))
+            .build();
 
     // When
-    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord, metadataRecord, taxonRecord, temporalRecord,
-        extendedRecord, taggedValueRecord);
+    OccurrenceHdfsRecord hdfsRecord =
+        toOccurrenceHdfsRecord(
+            basicRecord,
+            metadataRecord,
+            taxonRecord,
+            temporalRecord,
+            extendedRecord,
+            taggedValueRecord);
 
     // Should
     // Test common fields
@@ -174,7 +188,8 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertNotNull(hdfsRecord.getModified());
 
     Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name(), hdfsRecord.getBasisofrecord());
-    Assert.assertEquals(BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
+    Assert.assertEquals(
+        BasisOfRecord.HUMAN_OBSERVATION.name().toLowerCase(), hdfsRecord.getVBasisofrecord());
     Assert.assertNull(hdfsRecord.getLifestage());
     Assert.assertEquals("adultss", hdfsRecord.getVLifestage());
     Assert.assertEquals(taxonRecord.getCreated(), hdfsRecord.getLastparsed());
@@ -199,7 +214,7 @@ public class OccurrenceHdfsRecordConverterTest {
     multimediaRecord.setMultimediaItems(Collections.singletonList(multimedia));
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(multimediaRecord);
 
-    //Testing de-serialization
+    // Testing de-serialization
     List<Multimedia> media = MediaSerDeserUtils.fromJson(hdfsRecord.getExtMultimedia());
     Assert.assertEquals(media.get(0), multimedia);
     Assert.assertTrue(hdfsRecord.getMediatype().contains(MediaType.StillImage.name()));
@@ -226,7 +241,6 @@ public class OccurrenceHdfsRecordConverterTest {
     basicRecord.setRelativeOrganismQuantity(2d);
     basicRecord.setLicense(License.UNSPECIFIED.name());
 
-
     // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(basicRecord);
 
@@ -250,36 +264,63 @@ public class OccurrenceHdfsRecordConverterTest {
   public void taxonMapperTest() {
     // State
     List<RankedName> classification = new ArrayList<>();
-    classification.add(RankedName.newBuilder().setKey(2).setRank(Rank.KINGDOM).setName("Archaea").build());
-    classification.add(RankedName.newBuilder().setKey(79).setRank(Rank.PHYLUM).setName("Crenarchaeota").build());
-    classification.add(RankedName.newBuilder().setKey(8016360).setRank(Rank.ORDER).setName("Acidilobales").build());
-    classification.add(RankedName.newBuilder().setKey(292).setRank(Rank.CLASS).setName("Thermoprotei").build());
-    classification.add(RankedName.newBuilder().setKey(7785).setRank(Rank.FAMILY).setName("Caldisphaeraceae").build());
-    classification.add(RankedName.newBuilder().setKey(1000002).setRank(Rank.GENUS).setName("Caldisphaera").build());
     classification.add(
-        RankedName.newBuilder().setKey(1000003).setRank(Rank.SPECIES).setName("Caldisphaera lagunensis").build());
+        RankedName.newBuilder().setKey(2).setRank(Rank.KINGDOM).setName("Archaea").build());
+    classification.add(
+        RankedName.newBuilder().setKey(79).setRank(Rank.PHYLUM).setName("Crenarchaeota").build());
+    classification.add(
+        RankedName.newBuilder()
+            .setKey(8016360)
+            .setRank(Rank.ORDER)
+            .setName("Acidilobales")
+            .build());
+    classification.add(
+        RankedName.newBuilder().setKey(292).setRank(Rank.CLASS).setName("Thermoprotei").build());
+    classification.add(
+        RankedName.newBuilder()
+            .setKey(7785)
+            .setRank(Rank.FAMILY)
+            .setName("Caldisphaeraceae")
+            .build());
+    classification.add(
+        RankedName.newBuilder()
+            .setKey(1000002)
+            .setRank(Rank.GENUS)
+            .setName("Caldisphaera")
+            .build());
+    classification.add(
+        RankedName.newBuilder()
+            .setKey(1000003)
+            .setRank(Rank.SPECIES)
+            .setName("Caldisphaera lagunensis")
+            .build());
 
-    ParsedName parsedName = ParsedName.newBuilder().setType(NameType.SCIENTIFIC)
-        .setAbbreviated(Boolean.FALSE)
-        .setBasionymAuthorship(Authorship.newBuilder()
-            .setYear("2003")
-            .setAuthors(Collections.singletonList("Itoh & al."))
-            .setExAuthors(Collections.emptyList())
-            .setEmpty(Boolean.FALSE).build())
-        .setAutonym(Boolean.FALSE)
-        .setBinomial(Boolean.TRUE)
-        .setGenus("Caldisphaera")
-        .setSpecificEpithet("lagunensis")
-        .setNotho(NamePart.SPECIFIC)
-        .setState(State.COMPLETE)
-        .build();
+    ParsedName parsedName =
+        ParsedName.newBuilder()
+            .setType(NameType.SCIENTIFIC)
+            .setAbbreviated(Boolean.FALSE)
+            .setBasionymAuthorship(
+                Authorship.newBuilder()
+                    .setYear("2003")
+                    .setAuthors(Collections.singletonList("Itoh & al."))
+                    .setExAuthors(Collections.emptyList())
+                    .setEmpty(Boolean.FALSE)
+                    .build())
+            .setAutonym(Boolean.FALSE)
+            .setBinomial(Boolean.TRUE)
+            .setGenus("Caldisphaera")
+            .setSpecificEpithet("lagunensis")
+            .setNotho(NamePart.SPECIFIC)
+            .setState(State.COMPLETE)
+            .build();
 
     TaxonRecord taxonRecord = new TaxonRecord();
-    RankedName rankedName = RankedName.newBuilder()
-        .setKey(2492483)
-        .setRank(Rank.SPECIES)
-        .setName("Caldisphaera lagunensis Itoh & al., 2003")
-        .build();
+    RankedName rankedName =
+        RankedName.newBuilder()
+            .setKey(2492483)
+            .setRank(Rank.SPECIES)
+            .setName("Caldisphaera lagunensis Itoh & al., 2003")
+            .build();
 
     taxonRecord.setUsage(rankedName);
     taxonRecord.setUsage(rankedName);
@@ -315,30 +356,32 @@ public class OccurrenceHdfsRecordConverterTest {
     Assert.assertEquals(Integer.valueOf(1000003), hdfsRecord.getSpecieskey());
 
     Assert.assertEquals("2492483", hdfsRecord.getAcceptednameusageid());
-    Assert.assertEquals("Caldisphaera lagunensis Itoh & al., 2003", hdfsRecord.getAcceptedscientificname());
+    Assert.assertEquals(
+        "Caldisphaera lagunensis Itoh & al., 2003", hdfsRecord.getAcceptedscientificname());
     Assert.assertEquals(Integer.valueOf(2492483), hdfsRecord.getAcceptedtaxonkey());
 
     Assert.assertEquals("Caldisphaera", hdfsRecord.getGenericname());
     Assert.assertEquals("lagunensis", hdfsRecord.getSpecificepithet());
-
   }
 
   @Test
   public void temporalMapperTest() {
     String rawEventDate = "2019-01-01";
 
-    Long eventDate = LocalDate.of(2019, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
+    Long eventDate =
+        LocalDate.of(2019, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
 
-    TemporalRecord temporalRecord = TemporalRecord.newBuilder()
-        .setId("1")
-        .setDay(1)
-        .setYear(2019)
-        .setMonth(1)
-        .setStartDayOfYear(1)
-        .setEventDate(EventDate.newBuilder().setLte(rawEventDate).build())
-        .setDateIdentified(rawEventDate)
-        .setModified(rawEventDate)
-        .build();
+    TemporalRecord temporalRecord =
+        TemporalRecord.newBuilder()
+            .setId("1")
+            .setDay(1)
+            .setYear(2019)
+            .setMonth(1)
+            .setStartDayOfYear(1)
+            .setEventDate(EventDate.newBuilder().setLte(rawEventDate).build())
+            .setDateIdentified(rawEventDate)
+            .setModified(rawEventDate)
+            .build();
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(temporalRecord);
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getDay());
     Assert.assertEquals(Integer.valueOf(1), hdfsRecord.getMonth());
@@ -358,21 +401,22 @@ public class OccurrenceHdfsRecordConverterTest {
     String organizationKey = UUID.randomUUID().toString();
     List<String> networkKey = Collections.singletonList(UUID.randomUUID().toString());
 
-    MetadataRecord metadataRecord = MetadataRecord.newBuilder()
-        .setId("1")
-        .setDatasetKey(datasetKey)
-        .setCrawlId(1)
-        .setDatasetPublishingCountry(Country.COSTA_RICA.getIso2LetterCode())
-        .setLicense(License.CC_BY_4_0.name())
-        .setNetworkKeys(networkKey)
-        .setDatasetTitle("TestDataset")
-        .setEndorsingNodeKey(nodeKey)
-        .setInstallationKey(installationKey)
-        .setLastCrawled(new Date().getTime())
-        .setProtocol(EndpointType.DWC_ARCHIVE.name())
-        .setPublisherTitle("Pub")
-        .setPublishingOrganizationKey(organizationKey)
-        .build();
+    MetadataRecord metadataRecord =
+        MetadataRecord.newBuilder()
+            .setId("1")
+            .setDatasetKey(datasetKey)
+            .setCrawlId(1)
+            .setDatasetPublishingCountry(Country.COSTA_RICA.getIso2LetterCode())
+            .setLicense(License.CC_BY_4_0.name())
+            .setNetworkKeys(networkKey)
+            .setDatasetTitle("TestDataset")
+            .setEndorsingNodeKey(nodeKey)
+            .setInstallationKey(installationKey)
+            .setLastCrawled(new Date().getTime())
+            .setProtocol(EndpointType.DWC_ARCHIVE.name())
+            .setPublisherTitle("Pub")
+            .setPublishingOrganizationKey(organizationKey)
+            .build();
 
     // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(metadataRecord);
@@ -388,30 +432,31 @@ public class OccurrenceHdfsRecordConverterTest {
   @Test
   public void locationMapperTest() {
     // State
-    LocationRecord locationRecord = LocationRecord.newBuilder()
-        .setId("1")
-        .setCountry(Country.COSTA_RICA.name())
-        .setCountryCode(Country.COSTA_RICA.getIso2LetterCode())
-        .setDecimalLatitude(9.934739)
-        .setDecimalLongitude(-84.087502)
-        .setContinent(Continent.NORTH_AMERICA.name())
-        .setHasCoordinate(Boolean.TRUE)
-        .setCoordinatePrecision(0.1)
-        .setCoordinateUncertaintyInMeters(1.0)
-        .setDepth(5.0)
-        .setDepthAccuracy(0.1)
-        .setElevation(0.0)
-        .setElevationAccuracy(0.1)
-        .setHasGeospatialIssue(Boolean.FALSE)
-        .setRepatriated(Boolean.TRUE)
-        .setStateProvince("Limon")
-        .setWaterBody("Atlantic")
-        .setMaximumDepthInMeters(0.1)
-        .setMinimumDepthInMeters(0.1)
-        .setMaximumDistanceAboveSurfaceInMeters(0.1)
-        .setMaximumElevationInMeters(0.1)
-        .setMinimumElevationInMeters(0.1)
-        .build();
+    LocationRecord locationRecord =
+        LocationRecord.newBuilder()
+            .setId("1")
+            .setCountry(Country.COSTA_RICA.name())
+            .setCountryCode(Country.COSTA_RICA.getIso2LetterCode())
+            .setDecimalLatitude(9.934739)
+            .setDecimalLongitude(-84.087502)
+            .setContinent(Continent.NORTH_AMERICA.name())
+            .setHasCoordinate(Boolean.TRUE)
+            .setCoordinatePrecision(0.1)
+            .setCoordinateUncertaintyInMeters(1.0)
+            .setDepth(5.0)
+            .setDepthAccuracy(0.1)
+            .setElevation(0.0)
+            .setElevationAccuracy(0.1)
+            .setHasGeospatialIssue(Boolean.FALSE)
+            .setRepatriated(Boolean.TRUE)
+            .setStateProvince("Limon")
+            .setWaterBody("Atlantic")
+            .setMaximumDepthInMeters(0.1)
+            .setMinimumDepthInMeters(0.1)
+            .setMaximumDistanceAboveSurfaceInMeters(0.1)
+            .setMaximumElevationInMeters(0.1)
+            .setMinimumElevationInMeters(0.1)
+            .build();
 
     // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(locationRecord);
@@ -438,21 +483,20 @@ public class OccurrenceHdfsRecordConverterTest {
   public void issueMappingTest() {
     // State
     String[] issues = {
-        OccurrenceIssue.IDENTIFIED_DATE_INVALID.name(),
-        OccurrenceIssue.MODIFIED_DATE_INVALID.name(),
-        OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()
+      OccurrenceIssue.IDENTIFIED_DATE_INVALID.name(),
+      OccurrenceIssue.MODIFIED_DATE_INVALID.name(),
+      OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()
     };
 
-    TemporalRecord temporalRecord = TemporalRecord.newBuilder()
-        .setId("1")
-        .setDay(1)
-        .setYear(2019)
-        .setMonth(1)
-        .setStartDayOfYear(1)
-        .setIssues(IssueRecord.newBuilder()
-            .setIssueList(Arrays.asList(issues))
-            .build())
-        .build();
+    TemporalRecord temporalRecord =
+        TemporalRecord.newBuilder()
+            .setId("1")
+            .setDay(1)
+            .setYear(2019)
+            .setMonth(1)
+            .setStartDayOfYear(1)
+            .setIssues(IssueRecord.newBuilder().setIssueList(Arrays.asList(issues)).build())
+            .build();
 
     // When
     OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(temporalRecord);

@@ -2,11 +2,9 @@ package org.gbif.converters.converter;
 
 import java.io.Closeable;
 import java.io.IOException;
-
-import org.apache.avro.file.DataFileWriter;
-
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.avro.file.DataFileWriter;
 
 /** Sync class for avro DataFileWriter, created to avoid an issue during file writing */
 @AllArgsConstructor

@@ -71,6 +71,7 @@ During indexing the categories of interpreted information of use are merged and 
 
 The project is structured as:
 
+_DEPRECATED STRUCTURE_:
 - [**.buildSrc**](./.buildSrc) - Tools for building the project
 - [**docs**](./docs) - Documents related to the project
 - [**examples**](./examples) - Examples of using project API and base classes

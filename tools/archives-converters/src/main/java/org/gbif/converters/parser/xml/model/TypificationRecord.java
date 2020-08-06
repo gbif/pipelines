@@ -15,9 +15,8 @@
  */
 package org.gbif.converters.parser.xml.model;
 
-import java.io.Serializable;
-
 import com.google.common.base.Strings;
+import java.io.Serializable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -34,7 +33,8 @@ public class TypificationRecord implements Serializable {
   private String typeStatus;
   private String notes;
 
-  public TypificationRecord(String scientificName, String publication, String typeStatus, String notes) {
+  public TypificationRecord(
+      String scientificName, String publication, String typeStatus, String notes) {
     if (!Strings.isNullOrEmpty(scientificName)) {
       this.scientificName = scientificName;
     }

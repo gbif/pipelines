@@ -1,5 +1,13 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
+import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
+import static org.gbif.pipelines.core.utils.ModelUtils.addIssueSet;
+import static org.gbif.pipelines.core.utils.ModelUtils.extractValue;
+import static org.gbif.pipelines.core.utils.ModelUtils.hasValue;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Range;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
@@ -8,7 +16,10 @@ import java.time.temporal.TemporalQueries;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
@@ -21,20 +32,6 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.Range;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.DEFINITE;
-import static org.gbif.common.parsers.core.ParseResult.CONFIDENCE.PROBABLE;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.addIssueSet;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
-import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
 /** Interprets date representations into a Date to support API v1 */
 @Slf4j
@@ -51,10 +48,13 @@ public class TemporalInterpreter {
     if (eventResult.isSuccessful()) {
       TemporalAccessor temporalAccessor = eventResult.getPayload();
 
-      //Get eventDate as java.util.Date and ignore the offset (timezone) if provided
-      //Note for debug: be careful if you inspect the content of 'eventDate' it will contain your machine timezone.
-      LocalDateTime eventDate = TemporalAccessorUtils.toEarliestLocalDateTime(temporalAccessor, true);
-      AtomizedLocalDate atomizedLocalDate = AtomizedLocalDate.fromTemporalAccessor(temporalAccessor);
+      // Get eventDate as java.util.Date and ignore the offset (timezone) if provided
+      // Note for debug: be careful if you inspect the content of 'eventDate' it will contain your
+      // machine timezone.
+      LocalDateTime eventDate =
+          TemporalAccessorUtils.toEarliestLocalDateTime(temporalAccessor, true);
+      AtomizedLocalDate atomizedLocalDate =
+          AtomizedLocalDate.fromTemporalAccessor(temporalAccessor);
 
       Optional.ofNullable(eventDate)
           .map(LocalDateTime::toString)
@@ -69,10 +69,14 @@ public class TemporalInterpreter {
     LocalDate upperBound = LocalDate.now().plusDays(1);
     if (hasValue(er, DcTerm.modified)) {
       Range<LocalDate> validModifiedDateRange = Range.closed(MIN_EPOCH_LOCAL_DATE, upperBound);
-      OccurrenceParseResult<TemporalAccessor> parsed = interpretLocalDate(extractValue(er, DcTerm.modified),
-          validModifiedDateRange, OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
+      OccurrenceParseResult<TemporalAccessor> parsed =
+          interpretLocalDate(
+              extractValue(er, DcTerm.modified),
+              validModifiedDateRange,
+              OccurrenceIssue.MODIFIED_DATE_UNLIKELY);
       if (parsed.isSuccessful()) {
-        Optional.ofNullable(TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
+        Optional.ofNullable(
+                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
             .map(LocalDateTime::toString)
             .ifPresent(tr::setModified);
       }
@@ -83,10 +87,13 @@ public class TemporalInterpreter {
     if (hasValue(er, DwcTerm.dateIdentified)) {
       Range<LocalDate> validRecordedDateRange = Range.closed(MIN_LOCAL_DATE, upperBound);
       OccurrenceParseResult<TemporalAccessor> parsed =
-          interpretLocalDate(extractValue(er, DwcTerm.dateIdentified),
-              validRecordedDateRange, OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
+          interpretLocalDate(
+              extractValue(er, DwcTerm.dateIdentified),
+              validRecordedDateRange,
+              OccurrenceIssue.IDENTIFIED_DATE_UNLIKELY);
       if (parsed.isSuccessful()) {
-        Optional.ofNullable(TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
+        Optional.ofNullable(
+                TemporalAccessorUtils.toEarliestLocalDateTime(parsed.getPayload(), false))
             .map(LocalDateTime::toString)
             .ifPresent(tr::setDateIdentified);
       }
@@ -95,8 +102,8 @@ public class TemporalInterpreter {
   }
 
   /**
-   * A convenience method that calls interpretRecordedDate with the verbatim recordedDate values from the
-   * VerbatimOccurrence.
+   * A convenience method that calls interpretRecordedDate with the verbatim recordedDate values
+   * from the VerbatimOccurrence.
    *
    * @param er the VerbatimOccurrence containing a recordedDate
    * @return the interpretation result which is never null
@@ -111,21 +118,22 @@ public class TemporalInterpreter {
   }
 
   /**
-   * Given possibly both of year, month, day and a dateString, produces a single date.
-   * When year, month and day are all populated and parseable they are given priority,
-   * but if any field is missing or illegal and dateString is parseable dateString is preferred.
-   * Partially valid dates are not supported and null will be returned instead. The only exception is the year alone
-   * which will be used as the last resort if nothing else works.
-   * Years are verified to be before or next year and after 1600.
-   * x
+   * Given possibly both of year, month, day and a dateString, produces a single date. When year,
+   * month and day are all populated and parseable they are given priority, but if any field is
+   * missing or illegal and dateString is parseable dateString is preferred. Partially valid dates
+   * are not supported and null will be returned instead. The only exception is the year alone which
+   * will be used as the last resort if nothing else works. Years are verified to be before or next
+   * year and after 1600. x
    *
    * @return interpretation result, never null
    */
-  public static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(String year, String month, String day,
-      String dateString) {
+  public static OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
+      String year, String month, String day, String dateString) {
 
-    boolean atomizedDateProvided = StringUtils.isNotBlank(year) || StringUtils.isNotBlank(month)
-        || StringUtils.isNotBlank(day);
+    boolean atomizedDateProvided =
+        StringUtils.isNotBlank(year)
+            || StringUtils.isNotBlank(month)
+            || StringUtils.isNotBlank(day);
     boolean dateStringProvided = StringUtils.isNotBlank(dateString);
 
     if (!atomizedDateProvided && !dateStringProvided) {
@@ -136,21 +144,23 @@ public class TemporalInterpreter {
 
     // First, attempt year, month, day parsing
     // If the parse result is SUCCESS it means that a whole date could be extracted (with year,
-    // month and day). If it is a failure but the normalizer returned a meaningful result (e.g. it could extract just
+    // month and day). If it is a failure but the normalizer returned a meaningful result (e.g. it
+    // could extract just
     // a year) we're going to return a result with all the fields set that we could parse.
     TemporalAccessor parsedTemporalAccessor;
     ParseResult.CONFIDENCE confidence;
 
-    ParseResult<TemporalAccessor> parsedYMDResult = atomizedDateProvided ? TEXTDATE_PARSER.parse(year, month, day) :
-        ParseResult.fail();
-    ParseResult<TemporalAccessor> parsedDateResult = dateStringProvided ? TEXTDATE_PARSER.parse(dateString) :
-        ParseResult.fail();
+    ParseResult<TemporalAccessor> parsedYMDResult =
+        atomizedDateProvided ? TEXTDATE_PARSER.parse(year, month, day) : ParseResult.fail();
+    ParseResult<TemporalAccessor> parsedDateResult =
+        dateStringProvided ? TEXTDATE_PARSER.parse(dateString) : ParseResult.fail();
     TemporalAccessor parsedYmdTa = parsedYMDResult.getPayload();
     TemporalAccessor parsedDateTa = parsedDateResult.getPayload();
 
     // If both inputs exist handle the case when they don't match
-    if (atomizedDateProvided && dateStringProvided && !TemporalAccessorUtils.sameOrContained(parsedYmdTa,
-        parsedDateTa)) {
+    if (atomizedDateProvided
+        && dateStringProvided
+        && !TemporalAccessorUtils.sameOrContained(parsedYmdTa, parsedDateTa)) {
 
       // eventDate could be ambiguous (5/4/2014), but disambiguated by year-month-day.
       boolean ambiguityResolved = false;
@@ -159,7 +169,12 @@ public class TemporalInterpreter {
           if (TemporalAccessorUtils.sameOrContained(parsedYmdTa, possibleTa)) {
             parsedDateTa = possibleTa;
             ambiguityResolved = true;
-            log.debug("Ambiguous date {} matches year-month-day date {}-{}-{} for {}", dateString, year, month, day,
+            log.debug(
+                "Ambiguous date {} matches year-month-day date {}-{}-{} for {}",
+                dateString,
+                year,
+                month,
+                day,
                 parsedDateTa);
           }
         }
@@ -172,7 +187,8 @@ public class TemporalInterpreter {
       }
 
       // choose the one with better resolution
-      Optional<TemporalAccessor> bestResolution = TemporalAccessorUtils.bestResolution(parsedYmdTa, parsedDateTa);
+      Optional<TemporalAccessor> bestResolution =
+          TemporalAccessorUtils.bestResolution(parsedYmdTa, parsedDateTa);
       if (bestResolution.isPresent()) {
         parsedTemporalAccessor = bestResolution.get();
         // if one of the two results is null we can not set the confidence to DEFINITE
@@ -182,8 +198,10 @@ public class TemporalInterpreter {
       }
     } else {
       // they match, or we only have one anyway, choose the one with better resolution.
-      parsedTemporalAccessor = TemporalAccessorUtils.bestResolution(parsedYmdTa, parsedDateTa).orElse(null);
-      confidence = parsedDateTa != null ? parsedDateResult.getConfidence() : parsedYMDResult.getConfidence();
+      parsedTemporalAccessor =
+          TemporalAccessorUtils.bestResolution(parsedYmdTa, parsedDateTa).orElse(null);
+      confidence =
+          parsedDateTa != null ? parsedDateResult.getConfidence() : parsedYMDResult.getConfidence();
     }
 
     if (!isValidDate(parsedTemporalAccessor, true)) {
@@ -201,21 +219,20 @@ public class TemporalInterpreter {
   }
 
   /**
-   * Check if a date express as TemporalAccessor falls between the predefined range.
-   * Lower bound defined by {@link #MIN_LOCAL_DATE} and upper bound by current date + 1 day
+   * Check if a date express as TemporalAccessor falls between the predefined range. Lower bound
+   * defined by {@link #MIN_LOCAL_DATE} and upper bound by current date + 1 day
    *
    * @return valid or not according to the predefined range.
    */
   public static boolean isValidDate(TemporalAccessor temporalAccessor, boolean acceptPartialDate) {
     LocalDate upperBound = LocalDate.now().plusDays(1);
-    return isValidDate(temporalAccessor, acceptPartialDate, Range.closed(MIN_LOCAL_DATE, upperBound));
+    return isValidDate(
+        temporalAccessor, acceptPartialDate, Range.closed(MIN_LOCAL_DATE, upperBound));
   }
 
-  /**
-   * Check if a date express as TemporalAccessor falls between the provided range.
-   */
-  public static boolean isValidDate(TemporalAccessor temporalAccessor, boolean acceptPartialDate,
-      Range<LocalDate> likelyRange) {
+  /** Check if a date express as TemporalAccessor falls between the provided range. */
+  public static boolean isValidDate(
+      TemporalAccessor temporalAccessor, boolean acceptPartialDate, Range<LocalDate> likelyRange) {
 
     if (temporalAccessor == null) {
       return false;
@@ -229,7 +246,7 @@ public class TemporalInterpreter {
       return likelyRange.contains(localDate);
     }
 
-    //if partial dates should be considered valid
+    // if partial dates should be considered valid
     int year;
     int month = 1;
     int day = 1;
@@ -250,14 +267,12 @@ public class TemporalInterpreter {
     return likelyRange.contains(LocalDate.of(year, month, day));
   }
 
-  /**
-   * @return TemporalAccessor that represents a LocalDate or LocalDateTime
-   */
-  public static OccurrenceParseResult<TemporalAccessor> interpretLocalDate(String dateString,
-      Range<LocalDate> likelyRange,
-      OccurrenceIssue unlikelyIssue) {
+  /** @return TemporalAccessor that represents a LocalDate or LocalDateTime */
+  public static OccurrenceParseResult<TemporalAccessor> interpretLocalDate(
+      String dateString, Range<LocalDate> likelyRange, OccurrenceIssue unlikelyIssue) {
     if (!Strings.isNullOrEmpty(dateString)) {
-      OccurrenceParseResult<TemporalAccessor> result = new OccurrenceParseResult<>(TEXTDATE_PARSER.parse(dateString));
+      OccurrenceParseResult<TemporalAccessor> result =
+          new OccurrenceParseResult<>(TEXTDATE_PARSER.parse(dateString));
       // check year makes sense
       if (result.isSuccessful() && !isValidDate(result.getPayload(), true, likelyRange)) {
         log.debug("Unlikely date parsed, ignore [{}].", dateString);
@@ -267,5 +282,4 @@ public class TemporalInterpreter {
     }
     return OccurrenceParseResult.fail();
   }
-
 }

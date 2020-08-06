@@ -1,13 +1,11 @@
 package org.gbif.pipelines.core.converters;
 
 import java.util.Collections;
-
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,7 +36,11 @@ public class JsonConverterTest {
             .setDecimalLongitude(2d)
             .build();
 
-    MetadataRecord metadataRecord = MetadataRecord.newBuilder().setId("777").setNetworkKeys(Collections.singletonList("NK1")).build();
+    MetadataRecord metadataRecord =
+        MetadataRecord.newBuilder()
+            .setId("777")
+            .setNetworkKeys(Collections.singletonList("NK1"))
+            .build();
 
     String expected =
         "{\"id\":\"777\",\"coreRowType\":\"core\",\"coreTerms\":\"{}\",\"extensions\":\"{}\",\"year\":2000,"
@@ -47,13 +49,14 @@ public class JsonConverterTest {
             + "\"decimalLongitude\":2.0,\"networkKeys\":[\"NK1\"]}";
 
     // When
-    String result = JsonConverter.builder()
-        .record(extendedRecord)
-        .record(temporalRecord)
-        .record(locationRecord)
-        .record(metadataRecord)
-        .build()
-        .toString();
+    String result =
+        JsonConverter.builder()
+            .record(extendedRecord)
+            .record(temporalRecord)
+            .record(locationRecord)
+            .record(metadataRecord)
+            .build()
+            .toString();
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));

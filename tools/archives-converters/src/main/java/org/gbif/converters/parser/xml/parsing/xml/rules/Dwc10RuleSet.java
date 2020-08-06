@@ -3,11 +3,9 @@ package org.gbif.converters.parser.xml.parsing.xml.rules;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
-
-import org.gbif.api.vocabulary.OccurrenceSchemaType;
-
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.RuleSet;
+import org.gbif.api.vocabulary.OccurrenceSchemaType;
 
 public class Dwc10RuleSet extends AbstractDwcRuleSet implements RuleSet {
 

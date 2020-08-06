@@ -1,14 +1,12 @@
 package org.gbif.converters.parser.xml.parsing.xml;
 
 import java.util.Set;
-
-import org.gbif.converters.parser.xml.identifier.UniqueIdentifier;
-
 import javax.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
+import org.gbif.converters.parser.xml.identifier.UniqueIdentifier;
 
 /**
  * Contains the set of {@link UniqueIdentifier} that were extracted from a raw fragment that each
@@ -20,9 +18,7 @@ import lombok.NonNull;
 @EqualsAndHashCode
 public class IdentifierExtractionResult {
 
-  @NonNull
-  private final Set<UniqueIdentifier> uniqueIdentifiers;
+  @NonNull private final Set<UniqueIdentifier> uniqueIdentifiers;
 
-  @Nullable
-  private final String unitQualifier;
+  @Nullable private final String unitQualifier;
 }

@@ -5,15 +5,12 @@ import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
-
-import org.gbif.pipelines.estools.client.EsClient;
-import org.gbif.pipelines.estools.client.EsConfig;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
+import org.gbif.pipelines.estools.client.EsClient;
+import org.gbif.pipelines.estools.client.EsConfig;
 import org.junit.rules.ExternalResource;
-
-import lombok.extern.slf4j.Slf4j;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
@@ -40,7 +37,8 @@ public class EsServer extends ExternalResource {
         EmbeddedElastic.builder()
             .withElasticVersion(getEsVersion())
             .withEsJavaOpts("-Xms128m -Xmx512m")
-            .withInstallationDirectory(Files.createTempDirectory("pipelines-elasticsearch").toFile())
+            .withInstallationDirectory(
+                Files.createTempDirectory("pipelines-elasticsearch").toFile())
             .withCleanInstallationDirectoryOnStop(true)
             .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
             .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())

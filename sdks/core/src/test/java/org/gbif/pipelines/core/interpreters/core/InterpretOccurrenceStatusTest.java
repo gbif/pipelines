@@ -1,21 +1,18 @@
 package org.gbif.pipelines.core.interpreters.core;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.Map;
-
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import org.junit.Test;
-
-import lombok.NoArgsConstructor;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class InterpretOccurrenceStatusTest {
 
@@ -378,7 +375,7 @@ public class InterpretOccurrenceStatusTest {
     public void close() {}
   }
 
-  private void assertIssueSize(BasicRecord br, int expectedSize){
+  private void assertIssueSize(BasicRecord br, int expectedSize) {
     assertEquals(expectedSize, br.getIssues().getIssueList().size());
   }
 

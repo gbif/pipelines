@@ -4,15 +4,12 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Objects;
-
-import org.gbif.pipelines.common.PipelinesVariables.Metrics;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.file.CodecFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
-import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @Slf4j
 public abstract class ConverterToVerbatim {
@@ -113,13 +110,15 @@ public abstract class ConverterToVerbatim {
     return !isConverted;
   }
 
-  private void createMetafile(FileSystem fs, Path metaPath, long numberOfRecords) throws IOException {
+  private void createMetafile(FileSystem fs, Path metaPath, long numberOfRecords)
+      throws IOException {
     if (metaPath != null) {
       String info = Metrics.ARCHIVE_TO_ER_COUNT + ": " + numberOfRecords + "\n";
       FsUtils.createFile(fs, metaPath, info);
     }
   }
 
-  protected abstract long convert(java.nio.file.Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
+  protected abstract long convert(
+      java.nio.file.Path inputPath, SyncDataFileWriter<ExtendedRecord> dataFileWriter)
       throws IOException;
 }
