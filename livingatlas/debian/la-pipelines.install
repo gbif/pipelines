@@ -2,7 +2,7 @@
 pipelines/target/la-pipelines.jar usr/share/la-pipelines/
 scripts/la-pipelines usr/bin
 scripts/logging_lib.sh usr/share/la-pipelines/
-pipelines/target/la-pipelines etc/bash_completion.d/
+pipelines/target/la-pipelines usr/share/bash-completion/completions/
 pipelines/src/main/resources/log4j-colorized.properties data/la-pipelines/config
 pipelines/src/main/resources/log4j.properties data/la-pipelines/config
 configs/la-pipelines.yaml data/la-pipelines/config

@@ -12,13 +12,16 @@
 # $(CURDIR) is the repository directory
 
 CURVERSION=$(shell grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")
+# Set the m2 repo local for fakeroot
+M2_REPO = $(CURDIR)/debian/maven-repo-local
 
 %:
 	dh $@
 
 build:
+# Also we can -DskipITs
+	(cd .. ; mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests)
 #	install don't allow to rename files (like wars), so we copy here the file we want to install with the package
-# $(CURDIR) is the repo directory
 	cp $(CURDIR)/pipelines/target/pipelines-$(CURVERSION)-shaded.jar $(CURDIR)/pipelines/target/la-pipelines.jar
 	cp $(CURDIR)/scripts/la-pipelines-bash-completion.sh $(CURDIR)/pipelines/target/la-pipelines
 
@@ -31,3 +34,6 @@ override_dh_fixperms:
 override_dh_install:
 	dh_install # calls default *.install and *.dirs installation
 #	man install
+
+override_dh_strip_nondeterminism:
+	# this takes to much time because debian/maven-repo-local so skip it for now
