@@ -10,7 +10,7 @@
     - [**Indexing**](#indexing)
 - [**Structure**](#structure)
 - [**How to build the project**](#how-to-build-the-project)
-- [**Codestyle and tools recommendations**](#codestyle-and-tools-recommendations)
+- [**Contributions**](#contributions)
 
 # About the project
 
