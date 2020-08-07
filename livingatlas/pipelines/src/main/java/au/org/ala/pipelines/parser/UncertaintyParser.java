@@ -1,17 +1,18 @@
 package au.org.ala.pipelines.parser;
-import org.gbif.common.parsers.core.ParseResult;
-import org.gbif.common.parsers.geospatial.MeterRangeParser;
+
 import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.common.parsers.core.ParseResult;
+import org.gbif.common.parsers.geospatial.MeterRangeParser;
 
 /**
  * This is a port of
  * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/main/scala/au/org/ala/biocache/parser/DistanceRangeParser.scala
  */
 @Slf4j
-public class DistanceRangeParser extends MeterRangeParser{
+public class UncertaintyParser extends MeterRangeParser {
 
   static String singleNumber = "(-?[0-9]{1,})";
   static String decimalNumber = "(-?[0-9]{1,}[.]{1}[0-9]{1,})";
@@ -42,7 +43,10 @@ public class DistanceRangeParser extends MeterRangeParser{
     if (gl_matcher.find()) {
       String numberStr = gl_matcher.group(2);
       String uom = gl_matcher.group(3);
-      return convertUOM(Double.valueOf(numberStr), uom);
+      ParseResult<Double> iMeter = MeterRangeParser.parseMeters(numberStr + uom);
+      if (iMeter.isSuccessful()) {
+        return iMeter.getPayload();
+      }
     }
 
     // range check
@@ -50,37 +54,26 @@ public class DistanceRangeParser extends MeterRangeParser{
     if (range_matcher.find()) {
       String numberStr = range_matcher.group(3);
       String uom = range_matcher.group(4);
-      return convertUOM(Double.valueOf(numberStr), uom);
+      ParseResult<Double> iMeter = MeterRangeParser.parseMeters(numberStr + uom);
+      if (iMeter.isSuccessful()) {
+        return iMeter.getPayload();
+      }
     }
 
-    if(normalised.matches(singleNumberMetres + "|" + singleNumberFeet +"|" + singleNumberKilometres + "|" + singleNumberInch)){
+    if (normalised.matches(
+        singleNumberMetres
+            + "|"
+            + singleNumberFeet
+            + "|"
+            + singleNumberKilometres
+            + "|"
+            + singleNumberInch)) {
       ParseResult<Double> iMeter = MeterRangeParser.parseMeters(normalised);
-      if(iMeter.isSuccessful()){
+      if (iMeter.isSuccessful()) {
         return iMeter.getPayload();
       }
     }
 
     throw new UnknownFormatConversionException("Uncertainty: " + value + " cannot be parsed!");
-  }
-
-  private static double convertUOM(double value, String uom) {
-    switch (uom.toLowerCase()) {
-      case "m":
-      case "meters":
-      case "metres":
-      case "":
-        return value;
-      case "ft":
-      case "feet":
-      case "f":
-        return value * 0.3048d;
-      case "km":
-      case "kilometers":
-      case "kilometres":
-        return value * 1000d;
-      default:
-        log.error("{} is not recognised UOM", uom);
-        throw new UnknownFormatConversionException(uom + " is not recognised UOM");
-    }
   }
 }
