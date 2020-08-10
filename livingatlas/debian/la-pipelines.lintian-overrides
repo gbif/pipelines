@@ -5,4 +5,4 @@ la-pipelines: script-not-executable usr/share/la-pipelines/logging_lib.sh
 la-pipelines: debian-changelog-line-too-long line *
 la-pipelines: file-in-unusual-dir data/la-pipelines/*
 la-pipelines: spelling-error-in-changelog *
-la-pipelines: jar-contains-source usr/share/la-pipelines/la-pipelines.jar
+la-pipelines: jar-contains-source usr/share/la-pipelines/la-pipelines.jar *
