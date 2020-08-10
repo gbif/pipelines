@@ -20,8 +20,12 @@ DESTDIR=$(CURDIR)/pipelines/target
 	dh $@
 
 override_dh_auto_build:
-# Also we can -DskipITs
-	mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests -X -Djava.net.preferIPv4Stack=true 
+ifeq ($(filter nobuildjar,$(DEB_BUILD_PROFILES)),)
+# This allows to skip the maven jar build (for instance, if its builded by another jenkins job)
+# for instance with debuild -us -uc -b --build-profiles=nobuildjar
+# Also we can -DskipITs tests
+	(cd ..; mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests)
+endif
 
 override_dh_auto_clean:
 #	rm -rf m2
