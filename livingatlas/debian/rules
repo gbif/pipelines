@@ -13,27 +13,35 @@
 
 CURVERSION=$(shell grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")
 # Set the m2 repo local for fakeroot
-M2_REPO = $(CURDIR)/debian/maven-repo-local
+M2_REPO=/tmp/m2
+DESTDIR=$(CURDIR)/pipelines/target
 
 %:
 	dh $@
 
-build:
+override_dh_auto_build:
 # Also we can -DskipITs
-	(cd .. ; mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests)
-#	install don't allow to rename files (like wars), so we copy here the file we want to install with the package
-	cp $(CURDIR)/pipelines/target/pipelines-$(CURVERSION)-shaded.jar $(CURDIR)/pipelines/target/la-pipelines.jar
-	cp $(CURDIR)/scripts/la-pipelines-bash-completion.sh $(CURDIR)/pipelines/target/la-pipelines
+	mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests
 
-override_dh_fixperms:
-	dh_fixperms
+override_dh_auto_clean:
+#	rm -rf m2
+
+override_dh_auto_install:
+#	install don't allow to rename files (like wars), so we copy here the file we want to install with the package
+	cp $(CURDIR)/pipelines/target/pipelines-$(CURVERSION)-shaded.jar $(DESTDIR)/la-pipelines.jar
+	cp $(CURDIR)/scripts/la-pipelines-bash-completion.sh $(DESTDIR)/la-pipelines
+	dh_auto_install
+
+#override_dh_fixperms:
+#	dh_fixperms
 #	If we need to set some special perms to a file
 #	chmod 4755 debian/ala-foo/opt/atlas/ala-foo/foo.jar
 #	Also we use postinstall for this
 
-override_dh_install:
-	dh_install # calls default *.install and *.dirs installation
+#override_dh_install:
+#	dh_install # calls default *.install and *.dirs installation
 #	man install
 
 override_dh_strip_nondeterminism:
-	# this takes to much time because debian/maven-repo-local so skip it for now
+# this takes to much time because debian/maven-repo-local so skip it for now
+# dh_strip_nondeterminism --verbose
