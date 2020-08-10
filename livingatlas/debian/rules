@@ -21,7 +21,7 @@ DESTDIR=$(CURDIR)/pipelines/target
 
 override_dh_auto_build:
 # Also we can -DskipITs
-	mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests
+	mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests -X
 
 override_dh_auto_clean:
 #	rm -rf m2
