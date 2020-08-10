@@ -35,10 +35,10 @@ public class UncertaintyRangeParserTest {
     value = UncertaintyParser.parse("1000inches,");
     assertEquals(25.4, value, 0);
 
-    value = UncertaintyParser.parse(" 1km-20km");
+    value = UncertaintyParser.parse(" 1m-20km");
     assertEquals(20000f, value, 0);
 
-    value = UncertaintyParser.parse(" 1kilometers-20kilometres");
+    value = UncertaintyParser.parse(" 1feet-20kilometres");
     assertEquals(20000f, value, 0);
 
     // GBIF parser's precision set to

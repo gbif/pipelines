@@ -4,6 +4,7 @@ import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.common.Strings;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
 
@@ -26,7 +27,7 @@ public class UncertaintyParser extends MeterRangeParser {
   static String singleNumberInch = "(-?[0-9]{1,})(in|inch|inches)";
 
   /**
-   * Handle these formats: 2000 1km-10km 100m-1000m >10km >100m 100-1000 m
+   * Handle these formats: 2000 1km-10km 100m-1000m >10km >100m 100-1000 m Support inch/feet/km
    *
    * @return the value in metres and the original units
    */
@@ -34,30 +35,24 @@ public class UncertaintyParser extends MeterRangeParser {
     String normalised =
         value.replaceAll("\\[", "").replaceAll(",", "").replaceAll("]", "").toLowerCase().trim();
 
-    if (normalised.matches(singleNumber + "|" + decimalNumber)) {
-      return Double.valueOf(normalised);
-    }
+    String parseStr = "";
 
-    // Sequence of pattern match does matter
+    if (normalised.matches(singleNumber + "|" + decimalNumber)) {
+      parseStr = normalised + "m";
+    }
+    // less or great
     Matcher gl_matcher = Pattern.compile(greaterOrLessThan).matcher(normalised);
     if (gl_matcher.find()) {
       String numberStr = gl_matcher.group(2);
       String uom = gl_matcher.group(3);
-      ParseResult<Double> iMeter = MeterRangeParser.parseMeters(numberStr + uom);
-      if (iMeter.isSuccessful()) {
-        return iMeter.getPayload();
-      }
+      parseStr = numberStr + uom;
     }
-
     // range check
     Matcher range_matcher = Pattern.compile(range).matcher(normalised);
     if (range_matcher.find()) {
       String numberStr = range_matcher.group(3);
       String uom = range_matcher.group(4);
-      ParseResult<Double> iMeter = MeterRangeParser.parseMeters(numberStr + uom);
-      if (iMeter.isSuccessful()) {
-        return iMeter.getPayload();
-      }
+      parseStr = numberStr + uom;
     }
 
     if (normalised.matches(
@@ -68,7 +63,11 @@ public class UncertaintyParser extends MeterRangeParser {
             + singleNumberKilometres
             + "|"
             + singleNumberInch)) {
-      ParseResult<Double> iMeter = MeterRangeParser.parseMeters(normalised);
+      parseStr = normalised;
+    }
+
+    if (!Strings.isNullOrEmpty(parseStr)) {
+      ParseResult<Double> iMeter = MeterRangeParser.parseMeters(parseStr);
       if (iMeter.isSuccessful()) {
         return iMeter.getPayload();
       }
