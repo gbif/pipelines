@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.geocode.LatLng;
 
@@ -47,7 +48,7 @@ public class CentrePoints {
         .forEach(
             l -> {
               String[] ss = l.split("\t");
-              String name = ss[0].toLowerCase();
+              String name = ss[0].toUpperCase();
               LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
               BBox bbox =
                   new BBox(
@@ -68,7 +69,7 @@ public class CentrePoints {
   public boolean coordinatesMatchCentre(
       String location, double decimalLatitude, double decimalLongitude) {
 
-    LatLng supposedCentre = centres.get(location.toLowerCase());
+    LatLng supposedCentre = centres.get(location.toUpperCase());
     if (supposedCentre != null) {
       int latDecPlaces = noOfDecimalPlace(decimalLatitude);
       int longDecPlaces = noOfDecimalPlace(decimalLongitude);
@@ -94,6 +95,14 @@ public class CentrePoints {
   /** @return size of centres */
   public int size() {
     return centres.size();
+  }
+
+  /**
+   *
+   * @return keys
+   */
+  public Set keys(){
+    return centres.keySet();
   }
 
   private double round(double number, int decimalPlaces) {

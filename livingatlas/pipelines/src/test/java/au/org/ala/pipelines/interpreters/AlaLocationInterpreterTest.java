@@ -7,10 +7,12 @@ import static org.junit.Assert.assertNull;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
 import au.org.ala.pipelines.vocabulary.*;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -362,6 +364,23 @@ public class AlaLocationInterpreterTest {
         },
         lr.getIssues().getIssueList().toArray());
     assertEquals(Country.AUSTRALIA.getTitle(), lr.getCountry());
+  }
+
+  /**
+   * List countries not in coutrycentrefile
+   * @throws IOException
+   */
+  @Test
+  public void countryNameMatch() throws IOException{
+    CentrePoints ccp = CountryCentrePoints.getInstance(new LocationInfoConfig());
+    Set<String> countryInFile = ccp.keys();
+
+    for (Country country : Country.values()) {
+      String countryName = country.getTitle().toUpperCase();
+      if (!countryInFile.contains(countryName)){
+         System.out.println(countryName);
+      }
+    }
   }
 
   /** Only works for country */
