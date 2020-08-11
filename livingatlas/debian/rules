@@ -11,7 +11,7 @@
 
 # $(CURDIR) is the repository directory
 
-CURVERSION=$(shell grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")
+CURVERSION=$(shell grep -oPm1 "(?<=<version>)[^<]+" "livingatlas/pom.xml")
 # Set the m2 repo local for fakeroot
 M2_REPO=/tmp/m2
 DESTDIR=$(CURDIR)/livingatlas/pipelines/target
