@@ -14,7 +14,7 @@
 CURVERSION=$(shell grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")
 # Set the m2 repo local for fakeroot
 M2_REPO=/tmp/m2
-DESTDIR=$(CURDIR)/pipelines/target
+DESTDIR=$(CURDIR)/livingatlas/pipelines/target
 
 %:
 	dh $@
@@ -24,7 +24,7 @@ ifeq ($(filter nobuildjar,$(DEB_BUILD_PROFILES)),)
 # This allows to skip the maven jar build (for instance, if its builded by another jenkins job)
 # for instance with debuild -us -uc -b --build-profiles=nobuildjar
 # Also we can -DskipITs tests
-	(cd ..; mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests)
+	mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests
 endif
 
 override_dh_auto_clean:
@@ -32,8 +32,8 @@ override_dh_auto_clean:
 
 override_dh_auto_install:
 #	install don't allow to rename files (like wars), so we copy here the file we want to install with the package
-	cp $(CURDIR)/pipelines/target/pipelines-$(CURVERSION)-shaded.jar $(DESTDIR)/la-pipelines.jar
-	cp $(CURDIR)/scripts/la-pipelines-bash-completion.sh $(DESTDIR)/la-pipelines
+	cp $(CURDIR)/livingatlas/pipelines/target/pipelines-$(CURVERSION)-shaded.jar $(DESTDIR)/la-pipelines.jar
+	cp $(CURDIR)/livingatlas/scripts/la-pipelines-bash-completion.sh $(DESTDIR)/la-pipelines
 	dh_auto_install
 
 #override_dh_fixperms:
