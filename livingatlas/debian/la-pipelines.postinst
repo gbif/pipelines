@@ -21,7 +21,7 @@ case "$1" in
     configure)
         # create la-pipelines-local.yaml only if doesn't exist
         if [ ! -f /data/la-pipelines/config/la-pipelines-local.yaml ] ; then
-            cp /usr/share/doc/la-pipelines/la-pipelines-local.yaml /data/la-pipelines/config/la-pipelines-local.yaml
+            cp /usr/share/doc/la-pipelines/examples/la-pipelines-local.yaml /data/la-pipelines/config/la-pipelines-local.yaml
         fi
     ;;
 esac
