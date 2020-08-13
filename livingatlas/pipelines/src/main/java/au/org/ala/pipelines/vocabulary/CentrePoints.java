@@ -44,20 +44,23 @@ public class CentrePoints {
     new BufferedReader(new InputStreamReader(is))
         .lines()
         .map(s -> s.trim())
-        .filter(l -> l.split("\t").length == 7)
+        .filter(l -> l.split("\t").length == 7 || l.split("\t").length == 3)
         .forEach(
             l -> {
               String[] ss = l.split("\t");
               String name = ss[0].toUpperCase();
               LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
+              if(l.split("\t").length == 7){
               BBox bbox =
                   new BBox(
                       Double.parseDouble(ss[3]),
                       Double.parseDouble(ss[4]),
                       Double.parseDouble(ss[5]),
                       Double.parseDouble(ss[6]));
+                  cp.BBox.put(name, bbox);
+              }
               cp.centres.put(name, centre);
-              cp.BBox.put(name, bbox);
+
             });
     return cp;
   }

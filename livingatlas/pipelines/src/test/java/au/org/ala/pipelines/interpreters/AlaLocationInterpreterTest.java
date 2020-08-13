@@ -372,8 +372,7 @@ public class AlaLocationInterpreterTest {
    */
   @Test
   public void countryNameMatch() throws IOException{
-    CentrePoints ccp = CountryCentrePoints.getInstance(new LocationInfoConfig());
-    Set<String> countryInFile = ccp.keys();
+    Set<String> countryInFile = countryCentrePoints.keys();
 
     for (Country country : Country.values()) {
       String countryName = country.getTitle().toUpperCase();
