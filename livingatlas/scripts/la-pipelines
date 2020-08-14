@@ -214,10 +214,6 @@ SPARK_TMP=$(getConf run.$TYPE.sparkTmp)
 
 SPARK_MASTER=$(getConf run.$TYPE.sparkMaster)
 
-DWCA_IMPORT=$(getConf run.$TYPE.dwcaImportDir)
-
-DWCA_TMP=$(getConf run.$TYPE.dwcaTmp)
-
 log.debug Target $(getConf general.targetPath)
 log.debug Jar: $PIPELINES_JAR
 log.debug Spart tmp: $SPARK_TMP
@@ -256,21 +252,21 @@ function dwca-avro () {
     SECONDS=0
     logStepStart "DWCA-AVRO conversion" $dr
 
-    dwca_dir="$DWCA_IMPORT/$dr/$dr.zip"
+    dwca_dir="/data/biocache-load/$dr/$dr.zip"
 
     if [[ ! -f  $dwca_dir ]]
     then
-        dwca_dir="$DWCA_IMPORT/$dr.zip"
+        dwca_dir="/data/biocache-load/$dr.zip"
     fi
 
     if [[ ! -f  $dwca_dir ]]
     then
-        dwca_dir="$DWCA_IMPORT/$dr.zip"
+        dwca_dir="/data/biocache-load/$dr.zip"
         log.error "$dwca_dir does not exists on your filesystem."
         exit 1
     fi
 
-    $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP -Djava.io.tmpdir=$DWCA_TMP \
+    $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
         -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
         --datasetId=$dr \
         --config=$config $ARGS
@@ -518,7 +514,7 @@ if ($do_all || $dwca_avro) ; then
             dwca-avro $dr
         done
     else
-        rootDir=$DWCA_IMPORT
+        rootDir=/data/biocache-load
         # !!!!!! need to run this command on one vm then run the script !!!!
         # rm -rf $rootDir/dr*.lockdir
 
