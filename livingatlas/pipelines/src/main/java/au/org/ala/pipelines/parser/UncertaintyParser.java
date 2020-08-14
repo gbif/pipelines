@@ -4,9 +4,9 @@ import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
+import com.google.common.base.Strings;
 
 /**
  * This is a port of
@@ -66,7 +66,7 @@ public class UncertaintyParser extends MeterRangeParser {
       parseStr = normalised;
     }
 
-    if (!Strings.isNullOrEmpty(parseStr)) {
+    if ( !Strings.isNullOrEmpty(parseStr)) {
       ParseResult<Double> iMeter = MeterRangeParser.parseMeters(parseStr);
       if (iMeter.isSuccessful()) {
         return iMeter.getPayload();
