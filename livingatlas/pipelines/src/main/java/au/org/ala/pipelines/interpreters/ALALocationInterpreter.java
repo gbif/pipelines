@@ -7,7 +7,7 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.extractValue;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
 import au.org.ala.pipelines.parser.CoordinatesParser;
-import au.org.ala.pipelines.parser.UncertaintyParser;
+import au.org.ala.pipelines.parser.DistanceParser;
 import au.org.ala.pipelines.vocabulary.*;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
@@ -221,7 +221,7 @@ public class ALALocationInterpreter {
       if (!Strings.isNullOrEmpty(precisionValue)) {
         try {
           // convert possible uom to meters
-          double possiblePrecision = UncertaintyParser.parse(precisionValue);
+          double possiblePrecision = DistanceParser.parse(precisionValue);
           if (possiblePrecision > 1) {
             uncertaintyInMeters = possiblePrecision;
             addIssue(lr, ALAOccurrenceIssue.UNCERTAINTY_IN_PRECISION.name());
@@ -236,7 +236,7 @@ public class ALALocationInterpreter {
     } else {
       // Uncertainty available
       try {
-        uncertaintyInMeters = UncertaintyParser.parse(uncertaintyValue);
+        uncertaintyInMeters = DistanceParser.parse(uncertaintyValue);
       } catch (Exception e) {
         if (log.isDebugEnabled()) {
           log.debug("Unable to parse coordinateUncertaintyInMeters: " + uncertaintyValue);

@@ -1,19 +1,19 @@
 package au.org.ala.pipelines.parser;
 
+import com.google.common.base.Strings;
 import java.util.UnknownFormatConversionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.geospatial.MeterRangeParser;
-import com.google.common.base.Strings;
 
 /**
  * This is a port of
  * https://github.com/AtlasOfLivingAustralia/biocache-store/blob/master/src/main/scala/au/org/ala/biocache/parser/DistanceRangeParser.scala
  */
 @Slf4j
-public class UncertaintyParser extends MeterRangeParser {
+public class DistanceParser extends MeterRangeParser {
 
   static String singleNumber = "(-?[0-9]{1,})";
   static String decimalNumber = "(-?[0-9]{1,}[.]{1}[0-9]{1,})";
@@ -66,7 +66,7 @@ public class UncertaintyParser extends MeterRangeParser {
       parseStr = normalised;
     }
 
-    if ( !Strings.isNullOrEmpty(parseStr)) {
+    if (!Strings.isNullOrEmpty(parseStr)) {
       ParseResult<Double> iMeter = MeterRangeParser.parseMeters(parseStr);
       if (iMeter.isSuccessful()) {
         return iMeter.getPayload();
