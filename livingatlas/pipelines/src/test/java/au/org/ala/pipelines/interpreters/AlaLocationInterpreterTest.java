@@ -375,9 +375,9 @@ public class AlaLocationInterpreterTest {
     Set<String> countryInFile = countryCentrePoints.keys();
 
     for (Country country : Country.values()) {
-      String countryName = country.getTitle().toUpperCase();
-      if (!countryInFile.contains(countryName)){
-         System.out.println(countryName);
+      String countryCode = country.getIso2LetterCode().toUpperCase();
+      if (!countryInFile.contains(countryCode)){
+         System.out.println(countryCode + " : " +country.getTitle());
       }
     }
   }

@@ -31,6 +31,9 @@ public class CentrePoints {
   private static CentrePoints cp;
   private final Map<String, LatLng> centres = new HashMap();
   private final Map<String, BBox> BBox = new HashMap();
+  //Only for country, map country code to country name
+  private final Map<String, String> names = new HashMap();
+
 
   private CentrePoints() {}
 
@@ -41,15 +44,23 @@ public class CentrePoints {
 
   public static CentrePoints getInstance(InputStream is) {
     cp = new CentrePoints();
+    // Use country as an example
+    // 3 columns: country code, latitude, longitude,
+    // 4 columns: country code, latitude, longitude,country name
+    // 7 coluns: country code, latitude, longitude, bbox
     new BufferedReader(new InputStreamReader(is))
         .lines()
         .map(s -> s.trim())
-        .filter(l -> l.split("\t").length == 7 || l.split("\t").length == 3)
+        .filter(l -> l.split("\t").length == 7 || l.split("\t").length == 3 || l.split("\t").length == 4)
         .forEach(
             l -> {
               String[] ss = l.split("\t");
-              String name = ss[0].toUpperCase();
+              String key = ss[0].toUpperCase();
               LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
+              if(l.split("\t").length == 4){
+                String fullname = ss[3].toUpperCase();
+                cp.names.put(key,fullname);
+              }
               if(l.split("\t").length == 7){
               BBox bbox =
                   new BBox(
@@ -57,9 +68,9 @@ public class CentrePoints {
                       Double.parseDouble(ss[4]),
                       Double.parseDouble(ss[5]),
                       Double.parseDouble(ss[6]));
-                  cp.BBox.put(name, bbox);
+                  cp.BBox.put(key, bbox);
               }
-              cp.centres.put(name, centre);
+              cp.centres.put(key, centre);
 
             });
     return cp;
@@ -106,6 +117,16 @@ public class CentrePoints {
    */
   public Set keys(){
     return centres.keySet();
+  }
+
+  /**
+   * Only for country centre file.
+   *
+   * @param key country code
+   * @return country name if exists
+   */
+  public String getName(String key){
+    return names.get(key);
   }
 
   private double round(double number, int decimalPlaces) {
