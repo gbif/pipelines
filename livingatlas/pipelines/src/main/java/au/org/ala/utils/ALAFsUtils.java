@@ -180,6 +180,15 @@ public class ALAFsUtils {
     return filePaths;
   }
 
+  public static void deleteMetricsFile(InterpretationPipelineOptions options) {
+    String metadataPath =
+        FsUtils.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    FileSystem fs =
+        FsUtils.getFileSystem(
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), metadataPath);
+    deleteIfExist(fs, metadataPath);
+  }
+
   /**
    * Read a properties file from HDFS/Local FS
    *

@@ -33,6 +33,7 @@ import org.gbif.pipelines.io.avro.LocationFeatureRecord;
 import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.transforms.specific.LocationFeatureTransform;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.MDC;
 
 /** Pipeline that adds a sampling AVRO extension to the stored interpretation. */
 @Slf4j
@@ -43,6 +44,9 @@ public class ALASamplingToAvroPipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "sample-avro");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
+
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
   }
@@ -72,11 +76,13 @@ public class ALASamplingToAvroPipeline {
 
     // Location transform output
     String alaRecordDirectoryPath =
-        options.getTargetPath()
-            + "/"
-            + options.getDatasetId().trim()
-            + "/1/interpreted/"
-            + PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION.name().toLowerCase();
+        String.join(
+            "/",
+            options.getTargetPath(),
+            options.getDatasetId().trim(),
+            options.getAttempt().toString(),
+            "interpreted",
+            PipelinesVariables.Pipeline.Interpretation.RecordType.LOCATION.name().toLowerCase());
 
     // Filter records without lat/long, create map LatLng -> ExtendedRecord.getId()
     PCollection<KV<String, String>> latLngID =

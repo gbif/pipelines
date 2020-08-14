@@ -42,15 +42,14 @@ public class ALAInterpretedToLatLongCSVPipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "export-latlng");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
   }
 
   public static void run(InterpretationPipelineOptions options) throws Exception {
-
-    MDC.put("datasetId", options.getDatasetId());
-    MDC.put("attempt", options.getAttempt().toString());
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =

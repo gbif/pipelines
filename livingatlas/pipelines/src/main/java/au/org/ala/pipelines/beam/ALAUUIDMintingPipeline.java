@@ -35,6 +35,7 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
+import org.slf4j.MDC;
 
 /**
  * Pipeline responsible for minting UUIDs on new records and rematching existing UUIDs to records
@@ -74,6 +75,8 @@ public class ALAUUIDMintingPipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "uuid");
     UUIDPipelineOptions options =
         PipelinesOptionsFactory.create(UUIDPipelineOptions.class, combinedArgs);
+    MDC.put("datasetId", options.getDatasetId());
+    MDC.put("attempt", options.getAttempt().toString());
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
@@ -81,6 +84,9 @@ public class ALAUUIDMintingPipeline {
   }
 
   public static void run(UUIDPipelineOptions options) throws Exception {
+
+    // delete metrics if it exists
+    MetricsHandler.deleteMetricsFile(options);
 
     Pipeline p = Pipeline.create(options);
 
@@ -141,6 +147,7 @@ public class ALAUUIDMintingPipeline {
     }
 
     final String datasetID = options.getDatasetId();
+    final boolean throwErrorForEmptyKey = options.isThrowErrorForEmptyKey();
 
     log.info(
         "Transform 1: ExtendedRecord er ->  <uniqueKey, er.getId()> - this generates the UniqueKey.....");
@@ -209,7 +216,6 @@ public class ALAUUIDMintingPipeline {
     log.info("Running the pipeline");
     PipelineResult result = p.run();
     result.waitUntilFinish();
-    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
 
     Path existingVersionUUids = new Path(alaRecordDirectoryPath);
     Path newVersionUUids = new Path(alaRecordDirectoryPath + "_new");
@@ -223,6 +229,10 @@ public class ALAUUIDMintingPipeline {
     // rename new version to current path
     fs.rename(newVersionUUids, existingVersionUUids);
     log.info("Pipeline complete.");
+
+    log.info("Writing metrics.....");
+    MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
+    log.info("Writing metrics written.");
   }
 
   /**
