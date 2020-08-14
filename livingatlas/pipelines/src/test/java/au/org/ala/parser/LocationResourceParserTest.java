@@ -26,14 +26,20 @@ public class LocationResourceParserTest {
 
   @Test
   public void countryCentreTest() throws FileNotFoundException {
+    //    boolean result =
+    //        CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
+    //            .coordinatesMatchCentre("AUSTRALIA", -29.5328, 145.491477);
+    //    Assert.assertEquals(true, result);
+
+    // -25.73288704	134.4910001
     boolean result =
         CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
-            .coordinatesMatchCentre("AUSTRALIA", -29.5328, 145.491477);
+            .coordinatesMatchCentre("AU", -25.733, 134.491);
     Assert.assertEquals(true, result);
 
     boolean result1 =
         CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
-            .coordinatesMatchCentre("AUSTRALIA", -29.53281, 145.491477);
+            .coordinatesMatchCentre("AU", -29.53281, 145.491477);
     Assert.assertEquals(false, result1);
   }
 

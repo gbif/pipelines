@@ -340,13 +340,11 @@ public class AlaLocationInterpreterTest {
   @Test
   public void assertCountryCentre() {
     KeyValueTestStoreStub store = new KeyValueTestStoreStub();
-    store.put(new LatLng(-29.532804, 145.491477), createCountryResponse(Country.AUSTRALIA));
-
+    store.put(new LatLng(-25.73d, 134.491d), createCountryResponse(Country.AUSTRALIA));
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
-
     Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-29.532804d");
-    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "145.491477d");
+    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-25.73d");
+    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "134.491");
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
@@ -368,16 +366,17 @@ public class AlaLocationInterpreterTest {
 
   /**
    * List countries not in coutrycentrefile
+   *
    * @throws IOException
    */
   @Test
-  public void countryNameMatch() throws IOException{
+  public void countryNameMatch() throws IOException {
     Set<String> countryInFile = countryCentrePoints.keys();
 
     for (Country country : Country.values()) {
       String countryCode = country.getIso2LetterCode().toUpperCase();
-      if (!countryInFile.contains(countryCode)){
-         System.out.println(countryCode + " : " +country.getTitle());
+      if (!countryInFile.contains(countryCode)) {
+        System.out.println(countryCode + " : " + country.getTitle());
       }
     }
   }

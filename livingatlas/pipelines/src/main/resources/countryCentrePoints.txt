@@ -1,241 +1,241 @@
-AW	-69.98267711	12.52088038	Aruba
-AF	66.00473366	33.83523073	Islamic State of Afghanistan
-AO	17.53736768	-12.29336054	People's Republic of Angola
-AI	-63.06498927	18.2239595
-AL	20.04983396	41.14244989	Republic of Albania
-AX	19.95328768	60.21488688	Ãland Islands
-AD	1.56054378	42.54229102	Principality of Andorra
-AE	54.3001671	23.90528188	United Arab Emirates
-AR	-65.17980692	-35.3813488	Argentine Republic
-AM	44.92993276	40.28952569	Republic of Armenia
-AS	-170.7180258	-14.30445997	American Samoa
-AQ	19.92108951	-80.50857913
--99	123.5838379	-12.42993164	Territory of Ashmore and Cartier Islands
-TF	69.22666758	-49.24895485	Territory of the French Southern and Antarctic Lands
-AG	-61.79469343	17.2774996	Antigua and Barbuda
-AU	134.4910001	-25.73288704	Commonwealth of Australia
-AT	14.1264761	47.58549439	Republic of Austria
-AZ	47.54599879	40.28827235	Republic of Azerbaijan
-BI	29.87512156	-3.35939666	Republic of Burundi
-BE	4.64065114	50.63981576	Kingdom of Belgium
-BJ	2.32785254	9.6417597	Republic of Benin
-BF	-1.75456601	12.26953846	Burkina Faso
-BD	90.23812743	23.86731158	People's Republic of Bangladesh
-BG	25.21552909	42.76890318	Republic of Bulgaria
-BH	50.54196932	26.04205135	Kingdom of Bahrain
-CA	-98.30777028	61.36206324	Canada
-BS	-76.62843038	24.29036702	Commonwealth of the Bahamas
-BA	17.76876733	44.17450125	Bosnia and Herzegovina
-BL	-62.84067779	17.89880451	Saint-BarthÃ©lemy
-BY	28.03209307	53.53131377	Republic of Belarus
-BZ	-88.71010486	17.20027509	Belize
-BM	-64.7545589	32.31367802	The Bermudas or Somers Isles
-BO	-64.68538645	-16.70814787	Plurinational State of Bolivia
-BR	-53.09783113	-10.78777702	Federative Republic of Brazil
-BB	-59.559797	13.18145428	Barbados
-BN	114.7220304	4.51968958	Negara Brunei Darussalam
-BT	90.40188155	27.41106589	Kingdom of Bhutan
-BW	23.79853368	-22.18403213	Republic of Botswana
-CF	20.46826831	6.56823297	Central African Republic
-CH	8.20867471	46.79785878	Swiss Confederation
-CL	-71.38256213	-37.73070989	Republic of Chile
-CN	103.8190735	36.56176546	People's Republic of China
-CI	-5.5692157	7.6284262	Republic of Ivory Coast
-CM	12.73964156	5.69109849	Republic of Cameroon
-CD	23.64396107	-2.87746289	Democratic Republic of the Congo
-CG	15.21965762	-0.83787463	Republic of Congo
-CK	-159.7872422	-21.21927288
-CO	-73.08114582	3.91383431	Republic of Colombia
-KM	43.68253968	-11.87783444	Union of the Comoros
-CV	-23.9598882	15.95523324	Republic of Cape Verde
-CR	-84.19208768	9.97634464	Republic of Costa Rica
-CU	-79.01605384	21.62289528	Republic of Cuba
-CW	-68.97119369	12.19551675	CuraÃ§ao
-KY	-80.91213321	19.42896497	Cayman Islands
--99	33.5684813	35.26277486	Turkish Republic of Northern Cyprus
-CY	33.0060022	34.91667211	Republic of Cyprus
-CZ	15.31240163	49.73341233	Czech Republic
-DE	10.38578051	51.10698181	Federal Republic of Germany
-DJ	42.5606754	11.74871806	Republic of Djibouti
-DM	-61.357726	15.4394702	Commonwealth of Dominica
-DK	10.02800992	55.98125296	Kingdom of Denmark
-DO	-70.50568896	18.89433082	Dominican Republic
-DZ	2.61732301	28.15893849	People's Democratic Republic of Algeria
-EC	-78.75201922	-1.42381612	Republic of Ecuador
-EG	29.86190099	26.49593311	Arab Republic of Egypt
-ER	38.84617011	15.36186618	State of Eritrea
-ES	-3.64755047	40.24448698	Kingdom of Spain
-EE	25.54248537	58.67192972	Republic of Estonia
-ET	39.60080098	8.62278679	Federal Democratic Republic of Ethiopia
-FI	26.2746656	64.49884603	Republic of Finland
-FJ	165.4519543	-17.42858032	Republic of Fiji
-FK	-59.35238956	-51.74483954	Falkland Islands
-FR	-2.76172945	42.17344011	French Republic
-FO	-6.88095423	62.05385403	FÃ¸royar Is. (Faeroe Is.)
-FM	153.2394379	7.45246814	Federated States of Micronesia
-GA	11.7886287	-0.58660025	Gabonese Republic
-GB	-2.86563164	54.12387156	United Kingdom of Great Britain and Northern Ireland
-GE	43.50780252	42.16855755	Georgia
-GG	-2.57239064	49.46809761	Bailiwick of Guernsey
-GH	-1.21676566	7.95345644	Republic of Ghana
-GN	-10.94066612	10.43621593	Republic of Guinea
-GM	-15.39601295	13.44965244	Republic of the Gambia
-GW	-14.94972445	12.04744948	Republic of Guinea-Bissau
-GQ	10.34137924	1.70555135	Republic of Equatorial Guinea
-GR	22.95555794	39.07469623	Hellenic Republic
-GD	-61.68220189	12.11725044	Grenada
-GL	-41.34191127	74.71051289	Greenland
-GT	-90.36482009	15.69403664	Republic of Guatemala
-GU	144.7679102	13.44165626	Territory of Guam
-GY	-58.98202459	4.79378034	Co-operative Republic of Guyana
-HK	114.1138045	22.39827737	"Hong Kong Special Administrative Region, PRC"
-HM	73.5205171	-53.08724656	Territory of Heard Island and McDonald Islands
-HN	-86.6151661	14.82688165	Republic of Honduras
-HR	16.40412899	45.08047631	Republic of Croatia
-HT	-72.68527509	18.93502563	Republic of Haiti
-HU	19.39559116	47.16277506	Republic of Hungary
-ID	117.2401137	-2.21505456	Republic of Indonesia
-IM	-4.53873952	54.22418911
-IN	79.6119761	22.88578212	Republic of India
--99	104.851898	-10.6478515
-IO	72.44541229	-7.33059751
-IE	-8.13793569	53.1754487	Ireland
-IR	54.27407004	32.57503292	Islamic Republic of Iran
-IQ	43.74353149	33.03970582	Republic of Iraq
-IS	-18.57396167	64.99575386	Republic of Iceland
-IL	35.00444693	31.46110101	State of Israel
-IT	12.07001339	42.79662641	Italian Republic
-JM	-77.31482593	18.15694878	Jamaica
-JE	-2.12689938	49.21837377	Bailiwick of Jersey
-JO	36.77136104	31.24579091	Hashemite Kingdom of Jordan
-JP	138.0308956	37.59230135	Japan
--99	77.18011865	35.39236325
-KZ	67.29149357	48.15688067	Republic of Kazakhstan
-KE	37.79593973	0.59988022	Republic of Kenya
-KG	74.54165513	41.46221943	Kyrgyz Republic
-KH	104.9069433	12.72004786	Kingdom of Cambodia
-KI	-45.61110513	0.86001503	Republic of Kiribati
-KN	-62.68755265	17.2645995	Federation of Saint Kitts and Nevis
-KR	127.8391609	36.38523983	Republic of Korea
--99	20.87249811	42.57078707	Republic of Kosovo
-KW	47.58700459	29.33431262	State of Kuwait
-LA	103.7377241	18.50217433	Lao People's Democratic Republic
-LB	35.88016072	33.92306631	Lebanese Republic
-LR	-9.32207573	6.45278492	Republic of Liberia
-LY	18.00866169	27.03094495	Libya
-LC	-60.96969923	13.89479481	Saint Lucia
-LI	9.53574312	47.13665835	Principality of Liechtenstein
-LK	80.70108238	7.61266509	Democratic Socialist Republic of Sri Lanka
-LS	28.22723131	-29.58003188	Kingdom of Lesotho
-LT	23.88719355	55.32610984	Republic of Lithuania
-LU	6.07182201	49.76725361	Grand Duchy of Luxembourg
-LV	24.91235983	56.85085163	Republic of Latvia
-MO	113.5093212	22.22311688	"Macao Special Administrative Region, PRC"
-MF	-63.05972851	18.08888611	Saint-Martin (French part)
-MA	-8.45615795	29.83762955	Kingdom of Morocco
-MC	7.40627677	43.75274627	Principality of Monaco
-MD	28.45673372	47.19498804	Republic of Moldova
-MG	46.70473674	-19.37189587	Republic of Madagascar
-MV	73.45713004	3.7287092	Republic of Maldives
-MX	-102.5234517	23.94753724	United Mexican States
-MH	170.3397612	7.00376358	Republic of the Marshall Islands
-MK	21.68211346	41.59530893	Former Yugoslav Republic of Macedonia
-ML	-3.54269065	17.34581581	Republic of Mali
-MT	14.40523316	35.92149632	Republic of Malta
-MM	96.48843321	21.18566599	Republic of the Union of Myanmar
-ME	19.23883939	42.78890259	Montenegro
-MN	103.0529977	46.82681544	Mongolia
-MP	145.6196965	15.82927563	Commonwealth of the Northern Mariana Islands
-MZ	35.53367543	-17.27381643	Republic of Mozambique
-MR	-10.34779815	20.25736706	Islamic Republic of Mauritania
-MS	-62.18518546	16.73941406
-MU	57.57120551	-20.27768704	Republic of Mauritius
-MW	34.28935599	-13.21808088	Republic of Malawi
-MY	109.6976228	3.78986846	Malaysia
-NA	17.20963567	-22.13032568	Republic of Namibia
-NC	165.6849237	-21.29991806	New Caledonia
-NE	9.38545882	17.41912493	Republic of Niger
-NF	167.9492168	-29.0514609	Territory of Norfolk Island
-NG	8.08943895	9.59411452	Federal Republic of Nigeria
-NI	-85.0305297	12.84709429	Republic of Nicaragua
-NU	-169.8699468	-19.04945708
-NL	5.28144793	52.1007899	Kingdom of the Netherlands
-NO	15.34834656	68.75015572	Kingdom of Norway
-NP	83.9158264	28.24891365	Nepal
-NR	166.9325682	-0.51912639	Republic of Nauru
-NZ	171.4849235	-41.81113557	New Zealand
-OM	56.09166155	20.60515333	Sultanate of Oman
-PK	69.33957937	29.9497515	Islamic Republic of Pakistan
-PA	-80.11915156	8.51750797	Republic of Panama
-PN	-128.317042	-24.36500535	"Pitcairn, Henderson, Ducie and Oeno Islands"
-PE	-74.38242685	-9.15280381	Republic of Peru
-PH	122.8839325	11.77536778	Republic of the Philippines
-PW	134.4080797	7.28742784	Republic of Palau
-PG	145.2074475	-6.46416646	Independent State of Papua New Guinea
-PL	19.39012835	52.12759564	Republic of Poland
-PR	-66.47307604	18.22813055	Commonwealth of Puerto Rico
-KP	127.1924797	40.15350311	Democratic People's Republic of Korea
-PT	-8.50104361	39.59550671	Portuguese Republic
-PY	-58.40013703	-23.22823913	Republic of Paraguay
-PS	35.19628705	31.91613893	West Bank and Gaza
-PF	-144.9049439	-14.72227409	French Polynesia
-QA	51.18479632	25.30601188	State of Qatar
-RO	24.97293039	45.85243127	Romania
-RU	96.68656112	61.98052209	Russian Federation
-RW	29.91988515	-1.99033832	Republic of Rwanda
-EH	-12.21982755	24.22956739	Sahrawi Arab Democratic Republic
-SA	44.53686271	24.12245841	Kingdom of Saudi Arabia
-SD	29.94046812	15.99035669	Republic of the Sudan
-SS	30.24790002	7.30877945	Republic of South Sudan
-SN	-14.4734924	14.36624173	Republic of Senegal
-SG	103.8172559	1.35876087	Republic of Singapore
-GS	-36.43318388	-54.46488248	South Georgia and South Sandwich Islands
-SH	-9.54779416	-12.40355951
-SB	159.6328767	-8.92178022
-SL	-11.79271247	8.56329593	Republic of Sierra Leone
-SV	-88.87164469	13.73943744	Republic of El Salvador
-SM	12.45922334	43.94186747	Republic of San Marino
--99	46.25198395	9.73345496	Republic of Somaliland
-SO	45.70714487	4.75062876	Federal Republic of Somalia
-PM	-56.30319779	46.91918789	Saint Pierre and Miquelon
-RS	20.78958334	44.2215032	Republic of Serbia
-ST	6.72429658	0.44391445	Democratic Republic of SÃ£o TomÃ© and Principe
-SR	-55.9123457	4.13055413	Republic of Suriname
-SK	19.47905218	48.70547528	Slovak Republic
-SI	14.80444238	46.11554772	Republic of Slovenia
-SE	16.74558049	62.77966519	Kingdom of Sweden
-SZ	31.4819369	-26.55843045	Kingdom of Swaziland
-SX	-63.05713363	18.05081728	Sint Maarten (Dutch part)
-SC	55.47603279	-4.66099094	Republic of Seychelles
-SY	38.50788204	35.02547389	Syrian Arab Republic
-TC	-71.97387881	21.83047572	Turks and Caicos Islands
-TD	18.64492513	15.33333758	Republic of Chad
-TG	0.96232845	8.52531356	Togolese Republic
-TH	101.0028813	15.11815794	Kingdom of Thailand
-TJ	71.01362631	38.5304539	Republic of Tajikistan
-TM	59.37100021	39.11554137	Turkmenistan
-TL	125.8443898	-8.82889162	Democratic Republic of Timor-Leste
-TO	-174.8098734	-20.42843174	Kingdom of Tonga
-TT	-61.26567923	10.45733408	Republic of Trinidad and Tobago
-TN	9.55288359	34.11956246	Republic of Tunisia
-TR	35.16895346	39.0616029	Republic of Turkey
-TW	120.9542728	23.7539928
-TZ	34.81309981	-6.27565408	United Republic of Tanzania
-UG	32.36907971	1.27469299	Republic of Uganda
-UA	31.38326469	48.99656673	Ukraine
-UY	-56.01807053	-32.79951534	Oriental Republic of Uruguay
-US	-112.4616737	45.6795472	United States of America
-UZ	63.14001528	41.75554225	Republic of Uzbekistan
-VA	12.43387177	41.90174985	State of the Vatican City
-VC	-61.20129695	13.22472269	Saint Vincent and the Grenadines
-VE	-66.18184123	7.12422421	Bolivarian Republic of Venezuela
-VG	-64.47146992	18.52585755	British Virgin Islands
-VI	-64.80301538	17.95500624	Virgin Islands of the United States
-VN	106.299147	16.6460167	Socialist Republic of Vietnam
-VU	167.6864464	-16.22640909	Republic of Vanuatu
-WF	-177.3483483	-13.88737039	Wallis and Futuna Islands
-WS	-172.1648506	-13.75324346	Independent State of Samoa
-YE	47.58676189	15.90928005	Republic of Yemen
-ZA	25.08390093	-29.00034095	Republic of South Africa
-ZM	27.77475946	-13.45824152	Republic of Zambia
-ZW	29.8514412	-19.00420419	Republic of Zimbabwe
+AW	12.52088038	-69.98267711	Aruba
+AF	33.83523073	66.00473366	Islamic State of Afghanistan
+AO	-12.29336054	17.53736768	People's Republic of Angola
+-99	18.2239595	-63.06498927
+AL	41.14244989	20.04983396	Republic of Albania
+-99	60.21488688	19.95328768	Ãland Islands
+AD	42.54229102	1.56054378	Principality of Andorra
+AE	23.90528188	54.3001671	United Arab Emirates
+AR	-35.3813488	-65.17980692	Argentine Republic
+AM	40.28952569	44.92993276	Republic of Armenia
+AS	-14.30445997	-170.7180258	American Samoa
+-99	-80.50857913	19.92108951
+-99	-12.42993164	123.5838379	Territory of Ashmore and Cartier Islands
+-99	-49.24895485	69.22666758	Territory of the French Southern and Antarctic Lands
+AG	17.2774996	-61.79469343	Antigua and Barbuda
+AU	-25.73288704	134.4910001	Commonwealth of Australia
+AT	47.58549439	14.1264761	Republic of Austria
+AZ	40.28827235	47.54599879	Republic of Azerbaijan
+BI	-3.35939666	29.87512156	Republic of Burundi
+BE	50.63981576	4.64065114	Kingdom of Belgium
+BJ	9.6417597	2.32785254	Republic of Benin
+BF	12.26953846	-1.75456601	Burkina Faso
+BD	23.86731158	90.23812743	People's Republic of Bangladesh
+BG	42.76890318	25.21552909	Republic of Bulgaria
+BH	26.04205135	50.54196932	Kingdom of Bahrain
+CA	61.36206324	-98.30777028	Canada
+BS	24.29036702	-76.62843038	Commonwealth of the Bahamas
+BA	44.17450125	17.76876733	Bosnia and Herzegovina
+-99	17.89880451	-62.84067779	Saint-BarthÃ©lemy
+BY	53.53131377	28.03209307	Republic of Belarus
+BZ	17.20027509	-88.71010486	Belize
+BM	32.31367802	-64.7545589	The Bermudas or Somers Isles
+BO	-16.70814787	-64.68538645	Plurinational State of Bolivia
+BR	-10.78777702	-53.09783113	Federative Republic of Brazil
+BB	13.18145428	-59.559797	Barbados
+BN	4.51968958	114.7220304	Negara Brunei Darussalam
+BT	27.41106589	90.40188155	Kingdom of Bhutan
+BW	-22.18403213	23.79853368	Republic of Botswana
+CF	6.56823297	20.46826831	Central African Republic
+CH	46.79785878	8.20867471	Swiss Confederation
+CL	-37.73070989	-71.38256213	Republic of Chile
+CN	36.56176546	103.8190735	People's Republic of China
+CI	7.6284262	-5.5692157	Republic of Ivory Coast
+CM	5.69109849	12.73964156	Republic of Cameroon
+ZR	-2.87746289	23.64396107	Democratic Republic of the Congo
+CG	-0.83787463	15.21965762	Republic of Congo
+-99	-21.21927288	-159.7872422
+CO	3.91383431	-73.08114582	Republic of Colombia
+KM	-11.87783444	43.68253968	Union of the Comoros
+CV	15.95523324	-23.9598882	Republic of Cape Verde
+CR	9.97634464	-84.19208768	Republic of Costa Rica
+CU	21.62289528	-79.01605384	Republic of Cuba
+CW	12.19551675	-68.97119369	CuraÃ§ao
+KY	19.42896497	-80.91213321	Cayman Islands
+-99	35.26277486	33.5684813	Turkish Republic of Northern Cyprus
+CY	34.91667211	33.0060022	Republic of Cyprus
+CZ	49.73341233	15.31240163	Czech Republic
+DE	51.10698181	10.38578051	Federal Republic of Germany
+DJ	11.74871806	42.5606754	Republic of Djibouti
+DM	15.4394702	-61.357726	Commonwealth of Dominica
+DK	55.98125296	10.02800992	Kingdom of Denmark
+DO	18.89433082	-70.50568896	Dominican Republic
+DZ	28.15893849	2.61732301	People's Democratic Republic of Algeria
+EC	-1.42381612	-78.75201922	Republic of Ecuador
+EG	26.49593311	29.86190099	Arab Republic of Egypt
+ER	15.36186618	38.84617011	State of Eritrea
+ES	40.24448698	-3.64755047	Kingdom of Spain
+EE	58.67192972	25.54248537	Republic of Estonia
+ET	8.62278679	39.60080098	Federal Democratic Republic of Ethiopia
+FI	64.49884603	26.2746656	Republic of Finland
+FJ	-17.42858032	165.4519543	Republic of Fiji
+-99	-51.74483954	-59.35238956	Falkland Islands
+FR	42.17344011	-2.76172945	French Republic
+FO	62.05385403	-6.88095423	FÃ¸royar Is. (Faeroe Is.)
+FM	7.45246814	153.2394379	Federated States of Micronesia
+GA	-0.58660025	11.7886287	Gabonese Republic
+GB	54.12387156	-2.86563164	United Kingdom of Great Britain and Northern Ireland
+GE	42.16855755	43.50780252	Georgia
+JG	49.46809761	-2.57239064	Bailiwick of Guernsey
+GH	7.95345644	-1.21676566	Republic of Ghana
+GN	10.43621593	-10.94066612	Republic of Guinea
+GM	13.44965244	-15.39601295	Republic of the Gambia
+GW	12.04744948	-14.94972445	Republic of Guinea-Bissau
+GQ	1.70555135	10.34137924	Republic of Equatorial Guinea
+GR	39.07469623	22.95555794	Hellenic Republic
+GD	12.11725044	-61.68220189	Grenada
+GL	74.71051289	-41.34191127	Greenland
+GT	15.69403664	-90.36482009	Republic of Guatemala
+GU	13.44165626	144.7679102	Territory of Guam
+GY	4.79378034	-58.98202459	Co-operative Republic of Guyana
+HK	22.39827737	114.1138045	"Hong Kong Special Administrative Region, PRC"
+-99	-53.08724656	73.5205171	Territory of Heard Island and McDonald Islands
+HN	14.82688165	-86.6151661	Republic of Honduras
+HR	45.08047631	16.40412899	Republic of Croatia
+HT	18.93502563	-72.68527509	Republic of Haiti
+HU	47.16277506	19.39559116	Republic of Hungary
+ID	-2.21505456	117.2401137	Republic of Indonesia
+IM	54.22418911	-4.53873952
+IN	22.88578212	79.6119761	Republic of India
+-99	-10.6478515	104.851898
+-99	-7.33059751	72.44541229
+IE	53.1754487	-8.13793569	Ireland
+IR	32.57503292	54.27407004	Islamic Republic of Iran
+IQ	33.03970582	43.74353149	Republic of Iraq
+IS	64.99575386	-18.57396167	Republic of Iceland
+IL	31.46110101	35.00444693	State of Israel
+IT	42.79662641	12.07001339	Italian Republic
+JM	18.15694878	-77.31482593	Jamaica
+JG	49.21837377	-2.12689938	Bailiwick of Jersey
+JO	31.24579091	36.77136104	Hashemite Kingdom of Jordan
+JP	37.59230135	138.0308956	Japan
+-99	35.39236325	77.18011865
+KZ	48.15688067	67.29149357	Republic of Kazakhstan
+KE	0.59988022	37.79593973	Republic of Kenya
+KG	41.46221943	74.54165513	Kyrgyz Republic
+KH	12.72004786	104.9069433	Kingdom of Cambodia
+KI	0.86001503	-45.61110513	Republic of Kiribati
+KN	17.2645995	-62.68755265	Federation of Saint Kitts and Nevis
+KR	36.38523983	127.8391609	Republic of Korea
+KV	42.57078707	20.87249811	Republic of Kosovo
+KW	29.33431262	47.58700459	State of Kuwait
+LA	18.50217433	103.7377241	Lao People's Democratic Republic
+LB	33.92306631	35.88016072	Lebanese Republic
+LR	6.45278492	-9.32207573	Republic of Liberia
+LY	27.03094495	18.00866169	Libya
+LC	13.89479481	-60.96969923	Saint Lucia
+LI	47.13665835	9.53574312	Principality of Liechtenstein
+LK	7.61266509	80.70108238	Democratic Socialist Republic of Sri Lanka
+LS	-29.58003188	28.22723131	Kingdom of Lesotho
+LT	55.32610984	23.88719355	Republic of Lithuania
+LU	49.76725361	6.07182201	Grand Duchy of Luxembourg
+LV	56.85085163	24.91235983	Republic of Latvia
+MO	22.22311688	113.5093212	"Macao Special Administrative Region, PRC"
+MF	18.08888611	-63.05972851	Saint-Martin (French part)
+MA	29.83762955	-8.45615795	Kingdom of Morocco
+MC	43.75274627	7.40627677	Principality of Monaco
+MD	47.19498804	28.45673372	Republic of Moldova
+MG	-19.37189587	46.70473674	Republic of Madagascar
+MV	3.7287092	73.45713004	Republic of Maldives
+MX	23.94753724	-102.5234517	United Mexican States
+MH	7.00376358	170.3397612	Republic of the Marshall Islands
+MK	41.59530893	21.68211346	Former Yugoslav Republic of Macedonia
+ML	17.34581581	-3.54269065	Republic of Mali
+MT	35.92149632	14.40523316	Republic of Malta
+MM	21.18566599	96.48843321	Republic of the Union of Myanmar
+ME	42.78890259	19.23883939	Montenegro
+MN	46.82681544	103.0529977	Mongolia
+MP	15.82927563	145.6196965	Commonwealth of the Northern Mariana Islands
+MZ	-17.27381643	35.53367543	Republic of Mozambique
+MR	20.25736706	-10.34779815	Islamic Republic of Mauritania
+-99	16.73941406	-62.18518546
+MU	-20.27768704	57.57120551	Republic of Mauritius
+MW	-13.21808088	34.28935599	Republic of Malawi
+MY	3.78986846	109.6976228	Malaysia
+NA	-22.13032568	17.20963567	Republic of Namibia
+NC	-21.29991806	165.6849237	New Caledonia
+NE	17.41912493	9.38545882	Republic of Niger
+-99	-29.0514609	167.9492168	Territory of Norfolk Island
+NG	9.59411452	8.08943895	Federal Republic of Nigeria
+NI	12.84709429	-85.0305297	Republic of Nicaragua
+-99	-19.04945708	-169.8699468
+NL	52.1007899	5.28144793	Kingdom of the Netherlands
+NO	68.75015572	15.34834656	Kingdom of Norway
+NP	28.24891365	83.9158264	Nepal
+-99	-0.51912639	166.9325682	Republic of Nauru
+NZ	-41.81113557	171.4849235	New Zealand
+OM	20.60515333	56.09166155	Sultanate of Oman
+PK	29.9497515	69.33957937	Islamic Republic of Pakistan
+PA	8.51750797	-80.11915156	Republic of Panama
+-99	-24.36500535	-128.317042	"Pitcairn, Henderson, Ducie and Oeno Islands"
+PE	-9.15280381	-74.38242685	Republic of Peru
+PH	11.77536778	122.8839325	Republic of the Philippines
+PW	7.28742784	134.4080797	Republic of Palau
+PG	-6.46416646	145.2074475	Independent State of Papua New Guinea
+PL	52.12759564	19.39012835	Republic of Poland
+PR	18.22813055	-66.47307604	Commonwealth of Puerto Rico
+KP	40.15350311	127.1924797	Democratic People's Republic of Korea
+PT	39.59550671	-8.50104361	Portuguese Republic
+PY	-23.22823913	-58.40013703	Republic of Paraguay
+GZ	31.91613893	35.19628705	West Bank and Gaza
+PF	-14.72227409	-144.9049439	French Polynesia
+QA	25.30601188	51.18479632	State of Qatar
+RO	45.85243127	24.97293039	Romania
+RU	61.98052209	96.68656112	Russian Federation
+RW	-1.99033832	29.91988515	Republic of Rwanda
+-99	24.22956739	-12.21982755	Sahrawi Arab Democratic Republic
+SA	24.12245841	44.53686271	Kingdom of Saudi Arabia
+SD	15.99035669	29.94046812	Republic of the Sudan
+SS	7.30877945	30.24790002	Republic of South Sudan
+SN	14.36624173	-14.4734924	Republic of Senegal
+SG	1.35876087	103.8172559	Republic of Singapore
+-99	-54.46488248	-36.43318388	South Georgia and South Sandwich Islands
+-99	-12.40355951	-9.54779416
+SB	-8.92178022	159.6328767
+SL	8.56329593	-11.79271247	Republic of Sierra Leone
+SV	13.73943744	-88.87164469	Republic of El Salvador
+SM	43.94186747	12.45922334	Republic of San Marino
+-99	9.73345496	46.25198395	Republic of Somaliland
+SO	4.75062876	45.70714487	Federal Republic of Somalia
+-99	46.91918789	-56.30319779	Saint Pierre and Miquelon
+YF	44.2215032	20.78958334	Republic of Serbia
+ST	0.44391445	6.72429658	Democratic Republic of SÃ£o TomÃ© and Principe
+SR	4.13055413	-55.9123457	Republic of Suriname
+SK	48.70547528	19.47905218	Slovak Republic
+SI	46.11554772	14.80444238	Republic of Slovenia
+SE	62.77966519	16.74558049	Kingdom of Sweden
+SZ	-26.55843045	31.4819369	Kingdom of Swaziland
+SX	18.05081728	-63.05713363	Sint Maarten (Dutch part)
+SC	-4.66099094	55.47603279	Republic of Seychelles
+SY	35.02547389	38.50788204	Syrian Arab Republic
+TC	21.83047572	-71.97387881	Turks and Caicos Islands
+TD	15.33333758	18.64492513	Republic of Chad
+TG	8.52531356	0.96232845	Togolese Republic
+TH	15.11815794	101.0028813	Kingdom of Thailand
+TJ	38.5304539	71.01362631	Republic of Tajikistan
+TM	39.11554137	59.37100021	Turkmenistan
+TP	-8.82889162	125.8443898	Democratic Republic of Timor-Leste
+TO	-20.42843174	-174.8098734	Kingdom of Tonga
+TT	10.45733408	-61.26567923	Republic of Trinidad and Tobago
+TN	34.11956246	9.55288359	Republic of Tunisia
+TR	39.0616029	35.16895346	Republic of Turkey
+-99	23.7539928	120.9542728
+TZ	-6.27565408	34.81309981	United Republic of Tanzania
+UG	1.27469299	32.36907971	Republic of Uganda
+UA	48.99656673	31.38326469	Ukraine
+UY	-32.79951534	-56.01807053	Oriental Republic of Uruguay
+US	45.6795472	-112.4616737	United States of America
+UZ	41.75554225	63.14001528	Republic of Uzbekistan
+-99	41.90174985	12.43387177	State of the Vatican City
+VC	13.22472269	-61.20129695	Saint Vincent and the Grenadines
+VE	7.12422421	-66.18184123	Bolivarian Republic of Venezuela
+-99	18.52585755	-64.47146992	British Virgin Islands
+VI	17.95500624	-64.80301538	Virgin Islands of the United States
+VN	16.6460167	106.299147	Socialist Republic of Vietnam
+VU	-16.22640909	167.6864464	Republic of Vanuatu
+-99	-13.88737039	-177.3483483	Wallis and Futuna Islands
+WS	-13.75324346	-172.1648506	Independent State of Samoa
+RY	15.90928005	47.58676189	Republic of Yemen
+ZA	-29.00034095	25.08390093	Republic of South Africa
+ZM	-13.45824152	27.77475946	Republic of Zambia
+ZW	-19.00420419	29.8514412	Republic of Zimbabwe

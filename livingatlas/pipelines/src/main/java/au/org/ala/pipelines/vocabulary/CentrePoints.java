@@ -31,9 +31,8 @@ public class CentrePoints {
   private static CentrePoints cp;
   private final Map<String, LatLng> centres = new HashMap();
   private final Map<String, BBox> BBox = new HashMap();
-  //Only for country, map country code to country name
+  // Only for country, map country code to country name
   private final Map<String, String> names = new HashMap();
-
 
   private CentrePoints() {}
 
@@ -51,27 +50,28 @@ public class CentrePoints {
     new BufferedReader(new InputStreamReader(is))
         .lines()
         .map(s -> s.trim())
-        .filter(l -> l.split("\t").length == 7 || l.split("\t").length == 3 || l.split("\t").length == 4)
+        .filter(
+            l ->
+                l.split("\t").length == 7 || l.split("\t").length == 3 || l.split("\t").length == 4)
         .forEach(
             l -> {
               String[] ss = l.split("\t");
               String key = ss[0].toUpperCase();
               LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
-              if(l.split("\t").length == 4){
+              if (l.split("\t").length == 4) {
                 String fullname = ss[3].toUpperCase();
-                cp.names.put(key,fullname);
+                cp.names.put(key, fullname);
               }
-              if(l.split("\t").length == 7){
-              BBox bbox =
-                  new BBox(
-                      Double.parseDouble(ss[3]),
-                      Double.parseDouble(ss[4]),
-                      Double.parseDouble(ss[5]),
-                      Double.parseDouble(ss[6]));
-                  cp.BBox.put(key, bbox);
+              if (l.split("\t").length == 7) {
+                BBox bbox =
+                    new BBox(
+                        Double.parseDouble(ss[3]),
+                        Double.parseDouble(ss[4]),
+                        Double.parseDouble(ss[5]),
+                        Double.parseDouble(ss[6]));
+                cp.BBox.put(key, bbox);
               }
               cp.centres.put(key, centre);
-
             });
     return cp;
   }
@@ -111,11 +111,8 @@ public class CentrePoints {
     return centres.size();
   }
 
-  /**
-   *
-   * @return keys
-   */
-  public Set keys(){
+  /** @return keys */
+  public Set keys() {
     return centres.keySet();
   }
 
@@ -125,7 +122,7 @@ public class CentrePoints {
    * @param key country code
    * @return country name if exists
    */
-  public String getName(String key){
+  public String getName(String key) {
     return names.get(key);
   }
 
