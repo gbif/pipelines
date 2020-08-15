@@ -32,6 +32,11 @@ public class DumpDatasetSize {
       description = "The absolute path to a hdfs-site.xml with default.FS configuration")
   private String hdfsSiteConfig;
 
+  @Parameter(
+      names = "--coreSiteConfig",
+      description = "The absolute path to a core-site.xml with default.FS configuration")
+  private String coreSiteConfig;
+
   public static void main(String[] args) throws Exception {
 
     String[] combinedArgs =
@@ -50,7 +55,7 @@ public class DumpDatasetSize {
 
   public void run() throws Exception {
 
-    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig).getFs("/");
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
     Map<String, Long> counts = new HashMap<String, Long>();
 
     FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
