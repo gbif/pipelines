@@ -220,7 +220,7 @@ DWCA_TMP=$(getConf run.$TYPE.dwcaTmp)
 
 log.debug Target $(getConf general.targetPath)
 log.debug Jar: $PIPELINES_JAR
-log.debug Spart tmp: $SPARK_TMP
+log.debug Spark tmp: $SPARK_TMP
 
 FS_PATH_ARG="--fsPath=$FS_PATH"
 
@@ -270,7 +270,9 @@ function dwca-avro () {
         exit 1
     fi
 
-    $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP -Djava.io.tmpdir=$DWCA_TMP \
+    export TMPDIR=$DWCA_TMP
+
+    $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
         -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
         --datasetId=$dr \
         --config=$config $ARGS
@@ -317,7 +319,7 @@ function interpret () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -355,7 +357,7 @@ function uuid () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -392,7 +394,7 @@ function export-latlng () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -447,7 +449,7 @@ function sample-avro () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -496,7 +498,7 @@ function index () {
             $(toArg $PRE driver-memory) \
             --class $CLASS  \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
