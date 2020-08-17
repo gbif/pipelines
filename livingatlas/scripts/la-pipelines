@@ -26,7 +26,14 @@ set -e # Stop on any failure
 if [[ $SCRIPTPATH == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
 
 if [[ $PROD = false ]]; then
-    VER=$(grep -oPm1 "(?<=<version>)[^<]+" "../pom.xml")
+  # the grep function doesnt work on Mac OSX - perl regex arent supported,
+  # unless you install grep with `brew install grep`
+  # see https://apple.stackexchange.com/questions/193288/how-to-install-and-use-gnu-grep-in-macos
+  if [[ "$OSTYPE" == "darwin"*  ]]; then
+    VER=$(ggrep -oPm1 "(?<=<version>)[^<]+" "../pom.xml")
+  else
+    VER=$(grep -om1 "(?<=<version>)[^<]+" "../pom.xml")
+  fi
 else
     VER=$(dpkg-query --show -f '${Version}' la-pipelines)
 fi

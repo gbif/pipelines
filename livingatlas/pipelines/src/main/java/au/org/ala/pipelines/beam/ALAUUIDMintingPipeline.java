@@ -7,6 +7,7 @@ import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationUtils;
 import java.util.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,6 @@ import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.TypeDescriptor;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.dwc.terms.DwcTerm;
@@ -34,7 +34,6 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.parsers.utils.ModelUtils;
 import org.slf4j.MDC;
 
 /**
@@ -88,6 +87,19 @@ public class ALAUUIDMintingPipeline {
 
     // delete metrics if it exists
     MetricsHandler.deleteMetricsFile(options);
+
+    // run the validation pipeline
+    ALAUUIDValidationPipeline.run(options);
+
+    // check validation results
+    boolean validationPassed = ValidationUtils.checkValidationFile(options);
+
+    if (!validationPassed) {
+      log.error(
+          "Unable to run UUID pipeline. Please check validation file: "
+              + ValidationUtils.getValidationFilePath(options));
+      return;
+    }
 
     Pipeline p = Pipeline.create(options);
 
@@ -164,7 +176,8 @@ public class ALAUUIDMintingPipeline {
                           ProcessContext c) {
                         out.output(
                             KV.of(
-                                generateUniqueKey(datasetID, source, uniqueDwcTerms),
+                                ValidationUtils.generateUniqueKey(
+                                    datasetID, source, uniqueDwcTerms),
                                 source.getId()));
                       }
                     }));
@@ -224,51 +237,6 @@ public class ALAUUIDMintingPipeline {
     log.info("Writing metrics.....");
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
     log.info("Writing metrics written.");
-  }
-
-  /**
-   * Generate a unique key based on the darwin core fields. This works the same was unique keys
-   * where generated in the biocache-store. This is repeated to maintain backwards compatibility
-   * with existing data holdings.
-   *
-   * @param source
-   * @param uniqueTerms
-   * @return
-   * @throws RuntimeException
-   */
-  public static String generateUniqueKey(
-      String datasetID, ExtendedRecord source, List<Term> uniqueTerms) throws RuntimeException {
-
-    // if the unique terms list is empty, generate a random UUID
-    if (uniqueTerms.isEmpty()) {
-      return UUID.randomUUID().toString();
-    }
-
-    List<String> uniqueValues = new ArrayList<String>();
-    boolean allUniqueValuesAreEmpty = true;
-    for (Term term : uniqueTerms) {
-      String value = ModelUtils.extractNullAwareValue(source, term);
-      if (value != null && StringUtils.trimToNull(value) != null) {
-        // we have a term with a value
-        allUniqueValuesAreEmpty = false;
-        uniqueValues.add(value.trim());
-      }
-    }
-
-    if (allUniqueValuesAreEmpty) {
-      log.error(
-          "Unable to load dataset "
-              + datasetID
-              + ". All supplied unique terms where empty record with ID "
-              + source.getId());
-      System.exit(1);
-    }
-
-    // add the datasetID
-    uniqueValues.add(0, datasetID);
-
-    // create the unique key
-    return String.join(UNIQUE_COMPOSITE_KEY_JOIN_CHAR, uniqueValues);
   }
 
   /** Function to create ALAUUIDRecords. */
