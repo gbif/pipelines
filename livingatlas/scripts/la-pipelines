@@ -290,6 +290,7 @@ function interpret () {
 
     PRE=interpret-sh-args.local
     if [[ $ltype = "local" ]] ; then
+        CLASS=au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline
         $_D java $EXTRA_JVM_CLI_ARGS \
             $(getConf $PRE.jvm) \
             -cp $PIPELINES_JAR $CLASS \
