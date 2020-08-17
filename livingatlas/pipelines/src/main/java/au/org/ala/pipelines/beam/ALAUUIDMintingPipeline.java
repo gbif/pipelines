@@ -77,6 +77,7 @@ public class ALAUUIDMintingPipeline {
         PipelinesOptionsFactory.create(UUIDPipelineOptions.class, combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", "UUID");
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
@@ -113,26 +114,17 @@ public class ALAUUIDMintingPipeline {
     // lookup collectory metadata for this data resource
     ALACollectoryMetadata collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
     if (collectoryMetadata.equals(ALACollectoryMetadata.EMPTY)) {
-      throw new RuntimeException(
-          "Unable to retrieve dataset metadata for dataset: " + options.getDatasetId());
+      log.error("Unable to retrieve dataset metadata for dataset: " + options.getDatasetId());
+      System.exit(1);
     }
 
     // construct unique list of darwin core terms
     List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
 
     if ((uniqueTerms == null || uniqueTerms.isEmpty())) {
-
-      if (!options.isAllowEmptyUniqueTerms()) {
-        throw new RuntimeException(
-            "No unique terms specified for dataset: " + options.getDatasetId());
-      } else {
-        log.warn(
-            "No unique terms specified for dataset {}. Proceeding as allowEmptyUniqueTerms=true",
-            options.getDatasetId());
-        if (uniqueTerms == null) {
-          uniqueTerms = Collections.emptyList();
-        }
-      }
+      log.error(
+          "Unable to proceed, No unique terms specified for dataset: " + options.getDatasetId());
+      System.exit(1);
     }
 
     final List<Term> uniqueDwcTerms = new ArrayList<Term>();
@@ -147,7 +139,6 @@ public class ALAUUIDMintingPipeline {
     }
 
     final String datasetID = options.getDatasetId();
-    final boolean throwErrorForEmptyKey = options.isThrowErrorForEmptyKey();
 
     log.info(
         "Transform 1: ExtendedRecord er ->  <uniqueKey, er.getId()> - this generates the UniqueKey.....");
@@ -265,11 +256,12 @@ public class ALAUUIDMintingPipeline {
     }
 
     if (allUniqueValuesAreEmpty) {
-      throw new RuntimeException(
+      log.error(
           "Unable to load dataset "
               + datasetID
               + ". All supplied unique terms where empty record with ID "
               + source.getId());
+      System.exit(1);
     }
 
     // add the datasetID

@@ -46,6 +46,7 @@ public class ALASamplingToAvroPipeline {
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", "SAMPLING_AVRO");
 
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);

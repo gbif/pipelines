@@ -69,6 +69,7 @@ public class LayerCrawler {
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
+    MDC.put("step", "SAMPLING");
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
