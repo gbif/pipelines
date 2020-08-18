@@ -3,6 +3,8 @@ package au.org.ala.utils;
 import static au.org.ala.pipelines.beam.ALAUUIDMintingPipeline.UNIQUE_COMPOSITE_KEY_JOIN_CHAR;
 
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
+
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -75,6 +77,60 @@ public class ValidationUtils {
     } else {
       log.error("Enable to read validation file. Has validation pipeline failed ?");
       return false;
+    }
+  }
+
+  /**
+   * Checks the content of the validate file, returning true if the UUID content has been checked
+   * and is thought to be valid.
+   *
+   * @param options
+   * @return
+   */
+  public static Long getDuplicateKeyCount(UUIDPipelineOptions options) throws Exception {
+    FileSystem fs =
+            FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+                    .getFs(options.getInputPath());
+    String validateFilePath = getValidationFilePath(options);
+    Path metrics = new Path(validateFilePath);
+
+    if (fs.exists(metrics)) {
+      // read YAML
+      Yaml yaml = new Yaml();
+      // the YAML files created by metrics are UTF-16 encoded
+      Map<String, Object> yamlObject =
+              yaml.load(new InputStreamReader(fs.open(metrics), StandardCharsets.UTF_8));
+
+      return Long.parseLong(yamlObject.getOrDefault(DUPLICATE_KEY_COUNT, -1L).toString());
+    } else {
+      throw new FileNotFoundException();
+    }
+  }
+
+  /**
+   * Checks the content of the validate file, returning true if the UUID content has been checked
+   * and is thought to be valid.
+   *
+   * @param options
+   * @return
+   */
+  public static Long getInvalidRecordCount(UUIDPipelineOptions options) throws Exception {
+    FileSystem fs =
+            FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+                    .getFs(options.getInputPath());
+    String validateFilePath = getValidationFilePath(options);
+    Path metrics = new Path(validateFilePath);
+
+    if (fs.exists(metrics)) {
+      // read YAML
+      Yaml yaml = new Yaml();
+      // the YAML files created by metrics are UTF-16 encoded
+      Map<String, Object> yamlObject =
+              yaml.load(new InputStreamReader(fs.open(metrics), StandardCharsets.UTF_8));
+
+      return Long.parseLong(yamlObject.getOrDefault(INVALID_RECORDS, -1L).toString());
+    } else {
+      throw new FileNotFoundException();
     }
   }
 
