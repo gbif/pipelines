@@ -23,6 +23,11 @@ import org.yaml.snakeyaml.Yaml;
 @Slf4j
 public class ValidationUtils {
 
+  public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
+  public static final String INVALID_RECORDS = "invalidRecords";
+  public static final String DUPLICATE_RECORD_KEY_COUNT = "duplicateRecordKeyCount";
+  public static final String VALIDATION_REPORT_FILE = "validate-report.yaml";
+
   /**
    * Checks the content of the validate file, returning true if the UUID content has been checked
    * and is thought to be valid.
@@ -46,7 +51,7 @@ public class ValidationUtils {
 
       // check invalid record count
       Long invalidRecords =
-          Long.parseLong(yamlObject.getOrDefault("invalidRecords", -1L).toString());
+          Long.parseLong(yamlObject.getOrDefault(INVALID_RECORDS, -1L).toString());
 
       if (invalidRecords > 0) {
         log.error("Records with invalid values for unique terms: " + invalidRecords);
@@ -55,14 +60,17 @@ public class ValidationUtils {
       if (invalidRecords != 0) return false;
 
       // check duplicate record count
-      Long duplicateRecords =
-          Long.parseLong(yamlObject.getOrDefault("duplicateRecords", -1L).toString());
+      Long duplicateKeyCount =
+          Long.parseLong(yamlObject.getOrDefault(DUPLICATE_KEY_COUNT, -1L).toString());
+      Long duplicateRecordKeyCount =
+          Long.parseLong(yamlObject.getOrDefault(DUPLICATE_RECORD_KEY_COUNT, -1L).toString());
 
-      if (duplicateRecords > 0) {
-        log.error("The number of duplicate keys: " + duplicateRecords);
+      if (duplicateKeyCount > 0) {
+        log.error("The number of duplicate keys: " + duplicateKeyCount);
+        log.error("The number of records with duplicate keys: " + duplicateRecordKeyCount);
       }
 
-      return duplicateRecords == 0;
+      return duplicateKeyCount == 0;
 
     } else {
       log.error("Enable to read validation file. Has validation pipeline failed ?");
@@ -78,7 +86,7 @@ public class ValidationUtils {
             options.getTargetPath(),
             options.getDatasetId().trim(),
             options.getAttempt().toString(),
-            "validate-report.yaml");
+            VALIDATION_REPORT_FILE);
     return validateFilePath;
   }
 

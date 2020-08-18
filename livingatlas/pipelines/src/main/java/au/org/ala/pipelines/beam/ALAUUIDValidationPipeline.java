@@ -1,5 +1,7 @@
 package au.org.ala.pipelines.beam;
 
+import static au.org.ala.utils.ValidationUtils.*;
+
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.ALAPipelinesConfigFactory;
 import au.org.ala.kvs.cache.ALAAttributionKVStoreFactory;
@@ -24,39 +26,23 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.gbif.converters.converter.FileSystemFactory;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.io.avro.ALAUUIDRecord;
+import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.parsers.utils.ModelUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 
 /**
- * Pipeline responsible for minting UUIDs on new records and rematching existing UUIDs to records
- * that have been previously loaded.
- *
- * <p>This works by:
- *
- * <p>1. Creating a map from ExtendedRecord of UniqueKey -> ExtendedRecord.getId(). The UniqueKey is
- * constructed using the unique terms specified in the collectory.
- *
- * <p>2. Creating a map from source of UniqueKey -> UUID from previous ingestions (this will be
- * blank for newly imported datasets)
- *
- * <p>3. Joining the two maps by the UniqueKey.
- *
- * <p>4. Writing out ALAUUIDRecords containing ExtendedRecord.getId() -> (UUID, UniqueKey). These
- * records are then used in SOLR index generation.
- *
- * <p>5. Backing up previous AVRO ALAUUIDRecords.
- *
- * <p>The end result is a AVRO export ALAUUIDRecords which are then used as a mandatory extension in
- * the generation of the SOLR index.
- *
- * @see ALAUUIDRecord
+ * Pipeline responsible for validation of unique key data. This pipeline produces a YAML report that
+ * is read by {@link ALAUUIDMintingPipeline}. {@link ALAUUIDMintingPipeline} will not run if
+ * validation has failed.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -77,8 +63,10 @@ public class ALAUUIDValidationPipeline {
 
   public static void run(UUIDPipelineOptions options) throws Exception {
 
-    // delete metrics if it exists
     Pipeline p = Pipeline.create(options);
+
+    //deletePreviousValidation
+    deletePreviousValidation(options);
 
     // validation results
     PCollectionList<String> results = PCollectionList.<String>empty(p);
@@ -178,7 +166,7 @@ public class ALAUUIDValidationPipeline {
               .apply(
                   "FormatResults",
                   MapElements.into(TypeDescriptors.strings())
-                      .via(longValue -> "invalidRecords: " + longValue.toString()));
+                      .via(longValue -> INVALID_RECORDS + ": " + longValue.toString()));
 
       // add the invalid key records
       results = results.and(invalidKeyResults.setCoder(StringUtf8Coder.of()));
@@ -201,24 +189,59 @@ public class ALAUUIDValidationPipeline {
                       }))
               .apply(Count.<String>perElement());
 
-      PCollection<String> duplicateKeyResults =
-          keyCounts
+      // filter keys that are used more than once
+      PCollection<KV<String, Long>> duplicateKeyCounts = keyCounts
               .apply(
-                  Filter.by(
-                      new SerializableFunction<KV<String, Long>, Boolean>() {
-                        @Override
-                        public Boolean apply(KV<String, Long> input) {
-                          return input.getValue() > 1;
+                      Filter.by(
+                              new SerializableFunction<KV<String, Long>, Boolean>() {
+                                @Override
+                                public Boolean apply(KV<String, Long> input) {
+                                  return input.getValue() > 1;
+                                }
+                              }));
+
+      // retrieve a count of records with duplicate keys problems
+      PCollection<String> duplicateKeyCount =
+              duplicateKeyCounts
+              .apply(
+                  ParDo.of(
+                      new DoFn<KV<String, Long>, Long>() {
+                        @ProcessElement
+                        public void processElement(
+                            @Element KV<String, Long> kv,
+                            OutputReceiver<Long> out,
+                            ProcessContext c) {
+                          out.output(kv.getValue());
                         }
                       }))
+              .apply(Sum.longsGlobally())
+              .apply(
+                  MapElements.into(TypeDescriptors.strings())
+                      .via(longValue -> DUPLICATE_RECORD_KEY_COUNT + ": " + longValue.toString()));
+      results = results.and(duplicateKeyCount.setCoder(StringUtf8Coder.of()));
+
+      // retrieve a count of duplicate keys
+      PCollection<String> duplicateKeyResults = duplicateKeyCounts
               .apply(Count.globally())
               .apply(
-                  "FormatResults",
                   MapElements.into(TypeDescriptors.strings())
-                      .via(longValue -> "duplicateRecords: " + longValue.toString()));
+                      .via(longValue -> DUPLICATE_KEY_COUNT + ": " + longValue.toString()));
 
       // add the duplicate key records
       results = results.and(duplicateKeyResults.setCoder(StringUtf8Coder.of()));
+
+      // dump out duplicate keys to CSV
+      duplicateKeyCounts
+              .apply(MapElements.into(TypeDescriptors.strings())
+                      .via(kv ->  kv.getKey() + "," + kv.getValue()))
+              .apply(
+                      TextIO.write()
+                              .to(
+                                      String.join(
+                                              "/",
+                                    getValidationFilePath(options, "validation"),
+                                              "duplicateKeys.csv"))
+                              .withoutSharding());
     }
 
     // write out all results to YAML file
@@ -227,18 +250,31 @@ public class ALAUUIDValidationPipeline {
         .setCoder(StringUtf8Coder.of())
         .apply(
             TextIO.write()
-                .to(
-                    String.join(
-                        "/",
-                        options.getTargetPath(),
-                        options.getDatasetId().trim(),
-                        options.getAttempt().toString(),
-                        "validate-report"))
-                .withSuffix(".yaml")
+                .to(getValidationFilePath(options, VALIDATION_REPORT_FILE))
                 .withoutSharding());
 
     PipelineResult result = p.run();
     result.waitUntilFinish();
+  }
+
+  @NotNull
+  private static String getValidationFilePath(UUIDPipelineOptions options, String validationReportFile) {
+    return String.join(
+            "/",
+            options.getTargetPath(),
+            options.getDatasetId().trim(),
+            options.getAttempt().toString(),
+            validationReportFile);
+  }
+
+  public static void deletePreviousValidation(UUIDPipelineOptions options){
+    //delete output directory
+    String dirPath = getValidationFilePath(options, "validation");
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), dirPath);
+
+    //delete report
+    String filePath = getValidationFilePath(options, VALIDATION_REPORT_FILE);
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), filePath);
   }
 
   /**
