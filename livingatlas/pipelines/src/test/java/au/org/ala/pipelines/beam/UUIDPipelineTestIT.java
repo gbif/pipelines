@@ -6,10 +6,9 @@ import static org.junit.Assert.assertTrue;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.AvroUtils;
 import au.org.ala.util.TestUtils;
+import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.util.Map;
-
-import au.org.ala.utils.ValidationUtils;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;

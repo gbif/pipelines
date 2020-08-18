@@ -1,10 +1,12 @@
 package au.org.ala.pipelines.beam;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.util.TestUtils;
-import java.io.File;
-
 import au.org.ala.utils.ValidationUtils;
+import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
@@ -12,9 +14,6 @@ import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class UUIDEmptyKeysTestIT {
 
