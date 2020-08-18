@@ -19,7 +19,7 @@ repositoryTargetPath: hdfs://ha-nn/data/hdfsview/occurrence_new
 ```
 cd _github && git pull
 ```
-8. Run crawler-pipelines-balancer, crawler-pipelines-interpret-dataset-*, crawler-pipelines-index-dataset-*, crawler-pipelines-hdfs-view-* CLIs only
+8. Run crawler-pipelines-balancer, crawler-pipelines-interpret-dataset-\*, crawler-pipelines-index-dataset-\*, crawler-pipelines-hdfs-view-\* CLIs only
 ```
 ./start-pipelines-balancer
 ./start-pipelines-interpret-dataset-distributed
@@ -59,7 +59,7 @@ sudo -u hdfs hdfs dfsadmin -allowSnapshot /data/hdfsview/occurrence/
 19. Remove the old pipelines tables
 20. Deploy Oozie download workflow and build new download tables
 21. Resume other Oozie jobs (maps)
-22. Remove old indices. Delete **all** (first arg is \*) indices, except indices with suffix being used, for example **_20191001** *(second arg is -\*_20191001\*)* and indices starting with **.** *(third arg is -.\*)*
+22. Remove old indices. Delete **all** indices (first argument, `*`), except indices with suffix being used, for example **_20191001** (second argugent is `-*_20191001*`) and indices starting with **.** (third argument is `-.*`).
 ```
 DELETE /*,-*_20191001*,-.*,-dataset*
 ```
