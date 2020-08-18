@@ -48,33 +48,37 @@ POST /_aliases
 15. Tests that occurrence search, small downloads and big downloads work.
 16. Remove hdfs://ha-nn/data/hdfsview/occurrence
 17. Rename hdfs://ha-nn/data/hdfsview/occurrence_new to hdfs://ha-nn/data/hdfsview/occurrence
-18. Remove old pipelines tables
-19. Deploy oozie build table job and build new tables
-20. Resume other oozie jobs
-21. Remove old indices. Delete **all** (first arg is \*) indices, except indices with suffix being used, for example **_20191001** *(second arg is -\*_20191001\*)* and indices starting with **.** *(third arg is -.\*)*
+18. Enable snapshots for the new data folder
+```  
+sudo -u hdfs hdfs dfsadmin -allowSnapshot /data/hdfsview/occurrence/
+```
+19. Remove old pipelines tables
+20. Deploy oozie build table job and build new tables
+21. Resume other oozie jobs
+22. Remove old indices. Delete **all** (first arg is \*) indices, except indices with suffix being used, for example **_20191001** *(second arg is -\*_20191001\*)* and indices starting with **.** *(third arg is -.\*)*
 ```
 DELETE /*,-*_20191001*,-.*,-dataset*
 ```
-22. Turn on replicas for the new index
+23. Turn on replicas for the new index
 ```
 PUT occurrence/_settings
 {
   "index": { "number_of_replicas": 1 }
 }
 ```
-23. Change **crawler-pipelines-index-dataset-\*.yaml** and set:
+24. Change **crawler-pipelines-index-dataset-\*.yaml** and set:
 ```
 indexNumberReplicas: 1
 indexAlias: occurrence
 ```
-24. Change **crawler-pipelines-hdfs-view-\*.yaml** and set:
+25. Change **crawler-pipelines-hdfs-view-\*.yaml** and set:
 ```
 repositoryTargetPath: hdfs://ha-nn/data/hdfsview/occurrence
 ```
-25. Update **prodcrawler3** and **prodcrawler4** configs
+26. Update **prodcrawler3** and **prodcrawler4** configs
 ```
 cd _github && git pull
 ```
-26. Restart pipelines CLIs
-27. "Fix" downloads
-28. Deploy the new portal version
+27. Restart pipelines CLIs
+28. "Fix" downloads
+29. Deploy the new portal version
