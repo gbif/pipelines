@@ -1,4 +1,4 @@
-= Performing a full reinterpretation
+# Performing a full reinterpretation
 
 These are the steps to reinterpret all occurrences, for example when taxonomy or geography lookups are changed.
 
