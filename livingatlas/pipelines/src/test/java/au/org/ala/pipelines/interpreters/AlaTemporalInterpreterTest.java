@@ -1,6 +1,7 @@
 package au.org.ala.pipelines.interpreters;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.time.temporal.TemporalAccessor;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
+import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -107,6 +109,61 @@ public class AlaTemporalInterpreterTest {
         new String[] {OccurrenceIssue.RECORDED_DATE_UNLIKELY.name()},
         tr.getIssues().getIssueList().toArray());
   }
+
+  @Test
+  public void testAmbiguousDateAssertions() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "1/3/2008");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "2/3/2008");
+    map.put(DcTerm.modified.qualifiedName(), "4/3/2008");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    ALATemporalInterpreter.interpretTemporal(er, tr);
+
+    assertEquals("2008-03-01T00:00", tr.getEventDate().getGte());
+    assertEquals("2008-03-02T00:00", tr.getDateIdentified());
+    assertEquals("2008-03-04T00:00", tr.getModified());
+  }
+
+  @Test
+  public void testAmbiguousDateTtimeAssertions() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "1/3/2008T11:20:30");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "2/3/2008T10:30:01+0100");
+    map.put(DcTerm.modified.qualifiedName(), "4/3/2008T11:20:30.100");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    ALATemporalInterpreter.interpretTemporal(er, tr);
+
+    assertEquals("2008-03-01T11:20:30", tr.getEventDate().getGte());
+    //Timezone check
+    assertEquals("2008-03-02T09:30:01", tr.getDateIdentified());
+    assertEquals("2008-03-04T11:20:30.100", tr.getModified());
+  }
+  @Test
+  public void testAmbiguousDatetimeAssertions() {
+    Map<String, String> map = new HashMap<>();
+    map.put(DwcTerm.eventDate.qualifiedName(), "1/3/2008 11:20:30");
+    map.put(DwcTerm.dateIdentified.qualifiedName(), "2/3/2008 10:30:01+0100");
+    map.put(DcTerm.modified.qualifiedName(), "4/3/2008 11:20:30.100");
+
+    ExtendedRecord er = ExtendedRecord.newBuilder().setId("1").setCoreTerms(map).build();
+    TemporalRecord tr = TemporalRecord.newBuilder().setId("1").build();
+
+    ALATemporalInterpreter.interpretTemporal(er, tr);
+
+    assertEquals("2008-03-01T11:20:30", tr.getEventDate().getGte());
+    //Timezone check
+    assertEquals("2008-03-02T09:30:01", tr.getDateIdentified());
+    assertEquals("2008-03-04T11:20:30.100", tr.getModified());
+  }
+
+
+
 
   private OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
       String y, String m, String d, String date) {

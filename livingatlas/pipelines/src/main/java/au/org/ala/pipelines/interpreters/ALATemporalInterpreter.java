@@ -1,27 +1,35 @@
 package au.org.ala.pipelines.interpreters;
 
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
 import static org.gbif.pipelines.parsers.utils.ModelUtils.*;
 
 import au.org.ala.pipelines.vocabulary.ALAOccurrenceIssue;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.TemporalAccessor;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
+import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.pipelines.core.interpreters.core.DefaultTemporalInterpreter;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 
 public class ALATemporalInterpreter {
 
   protected static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
+  //Parse ambiguous date, such as 1/2/2008 as D/M/Y
+  private final static DefaultTemporalInterpreter temporalInterpreter = DefaultTemporalInterpreter.getInstance(DMY_FORMATS);
 
   /** Inherit from GBIF interpretTemporal method. Add extra assertions */
   public static void interpretTemporal(ExtendedRecord er, TemporalRecord tr) {
-    TemporalInterpreter.interpretTemporal(er, tr);
+    temporalInterpreter.interpretTemporal(er, tr);
     checkRecordDateQuality(er, tr);
     checkDateIdentified(tr);
     checkGeoreferencedDate(er, tr);
@@ -93,4 +101,32 @@ public class ALATemporalInterpreter {
       }
     }
   }
+
+  /**
+   * interprete geoReferenceDate, and assign it to LocationRecord
+   *
+   * @param er
+   * @param lr
+   */
+/*  public static void interpretGeoreferencedDate(ExtendedRecord er, LocationRecord lr) {
+    if (hasValue(er, DwcTerm.georeferencedDate)) {
+      OccurrenceParseResult<TemporalAccessor> result =
+          new OccurrenceParseResult<>(dmyParser.parse(extractValue(er, DwcTerm.georeferencedDate)));
+      // check year makes sense
+      if (result.isSuccessful()) {
+        Optional.ofNullable(
+                TemporalAccessorUtils.toEarliestLocalDateTime(result.getPayload(), false))
+            .map(LocalDateTime::toString)
+            .ifPresent(lr::setGeoreferencedDate);
+        if (!DefaultTemporalInterpreter.isValidDate(result.getPayload(), true)) {
+          lr.getIssues().getIssueList().add(ALAOccurrenceIssue.GEOREFERENCED_DATE_UNLIKELY.name());
+        }
+        if (result.getConfidence() == CONFIDENCE.POSSIBLE) {
+          lr.getIssues().getIssueList().add(ALAOccurrenceIssue.GEOREFERENCED_DATE_AMBIGUOUS.name());
+        }
+      }
+    } else {
+      addIssue(lr, ALAOccurrenceIssue.MISSING_GEOREFERENCE_DATE.name());
+    }
+  }*/
 }
