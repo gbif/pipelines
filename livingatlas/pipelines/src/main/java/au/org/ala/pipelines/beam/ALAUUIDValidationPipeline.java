@@ -26,8 +26,6 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionList;
 import org.apache.beam.sdk.values.TypeDescriptors;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.gbif.converters.converter.FileSystemFactory;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
@@ -65,7 +63,7 @@ public class ALAUUIDValidationPipeline {
 
     Pipeline p = Pipeline.create(options);
 
-    //deletePreviousValidation
+    // deletePreviousValidation
     deletePreviousValidation(options);
 
     // validation results
@@ -190,19 +188,19 @@ public class ALAUUIDValidationPipeline {
               .apply(Count.<String>perElement());
 
       // filter keys that are used more than once
-      PCollection<KV<String, Long>> duplicateKeyCounts = keyCounts
-              .apply(
-                      Filter.by(
-                              new SerializableFunction<KV<String, Long>, Boolean>() {
-                                @Override
-                                public Boolean apply(KV<String, Long> input) {
-                                  return input.getValue() > 1;
-                                }
-                              }));
+      PCollection<KV<String, Long>> duplicateKeyCounts =
+          keyCounts.apply(
+              Filter.by(
+                  new SerializableFunction<KV<String, Long>, Boolean>() {
+                    @Override
+                    public Boolean apply(KV<String, Long> input) {
+                      return input.getValue() > 1;
+                    }
+                  }));
 
       // retrieve a count of records with duplicate keys problems
       PCollection<String> duplicateKeyCount =
-              duplicateKeyCounts
+          duplicateKeyCounts
               .apply(
                   ParDo.of(
                       new DoFn<KV<String, Long>, Long>() {
@@ -221,7 +219,8 @@ public class ALAUUIDValidationPipeline {
       results = results.and(duplicateKeyCount.setCoder(StringUtf8Coder.of()));
 
       // retrieve a count of duplicate keys
-      PCollection<String> duplicateKeyResults = duplicateKeyCounts
+      PCollection<String> duplicateKeyResults =
+          duplicateKeyCounts
               .apply(Count.globally())
               .apply(
                   MapElements.into(TypeDescriptors.strings())
@@ -232,16 +231,15 @@ public class ALAUUIDValidationPipeline {
 
       // dump out duplicate keys to CSV
       duplicateKeyCounts
-              .apply(MapElements.into(TypeDescriptors.strings())
-                      .via(kv ->  kv.getKey() + "," + kv.getValue()))
-              .apply(
-                      TextIO.write()
-                              .to(
-                                      String.join(
-                                              "/",
-                                    getValidationFilePath(options, "validation"),
-                                              "duplicateKeys.csv"))
-                              .withoutSharding());
+          .apply(
+              MapElements.into(TypeDescriptors.strings())
+                  .via(kv -> kv.getKey() + "," + kv.getValue()))
+          .apply(
+              TextIO.write()
+                  .to(
+                      String.join(
+                          "/", getValidationFilePath(options, "validation"), "duplicateKeys.csv"))
+                  .withoutSharding());
     }
 
     // write out all results to YAML file
@@ -258,21 +256,22 @@ public class ALAUUIDValidationPipeline {
   }
 
   @NotNull
-  private static String getValidationFilePath(UUIDPipelineOptions options, String validationReportFile) {
+  private static String getValidationFilePath(
+      UUIDPipelineOptions options, String validationReportFile) {
     return String.join(
-            "/",
-            options.getTargetPath(),
-            options.getDatasetId().trim(),
-            options.getAttempt().toString(),
-            validationReportFile);
+        "/",
+        options.getTargetPath(),
+        options.getDatasetId().trim(),
+        options.getAttempt().toString(),
+        validationReportFile);
   }
 
-  public static void deletePreviousValidation(UUIDPipelineOptions options){
-    //delete output directory
+  public static void deletePreviousValidation(UUIDPipelineOptions options) {
+    // delete output directory
     String dirPath = getValidationFilePath(options, "validation");
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), dirPath);
 
-    //delete report
+    // delete report
     String filePath = getValidationFilePath(options, VALIDATION_REPORT_FILE);
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), filePath);
   }
