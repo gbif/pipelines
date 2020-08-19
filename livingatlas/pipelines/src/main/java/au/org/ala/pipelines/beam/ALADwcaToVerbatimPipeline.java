@@ -1,5 +1,6 @@
 package au.org.ala.pipelines.beam;
 
+import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.File;
@@ -15,7 +16,6 @@ import org.codehaus.plexus.util.FileUtils;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.common.beam.DwcaIO;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
@@ -30,10 +30,14 @@ public class ALADwcaToVerbatimPipeline {
   public static void main(String[] args) throws IOException {
 
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "dwca-avro");
-    InterpretationPipelineOptions options =
-        PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    DwcaToVerbatimPipelineOptions options =
+        PipelinesOptionsFactory.create(DwcaToVerbatimPipelineOptions.class, combinedArgs);
+    PipelinesOptionsFactory.registerHdfs(options);
 
+    // handle run for all datasets
     if (options.getDatasetId() == null || options.getDatasetId().equalsIgnoreCase("all")) {
+
+      log.info("Running Dwca -> Verbatim for all datasets");
 
       // load all datasets - return a map of <datasetId -> datasetInputPath>
       Map<String, String> datasets = ALAFsUtils.listAllDatasets(options);
@@ -50,7 +54,14 @@ public class ALADwcaToVerbatimPipeline {
     }
   }
 
-  private static void runWithLocking(InterpretationPipelineOptions options) throws IOException {
+  /**
+   * Run a load for the supplied dataset, creating a lock to prevent other load process loading the
+   * same archive.
+   *
+   * @param options
+   * @throws IOException
+   */
+  private static void runWithLocking(DwcaToVerbatimPipelineOptions options) throws IOException {
     // check for a lock file - if there isn't one, create one.
     boolean okToProceed = ALAFsUtils.checkAndCreateLockFile(options);
 
@@ -59,6 +70,11 @@ public class ALADwcaToVerbatimPipeline {
       MDC.put("attempt", options.getAttempt().toString());
       MDC.put("step", StepType.DWCA_TO_VERBATIM.name());
       run(options);
+
+      if (options.isDeleteLockFileOnExit()) {
+        ALAFsUtils.deleteLockFile(options);
+      }
+
     } else {
       log.info(
           "Dataset {} is locked. Will not attempt to loaded. Remove lockdir to proceed,",
@@ -66,7 +82,7 @@ public class ALADwcaToVerbatimPipeline {
     }
   }
 
-  public static void run(InterpretationPipelineOptions options) throws IOException {
+  public static void run(DwcaToVerbatimPipelineOptions options) throws IOException {
 
     MDC.put("datasetKey", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());

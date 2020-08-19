@@ -241,10 +241,11 @@ public class ALAFsUtils {
   }
 
   public static void deleteLockFile(InterpretationPipelineOptions options) throws IOException {
-    FsUtils.deleteIfExist(
-        options.getHdfsSiteConfig(),
-        options.getCoreSiteConfig(),
-        options.getInputPath() + ".lockdir");
+
+    String lockFilePath = options.getInputPath() + ".lockdir";
+
+    log.info("Attempting to delete lock file {}", lockFilePath);
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), lockFilePath);
   }
 
   /**

@@ -260,38 +260,30 @@ function logStepEnd() {
 function dwca-avro () {
     dr=$1
 
+    dwca_dir="$DWCA_IMPORT/$dr/$dr.zip"
+
+    export TMPDIR=$DWCA_TMP
+
+    SECONDS=0
+    logStepStart "DWCA-AVRO conversion" $dr
+
     if [[ $dr != "all" ]] ; then
-
-      SECONDS=0
-      logStepStart "DWCA-AVRO conversion" $dr
-
-      dwca_dir="$DWCA_IMPORT/$dr/$dr.zip"
-
-      export TMPDIR=$DWCA_TMP
 
       $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
           -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
           --datasetId=$dr \
+          --deleteLockFileOnExit=true \
           --config=$config $ARGS
-
-      logStepEnd "DWCA-AVRO conversion" $dr local $SECONDS
-
     else
-      SECONDS=0
-      logStepStart "DWCA-AVRO conversion" $dr
-
-      dwca_dir="$DWCA_IMPORT"
-
-      export TMPDIR=$DWCA_TMP
-
       $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
           -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
           --datasetId=$dr \
           --inputPath=$dwca_dir \
+          --deleteLockFileOnExit=false \
           --config=$config $ARGS
-
-      logStepEnd "DWCA-AVRO conversion" $dr local $SECONDS
     fi
+
+    logStepEnd "DWCA-AVRO conversion" $dr local $SECONDS
 }
 
 function interpret () {
