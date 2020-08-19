@@ -17,6 +17,7 @@ run:
     sparkMaster: ""
   spark-cluster:
     jar: /efs-mount-point/pipelines.jar
+    dwcaImportDir: ''
     sparkTmp: /data/spark-tmp
     sparkMaster: spark://localhost:7077
 

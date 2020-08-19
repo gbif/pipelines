@@ -15,6 +15,7 @@ import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 
@@ -214,5 +215,70 @@ public class ALAFsUtils {
       }
     }
     throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
+  }
+
+  public static boolean checkAndCreateLockFile(InterpretationPipelineOptions options)
+      throws IOException {
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    Path path = new Path(options.getInputPath() + ".lockdir");
+    if (fs.exists(path)) {
+      // dataset is locked
+      log.info("lockdir exists: " + options.getInputPath() + ".lockdir");
+      return false;
+    }
+
+    log.info("Creating lockdir: " + options.getInputPath() + ".lockdir");
+    // otherwise, lock it and return true
+    try {
+      return fs.mkdirs(new Path(options.getInputPath() + ".lockdir"));
+    } catch (IOException e) {
+      log.info("Unable to create lockdir");
+      return false;
+    }
+  }
+
+  public static void deleteLockFile(InterpretationPipelineOptions options) throws IOException {
+    FsUtils.deleteIfExist(
+        options.getHdfsSiteConfig(),
+        options.getCoreSiteConfig(),
+        options.getInputPath() + ".lockdir");
+  }
+
+  /**
+   * Scans the supplied options.getInputPath() for zip files. Assumes zip files are in the name for
+   * of <DATASET_ID>.zip
+   *
+   * @param options
+   * @return
+   * @throws IOException
+   */
+  public static Map<String, String> listAllDatasets(InterpretationPipelineOptions options)
+      throws IOException {
+
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    log.info("List files in inputPath: {}", options.getInputPath());
+
+    Path path = new Path(options.getInputPath());
+    RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(path, true);
+
+    Map<String, String> filePaths = new HashMap<String, String>();
+
+    while (iterator.hasNext()) {
+      LocatedFileStatus locatedFileStatus = iterator.next();
+      Path filePath = locatedFileStatus.getPath();
+
+      if (filePath.getName().endsWith(".zip")) {
+        filePaths.put(
+            filePath.getName().replaceAll(".zip", ""),
+            filePath.getParent() + "/" + filePath.getName());
+      }
+    }
+    return filePaths;
   }
 }

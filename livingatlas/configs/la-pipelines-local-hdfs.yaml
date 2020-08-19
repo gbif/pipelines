@@ -2,12 +2,36 @@
 # This file should be copied over `la-pipelines-local.yaml` when deployed
 # so that it is used by the scripts.
 #
+run:
+    # where to run: local, spark-embedded or spark-cluster
+    platform: local
+    local:
+        # jar: we get the jar from our dev or production environment
+        sparkTmp: /data/spark-tmp
+        dwcaTmp: /data/dwca-tmp
+        dwcaImportDir: hdfs://localhost:8020/dwca-exports
+        sparkMaster: ""
+    spark-embedded:
+        # jar: we get the jar from our dev or production environment
+        sparkTmp: /data/spark-tmp
+        dwcaTmp: /data/dwca-tmp
+        dwcaImportDir: hdfs://localhost:8020/dwca-exports
+        sparkMaster: ""
+    spark-cluster:
+        jar: /efs-mount-point/pipelines.jar
+        dwcaImportDir: hdfs://localhost:8020/dwca-exports
+        sparkTmp: /data/spark-tmp
+        sparkMaster: spark://localhost:7077
+
 general:
     attempt: 1
-    hdfsSiteConfig: hdfs-site.xml
-    coreSiteConfig: core-site.xml
+    hdfsSiteConfig: /usr/local/Cellar/hadoop/3.2.1_1/libexec/etc/hadoop/hdfs-site.xml
+    coreSiteConfig: /usr/local/Cellar/hadoop/3.2.1_1/libexec/etc/hadoop/core-site.xml
     inputPath: hdfs://localhost:8020/pipelines-data
     targetPath: hdfs://localhost:8020/pipelines-data
+dwca-avro:
+    inputPath: hdfs://localhost:8020/dwca-exports/{datasetId}/{datasetId}.zip
+    tempLocation: /data/spark-tmp/dwca-avro/{datasetId}
 interpret:
     inputPath: hdfs://localhost:8020/pipelines-data/{datasetId}/1/verbatim.avro
 export-latlng:
