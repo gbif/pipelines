@@ -25,9 +25,12 @@ import org.yaml.snakeyaml.Yaml;
 public class ValidationUtils {
 
   public static final String DUPLICATE_KEY_COUNT = "duplicateKeyCount";
-  public static final String INVALID_RECORDS = "invalidRecords";
+  public static final String EMPTY_KEY_RECORDS = "emptyKeyRecords";
   public static final String DUPLICATE_RECORD_KEY_COUNT = "duplicateRecordKeyCount";
-  public static final String VALIDATION_REPORT_FILE = "validate-report.yaml";
+  public static final String VALIDATION_REPORT_FILE = "validation-report.yaml";
+  public static final String VALIDATION_OUTPUT_DIR = "validation";
+  public static final String DUPLICATE_KEYS_OUTPUT = "duplicateKeys.csv";
+  public static final String UNIQUE_TERMS_SPECIFIED = "uniqueTermsSpecified";
 
   /**
    * Checks the content of the validate file, returning true if the UUID content has been checked
@@ -51,14 +54,15 @@ public class ValidationUtils {
           yaml.load(new InputStreamReader(fs.open(metrics), StandardCharsets.UTF_8));
 
       // check invalid record count
-      Long invalidRecords =
-          Long.parseLong(yamlObject.getOrDefault(INVALID_RECORDS, -1L).toString());
+      Long emptyKeyRecords =
+          Long.parseLong(yamlObject.getOrDefault(EMPTY_KEY_RECORDS, -1L).toString());
 
-      if (invalidRecords > 0) {
-        log.error("Records with invalid values for unique terms: " + invalidRecords);
+      if (emptyKeyRecords > 0) {
+        log.error(
+            "The number of records with empty values for all unique terms: " + emptyKeyRecords);
       }
 
-      if (invalidRecords != 0) return false;
+      if (emptyKeyRecords != 0) return false;
 
       // check duplicate record count
       Long duplicateKeyCount =
@@ -127,7 +131,7 @@ public class ValidationUtils {
       Map<String, Object> yamlObject =
           yaml.load(new InputStreamReader(fs.open(metrics), StandardCharsets.UTF_8));
 
-      return Long.parseLong(yamlObject.getOrDefault(INVALID_RECORDS, -1L).toString());
+      return Long.parseLong(yamlObject.getOrDefault(EMPTY_KEY_RECORDS, -1L).toString());
     } else {
       throw new FileNotFoundException();
     }

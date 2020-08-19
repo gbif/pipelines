@@ -99,11 +99,11 @@ public class ALAUUIDValidationPipeline {
       log.error(
           "Unable to proceed, No unique terms specified for dataset: " + options.getDatasetId());
       PCollection<String> pc =
-          p.apply(Create.of("uniqueTermsSpecified: false").withCoder(StringUtf8Coder.of()));
+          p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": false").withCoder(StringUtf8Coder.of()));
       results = results.and(pc);
     } else {
       PCollection<String> pc =
-          p.apply(Create.of("uniqueTermsSpecified: true").withCoder(StringUtf8Coder.of()));
+          p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": true").withCoder(StringUtf8Coder.of()));
       results = results.and(pc);
     }
 
@@ -162,9 +162,8 @@ public class ALAUUIDValidationPipeline {
                       }))
               .apply(Count.globally())
               .apply(
-                  "FormatResults",
                   MapElements.into(TypeDescriptors.strings())
-                      .via(longValue -> INVALID_RECORDS + ": " + longValue.toString()));
+                      .via(longValue -> EMPTY_KEY_RECORDS + ": " + longValue.toString()));
 
       // add the invalid key records
       results = results.and(invalidKeyResults.setCoder(StringUtf8Coder.of()));
@@ -238,7 +237,9 @@ public class ALAUUIDValidationPipeline {
               TextIO.write()
                   .to(
                       String.join(
-                          "/", getValidationFilePath(options, "validation"), "duplicateKeys.csv"))
+                          "/",
+                          getValidationFilePath(options, VALIDATION_OUTPUT_DIR),
+                          DUPLICATE_KEYS_OUTPUT))
                   .withoutSharding());
     }
 
@@ -268,7 +269,7 @@ public class ALAUUIDValidationPipeline {
 
   public static void deletePreviousValidation(UUIDPipelineOptions options) {
     // delete output directory
-    String dirPath = getValidationFilePath(options, "validation");
+    String dirPath = getValidationFilePath(options, VALIDATION_OUTPUT_DIR);
     FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), dirPath);
 
     // delete report
