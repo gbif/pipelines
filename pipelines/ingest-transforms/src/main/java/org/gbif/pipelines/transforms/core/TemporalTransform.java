@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import org.gbif.pipelines.core.Interpretation;
+import org.gbif.pipelines.core.interpreters.core.DefaultTemporalInterpreter;
 import org.gbif.pipelines.core.interpreters.core.TemporalInterpreter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
@@ -14,6 +15,10 @@ import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TypeDescriptor;
 
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
+
+import static org.gbif.common.parsers.date.DateComponentOrdering.DMY_FORMATS;
+import static org.gbif.common.parsers.date.DateComponentOrdering.MDY_FORMATS;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.TEMPORAL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.TEMPORAL;
 
@@ -28,12 +33,18 @@ import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretati
  */
 public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord> {
 
+  private PipelinesConfig config;
+  private  DefaultTemporalInterpreter temporalInterpreter;
+
   private TemporalTransform() {
     super(TemporalRecord.class, TEMPORAL, TemporalTransform.class.getName(), TEMPORAL_RECORDS_COUNT);
+
   }
 
-  public static TemporalTransform create() {
-    return new TemporalTransform();
+  public static TemporalTransform create(PipelinesConfig config) {
+    TemporalTransform tr = new TemporalTransform();
+    tr.config = config;
+    return tr;
   }
 
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */
@@ -54,10 +65,17 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
+    if(config.getDefaultDateFormat().equalsIgnoreCase("DMY")){
+      temporalInterpreter = DefaultTemporalInterpreter.getInstance(DMY_FORMATS);
+    }else if( config.getDefaultDateFormat().equalsIgnoreCase("MDY") ){
+      temporalInterpreter = DefaultTemporalInterpreter.getInstance(MDY_FORMATS);
+    }else
+      temporalInterpreter = DefaultTemporalInterpreter.getInstance();
+
     return Interpretation.from(source)
         .to(tr)
         .when(er -> !er.getCoreTerms().isEmpty())
-        .via(TemporalInterpreter::interpretTemporal)
+        .via(temporalInterpreter::interpretTemporal)
         .get();
   }
 

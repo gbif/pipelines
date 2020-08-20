@@ -140,10 +140,11 @@ public class AlaTemporalInterpreterTest {
     ALATemporalInterpreter.interpretTemporal(er, tr);
 
     assertEquals("2008-03-01T11:20:30", tr.getEventDate().getGte());
-    //Timezone check
+    // Timezone check
     assertEquals("2008-03-02T09:30:01", tr.getDateIdentified());
     assertEquals("2008-03-04T11:20:30.100", tr.getModified());
   }
+
   @Test
   public void testAmbiguousDatetimeAssertions() {
     Map<String, String> map = new HashMap<>();
@@ -157,13 +158,10 @@ public class AlaTemporalInterpreterTest {
     ALATemporalInterpreter.interpretTemporal(er, tr);
 
     assertEquals("2008-03-01T11:20:30", tr.getEventDate().getGte());
-    //Timezone check
+    // Timezone check
     assertEquals("2008-03-02T09:30:01", tr.getDateIdentified());
     assertEquals("2008-03-04T11:20:30.100", tr.getModified());
   }
-
-
-
 
   private OccurrenceParseResult<TemporalAccessor> interpretRecordedDate(
       String y, String m, String d, String date) {

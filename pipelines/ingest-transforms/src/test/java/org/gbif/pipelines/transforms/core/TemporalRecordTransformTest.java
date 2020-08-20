@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.temporal.Temporal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,6 +14,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.EventDate;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
 
 import org.apache.beam.sdk.testing.NeedsRunner;
@@ -22,6 +24,7 @@ import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -31,6 +34,13 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 @Category(NeedsRunner.class)
 public class TemporalRecordTransformTest {
+
+  private PipelinesConfig config;
+  @Before
+  public void set() {
+    config = new PipelinesConfig();
+    config.setDefaultDateFormat("DMY");
+  }
 
   @Rule
   public final transient TestPipeline p = TestPipeline.create();
@@ -66,7 +76,44 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream = p
         .apply(Create.of(input))
-        .apply(TemporalTransform.create().interpret())
+        .apply(TemporalTransform.create(config).interpret())
+        .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
+
+    // Should
+    PAssert.that(dataStream).containsInAnyOrder(dataExpected);
+    p.run();
+  }
+
+  @Test
+  public void DMYtransformationTest() {
+    // State
+    final List<ExtendedRecord> input = new ArrayList<>();
+
+    ExtendedRecord record = ExtendedRecord.newBuilder().setId("0").build();
+    record.getCoreTerms().put(DwcTerm.year.qualifiedName(), "1999");
+    record.getCoreTerms().put(DwcTerm.month.qualifiedName(), "2");
+    record.getCoreTerms().put(DwcTerm.day.qualifiedName(), "1");
+    record.getCoreTerms().put(DwcTerm.eventDate.qualifiedName(), "01/02/1999T12:26Z");
+    record.getCoreTerms().put(DwcTerm.dateIdentified.qualifiedName(), "1999-02-01T12:26Z");
+    record.getCoreTerms().put(DcTerm.modified.qualifiedName(), "01/02/1999T12:26Z");
+    input.add(record);
+    // Expected
+    // First
+    final LocalDateTime fromOne = LocalDateTime.of(1999, 2, 1, 12, 26);
+    final ParsedTemporal periodOne = ParsedTemporal.create();
+    periodOne.setFromDate(fromOne);
+    periodOne.setYear(Year.of(1999));
+    periodOne.setMonth(Month.of(2));
+    periodOne.setDay(1);
+    periodOne.setDay(1);
+    periodOne.setDay(1);
+
+    final List<TemporalRecord> dataExpected = createTemporalRecordList(periodOne);
+
+    // When
+    PCollection<TemporalRecord> dataStream = p
+        .apply(Create.of(input))
+        .apply(TemporalTransform.create(config).interpret())
         .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
@@ -83,7 +130,7 @@ public class TemporalRecordTransformTest {
     // When
     PCollection<TemporalRecord> dataStream = p
         .apply(Create.of(er))
-        .apply(TemporalTransform.create().interpret())
+        .apply(TemporalTransform.create(config).interpret())
         .apply("Cleaning timestamps", ParDo.of(new CleanDateCreate()));
 
     // Should
