@@ -278,7 +278,7 @@ function dwca-avro () {
       $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
           -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
           --datasetId=$dr \
-          --inputPath=$dwca_dir \
+          --inputPath=$DWCA_IMPORT \
           --deleteLockFileOnExit=false \
           --config=$config $ARGS
     fi
