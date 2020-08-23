@@ -9,6 +9,7 @@ import static org.gbif.pipelines.parsers.utils.ModelUtils.hasValue;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
@@ -44,7 +45,7 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 
 @Slf4j
 //@NoArgsConstructor(access = PRIVATE)
-public class DefaultTemporalInterpreter {
+public class DefaultTemporalInterpreter implements Serializable{
 
   private static final LocalDate MIN_LOCAL_DATE = LocalDate.of(1600, 1, 1);
   private static final LocalDate MIN_EPOCH_LOCAL_DATE = LocalDate.ofEpochDay(0);

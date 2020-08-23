@@ -1,5 +1,6 @@
 package org.gbif.pipelines.transforms.core;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -44,8 +45,17 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
   public static TemporalTransform create(PipelinesConfig config) {
     TemporalTransform tr = new TemporalTransform();
     tr.config = config;
+
+    if(config.getDefaultDateFormat().equalsIgnoreCase("DMY")){
+      tr.temporalInterpreter =  DefaultTemporalInterpreter.getInstance(DMY_FORMATS);
+    }else if( config.getDefaultDateFormat().equalsIgnoreCase("MDY") ){
+      tr.temporalInterpreter =  DefaultTemporalInterpreter.getInstance(MDY_FORMATS);
+    }else
+      tr.temporalInterpreter =  DefaultTemporalInterpreter.getInstance();
+
     return tr;
   }
+
 
   /** Maps {@link TemporalRecord} to key value, where key is {@link TemporalRecord#getId} */
   public MapElements<TemporalRecord, KV<String, TemporalRecord>> toKv() {
@@ -65,12 +75,6 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
         .setCreated(Instant.now().toEpochMilli())
         .build();
 
-    if(config.getDefaultDateFormat().equalsIgnoreCase("DMY")){
-      temporalInterpreter = DefaultTemporalInterpreter.getInstance(DMY_FORMATS);
-    }else if( config.getDefaultDateFormat().equalsIgnoreCase("MDY") ){
-      temporalInterpreter = DefaultTemporalInterpreter.getInstance(MDY_FORMATS);
-    }else
-      temporalInterpreter = DefaultTemporalInterpreter.getInstance();
 
     return Interpretation.from(source)
         .to(tr)
