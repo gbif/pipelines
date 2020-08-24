@@ -121,7 +121,16 @@ if [[ $PROD = false && $no_colors = true ]];  then logConfig=$PWD/../pipelines/s
 if [[ $PROD = true &&  $no_colors = false ]]; then logConfig=$CONFIG_DIR/log4j-colorized.properties; fi
 if [[ $PROD = true &&  $no_colors = true ]];  then logConfig=$CONFIG_DIR/log4j.properties; fi
 
-for dr in "${dr[@]}"; do
+# Let's reasing dr variable in order to allow multiple drs
+drs=("${dr[@]}")
+
+if ($debug); then
+    for dr in "${drs[@]}"; do
+        log.debug "Processing $dr"
+    done
+fi
+
+for dr in "${drs[@]}"; do
     if [[ -n $dr && $dr != all && $dr != dr* ]]; then >&2 log.error "Wrong dataResource '$dr'. It should start with 'dr', like 'dr893'"; exit 1 ; fi
 done
 
@@ -502,16 +511,16 @@ function index () {
     logStepEnd "Indexing" $dr $ltype $SECONDS
 }
 
-if [[ $dr = "all" ]] ; then
+if [[ $drs = "all" ]] ; then
     log.info Dump dataset size for all
     java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.DumpDatasetSize \
          --config=$config $ARGS
 fi # This should create /tmp/dataset-counts.csv
 
 if ($do_all || $dwca_avro) ; then
-    if [[ $dr != "all" ]] ; then
-        for dr in "${dr[@]}"; do
-            dwca-avro $dr
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            dwca-avro $d
         done
     else
         rootDir=/data/biocache-load
@@ -542,9 +551,9 @@ if ($do_all || $dwca_avro) ; then
 fi
 
 if ($interpret || $do_all); then
-    if [[ $dr != "all" ]] ; then
-        for dr in "${dr[@]}"; do
-            interpret $dr $TYPE
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            interpret $d $TYPE
         done
     else
         while IFS=, read -r datasetID recordCount
@@ -564,9 +573,9 @@ if ($interpret || $do_all); then
 fi
 
 if ($uuid || $do_all); then
-    if [[ $dr != "all" ]] ; then
-        for dr in "${dr[@]}"; do
-            uuid $dr $TYPE
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            uuid $d $TYPE
         done
     else
         while IFS=, read -r datasetID recordCount
@@ -586,9 +595,9 @@ if ($uuid || $do_all); then
 fi
 
 if ($export_latlng || $do_all); then
-  if [[ $dr != "all" ]] ; then
-      for dr in "${dr[@]}"; do
-          export-latlng $dr $TYPE
+  if [[ $drs != "all" ]] ; then
+      for d in "${drs[@]}"; do
+          export-latlng $d $TYPE
       done
   else
       while IFS=, read -r datasetID recordCount
@@ -608,8 +617,8 @@ if ($export_latlng || $do_all); then
 fi
 
 if ($sample || $do_all); then
-    if [[ $dr != "all" ]] ; then
-        sample $dr
+    if [[ $drs != "all" ]] ; then
+        sample $drs
     else
         while IFS=, read -r datasetID recordCount
         do
@@ -619,9 +628,9 @@ if ($sample || $do_all); then
 fi
 
 if ($sample_avro || $do_all); then
-    if [[ $dr != "all" ]] ; then
-        for dr in "${dr[@]}"; do
-            sample-avro $dr $TYPE
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            sample-avro $d $TYPE
         done
     else
         while IFS=, read -r datasetID recordCount
@@ -641,9 +650,9 @@ if ($sample_avro || $do_all); then
 fi
 
 if ($index || $do_all); then
-    if [[ $dr != "all" ]] ; then
-        for dr in "${dr[@]}"; do
-            index $dr $TYPE
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            index $d $TYPE
         done
     else
         while IFS=, read -r datasetID recordCount
