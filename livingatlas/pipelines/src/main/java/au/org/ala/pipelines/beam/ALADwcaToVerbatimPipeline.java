@@ -6,7 +6,6 @@ import au.org.ala.utils.CombinedYamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
@@ -33,25 +32,7 @@ public class ALADwcaToVerbatimPipeline {
     DwcaToVerbatimPipelineOptions options =
         PipelinesOptionsFactory.create(DwcaToVerbatimPipelineOptions.class, combinedArgs);
     PipelinesOptionsFactory.registerHdfs(options);
-
-    // handle run for all datasets
-    if (options.getDatasetId() == null || options.getDatasetId().equalsIgnoreCase("all")) {
-
-      log.info("Running Dwca -> Verbatim for all datasets");
-
-      // load all datasets - return a map of <datasetId -> datasetInputPath>
-      Map<String, String> datasets = ALAFsUtils.listAllDatasets(options);
-
-      // run for all found datasets
-      for (Map.Entry<String, String> datasetIDAndPath : datasets.entrySet()) {
-        options.setDatasetId(datasetIDAndPath.getKey());
-        options.setInputPath(datasetIDAndPath.getValue());
-        runWithLocking(options);
-      }
-
-    } else {
-      runWithLocking(options);
-    }
+    runWithLocking(options);
   }
 
   /**
@@ -146,8 +127,8 @@ public class ALADwcaToVerbatimPipeline {
     PipelineResult result = p.run();
     result.waitUntilFinish();
 
+    // write metrics
     MetricsHandler.saveCountersToTargetPathFile(options, result.metrics());
-
     log.info("Pipeline has been finished");
   }
 }

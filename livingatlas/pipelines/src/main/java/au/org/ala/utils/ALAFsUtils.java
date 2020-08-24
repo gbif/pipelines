@@ -9,6 +9,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
@@ -253,33 +254,41 @@ public class ALAFsUtils {
    * of <DATASET_ID>.zip
    *
    * @param options
-   * @return
+   * @return a Map of datasetId -> filePath, with zip files sorted by size, largest to smallest.
    * @throws IOException
    */
-  public static Map<String, String> listAllDatasets(InterpretationPipelineOptions options)
-      throws IOException {
+  public static Map<String, String> listAllDatasets(
+      String hdfsSiteConfig, String coreSiteConfig, String inputPath) throws IOException {
 
-    FileSystem fs =
-        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
-            .getFs(options.getInputPath());
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
 
-    log.info("List files in inputPath: {}", options.getInputPath());
+    log.info("List files in inputPath: {}", inputPath);
 
-    Path path = new Path(options.getInputPath());
+    Path path = new Path(inputPath);
     RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(path, true);
 
-    Map<String, String> filePaths = new HashMap<String, String>();
+    Map<Path, Long> filePathsWithSize = new HashMap<>();
 
+    // find zip files
     while (iterator.hasNext()) {
       LocatedFileStatus locatedFileStatus = iterator.next();
       Path filePath = locatedFileStatus.getPath();
 
+      long fileLength = locatedFileStatus.getLen();
       if (filePath.getName().endsWith(".zip")) {
-        filePaths.put(
-            filePath.getName().replaceAll(".zip", ""),
-            filePath.getParent() + "/" + filePath.getName());
+        log.debug(filePath.getName() + " : " + fileLength);
+        filePathsWithSize.put(filePath, fileLength);
       }
     }
-    return filePaths;
+
+    // sort by size and return ordered map
+    return filePathsWithSize.entrySet().stream()
+        .sorted(Map.Entry.<Path, Long>comparingByValue().reversed())
+        .collect(
+            Collectors.toMap(
+                entry -> entry.getKey().getName().replaceAll(".zip", ""),
+                entry -> entry.getKey().getParent() + "/" + entry.getKey().getName(),
+                (e1, e2) -> e1,
+                LinkedHashMap::new));
   }
 }

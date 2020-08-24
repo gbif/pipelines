@@ -149,6 +149,10 @@ dataset-count-dump:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-counts.csv
 
+dataset-archive-list:
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: /tmp/dataset-archive-list.csv
+
 migrate-uuids:
   inputPath: '{fsPath}/pipelines-data/occ_uuid.csv'
   targetPath: '{fsPath}/pipelines-data'
