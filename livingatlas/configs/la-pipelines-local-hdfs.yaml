@@ -34,8 +34,12 @@ dwca-avro:
     tempLocation: /data/spark-tmp/dwca-avro/{datasetId}
 interpret:
     inputPath: hdfs://localhost:8020/pipelines-data/{datasetId}/1/verbatim.avro
+dataset-validated-dump:
+    inputPath: hdfs://localhost:8020/pipelines-data
 dataset-count-dump:
     inputPath: hdfs://localhost:8020/pipelines-data
+dataset-archive-list:
+    inputPath: hdfs://localhost:8020/dwca-exports/
 export-latlng:
     inputPath: hdfs://localhost:8020/pipelines-data
 uuid:
