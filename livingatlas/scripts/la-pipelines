@@ -70,6 +70,7 @@ Usage:
   $CMD [options] dwca-avro     (<dr>...|all)
   $CMD [options] interpret     (<dr>...|all) $WHEREL
   $CMD [options] uuid          (<dr>...|all)         $WHERE
+  $CMD [options] validate          (<dr>...|all)         $WHERE
   $CMD [options] export-latlng (<dr>...|all)         $WHERE
   $CMD [options] sample        (<dr>...|all)
   $CMD [options] sample-avro   (<dr>...|all)         $WHERE
@@ -371,6 +372,44 @@ function interpret () {
     logStepEnd "Interpretation" $dr $ltype $SECONDS
 }
 
+function validate () {
+    dr=$1
+    ltype=$2
+    CLASS=au.org.ala.pipelines.beam.ALAUUIDValidationPipeline
+
+    logStepStart "Validation pipeline" $dr
+    SECONDS=0
+
+    PRE=uuid-sh-args.spark-embedded
+    if [[ $ltype = "spark-embedded" || $ltype = "local" ]] ; then
+        # TODO: we can put this in a function? Same code that interpret
+        $_D java $EXTRA_JVM_CLI_ARGS \
+            $(getConf $PRE.jvm)  \
+            -cp $PIPELINES_JAR $CLASS \
+            --datasetId=$dr\
+            --config=$config $ARGS
+    fi
+
+    PRE=uuid-sh-args.spark-cluster
+    if [[ $ltype = "spark-cluster" ]] ; then
+        $_D /data/spark/bin/spark-submit \
+            --name "validate-uuid $dr" \
+            $(toArg $PRE num-executors) \
+            $(toArg $PRE executor-cores) \
+            $(toArg $PRE executor-memory) \
+            $(toArg $PRE driver-memory) \
+            --class $CLASS \
+            --master $SPARK_MASTER \
+            --driver-java-options "-Dlog4j.configuration=file:$CONFIG_DIR/log4j.properties" \
+            $PIPELINES_JAR \
+            --datasetId=$dr \
+            --config=$config $ARGS
+            # TODO set here an optional colorized log4j properties
+    fi
+
+    logStepEnd "Validation" $dr $ltype $SECONDS
+}
+
 function uuid () {
     dr=$1
     ltype=$2
@@ -589,6 +628,28 @@ if ($interpret || $do_all); then
                 fi
             else
                 interpret $datasetID local
+            fi
+        done < /tmp/dataset-counts.csv
+    fi
+fi
+
+if ($validate || $do_all); then
+    if [[ $drs != "all" ]] ; then
+        for d in "${drs[@]}"; do
+            validate $d $TYPE
+        done
+    else
+        while IFS=, read -r datasetID recordCount
+        do
+            log.info "Dataset = $datasetID and count = $recordCount"
+            if [ "$recordCount" -gt "50000" ]; then
+                if [ $USE_CLUSTER = true ]; then
+                    $validate $datasetID spark-cluster
+                else
+                    $validate $datasetID spark-embedded
+                fi
+            else
+                $validate $datasetID spark-embedded
             fi
         done < /tmp/dataset-counts.csv
     fi

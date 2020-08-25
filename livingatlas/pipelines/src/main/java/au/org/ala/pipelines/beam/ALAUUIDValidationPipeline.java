@@ -10,6 +10,7 @@ import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.utils.CombinedYamlConfiguration;
 import au.org.ala.utils.ValidationUtils;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.AccessLevel;
@@ -93,22 +94,33 @@ public class ALAUUIDValidationPipeline {
       results = results.and(pc);
     }
 
+    List<String> uniqueTerms = Collections.emptyList();
+
     // construct unique list of darwin core terms
-    List<String> uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
-    if ((uniqueTerms == null || uniqueTerms.isEmpty())) {
-      log.error(
-          "Unable to proceed, No unique terms specified for dataset: " + options.getDatasetId());
-      PCollection<String> pc =
-          p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": false").withCoder(StringUtf8Coder.of()));
-      results = results.and(pc);
+
+    if (collectoryMetadata.getConnectionParameters() != null) {
+      uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
+      if ((uniqueTerms == null || uniqueTerms.isEmpty())) {
+        log.error(
+            "Unable to proceed, No unique terms specified for dataset: " + options.getDatasetId());
+        PCollection<String> pc =
+            p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": false").withCoder(StringUtf8Coder.of()));
+        results = results.and(pc);
+      } else {
+        PCollection<String> pc =
+            p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": true").withCoder(StringUtf8Coder.of()));
+        results = results.and(pc);
+      }
     } else {
       PCollection<String> pc =
-          p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": true").withCoder(StringUtf8Coder.of()));
+          p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": false").withCoder(StringUtf8Coder.of()));
       results = results.and(pc);
     }
 
     // if we have unique terms, check each record is populated
-    if ((uniqueTerms != null && !uniqueTerms.isEmpty())) {
+    if (collectoryMetadata.getConnectionParameters() != null
+        && uniqueTerms != null
+        && !uniqueTerms.isEmpty()) {
 
       // retrieve the unique term fields
       final List<Term> uniqueDwcTerms = new ArrayList<Term>();
@@ -254,6 +266,9 @@ public class ALAUUIDValidationPipeline {
 
     PipelineResult result = p.run();
     result.waitUntilFinish();
+    log.info(
+        "Validation finished. Results written to: {}",
+        getValidationFilePath(options, VALIDATION_REPORT_FILE));
   }
 
   @NotNull

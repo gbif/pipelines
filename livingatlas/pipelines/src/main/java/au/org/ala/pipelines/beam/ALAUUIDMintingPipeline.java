@@ -89,10 +89,13 @@ public class ALAUUIDMintingPipeline {
     MetricsHandler.deleteMetricsFile(options);
 
     // run the validation pipeline
+    log.info("Running validation pipeline");
     ALAUUIDValidationPipeline.run(options);
 
     // check validation results
     boolean validationPassed = ValidationUtils.checkValidationFile(options);
+
+    log.info("Validation passed: {} ", validationPassed);
 
     if (!validationPassed) {
       log.error(
