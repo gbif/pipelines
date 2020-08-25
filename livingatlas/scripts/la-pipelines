@@ -63,20 +63,22 @@ dwca-avro --> interpret --> uuid -->                │
 -  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv'
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv'
+-  'validation-list' dumps out a list of datasets ready to be indexed to '/tmp/index-counts.csv'
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
 Usage:
   $CMD [options] dwca-avro     (<dr>...|all)
   $CMD [options] interpret     (<dr>...|all) $WHEREL
+  $CMD [options] validate      (<dr>...|all)         $WHERE
   $CMD [options] uuid          (<dr>...|all)         $WHERE
-  $CMD [options] validate          (<dr>...|all)         $WHERE
   $CMD [options] export-latlng (<dr>...|all)         $WHERE
   $CMD [options] sample        (<dr>...|all)
   $CMD [options] sample-avro   (<dr>...|all)         $WHERE
   $CMD [options] index         (<dr>...|all) $WHEREL
   $CMD [options] archive-list
   $CMD [options] dataset-list
+  $CMD [options] validation-list
   $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
   $CMD -v | --version
@@ -275,6 +277,13 @@ function archive-list() {
     # dump out archive list
     log.info "Dumping archive list"
     java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.DumpArchiveList \
+       --config=$config $ARGS
+}
+
+function validation-list() {
+    # dump out archive list
+    log.info "Dumping ready to validation list"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.DumpReadyToIndexList \
        --config=$config $ARGS
 }
 
@@ -595,6 +604,10 @@ fi
 
 if ($dataset_list) ; then
     dataset-list
+fi
+
+if ($validation_list) ; then
+    validation-list
 fi
 
 if ($do_all || $dwca_avro) ; then

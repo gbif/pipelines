@@ -1,9 +1,51 @@
-# Here we can override some config from la-pipelines.yml instead of modifying it.
-# This is useful during upgrades via debian packaging so we can maintain 
-# la-pipelines.yml without modifications and updated as a configuration reference
-# while doing local modifications here (manually or via ansible).
+# Deployment specific configuration for locql machine using a locally installed HDFS.
+# This file should be copied over `la-pipelines-local.yaml` when deployed
+# so that it is used by the scripts.
 #
-# For instance:
+run:
+  # where to run: local, spark-embedded or spark-cluster
+  platform: local
+  local:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: hdfs://localhost:8020/dwca-exports
+    sparkMaster: ""
+  spark-embedded:
+    # jar: we get the jar from our dev or production environment
+    sparkTmp: /data/spark-tmp
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: hdfs://localhost:8020/dwca-exports
+    sparkMaster: ""
+  spark-cluster:
+    jar: /efs-mount-point/pipelines.jar
+    dwcaImportDir: hdfs://localhost:8020/dwca-exports
+    sparkTmp: /data/spark-tmp
+    sparkMaster: spark://localhost:7077
 
-# general:
-#  targetPath: /some-other-moint-point/pipelines-data
+general:
+  attempt: 1
+  hdfsSiteConfig: /usr/local/Cellar/hadoop/3.2.1_1/libexec/etc/hadoop/hdfs-site.xml
+  coreSiteConfig: /usr/local/Cellar/hadoop/3.2.1_1/libexec/etc/hadoop/core-site.xml
+  inputPath: hdfs://localhost:8020/pipelines-data
+  targetPath: hdfs://localhost:8020/pipelines-data
+dataset-validated-dump:
+  inputPath: hdfs://localhost:8020/pipelines-data
+dataset-count-dump:
+  inputPath: hdfs://localhost:8020/pipelines-data
+dataset-archive-list:
+  inputPath: hdfs://localhost:8020/dwca-exports/
+dwca-avro:
+  inputPath: hdfs://localhost:8020/dwca-exports/{datasetId}/{datasetId}.zip
+  tempLocation: /data/spark-tmp/dwca-avro/{datasetId}
+interpret:
+  inputPath: hdfs://localhost:8020/pipelines-data/{datasetId}/1/verbatim.avro
+export-latlng:
+  inputPath: hdfs://localhost:8020/pipelines-data
+uuid:
+  inputPath: hdfs://localhost:8020/pipelines-data
+sample-avro:
+  inputPath: hdfs://localhost:8020/pipelines-data
+index:
+  inputPath: hdfs://localhost:8020/pipelines-data
+  zkHost: localhost:9983

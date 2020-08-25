@@ -149,6 +149,11 @@ dataset-count-dump:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-counts.csv
 
+dataset-validated-dump:
+  inputPath: '{fsPath}/pipelines-data'
+  targetPath: /tmp/dataset-validation-list.csv
+  fullReportPath: /tmp/full-validation-list.csv
+
 dataset-archive-list:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-archive-list.csv
