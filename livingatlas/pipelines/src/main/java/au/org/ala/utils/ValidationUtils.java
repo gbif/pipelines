@@ -31,6 +31,7 @@ public class ValidationUtils {
   public static final String VALIDATION_OUTPUT_DIR = "validation";
   public static final String DUPLICATE_KEYS_OUTPUT = "duplicateKeys.csv";
   public static final String UNIQUE_TERMS_SPECIFIED = "uniqueTermsSpecified";
+  public static final String METADATA_AVAILABLE = "metadataAvailable";
 
   /**
    * Checks the content of the validate file, returning true if the UUID content has been checked
@@ -62,7 +63,9 @@ public class ValidationUtils {
             "The number of records with empty values for all unique terms: " + emptyKeyRecords);
       }
 
-      if (emptyKeyRecords != 0) return false;
+      if (emptyKeyRecords != 0) {
+        return false;
+      }
 
       // check duplicate record count
       Long duplicateKeyCount =

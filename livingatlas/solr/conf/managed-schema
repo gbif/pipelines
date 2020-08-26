@@ -352,8 +352,10 @@
   <field name="waterBody"  type="string" docValues="true" indexed="true"/>
   <field name="year"  type="tint" docValues="true" indexed="true"/>
 
-  <!-- large text fields - not to be indexed -->
+  <!-- Large text fields (not supported by doc values) -->
   <field name="raw_footprintWKT"  type="text" />
+  <field name="raw_dynamicProperties"  type="text" />
+  <field name="raw_verbatimCoordinates"  type="text" />
 
   <!-- recent GBIF additions -->
   <field name="identifiedByIds"  type="string" docValues="true" indexed="true"/>

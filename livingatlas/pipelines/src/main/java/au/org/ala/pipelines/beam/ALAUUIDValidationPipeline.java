@@ -84,11 +84,11 @@ public class ALAUUIDValidationPipeline {
     if (collectoryMetadata.equals(ALACollectoryMetadata.EMPTY)) {
       log.error("Unable to retrieve dataset metadata for dataset: " + options.getDatasetId());
       PCollection<String> pc =
-          p.apply(Create.of("metadataAvailable: false").withCoder(StringUtf8Coder.of()));
+          p.apply(Create.of(METADATA_AVAILABLE + ": false").withCoder(StringUtf8Coder.of()));
       results = results.and(pc);
     } else {
       PCollection<String> pc =
-          p.apply(Create.of("metadataAvailable: true").withCoder(StringUtf8Coder.of()))
+          p.apply(Create.of(METADATA_AVAILABLE + ": true").withCoder(StringUtf8Coder.of()))
               .setCoder(StringUtf8Coder.of());
       ;
       results = results.and(pc);

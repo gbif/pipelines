@@ -19,19 +19,27 @@ import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.yaml.snakeyaml.Yaml;
 
+/**
+ * Generates 2 CSV reports based on the data within system:
+ *
+ * <p>1) A CSV listing datasets that are in a valid state for loading 2) A CSV listing all datasets
+ * and their validity for loading and test results.
+ */
 @Parameters(separators = "=")
 @Slf4j
 public class DumpReadyToIndexList {
 
-  @Parameter(names = "--inputPath", description = "Comma-separated list of group names to be run")
+  @Parameter(
+      names = "--inputPath",
+      description = "The root of the pipelines data directory e.g. /data/pipelines-data ")
   private String inputPath;
 
-  @Parameter(names = "--targetPath", description = "Comma-separated list of group names to be run")
+  @Parameter(names = "--targetPath", description = "The file path for the generated CSV")
   private String targetPath;
 
   @Parameter(
       names = "--fullReportPath",
-      description = "Comma-separated list of group names to be run")
+      description = "The file path for the generated CSV which is a complete list of datasets")
   private String fullReportPath;
 
   @Parameter(
@@ -69,7 +77,22 @@ public class DumpReadyToIndexList {
     FileWriter reportWriter = new FileWriter(fullReportPath);
 
     reportWriter.write(
-        String.join(", ", "datasetID", "recordCount", "verbatimLoaded", "uuidLoaded") + "\n");
+        String.join(
+                ", ",
+                "datasetID",
+                "datasetCanBeLoaded",
+                "recordCount",
+                ValidationUtils.METADATA_AVAILABLE,
+                ValidationUtils.UNIQUE_TERMS_SPECIFIED,
+                "verbatimAvoCreated",
+                "validationGenerated",
+                "uuidGenerated",
+                "hasEmptyRecordsKeys",
+                "hasDuplicateKeys",
+                ValidationUtils.EMPTY_KEY_RECORDS,
+                ValidationUtils.DUPLICATE_KEY_COUNT,
+                ValidationUtils.DUPLICATE_RECORD_KEY_COUNT)
+            + "\n");
 
     FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
     for (FileStatus fileStatus : fileStatuses) {
@@ -83,7 +106,13 @@ public class DumpReadyToIndexList {
         // dataset found
         boolean verbatimLoaded = false;
         boolean uuidLoaded = false;
+        boolean validationLoaded = false;
+        boolean metadataAvailable = false;
+        boolean uniqueTermsSpecified = false;
         Long recordCount = 0l;
+        Long emptyKeyRecords = 0l;
+        Long duplicateKeyCount = 0l;
+        Long duplicateRecordKeyCount = 0l;
 
         Path metrics = new Path(fileStatus.getPath().toString() + "/1/dwca-metrics.yml");
         verbatimLoaded = fs.exists(metrics);
@@ -103,13 +132,61 @@ public class DumpReadyToIndexList {
         Path uuidMetrics = new Path(fileStatus.getPath().toString() + "/1/uuid-metrics.yml");
         uuidLoaded = fs.exists(uuidMetrics);
 
+        // check UUIDs are generated
+        Path validationMetrics =
+            new Path(
+                fileStatus.getPath().toString() + "/1/" + ValidationUtils.VALIDATION_REPORT_FILE);
+        validationLoaded = fs.exists(validationMetrics);
+
+        if (validationLoaded) {
+          // read YAML
+          Yaml yaml = new Yaml();
+          // the YAML files created by metrics are UTF-16 encoded
+          Map<String, Object> yamlObject =
+              yaml.load(new InputStreamReader(fs.open(validationMetrics), StandardCharsets.UTF_8));
+
+          metadataAvailable =
+              Boolean.parseBoolean(
+                  yamlObject.getOrDefault(ValidationUtils.METADATA_AVAILABLE, false).toString());
+          uniqueTermsSpecified =
+              Boolean.parseBoolean(
+                  yamlObject
+                      .getOrDefault(ValidationUtils.UNIQUE_TERMS_SPECIFIED, false)
+                      .toString());
+          emptyKeyRecords =
+              Long.parseLong(
+                  yamlObject.getOrDefault(ValidationUtils.EMPTY_KEY_RECORDS, -1L).toString());
+          duplicateKeyCount =
+              Long.parseLong(
+                  yamlObject.getOrDefault(ValidationUtils.DUPLICATE_KEY_COUNT, -1L).toString());
+          duplicateRecordKeyCount =
+              Long.parseLong(
+                  yamlObject
+                      .getOrDefault(ValidationUtils.DUPLICATE_RECORD_KEY_COUNT, -1L)
+                      .toString());
+        }
+
         reportWriter.write(
             String.join(
                     ", ",
                     datasetID,
+                    Boolean.toString(
+                        metadataAvailable
+                            && uniqueTermsSpecified
+                            && recordCount > 0
+                            && verbatimLoaded
+                            && uuidLoaded),
                     recordCount.toString(),
+                    Boolean.toString(metadataAvailable),
+                    Boolean.toString(uniqueTermsSpecified),
                     Boolean.toString(verbatimLoaded),
-                    Boolean.toString(uuidLoaded))
+                    Boolean.toString(validationLoaded),
+                    Boolean.toString(uuidLoaded),
+                    Boolean.toString(emptyKeyRecords > 0),
+                    Boolean.toString(duplicateKeyCount > 0),
+                    emptyKeyRecords.toString(),
+                    duplicateKeyCount.toString(),
+                    duplicateRecordKeyCount.toString())
                 + "\n");
 
         if (recordCount > 0 && verbatimLoaded && uuidLoaded) {
