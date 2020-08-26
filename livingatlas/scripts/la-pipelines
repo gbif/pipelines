@@ -27,11 +27,8 @@ if [[ $SCRIPTPATH == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
 
 if [[ $PROD = false ]]; then
   # grep with -P option doesnt work on Mac OSX - perl regex arent supported,
-  # unless you install grep with `brew install grep`
-  # see https://apple.stackexchange.com/questions/193288/how-to-install-and-use-gnu-grep-in-macos
-  # and ggrep can be used
   if [[ "$OSTYPE" == "darwin"*  ]]; then
-    VER=$(ggrep -oPm1 "(?<=<version>)[^<]+" "../pom.xml")
+    VER=$(grep version ../pom.xml | grep -v '<?xml'| head -1 | sed 's/[[:space:]]//g' | sed -E 's/<[/]{0,1}version>//g')
   else
     VER=$(grep -om1 "(?<=<version>)[^<]+" "../pom.xml")
   fi
@@ -278,6 +275,7 @@ function dwca-avro () {
         exit 1
     fi
 
+    # TMPDIR is used by GNU sorting which is in use the dwca-io library
     export TMPDIR=$DWCA_TMP
 
     $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
