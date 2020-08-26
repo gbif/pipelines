@@ -42,6 +42,13 @@ public class TemporalTransform extends Transform<ExtendedRecord, TemporalRecord>
 
   }
 
+  //use default ISO date parser
+  public static TemporalTransform create() {
+    TemporalTransform tr = new TemporalTransform();
+    tr.temporalInterpreter =  DefaultTemporalInterpreter.getInstance();
+    return tr;
+  }
+
   public static TemporalTransform create(PipelinesConfig config) {
     TemporalTransform tr = new TemporalTransform();
     tr.config = config;
