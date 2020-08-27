@@ -102,7 +102,7 @@ public class ALALocationInterpreter {
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
         if (!Strings.isNullOrEmpty(lr.getCountryCode())) {
           if (countryCentrePoints.coordinatesMatchCentre(
-              lr.getCountryCode(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
+              lr.getCountry(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
             addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
           }
         }

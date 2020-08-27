@@ -340,11 +340,12 @@ public class AlaLocationInterpreterTest {
   @Test
   public void assertCountryCentre() {
     KeyValueTestStoreStub store = new KeyValueTestStoreStub();
-    store.put(new LatLng(-25.73d, 134.491d), createCountryResponse(Country.AUSTRALIA));
+    store.put(new LatLng(-29.532804, 145.491477), createCountryResponse(Country.AUSTRALIA));
+
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
     Map<String, String> coreMap = new HashMap<>();
-    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-25.73d");
-    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "134.491");
+    coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-29.532804d");
+    coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "145.491477d");
     coreMap.put(DwcTerm.geodeticDatum.qualifiedName(), "EPSG:4326");
 
     ExtendedRecord er = ExtendedRecord.newBuilder().setId(ID).setCoreTerms(coreMap).build();
@@ -374,8 +375,9 @@ public class AlaLocationInterpreterTest {
     Set<String> countryInFile = countryCentrePoints.keys();
 
     for (Country country : Country.values()) {
+      String name = country.getTitle().toUpperCase();
       String countryCode = country.getIso2LetterCode().toUpperCase();
-      if (!countryInFile.contains(countryCode)) {
+      if (!countryInFile.contains(name)) {
         System.out.println(countryCode + " : " + country.getTitle());
       }
     }

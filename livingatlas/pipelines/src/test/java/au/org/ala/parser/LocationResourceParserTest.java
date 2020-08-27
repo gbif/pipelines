@@ -34,13 +34,13 @@ public class LocationResourceParserTest {
     // -25.73288704	134.4910001
     boolean result =
         CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
-            .coordinatesMatchCentre("AU", -25.733, 134.491);
-    Assert.assertEquals(true, result);
+            .coordinatesMatchCentre("AUSTRALIA", -25.733, 134.491);
+    Assert.assertEquals(false, result);
 
     boolean result1 =
         CountryCentrePoints.getInstance(alaConfig.getLocationInfoConfig())
-            .coordinatesMatchCentre("AU", -29.53281, 145.491477);
-    Assert.assertEquals(false, result1);
+            .coordinatesMatchCentre("AUSTRALIA", -29.53, 145.4915);
+    Assert.assertEquals(true, result1);
   }
 
   @Test

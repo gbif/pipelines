@@ -23,6 +23,16 @@ import org.gbif.kvs.geocode.LatLng;
  *
  * <p>The first two is the coordinate of central point. The rest four are BBox
  *
+ * <p>1st col: name
+ *
+ * <p>2nd, 3rd: centre
+ *
+ * <p>If only 4 columns, the 4th is country code
+ *
+ * <p>If 7 columns, from the 4th to 8th is BBOX
+ *
+ * <p>If 8 columns, the 8th is country code
+ *
  * @author Bai187
  */
 @Slf4j
@@ -32,7 +42,7 @@ public class CentrePoints {
   private final Map<String, LatLng> centres = new HashMap();
   private final Map<String, BBox> BBox = new HashMap();
   // Only for country, map country code to country name
-  private final Map<String, String> names = new HashMap();
+  private final Map<String, String> codes = new HashMap();
 
   private CentrePoints() {}
 
@@ -52,26 +62,35 @@ public class CentrePoints {
         .map(s -> s.trim())
         .filter(
             l ->
-                l.split("\t").length == 7 || l.split("\t").length == 3 || l.split("\t").length == 4)
+                l.split("\t").length == 7
+                    || l.split("\t").length == 3
+                    || l.split("\t").length == 4
+                    || l.split("\t").length == 8)
         .forEach(
             l -> {
               String[] ss = l.split("\t");
-              String key = ss[0].toUpperCase();
+              int length = ss.length;
+              String name = ss[0].toUpperCase().replace("\"", ""); // Remove possible string quotes
               LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
-              if (l.split("\t").length == 4) {
-                String fullname = ss[3].toUpperCase();
-                cp.names.put(key, fullname);
+              // country code
+              if (length == 4) {
+                String code = ss[3].toUpperCase();
+                cp.codes.put(code, name);
               }
-              if (l.split("\t").length == 7) {
+              if (length == 8) {
+                String code = ss[7].toUpperCase();
+                cp.codes.put(code, name);
+              }
+              if (length == 7) {
                 BBox bbox =
                     new BBox(
                         Double.parseDouble(ss[3]),
                         Double.parseDouble(ss[4]),
                         Double.parseDouble(ss[5]),
                         Double.parseDouble(ss[6]));
-                cp.BBox.put(key, bbox);
+                cp.BBox.put(name, bbox);
               }
-              cp.centres.put(key, centre);
+              cp.centres.put(name, centre);
             });
     return cp;
   }
@@ -123,7 +142,7 @@ public class CentrePoints {
    * @return country name if exists
    */
   public String getName(String key) {
-    return names.get(key);
+    return codes.get(key);
   }
 
   private double round(double number, int decimalPlaces) {
