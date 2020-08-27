@@ -94,6 +94,8 @@ public class DumpReadyToIndexList {
                 ValidationUtils.DUPLICATE_RECORD_KEY_COUNT)
             + "\n");
 
+    int count = 0;
+
     FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
     for (FileStatus fileStatus : fileStatuses) {
       if (fileStatus.isDirectory()) {
@@ -113,6 +115,7 @@ public class DumpReadyToIndexList {
         Long emptyKeyRecords = 0l;
         Long duplicateKeyCount = 0l;
         Long duplicateRecordKeyCount = 0l;
+        count++;
 
         Path metrics = new Path(fileStatus.getPath().toString() + "/1/dwca-metrics.yml");
         verbatimLoaded = fs.exists(metrics);
@@ -209,6 +212,9 @@ public class DumpReadyToIndexList {
     reportWriter.flush();
     reportWriter.close();
 
+
+    log.info("Total number of datasets: {}", count);
+    log.info("Total number of valid dataset: {}", list.size());
     log.info("A list of valid datasets was written to: {}", inputPath);
     log.info("A list of all datasets and validation results was written to: {}", fullReportPath);
   }
