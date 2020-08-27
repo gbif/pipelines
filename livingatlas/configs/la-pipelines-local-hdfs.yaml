@@ -5,7 +5,7 @@
 general:
     attempt: 1
     hdfsSiteConfig: hdfs-site.xml
-    coreSiteConfig: hdfs-site.xml
+    coreSiteConfig: core-site.xml
     inputPath: hdfs://localhost:8020/pipelines-data
     targetPath: hdfs://localhost:8020/pipelines-data
 interpret:

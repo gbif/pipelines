@@ -242,6 +242,9 @@
     <!-- Common variables -->
     <surefireArgLine>-Xmx1024m</surefireArgLine>
 
+    <!-- GBIF libraries -->
+    <gbif-common.version>0.48</gbif-common.version>
+
     <!-- ALA libraries -->
     <ala-namematching-service.version>1.0-SNAPSHOT</ala-namematching-service.version>
 
@@ -279,6 +282,7 @@
 
     <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
     <jcabi-log.version>0.18.1</jcabi-log.version>
+
   </properties>
 
   <scm>
@@ -452,6 +456,7 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-common</artifactId>
+      <version>${gbif-common.version}</version>
     </dependency>
     <dependency>
       <groupId>org.gbif.kvs</groupId>

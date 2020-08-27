@@ -26,9 +26,10 @@ set -e # Stop on any failure
 if [[ $SCRIPTPATH == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
 
 if [[ $PROD = false ]]; then
-    VER=$(grep -oPm1 "(?<=<version>)[^<]+" "../pom.xml")
+  # grep with -P option doesnt work on Mac OSX - perl regex arent supported,
+  VER=$(grep version ../pom.xml | grep -v '<?xml'| head -1 | sed 's/[[:space:]]//g' | sed -E 's/<[/]{0,1}version>//g')
 else
-    VER=$(dpkg-query --show -f '${Version}' la-pipelines)
+  VER=$(dpkg-query --show -f '${Version}' la-pipelines)
 fi
 
 WHEREL="[--local|--embedded|--cluster]"
@@ -223,9 +224,13 @@ SPARK_TMP=$(getConf run.$TYPE.sparkTmp)
 
 SPARK_MASTER=$(getConf run.$TYPE.sparkMaster)
 
+DWCA_IMPORT=$(getConf run.$TYPE.dwcaImportDir)
+
+DWCA_TMP=$(getConf run.$TYPE.dwcaTmp)
+
 log.debug Target $(getConf general.targetPath)
 log.debug Jar: $PIPELINES_JAR
-log.debug Spart tmp: $SPARK_TMP
+log.debug Spark tmp: $SPARK_TMP
 
 FS_PATH_ARG="--fsPath=$FS_PATH"
 
@@ -261,19 +266,22 @@ function dwca-avro () {
     SECONDS=0
     logStepStart "DWCA-AVRO conversion" $dr
 
-    dwca_dir="/data/biocache-load/$dr/$dr.zip"
+    dwca_dir="$DWCA_IMPORT/$dr/$dr.zip"
 
     if [[ ! -f  $dwca_dir ]]
     then
-        dwca_dir="/data/biocache-load/$dr.zip"
+        dwca_dir="$DWCA_IMPORT/$dr.zip"
     fi
 
     if [[ ! -f  $dwca_dir ]]
     then
-        dwca_dir="/data/biocache-load/$dr.zip"
+        dwca_dir="$DWCA_IMPORT/$dr.zip"
         log.error "$dwca_dir does not exists on your filesystem."
         exit 1
     fi
+
+    # TMPDIR is used by GNU sorting which is in use the dwca-io library
+    export TMPDIR=$DWCA_TMP
 
     $_D java $EXTRA_JVM_CLI_ARGS -Dspark.local.dir=$SPARK_TMP \
         -cp $LOCAL_PIPELINES_JAR au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline \
@@ -293,6 +301,7 @@ function interpret () {
 
     PRE=interpret-sh-args.local
     if [[ $ltype = "local" ]] ; then
+        CLASS=au.org.ala.pipelines.java.ALAVerbatimToInterpretedPipeline
         $_D java $EXTRA_JVM_CLI_ARGS \
             $(getConf $PRE.jvm) \
             -cp $PIPELINES_JAR $CLASS \
@@ -322,7 +331,7 @@ function interpret () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$logConfig/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -360,7 +369,7 @@ function uuid () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$logConfig/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -397,7 +406,7 @@ function export-latlng () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$logConfig/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -452,7 +461,7 @@ function sample-avro () {
             $(toArg $PRE driver-memory) \
             --class $CLASS \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$logConfig/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -501,7 +510,7 @@ function index () {
             $(toArg $PRE driver-memory) \
             --class $CLASS  \
             --master $SPARK_MASTER \
-            --driver-java-options "-Dlog4j.configuration=file:/efs-mount-point/log4j.properties" \
+            --driver-java-options "-Dlog4j.configuration=file:$logConfig/log4j.properties" \
             $PIPELINES_JAR \
             --datasetId=$dr \
             --config=$config $ARGS
@@ -523,7 +532,7 @@ if ($do_all || $dwca_avro) ; then
             dwca-avro $d
         done
     else
-        rootDir=/data/biocache-load
+        rootDir=$DWCA_IMPORT
         # !!!!!! need to run this command on one vm then run the script !!!!
         # rm -rf $rootDir/dr*.lockdir
 

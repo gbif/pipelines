@@ -7,14 +7,19 @@ run:
     # jar: we get the jar from our dev or production environment
     sparkTmp: /data/spark-tmp
     sparkMaster: ""
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: /data/biocache-load
   spark-embedded:
-    # jar: we get the jar from our dev or production environment
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: /data/biocache-load
     sparkTmp: /data/spark-tmp
     sparkMaster: ""
   spark-cluster:
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: /data/biocache-load
     jar: /efs-mount-point/pipelines.jar
     sparkTmp: /data/spark-tmp
-    sparkMaster: spark://aws-spark-quoll-1.ala:7077
+    sparkMaster: spark://localhost:7077
 
 # which filesystem to use: local or hdfs
 fs:
@@ -23,7 +28,6 @@ fs:
     fsPath: /data
   hdfs:
     fsPath: hdfs://localhost:8020
-  # fsPath: hdfs://aws-spark-quoll-1.ala:9000/
 
 alaNameMatch:
   wsUrl: http://localhost:9179
