@@ -208,5 +208,8 @@ public class DumpReadyToIndexList {
 
     reportWriter.flush();
     reportWriter.close();
+
+    log.info("A list of valid datasets was written to: {}", inputPath);
+    log.info("A list of all datasets and validation results was written to: {}", fullReportPath);
   }
 }
