@@ -28,8 +28,6 @@ cd _github && git pull
 ./start-pipelines-hdfs-view-standalone
 ./start-pipelines-index-dataset-distributed
 ./start-pipelines-index-dataset-standalone
-./start-pipelines-index-dataset-distributed
-./start-pipelines-index-dataset-standalone
 ```
 9. Run "interpret all datasets":
 ```
