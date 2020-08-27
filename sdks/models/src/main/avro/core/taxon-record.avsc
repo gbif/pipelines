@@ -41,6 +41,16 @@
     ]
   },
   {
+    "name" : "ALAMatchIssueType",
+    "namespace" : "org.gbif.pipelines.io.avro",
+    "type" : "enum",
+    "symbols" : [
+      "affinitySpecies", "associatedNameExcluded", "conferSpecies", "excludedSpecies", "genericError",
+      "hintMismatch", "homonym", "indeterminateSpecies", "matchedToMisappliedName", "misappliedName",
+      "noIssue", "noMatch", "parentChildSynonym", "questionSpecies", "speciesPlural"
+     ]
+  },
+  {
     "name" : "Nomenclature",
     "namespace" : "org.gbif.pipelines.io.avro",
     "type" : "record",

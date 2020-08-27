@@ -17,7 +17,9 @@ import lombok.Value;
 public class ConnectionParameters {
 
   String protocol;
-  String url;
+
+  List<String> url;
+
   List<String> termsForUniqueKey;
 
   @JsonPOJOBuilder(withPrefix = "")

@@ -3,7 +3,7 @@ version: "2.4"
 services:
   ala-namematching-service:
     container_name: "ala-nameservice"
-    image: "djtfmartin/ala-namematching-service:v20200214-4"
+    image: "charvolant/ala-namematching-service:v20200214-5"
     ports:
       - "9180:9180"
       - "9179:9179"

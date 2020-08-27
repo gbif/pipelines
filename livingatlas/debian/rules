@@ -11,23 +11,42 @@
 
 # $(CURDIR) is the repository directory
 
-CURVERSION=$(shell grep -oPm1 "(?<=<version>)[^<]+" "pom.xml")
+CURVERSION=$(shell grep -oPm1 "(?<=<version>)[^<]+" "livingatlas/pom.xml")
+# Set the m2 repo local for fakeroot
+M2_REPO=/var/tmp/m2
+DESTDIR=$(CURDIR)/livingatlas/pipelines/target
 
 %:
 	dh $@
 
-build:
-#	install don't allow to rename files (like wars), so we copy here the file we want to install with the package
-# $(CURDIR) is the repo directory
-	cp $(CURDIR)/pipelines/target/pipelines-$(CURVERSION)-shaded.jar $(CURDIR)/pipelines/target/la-pipelines.jar
-	cp $(CURDIR)/scripts/la-pipelines-bash-completion.sh $(CURDIR)/pipelines/target/la-pipelines
+override_dh_auto_build:
+ifeq ($(filter nobuildjar,$(DEB_BUILD_PROFILES)),)
+# This allows to skip the maven jar build (for instance, if its builded by another jenkins job)
+# for instance with debuild -us -uc -b --build-profiles=nobuildjar
+# Also we can -DskipITs tests
+	mvn -Dmaven.repo.local=$(M2_REPO) clean package -DskipTests
+endif
 
-override_dh_fixperms:
-	dh_fixperms
+override_dh_auto_clean:
+#	rm -rf m2
+
+override_dh_auto_install:
+#	install don't allow to rename files (like wars), so we copy here the file we want to install with the package
+	cp $(CURDIR)/livingatlas/pipelines/target/pipelines-$(CURVERSION)-shaded.jar $(DESTDIR)/la-pipelines.jar
+	cp $(CURDIR)/livingatlas/scripts/la-pipelines-bash-completion.sh $(DESTDIR)/la-pipelines
+	cp $(CURDIR)/livingatlas/configs/la-pipelines-local.yaml $(DESTDIR)/la-pipelines-local.yaml.sample
+	dh_auto_install
+
+#override_dh_fixperms:
+#	dh_fixperms
 #	If we need to set some special perms to a file
 #	chmod 4755 debian/ala-foo/opt/atlas/ala-foo/foo.jar
 #	Also we use postinstall for this
 
-override_dh_install:
-	dh_install # calls default *.install and *.dirs installation
+#override_dh_install:
+#	dh_install # calls default *.install and *.dirs installation
 #	man install
+
+override_dh_strip_nondeterminism:
+# this takes to much time because debian/maven-repo-local so skip it for now
+# dh_strip_nondeterminism --verbose
