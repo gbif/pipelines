@@ -27,13 +27,9 @@ if [[ $SCRIPTPATH == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
 
 if [[ $PROD = false ]]; then
   # grep with -P option doesnt work on Mac OSX - perl regex arent supported,
-  if [[ "$OSTYPE" == "darwin"*  ]]; then
-    VER=$(grep version ../pom.xml | grep -v '<?xml'| head -1 | sed 's/[[:space:]]//g' | sed -E 's/<[/]{0,1}version>//g')
-  else
-    VER=$(grep -om1 "(?<=<version>)[^<]+" "../pom.xml")
-  fi
+  VER=$(grep version ../pom.xml | grep -v '<?xml'| head -1 | sed 's/[[:space:]]//g' | sed -E 's/<[/]{0,1}version>//g')
 else
-    VER=$(dpkg-query --show -f '${Version}' la-pipelines)
+  VER=$(dpkg-query --show -f '${Version}' la-pipelines)
 fi
 
 WHEREL="[--local|--embedded|--cluster]"
