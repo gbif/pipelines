@@ -378,7 +378,7 @@ public class AlaLocationInterpreterTest {
       String name = country.getTitle().toUpperCase();
       String countryCode = country.getIso2LetterCode().toUpperCase();
       if (!countryInFile.contains(name)) {
-        System.out.println(countryCode + " : " + country.getTitle());
+        log.info(countryCode + " : " + country.getTitle());
       }
     }
   }
