@@ -6,6 +6,7 @@ These are the steps to reinterpret all occurrences, for example when taxonomy or
 ```
 indexNumberReplicas: 0
 indexAlias: occurrence_new
+indexDefaultPrefixName: default_new
 ```
 2. Change **crawler-pipelines-hdfs-view-\*.yaml** and set:
 ```
