@@ -5,14 +5,14 @@ These are the steps to reinterpret all occurrences, for example when taxonomy or
 1. Change **crawler-pipelines-index-dataset-\*.yaml** and set:
 ```
 indexNumberReplicas: 0
-indexAlias: occurrence_new
-indexDefaultPrefixName: default_new
+indexAlias: occurrence_PIPELINES_VERSION
+indexDefaultPrefixName: default_PIPELINES_VERSION
 ```
 2. Change **crawler-pipelines-hdfs-view-\*.yaml** and set:
 ```
-repositoryTargetPath: hdfs://ha-nn/data/hdfsview/occurrence_new
+repositoryTargetPath: hdfs://ha-nn/data/hdfsview/occurrence_PIPELINES_VERSION
 ```
-3. Create a new directory hdfs://ha-nn/data/hdfsview/occurrence_new and grant 777 permission, and snapshot creation permission
+3. Create a new directory hdfs://ha-nn/data/hdfsview/occurrence_PIPELINES_VERSION and grant 777 permission, and snapshot creation permission
 4. Stop crawling
 5. Pause Oozie jobs – tables and maps
 6. Deploy pipelines, crawler, registry, etc
@@ -50,7 +50,7 @@ POST /_aliases
 14. Deploy any new occurrence-ws
 15. Tests that occurrence search, small downloads and big downloads work.
 16. Remove hdfs://ha-nn/data/hdfsview/occurrence
-17. Rename hdfs://ha-nn/data/hdfsview/occurrence_new to hdfs://ha-nn/data/hdfsview/occurrence
+17. Rename hdfs://ha-nn/data/hdfsview/occurrence_PIPELINES_VERSION to hdfs://ha-nn/data/hdfsview/occurrence
 18. Enable snapshots for the new data folder
 ```
 sudo -u hdfs hdfs dfsadmin -allowSnapshot /data/hdfsview/occurrence/
