@@ -236,7 +236,7 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     String idxName;
 
     if (recordsNumber >= config.indexIndepRecord) {
-      idxName = datasetId + "_" + message.getAttempt();
+      idxName = datasetId + "_" + message.getAttempt() + "_" + config.indexVersion;
       idxName = prefix == null ? idxName : idxName + "_" + prefix;
       idxName = idxName + "_" + Instant.now().toEpochMilli();
       log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
@@ -244,7 +244,8 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
     }
 
     // Default index name for all other datasets
-    String esPr = prefix == null ? config.indexDefaultPrefixName : config.indexDefaultPrefixName + "_" + prefix;
+    String defIdxPrefix = config.indexDefaultPrefixName + "_" + config.indexVersion;
+    String esPr = prefix == null ? defIdxPrefix : defIdxPrefix + "_" + prefix;
     idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
     log.info("ES Index name - {}", idxName);
     return idxName;

@@ -122,6 +122,10 @@ public class IndexingConfiguration implements BaseConfiguration {
   @NotNull
   public Integer indexDefaultNewIfSize;
 
+  @Parameter(names = "--index-version")
+  @NotNull
+  public String indexVersion;
+
   @Parameter(names = "--es-index-cat-url")
   @NotNull
   public String esIndexCatUrl;
