@@ -100,7 +100,7 @@ public class ALALocationInterpreter {
 
     return (er, lr) -> {
       if (lr.getDecimalLongitude() != null && lr.getDecimalLatitude() != null) {
-        if (!Strings.isNullOrEmpty(lr.getCountry())) {
+        if (!Strings.isNullOrEmpty(lr.getCountryCode())) {
           if (countryCentrePoints.coordinatesMatchCentre(
               lr.getCountry(), lr.getDecimalLatitude(), lr.getDecimalLongitude())) {
             addIssue(lr, ALAOccurrenceIssue.COORDINATES_CENTRE_OF_COUNTRY.name());
