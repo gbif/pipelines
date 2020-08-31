@@ -5,14 +5,14 @@ These are the steps to reinterpret all occurrences, for example when taxonomy or
 1. Change **crawler-pipelines-index-dataset-\*.yaml** and set:
 ```
 indexNumberReplicas: 0
-indexAlias: occurrence_PIPELINES_VERSION
-indexDefaultPrefixName: default_PIPELINES_VERSION
+indexVersion: INDEX_VERSION
+indexAlias: occurrence_INDEX_VERSION
 ```
 2. Change **crawler-pipelines-hdfs-view-\*.yaml** and set:
 ```
-repositoryTargetPath: hdfs://ha-nn/data/hdfsview/occurrence_PIPELINES_VERSION
+repositoryTargetPath: hdfs://ha-nn/data/hdfsview/occurrence_INDEX_VERSION
 ```
-3. Create a new directory hdfs://ha-nn/data/hdfsview/occurrence_PIPELINES_VERSION and grant 777 permission, and snapshot creation permission
+3. Create a new directory hdfs://ha-nn/data/hdfsview/occurrence_INDEX_VERSION and grant 777 permission, and snapshot creation permission
 4. Stop crawling
 5. Pause Oozie jobs – tables and maps
 6. Deploy pipelines, crawler, registry, etc
@@ -37,20 +37,20 @@ curl -iu username:password -X POST 'https://api.gbif-dev.org/v1/pipelines/histor
 10. Wait until reprocessing has finished
 11. Compare new and old indices to find missed data, fix data
 12. Deploy the Oozie download workflow with schema migration: https://github.com/gbif/occurrence/blob/master/occurrence-download/run-workflow-schema-migration.sh
-13. Swap the ES aliases. Delete **all** aliases from **all** indices and add **occurrence** alias to indices with the new suffix being used, for example **_20190926**
+13. Swap the ES aliases. Delete **all** aliases from **all** indices and add **occurrence** alias to indices with the new version being used, for example **_a_**
 ```
 POST /_aliases
 {
   "actions": [
     { "remove": { "index": "*", "alias": "*" } },
-    { "add": { "index": "*_20190926*", "alias": "occurrence" } }
+    { "add": { "index": "*_a_*", "alias": "occurrence" } }
   ]
 }
 ```
 14. Deploy any new occurrence-ws
 15. Tests that occurrence search, small downloads and big downloads work.
 16. Remove hdfs://ha-nn/data/hdfsview/occurrence
-17. Rename hdfs://ha-nn/data/hdfsview/occurrence_PIPELINES_VERSION to hdfs://ha-nn/data/hdfsview/occurrence
+17. Rename hdfs://ha-nn/data/hdfsview/occurrence_INDEX_VERSION to hdfs://ha-nn/data/hdfsview/occurrence
 18. Enable snapshots for the new data folder
 ```
 sudo -u hdfs hdfs dfsadmin -allowSnapshot /data/hdfsview/occurrence/
@@ -58,9 +58,9 @@ sudo -u hdfs hdfs dfsadmin -allowSnapshot /data/hdfsview/occurrence/
 19. Remove the old pipelines tables
 20. Deploy Oozie download workflow and build new download tables
 21. Resume other Oozie jobs (maps)
-22. Remove old indices. Delete **all** indices (first argument, `*`), except indices with suffix being used, for example **_20191001** (second argugent is `-*_20191001*`) and indices starting with **.** (third argument is `-.*`).
+22. Remove old indices. Delete **all** indices (first argument, `*`), except indices with version being used, for example **_a_** (second argugent is `-*_a_*`) and indices starting with **.** (third argument is `-.*`).
 ```
-DELETE /*,-*_20191001*,-.*,-dataset*
+DELETE /*,-*_a_*,-.*,-dataset*
 ```
 23. Turn on replicas for the new index
 ```
