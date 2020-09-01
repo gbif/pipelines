@@ -6,8 +6,6 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.FileWriter;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +13,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.ingest.utils.FileSystemFactory;
-import org.yaml.snakeyaml.Yaml;
 
 @Parameters(separators = "=")
 @Slf4j
@@ -61,22 +58,14 @@ public class DumpDatasetSize {
     FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
     for (FileStatus fileStatus : fileStatuses) {
       if (fileStatus.isDirectory()) {
+
         String datasetID =
             fileStatus
                 .getPath()
                 .toString()
                 .substring(fileStatus.getPath().toString().lastIndexOf("/") + 1);
-        Path metrics = new Path(fileStatus.getPath().toString() + "/1/dwca-metrics.yml");
-        if (fs.exists(metrics)) {
-          // read YAML
-          Yaml yaml = new Yaml();
-          // the YAML files created by metrics are UTF-16 encoded
-          Map<String, Object> yamlObject =
-              yaml.load(new InputStreamReader(fs.open(metrics), StandardCharsets.UTF_16));
-          counts.put(
-              datasetID,
-              Long.parseLong(yamlObject.getOrDefault("archiveToErCountAttempted", 0L).toString()));
-        }
+        counts.put(
+            datasetID, ValidationUtils.readVerbatimCount(fs, fileStatus.getPath().toString(), 1));
       }
     }
 

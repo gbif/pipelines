@@ -3,6 +3,7 @@ package au.org.ala.pipelines.beam;
 import au.org.ala.pipelines.options.DwcaToVerbatimPipelineOptions;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -31,6 +32,7 @@ public class ALADwcaToVerbatimPipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "dwca-avro");
     DwcaToVerbatimPipelineOptions options =
         PipelinesOptionsFactory.create(DwcaToVerbatimPipelineOptions.class, combinedArgs);
+    options.setMetaFileName(ValidationUtils.VERBATIM_METRICS);
     PipelinesOptionsFactory.registerHdfs(options);
     runWithLocking(options);
   }

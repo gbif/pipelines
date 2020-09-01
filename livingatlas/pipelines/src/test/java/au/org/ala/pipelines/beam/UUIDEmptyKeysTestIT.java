@@ -42,7 +42,7 @@ public class UUIDEmptyKeysTestIT {
               "--attempt=1",
               "--pipelineStep=DWCA_TO_VERBATIM",
               "--runner=DirectRunner",
-              "--metaFileName=dwca-metrics.yml",
+              "--metaFileName=" + ValidationUtils.VERBATIM_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-empty-terms",
               "--inputPath=" + inputPath
             });
@@ -56,7 +56,7 @@ public class UUIDEmptyKeysTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--interpretationTypes=ALL",
-              "--metaFileName=interpretation-metrics.yml",
+              "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-empty-terms",
               "--inputPath=/tmp/la-pipelines-test/uuid-empty-terms/"
                   + datasetID
@@ -73,7 +73,7 @@ public class UUIDEmptyKeysTestIT {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=uuid-metrics.yml",
+              "--metaFileName=" + ValidationUtils.UUID_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-empty-terms",
               "--inputPath=/tmp/la-pipelines-test/uuid-empty-terms/"
                   + datasetID
@@ -86,6 +86,6 @@ public class UUIDEmptyKeysTestIT {
 
     // assert count is 2
     assertEquals(1L, ValidationUtils.getInvalidRecordCount(uuidOptions));
-    assertFalse(ValidationUtils.checkValidationFile(uuidOptions));
+    assertFalse(ValidationUtils.checkValidationFile(uuidOptions).getValid());
   }
 }

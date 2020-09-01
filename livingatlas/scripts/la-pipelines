@@ -26,16 +26,10 @@ set -e # Stop on any failure
 if [[ $SCRIPTPATH == "/usr/bin" ]] ; then PROD=true ; else PROD=false ; fi
 
 if [[ $PROD = false ]]; then
-  # the grep function doesnt work on Mac OSX - perl regex arent supported,
-  # unless you install grep with `brew install grep`
-  # see https://apple.stackexchange.com/questions/193288/how-to-install-and-use-gnu-grep-in-macos
-  if [[ "$OSTYPE" == "darwin"*  ]]; then
-    VER=$(ggrep -oPm1 "(?<=<version>)[^<]+" "../pom.xml")
-  else
-    VER=$(grep -om1 "(?<=<version>)[^<]+" "../pom.xml")
-  fi
+  # grep with -P option doesnt work on Mac OSX - perl regex arent supported,
+  VER=$(grep version ../pom.xml | grep -v '<?xml'| head -1 | sed 's/[[:space:]]//g' | sed -E 's/<[/]{0,1}version>//g')
 else
-    VER=$(dpkg-query --show -f '${Version}' la-pipelines)
+  VER=$(dpkg-query --show -f '${Version}' la-pipelines)
 fi
 
 WHEREL="[--local|--embedded|--cluster]"
@@ -63,7 +57,7 @@ dwca-avro --> interpret --> uuid -->                │
 -  'index' reads a Dwc-A, interprets it and index the interpeted data creating a SOLR index.
 -  'archive-list' dumps out a list of archives that can be ingested to '/tmp/dataset-archive-list.csv'
 -  'dataset-list' dumps out a list of datasets that have been ingested to '/tmp/dataset-counts.csv'
--  'validation-list' dumps out a list of datasets ready to be indexed to '/tmp/index-counts.csv'
+-  'validation-report' dumps out a CSV list of datasets ready to be indexed to '/tmp/validation-report.csv'
 
 All the steps generate an output. If only the final output is desired, the intermediate outputs can be ignored.
 
@@ -78,7 +72,7 @@ Usage:
   $CMD [options] index         (<dr>...|all) $WHEREL
   $CMD [options] archive-list
   $CMD [options] dataset-list
-  $CMD [options] validation-list
+  $CMD [options] validation-report
   $CMD [options] do-all        (<dr>...|all) $WHEREL
   $CMD -h | --help
   $CMD -v | --version
@@ -280,10 +274,10 @@ function archive-list() {
        --config=$config $ARGS
 }
 
-function validation-list() {
+function validation-report() {
     # dump out archive list
-    log.info "Dumping ready to validation list"
-    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.DumpReadyToIndexList \
+    log.info "Creating validation report"
+    java $EXTRA_JVM_CLI_ARGS -cp $LOCAL_PIPELINES_JAR au.org.ala.utils.ValidationReportWriter \
        --config=$config $ARGS
 }
 
@@ -606,8 +600,8 @@ if ($dataset_list) ; then
     dataset-list
 fi
 
-if ($validation_list) ; then
-    validation-list
+if ($validation_report) ; then
+    validation-report
 fi
 
 if ($do_all || $dwca_avro) ; then

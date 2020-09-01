@@ -73,7 +73,6 @@ general:
 # class: au.org.ala.pipelines.beam.ALADwcaToVerbatimPipeline
 dwca-avro:
   runner: SparkRunner
-  metaFileName: dwca-metrics.yml
   # Path of the input file
   inputPath: /data/biocache-load/{datasetId}/{datasetId}.zip
   tempLocation: /data/biocache-load/{datasetId}/tmp/
@@ -83,7 +82,6 @@ interpret:
   appName: Interpretation for {datasetId}
   interpretationTypes: ALL
   inputPath: '{fsPath}/pipelines-data/{datasetId}/1/verbatim.avro'
-  metaFileName: interpretation-metrics.yml
   # Skips GBIF id generation and copies ids from ExtendedRecord ids
   useExtendedRecordId: true
   runner: SparkRunner
@@ -98,7 +96,6 @@ uuid:
   appName: UUID minting for {datasetId}
   runner: SparkRunner
   inputPath: '{fsPath}/pipelines-data'
-  metaFileName: uuid-metrics.yml
 
   ## For spark-cluster:
   # interpretationTypes: ALL
@@ -114,15 +111,11 @@ export-latlng:
 sample:
   inputPath: '{fsPath}/pipelines-data'
   appName: Sample for {datasetId}
-  metaFileName: indexing-metrics.yml
-  runner: SparkRunner
-  # TODO improve/move this
 
 # class: au.org.ala.pipelines.beam.ALASamplingToAvroPipeline
 sample-avro:
   inputPath: '{fsPath}/pipelines-data'
   runner: SparkRunner
-  metaFileName: indexing-metrics.yml
   ## For spark-cluster:
   # appName: Add Sampling for {datasetId}
   # useExtendedRecordId: true
@@ -132,7 +125,6 @@ sample-avro:
 # class: au.org.ala.pipelines.java.ALAInterpretedToSolrIndexPipeline
 index:
   inputPath: '{fsPath}/pipelines-data'
-  metaFileName: indexing-metrics.yml
   solrCollection: biocache
   includeSampling: true
   runner: SparkRunner
@@ -149,10 +141,12 @@ dataset-count-dump:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-counts.csv
 
-dataset-validated-dump:
+validation-report:
   inputPath: '{fsPath}/pipelines-data'
   targetPath: /tmp/dataset-validation-list.csv
   fullReportPath: /tmp/full-validation-list.csv
+  zkHost: localhost:9983
+  solrCollection: biocache
 
 dataset-archive-list:
   inputPath: '{fsPath}/pipelines-data'

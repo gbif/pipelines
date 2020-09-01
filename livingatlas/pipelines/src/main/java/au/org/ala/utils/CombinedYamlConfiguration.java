@@ -73,7 +73,7 @@ public class CombinedYamlConfiguration {
   }
 
   /**
-   * Combine linked hash mapS.
+   * Combine linked hash maps.
    *
    * <p>If some keys are maps of values we join them. For instance:
    *

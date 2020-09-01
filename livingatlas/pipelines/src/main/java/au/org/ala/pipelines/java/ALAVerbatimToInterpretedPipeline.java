@@ -15,6 +15,7 @@ import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -111,6 +112,7 @@ public class ALAVerbatimToInterpretedPipeline {
   public static void run(String[] args) {
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.create(InterpretationPipelineOptions.class, args);
+    options.setMetaFileName(ValidationUtils.INTERPRETATION_METRICS);
     run(options);
   }
 

@@ -7,6 +7,7 @@ import au.org.ala.kvs.client.ALACollectoryMetadata;
 import au.org.ala.pipelines.common.ALARecordTypes;
 import au.org.ala.pipelines.options.UUIDPipelineOptions;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationResult;
 import au.org.ala.utils.ValidationUtils;
 import java.util.*;
 import lombok.AccessLevel;
@@ -74,6 +75,7 @@ public class ALAUUIDMintingPipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "uuid");
     UUIDPipelineOptions options =
         PipelinesOptionsFactory.create(UUIDPipelineOptions.class, combinedArgs);
+    options.setMetaFileName(ValidationUtils.UUID_METRICS);
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", "UUID");
@@ -93,11 +95,11 @@ public class ALAUUIDMintingPipeline {
     ALAUUIDValidationPipeline.run(options);
 
     // check validation results
-    boolean validationPassed = ValidationUtils.checkValidationFile(options);
+    ValidationResult validatioResult = ValidationUtils.checkValidationFile(options);
 
-    log.info("Validation passed: {} ", validationPassed);
+    log.info("Validation passed: {} ", validatioResult.getMessage());
 
-    if (!validationPassed) {
+    if (!validatioResult.getValid()) {
       log.error(
           "Unable to run UUID pipeline. Please check validation file: "
               + ValidationUtils.getValidationFilePath(options));

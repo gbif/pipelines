@@ -115,7 +115,7 @@ public class UUIDPipelineTestIT {
               "--attempt=1",
               "--pipelineStep=DWCA_TO_VERBATIM",
               "--runner=DirectRunner",
-              "--metaFileName=dwca-metrics.yml",
+              "--metaFileName=" + ValidationUtils.VERBATIM_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-management",
               "--inputPath=" + inputPath
             });
@@ -129,7 +129,7 @@ public class UUIDPipelineTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--interpretationTypes=ALL",
-              "--metaFileName=interpretation-metrics.yml",
+              "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-management",
               "--inputPath=/tmp/la-pipelines-test/uuid-management/"
                   + datasetID
@@ -146,17 +146,15 @@ public class UUIDPipelineTestIT {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=uuid-metrics.yml",
+              "--metaFileName=" + ValidationUtils.UUID_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-management",
-              "--inputPath=/tmp/la-pipelines-test/uuid-management/"
-                  + datasetID
-                  + "/1/verbatim.avro",
+              "--inputPath=/tmp/la-pipelines-test/uuid-management/",
               "--properties=" + TestUtils.getPipelinesConfigFile(),
               "--useExtendedRecordId=true"
             });
     ALAUUIDMintingPipeline.run(uuidOptions);
 
     // check the UUIDs validate
-    Assertions.assertTrue(ValidationUtils.checkValidationFile(uuidOptions));
+    Assertions.assertTrue(ValidationUtils.checkValidationFile(uuidOptions).getValid());
   }
 }

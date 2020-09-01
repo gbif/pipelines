@@ -42,7 +42,7 @@ public class UUIDDuplicateKeysTestIT {
               "--attempt=1",
               "--pipelineStep=DWCA_TO_VERBATIM",
               "--runner=DirectRunner",
-              "--metaFileName=dwca-metrics.yml",
+              "--metaFileName=" + ValidationUtils.VERBATIM_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-duplicate-keys",
               "--inputPath=" + inputPath
             });
@@ -56,7 +56,7 @@ public class UUIDDuplicateKeysTestIT {
               "--attempt=1",
               "--runner=DirectRunner",
               "--interpretationTypes=ALL",
-              "--metaFileName=interpretation-metrics.yml",
+              "--metaFileName=" + ValidationUtils.INTERPRETATION_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-duplicate-keys",
               "--inputPath=/tmp/la-pipelines-test/uuid-duplicate-keys/"
                   + datasetID
@@ -73,7 +73,7 @@ public class UUIDDuplicateKeysTestIT {
               "--datasetId=" + datasetID,
               "--attempt=1",
               "--runner=DirectRunner",
-              "--metaFileName=uuid-metrics.yml",
+              "--metaFileName=" + ValidationUtils.UUID_METRICS,
               "--targetPath=/tmp/la-pipelines-test/uuid-duplicate-keys",
               "--inputPath=/tmp/la-pipelines-test/uuid-duplicate-keys/"
                   + datasetID
@@ -86,6 +86,6 @@ public class UUIDDuplicateKeysTestIT {
 
     // assert count is 2
     assertEquals(2L, ValidationUtils.getDuplicateKeyCount(uuidOptions));
-    assertFalse(ValidationUtils.checkValidationFile(uuidOptions));
+    assertFalse(ValidationUtils.checkValidationFile(uuidOptions).getValid());
   }
 }
