@@ -6,16 +6,17 @@ run:
   local:
     # jar: we get the jar from our dev or production environment
     sparkTmp: /data/spark-tmp
-    dwcaTmp: /data/dwca-tmp
-    dwcaImportDir: /data/biocache-load
     sparkMaster: ""
-  spark-embedded:
-    # jar: we get the jar from our dev or production environment
-    sparkTmp: /data/spark-tmp
     dwcaTmp: /data/dwca-tmp
     dwcaImportDir: /data/biocache-load
+  spark-embedded:
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: /data/biocache-load
+    sparkTmp: /data/spark-tmp
     sparkMaster: ""
   spark-cluster:
+    dwcaTmp: /data/dwca-tmp
+    dwcaImportDir: /data/biocache-load
     jar: /efs-mount-point/pipelines.jar
     dwcaImportDir: ''
     sparkTmp: /data/spark-tmp

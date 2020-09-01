@@ -7,10 +7,12 @@ import static org.junit.Assert.assertNull;
 import au.org.ala.kvs.ALAPipelinesConfig;
 import au.org.ala.kvs.LocationInfoConfig;
 import au.org.ala.pipelines.vocabulary.*;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
@@ -341,7 +343,6 @@ public class AlaLocationInterpreterTest {
     store.put(new LatLng(-29.532804, 145.491477), createCountryResponse(Country.AUSTRALIA));
 
     MetadataRecord mdr = MetadataRecord.newBuilder().setId(ID).build();
-
     Map<String, String> coreMap = new HashMap<>();
     coreMap.put(DwcTerm.verbatimLatitude.qualifiedName(), "-29.532804d");
     coreMap.put(DwcTerm.verbatimLongitude.qualifiedName(), "145.491477d");
@@ -362,6 +363,24 @@ public class AlaLocationInterpreterTest {
         },
         lr.getIssues().getIssueList().toArray());
     assertEquals(Country.AUSTRALIA.getTitle(), lr.getCountry());
+  }
+
+  /**
+   * List countries not in coutrycentrefile
+   *
+   * @throws IOException
+   */
+  @Test
+  public void countryNameMatch() throws IOException {
+    Set<String> countryInFile = countryCentrePoints.keys();
+
+    for (Country country : Country.values()) {
+      String name = country.getTitle().toUpperCase();
+      String countryCode = country.getIso2LetterCode().toUpperCase();
+      if (!countryInFile.contains(name)) {
+        log.info(countryCode + " : " + country.getTitle());
+      }
+    }
   }
 
   /** Only works for country */

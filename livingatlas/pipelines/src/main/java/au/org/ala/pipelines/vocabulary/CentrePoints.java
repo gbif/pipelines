@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.kvs.geocode.LatLng;
 
@@ -22,6 +23,16 @@ import org.gbif.kvs.geocode.LatLng;
  *
  * <p>The first two is the coordinate of central point. The rest four are BBox
  *
+ * <p>1st col: name
+ *
+ * <p>2nd, 3rd: centre
+ *
+ * <p>If only 4 columns, the 4th is country code
+ *
+ * <p>If 7 columns, from the 4th to 8th is BBOX
+ *
+ * <p>If 8 columns, the 8th is country code
+ *
  * @author Bai187
  */
 @Slf4j
@@ -30,6 +41,8 @@ public class CentrePoints {
   private static CentrePoints cp;
   private final Map<String, LatLng> centres = new HashMap();
   private final Map<String, BBox> BBox = new HashMap();
+  // Only for country, map country code to country name
+  private final Map<String, String> codes = new HashMap();
 
   private CentrePoints() {}
 
@@ -40,23 +53,44 @@ public class CentrePoints {
 
   public static CentrePoints getInstance(InputStream is) {
     cp = new CentrePoints();
+    // Use country as an example
+    // 3 columns: country code, latitude, longitude,
+    // 4 columns: country code, latitude, longitude,country name
+    // 7 coluns: country code, latitude, longitude, bbox
     new BufferedReader(new InputStreamReader(is))
         .lines()
         .map(s -> s.trim())
-        .filter(l -> l.split("\t").length == 7)
+        .filter(
+            l ->
+                l.split("\t").length == 7
+                    || l.split("\t").length == 3
+                    || l.split("\t").length == 4
+                    || l.split("\t").length == 8)
         .forEach(
             l -> {
               String[] ss = l.split("\t");
-              String name = ss[0].toLowerCase();
+              int length = ss.length;
+              String name = ss[0].toUpperCase().replace("\"", ""); // Remove possible string quotes
               LatLng centre = new LatLng(Double.parseDouble(ss[1]), Double.parseDouble(ss[2]));
-              BBox bbox =
-                  new BBox(
-                      Double.parseDouble(ss[3]),
-                      Double.parseDouble(ss[4]),
-                      Double.parseDouble(ss[5]),
-                      Double.parseDouble(ss[6]));
+              // country code
+              if (length == 4) {
+                String code = ss[3].toUpperCase();
+                cp.codes.put(code, name);
+              }
+              if (length == 8) {
+                String code = ss[7].toUpperCase();
+                cp.codes.put(code, name);
+              }
+              if (length == 7) {
+                BBox bbox =
+                    new BBox(
+                        Double.parseDouble(ss[3]),
+                        Double.parseDouble(ss[4]),
+                        Double.parseDouble(ss[5]),
+                        Double.parseDouble(ss[6]));
+                cp.BBox.put(name, bbox);
+              }
               cp.centres.put(name, centre);
-              cp.BBox.put(name, bbox);
             });
     return cp;
   }
@@ -68,7 +102,7 @@ public class CentrePoints {
   public boolean coordinatesMatchCentre(
       String location, double decimalLatitude, double decimalLongitude) {
 
-    LatLng supposedCentre = centres.get(location.toLowerCase());
+    LatLng supposedCentre = centres.get(location.toUpperCase());
     if (supposedCentre != null) {
       int latDecPlaces = noOfDecimalPlace(decimalLatitude);
       int longDecPlaces = noOfDecimalPlace(decimalLongitude);
@@ -94,6 +128,21 @@ public class CentrePoints {
   /** @return size of centres */
   public int size() {
     return centres.size();
+  }
+
+  /** @return keys */
+  public Set keys() {
+    return centres.keySet();
+  }
+
+  /**
+   * Only for country centre file.
+   *
+   * @param key country code
+   * @return country name if exists
+   */
+  public String getName(String key) {
+    return codes.get(key);
   }
 
   private double round(double number, int decimalPlaces) {
