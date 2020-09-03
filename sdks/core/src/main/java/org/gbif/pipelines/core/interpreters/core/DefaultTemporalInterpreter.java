@@ -27,7 +27,7 @@ import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.AtomizedLocalDate;
 import org.gbif.common.parsers.date.DateComponentOrdering;
 import org.gbif.common.parsers.date.DateParsers;
-import org.gbif.common.parsers.date.PrefTextDateParser;
+import org.gbif.common.parsers.date.CustomisedTextDateParser;
 import org.gbif.common.parsers.date.TemporalAccessorUtils;
 import org.gbif.common.parsers.date.TemporalParser;
 import org.gbif.dwc.terms.DcTerm;
@@ -57,7 +57,7 @@ public class DefaultTemporalInterpreter implements Serializable{
   }
 
   private DefaultTemporalInterpreter(DateComponentOrdering[] orderings){
-     temporalParser = PrefTextDateParser.getInstance(orderings);
+     temporalParser = CustomisedTextDateParser.getInstance(orderings);
   }
 
   /**
