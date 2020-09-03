@@ -18,7 +18,7 @@ run:
         dwcaImportDir: hdfs://localhost:8020/dwca-exports
         sparkMaster: ""
     spark-cluster:
-        jar: /efs-mount-point/pipelines.jar
+        jar: /efs-mount-point/la-pipelines.jar
         dwcaImportDir: hdfs://localhost:8020/dwca-exports
         sparkTmp: /data/spark-tmp
         sparkMaster: spark://localhost:7077
@@ -44,6 +44,9 @@ export-latlng:
     inputPath: hdfs://localhost:8020/pipelines-data
 uuid:
     inputPath: hdfs://localhost:8020/pipelines-data
+validation-report:
+    inputPath: hdfs://localhost:8020/pipelines-data
+    checkSolr: false
 sample-avro:
     inputPath: hdfs://localhost:8020/pipelines-data
 index:

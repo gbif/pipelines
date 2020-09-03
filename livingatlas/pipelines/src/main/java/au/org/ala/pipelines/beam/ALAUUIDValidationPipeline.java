@@ -97,7 +97,6 @@ public class ALAUUIDValidationPipeline {
     List<String> uniqueTerms = Collections.emptyList();
 
     // construct unique list of darwin core terms
-
     if (collectoryMetadata.getConnectionParameters() != null) {
       uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
       if ((uniqueTerms == null || uniqueTerms.isEmpty())) {

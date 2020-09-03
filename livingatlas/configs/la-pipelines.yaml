@@ -147,6 +147,8 @@ validation-report:
   targetPath: /tmp/dataset-validation-list.csv
   fullReportPath: /tmp/full-validation-list.csv
   zkHost: localhost:9983
+  checkSolr: true
+  checkSampling: true
   solrCollection: biocache
 
 dataset-archive-list:

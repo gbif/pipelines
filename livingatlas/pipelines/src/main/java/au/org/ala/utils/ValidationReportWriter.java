@@ -58,11 +58,11 @@ public class ValidationReportWriter {
       description = "Attempt of the dataset used to name the target file in file system")
   private Integer attempt;
 
-  @Parameter(names = "--checkSolr", description = "Check SOLR")
-  private Boolean checkSolr;
+  @Parameter(names = "--checkSolr", description = "Check SOLR", arity = 1)
+  private boolean checkSolr;
 
-  @Parameter(names = "--includeSampling", description = "Check sampling")
-  private Boolean includeSampling;
+  @Parameter(names = "--checkSampling", description = "Check sampling", arity = 1)
+  private boolean checkSampling;
 
   @Parameter(names = "--zkHost", description = "ZK host for SOLR")
   private String zkHost;
@@ -120,6 +120,7 @@ public class ValidationReportWriter {
     int count = 0;
 
     // retrieve indexed counts
+    log.info("Checking SOLR: {}, Checking Sampling: {}", checkSolr, checkSampling);
     Map<String, Long> datasetIndexCounts =
         checkSolr ? indexCounts(zkHost, solrCollection) : Collections.emptyMap();
 
@@ -203,8 +204,7 @@ public class ValidationReportWriter {
         }
 
         ValidationResult validationResult =
-            ValidationUtils.checkReadyForIndexing(
-                fs, filePath, datasetID, attempt, includeSampling);
+            ValidationUtils.checkReadyForIndexing(fs, filePath, datasetID, attempt, checkSampling);
 
         // write CSV
         reportWriter.write(
@@ -266,22 +266,27 @@ public class ValidationReportWriter {
    */
   public Map<String, Long> indexCounts(String zkHost, String solrCollection) throws Exception {
 
-    final SolrClient cloudSolrClient = new CloudSolrClient(zkHost);
-    final Map<String, String> queryParamMap = new HashMap<String, String>();
-    queryParamMap.put("q", "*:*");
-    queryParamMap.put("facet", "on");
-    queryParamMap.put("rows", "0");
-    queryParamMap.put("start", "0");
-    queryParamMap.put("facet.field", "dataResourceUid");
-    queryParamMap.put("facet.limit", "-1");
-    MapSolrParams queryParams = new MapSolrParams(queryParamMap);
+    try {
+      final SolrClient cloudSolrClient = new CloudSolrClient(zkHost);
+      final Map<String, String> queryParamMap = new HashMap<String, String>();
+      queryParamMap.put("q", "*:*");
+      queryParamMap.put("facet", "on");
+      queryParamMap.put("rows", "0");
+      queryParamMap.put("start", "0");
+      queryParamMap.put("facet.field", "dataResourceUid");
+      queryParamMap.put("facet.limit", "-1");
+      MapSolrParams queryParams = new MapSolrParams(queryParamMap);
 
-    QueryResponse queryResponse = cloudSolrClient.query(solrCollection, queryParams);
-    cloudSolrClient.close();
+      QueryResponse queryResponse = cloudSolrClient.query(solrCollection, queryParams);
+      cloudSolrClient.close();
 
-    FacetField ff = queryResponse.getFacetField("dataResourceUid");
+      FacetField ff = queryResponse.getFacetField("dataResourceUid");
 
-    return ff.getValues().stream()
-        .collect(Collectors.toMap(FacetField.Count::getName, FacetField.Count::getCount));
+      return ff.getValues().stream()
+          .collect(Collectors.toMap(FacetField.Count::getName, FacetField.Count::getCount));
+    } catch (Exception e) {
+      log.error("Unable to retrieve counts", e);
+      return Collections.emptyMap();
+    }
   }
 }

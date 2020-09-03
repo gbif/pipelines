@@ -64,6 +64,10 @@ public class ValidationUtils {
       throws Exception {
 
     ValidationResult isValid = checkValidationFile(options);
+    if (!isValid.getValid()) {
+      return isValid;
+    }
+
     FileSystem fs =
         FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
             .getFs(options.getInputPath());
@@ -82,53 +86,50 @@ public class ValidationUtils {
    * @return
    */
   public static ValidationResult checkReadyForIndexing(
-      FileSystem fs, String inputPath, String datasetId, Integer attempt, Boolean includeSampling)
+      FileSystem fs, String filePath, String datasetId, Integer attempt, boolean includeSampling)
       throws Exception {
 
-    ValidationResult isValid = checkValidationFile(fs, inputPath, datasetId, attempt);
+    ValidationResult isValid = checkValidationFile(fs, filePath, datasetId, attempt);
 
-    String filePath = inputPath + "/" + datasetId;
-
-    if (isValid.getValid()) {
-
-      // check date on DwCA?
-      long verbatimTime = metricsModificationTime(fs, filePath, attempt, VERBATIM_METRICS);
-      // check date on Interpretation?
-      long interpretationTime =
-          metricsModificationTime(fs, filePath, attempt, INTERPRETATION_METRICS);
-      // check UUID date
-      long uuidTime = metricsModificationTime(fs, filePath, attempt, UUID_METRICS);
-
-      if (interpretationTime < verbatimTime) {
-        log.warn(
-            "The imported verbatim is newer than the interpretation. Interpretation should be re-ran.");
-      }
-      if (interpretationTime > uuidTime) {
-        log.error(
-            "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
-        return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
-      }
-
-      // check date on UUID ?
-      if (includeSampling) {
-        // check sampling
-        boolean sampleRan = metricsExists(fs, filePath, attempt, SAMPLING_METRICS);
-        if (!sampleRan) {
-          log.error("Sampling has not been ran for this dataset. Unable to index dataset.");
-          return ValidationResult.builder().valid(false).message(NOT_SAMPLED).build();
-        }
-        long sampleTime = metricsModificationTime(fs, filePath, attempt, SAMPLING_METRICS);
-        if (interpretationTime > sampleTime) {
-          log.error(
-              "The sampling needs to be re-ran for this dataset as it pre-dates interpretation data.");
-          return ValidationResult.builder().valid(false).message(RESAMPLING_REQUIRED).build();
-        }
-      }
-
-      return ValidationResult.builder().valid(true).build();
-    } else {
-      return ValidationResult.OK;
+    if (!isValid.getValid()) {
+      return isValid;
     }
+
+    // check date on DwCA?
+    long verbatimTime = metricsModificationTime(fs, filePath, attempt, VERBATIM_METRICS);
+    // check date on Interpretation?
+    long interpretationTime =
+        metricsModificationTime(fs, filePath, attempt, INTERPRETATION_METRICS);
+    // check UUID date
+    long uuidTime = metricsModificationTime(fs, filePath, attempt, UUID_METRICS);
+
+    if (interpretationTime < verbatimTime) {
+      log.warn(
+          "The imported verbatim is newer than the interpretation. Interpretation should be re-ran.");
+    }
+    if (interpretationTime > uuidTime) {
+      log.warn(
+          "The imported interpretation is newer than the uuid. Unable to index until UUID minting re-ran");
+      return ValidationResult.builder().valid(false).message(UUID_REQUIRED).build();
+    }
+
+    // check date on UUID ?
+    if (includeSampling) {
+      // check sampling
+      boolean sampleRan = metricsExists(fs, filePath, attempt, SAMPLING_METRICS);
+      if (!sampleRan) {
+        log.warn("Sampling has not been ran for this dataset. Unable to index dataset.");
+        return ValidationResult.builder().valid(false).message(NOT_SAMPLED).build();
+      }
+      long sampleTime = metricsModificationTime(fs, filePath, attempt, SAMPLING_METRICS);
+      if (interpretationTime > sampleTime) {
+        log.warn(
+            "The sampling needs to be re-ran for this dataset as it pre-dates interpretation data.");
+        return ValidationResult.builder().valid(false).message(RESAMPLING_REQUIRED).build();
+      }
+    }
+
+    return ValidationResult.OK;
   }
 
   /**
@@ -154,6 +155,7 @@ public class ValidationUtils {
 
     String validateFilePath = getValidationFilePath(inputPath, datasetId, attempt);
     Path metrics = new Path(validateFilePath);
+
     if (fs.exists(metrics)) {
       // read YAML
       Yaml yaml = new Yaml();
@@ -166,7 +168,7 @@ public class ValidationUtils {
           Long.parseLong(yamlObject.getOrDefault(EMPTY_KEY_RECORDS, -1L).toString());
 
       if (emptyKeyRecords > 0) {
-        log.error(
+        log.warn(
             "The number of records with empty values for all unique terms: " + emptyKeyRecords);
       }
 
@@ -181,18 +183,18 @@ public class ValidationUtils {
           Long.parseLong(yamlObject.getOrDefault(DUPLICATE_RECORD_KEY_COUNT, -1L).toString());
 
       if (duplicateKeyCount > 0) {
-        log.error("The number of duplicate keys: " + duplicateKeyCount);
-        log.error("The number of records with duplicate keys: " + duplicateRecordKeyCount);
+        log.warn("The number of duplicate keys: " + duplicateKeyCount);
+        log.warn("The number of records with duplicate keys: " + duplicateRecordKeyCount);
       }
 
-      if (duplicateKeyCount == 0) {
-        return ValidationResult.OK;
-      } else {
+      if (duplicateKeyCount != 0) {
         return ValidationResult.builder().valid(false).message(HAS_DUPLICATES).build();
+      } else {
+        return ValidationResult.OK;
       }
 
     } else {
-      log.error("Unable to read validation file. Has validation pipeline failed ?");
+      log.info("Validation not completed  for {}, from inputPath {}", datasetId, validateFilePath);
       return ValidationResult.builder().valid(false).message(NOT_VALIDATED).build();
     }
   }
@@ -257,17 +259,16 @@ public class ValidationUtils {
     String validateFilePath =
         String.join(
             "/",
-            options.getTargetPath(),
+            options.getInputPath(),
             options.getDatasetId().trim(),
-            options.getAttempt().toString(),
+            "1",
             VALIDATION_REPORT_FILE);
     return validateFilePath;
   }
 
   @NotNull
   public static String getValidationFilePath(String inputPath, String datasetId, Integer attempt) {
-    String validateFilePath =
-        String.join("/", inputPath, datasetId, attempt.toString(), VALIDATION_REPORT_FILE);
+    String validateFilePath = String.join("/", inputPath, "1", VALIDATION_REPORT_FILE);
     return validateFilePath;
   }
 
@@ -293,6 +294,10 @@ public class ValidationUtils {
     // read YAML
     Yaml yaml = new Yaml();
     Path validationMetrics = getMetrics(fs, filePath, attempt, VERBATIM_METRICS);
+
+    if (!fs.exists(validationMetrics)) {
+      return -1l;
+    }
 
     // the YAML files created by metrics are UTF-16 encoded
     Map<String, Object> metrics =
@@ -334,7 +339,7 @@ public class ValidationUtils {
               "Unable to load dataset %s, All supplied unique terms (%s) where empty record with ID %s",
               datasetID, termList, source.getId());
 
-      log.error(errorMessage);
+      log.warn(errorMessage);
       throw new RuntimeException(errorMessage);
     }
 
@@ -388,11 +393,12 @@ public class ValidationUtils {
 
   public static long metricsModificationTime(
       FileSystem fs, String filePath, Integer attempt, String metricsFile) throws Exception {
-    Path metrics = new Path(String.join("/", filePath, attempt.toString(), metricsFile));
+    String path = String.join("/", filePath, attempt.toString(), metricsFile);
+    Path metrics = new Path(path);
     if (fs.exists(metrics)) {
       return fs.getFileStatus(metrics).getModificationTime();
     } else {
-      throw new FileNotFoundException("Unable to read metrics file at: " + metrics.getName());
+      throw new FileNotFoundException("Unable to read metrics file at: " + path);
     }
   }
 }
