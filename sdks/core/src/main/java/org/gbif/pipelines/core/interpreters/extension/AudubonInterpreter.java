@@ -1,11 +1,15 @@
 package org.gbif.pipelines.core.interpreters.extension;
 
+import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
+
+import com.google.common.base.Strings;
 import java.net.URI;
 import java.time.temporal.Temporal;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
-
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.common.parsers.LicenseUriParser;
@@ -18,24 +22,19 @@ import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.XmpRightsTerm;
 import org.gbif.dwc.terms.XmpTerm;
-import org.gbif.pipelines.core.ExtensionInterpretation;
-import org.gbif.pipelines.core.ExtensionInterpretation.Result;
-import org.gbif.pipelines.core.ExtensionInterpretation.TargetHandler;
+import org.gbif.pipelines.core.interpreters.ExtensionInterpretation;
+import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.Result;
+import org.gbif.pipelines.core.interpreters.ExtensionInterpretation.TargetHandler;
+import org.gbif.pipelines.core.parsers.temporal.ParsedTemporal;
+import org.gbif.pipelines.core.parsers.temporal.TemporalParser;
 import org.gbif.pipelines.io.avro.Audubon;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MediaType;
-import org.gbif.pipelines.parsers.parsers.temporal.ParsedTemporal;
-import org.gbif.pipelines.parsers.parsers.temporal.TemporalParser;
-
-import com.google.common.base.Strings;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-
-import static org.gbif.api.vocabulary.OccurrenceIssue.MULTIMEDIA_DATE_INVALID;
 
 /**
- * Interpreter for the Audubon extension, Interprets form {@link ExtendedRecord} to {@link AudubonRecord}.
+ * Interpreter for the Audubon extension, Interprets form {@link ExtendedRecord} to {@link
+ * AudubonRecord}.
  *
  * @see <a href="http://rs.gbif.org/extension/ac/audubon.xml</a>
  */
@@ -150,8 +149,8 @@ public class AudubonInterpreter {
           .postMap(AudubonInterpreter::parseAndSetTypeFromAccessUri);
 
   /**
-   * Interprets audubon of a {@link ExtendedRecord} and populates a {@link AudubonRecord}
-   * with the interpreted values.
+   * Interprets audubon of a {@link ExtendedRecord} and populates a {@link AudubonRecord} with the
+   * interpreted values.
    */
   public static void interpret(ExtendedRecord er, AudubonRecord ar) {
     Objects.requireNonNull(er);
@@ -163,9 +162,7 @@ public class AudubonInterpreter {
     ar.getIssues().setIssueList(result.getIssuesAsList());
   }
 
-  /**
-   * Parser for "http://rs.tdwg.org/ac/terms/accessURI" term value
-   */
+  /** Parser for "http://rs.tdwg.org/ac/terms/accessURI" term value */
   private static String parseAndSetAccessUri(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
     Optional<URI> uriOpt = Optional.ofNullable(uri);
@@ -182,25 +179,19 @@ public class AudubonInterpreter {
     return "";
   }
 
-  /**
-   * Parser for "http://rs.tdwg.org/ac/terms/furtherInformationURL" term value
-   */
+  /** Parser for "http://rs.tdwg.org/ac/terms/furtherInformationURL" term value */
   private static void parseAndSetFurtherInformationUrl(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
     Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setFurtherInformationUrl);
   }
 
-  /**
-   * Parser for "http://rs.tdwg.org/ac/terms/attributionLinkURL" term value
-   */
+  /** Parser for "http://rs.tdwg.org/ac/terms/attributionLinkURL" term value */
   private static void parseAndSetAttributionLinkUrl(Audubon a, String v) {
     URI uri = UrlParser.parse(v);
     Optional.ofNullable(uri).map(URI::toString).ifPresent(a::setAttributionLinkUrl);
   }
 
-  /**
-   * Parser for "http://purl.org/dc/terms/format" term value
-   */
+  /** Parser for "http://purl.org/dc/terms/format" term value */
   private static void parseAndSetFormat(Audubon a, String v) {
     String mimeType = MEDIA_PARSER.parseMimeType(v);
     if (Strings.isNullOrEmpty(mimeType) && !Strings.isNullOrEmpty(a.getIdentifier())) {
@@ -218,9 +209,7 @@ public class AudubonInterpreter {
     a.setFormat(mimeType);
   }
 
-  /**
-   * Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value
-   */
+  /** Parser for "http://ns.adobe.com/xap/1.0/CreateDate" term value */
   private static String parseAndSetCreatedDate(Audubon a, String v) {
     ParsedTemporal parsed = TemporalParser.parse(v);
     parsed.getFromOpt().map(Temporal::toString).ifPresent(a::setCreateDate);
@@ -228,14 +217,15 @@ public class AudubonInterpreter {
     return parsed.getIssues().isEmpty() ? "" : MULTIMEDIA_DATE_INVALID.name();
   }
 
-  /**
-   * Parser for "http://purl.org/dc/elements/1.1/type" term value
-   */
+  /** Parser for "http://purl.org/dc/elements/1.1/type" term value */
   private static void parseAndSetType(Audubon a, String v) {
     String v1 = Optional.ofNullable(v).orElse("");
     String format = Optional.ofNullable(a.getFormat()).orElse("");
-    BiPredicate<String, MediaType> prFn = (s, mt) -> format.startsWith(s) || v1.toLowerCase().startsWith(s)
-        || v1.toLowerCase().startsWith(mt.name().toLowerCase());
+    BiPredicate<String, MediaType> prFn =
+        (s, mt) ->
+            format.startsWith(s)
+                || v1.toLowerCase().startsWith(s)
+                || v1.toLowerCase().startsWith(mt.name().toLowerCase());
 
     if (prFn.test("video", MediaType.MovingImage)) {
       a.setType(MediaType.MovingImage.name());
@@ -246,22 +236,20 @@ public class AudubonInterpreter {
     }
   }
 
-  /**
-   * Parser for "http://purl.org/dc/terms/type" term value
-   */
+  /** Parser for "http://purl.org/dc/terms/type" term value */
   private static void parseAndSetTypeUri(Audubon a, String v) {
     parseAndSetType(a, v);
   }
 
   /** Returns ENUM instead of url string */
   private static void parseAndSetRightsAndRightsUri(Audubon a) {
-     String rightsUri = Strings.isNullOrEmpty(a.getRightsUri()) ? a.getRights() : a.getRightsUri();
-     if (Objects.nonNull(rightsUri)) {
-       ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(rightsUri);
-       String licenseUri = parsed.isSuccessful() ? parsed.getPayload().toString() : rightsUri;
-       a.setRights(licenseUri);
-       a.setRightsUri(licenseUri);
-     }
+    String rightsUri = Strings.isNullOrEmpty(a.getRightsUri()) ? a.getRights() : a.getRightsUri();
+    if (Objects.nonNull(rightsUri)) {
+      ParseResult<URI> parsed = LICENSE_URI_PARSER.parse(rightsUri);
+      String licenseUri = parsed.isSuccessful() ? parsed.getPayload().toString() : rightsUri;
+      a.setRights(licenseUri);
+      a.setRightsUri(licenseUri);
+    }
   }
 
   /** Parses type in case if type is null, but maybe accessUri contains type, like - *.jpg */

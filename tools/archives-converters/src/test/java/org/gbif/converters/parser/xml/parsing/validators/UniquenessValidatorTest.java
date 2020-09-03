@@ -1,17 +1,15 @@
 package org.gbif.converters.parser.xml.parsing.validators;
 
+import com.google.common.base.Stopwatch;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import com.google.common.base.Stopwatch;
-import lombok.extern.slf4j.Slf4j;
 
 /** Tests the {@link UniquenessValidator}. */
 @Slf4j

@@ -5,13 +5,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -47,7 +45,9 @@ public class MultimediaInterpreterTest {
     ext2.put(DcTerm.contributor.qualifiedName(), "Cont2");
     ext2.put(DcTerm.publisher.qualifiedName(), "Pub2");
     ext2.put(DcTerm.audience.qualifiedName(), "Aud2");
-    ext2.put(DcTerm.license.qualifiedName(), "http://creativecommons.org/publicdomain/zero/1.0/legalcode");
+    ext2.put(
+        DcTerm.license.qualifiedName(),
+        "http://creativecommons.org/publicdomain/zero/1.0/legalcode");
     ext2.put(DwcTerm.datasetID.qualifiedName(), "2");
     ext2.put(DcTerm.rightsHolder.qualifiedName(), "Rh2");
     ext2.put(DcTerm.creator.qualifiedName(), "Cr2");
@@ -57,7 +57,9 @@ public class MultimediaInterpreterTest {
     ext3.put(DcTerm.created.qualifiedName(), "2021-01-12T18:33:58.000+0000");
 
     Map<String, String> ext4 = new HashMap<>(4);
-    ext3.put(DcTerm.identifier.qualifiedName(), "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
+    ext3.put(
+        DcTerm.identifier.qualifiedName(),
+        "https://quod.lib.umich.edu/cgi/i/image/api/image/herb00ic:1559372:MICH-V-1559372/full/res:0/0/native.jpg");
 
     Map<String, List<Map<String, String>>> ext = new HashMap<>(1);
     ext.put(Extension.MULTIMEDIA.getRowType(), Arrays.asList(ext1, ext2, ext3, ext4));
@@ -65,7 +67,9 @@ public class MultimediaInterpreterTest {
     ExtendedRecord record =
         ExtendedRecord.newBuilder()
             .setId("id")
-            .setCoreTerms(Collections.singletonMap(DwcTerm.associatedMedia.qualifiedName(), "www.gbif.org/tmp22.jpg"))
+            .setCoreTerms(
+                Collections.singletonMap(
+                    DwcTerm.associatedMedia.qualifiedName(), "www.gbif.org/tmp22.jpg"))
             .setExtensions(ext)
             .build();
 
@@ -87,14 +91,14 @@ public class MultimediaInterpreterTest {
             + "\"publisher\": null, \"license\": null, \"rightsHolder\": null, \"datasetId\": null}], \"issues\": {\"issueList\": "
             + "[\"MULTIMEDIA_DATE_INVALID\", \"MULTIMEDIA_URI_INVALID\"]}}";
 
-    MultimediaRecord mr = MultimediaRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
+    MultimediaRecord mr =
+        MultimediaRecord.newBuilder().setId(record.getId()).setCreated(0L).build();
 
     // When
     MultimediaInterpreter.interpret(record, mr);
     MultimediaInterpreter.interpretAssociatedMedia(record, mr);
 
-    //Should
+    // Should
     Assert.assertEquals(result, mr.toString());
   }
-
 }

@@ -5,15 +5,13 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.concurrent.ForkJoinPool;
-
-import org.gbif.converters.converter.SyncDataFileWriter;
-import org.gbif.converters.converter.SyncDataFileWriterBuilder;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.gbif.converters.converter.SyncDataFileWriter;
+import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -131,7 +129,8 @@ public class ExtendedRecordConverterTest {
 
     // Deserialize ExtendedRecord from disk
     DatumReader<ExtendedRecord> datumReader = new SpecificDatumReader<>(ExtendedRecord.class);
-    try (DataFileReader<ExtendedRecord> dataFileReader = new DataFileReader<>(verbatim, datumReader)) {
+    try (DataFileReader<ExtendedRecord> dataFileReader =
+        new DataFileReader<>(verbatim, datumReader)) {
       while (dataFileReader.hasNext()) {
         ExtendedRecord record = dataFileReader.next();
         Assert.assertNotNull(record);

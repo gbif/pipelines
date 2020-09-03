@@ -15,17 +15,15 @@
  */
 package org.gbif.converters.parser.xml.model;
 
+import com.google.common.base.Strings;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
-
-import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
-import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
-
-import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.converters.parser.xml.constants.PrioritizedPropertyNameEnum;
+import org.gbif.converters.parser.xml.parsing.xml.PrioritizedProperty;
 
 /** Holds a single image for a RawOccurrenceRecord. */
 @Slf4j

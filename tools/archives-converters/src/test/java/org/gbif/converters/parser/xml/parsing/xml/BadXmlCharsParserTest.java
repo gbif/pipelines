@@ -15,14 +15,12 @@
  */
 package org.gbif.converters.parser.xml.parsing.xml;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.util.List;
-
 import org.gbif.converters.parser.xml.parsing.RawXmlOccurrence;
-
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class BadXmlCharsParserTest extends ParserTestCase {
 

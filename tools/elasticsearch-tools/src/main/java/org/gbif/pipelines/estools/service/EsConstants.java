@@ -2,7 +2,6 @@ package org.gbif.pipelines.estools.service;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -58,7 +57,7 @@ public final class EsConstants {
     public static final String NUMBER_REPLICAS = "0";
     public static final String ANALYSIS =
         "{\"normalizer\":{\"lowercase_normalizer\":{\"type\":\"custom\",\"char_filter\":[],\"filter\":[\"lowercase\"]}},"
-    +    "\"analyzer\": {\"lowercase_analyzer\": {\"filter\": [\"lowercase\"],\"tokenizer\": \"keyword\",\"type\": \"custom\",\"char_filter\": []}}}";
+            + "\"analyzer\": {\"lowercase_analyzer\": {\"filter\": [\"lowercase\"],\"tokenizer\": \"keyword\",\"type\": \"custom\",\"char_filter\": []}}}";
     private static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>();
 
     static {

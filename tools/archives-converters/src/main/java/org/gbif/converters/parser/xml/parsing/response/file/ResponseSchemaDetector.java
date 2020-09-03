@@ -20,12 +20,10 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.vocabulary.OccurrenceSchemaType;
 import org.gbif.converters.parser.xml.constants.ExtractionSimpleXPaths;
 import org.gbif.converters.parser.xml.constants.ResponseElementEnum;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Primary purpose of this class is, given a raw occurrence record serialized to String from XML,

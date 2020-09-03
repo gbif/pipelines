@@ -1,16 +1,15 @@
 package org.gbif.pipelines.examples;
 
-import org.gbif.example.io.avro.ExampleRecord;
-import org.gbif.pipelines.core.Interpretation;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.gbif.example.io.avro.ExampleRecord;
+import org.gbif.pipelines.core.interpreters.Interpretation;
+import org.gbif.pipelines.io.avro.TemporalRecord;
 
 /**
- * Example how to use {@link org.gbif.pipelines.core.Interpretation}, as a sequence of
- * interpretations and wrap it into Apache Beam {@link org.apache.beam.sdk.transforms.ParDo} and use
- * it after in a {@link org.apache.beam.sdk.Pipeline}
+ * Example how to use {@link Interpretation}, as a sequence of interpretations and wrap it into
+ * Apache Beam {@link org.apache.beam.sdk.transforms.ParDo} and use it after in a {@link
+ * org.apache.beam.sdk.Pipeline}
  *
  * <p>See source code - {@link org.gbif.pipelines.transforms}
  */

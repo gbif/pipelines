@@ -4,10 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,5 +34,4 @@ public class OccurrenceExtensionConverterTest {
     Assert.assertEquals(somethingCore, erResult.getCoreTerms().get(somethingCore));
     Assert.assertEquals(somethingExt, erResult.getCoreTerms().get(somethingExt));
   }
-
 }

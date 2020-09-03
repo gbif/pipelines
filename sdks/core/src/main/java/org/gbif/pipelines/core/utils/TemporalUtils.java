@@ -5,7 +5,6 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.Optional;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,5 +29,4 @@ public class TemporalUtils {
     }
     return Optional.empty();
   }
-
 }

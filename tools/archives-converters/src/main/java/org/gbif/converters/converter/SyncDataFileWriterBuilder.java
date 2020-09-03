@@ -4,24 +4,19 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Optional;
-
+import lombok.Builder;
+import lombok.NonNull;
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
 
-import lombok.Builder;
-import lombok.NonNull;
-
 @Builder
 public class SyncDataFileWriterBuilder {
 
-  @NonNull
-  private Schema schema;
-  @NonNull
-  private String codec;
-  @NonNull
-  private OutputStream outputStream;
+  @NonNull private Schema schema;
+  @NonNull private String codec;
+  @NonNull private OutputStream outputStream;
   private Integer syncInterval;
   private Boolean flushOnEveryBlock;
 
