@@ -26,9 +26,8 @@ import org.yaml.snakeyaml.Yaml;
 @Slf4j
 public class ValidationUtils {
 
-  public static final String CANT_INDEX = "CANT_INDEX";
   public static final String METADATA_NOT_AVAILABLE = "NOT_AVAILABLE";
-  public static final String UNIQUE_TERMS_NOT_SPECIFIED = "NOT_SPECIFIED";
+  public static final String UNIQUE_TERMS_NOT_SPECIFIED = "TERMS_NOT_SET";
   public static final String NO_VERBATIM = "NO_VERBATIM";
   public static final String NOT_INTERPRET = "NOT_INTERPRET";
   public static final String NOT_VALIDATED = "NOT_VALIDATED";
@@ -96,12 +95,12 @@ public class ValidationUtils {
     }
 
     // check date on DwCA?
-    long verbatimTime = metricsModificationTime(fs, filePath, attempt, VERBATIM_METRICS);
+    long verbatimTime = metricsModificationTime(fs, filePath, datasetId, attempt, VERBATIM_METRICS);
     // check date on Interpretation?
     long interpretationTime =
-        metricsModificationTime(fs, filePath, attempt, INTERPRETATION_METRICS);
+        metricsModificationTime(fs, filePath, datasetId, attempt, INTERPRETATION_METRICS);
     // check UUID date
-    long uuidTime = metricsModificationTime(fs, filePath, attempt, UUID_METRICS);
+    long uuidTime = metricsModificationTime(fs, filePath, datasetId, attempt, UUID_METRICS);
 
     if (interpretationTime < verbatimTime) {
       log.warn(
@@ -116,12 +115,12 @@ public class ValidationUtils {
     // check date on UUID ?
     if (includeSampling) {
       // check sampling
-      boolean sampleRan = metricsExists(fs, filePath, attempt, SAMPLING_METRICS);
+      boolean sampleRan = metricsExists(fs, filePath, datasetId, attempt, SAMPLING_METRICS);
       if (!sampleRan) {
         log.warn("Sampling has not been ran for this dataset. Unable to index dataset.");
         return ValidationResult.builder().valid(false).message(NOT_SAMPLED).build();
       }
-      long sampleTime = metricsModificationTime(fs, filePath, attempt, SAMPLING_METRICS);
+      long sampleTime = metricsModificationTime(fs, filePath, datasetId, attempt, SAMPLING_METRICS);
       if (interpretationTime > sampleTime) {
         log.warn(
             "The sampling needs to be re-ran for this dataset as it pre-dates interpretation data.");
@@ -162,6 +161,20 @@ public class ValidationUtils {
       // the YAML files created by metrics are UTF-16 encoded
       Map<String, Object> yamlObject =
           yaml.load(new InputStreamReader(fs.open(metrics), StandardCharsets.UTF_8));
+
+      // check metadata available
+      boolean metadataAvailable =
+          Boolean.parseBoolean(yamlObject.getOrDefault(METADATA_AVAILABLE, "false").toString());
+      if (!metadataAvailable) {
+        return ValidationResult.builder().valid(false).message(METADATA_NOT_AVAILABLE).build();
+      }
+
+      // check unique terms
+      boolean uniqueTermsSpecified =
+          Boolean.parseBoolean(yamlObject.getOrDefault(UNIQUE_TERMS_SPECIFIED, "false").toString());
+      if (!uniqueTermsSpecified) {
+        return ValidationResult.builder().valid(false).message(UNIQUE_TERMS_NOT_SPECIFIED).build();
+      }
 
       // check invalid record count
       Long emptyKeyRecords =
@@ -250,7 +263,8 @@ public class ValidationUtils {
 
       return Long.parseLong(yamlObject.getOrDefault(EMPTY_KEY_RECORDS, -1L).toString());
     } else {
-      throw new FileNotFoundException();
+      throw new FileNotFoundException(
+          "Unable to retrieve count. File not found: " + validateFilePath);
     }
   }
 
@@ -268,32 +282,32 @@ public class ValidationUtils {
 
   @NotNull
   public static String getValidationFilePath(String inputPath, String datasetId, Integer attempt) {
-    String validateFilePath = String.join("/", inputPath, "1", VALIDATION_REPORT_FILE);
-    return validateFilePath;
+    return String.join("/", inputPath, datasetId, attempt.toString(), VALIDATION_REPORT_FILE);
   }
 
-  public static Path getMetrics(FileSystem fs, String filePath, Integer attempt, String metricsFile)
+  public static Path getMetrics(
+      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile)
       throws Exception {
-    return new Path(filePath + "/" + attempt + "/" + metricsFile);
+    return new Path(String.join("/", filePath, datasetId, attempt.toString(), metricsFile));
   }
 
-  public static Map<String, Object> readValidation(FileSystem fs, String filePath, Integer attempt)
-      throws Exception {
+  public static Map<String, Object> readValidation(
+      FileSystem fs, String filePath, String datasetID, Integer attempt) throws Exception {
 
     // read YAML
     Yaml yaml = new Yaml();
-    Path validationMetrics = getMetrics(fs, filePath, attempt, VALIDATION_REPORT_FILE);
+    Path validationMetrics = getMetrics(fs, filePath, datasetID, attempt, VALIDATION_REPORT_FILE);
 
     // the YAML files created by metrics are UTF-16 encoded
     return yaml.load(new InputStreamReader(fs.open(validationMetrics), StandardCharsets.UTF_8));
   }
 
-  public static Long readVerbatimCount(FileSystem fs, String filePath, Integer attempt)
-      throws Exception {
+  public static Long readVerbatimCount(
+      FileSystem fs, String filePath, String datasetID, Integer attempt) throws Exception {
 
     // read YAML
     Yaml yaml = new Yaml();
-    Path validationMetrics = getMetrics(fs, filePath, attempt, VERBATIM_METRICS);
+    Path validationMetrics = getMetrics(fs, filePath, datasetID, attempt, VERBATIM_METRICS);
 
     if (!fs.exists(validationMetrics)) {
       return -1l;
@@ -386,14 +400,16 @@ public class ValidationUtils {
   }
 
   public static boolean metricsExists(
-      FileSystem fs, String filePath, Integer attempt, String metricsFile) throws Exception {
-    Path metrics = new Path(String.join("/", filePath, attempt.toString(), metricsFile));
+      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile)
+      throws Exception {
+    Path metrics = new Path(String.join("/", filePath, datasetId, attempt.toString(), metricsFile));
     return fs.exists(metrics);
   }
 
   public static long metricsModificationTime(
-      FileSystem fs, String filePath, Integer attempt, String metricsFile) throws Exception {
-    String path = String.join("/", filePath, attempt.toString(), metricsFile);
+      FileSystem fs, String filePath, String datasetId, Integer attempt, String metricsFile)
+      throws Exception {
+    String path = String.join("/", filePath, datasetId, attempt.toString(), metricsFile);
     Path metrics = new Path(path);
     if (fs.exists(metrics)) {
       return fs.getFileStatus(metrics).getModificationTime();

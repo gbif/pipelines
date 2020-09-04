@@ -36,6 +36,8 @@ alaNameMatch:
 collectory:
   wsUrl: https://collections.ala.org.au
   timeoutSec: 70
+  httpHeaders:
+    Authorization: add-a-api-key-here
 geocodeConfig:
   country:
     path: /data/pipelines-shp/political

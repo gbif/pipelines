@@ -1,6 +1,9 @@
 package org.gbif.pipelines.parsers.config.model;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
@@ -22,6 +25,9 @@ public final class WsConfig implements Serializable {
 
   // cache size in bytes
   private long cacheSizeMb = 64L;
+
+  // http headers to add to each request
+  private Map<String, String> httpHeaders = Collections.emptyMap();
 
   // Retry configuration
   private RetryConfig retryConfig = new RetryConfig();

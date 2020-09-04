@@ -149,32 +149,35 @@ public class ValidationReportWriter {
         Long duplicateRecordKeyCount = 0l;
         count++;
 
-        String filePath = fileStatus.getPath().toString();
-
         // check record count
         verbatimLoaded =
-            ValidationUtils.metricsExists(fs, filePath, attempt, ValidationUtils.VERBATIM_METRICS);
-        recordCount = ValidationUtils.readVerbatimCount(fs, filePath, attempt);
+            ValidationUtils.metricsExists(
+                fs, inputPath, datasetID, attempt, ValidationUtils.VERBATIM_METRICS);
+        recordCount = ValidationUtils.readVerbatimCount(fs, inputPath, datasetID, attempt);
 
         // check UUIDs are generated
         uuidLoaded =
-            ValidationUtils.metricsExists(fs, filePath, attempt, ValidationUtils.UUID_METRICS);
+            ValidationUtils.metricsExists(
+                fs, inputPath, datasetID, attempt, ValidationUtils.UUID_METRICS);
         interpretationRan =
             ValidationUtils.metricsExists(
-                fs, filePath, attempt, ValidationUtils.INTERPRETATION_METRICS);
+                fs, inputPath, datasetID, attempt, ValidationUtils.INTERPRETATION_METRICS);
         samplingRan =
-            ValidationUtils.metricsExists(fs, filePath, attempt, ValidationUtils.SAMPLING_METRICS);
+            ValidationUtils.metricsExists(
+                fs, inputPath, datasetID, attempt, ValidationUtils.SAMPLING_METRICS);
         indexingRan =
-            ValidationUtils.metricsExists(fs, filePath, attempt, ValidationUtils.INDEXING_METRICS);
+            ValidationUtils.metricsExists(
+                fs, inputPath, datasetID, attempt, ValidationUtils.INDEXING_METRICS);
 
         // check UUIDs are generated
         validationLoaded =
-            ValidationUtils.metricsExists(fs, filePath, attempt, VALIDATION_REPORT_FILE);
+            ValidationUtils.metricsExists(
+                fs, inputPath, datasetID, attempt, VALIDATION_REPORT_FILE);
 
         if (validationLoaded) {
 
           Map<String, Object> validationMetrics =
-              ValidationUtils.readValidation(fs, filePath, attempt);
+              ValidationUtils.readValidation(fs, inputPath, datasetID, attempt);
 
           metadataAvailable =
               Boolean.parseBoolean(
@@ -204,7 +207,7 @@ public class ValidationReportWriter {
         }
 
         ValidationResult validationResult =
-            ValidationUtils.checkReadyForIndexing(fs, filePath, datasetID, attempt, checkSampling);
+            ValidationUtils.checkReadyForIndexing(fs, inputPath, datasetID, attempt, checkSampling);
 
         // write CSV
         reportWriter.write(

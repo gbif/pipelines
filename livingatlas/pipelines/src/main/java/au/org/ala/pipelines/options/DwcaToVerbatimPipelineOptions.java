@@ -6,7 +6,7 @@ import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 
 public interface DwcaToVerbatimPipelineOptions extends InterpretationPipelineOptions {
 
-  @Description("Allow UUIDs to be created for datasets with empty unique terms specified")
+  @Description("Delete lock file on exit")
   @Default.Boolean(true)
   boolean isDeleteLockFileOnExit();
 

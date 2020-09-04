@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,45 +82,42 @@ public class ALAUUIDValidationPipeline {
 
     // lookup collectory metadata for this data resource
     ALACollectoryMetadata collectoryMetadata = dataResourceKvStore.get(options.getDatasetId());
-    if (collectoryMetadata.equals(ALACollectoryMetadata.EMPTY)) {
+    boolean metadataAvailable = !collectoryMetadata.equals(ALACollectoryMetadata.EMPTY);
+
+    if (!metadataAvailable) {
       log.error("Unable to retrieve dataset metadata for dataset: " + options.getDatasetId());
-      PCollection<String> pc =
-          p.apply(Create.of(METADATA_AVAILABLE + ": false").withCoder(StringUtf8Coder.of()));
-      results = results.and(pc);
-    } else {
-      PCollection<String> pc =
-          p.apply(Create.of(METADATA_AVAILABLE + ": true").withCoder(StringUtf8Coder.of()))
-              .setCoder(StringUtf8Coder.of());
-      ;
-      results = results.and(pc);
     }
+    results =
+        results.and(
+            p.apply(
+                Create.of(METADATA_AVAILABLE + ": " + metadataAvailable)
+                    .withCoder(StringUtf8Coder.of())));
 
     List<String> uniqueTerms = Collections.emptyList();
 
     // construct unique list of darwin core terms
     if (collectoryMetadata.getConnectionParameters() != null) {
       uniqueTerms = collectoryMetadata.getConnectionParameters().getTermsForUniqueKey();
-      if ((uniqueTerms == null || uniqueTerms.isEmpty())) {
+      boolean uniqueTermsSpecified = !(uniqueTerms == null || uniqueTerms.isEmpty());
+
+      if (!uniqueTermsSpecified) {
         log.error(
             "Unable to proceed, No unique terms specified for dataset: " + options.getDatasetId());
-        PCollection<String> pc =
-            p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": false").withCoder(StringUtf8Coder.of()));
-        results = results.and(pc);
       } else {
-        PCollection<String> pc =
-            p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": true").withCoder(StringUtf8Coder.of()));
-        results = results.and(pc);
+        log.info(
+            "Unique terms specified: " + uniqueTerms.stream().collect(Collectors.joining(",")));
       }
-    } else {
-      PCollection<String> pc =
-          p.apply(Create.of(UNIQUE_TERMS_SPECIFIED + ": false").withCoder(StringUtf8Coder.of()));
-      results = results.and(pc);
     }
 
+    // store result of unique terms specified
+    results =
+        results.and(
+            p.apply(
+                Create.of(UNIQUE_TERMS_SPECIFIED + ": " + !uniqueTerms.isEmpty())
+                    .withCoder(StringUtf8Coder.of())));
+
     // if we have unique terms, check each record is populated
-    if (collectoryMetadata.getConnectionParameters() != null
-        && uniqueTerms != null
-        && !uniqueTerms.isEmpty()) {
+    if (!uniqueTerms.isEmpty()) {
 
       // retrieve the unique term fields
       final List<Term> uniqueDwcTerms = new ArrayList<Term>();
@@ -163,14 +161,7 @@ public class ALAUUIDValidationPipeline {
                           out.output(isValidRecord(datasetID, source, uniqueDwcTerms));
                         }
                       }))
-              .apply(
-                  Filter.by(
-                      new SerializableFunction<Boolean, Boolean>() {
-                        @Override
-                        public Boolean apply(Boolean input) {
-                          return !input;
-                        }
-                      }))
+              .apply(Filter.by((SerializableFunction<Boolean, Boolean>) input -> !input))
               .apply(Count.globally())
               .apply(
                   MapElements.into(TypeDescriptors.strings())

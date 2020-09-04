@@ -5,6 +5,7 @@ import au.org.ala.utils.ValidationUtils;
 import java.io.File;
 import java.io.Serializable;
 import java.util.function.Function;
+import okhttp3.mockwebserver.MockWebServer;
 import org.apache.commons.io.FileUtils;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.pipelines.ingest.options.DwcaPipelineOptions;
@@ -12,10 +13,25 @@ import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
 import org.gbif.pipelines.ingest.pipelines.DwcaToVerbatimPipeline;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /** End to end default values test. */
 public class DefaultValuesTestIT {
+
+  MockWebServer server;
+
+  @Before
+  public void setup() throws Exception {
+    server = TestUtils.createMockCollectory();
+    server.start(TestUtils.getCollectoryPort());
+  }
+
+  @After
+  public void teardown() throws Exception {
+    server.shutdown();
+  }
 
   @Test
   public void testDwCaPipeline() throws Exception {

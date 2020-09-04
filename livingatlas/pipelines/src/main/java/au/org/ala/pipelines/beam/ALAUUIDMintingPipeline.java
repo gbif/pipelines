@@ -69,6 +69,7 @@ public class ALAUUIDMintingPipeline {
 
   public static final String NO_ID_MARKER = "NO_ID";
   public static final String REMOVED_PREFIX_MARKER = "REMOVED_";
+  public static final String IDENTIFIERS_DIR = "identifiers";
   public static final String UNIQUE_COMPOSITE_KEY_JOIN_CHAR = "|";
 
   public static void main(String[] args) throws Exception {
@@ -97,7 +98,7 @@ public class ALAUUIDMintingPipeline {
     // check validation results
     ValidationResult validatioResult = ValidationUtils.checkValidationFile(options);
 
-    log.info("Validation passed: {} ", validatioResult.getMessage());
+    log.info("Validation result: {} ", validatioResult.getMessage());
 
     if (!validatioResult.getValid()) {
       log.error(
@@ -120,7 +121,7 @@ public class ALAUUIDMintingPipeline {
             options.getTargetPath(),
             options.getDatasetId().trim(),
             options.getAttempt().toString(),
-            "identifiers",
+            IDENTIFIERS_DIR,
             ALARecordTypes.ALA_UUID.name().toLowerCase());
     log.info("Output path {}", alaRecordDirectoryPath);
 

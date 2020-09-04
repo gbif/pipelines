@@ -10,13 +10,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import okhttp3.OkHttpClient;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 import org.gbif.rest.client.configuration.ClientConfiguration;
-import org.gbif.rest.client.retrofit.RetrofitClientFactory;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@Slf4j
 /** Collectory service client implementation. */
 public class ALACollectoryServiceClient implements ALACollectoryService {
 
@@ -29,9 +32,10 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
    *
    * @param clientConfiguration Rest client configuration
    */
-  public ALACollectoryServiceClient(ClientConfiguration clientConfiguration) {
+  public ALACollectoryServiceClient(
+      ClientConfiguration clientConfiguration, Map<String, String> headers) {
 
-    okHttpClient = RetrofitClientFactory.createClient(clientConfiguration);
+    okHttpClient = createClient(clientConfiguration, headers);
 
     // this is for https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/113
     ObjectMapper om = new ObjectMapper();
@@ -74,6 +78,35 @@ public class ALACollectoryServiceClient implements ALACollectoryService {
           files.forEach(File::delete);
         }
       }
+    }
+  }
+
+  public static OkHttpClient createClient(ClientConfiguration config, Map<String, String> headers) {
+    OkHttpClient.Builder clientBuilder =
+        (new OkHttpClient.Builder())
+            .connectTimeout(config.getTimeOut(), TimeUnit.SECONDS)
+            .readTimeout(config.getTimeOut(), TimeUnit.SECONDS);
+    clientBuilder.cache(createCache(config.getFileCacheMaxSizeMb()));
+    clientBuilder.addInterceptor(
+        chain -> {
+          Request.Builder builder = chain.request().newBuilder();
+          headers.forEach((header, headerValue) -> builder.addHeader(header, headerValue));
+          Request request = builder.build();
+          return chain.proceed(request);
+        });
+    return clientBuilder.build();
+  }
+
+  private static Cache createCache(long maxSize) {
+    try {
+      String cacheName = System.currentTimeMillis() + "-wsCache";
+      File httpCacheDirectory = Files.createTempDirectory(cacheName).toFile();
+      httpCacheDirectory.deleteOnExit();
+      log.info("Cache file created - {}", httpCacheDirectory.getAbsolutePath());
+      return new Cache(httpCacheDirectory, maxSize);
+    } catch (IOException var4) {
+      throw new IllegalStateException(
+          "Cannot run without the ability to create temporary cache directory", var4);
     }
   }
 }

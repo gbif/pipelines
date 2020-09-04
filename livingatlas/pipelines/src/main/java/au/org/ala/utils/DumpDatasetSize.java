@@ -64,8 +64,7 @@ public class DumpDatasetSize {
                 .getPath()
                 .toString()
                 .substring(fileStatus.getPath().toString().lastIndexOf("/") + 1);
-        counts.put(
-            datasetID, ValidationUtils.readVerbatimCount(fs, fileStatus.getPath().toString(), 1));
+        counts.put(datasetID, ValidationUtils.readVerbatimCount(fs, inputPath, datasetID, 1));
       }
     }
 
