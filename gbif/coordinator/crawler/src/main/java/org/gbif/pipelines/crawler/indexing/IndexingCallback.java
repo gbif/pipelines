@@ -237,22 +237,19 @@ public class IndexingCallback extends AbstractMessageCallback<PipelinesInterpret
       throws IOException {
 
     String datasetId = message.getDatasetUuid().toString();
-    String prefix = message.getResetPrefix();
 
     // Independent index for datasets where number of records more than config.indexIndepRecord
     String idxName;
 
     if (recordsNumber >= config.indexIndepRecord) {
       idxName = datasetId + "_" + message.getAttempt() + "_" + config.indexVersion;
-      idxName = prefix == null ? idxName : idxName + "_" + prefix;
       idxName = idxName + "_" + Instant.now().toEpochMilli();
       log.info("ES Index name - {}, recordsNumber - {}", idxName, recordsNumber);
       return idxName;
     }
 
     // Default index name for all other datasets
-    String defIdxPrefix = config.indexDefaultPrefixName + "_" + config.indexVersion;
-    String esPr = prefix == null ? defIdxPrefix : defIdxPrefix + "_" + prefix;
+    String esPr = config.indexDefaultPrefixName + "_" + config.indexVersion;
     idxName = getIndexName(esPr).orElse(esPr + "_" + Instant.now().toEpochMilli());
     log.info("ES Index name - {}", idxName);
     return idxName;
