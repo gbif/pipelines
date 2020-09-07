@@ -1,0 +1,119 @@
+[
+  {
+    "name" : "MatchType",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "enum",
+    "symbols" : ["EXACT", "FUZZY", "MACHINE_TAG", "NONE"]
+  },
+  {
+    "name" : "Status",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "enum",
+    "symbols" : [
+      "ACCEPTED", "AMBIGUOUS", "AMBIGUOUS_MACHINE_TAGS", "AMBIGUOUS_OWNER", "AMBIGUOUS_INSTITUTION_MISMATCH", "DOUBTFUL"
+     ]
+  },
+  {
+    "name" : "Reason",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "enum",
+    "symbols" : [
+       "CODE_MATCH", "IDENTIFIER_MATCH", "ALTERNATIVE_CODE_MATCH", "NAME_MATCH", "PROBABLY_ON_LOAN", "INST_COLL_MISMATCH",
+       "COUNTRY_MATCH", "INSTITUTION_TAG", "COLLECTION_TAG", "COLLECTION_TO_INSTITUTION_TAG", "INSTITUTION_TO_COLLECTION_TAG"
+    ]
+  },
+  {
+    "name" : "IdentifierType",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "enum",
+    "symbols" : [
+        "URL", "LSID", "HANDLER", "DOI", "UUID", "FTP", "URI", "UNKNOWN", "GBIF_PORTAL", "GBIF_NODE", "GBIF_PARTICIPANT",
+         "GRSCICOLL_ID", "GRSCICOLL_URI", "IH_IRN"
+    ]
+  },
+  {
+    "name" : "Identifier",
+     "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+     "type" : "record",
+     "fields" : [
+       {"name" : "type", "type" : ["null", "IdentifierType"], "default" : null},
+       {"name" : "identifier", "type" : ["null", "string"], "default" : null}
+     ]
+  },
+  {
+    "name" : "Address",
+     "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+     "type" : "record",
+     "fields" : [
+       {"name" : "address", "type" : ["null", "string"], "default" : null},
+       {"name" : "city", "type" : ["null", "string"], "default" : null},
+       {"name" : "province", "type" : ["null", "string"], "default" : null},
+       {"name" : "postalCode", "type" : ["null", "string"], "default" : null},
+       {"name" : "country", "type" : ["null", "string"], "default" : null}
+     ]
+  },
+  {
+    "name" : "Institution",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "record",
+    "fields" : [
+      {"name" : "key", "type" : ["null", "string"], "default" : null},
+      {"name" : "code", "type" : ["null", "string"], "default" : null},
+      {"name" : "name", "type" : ["null", "string"], "default" : null},
+      {"name" : "alternativeCodes", "type" : { "type" : "map", "default": {}, "values": ["null", "string"]} },
+      {"name" : "identifiers", "type" : [ "null", { "type" : "array", "items" : "Identifier"} ], "default" : []},
+      {"name" : "mailingAddress", "type" : ["null", "Address"], "default" : null},
+      {"name" : "address", "type" : ["null", "Address"], "default" : null}
+    ]
+  },
+    {
+      "name" : "Collection",
+      "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+      "type" : "record",
+      "fields" : [
+        {"name" : "key", "type" : ["null", "string"], "default" : null},
+        {"name" : "code", "type" : ["null", "string"], "default" : null},
+        {"name" : "name", "type" : ["null", "string"], "default" : null},
+        {"name" : "institutionKey", "type" : ["null", "string"], "default" : null},
+        {"name" : "alternativeCodes", "type" : { "type" : "map", "default": {}, "values": ["null", "string"]} },
+        {"name" : "identifiers", "type" : [ "null", { "type" : "array", "items" : "Identifier"} ], "default" : []},
+        {"name" : "mailingAddress", "type" : ["null", "Address"], "default" : null},
+        {"name" : "address", "type" : ["null", "Address"], "default" : null}
+      ]
+    },
+   {
+      "name" : "InstitutionMatch",
+      "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+      "type" : "record",
+      "fields" : [
+        {"name" : "matchType", "type" : ["null", "MatchType"], "default" : null},
+        {"name" : "status", "type" : ["null", "Status"], "default" : null},
+        {"name" : "reasons", "type" : ["null", { "type" : "array", "items" : "Reason"} ], "default" : []},
+        {"name" : "institution", "type" : ["null", "Institution"], "default" : null}
+      ]
+    },
+   {
+      "name" : "CollectionMatch",
+      "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+      "type" : "record",
+      "fields" : [
+        {"name" : "matchType", "type" : ["null", "MatchType"], "default" : null},
+        {"name" : "status", "type" : ["null", "Status"], "default" : null},
+        {"name" : "reasons", "type" : ["null", { "type" : "array", "items" : "Reason"} ], "default" : null},
+        {"name" : "collection", "type" : ["null", "Collection"], "default" : null}
+      ]
+    },
+  {
+    "name" : "GrscicollRecord",
+    "namespace" : "org.gbif.pipelines.io.avro.grscicoll",
+    "type" : "record",
+    "doc" : "Contains the match between an occurrence record and the GrSciColl data",
+    "fields" : [
+      {"name" : "id", "type" : ["null", "string"], "default" : null, "doc":"Pipelines identifier"},
+      {"name": "created", "type": ["null", "long"], "default" : null, "doc":"The timestamp the record was created"},
+      {"name" : "institutionMatch", "type" : ["null", "InstitutionMatch"], "default" : null},
+      {"name" : "collectionMatch", "type" : ["null", "CollectionMatch"], "default" : null},
+      {"name": "issues", "type": "org.gbif.pipelines.io.avro.IssueRecord", "default":{}}
+    ]
+  }
+]

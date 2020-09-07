@@ -1454,5 +1454,57 @@
   }, {
     "name" : "ext_multimedia",
     "type" : [ "string", "null" ]
-  } ]
+  }, {
+    "name" : "grscicoll_institutionkey",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_institutioncode",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_institutionname",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_institutioncountry",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_institutionalternativecodes",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
+    "name" : "grscicoll_institutionid",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
+     "name" : "grscicoll_ownerinstitutioncode",
+     "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_collectionkey",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_collectioninstitutionkey",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_collectioncode",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_collectionname",
+    "type" : [ "string", "null" ]
+  }, {
+    "name" : "grscicoll_collectionalternativecodes",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }, {
+    "name" : "grscicoll_collectionid",
+    "type" : [ {
+      "type" : "array",
+      "items" : [ "string", "null" ]
+    }, "null" ]
+  }
+  ]
 }

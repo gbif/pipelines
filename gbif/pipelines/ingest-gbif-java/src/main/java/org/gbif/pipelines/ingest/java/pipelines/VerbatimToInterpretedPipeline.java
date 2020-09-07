@@ -28,6 +28,7 @@ import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.converter.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
@@ -51,12 +52,13 @@ import org.gbif.pipelines.io.avro.LocationRecord;
 import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.SerializableConsumer;
 import org.gbif.pipelines.transforms.Transform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -66,7 +68,6 @@ import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
 
 /**
@@ -83,6 +84,7 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
  * </pre>
@@ -192,6 +194,12 @@ public class VerbatimToInterpretedPipeline {
             .create()
             .counterFn(incMetricFn);
 
+    GrscicollTransform grscicollTransform =
+        GrscicollTransform.builder()
+            .kvStoreSupplier(GrscicollLookupKvStoreFactory.getInstanceSupplier(config))
+            .create()
+            .counterFn(incMetricFn);
+
     LocationTransform locationTransform =
         LocationTransform.builder()
             .geocodeKvStoreSupplier(GeocodeKvStoreFactory.getInstanceSupplier(config))
@@ -199,9 +207,6 @@ public class VerbatimToInterpretedPipeline {
             .counterFn(incMetricFn);
 
     VerbatimTransform verbatimTransform = VerbatimTransform.create().counterFn(incMetricFn);
-
-    TaggedValuesTransform taggedValuesTransform =
-        TaggedValuesTransform.builder().create().counterFn(incMetricFn);
 
     TemporalTransform temporalTransform = TemporalTransform.create().counterFn(incMetricFn);
 
@@ -228,6 +233,7 @@ public class VerbatimToInterpretedPipeline {
     basicTransform.setup();
     locationTransform.setup();
     taxonomyTransform.setup();
+    grscicollTransform.setup();
     metadataTransform.setup();
     defaultValuesTransform.setup();
 
@@ -235,8 +241,6 @@ public class VerbatimToInterpretedPipeline {
             createWriter(options, ExtendedRecord.getClassSchema(), verbatimTransform, id);
         SyncDataFileWriter<MetadataRecord> metadataWriter =
             createWriter(options, MetadataRecord.getClassSchema(), metadataTransform, id);
-        SyncDataFileWriter<TaggedValueRecord> taggedValueWriter =
-            createWriter(options, TaggedValueRecord.getClassSchema(), taggedValuesTransform, id);
         SyncDataFileWriter<BasicRecord> basicWriter =
             createWriter(options, BasicRecord.getClassSchema(), basicTransform, id);
         SyncDataFileWriter<BasicRecord> basicInvalidWriter =
@@ -254,6 +258,8 @@ public class VerbatimToInterpretedPipeline {
                 options, MeasurementOrFactRecord.getClassSchema(), measurementTransform, id);
         SyncDataFileWriter<TaxonRecord> taxonWriter =
             createWriter(options, TaxonRecord.getClassSchema(), taxonomyTransform, id);
+        SyncDataFileWriter<GrscicollRecord> grscicollWriter =
+            createWriter(options, GrscicollRecord.getClassSchema(), grscicollTransform, id);
         SyncDataFileWriter<LocationRecord> locationWriter =
             createWriter(options, LocationRecord.getClassSchema(), locationTransform, id)) {
 
@@ -290,13 +296,13 @@ public class VerbatimToInterpretedPipeline {
             BasicRecord br = gbifIdTransform.getBrInvalidMap().get(er.getId());
             if (br == null) {
               verbatimWriter.append(er);
-              taggedValuesTransform.processElement(er, mdr).ifPresent(taggedValueWriter::append);
               temporalTransform.processElement(er).ifPresent(temporalWriter::append);
               multimediaTransform.processElement(er).ifPresent(multimediaWriter::append);
               imageTransform.processElement(er).ifPresent(imageWriter::append);
               audubonTransform.processElement(er).ifPresent(audubonWriter::append);
               measurementTransform.processElement(er).ifPresent(measurementWriter::append);
               taxonomyTransform.processElement(er).ifPresent(taxonWriter::append);
+              grscicollTransform.processElement(er, mdr).ifPresent(grscicollWriter::append);
               locationTransform.processElement(er, mdr).ifPresent(locationWriter::append);
             } else {
               basicInvalidWriter.append(br);
@@ -345,6 +351,7 @@ public class VerbatimToInterpretedPipeline {
           basicTransform,
           locationTransform,
           taxonomyTransform,
+          grscicollTransform,
           defaultValuesTransform);
     }
 
@@ -392,6 +399,7 @@ public class VerbatimToInterpretedPipeline {
         BasicTransform bTr,
         LocationTransform lTr,
         TaxonomyTransform tTr,
+        GrscicollTransform gTr,
         DefaultValuesTransform dTr) {
       Runnable shudownHook =
           () -> {
@@ -400,6 +408,7 @@ public class VerbatimToInterpretedPipeline {
             bTr.tearDown();
             lTr.tearDown();
             tTr.tearDown();
+            gTr.tearDown();
             dTr.tearDown();
             log.info("The resources were closed");
           };
@@ -411,11 +420,12 @@ public class VerbatimToInterpretedPipeline {
         BasicTransform bTr,
         LocationTransform lTr,
         TaxonomyTransform tTr,
+        GrscicollTransform gTr,
         DefaultValuesTransform dTr) {
       if (instance == null) {
         synchronized (MUTEX) {
           if (instance == null) {
-            instance = new Shutdown(mdTr, bTr, lTr, tTr, dTr);
+            instance = new Shutdown(mdTr, bTr, lTr, tTr, gTr, dTr);
           }
         }
       }

@@ -55,6 +55,17 @@ import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Address;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Identifier;
+import org.gbif.pipelines.io.avro.grscicoll.IdentifierType;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
+import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.MatchType;
+import org.gbif.pipelines.io.avro.grscicoll.Reason;
+import org.gbif.pipelines.io.avro.grscicoll.Status;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -595,5 +606,78 @@ public class OccurrenceHdfsRecordConverterTest {
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+  }
+
+  @Test
+  public void grscicollMapperTest() {
+    // State
+    Map<String, String> altCodes = new HashMap<>();
+    altCodes.put("A", "test");
+    altCodes.put("B", "test");
+
+    Identifier id1 = new Identifier(IdentifierType.IH_IRN, "1234");
+    Identifier id2 = new Identifier(IdentifierType.LSID, "lsid");
+
+    Institution institution =
+        Institution.newBuilder()
+            .setAddress(Address.newBuilder().setCountry("ES").build())
+            .setCode("I1")
+            .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .setAlternativeCodes(altCodes)
+            .setName("Institution1")
+            .setIdentifiers(Arrays.asList(id1, id2))
+            .build();
+
+    InstitutionMatch institutionMatch =
+        InstitutionMatch.newBuilder()
+            .setInstitution(institution)
+            .setMatchType(MatchType.EXACT)
+            .setReasons(Collections.singletonList(Reason.CODE_MATCH))
+            .setStatus(Status.ACCEPTED)
+            .build();
+
+    Collection collection =
+        Collection.newBuilder()
+            .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
+            .setCode("C1")
+            .setName("Collection1")
+            .setInstitutionKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .setAlternativeCodes(altCodes)
+            .setIdentifiers(Arrays.asList(id1, id2))
+            .build();
+
+    CollectionMatch collectionMatch =
+        CollectionMatch.newBuilder()
+            .setCollection(collection)
+            .setMatchType(MatchType.FUZZY)
+            .build();
+
+    GrscicollRecord record =
+        GrscicollRecord.newBuilder()
+            .setId("1")
+            .setInstitutionMatch(institutionMatch)
+            .setCollectionMatch(collectionMatch)
+            .build();
+
+    // When
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(record);
+
+    // Should
+    Assert.assertEquals(institution.getKey(), hdfsRecord.getGrscicollInstitutionkey());
+    Assert.assertEquals(institution.getCode(), hdfsRecord.getGrscicollInstitutioncode());
+    Assert.assertEquals(institution.getName(), hdfsRecord.getGrscicollInstitutionname());
+    Assert.assertEquals("ES", hdfsRecord.getGrscicollInstitutioncountry());
+    Assert.assertEquals(
+        new ArrayList<>(altCodes.keySet()), hdfsRecord.getGrscicollInstitutionalternativecodes());
+    Assert.assertEquals(Arrays.asList("1234", "lsid"), hdfsRecord.getGrscicollInstitutionid());
+
+    Assert.assertEquals(collection.getKey(), hdfsRecord.getGrscicollCollectionkey());
+    Assert.assertEquals(collection.getCode(), hdfsRecord.getGrscicollCollectioncode());
+    Assert.assertEquals(collection.getName(), hdfsRecord.getGrscicollCollectionname());
+    Assert.assertEquals(
+        collection.getInstitutionKey(), hdfsRecord.getGrscicollCollectioninstitutionkey());
+    Assert.assertEquals(
+        new ArrayList<>(altCodes.keySet()), hdfsRecord.getGrscicollCollectionalternativecodes());
+    Assert.assertEquals(Arrays.asList("1234", "lsid"), hdfsRecord.getGrscicollCollectionid());
   }
 }

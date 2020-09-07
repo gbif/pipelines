@@ -17,7 +17,12 @@ import org.gbif.pipelines.io.avro.MachineTag;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 
-/** Interprets MachineTags that are later stored or interpreted as {@link TaggedValueRecord}. */
+/**
+ * Interprets MachineTags that are later stored or interpreted as {@link TaggedValueRecord}.
+ *
+ * <p>Deprecated by {@link org.gbif.pipelines.core.interpreters.core.GrscicollInterpreter}.
+ */
+@Deprecated
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TaggedValuesInterpreter {
 

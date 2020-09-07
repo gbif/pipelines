@@ -27,7 +27,10 @@ import org.gbif.pipelines.transforms.Transform;
  *
  * <p>ParDo runs sequence of interpretations for {@link TaggedValueRecord} using {@link
  * ExtendedRecord} as a source and {@link TaggedValuesInterpreter} as interpretation steps
+ *
+ * <p>Deprecated by {@link org.gbif.pipelines.transforms.core.GrscicollTransform}.
  */
+@Deprecated
 @Slf4j
 public class TaggedValuesTransform extends Transform<ExtendedRecord, TaggedValueRecord> {
 

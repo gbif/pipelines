@@ -1,14 +1,56 @@
 package org.gbif.pipelines.core.converters;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.*;
-import org.gbif.api.vocabulary.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.gbif.api.vocabulary.AgentIdentifierType;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
-import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.io.avro.AgentIdentifier;
+import org.gbif.pipelines.io.avro.Amplification;
+import org.gbif.pipelines.io.avro.AmplificationRecord;
+import org.gbif.pipelines.io.avro.AudubonRecord;
+import org.gbif.pipelines.io.avro.BasicRecord;
+import org.gbif.pipelines.io.avro.BlastResult;
+import org.gbif.pipelines.io.avro.DeterminedDate;
+import org.gbif.pipelines.io.avro.EventDate;
+import org.gbif.pipelines.io.avro.ExtendedRecord;
+import org.gbif.pipelines.io.avro.GadmFeatures;
+import org.gbif.pipelines.io.avro.ImageRecord;
+import org.gbif.pipelines.io.avro.LocationFeatureRecord;
+import org.gbif.pipelines.io.avro.LocationRecord;
+import org.gbif.pipelines.io.avro.MachineTag;
+import org.gbif.pipelines.io.avro.MeasurementOrFact;
+import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.MediaType;
+import org.gbif.pipelines.io.avro.MetadataRecord;
+import org.gbif.pipelines.io.avro.Multimedia;
+import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
+import org.gbif.pipelines.io.avro.RankedName;
+import org.gbif.pipelines.io.avro.TaggedValueRecord;
+import org.gbif.pipelines.io.avro.TaxonRecord;
+import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Address;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Identifier;
+import org.gbif.pipelines.io.avro.grscicoll.IdentifierType;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
+import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.MatchType;
+import org.gbif.pipelines.io.avro.grscicoll.Reason;
+import org.gbif.pipelines.io.avro.grscicoll.Status;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -507,7 +549,9 @@ public class GbifJsonConverterTest {
             + "\"DEPTH_NON_NUMERIC\",\"COORDINATE_UNCERTAINTY_METERS_INVALID\",\"PRESUMED_NEGATED_LATITUDE\","
             + "\"COORDINATE_ACCURACY_INVALID\",\"TAXON_MATCH_HIGHERRANK\",\"CONTINENT_DERIVED_FROM_COORDINATES\","
             + "\"DEPTH_MIN_MAX_SWAPPED\",\"RECORDED_DATE_INVALID\",\"DEPTH_NOT_METRIC\",\"MULTIMEDIA_DATE_INVALID\","
-            + "\"INTERPRETATION_ERROR\",\"INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS\",\"RECORDED_DATE_UNLIKELY\"]}";
+            + "\"INTERPRETATION_ERROR\",\"INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS\",\"RECORDED_DATE_UNLIKELY\""
+            + "\"AMBIGUOUS_INSTITUTION\",\"AMBIGUOUS_COLLECTION\",\"INSTITUTION_MATCH_NONE\",\"COLLECTION_MATCH_NONE\","
+            + "\"INSTITUTION_MATCH_FUZZY\",\"COLLECTION_MATCH_FUZZY\",\"INSTITUTION_COLLECTION_MISMATCH\",\"PROBABLY_ON_LOAN\"]}";
 
     // State
     ExtendedRecord er = ExtendedRecord.newBuilder().setId("777").build();
@@ -885,7 +929,9 @@ public class GbifJsonConverterTest {
             + "\"PRESUMED_NEGATED_LATITUDE\",\"COORDINATE_ACCURACY_INVALID\",\"TAXON_MATCH_HIGHERRANK\","
             + "\"CONTINENT_DERIVED_FROM_COORDINATES\",\"DEPTH_MIN_MAX_SWAPPED\",\"RECORDED_DATE_INVALID\","
             + "\"DEPTH_NOT_METRIC\",\"MULTIMEDIA_DATE_INVALID\",\"INTERPRETATION_ERROR\","
-            + "\"INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS\",\"RECORDED_DATE_UNLIKELY\"]}";
+            + "\"INDIVIDUAL_COUNT_CONFLICTS_WITH_OCCURRENCE_STATUS\",\"RECORDED_DATE_UNLIKELY\""
+            + "\"AMBIGUOUS_INSTITUTION\",\"AMBIGUOUS_COLLECTION\",\"INSTITUTION_MATCH_NONE\",\"COLLECTION_MATCH_NONE\","
+            + "\"INSTITUTION_MATCH_FUZZY\",\"COLLECTION_MATCH_FUZZY\",\"INSTITUTION_COLLECTION_MISMATCH\",\"PROBABLY_ON_LOAN\"]}";
 
     // State
     String k = "777";
@@ -911,6 +957,82 @@ public class GbifJsonConverterTest {
     // When
     MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
     String result = GbifJsonConverter.toStringJson(mdr, br, tr, lr, txr, mmr, mfr, er);
+
+    // Should
+    Assert.assertEquals(expected, result);
+  }
+
+  @Test
+  public void grscicollRecordTest() {
+    // Expected
+    String expected =
+        "{\"id\":\"1\","
+            + "\"grscicoll\":{"
+            + "\"institutionKey\":\"cb0098db-6ff6-4a5d-ad29-51348d114e41\","
+            + "\"institutionCode\":\"I1\","
+            + "\"institutionName\":\"Institution1\","
+            + "\"institutionCountry\":\"ES\","
+            + "\"institutionAlternativeCodes\":[\"A\",\"B\"],"
+            + "\"institutionID\":[\"1234\",\"lsid\"],"
+            + "\"collectionKey\":\"5c692584-d517-48e8-93a8-a916ba131d9b\","
+            + "\"collectionCode\":\"C1\","
+            + "\"collectionName\":\"Collection1\","
+            + "\"collectionInstitutionKey\":\"cb0098db-6ff6-4a5d-ad29-51348d114e41\","
+            + "\"collectionAlternativeCodes\":[\"A\",\"B\"],"
+            + "\"collectionID\":[\"1234\",\"lsid\"]"
+            + "}}";
+
+    // State
+    Map<String, String> altCodes = new HashMap<>();
+    altCodes.put("A", "test");
+    altCodes.put("B", "test");
+
+    Identifier id1 = new Identifier(IdentifierType.IH_IRN, "1234");
+    Identifier id2 = new Identifier(IdentifierType.LSID, "lsid");
+
+    Institution institution =
+        Institution.newBuilder()
+            .setAddress(Address.newBuilder().setCountry("ES").build())
+            .setCode("I1")
+            .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .setAlternativeCodes(altCodes)
+            .setName("Institution1")
+            .setIdentifiers(Arrays.asList(id1, id2))
+            .build();
+
+    InstitutionMatch institutionMatch =
+        InstitutionMatch.newBuilder()
+            .setInstitution(institution)
+            .setMatchType(MatchType.EXACT)
+            .setReasons(Collections.singletonList(Reason.CODE_MATCH))
+            .setStatus(Status.ACCEPTED)
+            .build();
+
+    Collection collection =
+        Collection.newBuilder()
+            .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
+            .setCode("C1")
+            .setName("Collection1")
+            .setInstitutionKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .setAlternativeCodes(altCodes)
+            .setIdentifiers(Arrays.asList(id1, id2))
+            .build();
+
+    CollectionMatch collectionMatch =
+        CollectionMatch.newBuilder()
+            .setCollection(collection)
+            .setMatchType(MatchType.FUZZY)
+            .build();
+
+    GrscicollRecord record =
+        GrscicollRecord.newBuilder()
+            .setId("1")
+            .setInstitutionMatch(institutionMatch)
+            .setCollectionMatch(collectionMatch)
+            .build();
+
+    // When
+    String result = GbifJsonConverter.toStringPartialJson(record);
 
     // Should
     Assert.assertEquals(expected, result);

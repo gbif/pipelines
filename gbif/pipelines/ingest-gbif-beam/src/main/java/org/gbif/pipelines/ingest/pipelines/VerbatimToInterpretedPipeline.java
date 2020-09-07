@@ -22,6 +22,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
+import org.gbif.pipelines.factory.GrscicollLookupKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
@@ -38,6 +39,7 @@ import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -48,7 +50,6 @@ import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
 import org.gbif.pipelines.transforms.metadata.DefaultValuesTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
-import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
 
 /**
@@ -65,6 +66,7 @@ import org.slf4j.MDC;
  *      {@link org.gbif.pipelines.io.avro.AudubonRecord},
  *      {@link org.gbif.pipelines.io.avro.MeasurementOrFactRecord},
  *      {@link org.gbif.pipelines.io.avro.TaxonRecord},
+ *      {@link org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord},
  *      {@link org.gbif.pipelines.io.avro.LocationRecord}
  *    3) Writes data to independent files
  * </pre>
@@ -131,8 +133,6 @@ public class VerbatimToInterpretedPipeline {
             .endpointType(options.getEndPointType())
             .create();
 
-    TaggedValuesTransform taggedValuesTransform = TaggedValuesTransform.builder().create();
-
     // Core
     BasicTransform basicTransform =
         BasicTransform.builder()
@@ -150,6 +150,11 @@ public class VerbatimToInterpretedPipeline {
     TaxonomyTransform taxonomyTransform =
         TaxonomyTransform.builder()
             .kvStoreSupplier(NameUsageMatchStoreFactory.createSupplier(config))
+            .create();
+
+    GrscicollTransform grscicollTransform =
+        GrscicollTransform.builder()
+            .kvStoreSupplier(GrscicollLookupKvStoreFactory.createSupplier(config))
             .create();
 
     LocationTransform locationTransform =
@@ -185,7 +190,7 @@ public class VerbatimToInterpretedPipeline {
             .apply("Convert into view", View.asSingleton());
 
     locationTransform.setMetadataView(metadataView);
-    taggedValuesTransform.setMetadataView(metadataView);
+    grscicollTransform.setMetadataView(metadataView);
 
     PCollection<ExtendedRecord> uniqueRecords =
         metadataTransform.metadataOnly(types)
@@ -242,11 +247,6 @@ public class VerbatimToInterpretedPipeline {
         .apply("Write verbatim to avro", verbatimTransform.write(pathFn));
 
     filteredUniqueRecords
-        .apply("Check tagged values transform condition", taggedValuesTransform.check(types))
-        .apply("Interpret tagged values", taggedValuesTransform.interpret())
-        .apply("Write tagged values to avro", taggedValuesTransform.write(pathFn));
-
-    filteredUniqueRecords
         .apply("Check temporal transform condition", temporalTransform.check(types))
         .apply("Interpret temporal", temporalTransform.interpret())
         .apply("Write temporal to avro", temporalTransform.write(pathFn));
@@ -275,6 +275,11 @@ public class VerbatimToInterpretedPipeline {
         .apply("Check taxonomy transform condition", taxonomyTransform.check(types))
         .apply("Interpret taxonomy", taxonomyTransform.interpret())
         .apply("Write taxon to avro", taxonomyTransform.write(pathFn));
+
+    filteredUniqueRecords
+        .apply("Check grscicoll transform condition", grscicollTransform.check(types))
+        .apply("Interpret grscicoll", grscicollTransform.interpret())
+        .apply("Write grscicoll to avro", grscicollTransform.write(pathFn));
 
     filteredUniqueRecords
         .apply("Check location transform condition", locationTransform.check(types))

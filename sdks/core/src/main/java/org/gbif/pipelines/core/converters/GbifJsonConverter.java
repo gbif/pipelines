@@ -32,6 +32,7 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
@@ -50,6 +51,11 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Identifier;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
+import org.gbif.pipelines.io.avro.grscicoll.MatchType;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase}
@@ -99,8 +105,8 @@ public class GbifJsonConverter {
           .converter(AmplificationRecord.class, getAmplificationRecordConverter())
           .converter(MeasurementOrFactRecord.class, getMeasurementOrFactRecordConverter())
           .converter(MultimediaRecord.class, getMultimediaConverter())
-          .converter(TaggedValueRecord.class, getTaggedValueConverter())
-          .converter(BasicRecord.class, getBasicRecordConverter());
+          .converter(BasicRecord.class, getBasicRecordConverter())
+          .converter(GrscicollRecord.class, getGrscicollRecordConverter());
 
   @Builder.Default private boolean skipIssues = false;
 
@@ -765,7 +771,10 @@ public class GbifJsonConverter {
    *  //.....more fields
    *
    * }</pre>
+   *
+   * Deprecated by {@link GbifJsonConverter#getGrscicollRecordConverter()}.
    */
+  @Deprecated
   private BiConsumer<JsonConverter, SpecificRecordBase> getTaggedValueConverter() {
     return (jc, record) -> {
       TaggedValueRecord tvr = (TaggedValueRecord) record;
@@ -802,6 +811,97 @@ public class GbifJsonConverter {
 
       // Add other fields
       jc.addCommonFields(br);
+    };
+  }
+
+  /**
+   * String converter for {@link GrscicollRecord}, convert an object to specific string view
+   *
+   * <pre>{@code
+   * Result example:
+   *
+   *  "grscicoll" : {
+   *     "institutionKey": "04ec1770-6216-4c66-b9ea-c8087b8f563f",
+   *     "institutionID:": [
+   *        {
+   *          "type": "IH_IRN",
+   *          "value": "1234"
+   *        }
+   *     ],
+   *     "institutionAlternativeCodes": ["A", "B"]
+   *     //.....more fields
+   *
+   *  }
+   * }</pre>
+   */
+  private BiConsumer<JsonConverter, SpecificRecordBase> getGrscicollRecordConverter() {
+    return (jc, record) -> {
+      GrscicollRecord gr = (GrscicollRecord) record;
+
+      if (!skipId) {
+        jc.addJsonTextFieldNoCheck(ID, gr.getId());
+      }
+
+      ObjectNode grscicollNode =
+          jc.getMainNode().has("grscicoll")
+              ? (ObjectNode) jc.getMainNode().get("grscicoll")
+              : JsonConverter.createObjectNode();
+
+      BiConsumer<Term, String> termSetter = (t, v) -> grscicollNode.put(t.simpleName(), v);
+
+      if (gr.getInstitutionMatch() != null
+          && gr.getInstitutionMatch().getMatchType() != MatchType.NONE) {
+        Institution institution = gr.getInstitutionMatch().getInstitution();
+        termSetter.accept(GbifInternalTerm.institutionKey, institution.getKey());
+        termSetter.accept(DwcTerm.institutionCode, institution.getCode());
+        termSetter.accept(GbifInternalTerm.institutionName, institution.getName());
+
+        // country
+        if (institution.getAddress() != null && institution.getAddress().getCountry() != null) {
+          termSetter.accept(
+              GbifInternalTerm.institutionCountry, institution.getAddress().getCountry());
+        } else if (institution.getMailingAddress() != null
+            && institution.getMailingAddress().getCountry() != null) {
+          termSetter.accept(
+              GbifInternalTerm.institutionCountry, institution.getMailingAddress().getCountry());
+        }
+
+        // alternative codes
+        ArrayNode alternativeCodesArray =
+            grscicollNode.putArray(GbifInternalTerm.institutionAlternativeCodes.simpleName());
+        institution.getAlternativeCodes().keySet().forEach(alternativeCodesArray::add);
+
+        // identifiers
+        ArrayNode identifiersArray = grscicollNode.putArray(DwcTerm.institutionID.simpleName());
+        institution.getIdentifiers().stream()
+            .map(Identifier::getIdentifier)
+            .forEach(identifiersArray::add);
+      }
+
+      if (gr.getCollectionMatch() != null
+          && gr.getCollectionMatch().getMatchType() != MatchType.NONE) {
+        Collection collection = gr.getCollectionMatch().getCollection();
+        termSetter.accept(GbifInternalTerm.collectionKey, collection.getKey());
+        termSetter.accept(DwcTerm.collectionCode, collection.getCode());
+        termSetter.accept(GbifInternalTerm.collectionName, collection.getName());
+        termSetter.accept(
+            GbifInternalTerm.collectionInstitutionKey, collection.getInstitutionKey());
+
+        // alternative codes
+        ArrayNode alternativeCodesArray =
+            grscicollNode.putArray(GbifInternalTerm.collectionAlternativeCodes.simpleName());
+        collection.getAlternativeCodes().keySet().forEach(alternativeCodesArray::add);
+
+        // identifiers
+        ArrayNode identifiersArray = grscicollNode.putArray(DwcTerm.collectionID.simpleName());
+        collection.getIdentifiers().stream()
+            .map(Identifier::getIdentifier)
+            .forEach(identifiersArray::add);
+      }
+
+      if (!jc.getMainNode().has("grscicoll")) {
+        jc.addJsonObject("grscicoll", grscicollNode);
+      }
     };
   }
 }
