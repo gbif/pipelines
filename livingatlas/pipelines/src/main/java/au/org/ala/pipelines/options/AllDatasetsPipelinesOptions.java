@@ -1,4 +1,4 @@
-package au.org.ala.pipelines.beam;
+package au.org.ala.pipelines.options;
 
 import org.apache.beam.sdk.options.*;
 

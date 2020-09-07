@@ -9,12 +9,14 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.*;
 import org.gbif.pipelines.common.PipelinesVariables;
 import org.gbif.pipelines.ingest.options.BasePipelineOptions;
 import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.parsers.config.model.PipelinesConfig;
 
@@ -180,6 +182,15 @@ public class ALAFsUtils {
     return filePaths;
   }
 
+  public static void deleteMetricsFile(InterpretationPipelineOptions options) {
+    String metadataPath =
+        FsUtils.buildDatasetAttemptPath(options, options.getMetaFileName(), false);
+    FileSystem fs =
+        FsUtils.getFileSystem(
+            options.getHdfsSiteConfig(), options.getCoreSiteConfig(), metadataPath);
+    deleteIfExist(fs, metadataPath);
+  }
+
   /**
    * Read a properties file from HDFS/Local FS
    *
@@ -205,5 +216,79 @@ public class ALAFsUtils {
       }
     }
     throw new FileNotFoundException("The properties file doesn't exist - " + filePath);
+  }
+
+  public static boolean checkAndCreateLockFile(InterpretationPipelineOptions options)
+      throws IOException {
+    FileSystem fs =
+        FileSystemFactory.getInstance(options.getHdfsSiteConfig(), options.getCoreSiteConfig())
+            .getFs(options.getInputPath());
+
+    Path path = new Path(options.getInputPath() + ".lockdir");
+    if (fs.exists(path)) {
+      // dataset is locked
+      log.info("lockdir exists: " + options.getInputPath() + ".lockdir");
+      return false;
+    }
+
+    log.info("Creating lockdir: " + options.getInputPath() + ".lockdir");
+    // otherwise, lock it and return true
+    try {
+      return fs.mkdirs(new Path(options.getInputPath() + ".lockdir"));
+    } catch (IOException e) {
+      log.info("Unable to create lockdir");
+      return false;
+    }
+  }
+
+  public static void deleteLockFile(InterpretationPipelineOptions options) throws IOException {
+
+    String lockFilePath = options.getInputPath() + ".lockdir";
+
+    log.info("Attempting to delete lock file {}", lockFilePath);
+    FsUtils.deleteIfExist(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), lockFilePath);
+  }
+
+  /**
+   * Scans the supplied options.getInputPath() for zip files. Assumes zip files are in the name for
+   * of <DATASET_ID>.zip
+   *
+   * @param options
+   * @return a Map of datasetId -> filePath, with zip files sorted by size, largest to smallest.
+   * @throws IOException
+   */
+  public static Map<String, String> listAllDatasets(
+      String hdfsSiteConfig, String coreSiteConfig, String inputPath) throws IOException {
+
+    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
+
+    log.info("List files in inputPath: {}", inputPath);
+
+    Path path = new Path(inputPath);
+    RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(path, true);
+
+    Map<Path, Long> filePathsWithSize = new HashMap<>();
+
+    // find zip files
+    while (iterator.hasNext()) {
+      LocatedFileStatus locatedFileStatus = iterator.next();
+      Path filePath = locatedFileStatus.getPath();
+
+      long fileLength = locatedFileStatus.getLen();
+      if (filePath.getName().endsWith(".zip")) {
+        log.debug(filePath.getName() + " : " + fileLength);
+        filePathsWithSize.put(filePath, fileLength);
+      }
+    }
+
+    // sort by size and return ordered map
+    return filePathsWithSize.entrySet().stream()
+        .sorted(Map.Entry.<Path, Long>comparingByValue().reversed())
+        .collect(
+            Collectors.toMap(
+                entry -> entry.getKey().getName().replaceAll(".zip", ""),
+                entry -> entry.getKey().getParent() + "/" + entry.getKey().getName(),
+                (e1, e2) -> e1,
+                LinkedHashMap::new));
   }
 }

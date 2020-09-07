@@ -1,22 +1,15 @@
 package au.org.ala.utils;
 
-import static java.util.Collections.reverseOrder;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.fs.*;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
 
 @Parameters(separators = "=")
 @Slf4j
-public class DumpDatasetSize {
+public class DumpArchiveList {
 
   @Parameter(names = "--inputPath", description = "Comma-separated list of group names to be run")
   private String inputPath;
@@ -37,9 +30,9 @@ public class DumpDatasetSize {
   public static void main(String[] args) throws Exception {
 
     String[] combinedArgs =
-        new CombinedYamlConfiguration(args).toArgs("general", "dataset-count-dump");
+        new CombinedYamlConfiguration(args).toArgs("general", "dataset-archive-list");
 
-    DumpDatasetSize m = new DumpDatasetSize();
+    DumpArchiveList m = new DumpArchiveList();
     JCommander jCommander = JCommander.newBuilder().acceptUnknownOptions(true).addObject(m).build();
     jCommander.parse(combinedArgs);
 
@@ -52,31 +45,18 @@ public class DumpDatasetSize {
 
   public void run() throws Exception {
 
-    FileSystem fs = FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(inputPath);
-    Map<String, Long> counts = new HashMap<String, Long>();
+    // load all datasets - return a map of <datasetId -> datasetInputPath>
+    Map<String, String> datasets =
+        ALAFsUtils.listAllDatasets(hdfsSiteConfig, coreSiteConfig, inputPath);
 
-    FileStatus[] fileStatuses = fs.listStatus(new Path(inputPath));
-    for (FileStatus fileStatus : fileStatuses) {
-      if (fileStatus.isDirectory()) {
-
-        String datasetID =
-            fileStatus
-                .getPath()
-                .toString()
-                .substring(fileStatus.getPath().toString().lastIndexOf("/") + 1);
-        counts.put(datasetID, ValidationUtils.readVerbatimCount(fs, inputPath, datasetID, 1));
-      }
-    }
-
-    // order by size descending
-    List<Map.Entry<String, Long>> list = new ArrayList<>(counts.entrySet());
-    list.sort(reverseOrder(Map.Entry.comparingByValue()));
-
+    // dump to file
     FileWriter fw = new FileWriter(targetPath);
-    for (Map.Entry<String, Long> entry : list) {
+    for (Map.Entry<String, String> entry : datasets.entrySet()) {
       fw.write(entry.getKey() + "," + entry.getValue() + "\n");
     }
     fw.flush();
     fw.close();
+    log.info("Datasets listed: {}", datasets.size());
+    log.info("List written to: {}", targetPath);
   }
 }

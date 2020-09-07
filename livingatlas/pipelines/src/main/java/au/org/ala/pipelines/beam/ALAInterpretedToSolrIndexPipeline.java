@@ -9,7 +9,8 @@ import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.ALAUUIDTransform;
 import au.org.ala.utils.ALAFsUtils;
 import au.org.ala.utils.CombinedYamlConfiguration;
-import java.io.FileNotFoundException;
+import au.org.ala.utils.ValidationResult;
+import au.org.ala.utils.ValidationUtils;
 import java.util.function.UnaryOperator;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -48,19 +49,27 @@ import org.slf4j.MDC;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ALAInterpretedToSolrIndexPipeline {
 
-  public static void main(String[] args) throws FileNotFoundException {
+  public static void main(String[] args) throws Exception {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "index");
     ALASolrPipelineOptions options =
         PipelinesOptionsFactory.create(ALASolrPipelineOptions.class, combinedArgs);
+    options.setMetaFileName(ValidationUtils.INDEXING_METRICS);
     PipelinesOptionsFactory.registerHdfs(options);
     run(options);
   }
 
-  public static void run(ALASolrPipelineOptions options) {
+  public static void run(ALASolrPipelineOptions options) throws Exception {
 
     MDC.put("datasetId", options.getDatasetId());
     MDC.put("attempt", options.getAttempt().toString());
     MDC.put("step", StepType.INTERPRETED_TO_INDEX.name());
+
+    ValidationResult valid = ValidationUtils.checkReadyForIndexing(options);
+    if (!valid.getValid()) {
+      log.error(
+          "The dataset can not be indexed. See logs for more details: {}", valid.getMessage());
+      return;
+    }
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> pathFn =

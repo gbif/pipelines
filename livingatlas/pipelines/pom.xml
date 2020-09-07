@@ -256,7 +256,7 @@
     <solr8.http.port>8973</solr8.http.port>
     <solr8.zk.host>localhost</solr8.zk.host>
     <solr8.http.host>localhost</solr8.http.host>
-    <collectory.url>https://collections.ala.org.au</collectory.url>
+    <collectory.url>http://localhost:3939</collectory.url>
 
     <!-- Tools-->
     <geotools.version>20.5</geotools.version>
@@ -283,6 +283,9 @@
     <download-maven-plugin.version>1.6.0</download-maven-plugin.version>
     <jcabi-log.version>0.18.1</jcabi-log.version>
 
+    <!-- use same version as okhttp -->
+    <!-- avoids this issue https://stackoverflow.com/questions/56854548/mockwebserver-java-lang-nosuchmethoderror -->
+    <mockwebserver.version>4.2.2</mockwebserver.version>
   </properties>
 
   <scm>

@@ -12,6 +12,7 @@ import au.org.ala.pipelines.transforms.ALADefaultValuesTransform;
 import au.org.ala.pipelines.transforms.ALATaxonomyTransform;
 import au.org.ala.pipelines.transforms.LocationTransform;
 import au.org.ala.utils.CombinedYamlConfiguration;
+import au.org.ala.utils.ValidationUtils;
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -92,6 +93,7 @@ public class ALAVerbatimToInterpretedPipeline {
     String[] combinedArgs = new CombinedYamlConfiguration(args).toArgs("general", "interpret");
     InterpretationPipelineOptions options =
         PipelinesOptionsFactory.createInterpretation(combinedArgs);
+    options.setMetaFileName(ValidationUtils.INTERPRETATION_METRICS);
     run(options);
     // FIXME: Issue logged here: https://github.com/AtlasOfLivingAustralia/la-pipelines/issues/105
     System.exit(0);
@@ -101,6 +103,11 @@ public class ALAVerbatimToInterpretedPipeline {
 
     String datasetId = options.getDatasetId();
     Integer attempt = options.getAttempt();
+
+    MDC.put("datasetId", datasetId);
+    MDC.put("attempt", attempt.toString());
+    MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
+
     boolean tripletValid = options.isTripletValid();
     boolean occurrenceIdValid = options.isOccurrenceIdValid();
     boolean useExtendedRecordId = options.isUseExtendedRecordId();
@@ -122,10 +129,6 @@ public class ALAVerbatimToInterpretedPipeline {
         ALAPipelinesConfigFactory.getInstance(
                 options.getHdfsSiteConfig(), options.getCoreSiteConfig(), options.getProperties())
             .get();
-
-    MDC.put("datasetId", datasetId);
-    MDC.put("attempt", attempt.toString());
-    MDC.put("step", StepType.VERBATIM_TO_INTERPRETED.name());
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
