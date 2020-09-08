@@ -27,7 +27,6 @@ import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.*;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.common.OccurrenceHdfsRecordTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceHdfsRecordConverterTransform;
 import org.gbif.pipelines.transforms.core.*;
@@ -51,7 +50,6 @@ import org.slf4j.MDC;
  *      {@link AudubonRecord},
  *      {@link MeasurementOrFactRecord},
  *      {@link TaxonRecord},
- *      {@link GrscicollRecord},
  *      {@link LocationRecord}
  *    2) Joins avro files
  *    3) Converts to a {@link OccurrenceHdfsRecord} based on the input files
@@ -116,7 +114,6 @@ public class InterpretedToHdfsViewPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-    GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
     // Extension
     MeasurementOrFactTransform measurementOrFactTransform = MeasurementOrFactTransform.create();
@@ -149,10 +146,6 @@ public class InterpretedToHdfsViewPipeline {
         p.apply("Read Taxon", taxonomyTransform.read(interpretPathFn))
             .apply("Map Taxon to KV", taxonomyTransform.toKv());
 
-    PCollection<KV<String, GrscicollRecord>> grscicollCollection =
-        p.apply("Read Grscicoll", grscicollTransform.read(interpretPathFn))
-            .apply("Map Grscicoll to KV", grscicollTransform.toKv());
-
     PCollection<KV<String, MultimediaRecord>> multimediaCollection =
         p.apply("Read Multimedia", multimediaTransform.read(interpretPathFn))
             .apply("Map Multimedia to KV", multimediaTransform.toKv());
@@ -181,7 +174,6 @@ public class InterpretedToHdfsViewPipeline {
             .imageRecordTag(imageTransform.getTag())
             .audubonRecordTag(audubonTransform.getTag())
             .measurementOrFactRecordTag(measurementOrFactTransform.getTag())
-            .grscicollRecordTag(grscicollTransform.getTag())
             .metadataView(metadataView)
             .build()
             .converter();
@@ -192,7 +184,6 @@ public class InterpretedToHdfsViewPipeline {
         .and(temporalTransform.getTag(), temporalCollection)
         .and(locationTransform.getTag(), locationCollection)
         .and(taxonomyTransform.getTag(), taxonCollection)
-        .and(grscicollTransform.getTag(), grscicollCollection)
         // Extension
         .and(multimediaTransform.getTag(), multimediaCollection)
         .and(imageTransform.getTag(), imageCollection)

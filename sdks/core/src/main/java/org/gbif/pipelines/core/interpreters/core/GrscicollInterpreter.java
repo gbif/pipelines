@@ -106,7 +106,7 @@ public class GrscicollInterpreter {
       return OccurrenceIssue.AMBIGUOUS_INSTITUTION;
     }
     if (status == Status.AMBIGUOUS_OWNER) {
-      return OccurrenceIssue.PROBABLY_ON_LOAN;
+      return OccurrenceIssue.POSSIBLY_ON_LOAN;
     }
 
     return OccurrenceIssue.INSTITUTION_MATCH_NONE;

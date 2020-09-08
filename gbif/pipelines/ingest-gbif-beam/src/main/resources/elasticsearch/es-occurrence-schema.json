@@ -35,8 +35,6 @@
       "networkKeys": {"type": "keyword", "normalizer": "lowercase_normalizer"},
       "projectId": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
       "programmeAcronym": {"type": "keyword", "normalizer": "lowercase_normalizer", "copy_to": "all"},
-      "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
-      "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
 
       "basisOfRecord": {"type": "keyword"},
       "sex": {"type": "keyword", "copy_to": "all"},
@@ -226,6 +224,13 @@
 
       "issues": {"type": "keyword"},
       "notIssues": {"type": "keyword"},
+
+      "grscicoll": {
+        "properties": {
+          "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
+          "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"}
+        }
+      },
 
       "gbifClassification": {
         "properties": {

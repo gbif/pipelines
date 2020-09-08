@@ -20,7 +20,7 @@ public class GrscicollInterpreterTest {
         OccurrenceIssue.AMBIGUOUS_INSTITUTION,
         GrscicollInterpreter.getInstitutionMatchNoneIssue(Status.AMBIGUOUS_MACHINE_TAGS));
     assertEquals(
-        OccurrenceIssue.PROBABLY_ON_LOAN,
+        OccurrenceIssue.POSSIBLY_ON_LOAN,
         GrscicollInterpreter.getInstitutionMatchNoneIssue(Status.AMBIGUOUS_OWNER));
   }
 

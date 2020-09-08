@@ -41,9 +41,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -68,7 +66,6 @@ import org.slf4j.MDC;
  *      {@link AudubonRecord},
  *      {@link MeasurementOrFactRecord},
  *      {@link TaxonRecord},
- *      {@link GrscicollRecord},
  *      {@link LocationRecord}
  *    2) Joins avro files
  *    3) Converts to a {@link OccurrenceHdfsRecord} based on the input files
@@ -138,7 +135,6 @@ public class InterpretedToHdfsViewPipeline {
     VerbatimTransform verbatimTransform = VerbatimTransform.create();
     TemporalTransform temporalTransform = TemporalTransform.create();
     TaxonomyTransform taxonomyTransform = TaxonomyTransform.builder().create();
-    GrscicollTransform grscicollTransform = GrscicollTransform.builder().create();
     LocationTransform locationTransform = LocationTransform.builder().create();
 
     // Extension
@@ -213,16 +209,6 @@ public class InterpretedToHdfsViewPipeline {
                     pathFn.apply(taxonomyTransform.getBaseName())),
             executor);
 
-    CompletableFuture<Map<String, GrscicollRecord>> grscicollMapFeature =
-        CompletableFuture.supplyAsync(
-            () ->
-                AvroReader.readRecords(
-                    hdfsSiteConfig,
-                    coreSiteConfig,
-                    GrscicollRecord.class,
-                    pathFn.apply(grscicollTransform.getBaseName())),
-            executor);
-
     CompletableFuture<Map<String, MultimediaRecord>> multimediaMapFeature =
         CompletableFuture.supplyAsync(
             () ->
@@ -270,7 +256,6 @@ public class InterpretedToHdfsViewPipeline {
         temporalMapFeature,
         locationMapFeature,
         taxonMapFeature,
-        grscicollMapFeature,
         multimediaMapFeature,
         imageMapFeature,
         audubonMapFeature,
@@ -282,7 +267,6 @@ public class InterpretedToHdfsViewPipeline {
     Map<String, TemporalRecord> temporalMap = temporalMapFeature.get();
     Map<String, LocationRecord> locationMap = locationMapFeature.get();
     Map<String, TaxonRecord> taxonMap = taxonMapFeature.get();
-    Map<String, GrscicollRecord> grscicollMap = grscicollMapFeature.get();
     Map<String, MultimediaRecord> multimediaMap = multimediaMapFeature.get();
     Map<String, ImageRecord> imageMap = imageMapFeature.get();
     Map<String, AudubonRecord> audubonMap = audubonMapFeature.get();
@@ -300,8 +284,6 @@ public class InterpretedToHdfsViewPipeline {
           LocationRecord lr =
               locationMap.getOrDefault(k, LocationRecord.newBuilder().setId(k).build());
           TaxonRecord txr = taxonMap.getOrDefault(k, TaxonRecord.newBuilder().setId(k).build());
-          GrscicollRecord gr =
-              grscicollMap.getOrDefault(k, GrscicollRecord.newBuilder().setId(k).build());
           // Extension
           MultimediaRecord mr =
               multimediaMap.getOrDefault(k, MultimediaRecord.newBuilder().setId(k).build());
@@ -315,7 +297,7 @@ public class InterpretedToHdfsViewPipeline {
 
           MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
           return OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(
-              br, metadata, tr, lr, txr, gr, mmr, mfr, er);
+              br, metadata, tr, lr, txr, mmr, mfr, er);
         };
 
     boolean useSyncMode = options.getSyncThreshold() > basicMap.size();

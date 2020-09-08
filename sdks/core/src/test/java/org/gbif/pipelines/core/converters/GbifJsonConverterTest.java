@@ -14,7 +14,6 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.pipelines.io.avro.AgentIdentifier;
 import org.gbif.pipelines.io.avro.Amplification;
 import org.gbif.pipelines.io.avro.AmplificationRecord;
@@ -37,7 +36,6 @@ import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.Rank;
 import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Address;
@@ -281,22 +279,10 @@ public class GbifJsonConverterTest {
             .setUsage(synonym)
             .build();
 
-    TaggedValueRecord tvr =
-        TaggedValueRecord.newBuilder()
-            .setId("123")
-            .setTaggedValues(
-                new ImmutableMap.Builder<String, String>()
-                    .put(
-                        GbifInternalTerm.collectionKey.qualifiedName(),
-                        "75956ee6-1a2b-4fa3-b3e8-ccda64ce6c2d")
-                    .put(
-                        GbifInternalTerm.institutionKey.qualifiedName(),
-                        "6ac3f774-d9fb-4796-b3e9-92bf6c81c084")
-                    .build())
-            .build();
+    // TODO: add grcicoll
 
     // When
-    String result = GbifJsonConverter.toStringJson(mr, er, tmr, lr, tr, br, tvr);
+    String result = GbifJsonConverter.toStringJson(mr, er, tmr, lr, tr, br);
 
     // Should
     Assert.assertTrue(JsonValidationUtils.isValid(result));
@@ -964,6 +950,8 @@ public class GbifJsonConverterTest {
 
   @Test
   public void grscicollRecordTest() {
+    // TODO: adapt this test
+
     // Expected
     String expected =
         "{\"id\":\"1\","

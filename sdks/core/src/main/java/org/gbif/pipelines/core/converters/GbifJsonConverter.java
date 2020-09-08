@@ -48,12 +48,10 @@ import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.RankedName;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Collection;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Identifier;
 import org.gbif.pipelines.io.avro.grscicoll.Institution;
 import org.gbif.pipelines.io.avro.grscicoll.MatchType;
 
@@ -757,38 +755,6 @@ public class GbifJsonConverter {
   }
 
   /**
-   * String converter for {@link TaggedValueRecord}, convert an object to specific string view.
-   * Copies all the value at the root node level.
-   *
-   * <pre>{@code
-   * Result example:
-   *
-   * "verbatim": {
-   *    ...
-   * },
-   * "institutionKey": "7ddf754f-d193-4cc9-b351-99906754a03b",
-   * "collectionKey": "7ddf754f-d193-4cc9-b351-99906754a07b",
-   *  //.....more fields
-   *
-   * }</pre>
-   *
-   * Deprecated by {@link GbifJsonConverter#getGrscicollRecordConverter()}.
-   */
-  @Deprecated
-  private BiConsumer<JsonConverter, SpecificRecordBase> getTaggedValueConverter() {
-    return (jc, record) -> {
-      TaggedValueRecord tvr = (TaggedValueRecord) record;
-      if (Objects.nonNull(tvr.getTaggedValues())) {
-        tvr.getTaggedValues()
-            .forEach(
-                (k, v) ->
-                    Optional.ofNullable(TERM_FACTORY.findTerm(k))
-                        .ifPresent(term -> jc.addJsonTextFieldNoCheck(term.simpleName(), v)));
-      }
-    };
-  }
-
-  /**
    * String converter for {@link BasicRecord}, convert an object to specific string view. Copies all
    * the value at the root node level.
    *
@@ -822,15 +788,7 @@ public class GbifJsonConverter {
    *
    *  "grscicoll" : {
    *     "institutionKey": "04ec1770-6216-4c66-b9ea-c8087b8f563f",
-   *     "institutionID:": [
-   *        {
-   *          "type": "IH_IRN",
-   *          "value": "1234"
-   *        }
-   *     ],
-   *     "institutionAlternativeCodes": ["A", "B"]
-   *     //.....more fields
-   *
+   *     "collectionKey": "02d1e772-54ee-4767-b4b8-c35f0c7270ba",
    *  }
    * }</pre>
    */
@@ -847,56 +805,16 @@ public class GbifJsonConverter {
               ? (ObjectNode) jc.getMainNode().get("grscicoll")
               : JsonConverter.createObjectNode();
 
-      BiConsumer<Term, String> termSetter = (t, v) -> grscicollNode.put(t.simpleName(), v);
-
       if (gr.getInstitutionMatch() != null
           && gr.getInstitutionMatch().getMatchType() != MatchType.NONE) {
         Institution institution = gr.getInstitutionMatch().getInstitution();
-        termSetter.accept(GbifInternalTerm.institutionKey, institution.getKey());
-        termSetter.accept(DwcTerm.institutionCode, institution.getCode());
-        termSetter.accept(GbifInternalTerm.institutionName, institution.getName());
-
-        // country
-        if (institution.getAddress() != null && institution.getAddress().getCountry() != null) {
-          termSetter.accept(
-              GbifInternalTerm.institutionCountry, institution.getAddress().getCountry());
-        } else if (institution.getMailingAddress() != null
-            && institution.getMailingAddress().getCountry() != null) {
-          termSetter.accept(
-              GbifInternalTerm.institutionCountry, institution.getMailingAddress().getCountry());
-        }
-
-        // alternative codes
-        ArrayNode alternativeCodesArray =
-            grscicollNode.putArray(GbifInternalTerm.institutionAlternativeCodes.simpleName());
-        institution.getAlternativeCodes().keySet().forEach(alternativeCodesArray::add);
-
-        // identifiers
-        ArrayNode identifiersArray = grscicollNode.putArray(DwcTerm.institutionID.simpleName());
-        institution.getIdentifiers().stream()
-            .map(Identifier::getIdentifier)
-            .forEach(identifiersArray::add);
+        grscicollNode.put(GbifInternalTerm.institutionKey.simpleName(), institution.getKey());
       }
 
       if (gr.getCollectionMatch() != null
           && gr.getCollectionMatch().getMatchType() != MatchType.NONE) {
         Collection collection = gr.getCollectionMatch().getCollection();
-        termSetter.accept(GbifInternalTerm.collectionKey, collection.getKey());
-        termSetter.accept(DwcTerm.collectionCode, collection.getCode());
-        termSetter.accept(GbifInternalTerm.collectionName, collection.getName());
-        termSetter.accept(
-            GbifInternalTerm.collectionInstitutionKey, collection.getInstitutionKey());
-
-        // alternative codes
-        ArrayNode alternativeCodesArray =
-            grscicollNode.putArray(GbifInternalTerm.collectionAlternativeCodes.simpleName());
-        collection.getAlternativeCodes().keySet().forEach(alternativeCodesArray::add);
-
-        // identifiers
-        ArrayNode identifiersArray = grscicollNode.putArray(DwcTerm.collectionID.simpleName());
-        collection.getIdentifiers().stream()
-            .map(Identifier::getIdentifier)
-            .forEach(identifiersArray::add);
+        grscicollNode.put(GbifInternalTerm.collectionKey.simpleName(), collection.getKey());
       }
 
       if (!jc.getMainNode().has("grscicoll")) {

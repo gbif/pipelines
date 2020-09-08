@@ -32,7 +32,6 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.gbif.api.vocabulary.License;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.TermFactory;
 import org.gbif.occurrence.common.TermUtils;
@@ -49,14 +48,8 @@ import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.Multimedia;
 import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Collection;
-import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
-import org.gbif.pipelines.io.avro.grscicoll.Identifier;
-import org.gbif.pipelines.io.avro.grscicoll.Institution;
-import org.gbif.pipelines.io.avro.grscicoll.MatchType;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -80,7 +73,6 @@ public class OccurrenceHdfsRecordConverter {
     converters.put(TemporalRecord.class, temporalMapper());
     converters.put(MetadataRecord.class, metadataMapper());
     converters.put(MultimediaRecord.class, multimediaMapper());
-    converters.put(GrscicollRecord.class, grscicollMapper());
   }
 
   // Converts a TemporalAccessor into Date
@@ -594,74 +586,6 @@ public class OccurrenceHdfsRecordConverter {
 
       setCreatedIfGreater(hr, mr.getCreated());
       hr.setMediatype(mediaTypes);
-    };
-  }
-
-  /**
-   * Collects the {@link TaggedValueRecord} tagged values data into the {@link
-   * OccurrenceHdfsRecord}.
-   */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> taggedValueMapper() {
-    return (hr, sr) -> {
-      TaggedValueRecord tvr = (TaggedValueRecord) sr;
-      // TODO: remove the first 2
-      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.projectId.qualifiedName()))
-          .ifPresent(hr::setProjectid);
-      Optional.ofNullable(
-              tvr.getTaggedValues().get(GbifInternalTerm.programmeAcronym.qualifiedName()))
-          .ifPresent(hr::setProgrammeacronym);
-      Optional.ofNullable(tvr.getTaggedValues().get(GbifInternalTerm.collectionKey.qualifiedName()))
-          .ifPresent(hr::setCollectionkey);
-      Optional.ofNullable(
-              tvr.getTaggedValues().get(GbifInternalTerm.institutionKey.qualifiedName()))
-          .ifPresent(hr::setInstitutionkey);
-    };
-  }
-
-  /** Copies the {@link GrscicollRecord} data into the {@link OccurrenceHdfsRecord}. */
-  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> grscicollMapper() {
-    return (hr, sr) -> {
-      GrscicollRecord gr = (GrscicollRecord) sr;
-
-      // institution
-      if (gr.getInstitutionMatch() != null
-          && gr.getInstitutionMatch().getMatchType() != MatchType.NONE) {
-        Institution institution = gr.getInstitutionMatch().getInstitution();
-        hr.setGrscicollInstitutionkey(institution.getKey());
-        hr.setGrscicollInstitutioncode(institution.getCode());
-        hr.setGrscicollInstitutionname(institution.getName());
-        hr.setGrscicollInstitutionalternativecodes(
-            new ArrayList<>(institution.getAlternativeCodes().keySet()));
-        hr.setGrscicollInstitutionid(
-            institution.getIdentifiers().stream()
-                .map(Identifier::getIdentifier)
-                .collect(Collectors.toList()));
-
-        if (institution.getAddress() != null && institution.getAddress().getCountry() != null) {
-          hr.setGrscicollInstitutioncountry(institution.getAddress().getCountry());
-        } else if (institution.getMailingAddress() != null
-            && institution.getMailingAddress().getCountry() != null) {
-          hr.setGrscicollInstitutioncountry(institution.getMailingAddress().getCountry());
-        }
-      }
-
-      // collection
-      if (gr.getCollectionMatch() != null
-          && gr.getCollectionMatch().getMatchType() != MatchType.NONE) {
-        Collection collection = gr.getCollectionMatch().getCollection();
-        hr.setGrscicollCollectionkey(collection.getKey());
-        hr.setGrscicollCollectioncode(collection.getCode());
-        hr.setGrscicollCollectionname(collection.getName());
-        hr.setGrscicollCollectioninstitutionkey(collection.getInstitutionKey());
-        hr.setGrscicollCollectionalternativecodes(
-            new ArrayList<>(collection.getAlternativeCodes().keySet()));
-        hr.setGrscicollCollectionid(
-            collection.getIdentifiers().stream()
-                .map(Identifier::getIdentifier)
-                .collect(Collectors.toList()));
-      }
-
-      addIssues(gr.getIssues(), hr);
     };
   }
 
