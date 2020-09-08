@@ -1,5 +1,6 @@
 package org.gbif.pipelines.core.ws.metadata;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.github.resilience4j.retry.Retry;
 import java.io.IOException;
 import java.util.List;
@@ -26,10 +27,17 @@ public class MetadataServiceClient {
   private final ContentService contentService;
   private final Retry retry;
 
+  @VisibleForTesting
+  protected MetadataServiceClient() {
+    this.rest = null;
+    this.contentService = null;
+    this.retry = null;
+  }
+
   private MetadataServiceClient(WsConfig wsConfig, ContentConfig contentConfig) {
-    rest = MetadataServiceFactory.getInstance(wsConfig);
-    retry = RetryFactory.create(wsConfig.getRetryConfig(), "RegistryApiCall");
-    contentService =
+    this.rest = MetadataServiceFactory.getInstance(wsConfig);
+    this.retry = RetryFactory.create(wsConfig.getRetryConfig(), "RegistryApiCall");
+    this.contentService =
         Optional.ofNullable(contentConfig)
             .map(x -> ContentServiceFactory.getInstance(x.getEsHosts()).getService())
             .orElse(null);
