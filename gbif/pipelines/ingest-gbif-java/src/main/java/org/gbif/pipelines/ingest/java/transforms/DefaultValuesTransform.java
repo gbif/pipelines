@@ -1,9 +1,7 @@
 package org.gbif.pipelines.ingest.java.transforms;
 
-import java.util.List;
 import java.util.Map;
 import lombok.Builder;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.pipelines.core.ws.metadata.MetadataServiceClient;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.SerializableSupplier;
@@ -30,14 +28,9 @@ public class DefaultValuesTransform {
     transform.setup();
   }
 
-  public void tearDown() {
-    transform.tearDown();
-  }
-
   public void replaceDefaultValues(Map<String, ExtendedRecord> source) {
-    List<MachineTag> tags = transform.getMachineTags();
-    if (!tags.isEmpty()) {
-      source.forEach((key, value) -> source.put(key, transform.replaceDefaultValues(value, tags)));
+    if (!transform.getTags().isEmpty()) {
+      source.forEach((key, value) -> transform.convert(value).ifPresent(v -> source.put(key, v)));
     }
   }
 }

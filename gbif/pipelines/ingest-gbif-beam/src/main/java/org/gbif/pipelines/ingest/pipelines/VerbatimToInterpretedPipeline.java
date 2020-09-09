@@ -203,7 +203,8 @@ public class VerbatimToInterpretedPipeline {
                     DefaultValuesTransform.builder()
                         .clientSupplier(MetadataServiceClientFactory.createSupplier(config))
                         .datasetId(datasetId)
-                        .create());
+                        .create()
+                        .interpret());
 
     PCollectionTuple basicCollection =
         uniqueRecords

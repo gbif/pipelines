@@ -102,6 +102,7 @@ public class PipelinesVariables {
     public static final String INVALID_GBIF_ID_COUNT = "invalidGbifIdCount";
     // Core types
     public static final String METADATA_RECORDS_COUNT = "metadataRecordsCount";
+    public static final String DEFAULT_VALUES_RECORDS_COUNT = "defaultValuesRecordsCount";
     public static final String BASIC_RECORDS_COUNT = "basicRecordsCount";
     public static final String TEMPORAL_RECORDS_COUNT = "temporalRecordsCount";
     public static final String LOCATION_RECORDS_COUNT = "locationRecordsCount";

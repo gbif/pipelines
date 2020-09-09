@@ -29,12 +29,19 @@ public class LocationMatcherTest {
     store.put(new LatLng(71.7d, -42.6d), toGeocodeResponse(Country.GREENLAND));
     store.put(new LatLng(-17.65, -149.46), toGeocodeResponse(Country.FRENCH_POLYNESIA));
     store.put(new LatLng(27.15, -13.20), toGeocodeResponse(Country.MOROCCO));
+    store.put(new LatLng(-61d, -130d), toGeocodeNonISOResponse("Southern Ocean"));
     GEOCODE_KV_STORE = GeocodeKvStore.create(store);
   }
 
   private static GeocodeResponse toGeocodeResponse(Country country) {
     Location location = new Location();
     location.setIsoCountryCode2Digit(country.getIso2LetterCode());
+    return new GeocodeResponse(Collections.singletonList(location));
+  }
+
+  private static GeocodeResponse toGeocodeNonISOResponse(String title) {
+    Location location = new Location();
+    location.setName(title);
     return new GeocodeResponse(Collections.singletonList(location));
   }
 

@@ -109,18 +109,17 @@ public class LocationMatcher {
 
   private Optional<List<Country>> getCountryFromCoordinates(LatLng latLng) {
     if (latLng.isValid()) {
-      GeocodeResponse geocodeResponse = null;
-      geocodeResponse = geocodeKvStore.get(latLng);
+      if (isAntarctica(latLng.getLatitude(), this.country)) {
+        return Optional.of(Collections.singletonList(Country.ANTARCTICA));
+      }
 
+      GeocodeResponse geocodeResponse = geocodeKvStore.get(latLng);
       if (geocodeResponse != null && !geocodeResponse.getLocations().isEmpty()) {
         return Optional.of(
             geocodeResponse.getLocations().stream()
                 .map(Location::getIsoCountryCode2Digit)
                 .map(Country::fromIsoCode)
                 .collect(Collectors.toList()));
-      }
-      if (isAntarctica(latLng.getLatitude(), this.country)) {
-        return Optional.of(Collections.singletonList(Country.ANTARCTICA));
       }
     }
     return Optional.empty();
