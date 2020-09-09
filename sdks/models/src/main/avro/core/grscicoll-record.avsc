@@ -60,8 +60,8 @@
       {"name" : "key", "type" : ["null", "string"], "default" : null},
       {"name" : "code", "type" : ["null", "string"], "default" : null},
       {"name" : "name", "type" : ["null", "string"], "default" : null},
-      {"name" : "alternativeCodes", "type" : { "type" : "map", "default": {}, "values": ["null", "string"]} },
-      {"name" : "identifiers", "type" : [ "null", { "type" : "array", "items" : "Identifier"} ], "default" : []},
+      {"name" : "alternativeCodes", "type" : [ "null", { "type" : "map", "default": {}, "values": ["null", "string"]}], "default": null },
+      {"name" : "identifiers", "type" : [ "null", { "type" : "array", "items" : "Identifier"} ], "default" : null},
       {"name" : "mailingAddress", "type" : ["null", "Address"], "default" : null},
       {"name" : "address", "type" : ["null", "Address"], "default" : null}
     ]
@@ -75,8 +75,8 @@
         {"name" : "code", "type" : ["null", "string"], "default" : null},
         {"name" : "name", "type" : ["null", "string"], "default" : null},
         {"name" : "institutionKey", "type" : ["null", "string"], "default" : null},
-        {"name" : "alternativeCodes", "type" : { "type" : "map", "default": {}, "values": ["null", "string"]} },
-        {"name" : "identifiers", "type" : [ "null", { "type" : "array", "items" : "Identifier"} ], "default" : []},
+        {"name" : "alternativeCodes", "type" : [ "null", { "type" : "map", "default": {}, "values": ["null", "string"]}], "default": null },
+        {"name" : "identifiers", "type" : [ "null", { "type" : "array", "items" : "Identifier"} ], "default" : null},
         {"name" : "mailingAddress", "type" : ["null", "Address"], "default" : null},
         {"name" : "address", "type" : ["null", "Address"], "default" : null}
       ]
