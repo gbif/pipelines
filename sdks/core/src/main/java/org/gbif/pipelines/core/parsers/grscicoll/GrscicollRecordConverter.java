@@ -26,7 +26,7 @@ public class GrscicollRecordConverter {
     InstitutionMatch.Builder builder = InstitutionMatch.newBuilder();
 
     builder.setMatchType(MatchType.valueOf(matchResponse.getMatchType().name()));
-    builder.setStatus(Status.valueOf(matchResponse.getStatus().name()));
+    builder.setStatus(convertStatus(matchResponse.getStatus()));
     builder.setReasons(convertReasons(matchResponse.getReasons()));
 
     builder.setInstitution(convertInstitution(matchResponse.getEntityMatched()));
@@ -38,7 +38,7 @@ public class GrscicollRecordConverter {
     CollectionMatch.Builder builder = CollectionMatch.newBuilder();
 
     builder.setMatchType(MatchType.valueOf(matchResponse.getMatchType().name()));
-    builder.setStatus(Status.valueOf(matchResponse.getStatus().name()));
+    builder.setStatus(convertStatus(matchResponse.getStatus()));
     builder.setReasons(convertReasons(matchResponse.getReasons()));
 
     builder.setCollection(convertCollection(matchResponse.getEntityMatched()));
@@ -56,7 +56,8 @@ public class GrscicollRecordConverter {
     builder.setAddress(convertAddress(institutionResponse.getAddress()));
     builder.setMailingAddress(convertAddress(institutionResponse.getMailingAddress()));
 
-    if (institutionResponse.getIdentifiers() != null) {
+    if (institutionResponse.getIdentifiers() != null
+        && !institutionResponse.getIdentifiers().isEmpty()) {
       List<Identifier> identifiers =
           institutionResponse.getIdentifiers().stream()
               .map(GrscicollRecordConverter::convertIdentifier)
@@ -78,7 +79,8 @@ public class GrscicollRecordConverter {
     builder.setAddress(convertAddress(collectionResponse.getAddress()));
     builder.setMailingAddress(convertAddress(collectionResponse.getMailingAddress()));
 
-    if (collectionResponse.getIdentifiers() != null) {
+    if (collectionResponse.getIdentifiers() != null
+        && !collectionResponse.getIdentifiers().isEmpty()) {
       List<Identifier> identifiers =
           collectionResponse.getIdentifiers().stream()
               .map(GrscicollRecordConverter::convertIdentifier)
@@ -91,10 +93,24 @@ public class GrscicollRecordConverter {
 
   private static List<Reason> convertReasons(
       Set<org.gbif.api.model.collections.lookup.Match.Reason> reasons) {
+    if (reasons == null || reasons.isEmpty()) {
+      return null;
+    }
     return reasons.stream().map(r -> Reason.valueOf(r.name())).collect(Collectors.toList());
   }
 
+  private static Status convertStatus(org.gbif.api.model.collections.lookup.Match.Status status) {
+    if (status == null) {
+      return null;
+    }
+    return Status.valueOf(status.name());
+  }
+
   private static Address convertAddress(org.gbif.api.model.collections.Address address) {
+    if (address == null) {
+      return null;
+    }
+
     Address.Builder builder = Address.newBuilder();
 
     builder.setAddress(address.getAddress());
@@ -110,6 +126,10 @@ public class GrscicollRecordConverter {
   }
 
   private static Identifier convertIdentifier(org.gbif.api.model.registry.Identifier identifier) {
+    if (identifier == null) {
+      return null;
+    }
+
     Identifier.Builder builder = Identifier.newBuilder();
 
     builder.setIdentifier(identifier.getIdentifier());
