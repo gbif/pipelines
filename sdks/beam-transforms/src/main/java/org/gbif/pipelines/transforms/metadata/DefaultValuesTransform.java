@@ -35,6 +35,8 @@ public class DefaultValuesTransform extends Transform<ExtendedRecord, ExtendedRe
   private final String datasetId;
   private final SerializableSupplier<MetadataServiceClient> clientSupplier;
 
+  private MetadataServiceClient client;
+
   @Getter private List<MachineTag> tags;
 
   @Builder(buildMethodName = "create")
@@ -52,8 +54,7 @@ public class DefaultValuesTransform extends Transform<ExtendedRecord, ExtendedRe
   /** Beam @Setup initializes resources */
   @Setup
   public void setup() {
-    MetadataServiceClient client = null;
-    if (clientSupplier != null) {
+    if (client == null && clientSupplier != null) {
       log.info("Initialize MetadataServiceClient");
       client = clientSupplier.get();
     }
@@ -65,6 +66,11 @@ public class DefaultValuesTransform extends Transform<ExtendedRecord, ExtendedRe
       log.error("MachineTags list is null, datasetKey - {}", datasetId);
       tags = Collections.emptyList();
     }
+  }
+
+  /** Beam @Teardown closes initialized resources */
+  @Teardown
+  public void tearDown() {
     if (client != null) {
       log.info("Close MetadataServiceClient");
       client.close();

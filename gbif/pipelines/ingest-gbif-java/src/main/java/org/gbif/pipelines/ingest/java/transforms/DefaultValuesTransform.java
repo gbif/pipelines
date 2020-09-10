@@ -28,6 +28,10 @@ public class DefaultValuesTransform {
     transform.setup();
   }
 
+  public void tearDown() {
+    transform.tearDown();
+  }
+
   public void replaceDefaultValues(Map<String, ExtendedRecord> source) {
     if (!transform.getTags().isEmpty()) {
       source.forEach((key, value) -> transform.convert(value).ifPresent(v -> source.put(key, v)));

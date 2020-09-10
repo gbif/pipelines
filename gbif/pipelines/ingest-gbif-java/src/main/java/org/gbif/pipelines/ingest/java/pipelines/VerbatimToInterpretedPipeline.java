@@ -400,6 +400,7 @@ public class VerbatimToInterpretedPipeline {
             bTr.tearDown();
             lTr.tearDown();
             tTr.tearDown();
+            dTr.tearDown();
             log.info("The resources were closed");
           };
       Runtime.getRuntime().addShutdownHook(new Thread(shudownHook));
