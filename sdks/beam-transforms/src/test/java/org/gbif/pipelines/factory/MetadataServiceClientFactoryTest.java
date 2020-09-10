@@ -38,9 +38,9 @@ public class MetadataServiceClientFactoryTest {
 
     // When
     SerializableSupplier<MetadataServiceClient> supplierOne =
-            MetadataServiceClientFactory.createSupplier(pc);
+        MetadataServiceClientFactory.createSupplier(pc);
     SerializableSupplier<MetadataServiceClient> supplierTwo =
-            MetadataServiceClientFactory.createSupplier(pc);
+        MetadataServiceClientFactory.createSupplier(pc);
 
     // Should
     Assert.assertNotSame(supplierOne.get(), supplierTwo.get());
