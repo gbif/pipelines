@@ -226,6 +226,7 @@
       "notIssues": {"type": "keyword"},
 
       "grscicoll": {
+        "type": "object",
         "properties": {
           "institutionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"},
           "collectionKey": {"type": "keyword", "normalizer": "lowercase_normalizer"}
