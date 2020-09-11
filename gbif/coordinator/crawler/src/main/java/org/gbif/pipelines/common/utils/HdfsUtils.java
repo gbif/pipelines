@@ -22,7 +22,7 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.pipelines.ingest.utils.FileSystemFactory;
+import org.gbif.pipelines.core.factory.FileSystemFactory;
 
 /** Utils help to work with HDFS files */
 @Slf4j

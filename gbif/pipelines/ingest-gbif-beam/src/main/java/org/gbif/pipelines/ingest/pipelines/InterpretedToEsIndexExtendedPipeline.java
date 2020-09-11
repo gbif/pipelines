@@ -5,11 +5,12 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.ingest.utils.EsIndexUtils;
-import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.slf4j.MDC;
 
 /**
@@ -74,7 +75,7 @@ public class InterpretedToEsIndexExtendedPipeline {
 
     run(options, () -> InterpretedToEsIndexPipeline.run(options));
 
-    FsUtils.removeTmpDirectory(options);
+    FsUtils.removeTmpDirectory(PathBuilder.getTempDir(options));
     log.info("Finished main indexing pipeline");
   }
 

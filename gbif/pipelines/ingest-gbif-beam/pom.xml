@@ -126,12 +126,18 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
+      <artifactId>core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.pipelines</groupId>
       <artifactId>elasticsearch-tools</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.pipelines</groupId>
       <artifactId>keygen</artifactId>
     </dependency>
+
+    <!-- GBIF -->
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-wrangler</artifactId>
@@ -211,7 +217,7 @@
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
-    <!-- test -->
+    <!-- Test -->
     <dependency>
       <groupId>pl.allegro.tech</groupId>
       <artifactId>embedded-elasticsearch</artifactId>

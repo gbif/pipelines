@@ -11,8 +11,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.elasticsearch.client.Response;
+import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.ingest.pipelines.InterpretedToEsIndexExtendedPipeline;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

@@ -11,11 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.BlastServiceClientFactory;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.gbif.pipelines.transforms.extension.AmplificationTransform;
@@ -84,9 +85,10 @@ public class VerbatimToInterpretedAmpPipeline {
 
     String id = Long.toString(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-    UnaryOperator<String> pathFn = t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id);
+    UnaryOperator<String> pathFn =
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id);
     UnaryOperator<String> pathVerbatimFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     log.info("Creating a pipeline from options");
     Pipeline p = Pipeline.create(options);

@@ -1,5 +1,8 @@
 package org.gbif.converters.converter;
 
+import static org.gbif.converters.converter.FsUtils.*;
+import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -9,6 +12,8 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.pipelines.common.PipelinesVariables.Metrics;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 @Slf4j
@@ -85,7 +90,7 @@ public abstract class ConverterToVerbatim {
     // same connection. So, when using multiple consumers, one consumer would close the connection
     // that is being used
     // by another consumer.
-    FileSystem fs = FsUtils.createParentDirectories(hdfsSiteConfig, coreSiteConfig, outputPath);
+    FileSystem fs = createParentDirectories(hdfsSiteConfig, coreSiteConfig, outputPath);
     try (BufferedOutputStream outputStream = new BufferedOutputStream(fs.create(outputPath));
         SyncDataFileWriter<ExtendedRecord> dataFileWriter =
             SyncDataFileWriterBuilder.builder()
@@ -104,7 +109,7 @@ public abstract class ConverterToVerbatim {
       log.error("Failed performing conversion on {}", inputPath, e);
       throw new IllegalStateException("Failed performing conversion on " + inputPath, e);
     } finally {
-      isConverted = FsUtils.deleteAvroFileIfEmpty(fs, outputPath);
+      isConverted = deleteAvroFileIfEmpty(fs, outputPath);
     }
 
     return !isConverted;
@@ -114,7 +119,7 @@ public abstract class ConverterToVerbatim {
       throws IOException {
     if (metaPath != null) {
       String info = Metrics.ARCHIVE_TO_ER_COUNT + ": " + numberOfRecords + "\n";
-      FsUtils.createFile(fs, metaPath, info);
+      createFile(fs, metaPath, info);
     }
   }
 

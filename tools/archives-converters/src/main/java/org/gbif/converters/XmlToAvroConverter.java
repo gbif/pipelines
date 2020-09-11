@@ -6,8 +6,8 @@ import java.util.concurrent.Executors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.converter.ConverterToVerbatim;
-import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.ExtendedRecordConverter;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Converts ABCD/etc archive into {@link ExtendedRecord} AVRO file */

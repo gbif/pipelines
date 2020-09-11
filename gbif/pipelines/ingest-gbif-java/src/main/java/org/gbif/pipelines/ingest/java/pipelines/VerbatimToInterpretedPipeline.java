@@ -1,8 +1,8 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.ALL;
+import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -24,25 +24,23 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.converters.converter.SyncDataFileWriter;
-import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
+import org.gbif.pipelines.core.factory.ConfigFactory;
+import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.pipelines.factory.GeocodeKvStoreFactory;
 import org.gbif.pipelines.factory.KeygenServiceFactory;
 import org.gbif.pipelines.factory.MetadataServiceClientFactory;
 import org.gbif.pipelines.factory.NameUsageMatchStoreFactory;
 import org.gbif.pipelines.factory.OccurrenceStatusKvStoreFactory;
-import org.gbif.pipelines.ingest.java.io.AvroReader;
-import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.java.transforms.DefaultValuesTransform;
-import org.gbif.pipelines.ingest.java.transforms.OccurrenceExtensionTransform;
-import org.gbif.pipelines.ingest.java.transforms.UniqueGbifIdTransform;
-import org.gbif.pipelines.ingest.java.utils.ConfigFactory;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -65,6 +63,9 @@ import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
 import org.gbif.pipelines.transforms.extension.MultimediaTransform;
+import org.gbif.pipelines.transforms.java.DefaultValuesTransform;
+import org.gbif.pipelines.transforms.java.OccurrenceExtensionTransform;
+import org.gbif.pipelines.transforms.java.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.metadata.MetadataTransform;
 import org.gbif.pipelines.transforms.metadata.TaggedValuesTransform;
 import org.slf4j.MDC;
@@ -361,7 +362,7 @@ public class VerbatimToInterpretedPipeline {
       String id,
       boolean useInvalidName) {
     UnaryOperator<String> pathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, id + AVRO_EXTENSION);
     String baseName = useInvalidName ? transform.getBaseInvalidName() : transform.getBaseName();
     Path path = new Path(pathFn.apply(baseName));
     FileSystem fs =
