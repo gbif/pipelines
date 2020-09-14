@@ -27,6 +27,7 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 
 /**
  * Beam level transformation for Occurrence HDFS Downloads Table. The transformation consumes
@@ -42,6 +43,7 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
  * final TupleTag<TemporalRecord> trTag = new TupleTag<TemporalRecord>() {};
  * final TupleTag<LocationRecord> lrTag = new TupleTag<LocationRecord>() {};
  * final TupleTag<TaxonRecord> txrTag = new TupleTag<TaxonRecord>() {};
+ * final TupleTag<GrscicollRecord> txrTag = new TupleTag<GrscicollRecord>() {};
  * final TupleTag<MultimediaRecord> mrTag = new TupleTag<MultimediaRecord>() {};
  * final TupleTag<ImageRecord> irTag = new TupleTag<ImageRecord>() {};
  * final TupleTag<AudubonRecord> arTag = new TupleTag<AudubonRecord>() {};
@@ -75,6 +77,7 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
   @NonNull private final TupleTag<TemporalRecord> temporalRecordTag;
   @NonNull private final TupleTag<LocationRecord> locationRecordTag;
   @NonNull private final TupleTag<TaxonRecord> taxonRecordTag;
+  @NonNull private final TupleTag<GrscicollRecord> grscicollRecordTag;
   // Extension
   @NonNull private final TupleTag<MultimediaRecord> multimediaRecordTag;
   @NonNull private final TupleTag<ImageRecord> imageRecordTag;
@@ -106,6 +109,8 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
             LocationRecord lr =
                 v.getOnly(locationRecordTag, LocationRecord.newBuilder().setId(k).build());
             TaxonRecord txr = v.getOnly(taxonRecordTag, TaxonRecord.newBuilder().setId(k).build());
+            GrscicollRecord gr =
+                v.getOnly(grscicollRecordTag, GrscicollRecord.newBuilder().setId(k).build());
             // Extension
             MultimediaRecord mr =
                 v.getOnly(multimediaRecordTag, MultimediaRecord.newBuilder().setId(k).build());
@@ -120,7 +125,7 @@ public class OccurrenceHdfsRecordConverterTransform implements Serializable {
             MultimediaRecord mmr = MultimediaConverter.merge(mr, ir, ar);
             OccurrenceHdfsRecord record =
                 OccurrenceHdfsRecordConverter.toOccurrenceHdfsRecord(
-                    br, mdr, tr, lr, txr, mmr, mfr, er);
+                    br, mdr, tr, lr, txr, gr, mmr, mfr, er);
 
             c.output(record);
 

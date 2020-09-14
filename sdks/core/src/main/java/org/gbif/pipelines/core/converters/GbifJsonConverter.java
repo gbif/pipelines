@@ -800,25 +800,18 @@ public class GbifJsonConverter {
         jc.addJsonTextFieldNoCheck(ID, gr.getId());
       }
 
-      ObjectNode grscicollNode =
-          jc.getMainNode().has("grscicoll")
-              ? (ObjectNode) jc.getMainNode().get("grscicoll")
-              : JsonConverter.createObjectNode();
-
       if (gr.getInstitutionMatch() != null
           && gr.getInstitutionMatch().getMatchType() != MatchType.NONE) {
         Institution institution = gr.getInstitutionMatch().getInstitution();
-        grscicollNode.put(GbifInternalTerm.institutionKey.simpleName(), institution.getKey());
+        jc.addJsonTextFieldNoCheck(
+            GbifInternalTerm.institutionKey.simpleName(), institution.getKey());
       }
 
       if (gr.getCollectionMatch() != null
           && gr.getCollectionMatch().getMatchType() != MatchType.NONE) {
         Collection collection = gr.getCollectionMatch().getCollection();
-        grscicollNode.put(GbifInternalTerm.collectionKey.simpleName(), collection.getKey());
-      }
-
-      if (!jc.getMainNode().has("grscicoll")) {
-        jc.addJsonObject("grscicoll", grscicollNode);
+        jc.addJsonTextFieldNoCheck(
+            GbifInternalTerm.collectionKey.simpleName(), collection.getKey());
       }
     };
   }

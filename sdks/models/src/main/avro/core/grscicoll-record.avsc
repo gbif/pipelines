@@ -88,7 +88,7 @@
       "fields" : [
         {"name" : "matchType", "type" : ["null", "MatchType"], "default" : null},
         {"name" : "status", "type" : ["null", "Status"], "default" : null},
-        {"name" : "reasons", "type" : ["null", { "type" : "array", "items" : "Reason"} ], "default" : []},
+        {"name" : "reasons", "type" : ["null", { "type" : "array", "items" : "Reason"} ], "default" : null},
         {"name" : "institution", "type" : ["null", "Institution"], "default" : null}
       ]
     },

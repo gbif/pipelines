@@ -253,8 +253,8 @@ public class GbifJsonConverterTest {
         "[{\"type\":\"OTHER\",\"value\":\"someId\"}]", result.path("recordedByIds").toString());
     assertEquals("PRESENT", result.path("occurrenceStatus").asText());
 
-    assertEquals(institution.getKey(), result.path("grscicoll").path("institutionKey").asText());
-    assertFalse(result.path("grsicoll").has("collectionKey"));
+    assertEquals(institution.getKey(), result.path("institutionKey").asText());
+    assertFalse(result.has("collectionKey"));
 
     String expectedIssues =
         "[\"BASIS_OF_RECORD_INVALID\",\"INSTITUTION_MATCH_FUZZY\",\"ZERO_COORDINATE\"]";
@@ -881,10 +881,9 @@ public class GbifJsonConverterTest {
     // Expected
     String expected =
         "{\"id\":\"1\","
-            + "\"grscicoll\":{"
             + "\"institutionKey\":\"cb0098db-6ff6-4a5d-ad29-51348d114e41\","
             + "\"collectionKey\":\"5c692584-d517-48e8-93a8-a916ba131d9b\""
-            + "}}";
+            + "}";
 
     // State
     Institution institution =
