@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ConverterTask;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ExecutorPoolFactory;
 import org.gbif.converters.parser.xml.parsing.extendedrecord.ParserFileUtils;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Parsing xml response files or tar.xz archive and convert to ExtendedRecord avro file */

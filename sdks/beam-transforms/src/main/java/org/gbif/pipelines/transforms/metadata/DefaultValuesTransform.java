@@ -65,10 +65,12 @@ public class DefaultValuesTransform extends Transform<ExtendedRecord, ExtendedRe
       log.error("MachineTags list is null, datasetKey - {}", datasetId);
       tags = Collections.emptyList();
     }
-    if (client != null) {
-      log.info("Close MetadataServiceClient");
-      client.close();
-    }
+  }
+
+  /** Beam @Teardown closes initialized resources */
+  @Teardown
+  public void tearDown() {
+    // NOP
   }
 
   @Override

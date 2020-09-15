@@ -66,10 +66,7 @@ public class MetadataTransform extends Transform<String, MetadataRecord> {
   /** Beam @Teardown closes initialized resources */
   @Teardown
   public void tearDown() {
-    if (client != null) {
-      log.info("Close MetadataServiceClient");
-      client.close();
-    }
+    // NOP
   }
 
   @Override

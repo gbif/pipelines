@@ -1,7 +1,6 @@
 package org.gbif.converters.converter;
 
 import java.io.IOException;
-import java.net.URI;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,20 +18,6 @@ import org.gbif.pipelines.io.avro.ExtendedRecord;
 public class FsUtils {
 
   private static final long FILE_LIMIT_SIZE = 3L * 1_024L; // 3Kb
-
-  /**
-   * Helper method to create a parent directory in the provided path
-   *
-   * @return filesystem
-   */
-  @SneakyThrows
-  public static FileSystem createParentDirectories(
-      String hdfsSiteConfig, String coreSiteConfig, Path path) {
-    FileSystem fs =
-        FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(path.toString());
-    fs.mkdirs(path.getParent());
-    return fs;
-  }
 
   /**
    * If a file is too small (less than 3Kb), checks any records inside, if the file is empty,
@@ -65,13 +50,6 @@ public class FsUtils {
       }
       return false;
     }
-  }
-
-  public static long fileSize(String hdfsSiteConfig, String coreSiteConfig, URI file)
-      throws IOException {
-    FileSystem fs =
-        FileSystemFactory.getInstance(hdfsSiteConfig, coreSiteConfig).getFs(file.toString());
-    return fs.getFileStatus(new Path(file)).getLen();
   }
 
   public static void createFile(FileSystem fs, Path path, String body) throws IOException {

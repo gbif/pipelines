@@ -2,7 +2,7 @@ package org.gbif.pipelines.ingest.pipelines;
 
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.Interpretation.RecordType.OCCURRENCE_HDFS_RECORD;
-import static org.gbif.pipelines.ingest.utils.FsUtils.buildFilePathHdfsViewUsingInputPath;
+import static org.gbif.pipelines.common.beam.utils.PathBuilder.buildFilePathHdfsViewUsingInputPath;
 
 import java.util.Collections;
 import java.util.Set;
@@ -21,10 +21,12 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
+import org.gbif.pipelines.core.utils.FsUtils;
+import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
 import org.gbif.pipelines.io.avro.*;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
@@ -105,7 +107,7 @@ public class InterpretedToHdfsViewPipeline {
 
     log.info("Adding step 1: Options");
     UnaryOperator<String> interpretPathFn =
-        t -> FsUtils.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
 
     Pipeline p = Pipeline.create(options);
 
@@ -209,7 +211,7 @@ public class InterpretedToHdfsViewPipeline {
     PipelineResult result = p.run();
 
     if (PipelineResult.State.DONE == result.waitUntilFinish()) {
-      SharedLockUtils.doHdfsPrefixLock(options, () -> FsUtils.copyOccurrenceRecords(options));
+      SharedLockUtils.doHdfsPrefixLock(options, () -> HdfsViewAvroUtils.move(options));
     }
 
     // Metrics

@@ -20,16 +20,16 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.index.IndexRequest;
 import org.gbif.api.model.pipelines.StepType;
+import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.converters.GbifJsonConverter;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
-import org.gbif.pipelines.ingest.java.io.AvroReader;
-import org.gbif.pipelines.ingest.java.io.ElasticsearchWriter;
-import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
+import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.io.ElasticsearchWriter;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
 import org.gbif.pipelines.io.avro.AudubonRecord;
 import org.gbif.pipelines.io.avro.BasicRecord;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
@@ -131,7 +131,7 @@ public class InterpretedToEsIndexPipeline {
 
     log.info("Options");
     UnaryOperator<String> pathFn =
-        t -> FsUtils.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingTargetPath(options, t, "*" + AVRO_EXTENSION);
 
     String esDocumentId = options.getEsDocumentId();
     String hdfsSiteConfig = options.getHdfsSiteConfig();
