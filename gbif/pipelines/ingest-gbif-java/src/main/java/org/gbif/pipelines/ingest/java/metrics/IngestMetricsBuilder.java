@@ -24,6 +24,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECO
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.gbif.pipelines.transforms.common.FilterExtendedRecordTransform;
 import org.gbif.pipelines.transforms.common.UniqueGbifIdTransform;
 import org.gbif.pipelines.transforms.common.UniqueIdTransform;

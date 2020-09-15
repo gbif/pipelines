@@ -9,9 +9,10 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
 import org.gbif.pipelines.core.config.model.LockConfig;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.core.utils.FsUtils;
 import org.gbif.wrangler.lock.Mutex;
 import org.gbif.wrangler.lock.zookeeper.ZookeeperSharedReadWriteMutex;
 

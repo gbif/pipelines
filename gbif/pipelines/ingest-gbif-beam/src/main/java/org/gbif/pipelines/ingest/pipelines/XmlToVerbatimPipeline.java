@@ -8,10 +8,10 @@ import org.apache.beam.sdk.PipelineResult;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.XmlIO;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
@@ -56,7 +56,7 @@ public class XmlToVerbatimPipeline {
     MDC.put("step", StepType.XML_TO_VERBATIM.name());
 
     log.info("Adding step 1: Options");
-    String targetPath = FsUtils.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
+    String targetPath = PathBuilder.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
 
     log.info("Adding step 2: Pipeline steps");
     Pipeline p = Pipeline.create(options);

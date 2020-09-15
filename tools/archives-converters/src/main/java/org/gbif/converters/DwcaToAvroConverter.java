@@ -6,9 +6,9 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.converters.converter.ConverterToVerbatim;
-import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.pipelines.core.converters.ExtendedRecordConverter;
 import org.gbif.pipelines.core.io.DwcaReader;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /** Converts DWC archive into {@link ExtendedRecord} AVRO file */

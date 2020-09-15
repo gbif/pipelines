@@ -9,10 +9,10 @@ import org.apache.beam.sdk.PipelineResult;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.pipelines.common.PipelinesVariables.Pipeline.Conversion;
 import org.gbif.pipelines.common.beam.DwcaIO;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.transforms.core.VerbatimTransform;
 import org.slf4j.MDC;
 
@@ -58,8 +58,8 @@ public class DwcaToVerbatimPipeline {
 
     log.info("Adding step 1: Options");
     String inputPath = options.getInputPath();
-    String targetPath = FsUtils.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
-    String tmpPath = FsUtils.getTempDir(options);
+    String targetPath = PathBuilder.buildDatasetAttemptPath(options, Conversion.FILE_NAME, false);
+    String tmpPath = PathBuilder.getTempDir(options);
 
     boolean isDir = Paths.get(inputPath).toFile().isDirectory();
 

@@ -1,8 +1,8 @@
 package org.gbif.pipelines.ingest.java.pipelines;
 
-import static org.gbif.converters.converter.FsUtils.createParentDirectories;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.AVRO_TO_HDFS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Pipeline.AVRO_EXTENSION;
+import static org.gbif.pipelines.core.utils.FsUtils.createParentDirectories;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -18,35 +18,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.gbif.api.model.pipelines.StepType;
-import org.gbif.converters.converter.SyncDataFileWriter;
-import org.gbif.converters.converter.SyncDataFileWriterBuilder;
+import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
+import org.gbif.pipelines.common.beam.metrics.MetricsHandler;
+import org.gbif.pipelines.common.beam.options.InterpretationPipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.core.converters.MultimediaConverter;
 import org.gbif.pipelines.core.converters.OccurrenceHdfsRecordConverter;
-import org.gbif.pipelines.ingest.java.io.AvroReader;
-import org.gbif.pipelines.ingest.java.metrics.IngestMetrics;
+import org.gbif.pipelines.core.io.AvroReader;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
+import org.gbif.pipelines.core.io.SyncDataFileWriterBuilder;
 import org.gbif.pipelines.ingest.java.metrics.IngestMetricsBuilder;
-import org.gbif.pipelines.ingest.options.InterpretationPipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
-import org.gbif.pipelines.ingest.utils.MetricsHandler;
+import org.gbif.pipelines.ingest.utils.HdfsViewAvroUtils;
 import org.gbif.pipelines.ingest.utils.SharedLockUtils;
-import org.gbif.pipelines.io.avro.AudubonRecord;
-import org.gbif.pipelines.io.avro.BasicRecord;
-import org.gbif.pipelines.io.avro.ExtendedRecord;
-import org.gbif.pipelines.io.avro.ImageRecord;
-import org.gbif.pipelines.io.avro.LocationRecord;
-import org.gbif.pipelines.io.avro.MeasurementOrFactRecord;
-import org.gbif.pipelines.io.avro.MetadataRecord;
-import org.gbif.pipelines.io.avro.MultimediaRecord;
-import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
-import org.gbif.pipelines.io.avro.TaggedValueRecord;
-import org.gbif.pipelines.io.avro.TaxonRecord;
-import org.gbif.pipelines.io.avro.TemporalRecord;
-import org.gbif.pipelines.transforms.core.BasicTransform;
-import org.gbif.pipelines.transforms.core.LocationTransform;
-import org.gbif.pipelines.transforms.core.TaxonomyTransform;
-import org.gbif.pipelines.transforms.core.TemporalTransform;
-import org.gbif.pipelines.transforms.core.VerbatimTransform;
+import org.gbif.pipelines.io.avro.*;
+import org.gbif.pipelines.transforms.core.*;
 import org.gbif.pipelines.transforms.extension.AudubonTransform;
 import org.gbif.pipelines.transforms.extension.ImageTransform;
 import org.gbif.pipelines.transforms.extension.MeasurementOrFactTransform;
@@ -126,7 +112,7 @@ public class InterpretedToHdfsViewPipeline {
 
     log.info("Options");
     UnaryOperator<String> pathFn =
-        t -> FsUtils.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
+        t -> PathBuilder.buildPathInterpretUsingInputPath(options, t, "*" + AVRO_EXTENSION);
     String hdfsSiteConfig = options.getHdfsSiteConfig();
     String coreSiteConfig = options.getCoreSiteConfig();
 
@@ -334,7 +320,7 @@ public class InterpretedToHdfsViewPipeline {
       }
     }
 
-    SharedLockUtils.doHdfsPrefixLock(options, () -> FsUtils.copyOccurrenceRecords(options));
+    SharedLockUtils.doHdfsPrefixLock(options, () -> HdfsViewAvroUtils.move(options));
 
     MetricsHandler.saveCountersToInputPathFile(options, metrics.getMetricsResult());
     log.info("Pipeline has been finished - {}", LocalDateTime.now());
@@ -342,11 +328,12 @@ public class InterpretedToHdfsViewPipeline {
 
   /** Create an AVRO file writer */
   @SneakyThrows
+  @SuppressWarnings("all")
   private static SyncDataFileWriter<OccurrenceHdfsRecord> createWriter(
       InterpretationPipelineOptions options) {
     String id = options.getDatasetId() + '_' + options.getAttempt();
     String targetTempPath =
-        FsUtils.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
+        PathBuilder.buildFilePathHdfsViewUsingInputPath(options, id + AVRO_EXTENSION);
     Path path = new Path(targetTempPath);
     FileSystem verbatimFs =
         createParentDirectories(options.getHdfsSiteConfig(), options.getCoreSiteConfig(), path);

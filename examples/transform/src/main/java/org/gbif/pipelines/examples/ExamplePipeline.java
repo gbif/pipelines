@@ -6,9 +6,9 @@ import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.AvroIO;
 import org.gbif.example.io.avro.ExampleRecord;
 import org.gbif.pipelines.common.beam.DwcaIO;
-import org.gbif.pipelines.ingest.options.BasePipelineOptions;
-import org.gbif.pipelines.ingest.options.PipelinesOptionsFactory;
-import org.gbif.pipelines.ingest.utils.FsUtils;
+import org.gbif.pipelines.common.beam.options.BasePipelineOptions;
+import org.gbif.pipelines.common.beam.options.PipelinesOptionsFactory;
+import org.gbif.pipelines.common.beam.utils.PathBuilder;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,7 @@ public class ExamplePipeline {
 
     // Pipeline properties
     String inputPath = options.getInputPath(); // Path to DwCA zip archive
-    String tmpDir = FsUtils.getTempDir(options); // Path to temporal directory or creates new
+    String tmpDir = PathBuilder.getTempDir(options); // Path to temporal directory or creates new
     String outPath = options.getTargetPath(); // Path to output *.avro files
 
     // Creates pipeline from options

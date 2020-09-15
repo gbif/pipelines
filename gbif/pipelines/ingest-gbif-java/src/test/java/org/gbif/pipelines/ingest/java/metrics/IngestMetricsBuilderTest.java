@@ -24,6 +24,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.VERBATIM_RECO
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.beam.sdk.metrics.MetricResults;
+import org.gbif.pipelines.common.beam.metrics.IngestMetrics;
 import org.junit.Assert;
 import org.junit.Test;
 

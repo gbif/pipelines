@@ -12,7 +12,7 @@ import org.gbif.common.messaging.MessageListener;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.pipelines.common.configs.StepConfiguration;
 import org.gbif.pipelines.core.config.model.PipelinesConfig;
-import org.gbif.pipelines.ingest.java.utils.ConfigFactory;
+import org.gbif.pipelines.core.factory.ConfigFactory;
 import org.gbif.pipelines.keygen.config.KeygenConfig;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryWsClient;
 

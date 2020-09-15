@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.pipelines.common.beam.options.EsIndexingPipelineOptions;
 import org.gbif.pipelines.core.config.model.LockConfig;
 import org.gbif.pipelines.estools.EsIndex;
 import org.gbif.pipelines.estools.client.EsClient;
@@ -25,7 +26,6 @@ import org.gbif.pipelines.estools.model.IndexParams;
 import org.gbif.pipelines.estools.service.EsConstants.Field;
 import org.gbif.pipelines.estools.service.EsConstants.Indexing;
 import org.gbif.pipelines.estools.service.EsService;
-import org.gbif.pipelines.ingest.options.EsIndexingPipelineOptions;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)

@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.gbif.converters.converter.SyncDataFileWriter;
 import org.gbif.converters.parser.xml.OccurrenceParser;
 import org.gbif.converters.parser.xml.model.RawOccurrenceRecord;
 import org.gbif.converters.parser.xml.parsing.validators.UniquenessValidator;
 import org.gbif.converters.parser.xml.parsing.xml.XmlFragmentParser;
+import org.gbif.pipelines.core.io.SyncDataFileWriter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 
 /**
