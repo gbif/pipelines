@@ -7,6 +7,7 @@ import static org.gbif.pipelines.common.PipelinesVariables.Metrics.BASIC_RECORDS
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_GBIF_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.DUPLICATE_IDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.FILTER_ER_BASED_ON_GBIF_ID;
+import static org.gbif.pipelines.common.PipelinesVariables.Metrics.GRSCICOLL_RECORDS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_GBIF_OBJECTS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IDENTICAL_OBJECTS_COUNT;
 import static org.gbif.pipelines.common.PipelinesVariables.Metrics.IMAGE_RECORDS_COUNT;
@@ -31,6 +32,7 @@ import org.gbif.pipelines.transforms.converters.GbifJsonTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceExtensionTransform;
 import org.gbif.pipelines.transforms.converters.OccurrenceHdfsRecordConverterTransform;
 import org.gbif.pipelines.transforms.core.BasicTransform;
+import org.gbif.pipelines.transforms.core.GrscicollTransform;
 import org.gbif.pipelines.transforms.core.LocationTransform;
 import org.gbif.pipelines.transforms.core.TaxonomyTransform;
 import org.gbif.pipelines.transforms.core.TemporalTransform;
@@ -54,6 +56,7 @@ public class IngestMetricsBuilder {
         .addMetric(LocationTransform.class, LOCATION_RECORDS_COUNT)
         .addMetric(MetadataTransform.class, METADATA_RECORDS_COUNT)
         .addMetric(TaxonomyTransform.class, TAXON_RECORDS_COUNT)
+        .addMetric(GrscicollTransform.class, GRSCICOLL_RECORDS_COUNT)
         .addMetric(TemporalTransform.class, TEMPORAL_RECORDS_COUNT)
         .addMetric(VerbatimTransform.class, VERBATIM_RECORDS_COUNT)
         .addMetric(AudubonTransform.class, AUDUBON_RECORDS_COUNT)

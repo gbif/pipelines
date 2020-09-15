@@ -16,7 +16,7 @@ import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.kvs.KeyValueStore;
 import org.gbif.kvs.grscicoll.GrscicollLookupRequest;
-import org.gbif.pipelines.core.parsers.grscicoll.GrscicollRecordConverter;
+import org.gbif.pipelines.core.converters.GrscicollRecordConverter;
 import org.gbif.pipelines.io.avro.ExtendedRecord;
 import org.gbif.pipelines.io.avro.MetadataRecord;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;

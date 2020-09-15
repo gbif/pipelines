@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
@@ -58,7 +59,6 @@ import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Institution;
 import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
-import org.gbif.pipelines.io.avro.grscicoll.MatchType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -598,7 +598,7 @@ public class OccurrenceHdfsRecordConverterTest {
     InstitutionMatch institutionMatch =
         InstitutionMatch.newBuilder()
             .setInstitution(institution)
-            .setMatchType(MatchType.EXACT)
+            .setMatchType(MatchType.EXACT.name())
             .build();
 
     Collection collection =
@@ -610,7 +610,7 @@ public class OccurrenceHdfsRecordConverterTest {
     CollectionMatch collectionMatch =
         CollectionMatch.newBuilder()
             .setCollection(collection)
-            .setMatchType(MatchType.FUZZY)
+            .setMatchType(MatchType.FUZZY.name())
             .build();
 
     GrscicollRecord record =

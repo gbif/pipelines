@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
@@ -49,9 +50,6 @@ import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Institution;
 import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
-import org.gbif.pipelines.io.avro.grscicoll.MatchType;
-import org.gbif.pipelines.io.avro.grscicoll.Reason;
-import org.gbif.pipelines.io.avro.grscicoll.Status;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -171,9 +169,7 @@ public class GbifJsonConverterTest {
     InstitutionMatch institutionMatch =
         InstitutionMatch.newBuilder()
             .setInstitution(institution)
-            .setMatchType(MatchType.FUZZY)
-            .setReasons(Collections.singletonList(Reason.CODE_MATCH))
-            .setStatus(Status.ACCEPTED)
+            .setMatchType(MatchType.FUZZY.name())
             .build();
 
     GrscicollRecord gr =
@@ -896,9 +892,7 @@ public class GbifJsonConverterTest {
     InstitutionMatch institutionMatch =
         InstitutionMatch.newBuilder()
             .setInstitution(institution)
-            .setMatchType(MatchType.EXACT)
-            .setReasons(Collections.singletonList(Reason.CODE_MATCH))
-            .setStatus(Status.ACCEPTED)
+            .setMatchType(MatchType.EXACT.name())
             .build();
 
     Collection collection =
@@ -910,10 +904,7 @@ public class GbifJsonConverterTest {
             .build();
 
     CollectionMatch collectionMatch =
-        CollectionMatch.newBuilder()
-            .setCollection(collection)
-            .setMatchType(MatchType.FUZZY)
-            .build();
+        CollectionMatch.newBuilder().setCollection(collection).setMatchType("FUZZY").build();
 
     GrscicollRecord record =
         GrscicollRecord.newBuilder()

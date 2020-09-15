@@ -53,7 +53,6 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Collection;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Institution;
-import org.gbif.pipelines.io.avro.grscicoll.MatchType;
 
 /**
  * Converter for objects to GBIF elasticsearch schema. You can pass any {@link SpecificRecordBase}
@@ -800,18 +799,20 @@ public class GbifJsonConverter {
         jc.addJsonTextFieldNoCheck(ID, gr.getId());
       }
 
-      if (gr.getInstitutionMatch() != null
-          && gr.getInstitutionMatch().getMatchType() != MatchType.NONE) {
+      if (gr.getInstitutionMatch() != null) {
         Institution institution = gr.getInstitutionMatch().getInstitution();
-        jc.addJsonTextFieldNoCheck(
-            GbifInternalTerm.institutionKey.simpleName(), institution.getKey());
+        if (institution != null) {
+          jc.addJsonTextFieldNoCheck(
+              GbifInternalTerm.institutionKey.simpleName(), institution.getKey());
+        }
       }
 
-      if (gr.getCollectionMatch() != null
-          && gr.getCollectionMatch().getMatchType() != MatchType.NONE) {
+      if (gr.getCollectionMatch() != null) {
         Collection collection = gr.getCollectionMatch().getCollection();
-        jc.addJsonTextFieldNoCheck(
-            GbifInternalTerm.collectionKey.simpleName(), collection.getKey());
+        if (collection != null) {
+          jc.addJsonTextFieldNoCheck(
+              GbifInternalTerm.collectionKey.simpleName(), collection.getKey());
+        }
       }
     };
   }

@@ -53,7 +53,6 @@ import org.gbif.pipelines.io.avro.TemporalRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Collection;
 import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
 import org.gbif.pipelines.io.avro.grscicoll.Institution;
-import org.gbif.pipelines.io.avro.grscicoll.MatchType;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -380,16 +379,18 @@ public class OccurrenceHdfsRecordConverter {
     return (hr, sr) -> {
       GrscicollRecord gr = (GrscicollRecord) sr;
 
-      if (gr.getInstitutionMatch() != null
-          && gr.getInstitutionMatch().getMatchType() != MatchType.NONE) {
+      if (gr.getInstitutionMatch() != null) {
         Institution institution = gr.getInstitutionMatch().getInstitution();
-        hr.setInstitutionkey(institution.getKey());
+        if (institution != null) {
+          hr.setInstitutionkey(institution.getKey());
+        }
       }
 
-      if (gr.getCollectionMatch() != null
-          && gr.getCollectionMatch().getMatchType() != MatchType.NONE) {
+      if (gr.getCollectionMatch() != null) {
         Collection collection = gr.getCollectionMatch().getCollection();
-        hr.setCollectionkey(collection.getKey());
+        if (collection != null) {
+          hr.setCollectionkey(collection.getKey());
+        }
       }
     };
   }

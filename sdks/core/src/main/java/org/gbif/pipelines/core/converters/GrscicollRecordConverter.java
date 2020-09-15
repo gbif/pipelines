@@ -1,5 +1,6 @@
-package org.gbif.pipelines.core.parsers.grscicoll;
+package org.gbif.pipelines.core.converters;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -9,12 +10,8 @@ import org.gbif.pipelines.io.avro.grscicoll.Address;
 import org.gbif.pipelines.io.avro.grscicoll.Collection;
 import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
 import org.gbif.pipelines.io.avro.grscicoll.Identifier;
-import org.gbif.pipelines.io.avro.grscicoll.IdentifierType;
 import org.gbif.pipelines.io.avro.grscicoll.Institution;
 import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
-import org.gbif.pipelines.io.avro.grscicoll.MatchType;
-import org.gbif.pipelines.io.avro.grscicoll.Reason;
-import org.gbif.pipelines.io.avro.grscicoll.Status;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.CollectionResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.InstitutionResponse;
 import org.gbif.rest.client.grscicoll.GrscicollLookupResponse.Match;
@@ -25,7 +22,7 @@ public class GrscicollRecordConverter {
   public static InstitutionMatch convertInstitutionMatch(Match<InstitutionResponse> matchResponse) {
     InstitutionMatch.Builder builder = InstitutionMatch.newBuilder();
 
-    builder.setMatchType(MatchType.valueOf(matchResponse.getMatchType().name()));
+    builder.setMatchType(matchResponse.getMatchType().name());
     builder.setStatus(convertStatus(matchResponse.getStatus()));
     builder.setReasons(convertReasons(matchResponse.getReasons()));
 
@@ -37,7 +34,7 @@ public class GrscicollRecordConverter {
   public static CollectionMatch convertCollectionMatch(Match<CollectionResponse> matchResponse) {
     CollectionMatch.Builder builder = CollectionMatch.newBuilder();
 
-    builder.setMatchType(MatchType.valueOf(matchResponse.getMatchType().name()));
+    builder.setMatchType(matchResponse.getMatchType().name());
     builder.setStatus(convertStatus(matchResponse.getStatus()));
     builder.setReasons(convertReasons(matchResponse.getReasons()));
 
@@ -91,19 +88,16 @@ public class GrscicollRecordConverter {
     return builder.build();
   }
 
-  private static List<Reason> convertReasons(
+  private static List<String> convertReasons(
       Set<org.gbif.api.model.collections.lookup.Match.Reason> reasons) {
     if (reasons == null || reasons.isEmpty()) {
-      return null;
+      return Collections.emptyList();
     }
-    return reasons.stream().map(r -> Reason.valueOf(r.name())).collect(Collectors.toList());
+    return reasons.stream().map(Enum::name).collect(Collectors.toList());
   }
 
-  private static Status convertStatus(org.gbif.api.model.collections.lookup.Match.Status status) {
-    if (status == null) {
-      return null;
-    }
-    return Status.valueOf(status.name());
+  private static String convertStatus(org.gbif.api.model.collections.lookup.Match.Status status) {
+    return status == null ? null : status.name();
   }
 
   private static Address convertAddress(org.gbif.api.model.collections.Address address) {
@@ -133,7 +127,7 @@ public class GrscicollRecordConverter {
     Identifier.Builder builder = Identifier.newBuilder();
 
     builder.setIdentifier(identifier.getIdentifier());
-    builder.setType(IdentifierType.valueOf(identifier.getType().name()));
+    builder.setType(identifier.getType().name());
 
     return builder.build();
   }
