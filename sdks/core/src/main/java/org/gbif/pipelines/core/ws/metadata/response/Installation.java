@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** Can be a org.gbif.api.model.registry.Network model, some problem with enum unmarshalling */
+/** Can be a org.gbif.api.model.registry.Installation model, some problem with enum unmarshalling */
 @Getter
 @Setter
 @NoArgsConstructor
