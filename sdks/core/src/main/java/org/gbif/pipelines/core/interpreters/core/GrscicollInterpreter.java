@@ -5,9 +5,8 @@ import static org.gbif.pipelines.core.utils.ModelUtils.checkNullOrEmpty;
 import static org.gbif.pipelines.core.utils.ModelUtils.extractNullAwareValue;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.util.function.BiConsumer;
-
 import com.google.common.base.Strings;
+import java.util.function.BiConsumer;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
