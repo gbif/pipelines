@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
+import org.gbif.api.model.collections.lookup.Match.MatchType;
 import org.gbif.api.vocabulary.AgentIdentifierType;
 import org.gbif.api.vocabulary.BasisOfRecord;
 import org.gbif.api.vocabulary.Continent;
@@ -53,6 +54,11 @@ import org.gbif.pipelines.io.avro.RankedName;
 import org.gbif.pipelines.io.avro.State;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.CollectionMatch;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
+import org.gbif.pipelines.io.avro.grscicoll.InstitutionMatch;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -578,5 +584,47 @@ public class OccurrenceHdfsRecordConverterTest {
     assertEquals(1, cal.get(Calendar.YEAR));
     assertEquals(0, cal.get(Calendar.MONTH));
     assertEquals(1, cal.get(Calendar.DAY_OF_MONTH));
+  }
+
+  @Test
+  public void grscicollMapperTest() {
+    // State
+    Institution institution =
+        Institution.newBuilder()
+            .setCode("I1")
+            .setKey("cb0098db-6ff6-4a5d-ad29-51348d114e41")
+            .build();
+
+    InstitutionMatch institutionMatch =
+        InstitutionMatch.newBuilder()
+            .setInstitution(institution)
+            .setMatchType(MatchType.EXACT.name())
+            .build();
+
+    Collection collection =
+        Collection.newBuilder()
+            .setKey("5c692584-d517-48e8-93a8-a916ba131d9b")
+            .setCode("C1")
+            .build();
+
+    CollectionMatch collectionMatch =
+        CollectionMatch.newBuilder()
+            .setCollection(collection)
+            .setMatchType(MatchType.FUZZY.name())
+            .build();
+
+    GrscicollRecord record =
+        GrscicollRecord.newBuilder()
+            .setId("1")
+            .setInstitutionMatch(institutionMatch)
+            .setCollectionMatch(collectionMatch)
+            .build();
+
+    // When
+    OccurrenceHdfsRecord hdfsRecord = toOccurrenceHdfsRecord(record);
+
+    // Should
+    Assert.assertEquals(institution.getKey(), hdfsRecord.getInstitutionkey());
+    Assert.assertEquals(collection.getKey(), hdfsRecord.getCollectionkey());
   }
 }

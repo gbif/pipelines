@@ -50,6 +50,9 @@ import org.gbif.pipelines.io.avro.MultimediaRecord;
 import org.gbif.pipelines.io.avro.OccurrenceHdfsRecord;
 import org.gbif.pipelines.io.avro.TaxonRecord;
 import org.gbif.pipelines.io.avro.TemporalRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Collection;
+import org.gbif.pipelines.io.avro.grscicoll.GrscicollRecord;
+import org.gbif.pipelines.io.avro.grscicoll.Institution;
 
 /** Utility class to convert interpreted and extended records into {@link OccurrenceHdfsRecord}. */
 @Slf4j
@@ -70,6 +73,7 @@ public class OccurrenceHdfsRecordConverter {
     converters.put(BasicRecord.class, basicRecordMapper());
     converters.put(LocationRecord.class, locationMapper());
     converters.put(TaxonRecord.class, taxonMapper());
+    converters.put(GrscicollRecord.class, grscicollMapper());
     converters.put(TemporalRecord.class, temporalMapper());
     converters.put(MetadataRecord.class, metadataMapper());
     converters.put(MultimediaRecord.class, multimediaMapper());
@@ -367,6 +371,27 @@ public class OccurrenceHdfsRecordConverter {
 
       setCreatedIfGreater(hr, tr.getCreated());
       addIssues(tr.getIssues(), hr);
+    };
+  }
+
+  /** Copies the {@link GrscicollRecord} data into the {@link OccurrenceHdfsRecord}. */
+  private static BiConsumer<OccurrenceHdfsRecord, SpecificRecordBase> grscicollMapper() {
+    return (hr, sr) -> {
+      GrscicollRecord gr = (GrscicollRecord) sr;
+
+      if (gr.getInstitutionMatch() != null) {
+        Institution institution = gr.getInstitutionMatch().getInstitution();
+        if (institution != null) {
+          hr.setInstitutionkey(institution.getKey());
+        }
+      }
+
+      if (gr.getCollectionMatch() != null) {
+        Collection collection = gr.getCollectionMatch().getCollection();
+        if (collection != null) {
+          hr.setCollectionkey(collection.getKey());
+        }
+      }
     };
   }
 
